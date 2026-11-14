@@ -5751,6 +5751,70 @@ const BATCH_CHUNK_002: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
+    oracleId: 'c01aeaa5-1d3b-4493-9575-30175dcd780d',
+    name: 'Gleaming Splendor',
+    handledLines: ['{2}{W}: Two target players each draw a card.'],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'mana',
+              cost: {
+                generic: 2,
+                colored: {
+                  W: 1,
+                  U: 0,
+                  B: 0,
+                  R: 0,
+                  G: 0,
+                },
+                colorless: 0,
+              },
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [
+              {
+                kind: 'player',
+              },
+              {
+                kind: 'player',
+                differentFromSlots: [0],
+              },
+            ],
+            effects: [
+              {
+                op: 'drawTarget',
+                target: 0,
+                count: {
+                  kind: 'const',
+                  n: 1,
+                },
+              },
+              {
+                op: 'drawTarget',
+                target: 1,
+                count: {
+                  kind: 'const',
+                  n: 1,
+                },
+              },
+            ],
+            description: '{2}{W}: Two target players each draw a card.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-002',
+    patchSha256: '934fe1641c3dc206ab0791e159215dac1486046eccb33d6a7507bc4da96aef41',
+    behaviorSha256: 'ec6a2f4d951328a58220325434e6d0605f3ea3e827bd9979eba6b6e5826c611c',
+    acceptedBy: 'main-thread',
+  },
+  {
     oracleId: '2b62543f-a475-457a-a96b-b5d070383d3c',
     name: 'Goldvein Hydra',
     handledLines: [
@@ -11779,6 +11843,60 @@ const BATCH_CHUNK_003: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
+    oracleId: 'b10ad415-0aae-4d70-82e6-a4055a40cbe4',
+    name: 'Sword of War and Peace',
+    handledLines: [
+      'Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 life for each card in your hand.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'dealsCombatDamageToPlayer',
+            subject: {
+              kind: 'permanent',
+              selector: {
+                kind: 'attachedToSource',
+              },
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'dealDamage',
+              target: 'eventPlayer',
+              amount: {
+                kind: 'cardsInTargetHand',
+                target: 'eventPlayer',
+              },
+            },
+            {
+              op: 'gainLife',
+              amount: {
+                kind: 'countCardsInZone',
+                zone: 'hand',
+                selector: {
+                  kind: 'allOf',
+                  of: [],
+                },
+                owner: 'you',
+              },
+            },
+          ],
+          description:
+            'Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 life for each card in your hand.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-003',
+    patchSha256: '841fc45f7dcdacff45521e1bc82b6849bdf4ffbb57badbf32d819a124a38fa4c',
+    behaviorSha256: 'f1c2c688997be28f2e1d9fc4186854a42ed89302d3afcff82bbdc7c9aca49731',
+    acceptedBy: 'main-thread',
+  },
+  {
     oracleId: '5ab5eefd-47bf-4cdf-bc29-b517e4f6adc0',
     name: 'Sylvan Anthem',
     handledLines: ['Whenever a green creature you control enters, scry 1.'],
@@ -11872,6 +11990,78 @@ const BATCH_CHUNK_003: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
+    oracleId: 'd5770b0f-4493-42e9-a2d7-0e74a28da4ba',
+    name: 'The Earth King',
+    handledLines: [
+      'Whenever one or more creatures you control with power 4 or greater attack, search your library for up to that many basic land cards, put them onto the battlefield tapped, then shuffle.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'attackDeclared',
+            attacker: 'you',
+            minAttackers: 1,
+            attackerFilter: {
+              kind: 'allOf',
+              of: [
+                {
+                  kind: 'type',
+                  value: 'Creature',
+                },
+                {
+                  kind: 'powerAtLeast',
+                  n: 4,
+                },
+              ],
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'searchLibrary',
+              filter: {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'supertype',
+                    value: 'Basic',
+                  },
+                  {
+                    kind: 'type',
+                    value: 'Land',
+                  },
+                ],
+              },
+              destinations: [
+                {
+                  zone: 'battlefield',
+                  tapped: true,
+                },
+              ],
+              count: {
+                kind: 'triggerCount',
+              },
+              allowFailToFind: true,
+            },
+            {
+              op: 'shuffle',
+            },
+          ],
+          description:
+            'Whenever one or more creatures you control with power 4 or greater attack, search your library for up to that many basic land cards, put them onto the battlefield tapped, then shuffle.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-003',
+    patchSha256: '0d486a4ecb98d5ab9b69d19bb44e0a2c4f6319ea97af9d402e07208f9f8507bd',
+    behaviorSha256: '1ed3e411b1eb81e89487d9379c801167e53df67c2ebad2dfe165fd889b82d8e4',
+    acceptedBy: 'main-thread',
+  },
+  {
     oracleId: 'a2ec1dd0-86c7-423d-b562-ed95b79bf8f7',
     name: 'The Queen of Dale',
     handledLines: [
@@ -11927,6 +12117,99 @@ const BATCH_CHUNK_003: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-003',
     patchSha256: '8b05bba3f78380a382a1191f12100dab47c88068aab880f5446b9336a9d98f4a',
     behaviorSha256: '35c4da0d30ab51ced387f347e6aec8d4a46793859d8ab7bb5720a9d3a213f9e8',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '63a37c08-7e38-4fe2-9a71-cc4604c4f831',
+    name: 'Ulvenwald Tracker',
+    handledLines: ['{1}{G}, {T}: Target creature you control fights another target creature.'],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'mana',
+              cost: {
+                generic: 1,
+                colored: {
+                  W: 0,
+                  U: 0,
+                  B: 0,
+                  R: 0,
+                  G: 1,
+                },
+                colorless: 0,
+              },
+            },
+            {
+              kind: 'tap',
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [
+              {
+                kind: 'creature',
+                controller: 'you',
+              },
+              {
+                kind: 'creature',
+                differentFromSlots: [0],
+              },
+            ],
+            effects: [
+              {
+                op: 'fight',
+                first: 0,
+                second: 1,
+              },
+            ],
+            description: '{1}{G}, {T}: Target creature you control fights another target creature.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-003',
+    patchSha256: '72e9492b0a3499e94330efc9a216daeb2e3fe257a1958417b153112884c2f622',
+    behaviorSha256: 'bbb6e91f45a8b3d4c23b852fe22d199149c17012c1f50c54326ebbbb81c339b3',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'bd655e8b-f192-4635-9e23-357b6f89ef8f',
+    name: 'Uncivil Unrest',
+    handledLines: [
+      'If a creature you control with a +1/+1 counter on it would deal damage to a permanent or player, it deals double that damage instead.',
+    ],
+    def: {
+      ruleStatics: [
+        {
+          kind: 'damageDoubled',
+          sourceFilter: {
+            kind: 'allOf',
+            of: [
+              {
+                kind: 'type',
+                value: 'Creature',
+              },
+              {
+                kind: 'controller',
+                who: 'you',
+              },
+              {
+                kind: 'hasCounter',
+                counter: '+1/+1',
+              },
+            ],
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-003',
+    patchSha256: '20b20bb6fb31951916d0fefaaa07bd957c0c0abb46ba86ee4fd1812498daf453',
+    behaviorSha256: '2a7244cdebc593605287c2988c7fc87fb8562efafd6e5e507bcac14e93317fa6',
     acceptedBy: 'main-thread',
   },
   {

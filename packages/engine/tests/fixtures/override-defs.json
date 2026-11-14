@@ -12849,6 +12849,63 @@
     }
   },
   {
+    "oracleId": "63a37c08-7e38-4fe2-9a71-cc4604c4f831",
+    "name": "Ulvenwald Tracker",
+    "handledLines": [
+      "{1}{G}, {T}: Target creature you control fights another target creature."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{1}{G}, {T}: Target creature you control fights another target creature.",
+            "effects": [
+              {
+                "first": 0,
+                "op": "fight",
+                "second": 1
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "kind": "creature"
+              },
+              {
+                "differentFromSlots": [
+                  0
+                ],
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "64c986f0-e786-419c-9b51-8c316c8fae0e",
     "name": "Scriv, the Obligator",
     "handledLines": [
@@ -23691,6 +23748,55 @@
     }
   },
   {
+    "oracleId": "b10ad415-0aae-4d70-82e6-a4055a40cbe4",
+    "name": "Sword of War and Peace",
+    "handledLines": [
+      "Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 life for each card in your hand."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 life for each card in your hand.",
+          "effects": [
+            {
+              "amount": {
+                "kind": "cardsInTargetHand",
+                "target": "eventPlayer"
+              },
+              "op": "dealDamage",
+              "target": "eventPlayer"
+            },
+            {
+              "amount": {
+                "kind": "countCardsInZone",
+                "owner": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": []
+                },
+                "zone": "hand"
+              },
+              "op": "gainLife"
+            }
+          ],
+          "kind": "triggered",
+          "optional": false,
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "attachedToSource"
+              }
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "b14d05c0-fe10-4079-a90e-0aea1a8fd375",
     "name": "Lifeblood Hydra",
     "handledLines": [
@@ -25376,6 +25482,38 @@
     }
   },
   {
+    "oracleId": "bd655e8b-f192-4635-9e23-357b6f89ef8f",
+    "name": "Uncivil Unrest",
+    "handledLines": [
+      "If a creature you control with a +1/+1 counter on it would deal damage to a permanent or player, it deals double that damage instead."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "damageDoubled",
+          "sourceFilter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "counter": "+1/+1",
+                "kind": "hasCounter"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "bd92cacd-c7d8-43a2-a261-ea4754fefdc5",
     "name": "Sage's Reverie",
     "handledLines": [
@@ -25864,6 +26002,70 @@
         }
       ]
     }
+  },
+  {
+    "oracleId": "c01aeaa5-1d3b-4493-9575-30175dcd780d",
+    "name": "Gleaming Splendor",
+    "handledLines": [
+      "{2}{W}: Two target players each draw a card."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{2}{W}: Two target players each draw a card.",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "drawTarget",
+                "target": 0
+              },
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "drawTarget",
+                "target": 1
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              },
+              {
+                "differentFromSlots": [
+                  0
+                ],
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 1
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    },
+    "compose": "append"
   },
   {
     "oracleId": "c02ed1b7-1f8d-4196-a9b6-65e1b5a763d7",
@@ -28453,6 +28655,73 @@
           }
         ]
       }
+    },
+    "compose": "append"
+  },
+  {
+    "oracleId": "d5770b0f-4493-42e9-a2d7-0e74a28da4ba",
+    "name": "The Earth King",
+    "handledLines": [
+      "Whenever one or more creatures you control with power 4 or greater attack, search your library for up to that many basic land cards, put them onto the battlefield tapped, then shuffle."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more creatures you control with power 4 or greater attack, search your library for up to that many basic land cards, put them onto the battlefield tapped, then shuffle.",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "count": {
+                "kind": "triggerCount"
+              },
+              "destinations": [
+                {
+                  "tapped": true,
+                  "zone": "battlefield"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              },
+              "op": "searchLibrary"
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "optional": false,
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "attackerFilter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                }
+              ]
+            },
+            "minAttackers": 1,
+            "when": "attackDeclared"
+          }
+        }
+      ]
     },
     "compose": "append"
   },
@@ -48515,6 +48784,70 @@
     }
   },
   {
+    "oracleId": "oracle-gleaming-splendor",
+    "name": "Gleaming Splendor",
+    "handledLines": [
+      "{2}{W}: Two target players each draw a card."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{2}{W}: Two target players each draw a card.",
+            "effects": [
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "drawTarget",
+                "target": 0
+              },
+              {
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "op": "drawTarget",
+                "target": 1
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "kind": "player"
+              },
+              {
+                "differentFromSlots": [
+                  0
+                ],
+                "kind": "player"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 0,
+                  "R": 0,
+                  "U": 0,
+                  "W": 1
+                },
+                "colorless": 0,
+                "generic": 2
+              },
+              "kind": "mana"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "oracle-glimmer-of-genius",
     "name": "Glimmer of Genius",
     "handledLines": [
@@ -64251,6 +64584,55 @@
     "compose": "append"
   },
   {
+    "oracleId": "oracle-sword-of-war-and-peace",
+    "name": "Sword of War and Peace",
+    "handledLines": [
+      "Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 life for each card in your hand."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 life for each card in your hand.",
+          "effects": [
+            {
+              "amount": {
+                "kind": "cardsInTargetHand",
+                "target": "eventPlayer"
+              },
+              "op": "dealDamage",
+              "target": "eventPlayer"
+            },
+            {
+              "amount": {
+                "kind": "countCardsInZone",
+                "owner": "you",
+                "selector": {
+                  "kind": "allOf",
+                  "of": []
+                },
+                "zone": "hand"
+              },
+              "op": "gainLife"
+            }
+          ],
+          "kind": "triggered",
+          "optional": false,
+          "targets": [],
+          "trigger": {
+            "subject": {
+              "kind": "permanent",
+              "selector": {
+                "kind": "attachedToSource"
+              }
+            },
+            "when": "dealsCombatDamageToPlayer"
+          }
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "oracle-swords-to-plowshares",
     "name": "Swords to Plowshares",
     "handledLines": [
@@ -65524,6 +65906,73 @@
         "kind": "spell",
         "targets": []
       }
+    },
+    "compose": "append"
+  },
+  {
+    "oracleId": "oracle-the-earth-king",
+    "name": "The Earth King",
+    "handledLines": [
+      "Whenever one or more creatures you control with power 4 or greater attack, search your library for up to that many basic land cards, put them onto the battlefield tapped, then shuffle."
+    ],
+    "def": {
+      "triggers": [
+        {
+          "description": "Whenever one or more creatures you control with power 4 or greater attack, search your library for up to that many basic land cards, put them onto the battlefield tapped, then shuffle.",
+          "effects": [
+            {
+              "allowFailToFind": true,
+              "count": {
+                "kind": "triggerCount"
+              },
+              "destinations": [
+                {
+                  "tapped": true,
+                  "zone": "battlefield"
+                }
+              ],
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              },
+              "op": "searchLibrary"
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "kind": "triggered",
+          "optional": false,
+          "targets": [],
+          "trigger": {
+            "attacker": "you",
+            "attackerFilter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                }
+              ]
+            },
+            "minAttackers": 1,
+            "when": "attackDeclared"
+          }
+        }
+      ]
     },
     "compose": "append"
   },
@@ -67845,6 +68294,63 @@
     }
   },
   {
+    "oracleId": "oracle-ulvenwald-tracker",
+    "name": "Ulvenwald Tracker",
+    "handledLines": [
+      "{1}{G}, {T}: Target creature you control fights another target creature."
+    ],
+    "def": {
+      "activatedAbilities": [
+        {
+          "ability": {
+            "description": "{1}{G}, {T}: Target creature you control fights another target creature.",
+            "effects": [
+              {
+                "first": 0,
+                "op": "fight",
+                "second": 1
+              }
+            ],
+            "kind": "activated",
+            "targets": [
+              {
+                "controller": "you",
+                "kind": "creature"
+              },
+              {
+                "differentFromSlots": [
+                  0
+                ],
+                "kind": "creature"
+              }
+            ]
+          },
+          "costs": [
+            {
+              "cost": {
+                "colored": {
+                  "B": 0,
+                  "G": 1,
+                  "R": 0,
+                  "U": 0,
+                  "W": 0
+                },
+                "colorless": 0,
+                "generic": 1
+              },
+              "kind": "mana"
+            },
+            {
+              "kind": "tap"
+            }
+          ],
+          "timing": "any"
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
     "oracleId": "oracle-umbral-collar-zealot",
     "name": "Umbral Collar Zealot",
     "handledLines": [
@@ -67892,6 +68398,38 @@
             }
           ],
           "timing": "any"
+        }
+      ]
+    },
+    "compose": "append"
+  },
+  {
+    "oracleId": "oracle-uncivil-unrest",
+    "name": "Uncivil Unrest",
+    "handledLines": [
+      "If a creature you control with a +1/+1 counter on it would deal damage to a permanent or player, it deals double that damage instead."
+    ],
+    "def": {
+      "ruleStatics": [
+        {
+          "kind": "damageDoubled",
+          "sourceFilter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "counter": "+1/+1",
+                "kind": "hasCounter"
+              }
+            ]
+          }
         }
       ]
     },
