@@ -1,0 +1,73 @@
+{
+  "name": "Nature's Will",
+  "oracleId": "9837287b-d821-4655-8f01-93fc6c7f0ecc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever one or more creatures you control deal combat damage to a player, tap all lands that player controls and untap all lands you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "aggregate": "byEventPlayer"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "tapEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "eventPlayer"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            }
+          },
+          {
+            "op": "untapEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            }
+          }
+        ],
+        "description": "Whenever one or more creatures you control deal combat damage to a player, tap all lands that player controls and untap all lands you control."
+      }
+    ]
+  }
+}

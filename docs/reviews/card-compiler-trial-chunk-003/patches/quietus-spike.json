@@ -1,0 +1,34 @@
+{
+  "name": "Quietus Spike",
+  "oracleId": "0ff0a309-9b4a-4f9e-9ea6-c4d07906ebec",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature deals combat damage to a player, that player loses half their life, rounded up."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "loseHalfLifeTarget",
+            "target": "eventPlayer"
+          }
+        ],
+        "description": "Whenever equipped creature deals combat damage to a player, that player loses half their life, rounded up."
+      }
+    ]
+  }
+}
