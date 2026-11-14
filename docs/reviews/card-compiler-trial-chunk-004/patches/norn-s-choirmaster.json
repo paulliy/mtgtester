@@ -1,0 +1,71 @@
+{
+  "name": "Norn's Choirmaster",
+  "oracleId": "bad6a5a9-7010-418d-b042-182926aa999d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a commander you control enters or attacks, proliferate."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "isCommander"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "proliferate"
+          }
+        ],
+        "description": "Whenever a commander you control enters or attacks, proliferate."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "isCommander"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "proliferate"
+          }
+        ],
+        "description": "Whenever a commander you control enters or attacks, proliferate."
+      }
+    ]
+  }
+}

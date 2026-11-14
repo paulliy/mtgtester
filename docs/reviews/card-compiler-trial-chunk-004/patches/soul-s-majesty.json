@@ -1,0 +1,30 @@
+{
+  "name": "Soul's Majesty",
+  "oracleId": "50fd4cf3-c347-4eb9-ab15-a9b0c5ea8b0f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Draw cards equal to the power of target creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "draw",
+          "count": {
+            "kind": "powerOfTarget",
+            "target": 0
+          }
+        }
+      ],
+      "description": "Draw cards equal to the power of target creature you control."
+    }
+  }
+}

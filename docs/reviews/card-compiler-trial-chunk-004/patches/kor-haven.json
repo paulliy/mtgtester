@@ -1,0 +1,56 @@
+{
+  "name": "Kor Haven",
+  "oracleId": "276cece9-f9f2-46e6-ae76-daddaa2fb9ab",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{W}, {T}: Prevent all combat damage that would be dealt by target attacking creature this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 1,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "filter": {
+                "kind": "combatRole",
+                "role": "attacking"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "createDamageShield",
+              "target": 0,
+              "dealtBy": true,
+              "combatOnly": true
+            }
+          ],
+          "description": "{1}{W}, {T}: Prevent all combat damage that would be dealt by target attacking creature this turn."
+        }
+      }
+    ]
+  }
+}

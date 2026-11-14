@@ -1,0 +1,34 @@
+{
+  "name": "Hour of Revelation",
+  "oracleId": "920c1dd4-c3f6-4020-a6f0-2e8acad2c212",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {3} less to cast if there are ten or more nonland permanents on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 3
+        },
+        "selfOnly": true,
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "not",
+            "of": {
+              "kind": "type",
+              "value": "Land"
+            }
+          },
+          "scope": "all",
+          "cmp": ">=",
+          "n": 10
+        }
+      }
+    ]
+  }
+}
