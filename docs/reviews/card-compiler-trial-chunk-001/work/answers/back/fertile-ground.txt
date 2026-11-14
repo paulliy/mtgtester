@@ -1,0 +1,2 @@
+Enchant land
+Enchanted land has "{T}: Add one mana of any color."
