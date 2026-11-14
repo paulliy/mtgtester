@@ -14,7 +14,7 @@ import type { EngineCardObject, EnginePlayerState, GameContext } from '../src/st
 import { priorityCheckpoint } from '../src/sba/sba';
 import { queueSpellCopy } from '../src/stack/copy';
 import { resolveTopOfStack } from '../src/stack/stack';
-import { copies, conjure, gameConfig, oracle, pump, spawn, swamp } from './fixtures';
+import { copies, conjure, gameConfig, oracle, pump, spawn, swamp, editableDef } from './fixtures';
 
 interface PinnedCard {
   sha256: string;
@@ -256,7 +256,7 @@ describe('Aven Interrupter — pinned plot and cast tax', () => {
   it('exiles an uncounterable spell because this ability exiles instead of countering', () => {
     const game = pod('aven-uncounterable');
     const target = conjure(game, 'P2', simpleSpell('Uncounterable Spell'), 'hand');
-    game.defs.get(target.oracleId)!.spellCantBeCountered = true;
+    editableDef(game, target.oracleId).spellCantBeCountered = true;
     castTargetAndAven(game, target);
     expect(
       game.state.exile.some(
@@ -306,7 +306,7 @@ describe('Aven Interrupter — pinned plot and cast tax', () => {
     const exile = conjure(game, 'P2', card, 'exile');
     exile.playableUntilEotBy = 'P2';
     const grave = conjure(game, 'P2', card, 'graveyard');
-    game.defs.get(grave.oracleId)!.castFromGraveyard = true;
+    editableDef(game, grave.oracleId).castFromGraveyard = true;
     const ownExile = conjure(game, 'P1', card, 'exile');
     ownExile.playableUntilEotBy = 'P1';
     addMana(player(game, 'P2'), [

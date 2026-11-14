@@ -111,7 +111,7 @@ function entrant(
     power: isCreature ? '2' : null,
     toughness: isCreature ? '2' : null,
   });
-  const def = interpretCard(printed);
+  const def = structuredClone(interpretCard(printed));
   def.triggers = triggers.map((trigger): Ability => ({
     kind: 'triggered',
     trigger,
@@ -135,7 +135,7 @@ function observer(
     power: null,
     toughness: null,
   });
-  const def = interpretCard(printed);
+  const def = structuredClone(interpretCard(printed));
   def.triggers = [
     {
       kind: 'triggered',
@@ -278,7 +278,7 @@ describe('white-black-control entry and trigger suppression cards', () => {
       power: null,
       toughness: null,
     });
-    const muteDef = interpretCard(muteCard);
+    const muteDef = structuredClone(interpretCard(muteCard));
     muteDef.staticEffects = [
       { affects: { kind: 'subtype', value: 'Thrull' }, op: { layer: 6, loseAllAbilities: true } },
     ];
@@ -352,7 +352,7 @@ describe('white-black-control entry and trigger suppression cards', () => {
       power: null,
       toughness: null,
     });
-    const muteDef = interpretCard(muteCard);
+    const muteDef = structuredClone(interpretCard(muteCard));
     muteDef.staticEffects = [
       { affects: { kind: 'subtype', value: 'Faerie' }, op: { layer: 6, loseAllAbilities: true } },
     ];
@@ -375,7 +375,7 @@ describe('white-black-control entry and trigger suppression cards', () => {
       toughness: null,
     });
     const invalidIssues = (staticValue: unknown) => {
-      const def = interpretCard(printed);
+      const def = structuredClone(interpretCard(printed));
       def.ruleStatics = [staticValue as never];
       return validateCardDefinition(def);
     };

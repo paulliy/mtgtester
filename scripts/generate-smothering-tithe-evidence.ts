@@ -171,6 +171,7 @@ const SOURCE_FILES = [
   'packages/engine/src/cards/ability.ts',
   'packages/engine/src/cards/condition.ts',
   'packages/engine/src/cards/creature-types.ts',
+  'packages/engine/src/cards/definition-cache.ts',
   'packages/engine/src/cards/definition.ts',
   'packages/engine/src/cards/grammar/amount-forms.ts',
   'packages/engine/src/cards/grammar/amount.ts',
