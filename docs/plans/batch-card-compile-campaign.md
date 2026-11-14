@@ -1,6 +1,6 @@
 # Plan: batch-compiling the remaining EDHREC cards with Haiku workers
 
-Status: in progress (2026-11-14). Baseline: `fae4d11`. Stage 0 steps 1 to 6 are built and
+Status: stopped (2026-11-14), awaiting a decision. Baseline: `fae4d11`. Stage 0 steps 1 to 6 are built and
 measured (see [Stage 0 status](#stage-0-status)). Three chunks are done:
 [001](../reviews/card-compiler-trial-chunk-001/README.md),
 [002](../reviews/card-compiler-trial-chunk-002/README.md) and
@@ -8,8 +8,10 @@ measured (see [Stage 0 status](#stage-0-status)). Three chunks are done:
 retired three and promoted five more, the pool models 3,958 of 8,972. Their audits found 8 wrong patches among the 243 that every automatic check
 passed (about 3%), so the audit stays at every card (decided 2026-11-14): the ADR 0047 rule that
 lets audits drop to a sample is suspended until validator rules close the engine gaps behind those
-escapes. Still to do: chunks 004 onward, Stage 0 step 7 (optional), and the validator rules for the
-engine findings in the chunk READMEs.
+escapes. Chunk 004 stopped at
+the meaning check: two judges in a row called the known-wrong Urza's Power Plant calibration case
+"same" ([chunk 004](../reviews/card-compiler-trial-chunk-004/README.md)), which is the plan's stop
+rule. Nothing from chunk 004 is promoted.
 
 Scope: the 5,254 cards in the pinned EDHREC pool that do not model today. The plan runs them
 through the existing [batch card compiler](../../scripts/card-compiler/README.md) in chunks of 300,
