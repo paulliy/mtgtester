@@ -1,0 +1,2 @@
+Target creature can't block this turn.
+Draw a card.
