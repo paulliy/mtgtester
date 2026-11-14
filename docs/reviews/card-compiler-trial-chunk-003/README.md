@@ -67,6 +67,30 @@ catch different errors.
   (Alseid of Life's Bounty). One "cost became unpayable at application time" (Kaervek the
   Merciless), the same error chunk 001 saw with Mortuary Mire; it is not traced to a cause.
 
+## After the pull request review
+
+A review of PR #72 found three promoted cards wrong and one defect in the smoke harness.
+
+- **Retired:** Artifact Mutation created its Saproling tokens before destroying the artifact, so
+  anything watching tokens enter saw the artifact still there. Planar Engineering (this chunk) and
+  Lotus Field (chunk 001) sacrificed one land and then another, where the card sacrifices both at
+  once (CR 603.10a). All three are unmodeled again, so the engine halts on them.
+- **Judge instruction:** it said to ignore "ordering", which let Artifact Mutation through. It
+  now says the order of steps inside one ability matters, including two sacrifices against one.
+- **Calibration:** the seven wrong patches whose error shows in the data (Urza's Power Plant,
+  Lotus Field, Satyr Wayfinder, Minas Morgul, Voldaren Estate, Artifact Mutation, Planar
+  Engineering) joined the calibration set, which now holds 62 cases, 34 of them known-wrong.
+- **Smoke targets:** the harness picked each target slot on its own, so "fights another target
+  creature" could name one creature twice and throw. Ulvenwald Tracker and Gleaming Splendor
+  (chunk 002) failed that way, not because of their patches. With distinct targets both pass, and
+  both were promoted, with Sword of War and Peace, The Earth King and Uncivil Unrest, which the
+  replay exercised.
+
+Net: 82 + 5 − 3 promoted cards across this branch's changes to this chunk and the earlier ones;
+the pinned pool models 3,958 of 8,972. Full suite after the changes: 781 files and 12,657 tests
+passed. Fuzz on the five new cards: 7 of 10 games passed, the 3 failures being the mana-payment
+planner halts.
+
 ## Engine findings for the backlog
 
 New in this chunk; none is fixed here, because a promotion may not change engine source.

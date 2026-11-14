@@ -4,8 +4,8 @@ Status: in progress (2026-11-14). Baseline: `fae4d11`. Stage 0 steps 1 to 6 are 
 measured (see [Stage 0 status](#stage-0-status)). Three chunks are done:
 [001](../reviews/card-compiler-trial-chunk-001/README.md),
 [002](../reviews/card-compiler-trial-chunk-002/README.md) and
-[003](../reviews/card-compiler-trial-chunk-003/README.md) promoted 78, 78 and 82 cards, so the pool
-models 3,956 of 8,972. Their audits found 8 wrong patches among the 243 that every automatic check
+[003](../reviews/card-compiler-trial-chunk-003/README.md) promoted 78, 78 and 82 cards; after review
+retired three and promoted five more, the pool models 3,958 of 8,972. Their audits found 8 wrong patches among the 243 that every automatic check
 passed (about 3%), so the audit stays at every card (decided 2026-11-14): the ADR 0047 rule that
 lets audits drop to a sample is suspended until validator rules close the engine gaps behind those
 escapes. Still to do: chunks 004 onward, Stage 0 step 7 (optional), and the validator rules for the
