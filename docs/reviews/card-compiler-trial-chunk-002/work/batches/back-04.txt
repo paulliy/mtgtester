@@ -1,7 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/threefold-thunderhulk.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/threefold-thunderhulk.txt
-docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/sire-of-seven-deaths.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/sire-of-seven-deaths.txt
-docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/hellkite-charger.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/hellkite-charger.txt
-docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/feign-death.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/feign-death.txt
-docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/gratuitous-violence.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/gratuitous-violence.txt
-docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/displace.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/displace.txt
-docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/bartolom-del-presidio.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/bartolom-del-presidio.txt

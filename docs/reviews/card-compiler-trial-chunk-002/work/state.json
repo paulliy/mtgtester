@@ -529,7 +529,7 @@
       "When this creature dies, create a number of tapped Treasure tokens equal to its power."
     ],
     "rounds": 2,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [
       [
         "override.def.triggers[0].effects[0].count: event object information requires an owning permanent event scope"
@@ -691,7 +691,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this creature dies, create a number of Treasure tokens equal to this creature's power. They enter tapped. Each of those tokens has \"{T}, Sacrifice this artifact: Add one mana of any color.\""
   },
   {
     "name": "Wave Goodbye",
@@ -831,7 +832,7 @@
       "Until end of turn, target creature gets +2/+0 and gains \"When this creature dies, return it to the battlefield tapped under its owner's control and you create a Treasure token.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -952,7 +953,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target creature gets +2/+0 until end of turn and gains \"When this creature dies, return it to the battlefield tapped. Create a token that is a Treasure artifact with '{T}, Sacrifice this artifact: Add one mana of any color.'\" until end of turn."
   },
   {
     "name": "Baleful Mastery",
@@ -1329,7 +1331,7 @@
       "{2}{W}{W}, {T}: Look at the top five cards of your library. You may reveal a historic card from among them and put it into your hand. Put the rest on the bottom of your library in a random order."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -1496,7 +1498,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{2}{W}{W}, {T}: Look at the top five cards of your library. You may put an artifact, legendary, or Saga card from among them into your hand. If you do, reveal it. Put the rest on the bottom of your library in a random order."
   },
   {
     "name": "Grab the Prize",
@@ -2353,7 +2356,7 @@
       "Destroy all creatures you don't control and all planeswalkers you don't control."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -2460,7 +2463,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Destroy each creature and each planeswalker that opponents control."
   },
   {
     "name": "Sneak Attack",
@@ -3926,7 +3930,7 @@
       "Search your library for a nonlegendary card, put that card into your graveyard, then shuffle."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -4048,7 +4052,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Search your library for a card that is not legendary and put it into your graveyard. Then shuffle."
   },
   {
     "name": "Simulacrum Synthesizer",
@@ -4225,7 +4230,7 @@
       "At the beginning of your upkeep, put a night counter on this artifact. Then if it has eight or more night counters on it, remove all of them and create eight colorless snow artifact tokens named Replicated Ring with \"{T}: Add one mana of any color.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -4372,7 +4377,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "At the beginning of your upkeep, put a night counter on this.\nIf this has eight or more night counters on it, remove all night counters from it and create eight tokens. Each token is a snow artifact named Replicated Ring with \"{T}: Add one mana of any color among white, blue, black, red, and green.\""
   },
   {
     "name": "Sting, the Glinting Dagger",
@@ -4771,7 +4777,7 @@
       "At the beginning of your upkeep, if you have four or more creature cards in your graveyard, you may return target creature card from your graveyard to your hand."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -4914,7 +4920,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "At the beginning of your upkeep, if there are four or more creature cards in your graveyard, you may target a creature card in your graveyard. If you do, return that card to your hand."
   },
   {
     "name": "Woe Strider",
@@ -5358,7 +5365,7 @@
       "{2}{W}: Two target players each draw a card."
     ],
     "rounds": 2,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [
       [
         "override.def.activatedAbilities[0].ability.targets[0].differentPlayerTargetSlots: distinct player targets require every other ordinary player slot in the same domain",
@@ -5501,7 +5508,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{2}{W}: Choose two target players. The second must be a player other than the first. The first target player draws a card. The second target player draws a card."
   },
   {
     "name": "Profane Tutor",
@@ -6358,7 +6366,7 @@
       "~ is the chosen type in addition to its other types."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -6503,7 +6511,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "The creature type chosen for this is added to its other creature types."
   },
   {
     "name": "Satyr Wayfinder",
@@ -6512,7 +6521,7 @@
       "When this creature enters, reveal the top four cards of your library. You may put a land card from among them into your hand. Put the rest into your graveyard."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -6660,7 +6669,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this enters, look at the top four cards of your library. You may reveal a land card from among them and put it into your hand. Put the rest into your graveyard."
   },
   {
     "name": "Vorinclex, Voice of Hunger",
@@ -7485,7 +7495,7 @@
       "{T}, Sacrifice this artifact: Exile target player's graveyard."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -7649,7 +7659,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{T}, Sacrifice this artifact: Exile target player's graveyard."
   },
   {
     "name": "Terrain Generator",
@@ -8818,7 +8829,7 @@
       "Destroy all creatures with power 3 or greater. Then create a Food token for each creature you control."
     ],
     "rounds": 2,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [
       [
         "answer is not valid JSON in the required shape: SyntaxError: JSON Parse error: Expected '}'"
@@ -8947,7 +8958,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Destroy each creature with power 3 or greater.\nCreate a number of Food tokens equal to the number of creatures you control.\nEach Food token is an artifact with \"{2}, {T}, Sacrifice this artifact: You gain 3 life.\""
   },
   {
     "name": "Fists of Flame",
@@ -9145,7 +9157,7 @@
       "At the beginning of each player's draw step, that player draws an additional card."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -9301,7 +9313,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "At the beginning of each player's draw step, that player draws a card."
   },
   {
     "name": "Divine Visitation",
@@ -9505,7 +9518,7 @@
       "Tap three untapped Zombies you control: You draw a card and lose 1 life."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -9669,7 +9682,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Tap three Zombies (this creature can be one of them): You draw a card and you lose 1 life."
   },
   {
     "name": "Mutavault",
@@ -10937,7 +10951,7 @@
       "When ~ dies, it deals damage equal to its power to any target."
     ],
     "rounds": 2,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [
       [
         "override.def.triggers[0].effects[0].source: event object reference has no owning event scope",
@@ -11092,7 +11106,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this creature dies, it deals damage equal to its power to any target."
   },
   {
     "name": "Wound Reflection",
@@ -11322,7 +11337,7 @@
       "You may play historic lands and cast historic spells from the top of your library."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -11465,7 +11480,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "You may cast artifact, legendary, and Saga spells from the top of your library.\nYou may play land cards from the top of your library that are artifact, legendary, or Saga lands."
   },
   {
     "name": "Time Warp",
@@ -11689,7 +11705,7 @@
       "Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand. If that land is a Plains, you may return that nonland permanent card to the battlefield instead."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -11837,7 +11853,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever a land you control enters, you may target a creature, artifact, enchantment, planeswalker, or battle card in your graveyard. If you do, and the land that entered is a Plains, return that card to the battlefield. Otherwise, return that card to your hand."
   },
   {
     "name": "Abstergo Entertainment",
@@ -11894,7 +11911,7 @@
       "When this creature enters, you may search your library for an artifact card with mana value 1 or less, reveal that card, put it into your hand, then shuffle."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -12042,7 +12059,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this enters, you may search your library for an artifact card with mana value 1 or less, reveal it, and put it into your hand. Then shuffle."
   },
   {
     "name": "Elvish Reclaimer",
@@ -12051,7 +12069,7 @@
       "~ gets +2/+2 as long as there are three or more land cards in your graveyard."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -12217,7 +12235,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "This gets +2/+2 as long as there are three or more land cards in your graveyard."
   },
   {
     "name": "Birthing Pod",
@@ -12965,7 +12984,7 @@
       "Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -13089,7 +13108,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target creature you control.\nCreate a token that is a copy of that creature, except it has haste. Sacrifice that token at the beginning of the end step."
   },
   {
     "name": "Reckless Impulse",
@@ -13317,7 +13337,7 @@
       "At the beginning of combat on your turn, put X +1/+1 counters on another target creature you control, where X is ~'s power. That creature gains haste until end of turn."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -13481,7 +13501,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "At the beginning of combat on your turn, put a number of +1/+1 counters equal to this creature's power on another target creature you control. That creature gains haste until end of turn."
   },
   {
     "name": "Cold-Eyed Selkie",
@@ -13724,7 +13745,7 @@
       "At the beginning of each player's draw step, that player draws two additional cards."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -13880,7 +13901,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "At the beginning of each player's draw step, that player draws two cards."
   },
   {
     "name": "Tome of Legends",
@@ -14712,7 +14734,7 @@
       "You gain 1 life for each creature your opponents control. Prevent all damage that would be dealt to you this turn."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -14827,7 +14849,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "You gain life equal to the number of creatures your opponents control.\nCreate a damage shield for you."
   },
   {
     "name": "Jaya's Immolating Inferno",
@@ -14970,7 +14993,7 @@
       "Create two 1/1 green Squirrel creature tokens. Then each creature that isn't an Insect, Rat, Spider, or Squirrel gets -1/-1 until end of turn for each creature you control that's an Insect, Rat, Spider, or Squirrel."
     ],
     "rounds": 2,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [
       [
         "answer is not valid JSON in the required shape: SyntaxError: JSON Parse error: Expected ']'"
@@ -15088,7 +15111,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Create two 1/1 green Squirrel creature tokens.\nUntil end of turn, each creature that isn't an Insect, Rat, Spider, or Squirrel gets -X/-X, where X is the number of creatures you control that are Insects, Rats, Spiders, or Squirrels."
   },
   {
     "name": "Treasonous Ogre",
@@ -16100,7 +16124,7 @@
       "Target permanent gains hexproof and indestructible until end of turn. If it's an artifact creature, it gets +2/+2 until end of turn."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -16216,7 +16240,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target permanent gains hexproof and indestructible until end of turn.\nIf that permanent is an artifact creature, it gets +2/+2 until end of turn."
   },
   {
     "name": "Thrumming Stone",
@@ -16236,7 +16261,7 @@
       "~ deals 1 damage to each opponent and each creature and planeswalker they control."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -16352,7 +16377,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Each opponent takes 1 damage.\nDeal 1 damage to each creature and each planeswalker that opponents control."
   },
   {
     "name": "Qarsi Revenant",
@@ -16383,7 +16409,7 @@
       "Enchanted creature gets +2/+2 for each other enchantment on the battlefield."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -16531,7 +16557,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Enchanted creature gets +X/+X, where X is twice the number of other enchantments on the battlefield."
   },
   {
     "name": "Grafted Exoskeleton",
@@ -17130,7 +17157,7 @@
       "Commander creatures you own have \"Whenever an artifact or creature you control is put into a graveyard from the battlefield, each opponent loses 1 life.\""
     ],
     "rounds": 2,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [
       [
         "answer is not valid JSON in the required shape: SyntaxError: JSON Parse error: Expected ']'"
@@ -17277,7 +17304,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Commander creatures you own have \"Whenever an artifact or creature you control is put into a graveyard from the battlefield, each opponent loses 1 life.\""
   },
   {
     "name": "Slaughter the Strong",
@@ -17881,12 +17909,13 @@
       "Create a 4/4 white Angel creature token with flying if there are four or more card types among cards in your graveyard."
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "descend-upon-the-sinful",
       "expected": "same"
-    }
+    },
+    "backTranslation": "Exile each creature.\nIf there are four or more card types among cards in your graveyard, create a 4/4 white Angel creature token with flying."
   },
   {
     "name": "Dualcaster Mage",
@@ -17895,12 +17924,13 @@
       "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy."
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "dualcaster-mage",
       "expected": "same"
-    }
+    },
+    "backTranslation": "When this enters, copy target instant or sorcery spell. Choose new targets for the copy."
   },
   {
     "name": "Goblin Chainwhirler",
@@ -17939,12 +17969,13 @@
       "Whenever a creature you control deals combat damage to a player, if that creature entered this turn, draw a card."
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "samut-vizier-of-naktamun~widen-trigger-subject-drop-condition-n-",
       "expected": "different"
-    }
+    },
+    "backTranslation": "Whenever a creature that entered this turn deals combat damage to a player, draw a card."
   },
   {
     "name": "The Fifth Doctor",
