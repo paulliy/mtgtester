@@ -5,8 +5,9 @@ measured (see [Stage 0 status](#stage-0-status)). Both pilot chunks are done:
 [chunk 001](../reviews/card-compiler-trial-chunk-001/README.md) and
 [chunk 002](../reviews/card-compiler-trial-chunk-002/README.md) promoted 78 cards each, so the pool
 models 3,874 of 8,972. Their full audits found 5 wrong patches among the 150 that every automatic
-check passed (about 3%), so the ADR 0047 rule that lets audits drop to a sample from chunk 003 needs
-a decision first; chunk 001's README states it. Still to do: that decision, Stage 0 step 7
+check passed (about 3%), so the audit stays at every card (decided 2026-11-14): the ADR 0047 rule that
+lets audits drop to a sample is suspended until validator rules close the engine gaps behind
+those escapes. Still to do: Stage 0 step 7
 (optional), and the validator rules for the engine findings in both chunk READMEs.
 
 Scope: the 5,254 cards in the pinned EDHREC pool that do not model today. The plan runs them
