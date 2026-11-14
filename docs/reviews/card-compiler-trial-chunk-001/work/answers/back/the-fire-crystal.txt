@@ -1,0 +1,1 @@
+{4}{R}{R}, {T}: Create a token that is a copy of target creature you control. Sacrifice that token at the end step.
