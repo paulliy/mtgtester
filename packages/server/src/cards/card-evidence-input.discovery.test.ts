@@ -235,10 +235,7 @@ const pinned = require('./pinned.json');
     'binds independently discovered runtime and pinned inputs in %s output list',
     (card) => {
       const discovered = independentRuntimeBinding(card);
-      const source = readFileSync(
-        resolve(repoRoot, `scripts/generate-${card}-evidence.ts`),
-        'utf8',
-      );
+      const source = readFileSync(resolve(repoRoot, 'scripts/card-evidence-sources.ts'), 'utf8');
       const list = source.match(/const SOURCE_FILES = \[([\s\S]*?)\] as const;/)![1]!;
       const files = [...list.matchAll(/'([^']+)'/g)].map((m) => m[1]!);
       expect(new Set(files).size).toBe(files.length);
@@ -247,18 +244,12 @@ const pinned = require('./pinned.json');
     },
   );
 
-  it('source lists include helper, lab, runner, session and player once, with existing unique paths', () => {
+  it('the shared source list includes helper, lab, runner, session, player and every generator once, with existing unique paths', () => {
     const union = new Set<string>();
-    for (const card of [
-      'arcane-denial',
-      'fabled-passage',
-      'myriad-landscape',
-      'smothering-tithe',
-      'war-room',
-    ]) {
+    {
       const source = ts.createSourceFile(
-        card,
-        readFileSync(resolve(repoRoot, `scripts/generate-${card}-evidence.ts`), 'utf8'),
+        'card-evidence-sources.ts',
+        readFileSync(resolve(repoRoot, 'scripts/card-evidence-sources.ts'), 'utf8'),
         ts.ScriptTarget.Latest,
         true,
       );
@@ -284,7 +275,14 @@ const pinned = require('./pinned.json');
         'packages/server/src/match/runner.ts',
         'packages/server/src/match/session.ts',
         'apps/web/src/views/PlayerGameView.vue',
-        `scripts/generate-${card}-evidence.ts`,
+        'scripts/card-evidence-sources.ts',
+        ...[
+          'arcane-denial',
+          'fabled-passage',
+          'myriad-landscape',
+          'smothering-tithe',
+          'war-room',
+        ].map((card) => `scripts/generate-${card}-evidence.ts`),
       ])
         expect(paths.filter((path) => path === required)).toHaveLength(1);
       for (const path of paths) {
