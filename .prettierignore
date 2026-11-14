@@ -38,3 +38,5 @@ packages/server/fixtures/edhrec-pinned-oracle.json
 
 # Card compiler trial working files: raw model answers kept exactly as returned
 docs/reviews/card-compiler-trial-*/work
+# Patches are hashed byte for byte by the review queue and the promoted module
+docs/reviews/card-compiler-trial-chunk-*/patches

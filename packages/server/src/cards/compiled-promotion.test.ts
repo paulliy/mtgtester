@@ -317,3 +317,27 @@ describe('a promotion may only add cards', () => {
     ).toEqual(['the modeled ratchet has no definition fingerprints to compare']);
   });
 });
+
+describe('tokens in a compiled card', () => {
+  it('accepts the catalog token and refuses one of the same name that differs', async () => {
+    const { tokenDrift } = await import('../../../../scripts/card-compiler/promote');
+    const { TREASURE } = await import('../../../engine/src/cards/tokens');
+    const effect = (spec: unknown): unknown => ({
+      triggers: [{ effects: [{ op: 'createToken', spec }] }],
+    });
+    expect(tokenDrift(effect(TREASURE))).toEqual([]);
+    // The drift the catalog exists to stop: a Treasure that is not sacrificed for its mana.
+    const free = { ...TREASURE, manaAbilities: [{ units: [['W', 'U', 'B', 'R', 'G']] }] };
+    expect(tokenDrift(effect(free))).toEqual(['Treasure']);
+    // A token the catalog does not name is not checked here.
+    expect(tokenDrift(effect({ ...TREASURE, name: 'Gold' }))).toEqual([]);
+  });
+
+  it('holds for every promoted card', async () => {
+    const { tokenDrift } = await import('../../../../scripts/card-compiler/promote');
+    const { COMPILED_BATCHES } = await import('../../../engine/src/cards/overrides/compiled/index');
+    for (const batch of COMPILED_BATCHES)
+      for (const card of batch.cards)
+        expect([card.name, tokenDrift(card.def)]).toEqual([card.name, []]);
+  });
+});

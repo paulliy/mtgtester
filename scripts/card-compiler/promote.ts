@@ -36,6 +36,7 @@ import {
   unregisterOverride,
 } from '../../packages/engine/src/cards/overrides/index';
 import { COMPILED_BATCHES } from '../../packages/engine/src/cards/overrides/compiled/index';
+import * as TOKEN_CATALOG from '../../packages/engine/src/cards/tokens';
 import type {
   CompiledBatch,
   CompiledCard,
@@ -125,6 +126,49 @@ export interface Refusal {
   reason: string;
 }
 
+const sortedJson = (value: unknown): string =>
+  JSON.stringify(value, (_key, entry: unknown) =>
+    entry !== null && typeof entry === 'object' && !Array.isArray(entry)
+      ? Object.fromEntries(
+          Object.entries(entry as Record<string, unknown>).sort(([x], [y]) => x.localeCompare(y)),
+        )
+      : entry,
+  );
+
+/** The catalog's token of each name (`cards/tokens.ts`), as key-sorted JSON. */
+const CATALOG_TOKENS = new Map<string, string>(
+  Object.values(TOKEN_CATALOG)
+    .filter(
+      (entry): entry is { name: string } =>
+        entry !== null &&
+        typeof entry === 'object' &&
+        typeof (entry as { name?: unknown }).name === 'string' &&
+        Array.isArray((entry as { types?: unknown }).types),
+    )
+    .map((entry) => [entry.name, sortedJson(entry)]),
+);
+
+/**
+ * Names of the tokens in a patch that share a name with a catalog token and differ from it. The
+ * generated module is exempt from the lint rule that sends authored cards to the catalog, so this
+ * is what stops a compiled card from making a Treasure without its sacrifice cost.
+ */
+export function tokenDrift(def: unknown): string[] {
+  const drifted = new Set<string>();
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) return value.forEach(walk);
+    if (value === null || typeof value !== 'object') return;
+    const record = value as Record<string, unknown>;
+    if (typeof record['name'] === 'string' && Array.isArray(record['types'])) {
+      const catalog = CATALOG_TOKENS.get(record['name']);
+      if (catalog !== undefined && catalog !== sortedJson(record)) drifted.add(record['name']);
+    }
+    Object.values(record).forEach(walk);
+  };
+  walk(def);
+  return [...drifted].sort();
+}
+
 /**
  * Split the accepted queue entries into cards to promote and cards refused, with the reason.
  * Entries that were never accepted are not mentioned: they are simply still waiting.
@@ -195,6 +239,11 @@ export function selectForPromotion(
       JSON.stringify(patch.handledLines) !== JSON.stringify(target.lines)
     ) {
       refuse('the lines the patch was written for are no longer the unparsed lines of the card');
+      continue;
+    }
+    const drift = tokenDrift(patch.def);
+    if (drift.length > 0) {
+      refuse(`its ${drift.join(', ')} token differs from the token catalog`);
       continue;
     }
     const applied = applyPatch(target, patch.def);
