@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The patch itself is expressible, but once any non-empty patch is registered the interpreter stops stripping the generic label from the sibling line \"Summary Execution — {2}, Sacrifice another creature: ...\", so that already-modeled line is reported as unrecognized and no patch field can claim it."}
