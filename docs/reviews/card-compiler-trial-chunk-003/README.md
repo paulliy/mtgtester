@@ -1,0 +1,82 @@
+# Campaign chunk 003 (2026-11-14)
+
+The third chunk of the [batch card compile campaign](../../plans/batch-card-compile-campaign.md), and
+the first after the two pilot chunks: the next 300 pinned EDHREC cards by rank that no trial had
+seen (ranks 2,326 to 3,123). The audit stayed at every card (decided 2026-11-14, after the pilots
+found about 3% of fully checked patches wrong). Haiku workers answered every compile,
+back-translation and judge prompt; a Sonnet worker did the retry round and reviewed the flagged
+patches; the main thread audited every valid patch against Oracle text and the engine.
+
+**82 cards were promoted.** The pinned pool now models 3,956 of 8,972 cards (3,718 before the
+campaign). They are `implemented-unreviewed`
+([ADR 0047](../../decisions/0047-compiled-cards-as-unreviewed-overrides.md)).
+
+## Result
+
+| Stage                                   | Cards |
+| --------------------------------------- | ----: |
+| Selected                                |   300 |
+| Compiler declined (`inexpressible`)     |   180 |
+| Valid patch (validator and smoke games) |   120 |
+| Meaning check passed                    |    93 |
+| Meaning check flagged                   |    26 |
+| Smoke game failed                       |     1 |
+| Audit accepted                          |   110 |
+| Audit rejected                          |    10 |
+| Held back: no smoke game exercised it   |    28 |
+| **Promoted**                            |    82 |
+
+The compile rate was 40% (120 of 300), up from 34% in both pilot chunks. The meaning check passed
+calibration on its first run with no false alarm.
+
+More patches than before were held back because no smoke game exercised them (28, against 17 and
+16). Most are statics and triggers the generated boards rarely meet: "activated abilities can't be
+activated", spells that cost less, cards that need your commander or a Food on the battlefield.
+
+## What the audit found
+
+| Card                     | What was wrong                                                                 | Checks        |
+| ------------------------ | ------------------------------------------------------------------------------ | ------------- |
+| Angrath's Marauders      | Damage doubling only matches permanent sources, so your spells are not doubled | all passed    |
+| Dictate of the Twin Gods | The same: burn spells are not doubled                                          | all passed    |
+| Voldaren Estate          | Its Blood token has no ability                                                 | all passed    |
+| Planar Nexus             | Adds only the reminder text's land types, not every nonbasic land type         | not exercised |
+| Diamond City             | Counts creatures still on the battlefield, not every creature that entered     | flagged       |
+| Kona, Rescue Beastie     | "Permanent card" leaves out battles                                            | flagged       |
+| Malevolent Rumble        | Reveals only the chosen card; the card reveals all four                        | flagged       |
+| Lignify                  | Replaces noncreature subtypes too; "is a Treefolk" keeps them (CR 205.1b)      | flagged       |
+| Marauding Raptor         | The pump checks only that the creature is a Dinosaur, not that it was damaged  | flagged       |
+| Ulvenwald Tracker        | A smoke game threw on the second target                                        | smoke failed  |
+
+**Three wrong patches passed every automatic check** (3 of 93). Across the campaign that is 8 of 243,
+about 3%, steady across the three chunks.
+
+**The reviewer caught two the main thread had passed.** Lignify and Marauding Raptor were accepted
+in the main-thread audit; the meaning check flagged both, and the Sonnet reviewer showed each was a
+real defect with the engine line that decides it. As in chunk 002, the audit and the meaning check
+catch different errors.
+
+## Checks on the promoted tree
+
+- `run.ts verify`: additive. 82 cards promoted and nothing else changed.
+- `bun run test`, clean tree: 781 files and 12,655 tests passed.
+- `typecheck`, `typecheck:tests`, `lint`, `format:check`, `snapshots:check`, `check:ratchets` and
+  `audit:card-ir` pass.
+- Fuzz, two pods for each promoted card: 154 of 164 games passed. Eight failures are the
+  mana-payment planner halts that games without a promoted card also hit (chunk 001). One timeout
+  (Alseid of Life's Bounty). One "cost became unpayable at application time" (Kaervek the
+  Merciless), the same error chunk 001 saw with Mortuary Mire; it is not traced to a cause.
+
+## Engine findings for the backlog
+
+New in this chunk; none is fixed here, because a promotion may not change engine source.
+
+1. `damageDoubled` skips any source that is not a permanent (`effects/damage-modifiers.ts`), so
+   "a source you control" cannot include spells. The validator does not say so.
+2. Layer 4 `setSubtypes` replaces every subtype, so "is a [creature type]" removes land and
+   artifact subtypes.
+3. There is no condition for "if it was dealt damage this way".
+4. Blood is not in the token catalog, so the predefined-token check cannot catch a Blood token
+   without its ability.
+5. `differentFromSlots` on a second target throws in play (Ulvenwald Tracker; also Gleaming
+   Splendor in chunk 002).
