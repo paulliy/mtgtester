@@ -246,49 +246,47 @@ const pinned = require('./pinned.json');
 
   it('the shared source list includes helper, lab, runner, session, player and every generator once, with existing unique paths', () => {
     const union = new Set<string>();
-    {
-      const source = ts.createSourceFile(
-        'card-evidence-sources.ts',
-        readFileSync(resolve(repoRoot, 'scripts/card-evidence-sources.ts'), 'utf8'),
-        ts.ScriptTarget.Latest,
-        true,
-      );
-      let paths: string[] = [];
-      function visit(node: ts.Node) {
-        if (ts.isVariableDeclaration(node) && node.name.getText(source) === 'SOURCE_FILES') {
-          const init = node.initializer;
-          if (!init || !ts.isAsExpression(init) || !ts.isArrayLiteralExpression(init.expression))
-            throw new Error('source list is not literal');
-          paths = init.expression.elements.map((element) => {
-            if (!ts.isStringLiteral(element)) throw new Error('nonliteral source');
-            return element.text;
-          });
-        }
-        ts.forEachChild(node, visit);
+    const source = ts.createSourceFile(
+      'card-evidence-sources.ts',
+      readFileSync(resolve(repoRoot, 'scripts/card-evidence-sources.ts'), 'utf8'),
+      ts.ScriptTarget.Latest,
+      true,
+    );
+    let paths: string[] = [];
+    function visit(node: ts.Node) {
+      if (ts.isVariableDeclaration(node) && node.name.getText(source) === 'SOURCE_FILES') {
+        const init = node.initializer;
+        if (!init || !ts.isAsExpression(init) || !ts.isArrayLiteralExpression(init.expression))
+          throw new Error('source list is not literal');
+        paths = init.expression.elements.map((element) => {
+          if (!ts.isStringLiteral(element)) throw new Error('nonliteral source');
+          return element.text;
+        });
       }
-      visit(source);
-      expect(paths.length).toBeGreaterThan(0);
-      expect(new Set(paths).size).toBe(paths.length);
-      for (const required of [
-        'scripts/card-evidence-input.ts',
-        'apps/web/src/views/CardTestLabView.vue',
-        'packages/server/src/match/runner.ts',
-        'packages/server/src/match/session.ts',
-        'apps/web/src/views/PlayerGameView.vue',
-        'scripts/card-evidence-sources.ts',
-        ...[
-          'arcane-denial',
-          'fabled-passage',
-          'myriad-landscape',
-          'smothering-tithe',
-          'war-room',
-        ].map((card) => `scripts/generate-${card}-evidence.ts`),
-      ])
-        expect(paths.filter((path) => path === required)).toHaveLength(1);
-      for (const path of paths) {
-        expect(fs.statSync(resolve(repoRoot, path)).isFile()).toBe(true);
-        union.add(path);
-      }
+      ts.forEachChild(node, visit);
+    }
+    visit(source);
+    expect(paths.length).toBeGreaterThan(0);
+    expect(new Set(paths).size).toBe(paths.length);
+    for (const required of [
+      'scripts/card-evidence-input.ts',
+      'apps/web/src/views/CardTestLabView.vue',
+      'packages/server/src/match/runner.ts',
+      'packages/server/src/match/session.ts',
+      'apps/web/src/views/PlayerGameView.vue',
+      'scripts/card-evidence-sources.ts',
+      ...[
+        'arcane-denial',
+        'fabled-passage',
+        'myriad-landscape',
+        'smothering-tithe',
+        'war-room',
+      ].map((card) => `scripts/generate-${card}-evidence.ts`),
+    ])
+      expect(paths.filter((path) => path === required)).toHaveLength(1);
+    for (const path of paths) {
+      expect(fs.statSync(resolve(repoRoot, path)).isFile()).toBe(true);
+      union.add(path);
     }
     // Flat filesystem inventory is independent of generator imports and the loader's recursive
     // routing walk. Vue and separately launched server inputs must also be in the exact union.
