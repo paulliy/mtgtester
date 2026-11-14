@@ -129,3 +129,18 @@ describe('what the back-translator is shown', () => {
     expect(stripDescriptions({ cmp: '>= or so' })).toEqual({ cmp: '<text>' });
   });
 });
+
+describe('smoke target choice', () => {
+  it('never announces the same object for two target slots', () => {
+    // "Target creature you control fights another target creature": both slots offer your
+    // creatures, and a game that picked one twice threw "illegal target" (chunk 003).
+    const patch = JSON.parse(
+      readFileSync(
+        resolve(root, 'docs/reviews/card-compiler-trial-chunk-003/patches/ulvenwald-tracker.json'),
+        'utf8',
+      ),
+    ) as { def: Parameters<typeof smokeTest>[1] };
+    const runs = smokeTest(targetOf('Ulvenwald Tracker'), patch.def);
+    expect(runs.filter((result) => !result.ok).map((result) => result.detail)).toEqual([]);
+  }, 60_000);
+});

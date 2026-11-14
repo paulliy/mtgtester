@@ -139,7 +139,11 @@ lines of the same card (a spell's data covers the whole spell); that is fine whe
 whole card. An ability of the whole card that B does not mention is not a difference when it is
 outside the lines under test, and a remark in B that something is absent counts only when the
 lines under test include that thing. The one exception: when B gives the effect of an instant or
-sorcery, it must give every effect the whole card's spell has. Ignore wording, ordering, "this" versus a card name, and reminder text. Look for any difference
+sorcery, it must give every effect the whole card's spell has. Ignore wording, the order of
+separate abilities, "this" versus a card name, and reminder text. The order of the steps inside
+one ability or spell does matter: "destroy it, then create tokens" and "create tokens, then destroy
+it" differ, and so do "sacrifice two lands" and "sacrifice a land, then sacrifice a land". Look for
+any difference
 that would change what happens in a game: targets, who chooses, optional versus mandatory, amounts,
 durations, conditions, timing, zones, and anything present in one but missing from the other.
 

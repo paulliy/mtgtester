@@ -723,11 +723,23 @@ function finish(
   return result;
 }
 
+/**
+ * A random legal target for each slot, never the same object in two slots: "fights another target
+ * creature" offers the same creatures to both slots, and picking one twice is an illegal
+ * announcement, not a defect of the card. Slots with fewer options choose first.
+ */
 function firstTargets(action: DecisionRequest['legalActions'][number], rng: Prng): TargetChoice[] {
-  return (action.targets ?? []).map((slot) => ({
-    slot: slot.slot,
-    choice: slot.options[rng.nextInt(slot.options.length)] as string,
-  }));
+  const slots = action.targets ?? [];
+  const taken = new Set<string>();
+  const chosen = new Map<number, string>();
+  for (const slot of [...slots].sort((a, b) => a.options.length - b.options.length)) {
+    const fresh = slot.options.filter((option) => !taken.has(option));
+    const pool = fresh.length > 0 ? fresh : slot.options;
+    const choice = pool[rng.nextInt(pool.length)] as string;
+    taken.add(choice);
+    chosen.set(slot.slot, choice);
+  }
+  return slots.map((slot) => ({ slot: slot.slot, choice: chosen.get(slot.slot) as string }));
 }
 
 function chooseSmokeAction(
