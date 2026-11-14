@@ -1,0 +1,1 @@
+Spells of category any can't be cast more than one per turn (limit 1).
