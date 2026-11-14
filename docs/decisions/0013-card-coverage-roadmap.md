@@ -1,8 +1,11 @@
-# Roadmap to 100% Card Coverage Across Supported Commander Decks
+# 0013 — Roadmap to 100% Card Coverage Across Supported Commander Decks
+
+Status: Completed (2026-11-14)
+Status note: the goal is met. On 2026-11-14 `bun run coverage` reported every coverage deck at 100%, including all seven decks below (855 of 855 unique cards across the 13 decks now in `packages/server/fixtures/coverage-decks/`). The numbers below are the July baseline. The per-card backlog that followed this roadmap is [0049](0049-missing-primitives.md), and the plan that replaced its estimates is [0020](0020-remaining-primitives-plan.md).
 
 > **Executive Context**: The MTG Commander AI Simulator is at **Phase 4** (Spectator UI complete). Card coverage is the primary live constraint on end-to-end deck simulation. Because deck playability is **all-or-nothing** (an unmodeled card in hand or command zone triggers `UnmodeledCardError` and halts the engine per brief §6.3), 99% coverage of a deck produces 0 runnable games for that deck list.
 >
-> As established in [ADR 0009](0009-supported-pool-decks.md), the strategic goal is to move real deck lists from 0 playable decks to **100% card coverage across all 7 target decks** (538 unique cards) through a combination of high-yield core parser extensions and authored overrides ([ADR 0004](0004-ability-effect-model.md) / [ADR 0010](0010-layer-system-and-statics.md)).
+> As established in [ADR 0009](0009-supported-pool-decks.md), the strategic goal is to move real deck lists from 0 playable decks to **100% card coverage across all 7 target decks** (538 unique cards) through a combination of high-yield core parser extensions and authored overrides ([ADR 0004](0004-card-dsl.md) / [ADR 0005](0005-continuous-effects-layers.md)).
 
 ---
 

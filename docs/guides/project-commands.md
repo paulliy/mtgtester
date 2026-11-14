@@ -8,6 +8,7 @@ bun run typecheck                       # production TypeScript + Vue templates
 bun run typecheck:tests                 # engine/server test type projects
 bun run lint
 bun run format:check
+bun run adr:index [--check]             # regenerate (or check) the ADR index table in docs/decisions/README.md
 bun run --cwd apps/web build            # web build
 bun run test                            # full Vitest suite
 bun run test <path-or-filter>           # one test file or pattern
