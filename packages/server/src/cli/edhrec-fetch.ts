@@ -53,13 +53,24 @@ interface EdhrecPage {
   container?: { json_dict?: { cardlists?: { cardviews: EdhrecCardView[]; more?: string }[] } };
 }
 
+class NotFound extends Error {}
+
+/** One page, retried with backoff on network errors and server errors; a 404 fails at once. */
 async function getPage<Page = EdhrecPage>(path: string): Promise<Page> {
   for (let attempt = 1; ; attempt++) {
-    const response = await fetch(BASE + path, {
-      headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
-    });
-    if (response.ok) return (await response.json()) as Page;
-    if (attempt === 4) throw new Error(`EDHREC ${path}: HTTP ${response.status}`);
+    let failure: string;
+    try {
+      const response = await fetch(BASE + path, {
+        headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
+      });
+      if (response.ok) return (await response.json()) as Page;
+      if (response.status === 404) throw new NotFound(`EDHREC ${path}: HTTP 404`);
+      failure = `HTTP ${response.status}`;
+    } catch (err) {
+      if (err instanceof NotFound) throw err;
+      failure = (err as Error).message;
+    }
+    if (attempt === 4) throw new Error(`EDHREC ${path}: ${failure}`);
     await Bun.sleep(2000 * 2 ** attempt);
   }
 }
@@ -140,6 +151,9 @@ async function fetchAverageDecks(top: number): Promise<void> {
     }
     if ((position + 1) % 25 === 0) console.error(`  ${position + 1}/${commanders.length} …`);
   }
+  // Never overwrite a good snapshot with an empty one (a changed page shape fails every deck).
+  if (decks.length === 0)
+    throw new Error('no average deck could be read; the fixture is unchanged');
   writeFileSync(
     resolve(AVERAGE_DECKS_PATH),
     renderAverageDecks({

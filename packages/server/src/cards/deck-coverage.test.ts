@@ -94,6 +94,7 @@ describe('measureDeckCoverage', () => {
       playableExactly: 1,
       playableWithProvisional: 2,
       atMostUnmodeled: { '1': 3, '2': 4, '5': 5 },
+      atMostBlocking: { '1': 4, '2': 5, '5': 5 },
     });
   });
 
@@ -105,8 +106,8 @@ describe('measureDeckCoverage', () => {
   it('ranks cards by decks they alone would unblock, then by decks shared with one other', () => {
     const { unblock } = measureDeckCoverage(decks, isProvisional);
     expect(unblock).toEqual([
-      { name: 'Glitch', onlyBlocker: 1, oneOfTwo: 1, decks: 3, provisional: false },
       { name: 'Quirk', onlyBlocker: 1, oneOfTwo: 1, decks: 3, provisional: true },
+      { name: 'Glitch', onlyBlocker: 1, oneOfTwo: 1, decks: 3, provisional: false },
       { name: 'Oddity', onlyBlocker: 0, oneOfTwo: 0, decks: 1, provisional: false },
     ]);
   });
@@ -130,7 +131,7 @@ describe('measureDeckCoverage', () => {
     const text = renderDeckCoverageJson([population]);
     expect(JSON.parse(text)).toEqual({ populations: [population] });
     expect(committedHeadlines(text)).toEqual([
-      'Deck coverage (test): 1/5 playable exactly, 2/5 with provisional cards, 4/5 within 2 cards.',
+      'Deck coverage (test): 1/5 playable exactly, 2/5 with provisional cards, 4/5 within 2 unmodeled cards.',
     ]);
     expect(renderDeckCoverageMarkdown([population])).toContain('| Quirk *(p)* | 1 | 1 | 3 |');
   });
@@ -152,6 +153,14 @@ describe('provisionalFromQueue', () => {
     expect(provisionalFromQueue([entry({})], hash)(glitch)).toBe(false);
   });
 
+  it('leaves out a patch demoted by fuzz, but not another patch for the same card', () => {
+    const demoted = new Set([`${quirk.oracleId}|abc`]);
+    expect(provisionalFromQueue([entry({})], hash, demoted)(quirk)).toBe(false);
+    const other = entry({ patch: 'q.json', patchSha256: 'def' });
+    const hashBoth = (path: string) => ({ 'p.json': 'abc', 'q.json': 'def' })[path] ?? null;
+    expect(provisionalFromQueue([entry({}), other], hashBoth, demoted)(quirk)).toBe(true);
+  });
+
   it('rejects other statuses, rejected reviews, changed and missing patches', () => {
     for (const overrides of [
       { status: 'meaning-differs' },
@@ -159,6 +168,7 @@ describe('provisionalFromQueue', () => {
       { patchSha256: 'changed' },
       { patch: 'missing.json' },
       { patch: null },
+      { crossCheck: { verdict: 'differs' } },
     ])
       expect(provisionalFromQueue([entry(overrides)], hash)(quirk)).toBe(false);
   });

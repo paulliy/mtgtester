@@ -27,6 +27,7 @@ import type { OracleCard } from '@mtg/shared';
 import {
   DECK_COVERAGE_PATH,
   measureDeckCoverage,
+  NO_PROVISIONAL,
   provisionalFromQueue,
   renderDeckCoverageJson,
   renderDeckCoverageMarkdown,
@@ -64,6 +65,8 @@ const DECK_DIRS = ['packages/server/fixtures/coverage-decks'];
 /** Same exclusion as `bun run coverage` and the known-decks list. */
 const EXCLUDED_DECKS = new Set(['counter-intelligence.txt']);
 const QUEUE_PATH = 'docs/reviews/compiled-card-queue.json';
+/** Patches pulled out of the provisional tier after a fuzz failure (written by that tier's work). */
+const DEMOTED_PATH = 'docs/reviews/provisional-demoted.json';
 const DEFAULT_BANK = 'data/scryfall-oracle-cards.json';
 
 function option(name: string): string | undefined {
@@ -79,15 +82,26 @@ function option(name: string): string | undefined {
  * review queue read directly; switching to that tier's loader means changing only this function.
  */
 function provisionalLookup(): ProvisionalLookup {
+  if (!existsSync(resolve(QUEUE_PATH))) return NO_PROVISIONAL;
   const queue = JSON.parse(readFileSync(resolve(QUEUE_PATH), 'utf8')) as {
     cards: QueueEntryView[];
   };
-  return provisionalFromQueue(queue.cards, (path) =>
-    existsSync(resolve(path))
-      ? createHash('sha256')
-          .update(readFileSync(resolve(path)))
-          .digest('hex')
-      : null,
+  const demoted = existsSync(resolve(DEMOTED_PATH))
+    ? (
+        JSON.parse(readFileSync(resolve(DEMOTED_PATH), 'utf8')) as {
+          cards: { oracleId: string; patchSha256: string }[];
+        }
+      ).cards.map((card) => `${card.oracleId}|${card.patchSha256}`)
+    : [];
+  return provisionalFromQueue(
+    queue.cards,
+    (path) =>
+      existsSync(resolve(path))
+        ? createHash('sha256')
+            .update(readFileSync(resolve(path)))
+            .digest('hex')
+        : null,
+    new Set(demoted),
   );
 }
 
