@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Delve (exiling graveyard cards to pay generic cost) has no schema representation, since exileOtherCardsFromGraveyard is an Escape-style cost, not a cost reduction."}
