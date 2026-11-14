@@ -1,2 +1,1 @@
-Enchant land
-Enchanted land has "{T}: Add one mana of any color."
+Whenever enchanted permanent is tapped for mana, it produces one additional mana of any one color.
