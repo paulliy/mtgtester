@@ -694,6 +694,8 @@ const shapes = {
     ruleStatics: { array: { node: 'RuleStatic' } },
     modeled: leaf,
     unmodeledReasons: { array: leaf },
+    trust: leaf,
+    trustSource: leaf,
   } satisfies Fields<Objects<CardDefinition>>,
   Selector: {
     kind: leaf,

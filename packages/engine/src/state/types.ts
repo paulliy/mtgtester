@@ -1005,6 +1005,11 @@ export interface EngineState extends GameState {
   /** Safety cap: exceeding this halts the game as a probable bug (brief §4). */
   turnCap: number;
   /**
+   * Provisional cards (H1) already announced in the log by `provisionalCardUsed`, by oracle id.
+   * Absent in a game with no provisional card, so such a game's state is unchanged.
+   */
+  provisionalAnnounced?: string[];
+  /**
    * Additional combat phases waiting to run, most recently inserted first (CR 500.8): each runs
    * directly after the phase it was created in, ahead of anything scheduled after that phase
    * earlier. Emptied at the end of the turn.
@@ -1109,6 +1114,18 @@ export interface GameConfig {
    * produce yet. Not used in production paths.
    */
   customDefinitions?: CardDefinition[];
+  /**
+   * Opt in to provisional cards (H1): definitions built from machine-checked patches no person
+   * has reviewed yet. Off by default, and must stay off in every benchmark, fingerprint and
+   * coverage run. `createGame` refuses `provisionalDefinitions` unless this is true.
+   */
+  allowProvisional?: boolean;
+  /**
+   * Definitions with `trust: 'provisional'` (from `interpretProvisional`), by oracle id. Each one
+   * replaces the interpreted definition of a card in a deck only where the interpreter cannot
+   * model that card itself; entries for cards in no deck are ignored.
+   */
+  provisionalDefinitions?: CardDefinition[];
   /**
    * Test hook (ADR 0034 decision 2): rethrow `EngineInvariantError` instead of halting, so a
    * failing test points at the line responsible. Never set in production paths.

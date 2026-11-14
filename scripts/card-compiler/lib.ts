@@ -118,6 +118,9 @@ export const IDENTITY_FIELDS = [
   'defense',
   'modeled',
   'unmodeledReasons',
+  // Only the engine's provisional loader sets the trust tier (H1).
+  'trust',
+  'trustSource',
 ] as const;
 
 /** A definition with identity fields and empty defaults removed: what a patch would add. */

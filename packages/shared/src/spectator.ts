@@ -49,6 +49,11 @@ export interface SpectatorCard {
    * UI can't tell from the text. Optional only because snapshots saved before it lack the field.
    */
   isToken?: boolean;
+  /**
+   * True for a provisional card (H1): it plays by a machine-checked patch nobody has reviewed
+   * yet, and the UI marks it. Absent for every other card.
+   */
+  provisional?: true;
 }
 
 /**

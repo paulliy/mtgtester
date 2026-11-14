@@ -64,6 +64,7 @@ function cardView(ctx: GameContext, obj: EngineCardObject): SpectatorCard {
       subtypes: [...def.subtypes],
     }),
     isToken: obj.isToken,
+    ...(def?.trust === 'provisional' && { provisional: true as const }),
   };
 }
 
@@ -122,6 +123,7 @@ function permanentView(ctx: GameContext, perm: EnginePermanent): SpectatorPerman
     imageFace: copyImageFace(ctx, perm),
     scryfallId: scryfallIdOf(ctx, perm.oracleId),
     owner: perm.ownerId,
+    ...(ctx.defs.get(perm.oracleId)?.trust === 'provisional' && { provisional: true as const }),
   };
 }
 
@@ -367,6 +369,7 @@ const FACE_DOWN_PERMANENT_FIELDS = {
   subtypes: 'redact',
   boardGroup: 'redact',
   colors: 'redact',
+  provisional: 'redact',
 } satisfies Record<keyof SpectatorPermanent, Disclosure>;
 
 /** Another player's view of a card exiled face down: whose it is, and nothing about it. */
@@ -382,6 +385,7 @@ const FACE_DOWN_CARD_FIELDS = {
   supertypes: 'redact',
   subtypes: 'redact',
   isToken: 'redact',
+  provisional: 'redact',
 } satisfies Record<keyof SpectatorCard, Disclosure>;
 
 /** Another player's view of a commander in a hidden zone: its public identity and tax only. */
@@ -743,6 +747,14 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
           p['reason'] === 'timeLimit'
             ? 'the table reached its time limit — the game is a draw'
             : 'every player at the table is away — the game is a draw',
+        emphasis: 'warning',
+      };
+
+    // H1: a card playing by a machine-checked patch nobody has reviewed yet.
+    case 'provisionalCardUsed':
+      return {
+        ...base,
+        text: `${str(p, 'name') ?? 'a card'} is provisional: its rules were machine-checked but not yet reviewed`,
         emphasis: 'warning',
       };
 

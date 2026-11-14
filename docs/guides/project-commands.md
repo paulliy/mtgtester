@@ -28,6 +28,7 @@ bun run test:e2e:table                  # Playwright: table games in two browser
 bun run dev                             # server :3001 and UI :5173
 bun run dev --table [--oracle-fixture F] # serve:table --dev :3002 and the table app on :5173
 bun run serve [--port N] [--no-db] [--oracle-fixture packages/server/fixtures/coverage-oracle.json]
+bun run serve --provisional             # also play machine-checked review-queue cards, marked provisional (ADR 0047)
 bun run serve:table --dev [--port N] [--oracle-fixture packages/server/fixtures/coverage-oracle.json]
                                         # multiplayer table server, loopback only
 bun run serve:table [--insecure-lan]    # exposed table server; see docs/guides/table-hosting.md
@@ -77,6 +78,8 @@ bun run strategist-study --capture F [--seeds N] [--sample-rate R] [--margin M] 
 bun run jev-duel [--seats bot,bot-jev,model,jev] [--games N] [--offline] [--max-usd N] [--out DIR]
                                         # ADR 0041 Jev seat presets at one table; --offline is free, otherwise PAID
 bun run fuzz [--from N] [--games N] [--changed [--base S]] [--card "<name>"] [--json F] [--report F]
+bun run fuzz --games 0 --card-games 1 --provisional --demote docs/reviews/provisional-demoted.json   # fuzz provisional cards, demote failures
+bun run scripts/card-compiler/run.ts audit --seed S [--count 10]   # sample provisional cards for review; record with run.ts review
                                         # ADR 0034 seeded four-player games, invariants on; prints each failure's replay
 bun run engine-bench [--games N] [--turn-cap N] [--json F] [--compare F]
                                         # engine CPU over the heuristic fuzz pods; --compare fails if any game's

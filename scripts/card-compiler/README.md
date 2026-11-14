@@ -43,6 +43,13 @@ game". Nothing here registers a patch with the engine; every checked card goes t
 (`docs/reviews/compiled-card-queue.json`) and enters the card pool only after a person (or the main
 thread, under the card coverage workflow) reviews it.
 
+**Provisional play is opt-in** ([ADR 0047](../../docs/decisions/0047-provisional-card-tier.md),
+proposed). With `--provisional`, `serve`, `play-decks` and `fuzz` admit `compiled-checked` entries
+whose patch bytes still match as provisional cards: marked in the UI and log, listed on the game
+result, and never used by benchmarks or fingerprints. Without the switch nothing changes.
+`run.ts audit --seed S [--count 10]` samples them for review and `run.ts review` records a verdict;
+a `rejected` verdict takes the card out of provisional play.
+
 ## Running
 
 ```bash

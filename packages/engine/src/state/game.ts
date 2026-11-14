@@ -40,6 +40,25 @@ function gameRng(config: GameConfig): EngineRng {
   return new ChaCha20Rng(bytesOfHex(config.rngKey, 32), streamNonce(GAME_STREAM));
 }
 
+/**
+ * Swap in the provisional definitions a game opted into (H1). Only a card that is in a deck and
+ * that the interpreter cannot model is replaced, so a provisional patch can never shadow
+ * reviewed behavior or reach a game that did not ask for it.
+ */
+function applyProvisionalDefinitions(config: GameConfig, defs: Map<string, CardDefinition>): void {
+  const provisional = config.provisionalDefinitions ?? [];
+  if (provisional.length === 0) return;
+  if (config.allowProvisional !== true)
+    throw new EngineUsageError('provisionalDefinitions are set but allowProvisional is not');
+  for (const def of provisional) {
+    if (def.trust !== 'provisional')
+      throw new EngineUsageError(`${def.name} is passed as provisional but is not marked so`);
+    const current = defs.get(def.oracleId);
+    if (current === undefined || current.modeled) continue;
+    defs.set(def.oracleId, assertValidModeledDefinition(def));
+  }
+}
+
 export function createGame(config: GameConfig): GameContext {
   if (config.players.length < 2) {
     throw new Error('a game needs at least two players');
@@ -54,6 +73,7 @@ export function createGame(config: GameConfig): GameContext {
     for (const c of p.cards) addDef(c);
     if (p.companion != null) addDef(p.companion);
   }
+  applyProvisionalDefinitions(config, defs);
   for (const override of config.customDefinitions ?? []) {
     defs.set(override.oracleId, assertValidModeledDefinition(transformDefinition(override)));
   }

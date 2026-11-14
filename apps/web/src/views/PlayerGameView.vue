@@ -1731,6 +1731,7 @@ function abandon(): void {
                 :scryfall-id="card.scryfallId"
                 :name="card.name"
                 :is-token="card.isToken === true"
+                :provisional="card.provisional === true"
                 size="small"
               />
               <span v-if="playableVerbById.get(card.id)" class="play-tag">{{

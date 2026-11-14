@@ -1170,6 +1170,7 @@ export class GameServer {
       gameMode,
       disclosure: policy,
       ...replayOption(this.replayIdentity()),
+      ...(this.deps.pool.provisional !== undefined && { provisional: this.deps.pool.provisional }),
       ...(humanSeat !== undefined && { humanSeat }),
       store: this.deps.store,
       ...(playbackMode !== undefined && { playbackMode }),

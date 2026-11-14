@@ -10,6 +10,8 @@
  *   bun run scripts/card-compiler/run.ts recheck <trial-dir>       # redo back-translation and judge
  *   bun run scripts/card-compiler/run.ts import <trial-dir> <dir>  # check patches made elsewhere
  *   bun run scripts/card-compiler/run.ts queue <trial-dir>...      # rebuild the review queue
+ *   bun run scripts/card-compiler/run.ts audit [--seed S] [--count N]  # sample provisional cards
+ *   bun run scripts/card-compiler/run.ts review "<name>" <source> accepted|rejected --by <who>
  *
  * Stages are `compile`, `back` and `judge`. Every prompt is a file under <trial-dir>/work/prompts
  * and every answer a file under <trial-dir>/work/answers, so any executor can answer them: the
@@ -27,6 +29,7 @@ import {
 } from 'node:fs';
 import type { CardDefinition } from '../../packages/engine/src/cards/definition';
 import { textCheck } from './render';
+import { audit, review } from './audit';
 import {
   applyPatch,
   behaviorOf,
@@ -745,6 +748,14 @@ if (executorFlag >= 0) {
   argv.splice(executorFlag, 2);
 }
 const [command, trial, stage] = argv;
+if (command === 'audit') {
+  audit(argv.slice(1));
+  process.exit(0);
+}
+if (command === 'review') {
+  review(argv.slice(1));
+  process.exit(0);
+}
 if (trial === undefined)
   throw new Error(
     'usage: run.ts <prepare|exec|check|report|recheck|import|queue> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity]',

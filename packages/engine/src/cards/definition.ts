@@ -303,6 +303,15 @@ export interface CardDefinition {
    */
   modeled: boolean;
   unmodeledReasons: string[];
+  /**
+   * The trust tier (H1). Absent means today's default: behavior from the interpreter and the
+   * reviewed override registry. `'provisional'` marks a definition built from a machine-checked
+   * patch in the review queue that no person has reviewed yet. Such a definition only enters a
+   * game whose config sets `allowProvisional`, and it is shown as provisional to every viewer.
+   */
+  trust?: 'provisional';
+  /** Where a provisional definition's patch came from, e.g. `compiler@haiku-worker`. */
+  trustSource?: string;
 }
 
 export function isCreature(def: CardDefinition): boolean {

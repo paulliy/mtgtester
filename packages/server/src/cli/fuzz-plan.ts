@@ -100,6 +100,22 @@ export function failureOf(
 }
 
 /**
+ * Why a provisional card's game should demote it (H1), or null. Only a thrown error, an invariant
+ * break or an engine halt other than the turn cap counts: a slow game says nothing about the
+ * card's rules. The caller also requires the same pod without the card to have passed, so an
+ * engine bug the pod hits anyway does not demote every card played in it.
+ */
+export function demotionReason(outcome: Outcome): string | null {
+  if (outcome.kind === 'crash') return `the game process died: ${outcome.message}`;
+  if (outcome.kind !== 'played') return null;
+  const { reply } = outcome;
+  if (reply.error !== null) return `threw: ${reply.error}`;
+  if (reply.halt !== null && !reply.halt.turnCap)
+    return `halted: ${reply.halt.reason}${reply.halt.site === undefined ? '' : ` at ${reply.halt.site}`}`;
+  return null;
+}
+
+/**
  * The liveness report (ADR 0034 decision 8): across the games played, each card's ops that ran
  * and only ever exited early, most runs first, and how often each early-exit site fired. An op
  * that never acts is either a card that cannot do its job in these pods or a guard to look at.

@@ -186,6 +186,9 @@ export class BatchManager {
               providerKind: scenario.providerKind,
               disclosure: testerPolicy('spectator'),
               store: this.deps.store,
+              ...(this.deps.pool.provisional !== undefined && {
+                provisional: this.deps.pool.provisional,
+              }),
               playbackMode: 'live',
               livePaceMs: 0,
               ...(scenario.reflectionEnabled !== undefined
