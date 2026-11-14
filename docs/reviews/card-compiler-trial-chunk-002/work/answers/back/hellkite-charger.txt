@@ -1,0 +1,1 @@
+Whenever this creature attacks, you may pay {5}{R}{R}. If you do, untap each attacking creature and there is an additional combat phase.
