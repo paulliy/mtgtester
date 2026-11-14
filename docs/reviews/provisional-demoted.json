@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "cards": [
+    {
+      "oracleId": "7266b491-54e6-4393-a448-d5ae99d965c6",
+      "name": "Azorius Keyrune",
+      "patchSha256": "99322e87444df8da2124cb0bf178560eaff754d2d363ef65404bff2a1d753751",
+      "reason": "fuzz-0-provisional-Azorius Keyrune: threw: Error: engine bug: cost for P2 became unpayable at application time"
+    },
+    {
+      "oracleId": "f705c0eb-9c6c-4315-a860-208ed0c5d93e",
+      "name": "Cloudpost",
+      "patchSha256": "499e56f794f6aa5a43ae2c28cdfb0f4b95b2918f0fbbd9ad45dacb65cb5d7185",
+      "reason": "fuzz-0-provisional-Cloudpost: halted: Unmodeled card \"mana payment\" (proving a changing-resource casting payment): mana activation depth budget exceeded. The engine halts rather than guessing (brief §6.3)."
+    },
+    {
+      "oracleId": "8eb7c0a5-6190-40de-b473-2d1daa3bbe28",
+      "name": "Dualcaster Mage",
+      "patchSha256": "dfc442d0bf703c8952b5beb725f10954e6fec1fb73e92ff7a12592e25ed64d63",
+      "reason": "fuzz-0-provisional-Dualcaster Mage: threw: Error: engine bug: cost for P3 became unpayable at application time"
+    },
+    {
+      "oracleId": "84122d81-9634-4d3f-85a5-f6cf4303691a",
+      "name": "Mossborn Hydra",
+      "patchSha256": "8b2e7d7f361d413896bd03732e6e3e6acd2244f9f0bbc054d1c0ddae70c544e4",
+      "reason": "fuzz-0-provisional-Mossborn Hydra: halted: Unmodeled card \"mana payment\" (proving a changing-resource casting payment): payment requires a static production rider or strategic activation-cost continuation outside the proven scope. The engine halts rather than guessing (brief §6.3)."
+    },
+    {
+      "oracleId": "8191342b-b25e-4c4d-8f69-aee662148ff4",
+      "name": "Teysa, Orzhov Scion",
+      "patchSha256": "c75d98ae70a13c857c1ad9fa914c7f3f3d72d8b157217e9d3814beb766592f09",
+      "reason": "fuzz-0-provisional-Teysa, Orzhov Scion: halted: Unmodeled card \"mana payment\" (proving a changing-resource casting payment): mana activation state budget exceeded. The engine halts rather than guessing (brief §6.3)."
+    }
+  ]
+}
