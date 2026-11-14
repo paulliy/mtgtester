@@ -158,9 +158,9 @@ const sortedJson = (value: unknown): string =>
  * "1/1 red and white Soldier with haste" is a different token from the catalog's white Soldier.
  */
 const CATALOG_TOKENS = new Map<string, string>(
-  Object.values(TOKEN_CATALOG)
+  (Object.values(TOKEN_CATALOG) as unknown[])
     .filter(
-      (entry): entry is { name: string; power?: unknown } =>
+      (entry): entry is { name: string } =>
         entry !== null &&
         typeof entry === 'object' &&
         typeof (entry as { name?: unknown }).name === 'string' &&
