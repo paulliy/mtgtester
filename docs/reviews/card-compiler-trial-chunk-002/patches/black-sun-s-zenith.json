@@ -1,0 +1,32 @@
+{
+  "name": "Black Sun's Zenith",
+  "oracleId": "038c0165-32b6-4e81-8180-604b49905207",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put X -1/-1 counters on each creature. Shuffle ~ into its owner's library."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "putCountersEach",
+          "selector": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "counter": "-1/-1",
+          "count": {
+            "kind": "xValue"
+          }
+        },
+        {
+          "op": "resolvingSpellShuffleIntoLibrary"
+        }
+      ],
+      "description": "Put X -1/-1 counters on each creature. Shuffle Black Sun's Zenith into its owner's library."
+    }
+  }
+}
