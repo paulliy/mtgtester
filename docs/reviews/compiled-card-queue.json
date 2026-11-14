@@ -198,7 +198,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Adrix and Nev, Twincasters",
@@ -402,7 +406,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Agna Qel'a",
@@ -449,7 +457,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Ahriman",
@@ -644,7 +656,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Ancestral Statue",
@@ -888,7 +904,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Archmage of Echoes",
@@ -1058,7 +1078,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Ascendant Evincar",
@@ -1192,7 +1216,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Astral Cornucopia",
@@ -1447,7 +1475,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Azorius Keyrune",
@@ -1690,7 +1722,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Bastion Protector",
@@ -1894,7 +1930,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Beyond the Quiet",
@@ -1977,7 +2017,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Black Sun's Zenith",
@@ -2015,7 +2059,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Blacksmith's Skill",
@@ -2053,7 +2101,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Bloodforged Battle-Axe",
@@ -2150,7 +2202,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Bloodsworn Steward",
@@ -2706,7 +2762,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Champion's Helm",
@@ -2906,7 +2966,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Combat Research",
@@ -2955,7 +3019,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Corpsejack Menace",
@@ -3004,7 +3072,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Crawl from the Cellar",
@@ -3092,7 +3164,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Crystal Skull, Isu Spyglass",
@@ -3141,7 +3217,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Curse of Opulence",
@@ -3235,7 +3315,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Damning Verdict",
@@ -3622,7 +3706,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Diamond Lion",
@@ -3723,7 +3811,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Diary of Dreams",
@@ -3823,7 +3915,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Disdainful Stroke",
@@ -3897,7 +3993,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Dissipate",
@@ -4380,7 +4480,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Electroduplicate",
@@ -4418,7 +4522,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Elvish Reclaimer",
@@ -4467,7 +4575,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Emeria Shepherd",
@@ -4519,7 +4631,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "main-thread",
+        "note": "Forces the return to the battlefield when the land is a Plains; the card lets you choose hand or battlefield."
+      }
     },
     {
       "name": "End the Festivities",
@@ -4557,7 +4673,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Explorer's Scope",
@@ -4606,7 +4726,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Exsanguinator Cavalry",
@@ -4740,7 +4864,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Fake Your Own Death",
@@ -4781,7 +4909,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Fated Infatuation",
@@ -4857,7 +4989,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Fierce Empath",
@@ -4906,7 +5042,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Filter Out",
@@ -5093,7 +5233,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Forbidden Orchard",
@@ -5248,7 +5392,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Get Lost",
@@ -5286,7 +5434,11 @@
           "detail": "threw: event object information has no bound event object"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "main-thread",
+        "note": "A smoke game threw: event object information has no bound event object."
+      }
     },
     {
       "name": "Ghost-Spider, Gwen Stacy",
@@ -5485,7 +5637,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "main-thread",
+        "note": "A smoke game threw: illegal target for the second player slot."
+      }
     },
     {
       "name": "Glistening Oil",
@@ -5923,7 +6079,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Goro-Goro, Disciple of Ryusei",
@@ -6070,7 +6230,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Grazilaxx, Illithid Scholar",
@@ -6119,7 +6283,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Grisly Salvage",
@@ -6160,7 +6328,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "main-thread",
+        "note": "Reveals only the chosen card; the card reveals all five."
+      }
     },
     {
       "name": "Guardian of Faith",
@@ -6294,7 +6466,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Hanged Executioner",
@@ -6519,7 +6695,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Hero's Blade",
@@ -6568,7 +6748,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Hidden Hideout",
@@ -6666,7 +6850,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Horobi, Death's Wail",
@@ -6838,7 +7026,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Incremental Blight",
@@ -6953,7 +7145,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Into the North",
@@ -7107,7 +7303,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Jeskai Barricade",
@@ -7241,7 +7441,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Juri, Master of the Revue",
@@ -7288,7 +7492,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Kaito, Cunning Infiltrator",
@@ -7389,7 +7597,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Kederekt Parasite",
@@ -7438,7 +7650,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Kenrith's Transformation",
@@ -8025,7 +8241,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Loyal Warhound",
@@ -8074,7 +8294,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Magda, Brazen Outlaw",
@@ -8126,7 +8350,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Majestic Heliopterus",
@@ -8227,7 +8455,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Manamorphose",
@@ -8269,7 +8501,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Mass Calcify",
@@ -8443,7 +8679,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "main-thread",
+        "note": "The Wraith type is a static of the land, so it ends if the land leaves; shadow counters do not grant shadow in this engine."
+      }
     },
     {
       "name": "Misdirection",
@@ -8479,7 +8719,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Molten Duplication",
@@ -8517,7 +8761,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Monumental Henge",
@@ -8566,7 +8814,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Moonshadow",
@@ -8904,7 +9156,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Necropolis Regent",
@@ -9288,7 +9544,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Obliterate",
@@ -9376,7 +9636,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Oketra's Monument",
@@ -9557,7 +9821,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "On Thin Ice",
@@ -9655,7 +9923,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "main-thread",
+        "note": "oncePerTurn on the trigger is spent even when the copy is declined; the card says 'do this only once each turn'."
+      }
     },
     {
       "name": "Otepec Huntmaster",
@@ -9751,7 +10023,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Overprotect",
@@ -9838,7 +10114,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Oyobi, Who Split the Heavens",
@@ -9934,7 +10214,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Peer Past the Veil",
@@ -10298,7 +10582,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Poison-Blade Mentor",
@@ -10399,7 +10687,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Profane Memento",
@@ -10762,7 +11054,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Requiem Angel",
@@ -11034,7 +11330,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Rise of the Dark Realms",
@@ -11600,7 +11900,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "main-thread",
+        "note": "Reveals only the chosen card; the card reveals all four."
+      }
     },
     {
       "name": "Scale the Heights",
@@ -11742,7 +12046,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Secluded Starforge",
@@ -12025,7 +12333,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Sire of Seven Deaths",
@@ -12072,7 +12384,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Sisterhood of Karn",
@@ -12408,7 +12724,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Spiteful Visions",
@@ -12739,7 +13059,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Stormclaw Rager",
@@ -13064,7 +13388,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Swarmyard Massacre",
@@ -13102,7 +13430,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Sword of Feast and Famine",
@@ -13204,7 +13536,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Sword of Hearth and Home",
@@ -13313,7 +13649,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Tamiyo's Safekeeping",
@@ -13400,7 +13740,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Tarmogoyf Nest",
@@ -13540,7 +13884,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Teysa, Orzhov Scion",
@@ -13636,7 +13984,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Thalia's Lancers",
@@ -13723,7 +14075,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "The Fifth Doctor",
@@ -13973,7 +14329,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Thundering Raiju",
@@ -14123,7 +14483,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "main-thread",
+        "note": "Matches a commander you control; 'your commander' is a commander you own."
+      }
     },
     {
       "name": "Tormod's Crypt",
@@ -14170,7 +14534,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Traitorous Blood",
@@ -14246,7 +14614,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Treasonous Ogre",
@@ -14296,7 +14668,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine. Meaning check flag reviewed by a Sonnet reviewer and judged a back-translation or judge artifact."
+      }
     },
     {
       "name": "Treasure Mage",
@@ -14442,7 +14818,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Trophy Mage",
@@ -14491,7 +14871,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Twitch",
@@ -14617,7 +15001,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Urabrask the Hidden",
@@ -14664,7 +15052,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Uro, Titan of Nature's Wrath",
@@ -14711,7 +15103,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Urza's Mine",
@@ -14958,7 +15354,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Viridian Joiner",
@@ -15011,7 +15411,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Wake the Reflections",
@@ -15192,7 +15596,11 @@
           "detail": "threw: engine bug: source counters need a layer evaluation scope"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "main-thread",
+        "note": "Counts only +1/+1 counters, not all counters; its smoke games also threw."
+      }
     },
     {
       "name": "Wave Goodbye",
@@ -15228,7 +15636,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "accepted",
+        "by": "main-thread",
+        "note": "Pilot chunk full audit: read against Oracle text and the engine."
+      }
     },
     {
       "name": "Wellwisher",
