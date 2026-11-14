@@ -1350,6 +1350,7 @@ function abandon(): void {
                   :scryfall-id="commander.scryfallId"
                   :name="commander.name"
                   size="small"
+                  :provisional="commander.provisional === true"
                 />
               </span>
               <strong
@@ -1500,6 +1501,7 @@ function abandon(): void {
                     :scryfall-id="commander.scryfallId"
                     :name="commander.name"
                     size="small"
+                    :provisional="commander.provisional === true"
                   />
                 </button>
                 <span
@@ -1513,6 +1515,7 @@ function abandon(): void {
                     :scryfall-id="commander.scryfallId"
                     :name="commander.name"
                     size="small"
+                    :provisional="commander.provisional === true"
                   />
                 </span>
               </template>

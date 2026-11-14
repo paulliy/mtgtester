@@ -88,7 +88,8 @@ describe('loadProvisionalCatalog', () => {
     const def = catalog.definitions.get(cardNamed(BLADE).oracleId);
     expect(def?.modeled).toBe(true);
     expect(def?.trust).toBe('provisional');
-    expect(def?.trustSource).toBe('compiler@haiku-worker');
+    expect(def?.trustSource).toBe('compiler@test');
+    expect(catalog.admitted[0]?.source).toBe(def?.trustSource);
     // The registry is left as it was: the card is still unmodeled for everyone else.
     expect(interpretCard(cardNamed(BLADE)).modeled).toBe(false);
   });

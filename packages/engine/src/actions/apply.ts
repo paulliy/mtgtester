@@ -69,7 +69,7 @@ import {
   turnFaceUpCosts,
 } from './legal';
 import { breakYieldsForStop } from '../turn/stops';
-import { noteProvisionalUse } from '../state/provisional-use';
+import { announceProvisionalUse, provisionalUseOf } from '../state/provisional-use';
 
 /** Run an activation's cost payment, returning the life paid as part of it (Verrak). */
 function* withLifePaidTally<T>(ctx: GameContext, pay: GameGen<T>): GameGen<[T, number]> {
@@ -162,8 +162,19 @@ export function* applyPriorityAction(
   payload: PriorityActionPayload,
   outcome: DecisionOutcome,
 ): GameGen<void> {
+  // H1: the card is found before the action moves it, and announced once the action took effect.
+  const provisional = provisionalUseOf(ctx, payload);
+  yield* applyPriorityActionBody(ctx, player, payload, outcome);
+  if (provisional !== null) announceProvisionalUse(ctx, player, provisional);
+}
+
+function* applyPriorityActionBody(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  payload: PriorityActionPayload,
+  outcome: DecisionOutcome,
+): GameGen<void> {
   const s = ctx.state;
-  noteProvisionalUse(ctx, player, payload);
   switch (payload.kind) {
     case 'pass':
       throw new Error('engine bug: pass is not applied via applyPriorityAction');

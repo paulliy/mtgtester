@@ -121,7 +121,12 @@ onBeforeUnmount(() => unregisterAnchor(props.seat.seat));
         @mousemove="moveCommanderPreview"
         @mouseleave="hideCommanderPreview"
       >
-        <CardImage :scryfall-id="cmd.scryfallId" :name="cmd.name" size="small" />
+        <CardImage
+          :scryfall-id="cmd.scryfallId"
+          :name="cmd.name"
+          size="small"
+          :provisional="cmd.provisional === true"
+        />
       </span>
       <span
         class="label"

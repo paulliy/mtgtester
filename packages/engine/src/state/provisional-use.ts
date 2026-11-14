@@ -54,27 +54,54 @@ function isPublicUse(
   }
 }
 
+/** A provisional card an action is about to use, captured before the action moves it. */
+export interface ProvisionalUse {
+  oracleId: string;
+  name: string;
+  cardId: string;
+  source: string | null;
+}
+
 /**
- * Before a priority action is applied: if its source is a provisional card not yet announced in
- * this game, add one `provisionalCardUsed` line to the log.
+ * Before a priority action is applied: the provisional card it uses, if the use is public and the
+ * card has not been announced in this game yet. A face-down permanent stays anonymous for every
+ * action but turning it face up (CR 708.2).
  */
-export function noteProvisionalUse(
+export function provisionalUseOf(
+  ctx: GameContext,
+  payload: PriorityActionPayload,
+): ProvisionalUse | null {
+  if (!isPublicUse(payload)) return null;
+  const obj = findObject(ctx, payload.objectId);
+  if (obj === undefined) return null;
+  if (payload.kind !== 'turnFaceUp' && 'faceDown' in obj && obj.faceDown === true) return null;
+  const def = ctx.defs.get(obj.oracleId);
+  if (def?.trust !== 'provisional') return null;
+  if (ctx.state.provisionalAnnounced?.includes(obj.oracleId) === true) return null;
+  return {
+    oracleId: obj.oracleId,
+    name: def.name,
+    cardId: obj.cardId,
+    source: def.trustSource ?? null,
+  };
+}
+
+/**
+ * After the action took effect: one `provisionalCardUsed` line, so the board snapshot at that
+ * line already shows the card cast, played, activated or face up.
+ */
+export function announceProvisionalUse(
   ctx: GameContext,
   player: EnginePlayerState,
-  payload: PriorityActionPayload,
+  use: ProvisionalUse,
 ): void {
-  if (!isPublicUse(payload)) return;
-  const obj = findObject(ctx, payload.objectId);
-  if (obj === undefined) return;
-  const def = ctx.defs.get(obj.oracleId);
-  if (def?.trust !== 'provisional') return;
   const announced = (ctx.state.provisionalAnnounced ??= []);
-  if (announced.includes(obj.oracleId)) return;
-  announced.push(obj.oracleId);
+  if (announced.includes(use.oracleId)) return;
+  announced.push(use.oracleId);
   emit(
     ctx,
     'provisionalCardUsed',
-    { player: player.id, name: def.name, cardId: obj.cardId, source: def.trustSource ?? null },
+    { player: player.id, name: use.name, cardId: use.cardId, source: use.source },
     player.id,
   );
 }

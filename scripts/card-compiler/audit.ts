@@ -3,10 +3,12 @@
  * card's Oracle text beside its patch rendered back into English, and record a reviewer's verdict.
  *
  *   bun run scripts/card-compiler/run.ts audit [--seed S] [--count 10] [--all]
- *   bun run scripts/card-compiler/run.ts review "<card name>" <source> accepted|rejected --by <who> [--note "..."]
+ *   bun run scripts/card-compiler/run.ts audit-verdict "<card name>" <source> accepted|rejected --by <who> [--note "..."]
  *
  * `audit` draws from the entries the server could admit as provisional (`compiled-checked`, no
- * verdict yet) unless `--all` asks for every checked entry. The draw depends only on the seed and
+ * verdict yet, no `differs` cross-check, not demoted by fuzz) unless `--all` asks for every checked
+ * entry. `audit-verdict` is named apart from PR #72's `review` command; when that lands, the two
+ * write the same `review` field and this one can go. The draw depends only on the seed and
  * the queue, so two people with the same seed see the same cards. `review` writes the verdict into
  * the queue's `review` field; `queue` keeps it while the patch's bytes are unchanged, and a
  * `rejected` verdict takes the card out of provisional play.
@@ -18,12 +20,26 @@ import { cardByName } from './lib';
 import { renderBehavior, Unrendered } from './render';
 
 export const QUEUE_PATH = 'docs/reviews/compiled-card-queue.json';
+export const DEMOTED_PATH = 'docs/reviews/provisional-demoted.json';
+
+/** `oracleId|patchSha256` of each patch fuzz demoted (H1). */
+function demotedKeys(path: string): Set<string> {
+  if (!existsSync(path)) return new Set();
+  const cards =
+    (
+      JSON.parse(readFileSync(path, 'utf8')) as {
+        cards?: Array<{ oracleId: string; patchSha256: string }>;
+      }
+    ).cards ?? [];
+  return new Set(cards.map((card) => `${card.oracleId}|${card.patchSha256}`));
+}
 
 interface AuditEntry {
   name: string;
   oracleId: string;
   source: string;
   status: string;
+  crossCheck?: { source: string; verdict: string };
   handledLines: string[];
   patch: string | null;
   patchSha256: string | null;
@@ -69,8 +85,14 @@ export function audit(args: string[], queuePath = QUEUE_PATH): void {
   const seed = flag(args, '--seed') ?? new Date().toISOString().slice(0, 10);
   const count = Number.parseInt(flag(args, '--count') ?? '10', 10);
   const all = args.includes('--all');
+  const demoted = demotedKeys(DEMOTED_PATH);
   const candidates = readQueue(queuePath).cards.filter(
-    (entry) => entry.status === 'compiled-checked' && (all || entry.review === null),
+    (entry) =>
+      entry.status === 'compiled-checked' &&
+      (all ||
+        (entry.review === null &&
+          entry.crossCheck?.verdict !== 'differs' &&
+          !demoted.has(`${entry.oracleId}|${entry.patchSha256 ?? ''}`))),
   );
   const sample = drawSample(candidates, seed, count);
   console.log(
@@ -99,7 +121,7 @@ export function audit(args: string[], queuePath = QUEUE_PATH): void {
       console.log(`     ${line}`);
     console.log(`   Patch JSON: ${entry.patch ?? '(none)'}`);
     console.log(
-      `   Record: bun run scripts/card-compiler/run.ts review ${JSON.stringify(entry.name)} ${entry.source} accepted|rejected --by <you> [--note "..."]\n`,
+      `   Record: bun run scripts/card-compiler/run.ts audit-verdict ${JSON.stringify(entry.name)} ${entry.source} accepted|rejected --by <you> [--note "..."]\n`,
     );
   }
 }
@@ -115,7 +137,7 @@ export function review(args: string[], queuePath = QUEUE_PATH): void {
     by === undefined
   )
     throw new Error(
-      'usage: run.ts review "<card name>" <source> accepted|rejected --by <who> [--note "..."]',
+      'usage: run.ts audit-verdict "<card name>" <source> accepted|rejected --by <who> [--note "..."]',
     );
   const queue = readQueue(queuePath);
   const entry = queue.cards.find((card) => card.name === name && card.source === source);

@@ -14,7 +14,7 @@ import { Engine } from '../src/engine';
 import { RandomDecisionProvider } from '../src/providers/providers';
 import { EngineUsageError } from '../src/errors';
 import { createGame } from '../src/state/game';
-import { stampProvisional } from '../src/state/provisional-use';
+import { provisionalUseOf, stampProvisional } from '../src/state/provisional-use';
 import { buildSpectatorState, formatSpectatorLog } from '../src/view/spectator';
 import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 
@@ -96,6 +96,23 @@ describe('interpretProvisional', () => {
     }
   });
 
+  it('reports a malformed patch object instead of throwing', () => {
+    const shapes: unknown[] = [
+      null,
+      [],
+      { ...patch(), def: null },
+      { ...patch(), def: [] },
+      { ...patch(), handledLines: 'a line' },
+      { ...patch(), handledLines: [1] },
+      { ...patch(), source: undefined },
+    ];
+    for (const shape of shapes)
+      expect(interpretProvisional(oddity(), shape as ProvisionalPatch)).toMatchObject({
+        ok: false,
+        kind: 'invalid',
+      });
+  });
+
   it('reports malformed IR instead of throwing', () => {
     const bad = patch({
       def: {
@@ -172,7 +189,12 @@ describe('the game opt-in', () => {
         ),
       );
     };
+    const before = ctx.state.eventLog.length;
     activate();
+    // Announced after the action took effect: the line closes the activation's own events.
+    const firstUse = ctx.state.eventLog.slice(before);
+    expect(firstUse.length).toBeGreaterThan(1);
+    expect(firstUse.at(-1)?.type).toBe('provisionalCardUsed');
     perm.tapped = false;
     activate();
 
@@ -198,6 +220,22 @@ describe('the game opt-in', () => {
       haltReason: null,
     });
     expect(stamped.provisionalCards).toEqual(['Test Provisional Oddity']);
+  });
+
+  it('keeps a face-down provisional permanent anonymous until it is turned face up', () => {
+    const ctx = createGame(
+      gameConfig(seats(), { allowProvisional: true, provisionalDefinitions: [provisionalDef()] }),
+    );
+    const perm = spawn(ctx, 'P1', oddity());
+    perm.faceDown = true;
+    const activate = { kind: 'activateAbility', objectId: perm.id, index: 0 } as const;
+    expect(provisionalUseOf(ctx, activate)).toBeNull();
+    expect(provisionalUseOf(ctx, { kind: 'turnFaceUp', objectId: perm.id })).toMatchObject({
+      name: 'Test Provisional Oddity',
+    });
+    expect(buildSpectatorState(ctx).battlefield.find((p) => p.id === perm.id)?.provisional).toBe(
+      true,
+    );
   });
 
   it('stamps the result a driven game returns', () => {

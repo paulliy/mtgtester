@@ -11,7 +11,7 @@
  *   bun run scripts/card-compiler/run.ts import <trial-dir> <dir>  # check patches made elsewhere
  *   bun run scripts/card-compiler/run.ts queue <trial-dir>...      # rebuild the review queue
  *   bun run scripts/card-compiler/run.ts audit [--seed S] [--count N]  # sample provisional cards
- *   bun run scripts/card-compiler/run.ts review "<name>" <source> accepted|rejected --by <who>
+ *   bun run scripts/card-compiler/run.ts audit-verdict "<name>" <source> accepted|rejected --by <who>
  *
  * Stages are `compile`, `back` and `judge`. Every prompt is a file under <trial-dir>/work/prompts
  * and every answer a file under <trial-dir>/work/answers, so any executor can answer them: the
@@ -752,7 +752,7 @@ if (command === 'audit') {
   audit(argv.slice(1));
   process.exit(0);
 }
-if (command === 'review') {
+if (command === 'audit-verdict') {
   review(argv.slice(1));
   process.exit(0);
 }

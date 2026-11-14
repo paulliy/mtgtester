@@ -197,6 +197,10 @@ function commanderViews(ctx: GameContext, player: EnginePlayerState): SpectatorC
         visibleObject === null
           ? []
           : [...(ctx.defs.get(visibleObject.oracleId)?.colorIdentity ?? [])],
+      ...(visibleObject !== null &&
+        ctx.defs.get(visibleObject.oracleId)?.trust === 'provisional' && {
+          provisional: true as const,
+        }),
     };
   });
 }
@@ -398,6 +402,8 @@ const HIDDEN_COMMANDER_FIELDS = {
   taxGeneric: 'keep',
   scryfallId: 'redact',
   colorIdentity: 'keep',
+  // A commander's identity is public (CR 903.3), and so is the trust tier of its rules.
+  provisional: 'keep',
 } satisfies Record<keyof SpectatorCommander, Disclosure>;
 
 function disclose<T extends object>(

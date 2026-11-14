@@ -171,14 +171,15 @@ export function loadProvisionalCatalog(
       skip(`patch file is not JSON: ${String(error)}`);
       continue;
     }
-    if (file.def === undefined || typeof file.def !== 'object') {
+    if (typeof file.def !== 'object' || file.def === null || Array.isArray(file.def)) {
       skip('patch file has no def');
       continue;
     }
     const result = interpretProvisional(card, {
       handledLines: file.handledLines ?? entry.handledLines,
       def: file.def,
-      source: file.source ?? entry.source,
+      // The queue's source names the entry reviews and pins refer to, so it is the one recorded.
+      source: entry.source,
     });
     if (!result.ok) {
       skip(

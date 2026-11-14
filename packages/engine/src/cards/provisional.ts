@@ -66,11 +66,27 @@ const FORBIDDEN_PATCH_FIELDS: ReadonlySet<string> = new Set([
   'trustSource',
 ]);
 
+/** Why `patch` is not a patch object at all, or null when its shape is usable. */
+function malformedPatch(patch: unknown): string | null {
+  const isObject = (value: unknown): value is Record<string, unknown> =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
+  if (!isObject(patch)) return 'malformed patch: not an object';
+  if (!isObject(patch['def'])) return 'malformed patch: def is not an object';
+  const lines = patch['handledLines'];
+  if (!Array.isArray(lines) || !lines.every((line) => typeof line === 'string'))
+    return 'malformed patch: handledLines is not a list of strings';
+  if (typeof patch['source'] !== 'string') return 'malformed patch: source is not a string';
+  return null;
+}
+
 /**
  * Build the provisional definition of `card` from `patch`, or say why not. Never throws on bad
  * data: a patch that fails validation is reported, so one bad queue entry cannot stop a server.
  */
 export function interpretProvisional(card: OracleCard, patch: ProvisionalPatch): ProvisionalResult {
+  // Patch files are data from disk: check the shape before touching any field.
+  const shapeIssue = malformedPatch(patch);
+  if (shapeIssue !== null) return { ok: false, kind: 'invalid', issues: [shapeIssue] };
   const existing = getOverride(card.oracleId as OracleId);
   if (existing?.unsupportedReason !== undefined) {
     // An explicit "this card is known wrong" declaration outranks any unreviewed patch.
@@ -98,7 +114,12 @@ export function interpretProvisional(card: OracleCard, patch: ProvisionalPatch):
     def: patch.def,
     compose: 'append',
   };
-  const early = validateOverrideDefinition(override);
+  let early;
+  try {
+    early = validateOverrideDefinition(override);
+  } catch (error) {
+    return { ok: false, kind: 'invalid', issues: [`validation threw: ${String(error)}`] };
+  }
   if (early.length > 0)
     return {
       ok: false,

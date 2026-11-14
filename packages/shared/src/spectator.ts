@@ -110,6 +110,8 @@ export interface SpectatorCommander {
   scryfallId: string | null;
   /** The commander's color identity, which bounds its deck's colors. Absent in older snapshots. */
   colorIdentity?: Color[];
+  /** A provisional commander (H1): machine-checked rules nobody has reviewed. */
+  provisional?: true;
 }
 
 export interface SpectatorSeat {
