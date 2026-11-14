@@ -2,6 +2,53 @@
   "schemaVersion": 1,
   "cards": [
     {
+      "name": "Abandoned Air Temple",
+      "oracleId": "9575d7ce-f26d-4b90-87a3-6329e9799572",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["~ enters tapped unless you control a basic land."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/abandoned-air-temple.json",
+      "patchSha256": "5dcf254c082b3f693dfd5b0e222c754f900a0aaea2fe6746b1f88287a3c153f0",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Acolyte of Aclazotz",
       "oracleId": "324d2aa8-6dea-4b0d-898d-1e52ed187565",
       "source": "compiler@haiku-worker",
@@ -202,6 +249,105 @@
       "review": null
     },
     {
+      "name": "Aetherflux Reservoir",
+      "oracleId": "5f15125e-ae89-471e-b055-226a783bc7c1",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "smoke-failed",
+      "handledLines": [
+        "Whenever you cast a spell, you gain 1 life for each spell you've cast this turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/aetherflux-reservoir.json",
+      "patchSha256": "91f12a79d19aed42ae03d8c89c904dd785557393a2f2b351d89067030d62b1fe",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A counts only spells you have cast this turn (\"spell you've cast this turn\"), but Text B counts all spells cast this turn by any player (\"the number of spells cast this turn\"), so B gains life for opponents' spells too."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": false,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "threw: [object Object]"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Agate Instigator",
+      "oracleId": "e1a2bd31-b800-47cd-8866-1b849a601b09",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["Offspring {1}{R}"],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/agate-instigator.json",
+      "patchSha256": "6ed2a6c7afe258454a13e7320edc7892efb455dce21b52e24c6fc76ee6476a91",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Ahriman",
       "oracleId": "37d1d507-25dc-4cd0-b51e-2f1e9b24832c",
       "source": "compiler@haiku-worker",
@@ -293,6 +439,104 @@
           "exercised": true,
           "abilityResolved": true,
           "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "All That Glitters",
+      "oracleId": "a4d751e0-41c1-4e90-853d-512f385acd81",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Enchanted creature gets +1/+1 for each artifact and/or enchantment you control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/all-that-glitters.json",
+      "patchSha256": "6b2697a13bfedee20ebcc905c993eac9b99e77e9c419a64ccba3c9080a0f73c6",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Amphibian Downpour",
+      "oracleId": "a4280cea-386b-450d-a7e9-29c7aa58ce5a",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/amphibian-downpour.json",
+      "patchSha256": "e84d12d580337fdc1621f667b2e623dd73496ffd3617cf5e3af428741ca54029",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -394,6 +638,107 @@
           "exercised": false,
           "abilityResolved": false,
           "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Angel of the Ruins",
+      "oracleId": "14878a5f-7983-4133-a1a7-9d539531e092",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature enters, exile up to two target artifacts and/or enchantments."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/angel-of-the-ruins.json",
+      "patchSha256": "26255742e60e8c92072dba0184520d9759ffd10cddef3c39dcef2b7ec1c92916",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Anim Pakal, Thousandth Moon",
+      "oracleId": "05551d91-50c6-46d1-86a4-cd3d177d0923",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever you attack with one or more non-Gnome creatures, put a +1/+1 counter on ~, then create X 1/1 colorless Gnome artifact creature tokens that are tapped and attacking, where X is the number of +1/+1 counters on ~."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/anim-pakal-thousandth-moon.json",
+      "patchSha256": "705f4eea68ff7eb9eec0cb55f4b5785b1e43ca1192d71c90b46be1f802a1e98c",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A creates the Gnome tokens tapped and attacking; Text B creates them only attacking, so they enter untapped."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
           "detail": "game ended"
         }
       ],
@@ -721,6 +1066,102 @@
       "review": null
     },
     {
+      "name": "Asceticism",
+      "oracleId": "9396546c-d067-4ce3-9c3d-b62cca970b4f",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["{1}{G}: Regenerate target creature."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/asceticism.json",
+      "patchSha256": "0f59d6833a37f2de5f7796e19ca952025bb17da6f67330040e25851cda3f1e90",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "renderer",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Ashaya, Soul of the Wild",
+      "oracleId": "162572f2-1757-42e9-bd97-e6bd9a762c0e",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Nontoken creatures you control are Forest lands in addition to their other types."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/ashaya-soul-of-the-wild.json",
+      "patchSha256": "74f9501f8fe663f24fa88fa6e9eedb6eec8b6fd46dfb43c5373e447c3b5ebd3b",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Assault on Osgiliath",
       "oracleId": "d2aa50d2-d22d-495e-afc9-23a51c8c8f32",
       "source": "compiler@haiku-worker",
@@ -965,6 +1406,55 @@
       "review": null
     },
     {
+      "name": "Ayara, First of Locthwain",
+      "oracleId": "388168b3-ec68-4af2-b88c-6a5ec88c15f6",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever ~ or another black creature you control enters, each opponent loses 1 life and you gain 1 life."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/ayara-first-of-locthwain.json",
+      "patchSha256": "118478cc6bb215c974bf0c4f78849e36e0eb4f1aa0fdde039c35fcaa0589bf42",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Azorius Keyrune",
       "oracleId": "7266b491-54e6-4393-a448-d5ae99d965c6",
       "source": "compiler@haiku-worker",
@@ -1014,6 +1504,59 @@
       "review": null
     },
     {
+      "name": "Balefire Dragon",
+      "oracleId": "3d783beb-9ca6-4681-9276-fc3ad13b993f",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever this creature deals combat damage to a player, it deals that much damage to each creature that player controls."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/balefire-dragon.json",
+      "patchSha256": "0cecd3ae9539cd035d1fd6d7241599f108e149bfd7341b99c7f11958f20df326",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A deals the damage only to each creature that the player it hit controls; Text B deals it to each creature, including the source's controller's own creatures.",
+        "Text B says the damage is treated as controlled by the player it dealt combat damage to, which Text A does not state."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Ballyrush Banneret",
       "oracleId": "0ad27d0e-b6c3-4c3f-a389-285d889b6a65",
       "source": "xmage@31ede542",
@@ -1055,6 +1598,55 @@
           "exercised": false,
           "abilityResolved": false,
           "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Banner of Kinship",
+      "oracleId": "8c220dbd-6572-4715-aae6-dd09a4252d68",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "As this artifact enters, choose a creature type. ~ enters with a fellowship counter on it for each creature you control of the chosen type."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/banner-of-kinship.json",
+      "patchSha256": "a52d3a214e3f5c1dcd003d6880e8be6fb3c870d8ec8a242c53b4e7648b265cfe",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -1207,6 +1799,55 @@
       "review": null
     },
     {
+      "name": "Beastmaster Ascension",
+      "oracleId": "11b5308d-5bc0-4782-875f-a28be36e665d",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "As long as this enchantment has seven or more quest counters on it, creatures you control get +5/+5."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/beastmaster-ascension.json",
+      "patchSha256": "2e84115bb3d6141570fcdfc5ef4fac0b6d736b7ce0e2d16db8252d858071d522",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Beyond the Quiet",
       "oracleId": "c96424e7-63c4-4f07-959f-6ad09f91279a",
       "source": "xmage@31ede542",
@@ -1237,6 +1878,100 @@
           "ok": true,
           "exercised": true,
           "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Bident of Thassa",
+      "oracleId": "e1afaef7-9fa3-4662-a95f-adfb0da9fd11",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["{1}{U}, {T}: Creatures your opponents control attack this turn if able."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/bident-of-thassa.json",
+      "patchSha256": "eca9ca10f07cbd0e0e0f721029363890f8b8804c816f1607ee4d472456ee104e",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Blackblade Reforged",
+      "oracleId": "dca51281-fb21-45b6-beb4-1f13397caee2",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["Equip legendary creature {3}"],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/blackblade-reforged.json",
+      "patchSha256": "7d93456f43fa1d9ddbc3d9ef00d8f23a267b7378da718c560a3c0636a13cf5f7",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
           "detail": "game ended"
         }
       ],
@@ -1332,6 +2067,55 @@
           "exercised": false,
           "abilityResolved": false,
           "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Bonders' Enclave",
+      "oracleId": "f33ce38a-34ec-4b65-a0fc-160484a02007",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/bonders-enclave.json",
+      "patchSha256": "9ea565609c0565fcca03627f4bed7132a9bca373961e5c8aa7673363fb9f34c8",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
           "detail": "game ended"
         }
       ],
@@ -1564,6 +2348,55 @@
       "review": null
     },
     {
+      "name": "Branching Evolution",
+      "oracleId": "28fe909b-06e0-424c-9f75-c824a25f5865",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on that creature instead."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/branching-evolution.json",
+      "patchSha256": "71bcc11a6c296ba6bc137a2bb43be601c5dafcc4d2373db8f8d1d8b79f8e9e7f",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Brass's Bounty",
       "oracleId": "63b0538e-aa94-4e23-adf1-704cbf5bc3e5",
       "source": "compiler@haiku-worker",
@@ -1649,6 +2482,45 @@
       "review": null
     },
     {
+      "name": "Bulk Up",
+      "oracleId": "fade8af0-5fdb-4237-9dd6-48bfd1d62767",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": ["Double target creature's power until end of turn."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/bulk-up.json",
+      "patchSha256": "47d441e65af4d0dd7da794fae5e213268716da3b37bdf559a1544e823e17abf3",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A doubles the power until end of turn; Text B has no duration, so the power doubling is permanent."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Buried in the Garden",
       "oracleId": "f1f0eab3-681b-4c2d-b590-555951920880",
       "source": "compiler@haiku-worker",
@@ -1683,6 +2555,146 @@
           "ok": true,
           "exercised": false,
           "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Cabal Ritual",
+      "oracleId": "5b5bf1fa-6502-4790-b66b-f0f8504ebc7c",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Add {B}{B}{B}{B}{B} instead if there are seven or more cards in your graveyard."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/cabal-ritual.json",
+      "patchSha256": "ffee5efb851c7c5f4de9ffe56a0abe187644e8238919091f7af0d777a8d6d6dc",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Cabaretti Courtyard",
+      "oracleId": "65424bea-fd53-4f85-9757-0b91a6d40ba4",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "When this land enters, sacrifice it. When you do, search your library for a basic Mountain, Forest, or Plains card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/cabaretti-courtyard.json",
+      "patchSha256": "a34513ea0eeeade7d0094bbc851306cd402b82aa1ef5cb9b8f3b0bd685018d53",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text B adds '(you may find none)', making the search optional; Text A's search is mandatory and the player must find a matching card if one exists."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Captain Lannery Storm",
+      "oracleId": "235bf0ba-658c-463f-b112-7478ba27bd7b",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["Whenever you sacrifice a Treasure, ~ gets +1/+0 until end of turn."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/captain-lannery-storm.json",
+      "patchSha256": "64762c5e87457214a68f7fbb3874932388dc2da88a3c7516991a3d1f26f89723",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
           "changedGame": false,
           "detail": "game ended"
         },
@@ -1740,6 +2752,149 @@
           "ok": true,
           "exercised": true,
           "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Cephalid Coliseum",
+      "oracleId": "c733873e-77db-471f-8061-139db24f7e7c",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{U}, {T}, Sacrifice this land: Target player draws three cards, then discards three cards. Activate only if there are seven or more cards in your graveyard."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/cephalid-coliseum.json",
+      "patchSha256": "29cdef6365a5624236ceaa34a873bdbf934b30af3ed5712dbfb46cc786dafb4b",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Champion's Helm",
+      "oracleId": "c01aafb8-3da5-4eb1-8731-2a223e747d63",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["As long as equipped creature is legendary, it has hexproof."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/champion-s-helm.json",
+      "patchSha256": "b3c9f51a9341c5f2fc50a0159dff05aa9fe06cc53d9048fb1b0574365f699da0",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Changeling Outcast",
+      "oracleId": "a61ef0cc-1da9-49f9-b0dc-01cf9f6205be",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["~ can't block and can't be blocked."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/changeling-outcast.json",
+      "patchSha256": "fb211b65b5d865ffceb58feedf2fb1cabfa351cd0b3650a8758cea8cc326702a",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
           "changedGame": true,
           "detail": "game ended"
         }
@@ -1844,6 +2999,100 @@
       "review": null
     },
     {
+      "name": "Colossus Hammer",
+      "oracleId": "8ec03b88-8d3a-4a32-8b7c-7da59b0c03d0",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["Equipped creature gets +10/+10 and loses flying."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/colossus-hammer.json",
+      "patchSha256": "932d185ce9f50a178278873d85814fb7a2fbd4adf2906f7d94eb008e969560f1",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Coruscation Mage",
+      "oracleId": "88bb91b5-2ccd-4ce9-8cd4-e54d63c12abf",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["Offspring {2}"],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/coruscation-mage.json",
+      "patchSha256": "9a0520618aecf202015f8b92d9e73ec328e677ae4f1fd1e6aa402276da1c8032",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Crawl from the Cellar",
       "oracleId": "16c99713-f19e-4b25-9b03-6a8d8203adfe",
       "source": "compiler@haiku-worker",
@@ -1876,6 +3125,104 @@
           "ok": true,
           "exercised": true,
           "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Cruel Celebrant",
+      "oracleId": "3ee78cfc-0e9e-4737-a7e2-b42f94228040",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever this creature or another creature or planeswalker you control dies, each opponent loses 1 life and you gain 1 life."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/cruel-celebrant.json",
+      "patchSha256": "0cf2608b8d3038ae9307ffd4dc32f35c9d1f97623bd97f536a77b684dae5ebab",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Curse of Opulence",
+      "oracleId": "ba0d3df2-3acf-46d7-8d64-8d67d1579adc",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever enchanted player is attacked, create a Gold token. Each opponent attacking that player does the same."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/curse-of-opulence.json",
+      "patchSha256": "35749fc351d8157a0054856111e5d8fccc677ed4598136e775b45a87ee2828d4",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -2049,6 +3396,44 @@
       "review": null
     },
     {
+      "name": "Decimate",
+      "oracleId": "a4e5693f-12a0-451e-818d-d6efc7b4ed25",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Destroy target artifact, target creature, target enchantment, and target land."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/decimate.json",
+      "patchSha256": "2538d0518bce708a6c1d584bd2a33aee3abddcdc7aa3267bf910b485df3721be",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Deepchannel Mentor",
       "oracleId": "53b121df-3040-4ad0-a25d-587a299b4f8b",
       "source": "xmage@31ede542",
@@ -2082,6 +3467,58 @@
           "exercised": false,
           "abilityResolved": false,
           "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Demolition Field",
+      "oracleId": "93953926-a644-49bb-9b5a-4c8f19114c7e",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "{2}, {T}, Sacrifice this land: Destroy target nonbasic land an opponent controls. That land's controller may search their library for a basic land card, put it onto the battlefield, then shuffle. You may search your library for a basic land card, put it onto the battlefield, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/demolition-field.json",
+      "patchSha256": "6918d38f2888bd5541ab21764156ff3e3d3f48894d0bd5e6225247f950c1c2d2",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A makes your search optional ('You may search your library'); Text B makes your search mandatory ('Then search your library ... and put it onto the battlefield untapped')."
+      ],
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
           "detail": "game ended"
         },
         {
@@ -2170,6 +3607,55 @@
           "ok": true,
           "exercised": true,
           "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Descent into Avernus",
+      "oracleId": "1313da2f-92bb-4862-9153-373972cc1520",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "At the beginning of your upkeep, put two descent counters on this enchantment. Then each player creates X Treasure tokens and this enchantment deals X damage to each player, where X is the number of descent counters on this enchantment."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/descent-into-avernus.json",
+      "patchSha256": "8f7a3624937b4874e24cc4cf30cd05af0999252dd362d671cae148c2d720cc26",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
           "changedGame": true,
           "detail": "game ended"
         }
@@ -2744,6 +4230,180 @@
       "review": null
     },
     {
+      "name": "Entish Restoration",
+      "oracleId": "736017e2-bc33-49e8-812d-1639443fdb51",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If you control a creature with power 4 or greater, instead search your library for up to three basic land cards, put them onto the battlefield tapped, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/entish-restoration.json",
+      "patchSha256": "9b9c918f1750c62c7992c292cbbbd8043865f491c66bb9722b57e3c0f55c2ce0",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A searches for up to two (resp. up to three) basic lands, so the player may find fewer; Text B says search for exactly two (resp. three) basic land cards with no 'up to' option."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Evendo, Waking Haven",
+      "oracleId": "83161d59-2520-4741-9328-e2a4a8b5d5bc",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["12+ | {G}, {T}: Add {G} for each creature you control."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/evendo-waking-haven.json",
+      "patchSha256": "e54ec8e89c05f3bf36349f9035401da4d351ad12b75d4cb8c5426ffe4e695cc6",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Evolution Witness",
+      "oracleId": "0e07f1af-5ff6-4da5-8683-aea4cc390975",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": ["{1}{G}: Adapt 2."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/evolution-witness.json",
+      "patchSha256": "3f05ad1d814a04183ad1e882fb2a3ff07baf3fd123f14e658aa922e8b3a6f461",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": ["The activation cost is {1}{G} in Text A but {G} in Text B."],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Experimental Augury",
+      "oracleId": "2ee08dcd-5558-45be-b619-8a550f3865ad",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. Proliferate."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/experimental-augury.json",
+      "patchSha256": "a443e0be59524ad297a728d3dfb59b50c86332a7f64be802a245a1bda3c75206",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Exsanguinator Cavalry",
       "oracleId": "a867be6f-46ce-4a12-a827-9429bd94243f",
       "source": "compiler@haiku-worker",
@@ -2861,6 +4521,58 @@
           "ok": true,
           "exercised": true,
           "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Fertile Ground",
+      "oracleId": "cf14d4e5-5965-45ad-97f7-26facf2884b5",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever enchanted land is tapped for mana, its controller adds an additional one mana of any color."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/fertile-ground.json",
+      "patchSha256": "04e104d63e81dca6b8ace069582fa77b1eeb1176dca02a6d4f4bb4298358bef3",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "The card's enchant restriction is 'Enchant land', so it can only enchant a land; Text B says 'enchanted permanent', which would allow it to enchant any permanent."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -3002,6 +4714,94 @@
       "review": null
     },
     {
+      "name": "Forbidden Orchard",
+      "oracleId": "cfd60d1f-9832-4408-b84e-0fd3018b015b",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever you tap this land for mana, target opponent creates a 1/1 colorless Spirit creature token."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/forbidden-orchard.json",
+      "patchSha256": "3bb96b0c2a75fddca43c39467ed02cd330fe38d82e26c03a25d138e2ea71570a",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A triggers only when the controller of the land (you) taps it for mana; Text B triggers whenever this land is tapped for mana by anyone."
+      ],
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Force of Vigor",
+      "oracleId": "5f627e45-deee-4a4f-8128-57b0d8ebc553",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["Destroy up to two target artifacts and/or enchantments."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/force-of-vigor.json",
+      "patchSha256": "703d7273e08370b5ff50c6a6821d18fbde0dc8d0503052fa69f26ada4757159e",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Frogtosser Banneret",
       "oracleId": "91ebedb5-cb5f-4c58-ad30-6c6b0a106aa0",
       "source": "xmage@31ede542",
@@ -3042,6 +4842,58 @@
           "ok": true,
           "exercised": false,
           "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Ghost Quarter",
+      "oracleId": "2ec4288e-34c6-4831-a2c0-ba1ca1d9d1dc",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "{T}, Sacrifice this land: Destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/ghost-quarter.json",
+      "patchSha256": "66da3cf44ebfe0375eb32e747528ad7be1299cc24815690aa2a22d9f8f0b728e",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A says the controller may search for a basic land, put it onto the battlefield, then shuffle; Text B omits the shuffle."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
           "changedGame": true,
           "detail": "game ended"
         }
@@ -3095,6 +4947,53 @@
           "exercised": true,
           "abilityResolved": true,
           "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Gilded Goose",
+      "oracleId": "f2f09757-1931-47c0-a5f0-39280445489d",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["{T}, Sacrifice a Food: Add one mana of any color."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/gilded-goose.json",
+      "patchSha256": "6cbc019d15401c7ccb6035ba13ea7f076ba3da6d3055f3ab509193947b2b7bce",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -3722,6 +5621,55 @@
       "review": null
     },
     {
+      "name": "Hall of Heliod's Generosity",
+      "oracleId": "2fc070dc-f2f7-4648-8069-31d74790a39c",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{1}{W}, {T}: Put target enchantment card from your graveyard on top of your library."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/hall-of-heliod-s-generosity.json",
+      "patchSha256": "dfe0c17a4f9e610dca3b57220639c270fb889a491302003e5d2ec63242f665be",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Hanged Executioner",
       "oracleId": "6ff4ff67-ad08-447f-a112-1a071c1474a4",
       "source": "xmage@31ede542",
@@ -3895,6 +5843,104 @@
       "review": null
     },
     {
+      "name": "Haywire Mite",
+      "oracleId": "749d2994-44e7-40d3-8630-7bebed239e9e",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{G}, Sacrifice this creature: Exile target noncreature artifact or noncreature enchantment."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/haywire-mite.json",
+      "patchSha256": "8722c16780c8a3b4497a9d7ba561d474ed48ea3bddf348b151e7d90b5d66a9d9",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Helm of the Host",
+      "oracleId": "83b43aba-bf9c-4da2-967d-9daa632e97d2",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "At the beginning of combat on your turn, create a token that's a copy of equipped creature, except the token isn't legendary. That token gains haste."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/helm-of-the-host.json",
+      "patchSha256": "2685fbf9022eb22b0363cd31a636f4efbd58b3569e4a70c6aa8c8fe7427da4e3",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Hidden Hideout",
       "oracleId": "b639e1fe-d099-4cab-a0d0-a1b33c7f31dd",
       "source": "xmage@31ede542",
@@ -3930,6 +5976,56 @@
           "exercised": false,
           "abilityResolved": false,
           "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Homeward Path",
+      "oracleId": "cb8ec2e4-8223-4172-8f2c-37c918a573fa",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": ["{T}: Each player gains control of all creatures they own."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/homeward-path.json",
+      "patchSha256": "5a5ce085723bc0d1b55bc6a2e62ee86cb948b3970518445343a9aa783ec4ec3a",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A makes each player gain control of all creatures they own; Text B makes only the controller regain control of creatures that player owns, so other players are not affected in B."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
           "detail": "game ended"
         },
         {
@@ -4023,6 +6119,55 @@
           "ok": true,
           "exercised": true,
           "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Howling Mine",
+      "oracleId": "d26b27db-a567-4631-b4b6-7294222fbdd1",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "At the beginning of each player's draw step, if this artifact is untapped, that player draws an additional card."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/howling-mine.json",
+      "patchSha256": "877a57421b878a5e5a767db1182681f535f1a666262764ea6d3759c5bdabeee8",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
           "detail": "game ended"
         }
       ],
@@ -4401,6 +6546,104 @@
       "review": null
     },
     {
+      "name": "Kappa Cannoneer",
+      "oracleId": "7fffbe7f-ad78-4bb6-a611-c37e495c6ee0",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever this creature or another artifact you control enters, put a +1/+1 counter on this creature. It can't be blocked this turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/kappa-cannoneer.json",
+      "patchSha256": "7b9f7ec2c5da447812fd17e35b4b02529c0b62ef105578d3f330854dc1a3217f",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Kenrith's Transformation",
+      "oracleId": "a492a323-df8a-40fd-bff0-50091baa7700",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Enchanted creature loses all abilities and is a green Elk creature with base power and toughness 3/3."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/kenrith-s-transformation.json",
+      "patchSha256": "3e44c7e848b693462462fa9e07cb03d580dc03d7db704d5e9b730bdbab8df334",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Kher Keep",
       "oracleId": "79638767-fbc7-451a-b29f-d93f2ac6f102",
       "source": "xmage@31ede542",
@@ -4442,6 +6685,104 @@
           "exercised": true,
           "abilityResolved": true,
           "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Kiki-Jiki, Mirror Breaker",
+      "oracleId": "a34b7416-cfe3-4a1e-a8c1-a3056b747519",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{T}: Create a token that's a copy of target nonlegendary creature you control, except it has haste. Sacrifice it at the beginning of the next end step."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/kiki-jiki-mirror-breaker.json",
+      "patchSha256": "2e32a94a84feed29f3e1aca28ef9f62dda677d43e1474744a5672b9f030abe1f",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Kindred Discovery",
+      "oracleId": "005ee549-1bf5-478f-bc3f-3e791bd7eecf",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever a creature you control of the chosen type enters or attacks, draw a card."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/kindred-discovery.json",
+      "patchSha256": "6c46689965d5f616d8c4b94d05226836bd5601701a32f09141dfb9d565cd6f46",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -4647,6 +6988,58 @@
       "review": null
     },
     {
+      "name": "Krosan Verge",
+      "oracleId": "d9a10971-f32b-4978-952d-fed0a5bc9e36",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "{2}, {T}, Sacrifice this land: Search your library for a Forest card and a Plains card, put them onto the battlefield tapped, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/krosan-verge.json",
+      "patchSha256": "2eb38dca4e0df228162f2d13ebaf5b4278294499de7a0da7bc5eeb3b7c5b8b54",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A searches your library for the Forest and Plains cards; Text B searches a library, which allows searching any player's library."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Lazotep Chancellor",
       "oracleId": "c3e67b8f-1c91-4a2f-b924-35bbaff4bab9",
       "source": "compiler@haiku-worker",
@@ -4694,6 +7087,55 @@
       "review": null
     },
     {
+      "name": "Ledger Shredder",
+      "oracleId": "e9117015-1050-44dd-a46b-e7ffe2085fae",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever a player casts their second spell each turn, this creature connives."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/ledger-shredder.json",
+      "patchSha256": "534fb8e5952ca4a75f1335ec047d7db04786898c1e2e8a1f240b9fb7ea387f6e",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Legolas's Quick Reflexes",
       "oracleId": "59154c04-6bc5-4b95-af1f-6de5fed05649",
       "source": "compiler@sonnet-worker",
@@ -4726,6 +7168,255 @@
           "ok": true,
           "exercised": true,
           "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Leyline Axe",
+      "oracleId": "4f597675-0f6d-438c-990c-337171927a5e",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "If this card is in your opening hand, you may begin the game with it on the battlefield."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/leyline-axe.json",
+      "patchSha256": "c10c830e07248f1afcd2f6fe4ba48345685a9542a318093f2a2a0c0f74d6c9f7",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A lets you choose to begin the game on the battlefield (\"you may\"); Text B makes it mandatory."
+      ],
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Lion's Eye Diamond",
+      "oracleId": "ee6099b0-fb1f-42f1-b862-7708c6e36d05",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Discard your hand, Sacrifice this artifact: Add three mana of any one color. Activate only as an instant."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/lion-s-eye-diamond.json",
+      "patchSha256": "1702d172707d4201cf10e214c060c2b99333be89fb0e4edb74fe31f9acd43a4e",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A says the mana ability can be activated only as an instant; Text B omits this timing restriction."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Lotho, Corrupt Shirriff",
+      "oracleId": "135cc078-1c45-465e-b0b9-7168c89f56f4",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever a player casts their second spell each turn, you lose 1 life and create a Treasure token."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/lotho-corrupt-shirriff.json",
+      "patchSha256": "199a7b2910e140b67b849558adb7e514b352e1e7fb0a8f4ea5988735345ae701",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Lotus Field",
+      "oracleId": "134d5b82-7940-4b33-a922-7f9d1f403e50",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["When this land enters, sacrifice two lands."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/lotus-field.json",
+      "patchSha256": "4bebc35edd7d66ca288d949a0b6fbecc5d3459d88be5189372f23d1cea019ebd",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Maestros Theater",
+      "oracleId": "9464ddf2-4bcb-44f6-b945-89a132544de6",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this land enters, sacrifice it. When you do, search your library for a basic Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/maestros-theater.json",
+      "patchSha256": "224fe72accdcf56a1a470fc84f03b7308e5c29c65bed5e83602a70d3a915c5ad",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -4811,6 +7502,141 @@
           "ok": true,
           "exercised": true,
           "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Maze of Ith",
+      "oracleId": "38a12bd7-4394-44a8-91a0-6a4ff7fa4f71",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "{T}: Untap target attacking creature. Prevent all combat damage that would be dealt to and dealt by that creature this turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/maze-of-ith.json",
+      "patchSha256": "dab991e6b0f00bee4334a573ca763ffa3c93f61db568e3f4d24e388f771a3241",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A prevents all combat damage dealt to and dealt by the creature for the rest of the turn; Text B creates a damage shield with no stated duration, which is a different prevention scope and duration than preventing all damage this turn."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Mental Misstep",
+      "oracleId": "1a0770e6-b093-4439-baff-6889a50ba12e",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["Counter target spell with mana value 1."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/mental-misstep.json",
+      "patchSha256": "c5c6ad6285f72ff59a8fd3fc01fbb355319460d5f196751521b4ef0c41b304ba",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Metallic Mimic",
+      "oracleId": "1f91297a-ec2b-4ea8-9198-aa1daac20ff8",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["~ is the chosen type in addition to its other types."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/metallic-mimic.json",
+      "patchSha256": "3244780f69a5cf25f86e8cbd7812538116dd1ce125dac21890bf30ad58b4e772",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -5005,6 +7831,55 @@
       "review": null
     },
     {
+      "name": "Mortuary Mire",
+      "oracleId": "1b3fb20a-e090-4286-9c03-6b71c27c45be",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this land enters, you may put target creature card from your graveyard on top of your library."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/mortuary-mire.json",
+      "patchSha256": "4e61bb49c88478555c01e1c12fc7b83f73930d03137f44d1fbbd97c888092e79",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Mossborn Hydra",
       "oracleId": "84122d81-9634-4d3f-85a5-f6cf4303691a",
       "source": "compiler@haiku-worker",
@@ -5046,6 +7921,48 @@
           "scenario": "busy-own-turn",
           "ok": true,
           "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Muddle the Mixture",
+      "oracleId": "0826cf7d-7ccc-459b-a92f-29dc169628f8",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": ["Transmute {1}{U}{U}"],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/muddle-the-mixture.json",
+      "patchSha256": "4d72f25a34683fb8740f05d4e11b19e372c96b73ca97580ea0293b78a3a519b3",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Transmute in Text A searches for a card with the same mana value as this card ({1}{U}{U}, mana value 3); Text B searches for a card with mana value 2."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
           "abilityResolved": false,
           "changedGame": false,
           "detail": "game ended"
@@ -5146,6 +8063,44 @@
           "exercised": true,
           "abilityResolved": true,
           "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Narset's Reversal",
+      "oracleId": "d55f6c70-321f-4fb4-bd33-0850ae1a7c36",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Copy target instant or sorcery spell, then return it to its owner's hand. You may choose new targets for the copy."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/narset-s-reversal.json",
+      "patchSha256": "79a1d3334e7fdf4f3b0bced380b8e547389480dfe7107740423666cff8e214e8",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
           "detail": "game ended"
         }
       ],
@@ -5369,6 +8324,92 @@
           "exercised": true,
           "abilityResolved": true,
           "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Noxious Revival",
+      "oracleId": "97cabeda-9fe3-490d-99b4-4c8d87c17157",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["Put target card from a graveyard on top of its owner's library."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/noxious-revival.json",
+      "patchSha256": "0bd6f28a8aaa245fa46c6ced80496487b57d8346507319b708d2872c8756ded8",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Nuka-Cola Vending Machine",
+      "oracleId": "6cfb03e5-aca6-4fe2-a3f1-93e1f0cbf9e1",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": ["Whenever you sacrifice a Food, create a tapped Treasure token."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/nuka-cola-vending-machine.json",
+      "patchSha256": "27873bab8372661066e9571603e7965372491e56a344ffe17baefe8b78138f11",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A triggers when you sacrifice a Food (you are the sacrificing player); Text B triggers when a Food you control is sacrificed by anyone, so it also fires when an opponent or an effect makes you sacrifice a Food."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
           "detail": "game ended"
         },
         {
@@ -5704,6 +8745,94 @@
       "review": null
     },
     {
+      "name": "Open the Armory",
+      "oracleId": "2ecf7771-8061-4710-ad2e-80b092ae0b4b",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Search your library for an Aura or Equipment card, reveal it, put it into your hand, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/open-the-armory.json",
+      "patchSha256": "2ac79f813cdbb23b7978b216d976c16bf533e20d072c71cd4b79f6dde1eb4d1a",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A searches your library; Text B searches a library, which allows searching any player's library."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Oran-Rief, the Vastwood",
+      "oracleId": "e88027a6-24cc-4a8b-86db-734f26149ea8",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["{T}: Put a +1/+1 counter on each green creature that entered this turn."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/oran-rief-the-vastwood.json",
+      "patchSha256": "9c1e71311e677705403f3728112787ca139ae91defb461482b3a557737b67d3f",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "renderer",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Otepec Huntmaster",
       "oracleId": "41623eab-38b5-4058-8de2-e6b8706de7a2",
       "source": "xmage@31ede542",
@@ -5789,6 +8918,44 @@
       "review": null
     },
     {
+      "name": "Overwhelming Stampede",
+      "oracleId": "e1e96802-fd0c-41f1-aa21-3287d75a0e88",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Until end of turn, creatures you control gain trample and get +X/+X, where X is the greatest power among creatures you control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/overwhelming-stampede.json",
+      "patchSha256": "5e11ddab8930d36ea771e8c5be927591ea9614fb6ea6bc3e95dce9d7dce509a4",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Oyobi, Who Split the Heavens",
       "oracleId": "df5c1f34-94e4-4f89-b1af-943c430862d0",
       "source": "xmage@31ede542",
@@ -5816,6 +8983,55 @@
           "exercised": false,
           "abilityResolved": false,
           "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Ozolith, the Shattered Spire",
+      "oracleId": "41fed659-237c-4d8e-ad31-d17fa0d3f764",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "If one or more +1/+1 counters would be put on an artifact or creature you control, that many plus one +1/+1 counters are put on it instead."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/ozolith-the-shattered-spire.json",
+      "patchSha256": "b5a61057a243c651cd5b502b37e0185fb854f20aa6039a0a271cb391d00d190d",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
           "detail": "game ended"
         },
         {
@@ -6204,6 +9420,53 @@
       "review": null
     },
     {
+      "name": "Priest of Titania",
+      "oracleId": "3a198a16-17b9-481e-b516-5bc945c7e247",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["{T}: Add {G} for each Elf on the battlefield."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/priest-of-titania.json",
+      "patchSha256": "f36ae1b7bd938bd4682a70ede84fa84237eaa5a945c5d7e666f7d7834e347e80",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Profane Memento",
       "oracleId": "c81d1890-e741-49ec-a6ce-86c27fd4d502",
       "source": "compiler@haiku-worker",
@@ -6293,6 +9556,56 @@
       "review": null
     },
     {
+      "name": "Purphoros, God of the Forge",
+      "oracleId": "4fdbbec2-e921-4b63-958d-f9ba1e417197",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": ["As long as your devotion to red is less than five, ~ isn't a creature."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/purphoros-god-of-the-forge.json",
+      "patchSha256": "34449cd8a0b7150f2b3cec866de966506a173385289c9f61d091410bf96123b6",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A makes the permanent stop being a creature (it 'isn't a creature'); Text B says it loses all creature types, which removes subtypes but leaves it a creature."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Rabid Bite",
       "oracleId": "6d5dc34b-3eea-4b77-8db7-94bc30b14c4c",
       "source": "compiler@haiku-worker",
@@ -6325,6 +9638,102 @@
           "ok": true,
           "exercised": true,
           "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Realmwalker",
+      "oracleId": "b81eaa2f-0554-41c6-bdf6-d1cb73b8f56f",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "You may cast creature spells of the chosen type from the top of your library."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/realmwalker.json",
+      "patchSha256": "69548e0020dc1771bf746c2b42eccb51477e95583b09f29912ace46b38542dec",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Reflections of Littjara",
+      "oracleId": "c3fdfb94-2d10-4743-864c-a59fdd57d8b7",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["Whenever you cast a spell of the chosen type, copy that spell."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/reflections-of-littjara.json",
+      "patchSha256": "0a5a98d1f59f7d7bf83e08a0119bbc73f079fe2849ed53494805c5d1377021f6",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -6644,6 +10053,47 @@
       "review": null
     },
     {
+      "name": "Rise of the Dark Realms",
+      "oracleId": "e5223a09-f732-4747-8914-e6546ab0ef4c",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Put all creature cards from all graveyards onto the battlefield under your control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/rise-of-the-dark-realms.json",
+      "patchSha256": "c91c7a6fea8925186a4e55e1c6c49704c361418058e2397d568c8af7128c6408",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A puts the creature cards under your control; Text B does not say who controls them, so the owners would get them."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Rite of Flame",
       "oracleId": "8a2e53f9-8100-488f-8504-b59e9bd1cc29",
       "source": "compiler@haiku-worker",
@@ -6723,6 +10173,58 @@
           "exercised": true,
           "abilityResolved": true,
           "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Riveteers Overlook",
+      "oracleId": "5548ff43-e5f6-4a63-8562-a2b1de06d6f5",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "When this land enters, sacrifice it. When you do, search your library for a basic Swamp, Mountain, or Forest card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/riveteers-overlook.json",
+      "patchSha256": "245b9f44e1c5d453e04d452633e71c6dbf6edb075d8ccb99d0fd3481b7abd179",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text B adds '(you may find none)', making the search optional; Text A's search is mandatory and the player must find a matching card if one exists."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -6870,6 +10372,49 @@
           "exercised": true,
           "abilityResolved": true,
           "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Roiling Regrowth",
+      "oracleId": "65d63518-3261-40b5-87b8-19c152b29ee3",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/roiling-regrowth.json",
+      "patchSha256": "51c86cdcf9689686133772f07b75f78d3df9ca376b2e90cce7cda7c401de498f",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A makes the land sacrifice part of the spell's resolution effect; Text B makes it an additional cost paid on casting, with the sacrificed land restricted to lands you control.",
+        "Text A searches for up to two basic lands (zero or one is allowed); Text B searches for exactly two.",
+        "Text A searches your library; Text B searches a library, which allows searching any player's library."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
           "detail": "game ended"
         }
       ],
@@ -7306,6 +10851,55 @@
       "review": null
     },
     {
+      "name": "Serra Ascendant",
+      "oracleId": "27ad3e00-6ffb-48f7-8469-8868d066d1e2",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "As long as you have 30 or more life, this creature gets +5/+5 and has flying."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/serra-ascendant.json",
+      "patchSha256": "73e3a909f988ad8f429bcd47b1189adaba70139965b0fa71834d8f81980b46ac",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Serum Snare",
       "oracleId": "fbc7350c-d392-44bf-92f7-8dd4743a73b4",
       "source": "compiler@haiku-worker",
@@ -7494,6 +11088,42 @@
       "review": null
     },
     {
+      "name": "Slip Out the Back",
+      "oracleId": "82506e51-3fe1-446f-83c9-69e67583cefc",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["Put a +1/+1 counter on target creature. It phases out."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/slip-out-the-back.json",
+      "patchSha256": "0729013f016291edff7ec122f7ede67a9f5a2e0e6f93d55e941ca0f28abb6221",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Sliver Legion",
       "oracleId": "47657df2-0e58-46c8-87e2-cc752708a612",
       "source": "xmage@31ede542",
@@ -7625,6 +11255,55 @@
           "exercised": true,
           "abilityResolved": false,
           "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Spellseeker",
+      "oracleId": "47a785ed-8095-4685-8daa-02c4e2b0ffcd",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "When this creature enters, you may search your library for an instant or sorcery card with mana value 2 or less, reveal it, put it into your hand, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/spellseeker.json",
+      "patchSha256": "8b1757430ed7551506c483de78938e065c0483362ef681b81e23099b9d7540c9",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -7880,6 +11559,138 @@
       "review": null
     },
     {
+      "name": "Staff of Compleation",
+      "oracleId": "11c7662f-e688-40a6-98fd-6ae89d231b44",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["{T}, Pay 1 life: Destroy target permanent you own."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/staff-of-compleation.json",
+      "patchSha256": "a6496d972200e224c824610f345051dab171b63a08f148df21c418f92377073d",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Steel Overseer",
+      "oracleId": "986ae327-f433-4c58-93dc-afc544b9bfcb",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["{T}: Put a +1/+1 counter on each artifact creature you control."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/steel-overseer.json",
+      "patchSha256": "2c948c04ef658e2a6707ce29c4334d2d0c5c9a53d312843cf36587397f6bf159",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Steelshaper's Gift",
+      "oracleId": "d9abda7e-6ca2-42ea-ab24-c542e57014f1",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Search your library for an Equipment card, reveal that card, put it into your hand, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/steelshaper-s-gift.json",
+      "patchSha256": "9f6bb0c6660953445e5c390ec96d5c4a1462a8a4ae67de5658fa73058dff7268",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Stern Dismissal",
       "oracleId": "319d5cf8-ab72-401e-b04e-c13a7a6c1aac",
       "source": "xmage@31ede542",
@@ -8069,6 +11880,55 @@
       "review": null
     },
     {
+      "name": "Strionic Resonator",
+      "oracleId": "cf751552-156f-4f81-ac94-9814dce099f9",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{2}, {T}: Copy target triggered ability you control. You may choose new targets for the copy."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/strionic-resonator.json",
+      "patchSha256": "f89298034dc84962e21a94ec1e2a634c1023fc6c0814fbddb636da79277075f6",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Subjugate the Hobbits",
       "oracleId": "eb56141a-eb43-40e9-8ff1-e0ef5424f6a4",
       "source": "compiler@haiku-worker",
@@ -8198,6 +12058,155 @@
           "exercised": true,
           "abilityResolved": true,
           "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Swarmyard",
+      "oracleId": "4b508087-99da-4eb1-8b12-29162f2ec85d",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["{T}: Regenerate target Insect, Rat, Spider, or Squirrel."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/swarmyard.json",
+      "patchSha256": "a3fb378d1eaeabaa6d2ab89cb6de0a1bf827a3c80aad1900bcaff236c8d563bf",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Sword of Feast and Famine",
+      "oracleId": "d0901053-6de0-46d0-9ee3-8d40510236c1",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever equipped creature deals combat damage to a player, that player discards a card and you untap all lands you control."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/sword-of-feast-and-famine.json",
+      "patchSha256": "cbf534a8a4eebc3e1659ab7678ece8283a26ed60ba57f18a0cf1c6830109377d",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Sword of Hearth and Home",
+      "oracleId": "913e6182-706a-4872-8c8a-e146b0ae0738",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever equipped creature deals combat damage to a player, exile up to one target creature you own, then search your library for a basic land card. Put both cards onto the battlefield under your control, then shuffle."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/sword-of-hearth-and-home.json",
+      "patchSha256": "7e6aa55b989ae8bce9f0505ccfaf01f8cd44312d0bd85b2f8a8578b7087a099f",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A searches your library for the basic land; Text B searches a library, which allows searching any player's library.",
+        "Text A puts the land onto the battlefield under your control; Text B does not say who controls the land."
+      ],
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -8488,6 +12497,58 @@
       "review": null
     },
     {
+      "name": "The Fire Crystal",
+      "oracleId": "57276db8-9d8d-4587-ae88-dfdc44343f17",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "{4}{R}{R}, {T}: Create a token that's a copy of target creature you control. Sacrifice it at the beginning of the next end step."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/the-fire-crystal.json",
+      "patchSha256": "f2634cfe08e06ede7b3129b97e28f61342f144de8d3e97bad5e7a5bb4fb7b525",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A sacrifices the token at the beginning of the next end step; Text B sacrifices it at the beginning of 'the end step', which does not specify the next one, so the timing can differ (for example, when activated during an end step)."
+      ],
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "The Gold Saucer",
       "oracleId": "93e38650-ce22-4ab9-b79d-cc7b6477c075",
       "source": "compiler@haiku-worker",
@@ -8529,6 +12590,53 @@
           "exercised": true,
           "abilityResolved": true,
           "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "The Shire",
+      "oracleId": "9abf9a0e-8e7d-406b-a01d-d4870b30134e",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["~ enters tapped unless you control a legendary creature."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/the-shire.json",
+      "patchSha256": "77b375fd2179563180b3b0fc186c0d2bddc750b46008f71ba4dbdd2d923cb9fe",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
           "detail": "game ended"
         }
       ],
@@ -8691,6 +12799,55 @@
       "review": null
     },
     {
+      "name": "Tocasia's Welcome",
+      "oracleId": "25c983e0-a8c9-4784-91a4-8fe04c6df882",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever one or more creatures you control with mana value 3 or less enter, draw a card. This ability triggers only once each turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/tocasia-s-welcome.json",
+      "patchSha256": "1ac459bbd1b4574458af6e249870f64af73027e2f6f56786ec656e8a19d56c85",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Tolaria West",
       "oracleId": "46eefc72-2d9e-4389-8ae1-26d9ee472b5c",
       "source": "compiler@haiku-worker",
@@ -8730,6 +12887,47 @@
           "scenario": "busy-own-turn",
           "ok": true,
           "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Tragic Slip",
+      "oracleId": "fa6e2a47-a8cb-4224-ae3e-f61c90477285",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "That creature gets -13/-13 until end of turn instead if a creature died this turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/tragic-slip.json",
+      "patchSha256": "068a5889c71e80e014de908a1b9d9d2157e3d63f8bc21cbec6a23a9ceae24a86",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
           "abilityResolved": false,
           "changedGame": false,
           "detail": "game ended"
@@ -8873,6 +13071,93 @@
       "review": null
     },
     {
+      "name": "Tribute to the World Tree",
+      "oracleId": "72deedab-7c17-4505-aeca-4bc8596d80a5",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever a creature you control enters, draw a card if its power is 3 or greater. Otherwise, put two +1/+1 counters on it."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/tribute-to-the-world-tree.json",
+      "patchSha256": "bb0aec4856c3bd6f7e1db829dfde536078e4af37891e4530780e8d16487674c6",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Triumph of the Hordes",
+      "oracleId": "3ded0c0c-40ce-4d14-a9a6-b023bc19ee0e",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Until end of turn, creatures you control get +1/+1 and gain trample and infect."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/triumph-of-the-hordes.json",
+      "patchSha256": "74c7bda200e83698a0ba87d2e7d34393e690cf98d849cc278e7289039c8a3cc4",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Twitch",
       "oracleId": "321fd970-a259-448d-bd98-e85e386174f9",
       "source": "compiler@haiku-worker",
@@ -8906,6 +13191,44 @@
           "exercised": true,
           "abilityResolved": false,
           "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Tyvar's Stand",
+      "oracleId": "4247b667-a0a8-4995-97c7-622d20132f7d",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Target creature you control gets +X/+X and gains hexproof and indestructible until end of turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/tyvar-s-stand.json",
+      "patchSha256": "302b99b0a78877734e263c7fa7c1c90ad29a2a7893c1bf73020dbeba756f786b",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
           "detail": "game ended"
         }
       ],
@@ -8961,6 +13284,238 @@
       "review": null
     },
     {
+      "name": "Umbral Collar Zealot",
+      "oracleId": "12db6263-75c2-442f-a1a5-7af7915f8f9f",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["Sacrifice another creature or artifact: Surveil 1."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/umbral-collar-zealot.json",
+      "patchSha256": "c49bcadeb9c4c4471f9e3c4adbbee200c5ed6e66a542db59540003c88878e43e",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Undying Malice",
+      "oracleId": "8b061702-1bc3-45aa-a758-446b25034801",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Until end of turn, target creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it.\""
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/undying-malice.json",
+      "patchSha256": "87f3128eaedf7727de0348d976ba1fe59fb21b83e1c97e1aa64cd1479a6340b7",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Unnatural Growth",
+      "oracleId": "7324abaa-48da-439d-9339-b0ea5eea612e",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "At the beginning of each combat, double the power and toughness of each creature you control until end of turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/unnatural-growth.json",
+      "patchSha256": "c6fa0236f3cfc88fc188c097b9a90298ea6b75658c3df6a20b623a5c0d496bac",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Urza's Mine",
+      "oracleId": "33e85a8a-86df-4cdc-a9cc-8cbabe92c3c0",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{T}: Add {C}. If you control an Urza's Power-Plant and an Urza's Tower, add {C}{C} instead."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/urza-s-mine.json",
+      "patchSha256": "bb0aea206d666268c4606b2f294c62174d2b497fc7d556534e9ad6cde2ebda64",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Urza's Power Plant",
+      "oracleId": "e11966cd-2ee3-4df4-b099-abf42dcdf0db",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{T}: Add {C}. If you control an Urza's Mine and an Urza's Tower, add {C}{C} instead."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/urza-s-power-plant.json",
+      "patchSha256": "9627966be5151b525906f9c190a331ccf68ca6bef91733b6683273eb26dabb70",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
       "name": "Urza's Ruinous Blast",
       "oracleId": "978e0d87-3ff2-4a73-916c-ff0dc0ab2797",
       "source": "xmage@31ede542",
@@ -8991,6 +13546,193 @@
           "ok": true,
           "exercised": true,
           "abilityResolved": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Urza's Tower",
+      "oracleId": "32fbb638-ab14-4e8b-a07a-d4c44e3496f2",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "{T}: Add {C}. If you control an Urza's Mine and an Urza's Power-Plant, add {C}{C}{C} instead."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/urza-s-tower.json",
+      "patchSha256": "450f81b3ea58b87bf1102853c031b3ace98a93294f8a6ad89fe061d0ab20ee9a",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Uthros, Titanic Godcore",
+      "oracleId": "df08ac72-010f-42f8-beb3-6d645c638e1e",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["12+ | {U}, {T}: Add {U} for each artifact you control."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/uthros-titanic-godcore.json",
+      "patchSha256": "d71fd67e21d4df6e2d0a6f1ebdf7ff0e7cde7cc485c00c57d1129719db535cd0",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Valakut, the Molten Pinnacle",
+      "oracleId": "1bc44216-4e06-4f66-89b7-5c327004604e",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "meaning-differs",
+      "handledLines": [
+        "Whenever a Mountain you control enters, if you control at least five other Mountains, you may have this land deal 3 damage to any target."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/valakut-the-molten-pinnacle.json",
+      "patchSha256": "ac4e5424bb9fcfd83573f7fdd08910478dcdb96cee341127bb8cffa466969140",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "differences": [
+        "Text A requires at least five OTHER Mountains besides the entering Mountain; Text B requires five or more Mountains, which counts the entering Mountain, so the trigger condition is met one Mountain earlier in B."
+      ],
+      "smokeExercised": false,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Vanquish the Horde",
+      "oracleId": "a332e80a-dc51-4dc6-bc85-e114a1c6fdb8",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["This spell costs {1} less to cast for each creature on the battlefield."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/vanquish-the-horde.json",
+      "patchSha256": "8f16086e1ce5b96bde5314674f1e18702ebe823e0d7aa400f23602f7fd66ad59",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": true,
           "detail": "game ended"
         }
       ],
@@ -9138,6 +13880,55 @@
           "exercised": false,
           "abilityResolved": false,
           "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Welcoming Vampire",
+      "oracleId": "605c1ee0-5e8a-4e0a-a99b-42a38873f822",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": [
+        "Whenever one or more other creatures you control with power 2 or less enter, draw a card. This ability triggers only once each turn."
+      ],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/welcoming-vampire.json",
+      "patchSha256": "654cf06a43cebb3ae51545be7ab42081084434abfa0029b8dbc422874a418763",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": false,
+          "abilityResolved": false,
+          "changedGame": false,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
           "detail": "game ended"
         }
       ],
@@ -9374,6 +14165,53 @@
           "exercised": true,
           "abilityResolved": true,
           "changedGame": false,
+          "detail": "game ended"
+        }
+      ],
+      "review": null
+    },
+    {
+      "name": "Yahenni, Undying Partisan",
+      "oracleId": "fdba89eb-1cf5-46e6-9d09-1adb9bc40fcd",
+      "source": "compiler@claude-haiku-5-5",
+      "status": "compiled-checked",
+      "handledLines": ["Sacrifice another creature: ~ gains indestructible until end of turn."],
+      "patch": "docs/reviews/card-compiler-trial-chunk-001/patches/yahenni-undying-partisan.json",
+      "patchSha256": "09fe0e167e07ee6320f15e3e8c56abdcfe66a475b4987c3e3f2e9c7806980831",
+      "trial": "docs/reviews/card-compiler-trial-chunk-001",
+      "textCheck": "model",
+      "smokeExercised": true,
+      "smoke": [
+        {
+          "scenario": "from-hand",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "on-battlefield",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-board",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
+          "detail": "game ended"
+        },
+        {
+          "scenario": "busy-own-turn",
+          "ok": true,
+          "exercised": true,
+          "abilityResolved": true,
+          "changedGame": true,
           "detail": "game ended"
         }
       ],
