@@ -84,6 +84,24 @@ here, because a promotion may not change engine source.
 4. The Aetherflux Reservoir busy-board smoke game threw (`threw: [object Object]`) after a player
    was eliminated. The cause is not yet known.
 
+## Checks on the promoted tree
+
+- `run.ts verify`: additive. 78 cards promoted and nothing else changed.
+- `bun run test` on a clean tree: 781 files and 12,655 tests passed.
+- `typecheck`, `typecheck:tests`, `lint`, `format:check`, `snapshots:check`, `check:ratchets` and
+  `audit:card-ir` pass.
+- Fuzz, two pods for each promoted card: 143 of 156 games passed. Of the 13 failures, 10 are halts
+  in the mana-payment planner, and one each is an "unpayable at application time" error (Mortuary
+  Mire), an out-of-memory in the mana solver (Tragic Slip) and a 300-second timeout (Amphibian
+  Downpour). The planner halts are not caused by the promotion: 40 plain games with no promoted card
+  fail 4 times, twice with the same halt, and those games fail identically with the generated module
+  emptied. The other three are in the same mana code and have not been traced to a cause, so they
+  are engine finding 5.
+
+5. The mana-payment planner halts ("state budget exceeded", "depth budget exceeded") or fails in
+   about one fuzz game in ten on this branch's base, which hides card-specific fuzz failures behind
+   background noise.
+
 ## Not run
 
 - `bun run modelled-cards`: it needs the Scryfall bulk file, which this container does not have.
