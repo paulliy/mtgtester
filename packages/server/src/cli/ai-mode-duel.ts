@@ -1,7 +1,7 @@
 /**
  * One paid four-player game that seats both tactical modes at the same table (ADR 0039): P1 and
  * P3 play `AI_TACTICAL_MODE=bot` (the bot plays, the strategist sets knobs), P2 and P4 play
- * `AI_TACTICAL_MODE=model` (today's model tactician). Everything else comes from the environment
+ * `AI_TACTICAL_MODE=model` (the model tactician, the default before 2026-11-14). Everything else comes from the environment
  * (`.env` is read by Bun), so the endpoint, models and key are the same ones the app uses.
  *
  *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]
@@ -185,8 +185,12 @@ export function counting<M extends string = ModeName>(
       try {
         result = await inner.requestDecision(prompt, request, signal);
       } catch (error) {
-        tally.failedCalls++;
-        if (role === 'tactician') tally.failedTacticianCalls++;
+        // A call stopped by the duel's own spend cap is not a provider failure, so it stays out of
+        // the fallback share that judges whether the model seats got a fair game.
+        if (!budget.capped) {
+          tally.failedCalls++;
+          if (role === 'tactician') tally.failedTacticianCalls++;
+        }
         throw error;
       } finally {
         modeByRequest.delete(request.requestId);

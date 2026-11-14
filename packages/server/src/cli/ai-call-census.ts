@@ -45,7 +45,7 @@ interface Mode {
 const ALL_SHADOW = { botEscalationShadow: [...ESCALATION_TRIGGERS] };
 
 export const MODES: Mode[] = [
-  { name: 'model (today)', config: { tacticalMode: 'model' } },
+  { name: 'model (old default)', config: { tacticalMode: 'model' } },
   {
     name: 'bot, replan every turn',
     config: {

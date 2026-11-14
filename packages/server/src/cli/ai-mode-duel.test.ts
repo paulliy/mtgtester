@@ -150,6 +150,23 @@ describe('ai-mode-duel spend accounting', () => {
     expect(sent).toBe(2);
   });
 
+  it('does not count a call stopped by the spend cap as a provider failure', async () => {
+    const budget: Budget = { maxUsd: 1, maxCalls: 10, spentUsd: 0, calls: 0, capped: false };
+    const inner = {
+      activeModel: 'm',
+      setAttemptObserver() {},
+      async requestDecision() {
+        // As `budgetedFetch` does when the call that would cross the cap is sent.
+        budget.capped = true;
+        throw new Error('ai-mode-duel spend cap reached');
+      },
+    } as unknown as OpenAiCompatibleClient;
+    const tallies = { bot: emptyTally(), model: emptyTally() };
+    const client = counting(inner, 'tactician', () => 'model', tallies, budget);
+    await expect(client.requestDecision(prompt, request)).rejects.toThrow('spend cap');
+    expect(tallies.model).toMatchObject({ failedCalls: 0, failedTacticianCalls: 0 });
+  });
+
   it('reports the share of tactician calls that fell back to the bot', () => {
     const tally = { ...emptyTally(), tacticianCalls: 95, failedTacticianCalls: 5, failedCalls: 7 };
     expect(fallbackShare(tally)).toBe(0.05);
