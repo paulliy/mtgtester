@@ -1,3 +1,4 @@
+docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/polyraptor.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/polyraptor.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/strength-of-will.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/strength-of-will.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/might-of-the-meek.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/might-of-the-meek.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/dark-petition.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/dark-petition.json
@@ -6,6 +7,7 @@ docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/nylea-god-of-the-h
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/lembas.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/lembas.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/aether-gale.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/aether-gale.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/forth-eorlingas.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/forth-eorlingas.json
+docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/winged-words.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/winged-words.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/idolized.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/idolized.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/druid-s-deliverance.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/druid-s-deliverance.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/rite-of-oblivion.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/rite-of-oblivion.json
@@ -21,5 +23,3 @@ docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/lathril-blade-of-t
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/rampaging-brontodon.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/rampaging-brontodon.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/urza-s-power-plant.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/urza-s-power-plant.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/shelter.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/shelter.json
-docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/stocking-the-pantry.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/stocking-the-pantry.json
-docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/thryx-the-sudden-storm.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/thryx-the-sudden-storm.json

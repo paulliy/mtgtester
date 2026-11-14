@@ -1,3 +1,5 @@
+docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/stocking-the-pantry.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/stocking-the-pantry.json
+docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/thryx-the-sudden-storm.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/thryx-the-sudden-storm.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/norn-s-choirmaster.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/norn-s-choirmaster.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/tormented-soul.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/tormented-soul.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/renegade-tactics.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/renegade-tactics.json

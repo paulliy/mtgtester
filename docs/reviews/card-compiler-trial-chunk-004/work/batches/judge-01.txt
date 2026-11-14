@@ -1,5 +1,6 @@
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/goblin-chirurgeon.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/goblin-chirurgeon.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/eidolon-of-rhetoric.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/eidolon-of-rhetoric.json
+docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/extinguisher-battleship.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/extinguisher-battleship.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/nesting-dragon.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/nesting-dragon.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/hidden-nursery.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/hidden-nursery.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/and-ril-flame-of-the-west.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/and-ril-flame-of-the-west.json
@@ -22,4 +23,3 @@ docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/tifa-lockhart.md	d
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/workshop-assistant.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/workshop-assistant.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/soul-s-majesty.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/soul-s-majesty.json
 docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/lotus-field.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/lotus-field.json
-docs/reviews/card-compiler-trial-chunk-004/work/prompts/judge/polyraptor.md	docs/reviews/card-compiler-trial-chunk-004/work/answers/judge/polyraptor.json
