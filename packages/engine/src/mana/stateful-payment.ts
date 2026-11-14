@@ -130,7 +130,7 @@ const handBack = Symbol('hand back to the copying search');
  * only by that tap, the pool, and triggers that wait for the stack, so under fixed capacity the
  * sources left afterwards are the same ones minus every ability of the tapped permanent.
  */
-function tapOnlySource(source: ManaSource): boolean {
+export function tapOnlySource(source: ManaSource): boolean {
   return (
     source.costs.length === 1 &&
     source.costs[0]!.kind === 'tap' &&
@@ -195,7 +195,11 @@ export function planStatefulManaPayment(
   return current.plan;
 }
 
-function searchPayment(
+/**
+ * The search behind `planStatefulManaPayment`. `current` false runs it as it was before the gated
+ * bound and the copy-free search; the verify mode and the agreement tests compare the two.
+ */
+export function searchPayment(
   ctx: GameContext,
   player: EnginePlayerState,
   cost: ParsedManaCost,
@@ -549,8 +553,7 @@ function searchPayment(
     let demand: ParsedManaCost[] | undefined;
     const demandOf = () => (demand ??= otherManaDemand(ctx, payer.id));
     if (
-      JSON.stringify(orderByKeepValue(boardOrder, tierOf, demandOf)) !==
-      JSON.stringify(rootSources)
+      JSON.stringify(orderByKeepValue(boardOrder, tierOf, demandOf)) !== JSON.stringify(rootSources)
     )
       return handBack;
     const tapped: string[] = [];
@@ -563,7 +566,10 @@ function searchPayment(
         tierOf,
         demandOf,
       );
-      if ((lifeReserved === 0 || (!lifeLocked && life >= lifeReserved)) && energy >= energyReserved) {
+      if (
+        (lifeReserved === 0 || (!lifeLocked && life >= lifeReserved)) &&
+        energy >= energyReserved
+      ) {
         const final = planPayment(
           cost,
           pool,
