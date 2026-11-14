@@ -130,10 +130,14 @@ describe('explore from an ability with no event object', () => {
     // A nonland on top: the explorer gets a +1/+1 counter and its controller is asked about it.
     const top = conjure(ctx, 'P1', relic('Finding Top Relic'), 'library');
     const asked: string[] = [];
-    pump(executeAbility(ctx, source(ctx), map, [explorer.id]), (decision) => {
-      asked.push(decision.prompt);
-      return pick(decision, /Keep/);
-    });
+    pump(
+      executeAbility(ctx, source(ctx), map, [explorer.id]),
+      (decision) => {
+        asked.push(decision.prompt);
+        return pick(decision, /Keep/);
+      },
+      { strict: true },
+    );
     expect(explorer.counters['+1/+1']).toBe(1);
     expect(asked).toEqual([expect.stringContaining('put the revealed card into your graveyard')]);
     expect(ctx.state.players[0]!.library[0]!.cardId).toBe(top.cardId);
@@ -203,8 +207,10 @@ describe('explore from an ability with no event object', () => {
     const maps = ctx.state.battlefield.filter((perm) => perm.name === 'Map');
     expect(maps.map((perm) => perm.controllerId)).toEqual(['P2', 'P2']);
     const mapAbility = getDefByOracleId(ctx, maps[0]!.oracleId, 'Map').activatedAbilities[0]!;
-    pump(executeAbility(ctx, maps[0]!, mapAbility.ability, [survivor.id]), (decision) =>
-      pick(decision, /Keep/),
+    pump(
+      executeAbility(ctx, maps[0]!, mapAbility.ability, [survivor.id]),
+      (decision) => pick(decision, /Keep/),
+      { strict: true },
     );
     expect(survivor.counters['+1/+1']).toBe(1);
   });
