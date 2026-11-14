@@ -58,6 +58,52 @@ const KNOWN_WRONG: Record<string, string> = {
     'trial 01 audit: the mana is restricted to activating abilities; the real card only forbids casting spells',
 };
 
+/**
+ * Campaign chunks: wrong patches the full audit or the pull request review found, where the error
+ * is in what the data says, so a meaning check can see it. Wrong patches whose data reads right
+ * and only the engine executes differently (Urza's Mine, Banner of Kinship, Angrath's Marauders)
+ * are not here: a back-translation cannot show them, and they belong to the validator.
+ */
+const CAMPAIGN_WRONG: { slug: string; trial: string; origin: string }[] = [
+  {
+    slug: 'urza-s-power-plant',
+    trial: 'docs/reviews/card-compiler-trial-chunk-001',
+    origin: 'chunk 001 audit: matches the other lands by name, not by land type',
+  },
+  {
+    slug: 'lotus-field',
+    trial: 'docs/reviews/card-compiler-trial-chunk-001',
+    origin:
+      'PR #72 review: sacrifices one land, then another, where the card sacrifices two at once',
+  },
+  {
+    slug: 'satyr-wayfinder',
+    trial: 'docs/reviews/card-compiler-trial-chunk-002',
+    origin: 'chunk 002 audit: reveals only the chosen card; the card reveals all four',
+  },
+  {
+    slug: 'minas-morgul-dark-fortress',
+    trial: 'docs/reviews/card-compiler-trial-chunk-002',
+    origin: 'chunk 002 audit: the Wraith type is a static of the land, not of the resolved ability',
+  },
+  {
+    slug: 'voldaren-estate',
+    trial: 'docs/reviews/card-compiler-trial-chunk-003',
+    origin: 'chunk 003 audit: the Blood token has no ability',
+  },
+  {
+    slug: 'artifact-mutation',
+    trial: 'docs/reviews/card-compiler-trial-chunk-003',
+    origin: 'PR #72 review: creates the tokens before destroying the artifact',
+  },
+  {
+    slug: 'planar-engineering',
+    trial: 'docs/reviews/card-compiler-trial-chunk-003',
+    origin:
+      'PR #72 review: sacrifices one land, then another, where the card sacrifices two at once',
+  },
+];
+
 /** Trial 02: the ten checked patches audited by hand, all correct. */
 const TRIAL_02_AUDITED = [
   'scale-the-heights',
@@ -142,14 +188,16 @@ export function buildCalibrationSet(): CalibrationCase[] {
   const sources = [
     ...TRIAL_01_PATCHES.map((slug) => ({ slug, trial: TRIAL_01, audit: 'trial 01 audit' })),
     ...TRIAL_02_AUDITED.map((slug) => ({ slug, trial: TRIAL_02, audit: 'trial 02 audit' })),
+    ...CAMPAIGN_WRONG.map(({ slug, trial }) => ({ slug, trial, audit: 'campaign audit' })),
   ];
+  const campaignWrong = new Map(CAMPAIGN_WRONG.map((entry) => [entry.slug, entry.origin]));
   for (const { slug, trial, audit } of sources) {
     const patch = JSON.parse(readFileSync(`${trial}/patches/${slug}.json`, 'utf8')) as PatchFile;
     const row = byName.get(patch.name);
     const target = row === undefined ? null : compileTarget(row);
     // A card the interpreter has since learned to read cannot carry a patch any more.
     if (target === null) continue;
-    const wrong = KNOWN_WRONG[slug];
+    const wrong = KNOWN_WRONG[slug] ?? campaignWrong.get(slug);
     if (wrong !== undefined) {
       cases.push({
         id: slug,

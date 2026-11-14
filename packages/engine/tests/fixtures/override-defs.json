@@ -2726,49 +2726,6 @@
     }
   },
   {
-    "oracleId": "134d5b82-7940-4b33-a922-7f9d1f403e50",
-    "name": "Lotus Field",
-    "handledLines": [
-      "When this land enters, sacrifice two lands."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When this land enters, sacrifice two lands.",
-          "effects": [
-            {
-              "op": "sacrificeOneThen",
-              "selector": {
-                "kind": "type",
-                "value": "Land"
-              },
-              "then": [
-                {
-                  "op": "sacrificeOneThen",
-                  "selector": {
-                    "kind": "type",
-                    "value": "Land"
-                  },
-                  "then": []
-                }
-              ]
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "134dfb35-0c32-4143-aa63-7701f406b59e",
     "name": "Unmarked Grave",
     "handledLines": [
@@ -29539,86 +29496,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "dc48079a-b1c4-4c43-a989-418c78a264ec",
-    "name": "Planar Engineering",
-    "handledLines": [
-      "Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle.",
-        "effects": [
-          {
-            "op": "sacrificeOneThen",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Land"
-                },
-                {
-                  "kind": "controller",
-                  "who": "you"
-                }
-              ]
-            },
-            "then": []
-          },
-          {
-            "op": "sacrificeOneThen",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Land"
-                },
-                {
-                  "kind": "controller",
-                  "who": "you"
-                }
-              ]
-            },
-            "then": []
-          },
-          {
-            "count": {
-              "kind": "const",
-              "n": 4
-            },
-            "destinations": [
-              {
-                "tapped": true,
-                "zone": "battlefield"
-              }
-            ],
-            "filter": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "supertype",
-                  "value": "Basic"
-                },
-                {
-                  "kind": "type",
-                  "value": "Land"
-                }
-              ]
-            },
-            "op": "searchLibrary"
-          },
-          {
-            "op": "shuffle"
-          }
-        ],
-        "kind": "spell",
-        "targets": []
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "dc5dffc8-fac5-4956-bac4-1ad2cc16f6be",
     "name": "Deflecting Palm",
     "handledLines": [
@@ -31693,54 +31570,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "e77e8768-3ea8-44f9-aba6-1e023e006946",
-    "name": "Artifact Mutation",
-    "handledLines": [
-      "Destroy target artifact. It can't be regenerated. Create X 1/1 green Saproling creature tokens, where X is that artifact's mana value."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Destroy target artifact. It can't be regenerated. Create X 1/1 green Saproling creature tokens, where X is that artifact's mana value.",
-        "effects": [
-          {
-            "count": {
-              "kind": "manaValueOfTarget",
-              "target": 0
-            },
-            "op": "createToken",
-            "spec": {
-              "colors": [
-                "G"
-              ],
-              "name": "Saproling",
-              "power": 1,
-              "subtypes": [
-                "Saproling"
-              ],
-              "toughness": 1,
-              "typeLine": "Creature — Saproling",
-              "types": [
-                "Creature"
-              ]
-            }
-          },
-          {
-            "cantRegenerate": true,
-            "op": "destroy",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "artifact"
-          }
-        ]
-      }
-    },
-    "compose": "append"
   },
   {
     "oracleId": "e7ae3ee7-824f-4dcb-8f28-7de99e4d8c3e",
@@ -37720,54 +37549,6 @@
         ],
         "kind": "spell",
         "targets": []
-      }
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-artifact-mutation",
-    "name": "Artifact Mutation",
-    "handledLines": [
-      "Destroy target artifact. It can't be regenerated. Create X 1/1 green Saproling creature tokens, where X is that artifact's mana value."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Destroy target artifact. It can't be regenerated. Create X 1/1 green Saproling creature tokens, where X is that artifact's mana value.",
-        "effects": [
-          {
-            "count": {
-              "kind": "manaValueOfTarget",
-              "target": 0
-            },
-            "op": "createToken",
-            "spec": {
-              "colors": [
-                "G"
-              ],
-              "name": "Saproling",
-              "power": 1,
-              "subtypes": [
-                "Saproling"
-              ],
-              "toughness": 1,
-              "typeLine": "Creature — Saproling",
-              "types": [
-                "Creature"
-              ]
-            }
-          },
-          {
-            "cantRegenerate": true,
-            "op": "destroy",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "artifact"
-          }
-        ]
       }
     },
     "compose": "append"
@@ -53385,49 +53166,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-lotus-field",
-    "name": "Lotus Field",
-    "handledLines": [
-      "When this land enters, sacrifice two lands."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When this land enters, sacrifice two lands.",
-          "effects": [
-            {
-              "op": "sacrificeOneThen",
-              "selector": {
-                "kind": "type",
-                "value": "Land"
-              },
-              "then": [
-                {
-                  "op": "sacrificeOneThen",
-                  "selector": {
-                    "kind": "type",
-                    "value": "Land"
-                  },
-                  "then": []
-                }
-              ]
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-loyal-apprentice",
     "name": "Loyal Apprentice",
     "handledLines": [
@@ -58663,86 +58401,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-planar-engineering",
-    "name": "Planar Engineering",
-    "handledLines": [
-      "Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle.",
-        "effects": [
-          {
-            "op": "sacrificeOneThen",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Land"
-                },
-                {
-                  "kind": "controller",
-                  "who": "you"
-                }
-              ]
-            },
-            "then": []
-          },
-          {
-            "op": "sacrificeOneThen",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Land"
-                },
-                {
-                  "kind": "controller",
-                  "who": "you"
-                }
-              ]
-            },
-            "then": []
-          },
-          {
-            "count": {
-              "kind": "const",
-              "n": 4
-            },
-            "destinations": [
-              {
-                "tapped": true,
-                "zone": "battlefield"
-              }
-            ],
-            "filter": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "supertype",
-                  "value": "Basic"
-                },
-                {
-                  "kind": "type",
-                  "value": "Land"
-                }
-              ]
-            },
-            "op": "searchLibrary"
-          },
-          {
-            "op": "shuffle"
-          }
-        ],
-        "kind": "spell",
-        "targets": []
-      }
-    },
-    "compose": "append"
   },
   {
     "oracleId": "oracle-planar-void",

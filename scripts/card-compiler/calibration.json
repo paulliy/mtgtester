@@ -2711,6 +2711,394 @@
           }
         ]
       }
+    },
+    {
+      "id": "urza-s-power-plant",
+      "name": "Urza's Power Plant",
+      "expected": "different",
+      "origin": "chunk 001 audit: matches the other lands by name, not by land type",
+      "def": {
+        "manaAbilities": [
+          {
+            "units": [["C"]],
+            "conditionalUnits": {
+              "condition": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "countPermanents",
+                    "selector": {
+                      "kind": "name",
+                      "value": "Urza's Mine"
+                    },
+                    "scope": "you",
+                    "cmp": ">=",
+                    "n": 1
+                  },
+                  {
+                    "kind": "countPermanents",
+                    "selector": {
+                      "kind": "name",
+                      "value": "Urza's Tower"
+                    },
+                    "scope": "you",
+                    "cmp": ">=",
+                    "n": 1
+                  }
+                ]
+              },
+              "units": [["C"], ["C"]]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "lotus-field",
+      "name": "Lotus Field",
+      "expected": "different",
+      "origin": "PR #72 review: sacrifices one land, then another, where the card sacrifices two at once",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "sacrificeOneThen",
+                "selector": {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                "then": [
+                  {
+                    "op": "sacrificeOneThen",
+                    "selector": {
+                      "kind": "type",
+                      "value": "Land"
+                    },
+                    "then": []
+                  }
+                ]
+              }
+            ],
+            "description": "When this land enters, sacrifice two lands."
+          }
+        ]
+      }
+    },
+    {
+      "id": "satyr-wayfinder",
+      "name": "Satyr Wayfinder",
+      "expected": "different",
+      "origin": "chunk 002 audit: reveals only the chosen card; the card reveals all four",
+      "def": {
+        "triggers": [
+          {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "lookAtTopN",
+                "count": 4,
+                "mayPut": {
+                  "filter": {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  "destination": {
+                    "zone": "hand"
+                  },
+                  "reveal": true
+                },
+                "rest": "graveyard"
+              }
+            ],
+            "description": "When this creature enters, reveal the top four cards of your library. You may put a land card from among them into your hand. Put the rest into your graveyard."
+          }
+        ]
+      }
+    },
+    {
+      "id": "minas-morgul-dark-fortress",
+      "name": "Minas Morgul, Dark Fortress",
+      "expected": "different",
+      "origin": "chunk 002 audit: the Wraith type is a static of the land, not of the resolved ability",
+      "def": {
+        "activatedAbilities": [
+          {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 3,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 1,
+                    "R": 0,
+                    "G": 0
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [
+                {
+                  "kind": "creature"
+                }
+              ],
+              "effects": [
+                {
+                  "op": "putCounters",
+                  "target": 0,
+                  "counter": "shadow",
+                  "count": 1
+                }
+              ],
+              "description": "{3}{B}, {T}: Put a shadow counter on target creature."
+            }
+          }
+        ],
+        "staticEffects": [
+          {
+            "affects": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "hasCounter",
+                  "counter": "shadow"
+                }
+              ]
+            },
+            "op": {
+              "layer": 4,
+              "addSubtypes": ["Wraith"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "voldaren-estate",
+      "name": "Voldaren Estate",
+      "expected": "different",
+      "origin": "chunk 003 audit: the Blood token has no ability",
+      "def": {
+        "activatedAbilities": [
+          {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 5,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 0
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "createToken",
+                  "spec": {
+                    "name": "Blood",
+                    "typeLine": "Artifact — Blood",
+                    "types": ["Artifact"],
+                    "subtypes": ["Blood"],
+                    "colors": [],
+                    "power": null,
+                    "toughness": null
+                  },
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "description": "{5}, {T}: Create a Blood token. This ability costs {1} less to activate for each Vampire you control."
+            }
+          }
+        ],
+        "ruleStatics": [
+          {
+            "kind": "costReduction",
+            "appliesTo": "activate",
+            "selfOnly": true,
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Vampire"
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "artifact-mutation",
+      "name": "Artifact Mutation",
+      "expected": "different",
+      "origin": "PR #72 review: creates the tokens before destroying the artifact",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [
+            {
+              "kind": "artifact"
+            }
+          ],
+          "effects": [
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Saproling",
+                "typeLine": "Creature — Saproling",
+                "types": ["Creature"],
+                "subtypes": ["Saproling"],
+                "colors": ["G"],
+                "power": 1,
+                "toughness": 1
+              },
+              "count": {
+                "kind": "manaValueOfTarget",
+                "target": 0
+              }
+            },
+            {
+              "op": "destroy",
+              "target": 0,
+              "cantRegenerate": true
+            }
+          ],
+          "description": "Destroy target artifact. It can't be regenerated. Create X 1/1 green Saproling creature tokens, where X is that artifact's mana value."
+        }
+      }
+    },
+    {
+      "id": "planar-engineering",
+      "name": "Planar Engineering",
+      "expected": "different",
+      "origin": "PR #72 review: sacrifices one land, then another, where the card sacrifices two at once",
+      "def": {
+        "spellAbility": {
+          "kind": "spell",
+          "targets": [],
+          "effects": [
+            {
+              "op": "sacrificeOneThen",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              },
+              "then": []
+            },
+            {
+              "op": "sacrificeOneThen",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              },
+              "then": []
+            },
+            {
+              "op": "searchLibrary",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              },
+              "destinations": [
+                {
+                  "zone": "battlefield",
+                  "tapped": true
+                }
+              ],
+              "count": {
+                "kind": "const",
+                "n": 4
+              }
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "description": "Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle."
+        }
+      }
     }
   ]
 }

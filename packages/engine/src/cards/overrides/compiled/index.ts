@@ -2235,51 +2235,6 @@ const BATCH_CHUNK_001: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '134d5b82-7940-4b33-a922-7f9d1f403e50',
-    name: 'Lotus Field',
-    handledLines: ['When this land enters, sacrifice two lands.'],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'enters',
-            subject: {
-              kind: 'self',
-            },
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'sacrificeOneThen',
-              selector: {
-                kind: 'type',
-                value: 'Land',
-              },
-              then: [
-                {
-                  op: 'sacrificeOneThen',
-                  selector: {
-                    kind: 'type',
-                    value: 'Land',
-                  },
-                  then: [],
-                },
-              ],
-            },
-          ],
-          description: 'When this land enters, sacrifice two lands.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-001',
-    patchSha256: '4bebc35edd7d66ca288d949a0b6fbecc5d3459d88be5189372f23d1cea019ebd',
-    behaviorSha256: 'adcf0dbf60f1e9659391ebdd0345f52ae53faedaeb601c3cbd4ffe9ba90fe5a0',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '9464ddf2-4bcb-44f6-b945-89a132544de6',
     name: 'Maestros Theater',
     handledLines: [
@@ -8749,53 +8704,6 @@ const BATCH_CHUNK_003: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'e77e8768-3ea8-44f9-aba6-1e023e006946',
-    name: 'Artifact Mutation',
-    handledLines: [
-      "Destroy target artifact. It can't be regenerated. Create X 1/1 green Saproling creature tokens, where X is that artifact's mana value.",
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [
-          {
-            kind: 'artifact',
-          },
-        ],
-        effects: [
-          {
-            op: 'createToken',
-            spec: {
-              name: 'Saproling',
-              typeLine: 'Creature — Saproling',
-              types: ['Creature'],
-              subtypes: ['Saproling'],
-              colors: ['G'],
-              power: 1,
-              toughness: 1,
-            },
-            count: {
-              kind: 'manaValueOfTarget',
-              target: 0,
-            },
-          },
-          {
-            op: 'destroy',
-            target: 0,
-            cantRegenerate: true,
-          },
-        ],
-        description:
-          "Destroy target artifact. It can't be regenerated. Create X 1/1 green Saproling creature tokens, where X is that artifact's mana value.",
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-003',
-    patchSha256: '7ff9b5b06986797f14fea6153d9d513cf9cd9a31849c450990e95c9cd65a68a6',
-    behaviorSha256: 'ef9ed230030c603536854efcdfa088146c214354bad3b986bb0c4457024373df',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '69aa6809-5468-413a-94c9-562e6de93957',
     name: 'Baird, Steward of Argive',
     handledLines: [
@@ -11253,91 +11161,6 @@ const BATCH_CHUNK_003: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-003',
     patchSha256: '0646d783429eb4e51996e58c1b44f4b6f29e888aa3c678e906fe95dd9d80ee2c',
     behaviorSha256: 'f3813709bbcfc1d685cff403164c53aee118e080e6a75609a10b1cc287315efa',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'dc48079a-b1c4-4c43-a989-418c78a264ec',
-    name: 'Planar Engineering',
-    handledLines: [
-      'Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle.',
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [],
-        effects: [
-          {
-            op: 'sacrificeOneThen',
-            selector: {
-              kind: 'allOf',
-              of: [
-                {
-                  kind: 'type',
-                  value: 'Land',
-                },
-                {
-                  kind: 'controller',
-                  who: 'you',
-                },
-              ],
-            },
-            then: [],
-          },
-          {
-            op: 'sacrificeOneThen',
-            selector: {
-              kind: 'allOf',
-              of: [
-                {
-                  kind: 'type',
-                  value: 'Land',
-                },
-                {
-                  kind: 'controller',
-                  who: 'you',
-                },
-              ],
-            },
-            then: [],
-          },
-          {
-            op: 'searchLibrary',
-            filter: {
-              kind: 'allOf',
-              of: [
-                {
-                  kind: 'supertype',
-                  value: 'Basic',
-                },
-                {
-                  kind: 'type',
-                  value: 'Land',
-                },
-              ],
-            },
-            destinations: [
-              {
-                zone: 'battlefield',
-                tapped: true,
-              },
-            ],
-            count: {
-              kind: 'const',
-              n: 4,
-            },
-          },
-          {
-            op: 'shuffle',
-          },
-        ],
-        description:
-          'Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle.',
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-003',
-    patchSha256: 'f4c35966a185b0a465a10290b3be15d1cea8f8c149ad1210bdb520dab09123f1',
-    behaviorSha256: 'aff727d79c768ddb1d500d92caaac813bc1839df87d75cf56d2e0de22306c6a4',
     acceptedBy: 'main-thread',
   },
   {
