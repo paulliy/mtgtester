@@ -23,9 +23,7 @@
   {
     "name": "Crawlspace",
     "rank": 1385,
-    "lines": [
-      "No more than two creatures can attack you each combat."
-    ]
+    "lines": ["No more than two creatures can attack you each combat."]
   },
   {
     "name": "Coiling Oracle",
@@ -72,9 +70,7 @@
   {
     "name": "Wave Goodbye",
     "rank": 1418,
-    "lines": [
-      "Return each creature without a +1/+1 counter on it to its owner's hand."
-    ]
+    "lines": ["Return each creature without a +1/+1 counter on it to its owner's hand."]
   },
   {
     "name": "Snapcaster Mage",
@@ -93,9 +89,7 @@
   {
     "name": "Baleful Mastery",
     "rank": 1423,
-    "lines": [
-      "If the {1}{B} cost was paid, an opponent draws a card."
-    ]
+    "lines": ["If the {1}{B} cost was paid, an opponent draws a card."]
   },
   {
     "name": "Terastodon",
@@ -107,16 +101,12 @@
   {
     "name": "Fling",
     "rank": 1431,
-    "lines": [
-      "~ deals damage equal to the sacrificed creature's power to any target."
-    ]
+    "lines": ["~ deals damage equal to the sacrificed creature's power to any target."]
   },
   {
     "name": "No Mercy",
     "rank": 1432,
-    "lines": [
-      "Whenever a creature deals damage to you, destroy it."
-    ]
+    "lines": ["Whenever a creature deals damage to you, destroy it."]
   },
   {
     "name": "Caduceus, Staff of Hermes",
@@ -184,16 +174,12 @@
   {
     "name": "Misdirection",
     "rank": 1458,
-    "lines": [
-      "Change the target of target spell with a single target."
-    ]
+    "lines": ["Change the target of target spell with a single target."]
   },
   {
     "name": "Vedalken Orrery",
     "rank": 1459,
-    "lines": [
-      "You may cast spells as though they had flash."
-    ]
+    "lines": ["You may cast spells as though they had flash."]
   },
   {
     "name": "Treasure Nabber",
@@ -219,9 +205,7 @@
   {
     "name": "Cover of Darkness",
     "rank": 1465,
-    "lines": [
-      "Creatures of the chosen type have fear."
-    ]
+    "lines": ["Creatures of the chosen type have fear."]
   },
   {
     "name": "Temur Battle Rage",
@@ -247,9 +231,7 @@
   {
     "name": "Thalia, Heretic Cathar",
     "rank": 1471,
-    "lines": [
-      "Creatures and nonbasic lands your opponents control enter tapped."
-    ]
+    "lines": ["Creatures and nonbasic lands your opponents control enter tapped."]
   },
   {
     "name": "Ouroboroid",
@@ -268,9 +250,7 @@
   {
     "name": "In Garruk's Wake",
     "rank": 1481,
-    "lines": [
-      "Destroy all creatures you don't control and all planeswalkers you don't control."
-    ]
+    "lines": ["Destroy all creatures you don't control and all planeswalkers you don't control."]
   },
   {
     "name": "Sneak Attack",
@@ -282,16 +262,12 @@
   {
     "name": "Fell the Mighty",
     "rank": 1485,
-    "lines": [
-      "Destroy all creatures with power greater than target creature's power."
-    ]
+    "lines": ["Destroy all creatures with power greater than target creature's power."]
   },
   {
     "name": "Lizard Blades",
     "rank": 1490,
-    "lines": [
-      "Reconfigure {2}"
-    ]
+    "lines": ["Reconfigure {2}"]
   },
   {
     "name": "Gratuitous Violence",
@@ -338,9 +314,7 @@
   {
     "name": "Horizon of Progress",
     "rank": 1508,
-    "lines": [
-      "{3}, {T}: You may put a land card from your hand onto the battlefield tapped."
-    ]
+    "lines": ["{3}, {T}: You may put a land card from your hand onto the battlefield tapped."]
   },
   {
     "name": "Patriarch's Bidding",
@@ -394,9 +368,7 @@
   {
     "name": "Rhox Faithmender",
     "rank": 1535,
-    "lines": [
-      "If you would gain life, you gain twice that much life instead."
-    ]
+    "lines": ["If you would gain life, you gain twice that much life instead."]
   },
   {
     "name": "Eerie Ultimatum",
@@ -457,9 +429,7 @@
   {
     "name": "Ophidian Eye",
     "rank": 1571,
-    "lines": [
-      "Whenever enchanted creature deals damage to an opponent, you may draw a card."
-    ]
+    "lines": ["Whenever enchanted creature deals damage to an opponent, you may draw a card."]
   },
   {
     "name": "Cultivator Colossus",
@@ -471,9 +441,7 @@
   {
     "name": "Desynchronization",
     "rank": 1575,
-    "lines": [
-      "Return each nonland permanent that's not historic to its owner's hand."
-    ]
+    "lines": ["Return each nonland permanent that's not historic to its owner's hand."]
   },
   {
     "name": "Goblin Welder",
@@ -499,9 +467,7 @@
   {
     "name": "Felidar Sovereign",
     "rank": 1589,
-    "lines": [
-      "At the beginning of your upkeep, if you have 40 or more life, you win the game."
-    ]
+    "lines": ["At the beginning of your upkeep, if you have 40 or more life, you win the game."]
   },
   {
     "name": "The Gaffer",
@@ -513,9 +479,7 @@
   {
     "name": "Uro, Titan of Nature's Wrath",
     "rank": 1599,
-    "lines": [
-      "When ~ enters, sacrifice it unless it escaped."
-    ]
+    "lines": ["When ~ enters, sacrifice it unless it escaped."]
   },
   {
     "name": "Unmarked Grave",
@@ -576,9 +540,7 @@
   {
     "name": "Wild-Magic Sorcerer",
     "rank": 1627,
-    "lines": [
-      "The first spell you cast from exile each turn has cascade."
-    ]
+    "lines": ["The first spell you cast from exile each turn has cascade."]
   },
   {
     "name": "Loyal Warhound",
@@ -632,9 +594,7 @@
   {
     "name": "Woe Strider",
     "rank": 1653,
-    "lines": [
-      "~ escapes with two +1/+1 counters on it."
-    ]
+    "lines": ["~ escapes with two +1/+1 counters on it."]
   },
   {
     "name": "Blood Money",
@@ -653,9 +613,7 @@
   {
     "name": "Crypt of Agadeem",
     "rank": 1667,
-    "lines": [
-      "{2}, {T}: Add {B} for each black creature card in your graveyard."
-    ]
+    "lines": ["{2}, {T}: Add {B} for each black creature card in your graveyard."]
   },
   {
     "name": "Extraplanar Lens",
@@ -667,9 +625,7 @@
   {
     "name": "Gingerbrute",
     "rank": 1672,
-    "lines": [
-      "{1}: ~ can't be blocked this turn except by creatures with haste."
-    ]
+    "lines": ["{1}: ~ can't be blocked this turn except by creatures with haste."]
   },
   {
     "name": "Ondu Spiritdancer",
@@ -681,9 +637,7 @@
   {
     "name": "Reforge the Soul",
     "rank": 1679,
-    "lines": [
-      "Miracle {1}{R}"
-    ]
+    "lines": ["Miracle {1}{R}"]
   },
   {
     "name": "Sword of Truth and Justice",
@@ -702,23 +656,17 @@
   {
     "name": "Tetsuko Umezawa, Fugitive",
     "rank": 1688,
-    "lines": [
-      "Creatures you control with power or toughness 1 or less can't be blocked."
-    ]
+    "lines": ["Creatures you control with power or toughness 1 or less can't be blocked."]
   },
   {
     "name": "Gleaming Splendor",
     "rank": 1692,
-    "lines": [
-      "{2}{W}: Two target players each draw a card."
-    ]
+    "lines": ["{2}{W}: Two target players each draw a card."]
   },
   {
     "name": "Profane Tutor",
     "rank": 1701,
-    "lines": [
-      "Suspend 2—{1}{B}"
-    ]
+    "lines": ["Suspend 2—{1}{B}"]
   },
   {
     "name": "Obscura Storefront",
@@ -765,16 +713,12 @@
   {
     "name": "Intruder Alarm",
     "rank": 1717,
-    "lines": [
-      "Creatures don't untap during their controllers' untap steps."
-    ]
+    "lines": ["Creatures don't untap during their controllers' untap steps."]
   },
   {
     "name": "Impulsive Pilferer",
     "rank": 1722,
-    "lines": [
-      "Encore {3}{R}"
-    ]
+    "lines": ["Encore {3}{R}"]
   },
   {
     "name": "Painful Truths",
@@ -786,9 +730,7 @@
   {
     "name": "Tomb of the Spirit Dragon",
     "rank": 1729,
-    "lines": [
-      "{2}, {T}: You gain 1 life for each colorless creature you control."
-    ]
+    "lines": ["{2}, {T}: You gain 1 life for each colorless creature you control."]
   },
   {
     "name": "Alesha, Who Laughs at Fate",
@@ -821,16 +763,12 @@
   {
     "name": "Timely Ward",
     "rank": 1743,
-    "lines": [
-      "You may cast this spell as though it had flash if it targets a commander."
-    ]
+    "lines": ["You may cast this spell as though it had flash if it targets a commander."]
   },
   {
     "name": "Army of the Damned",
     "rank": 1747,
-    "lines": [
-      "Create thirteen tapped 2/2 black Zombie creature tokens."
-    ]
+    "lines": ["Create thirteen tapped 2/2 black Zombie creature tokens."]
   },
   {
     "name": "Ancient Brass Dragon",
@@ -842,9 +780,7 @@
   {
     "name": "Adaptive Automaton",
     "rank": 1760,
-    "lines": [
-      "~ is the chosen type in addition to its other types."
-    ]
+    "lines": ["~ is the chosen type in addition to its other types."]
   },
   {
     "name": "Satyr Wayfinder",
@@ -884,16 +820,12 @@
   {
     "name": "Urabrask the Hidden",
     "rank": 1787,
-    "lines": [
-      "Creatures your opponents control enter tapped."
-    ]
+    "lines": ["Creatures your opponents control enter tapped."]
   },
   {
     "name": "Brave the Sands",
     "rank": 1788,
-    "lines": [
-      "Each creature you control can block an additional creature each combat."
-    ]
+    "lines": ["Each creature you control can block an additional creature each combat."]
   },
   {
     "name": "Insurrection",
@@ -905,9 +837,7 @@
   {
     "name": "Goldlust Triad",
     "rank": 1794,
-    "lines": [
-      "Myriad"
-    ]
+    "lines": ["Myriad"]
   },
   {
     "name": "Claim Jumper",
@@ -947,9 +877,7 @@
   {
     "name": "Mana Reflection",
     "rank": 1813,
-    "lines": [
-      "If you tap a permanent for mana, it produces twice as much of that mana instead."
-    ]
+    "lines": ["If you tap a permanent for mana, it produces twice as much of that mana instead."]
   },
   {
     "name": "Containment Construct",
@@ -961,23 +889,17 @@
   {
     "name": "Tormod's Crypt",
     "rank": 1819,
-    "lines": [
-      "{T}, Sacrifice this artifact: Exile target player's graveyard."
-    ]
+    "lines": ["{T}, Sacrifice this artifact: Exile target player's graveyard."]
   },
   {
     "name": "Terrain Generator",
     "rank": 1824,
-    "lines": [
-      "{2}, {T}: You may put a basic land card from your hand onto the battlefield tapped."
-    ]
+    "lines": ["{2}, {T}: You may put a basic land card from your hand onto the battlefield tapped."]
   },
   {
     "name": "Bartolomé del Presidio",
     "rank": 1826,
-    "lines": [
-      "Sacrifice another creature or artifact: Put a +1/+1 counter on ~."
-    ]
+    "lines": ["Sacrifice another creature or artifact: Put a +1/+1 counter on ~."]
   },
   {
     "name": "White Sun's Twilight",
@@ -1024,16 +946,12 @@
   {
     "name": "Dictate of Kruphix",
     "rank": 1840,
-    "lines": [
-      "At the beginning of each player's draw step, that player draws an additional card."
-    ]
+    "lines": ["At the beginning of each player's draw step, that player draws an additional card."]
   },
   {
     "name": "Bennie Bracks, Zoologist",
     "rank": 1841,
-    "lines": [
-      "At the beginning of each end step, if you created a token this turn, draw a card."
-    ]
+    "lines": ["At the beginning of each end step, if you created a token this turn, draw a card."]
   },
   {
     "name": "Passionate Archaeologist",
@@ -1066,9 +984,7 @@
   {
     "name": "Tree of Perdition",
     "rank": 1852,
-    "lines": [
-      "{T}: Exchange target opponent's life total with this creature's toughness."
-    ]
+    "lines": ["{T}: Exchange target opponent's life total with this creature's toughness."]
   },
   {
     "name": "Sword of Forge and Frontier",
@@ -1080,9 +996,7 @@
   {
     "name": "Kami of the Crescent Moon",
     "rank": 1856,
-    "lines": [
-      "At the beginning of each player's draw step, that player draws an additional card."
-    ]
+    "lines": ["At the beginning of each player's draw step, that player draws an additional card."]
   },
   {
     "name": "Divine Visitation",
@@ -1094,16 +1008,12 @@
   {
     "name": "Search for Tomorrow",
     "rank": 1860,
-    "lines": [
-      "Suspend 2—{G}"
-    ]
+    "lines": ["Suspend 2—{G}"]
   },
   {
     "name": "The Locust God",
     "rank": 1861,
-    "lines": [
-      "When ~ dies, return it to its owner's hand at the beginning of the next end step."
-    ]
+    "lines": ["When ~ dies, return it to its owner's hand at the beginning of the next end step."]
   },
   {
     "name": "Phyrexian Obliterator",
@@ -1115,16 +1025,12 @@
   {
     "name": "Archetype of Imagination",
     "rank": 1867,
-    "lines": [
-      "Creatures your opponents control lose flying and can't have or gain flying."
-    ]
+    "lines": ["Creatures your opponents control lose flying and can't have or gain flying."]
   },
   {
     "name": "Cryptbreaker",
     "rank": 1878,
-    "lines": [
-      "Tap three untapped Zombies you control: You draw a card and lose 1 life."
-    ]
+    "lines": ["Tap three untapped Zombies you control: You draw a card and lose 1 life."]
   },
   {
     "name": "Mutavault",
@@ -1150,9 +1056,7 @@
   {
     "name": "Bitterthorn, Nissa's Animus",
     "rank": 1890,
-    "lines": [
-      "Living weapon"
-    ]
+    "lines": ["Living weapon"]
   },
   {
     "name": "Tannuk, Memorial Ensign",
@@ -1171,16 +1075,12 @@
   {
     "name": "Defense Grid",
     "rank": 1906,
-    "lines": [
-      "Each spell costs {3} more to cast except during its controller's turn."
-    ]
+    "lines": ["Each spell costs {3} more to cast except during its controller's turn."]
   },
   {
     "name": "Black Sun's Zenith",
     "rank": 1913,
-    "lines": [
-      "Put X -1/-1 counters on each creature. Shuffle ~ into its owner's library."
-    ]
+    "lines": ["Put X -1/-1 counters on each creature. Shuffle ~ into its owner's library."]
   },
   {
     "name": "Homunculus Horde",
@@ -1199,9 +1099,7 @@
   {
     "name": "Thirst for Knowledge",
     "rank": 1931,
-    "lines": [
-      "Draw three cards. Then discard two cards unless you discard an artifact card."
-    ]
+    "lines": ["Draw three cards. Then discard two cards unless you discard an artifact card."]
   },
   {
     "name": "Inkmoth Nexus",
@@ -1262,16 +1160,12 @@
   {
     "name": "Patrolling Peacemaker",
     "rank": 1955,
-    "lines": [
-      "Whenever an opponent commits a crime, proliferate."
-    ]
+    "lines": ["Whenever an opponent commits a crime, proliferate."]
   },
   {
     "name": "Nasty End",
     "rank": 1956,
-    "lines": [
-      "Draw two cards. If the sacrificed creature was legendary, draw three cards instead."
-    ]
+    "lines": ["Draw two cards. If the sacrificed creature was legendary, draw three cards instead."]
   },
   {
     "name": "Junk Diver",
@@ -1283,9 +1177,7 @@
   {
     "name": "Juri, Master of the Revue",
     "rank": 1962,
-    "lines": [
-      "When ~ dies, it deals damage equal to its power to any target."
-    ]
+    "lines": ["When ~ dies, it deals damage equal to its power to any target."]
   },
   {
     "name": "Wound Reflection",
@@ -1297,9 +1189,7 @@
   {
     "name": "Sire of Seven Deaths",
     "rank": 1966,
-    "lines": [
-      "Ward—Pay 7 life."
-    ]
+    "lines": ["Ward—Pay 7 life."]
   },
   {
     "name": "Brawn",
@@ -1311,16 +1201,12 @@
   {
     "name": "Venser, Shaper Savant",
     "rank": 1968,
-    "lines": [
-      "When ~ enters, return target spell or permanent to its owner's hand."
-    ]
+    "lines": ["When ~ enters, return target spell or permanent to its owner's hand."]
   },
   {
     "name": "Drownyard Temple",
     "rank": 1970,
-    "lines": [
-      "{3}: Return this card from your graveyard to the battlefield tapped."
-    ]
+    "lines": ["{3}: Return this card from your graveyard to the battlefield tapped."]
   },
   {
     "name": "Wild Magic Surge",
@@ -1339,16 +1225,12 @@
   {
     "name": "Crystal Skull, Isu Spyglass",
     "rank": 1978,
-    "lines": [
-      "You may play historic lands and cast historic spells from the top of your library."
-    ]
+    "lines": ["You may play historic lands and cast historic spells from the top of your library."]
   },
   {
     "name": "Time Warp",
     "rank": 1979,
-    "lines": [
-      "Target player takes an extra turn after this one."
-    ]
+    "lines": ["Target player takes an extra turn after this one."]
   },
   {
     "name": "Quartzwood Crasher",
@@ -1416,9 +1298,7 @@
   {
     "name": "Cybermen Squadron",
     "rank": 2037,
-    "lines": [
-      "Nonlegendary artifact creatures you control have myriad."
-    ]
+    "lines": ["Nonlegendary artifact creatures you control have myriad."]
   },
   {
     "name": "Trinket Mage",
@@ -1430,9 +1310,7 @@
   {
     "name": "Elvish Reclaimer",
     "rank": 2050,
-    "lines": [
-      "~ gets +2/+2 as long as there are three or more land cards in your graveyard."
-    ]
+    "lines": ["~ gets +2/+2 as long as there are three or more land cards in your graveyard."]
   },
   {
     "name": "Birthing Pod",
@@ -1444,9 +1322,7 @@
   {
     "name": "Paradise Druid",
     "rank": 2052,
-    "lines": [
-      "~ has hexproof as long as it's untapped."
-    ]
+    "lines": ["~ has hexproof as long as it's untapped."]
   },
   {
     "name": "Crippling Fear",
@@ -1521,9 +1397,7 @@
   {
     "name": "Horn of Greed",
     "rank": 2089,
-    "lines": [
-      "Whenever a player plays a land, that player draws a card."
-    ]
+    "lines": ["Whenever a player plays a land, that player draws a card."]
   },
   {
     "name": "Electroduplicate",
@@ -1584,9 +1458,7 @@
   {
     "name": "Cold-Eyed Selkie",
     "rank": 2127,
-    "lines": [
-      "Islandwalk"
-    ]
+    "lines": ["Islandwalk"]
   },
   {
     "name": "Wrenn's Resolve",
@@ -1647,9 +1519,7 @@
   {
     "name": "Tome of Legends",
     "rank": 2153,
-    "lines": [
-      "Whenever your commander enters or attacks, put a page counter on this artifact."
-    ]
+    "lines": ["Whenever your commander enters or attacks, put a page counter on this artifact."]
   },
   {
     "name": "Verdant Sun's Avatar",
@@ -1682,9 +1552,7 @@
   {
     "name": "Dracogenesis",
     "rank": 2170,
-    "lines": [
-      "You may cast Dragon spells without paying their mana costs."
-    ]
+    "lines": ["You may cast Dragon spells without paying their mana costs."]
   },
   {
     "name": "Descendants' Path",
@@ -1703,16 +1571,12 @@
   {
     "name": "Aura of Silence",
     "rank": 2184,
-    "lines": [
-      "Artifact and enchantment spells your opponents cast cost {2} more to cast."
-    ]
+    "lines": ["Artifact and enchantment spells your opponents cast cost {2} more to cast."]
   },
   {
     "name": "Airbender Ascension",
     "rank": 2189,
-    "lines": [
-      "When this enchantment enters, airbend up to one target creature."
-    ]
+    "lines": ["When this enchantment enters, airbend up to one target creature."]
   },
   {
     "name": "The Key to the Vault",
@@ -1724,9 +1588,7 @@
   {
     "name": "Frenzied Baloth",
     "rank": 2197,
-    "lines": [
-      "Combat damage can't be prevented."
-    ]
+    "lines": ["Combat damage can't be prevented."]
   },
   {
     "name": "Scourge of Fleets",
@@ -1759,9 +1621,7 @@
   {
     "name": "Combat Research",
     "rank": 2211,
-    "lines": [
-      "As long as enchanted creature is legendary, it gets +1/+1 and has ward {1}."
-    ]
+    "lines": ["As long as enchanted creature is legendary, it gets +1/+1 and has ward {1}."]
   },
   {
     "name": "General Kreat, the Boltbringer",
@@ -1787,9 +1647,7 @@
   {
     "name": "Jaya's Immolating Inferno",
     "rank": 2227,
-    "lines": [
-      "~ deals X damage to each of up to three targets."
-    ]
+    "lines": ["~ deals X damage to each of up to three targets."]
   },
   {
     "name": "Deep Gnome Terramancer",
@@ -1808,9 +1666,7 @@
   {
     "name": "Treasonous Ogre",
     "rank": 2231,
-    "lines": [
-      "Dethrone"
-    ]
+    "lines": ["Dethrone"]
   },
   {
     "name": "Explorer's Scope",
@@ -1850,16 +1706,12 @@
   {
     "name": "Season of Growth",
     "rank": 2244,
-    "lines": [
-      "Whenever you cast a spell that targets a creature you control, draw a card."
-    ]
+    "lines": ["Whenever you cast a spell that targets a creature you control, draw a card."]
   },
   {
     "name": "Rooftop Storm",
     "rank": 2245,
-    "lines": [
-      "You may pay {0} rather than pay the mana cost for Zombie creature spells you cast."
-    ]
+    "lines": ["You may pay {0} rather than pay the mana cost for Zombie creature spells you cast."]
   },
   {
     "name": "Song of Totentanz",
@@ -1927,16 +1779,12 @@
   {
     "name": "Poison Dart Frog",
     "rank": 2263,
-    "lines": [
-      "{2}: ~ gains deathtouch until end of turn."
-    ]
+    "lines": ["{2}: ~ gains deathtouch until end of turn."]
   },
   {
     "name": "Umbral Mantle",
     "rank": 2268,
-    "lines": [
-      "Equipped creature has \"{3}, {Q}: ~ gets +2/+2 until end of turn.\""
-    ]
+    "lines": ["Equipped creature has \"{3}, {Q}: ~ gets +2/+2 until end of turn.\""]
   },
   {
     "name": "Blacksmith's Skill",
@@ -1948,16 +1796,12 @@
   {
     "name": "Thrumming Stone",
     "rank": 2274,
-    "lines": [
-      "Spells you cast have ripple 4."
-    ]
+    "lines": ["Spells you cast have ripple 4."]
   },
   {
     "name": "End the Festivities",
     "rank": 2275,
-    "lines": [
-      "~ deals 1 damage to each opponent and each creature and planeswalker they control."
-    ]
+    "lines": ["~ deals 1 damage to each opponent and each creature and planeswalker they control."]
   },
   {
     "name": "Qarsi Revenant",
@@ -1969,16 +1813,12 @@
   {
     "name": "Starwinder",
     "rank": 2279,
-    "lines": [
-      "Warp {2}{U}{U}"
-    ]
+    "lines": ["Warp {2}{U}{U}"]
   },
   {
     "name": "Ancestral Mask",
     "rank": 2284,
-    "lines": [
-      "Enchanted creature gets +2/+2 for each other enchantment on the battlefield."
-    ]
+    "lines": ["Enchanted creature gets +2/+2 for each other enchantment on the battlefield."]
   },
   {
     "name": "Grafted Exoskeleton",
@@ -2011,16 +1851,12 @@
   {
     "name": "Agna Qel'a",
     "rank": 2297,
-    "lines": [
-      "~ enters tapped unless you control a basic land."
-    ]
+    "lines": ["~ enters tapped unless you control a basic land."]
   },
   {
     "name": "Wrap in Vigor",
     "rank": 2299,
-    "lines": [
-      "Regenerate each creature you control."
-    ]
+    "lines": ["Regenerate each creature you control."]
   },
   {
     "name": "Assemble the Legion",
@@ -2039,9 +1875,7 @@
   {
     "name": "Squee, the Immortal",
     "rank": 2307,
-    "lines": [
-      "You may cast this card from your graveyard or from exile."
-    ]
+    "lines": ["You may cast this card from your graveyard or from exile."]
   },
   {
     "name": "Agent of the Iron Throne",
@@ -2095,8 +1929,6 @@
   {
     "name": "Manamorphose",
     "rank": 2325,
-    "lines": [
-      "Add two mana in any combination of colors."
-    ]
+    "lines": ["Add two mana in any combination of colors."]
   }
 ]
