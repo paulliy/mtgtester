@@ -351,13 +351,14 @@
     "lines": [
       "{2}{G}{G}: ~ becomes a copy of target permanent card in your graveyard until end of turn. Activate only if there are four or more card types among cards in your graveyard."
     ],
-    "rounds": 1,
-    "stage": "compile",
+    "rounds": 2,
+    "stage": "inexpressible",
     "validatorIssues": [
       [
         "override.def.activatedAbilities[0].ability.effects[0].ref: cardInGraveyard is incompatible with effect domains permanent"
       ]
-    ]
+    ],
+    "inexpressibleReason": "becomeCopyOf only references permanents, so there is no way to become a copy of a permanent card in a graveyard."
   },
   {
     "name": "Aetherflux Reservoir",
@@ -3396,13 +3397,14 @@
     "lines": [
       "Whenever enchanted creature deals damage to an opponent, you may draw a card."
     ],
-    "rounds": 1,
-    "stage": "compile",
+    "rounds": 2,
+    "stage": "inexpressible",
     "validatorIssues": [
       [
         "override.def.triggers[0].trigger.subject: opponent damage currently supports only the damaging source's own ability"
       ]
-    ]
+    ],
+    "inexpressibleReason": "dealsDamageToOpponent only supports the source's own ability, so a trigger on the enchanted creature controlled by the Aura's controller cannot be said (granting it via addTrigger would give the draw to the creature's controller)."
   },
   {
     "name": "Thespian's Stage",
@@ -7097,7 +7099,7 @@
       "{T}: Put a +1/+1 counter on each green creature that entered this turn."
     ],
     "rounds": 1,
-    "stage": "done",
+    "stage": "back",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -7252,9 +7254,7 @@
         "changedGame": true
       }
     ],
-    "textCheck": "renderer",
-    "verdict": "same",
-    "differences": []
+    "textCheck": "renderer"
   },
   {
     "name": "Elvish Spirit Guide",
@@ -11813,14 +11813,15 @@
     "lines": [
       "Choose a Background"
     ],
-    "rounds": 1,
-    "stage": "compile",
+    "rounds": 2,
+    "stage": "inexpressible",
     "validatorIssues": [
       [
         "unrecognized rules text: \"Choose a Background\"",
         "override for \"Jaheira, Friend of the Forest\" has no executable behavior"
       ]
-    ]
+    ],
+    "inexpressibleReason": "The schema has no form for \"Choose a Background\" (the deck-construction commander pairing rule)."
   },
   {
     "name": "Cabaretti Courtyard",
@@ -14019,13 +14020,131 @@
     "lines": [
       "Put a +1/+1 counter on target creature. It phases out."
     ],
-    "rounds": 1,
-    "stage": "compile",
+    "rounds": 2,
+    "stage": "back",
     "validatorIssues": [
       [
         "override.def.spellAbility.effects[1].targetSlot: effect target 0 does not reference a variable-count target slot"
       ]
-    ]
+    ],
+    "valid": true,
+    "smoke": [
+      {
+        "ok": true,
+        "scenario": "from-hand",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Slip Out the Back"
+        ],
+        "detail": "game ended",
+        "decisions": 23,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "phaseBegin",
+          "phaseOut",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ]
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Slip Out the Back"
+        ],
+        "detail": "game ended",
+        "decisions": 20,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "phaseOut",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ]
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Slip Out the Back"
+        ],
+        "detail": "game ended",
+        "decisions": 23,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "phaseIn",
+          "phaseOut",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ]
+      }
+    ],
+    "textCheck": "model"
   },
   {
     "name": "Ram Through",
@@ -16448,13 +16567,14 @@
     "lines": [
       "{T}: Add an amount of {G} equal to ~'s power."
     ],
-    "rounds": 1,
-    "stage": "compile",
+    "rounds": 2,
+    "stage": "inexpressible",
     "validatorIssues": [
       [
         "override.def.manaAbilities[0].amount: mana amount a mana ability cannot evaluate"
       ]
-    ]
+    ],
+    "inexpressibleReason": "A mana ability amount cannot read the source's current power (powerOfSource is not evaluable there, and countersOnSelf would ignore other power modifiers)."
   },
   {
     "name": "Valakut, the Molten Pinnacle",
@@ -17680,7 +17800,7 @@
       "{1}{G}: Regenerate target creature."
     ],
     "rounds": 1,
-    "stage": "done",
+    "stage": "back",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -17846,9 +17966,7 @@
         "changedGame": true
       }
     ],
-    "textCheck": "renderer",
-    "verdict": "same",
-    "differences": []
+    "textCheck": "renderer"
   },
   {
     "name": "Genesis Wave",

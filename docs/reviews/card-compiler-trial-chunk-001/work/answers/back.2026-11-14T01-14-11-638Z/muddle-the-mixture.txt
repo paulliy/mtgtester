@@ -1,0 +1,2 @@
+{1}{U}{U}, Discard this card: Activate only as a sorcery and only from your hand. Search your library for a card with mana value exactly 2; reveal it and put it into your hand. Then shuffle your library.
+This card has no spell effect; its only ability is the activated ability above.

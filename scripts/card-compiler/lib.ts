@@ -303,8 +303,12 @@ export function stripDescriptions(value: unknown): unknown {
 const DISCRIMINANTS = new Set(['kind', 'op', 'when']);
 const SCHEMA_NAME = /^[A-Za-z][A-Za-z0-9]*$/;
 
-/** At most three words of letters, digits and symbol characters: "first strike", "+1/+1", "Treasure". */
-const ENUM_LIKE = /^[A-Za-z0-9+/'{}-]{1,24}( [A-Za-z0-9+/'{}-]{1,24}){0,2}$/;
+/**
+ * At most three words of letters, digits and symbol characters: "first strike", "+1/+1",
+ * "Treasure". A comparison operator (">=", "==") is kept too: hiding it would let a patch with the
+ * wrong comparison through the meaning check.
+ */
+const ENUM_LIKE = /^(?:[A-Za-z0-9+/'{}-]{1,24}( [A-Za-z0-9+/'{}-]{1,24}){0,2}|[<>=!]=?)$/;
 
 // ── Generated smoke test ──────────────────────────────────────────────────────────────────────
 

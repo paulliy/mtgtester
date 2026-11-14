@@ -21,5 +21,5 @@ docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/undying-malice.md	d
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/lion-s-eye-diamond.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/lion-s-eye-diamond.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/cabal-ritual.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/cabal-ritual.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/steel-overseer.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/steel-overseer.txt
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/asceticism.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/asceticism.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/balefire-dragon.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/balefire-dragon.txt
-docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/archon-of-the-wild-rose.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/archon-of-the-wild-rose.txt

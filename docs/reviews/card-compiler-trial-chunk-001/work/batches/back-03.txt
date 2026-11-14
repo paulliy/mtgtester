@@ -1,3 +1,6 @@
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/coruscation-mage.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/coruscation-mage.txt
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/branching-evolution.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/branching-evolution.txt
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/aetherflux-reservoir.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/aetherflux-reservoir.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/unnatural-growth.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/unnatural-growth.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/fertile-ground.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/fertile-ground.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/umbral-collar-zealot.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/umbral-collar-zealot.txt
@@ -20,6 +23,3 @@ docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/the-shire.md	docs/r
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/riveteers-overlook.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/riveteers-overlook.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/force-of-vigor.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/force-of-vigor.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/noxious-revival.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/noxious-revival.txt
-docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/entish-restoration.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/entish-restoration.txt
-docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/changeling-outcast.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/changeling-outcast.txt
-docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/evolution-witness.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/evolution-witness.txt

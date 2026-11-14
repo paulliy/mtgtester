@@ -1,9 +1,12 @@
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/helm-of-the-host.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/helm-of-the-host.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/reflections-of-littjara.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/reflections-of-littjara.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/open-the-armory.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/open-the-armory.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/roiling-regrowth.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/roiling-regrowth.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/might-of-old-krosa.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/might-of-old-krosa.txt
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/slip-out-the-back.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/slip-out-the-back.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/blackblade-reforged.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/blackblade-reforged.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/kindred-discovery.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/kindred-discovery.txt
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/oran-rief-the-vastwood.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/oran-rief-the-vastwood.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/leyline-axe.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/leyline-axe.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/bident-of-thassa.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/bident-of-thassa.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/overwhelming-stampede.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/overwhelming-stampede.txt
@@ -20,6 +23,3 @@ docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/experimental-augury
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/abandoned-air-temple.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/abandoned-air-temple.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/ashaya-soul-of-the-wild.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/ashaya-soul-of-the-wild.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/howling-mine.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/howling-mine.txt
-docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/coruscation-mage.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/coruscation-mage.txt
-docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/branching-evolution.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/branching-evolution.txt
-docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/aetherflux-reservoir.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/aetherflux-reservoir.txt

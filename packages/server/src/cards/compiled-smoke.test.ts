@@ -117,4 +117,15 @@ describe('what the back-translator is shown', () => {
       when: '<text>',
     });
   });
+
+  it('keeps comparison operators, which decide what a condition means', async () => {
+    const { stripDescriptions } = await import('../../../../scripts/card-compiler/lib');
+    for (const cmp of ['>=', '<=', '==', '!=', '<', '>'])
+      expect(stripDescriptions({ kind: 'countPermanents', cmp, n: 1 })).toEqual({
+        kind: 'countPermanents',
+        cmp,
+        n: 1,
+      });
+    expect(stripDescriptions({ cmp: '>= or so' })).toEqual({ cmp: '<text>' });
+  });
 });

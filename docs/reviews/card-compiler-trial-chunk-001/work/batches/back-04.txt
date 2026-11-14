@@ -1,3 +1,6 @@
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/entish-restoration.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/entish-restoration.txt
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/changeling-outcast.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/changeling-outcast.txt
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/evolution-witness.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/evolution-witness.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/haywire-mite.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/haywire-mite.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/evendo-waking-haven.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/evendo-waking-haven.txt
 docs/reviews/card-compiler-trial-chunk-001/work/prompts/back/captain-lannery-storm.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/back/captain-lannery-storm.txt

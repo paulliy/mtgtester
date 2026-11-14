@@ -1,0 +1,1 @@
+Whenever one or more creatures you control with mana value 3 or less enter the battlefield, draw a card. This ability triggers only once each turn. It is mandatory (not optional) and has no targets.
