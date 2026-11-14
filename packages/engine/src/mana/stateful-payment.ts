@@ -17,6 +17,14 @@ import { battlefieldCharacteristics } from '../effects/continuous';
 import type { ManaAbilitySpec } from '../cards/ability';
 import { activationInvariantProduction } from '../cards/mana-production';
 import { totalPips } from './cost';
+import type { ManaEntry } from '../cards/ability';
+import { orderByKeepValue } from './tap-preference';
+import {
+  otherManaDemand,
+  resolveConditionalUnits,
+  resolveDynamicAmount,
+  resolveDynamicUnits,
+} from '../state/queries';
 import { gateCannotOpenDuringPayment } from './payment-stability';
 
 const bounds = { states: 2048, activations: 32, productions: 256 };
@@ -113,6 +121,45 @@ function describeOutcome(outcome: Outcome): string {
   return error instanceof Error ? `${error.name}: ${error.message}` : String(error);
 }
 
+/** `searchTapOnly`'s answer when it cannot mirror the copying search exactly. */
+const handBack = Symbol('hand back to the copying search');
+
+/**
+ * A source whose activation only taps its permanent and adds the mana chosen for it: a `{T}` cost
+ * and nothing else, no rider, no convoke, nothing it consumes. Activating one changes the game
+ * only by that tap, the pool, and triggers that wait for the stack, so under fixed capacity the
+ * sources left afterwards are the same ones minus every ability of the tapped permanent.
+ */
+function tapOnlySource(source: ManaSource): boolean {
+  return (
+    source.costs.length === 1 &&
+    source.costs[0]!.kind === 'tap' &&
+    source.manaCost === undefined &&
+    (source.onActivate?.length ?? 0) === 0 &&
+    source.convoke !== true &&
+    source.sacrifices === undefined &&
+    source.taps === undefined &&
+    source.resources === undefined &&
+    (source.stateDependentProduction !== true || source.productionSpec !== undefined)
+  );
+}
+
+/** Mirror of the entries `payManaCost` adds for one activation. */
+function entriesFor(
+  source: ManaSource,
+  produced: readonly ProducedMana[],
+  fromTreasure: boolean,
+): ManaEntry[] {
+  return produced.map(({ symbol }) => ({
+    symbol,
+    ...(source.restriction !== undefined ? { restriction: source.restriction } : {}),
+    ...(source.spendTrigger !== undefined ? { spendTrigger: source.spendTrigger } : {}),
+    ...(source.uncounterableSpell === true ? { uncounterableSpell: true as const } : {}),
+    ...(fromTreasure ? { fromTreasure: true as const } : {}),
+    ...(source.persistent === true ? { persistent: true } : {}),
+  }));
+}
+
 /** Actual activation replay, including post-cost production, with no strategic cost decisions. */
 export function planStatefulManaPayment(
   ctx: GameContext,
@@ -124,7 +171,7 @@ export function planStatefulManaPayment(
   lifeReserved: number,
   energyReserved: number,
 ): PaymentPlan | null {
-  const run = (gatedBound: boolean) =>
+  const run = (current: boolean) =>
     searchPayment(
       ctx,
       player,
@@ -134,7 +181,7 @@ export function planStatefulManaPayment(
       reservedObjectIds,
       lifeReserved,
       energyReserved,
-      gatedBound,
+      current,
     );
   if (!VERIFY_MANA_PLAN) return run(true);
   const legacy = outcomeOf(() => run(false));
@@ -157,8 +204,10 @@ function searchPayment(
   reservedObjectIds: ReadonlySet<string>,
   lifeReserved: number,
   energyReserved: number,
-  gatedBound: boolean,
+  /** The bound with gated sources and the copy-free search; false is the search as it was. */
+  current: boolean,
 ): PaymentPlan | null {
+  const gatedBound = current;
   let states = 0;
   let outsideScope = false;
   const seen = new Set<string>();
@@ -448,6 +497,165 @@ function searchPayment(
     }
     return null;
   };
+  /**
+   * `visit` without a copy of the game per state. A state is the set of permanents tapped so far
+   * and the pool; `visit` keys states on the whole board and pool, which for a tap-only board
+   * determines the same two things, so this skips at least the states `visit` skips, each of
+   * which already returned null there. Every other step (the final solve, the early exits, the
+   * ceiling bound, the order and deduplication of candidates and of symbol choices, the budgets)
+   * is `visit`'s own.
+   */
+  function searchTapOnly(): PaymentPlan | null | typeof handBack {
+    if (!fixedCapacity) return handBack;
+    const payer = ctx.state.players.find((p) => p.id === player.id)!;
+    const rootSources = sourcesFor(ctx, payer);
+    if (!rootSources.every(tapOnlySource)) return handBack;
+    const lifeLocked = playerLifeLocked(ctx, payer.id);
+    const { life, energy } = payer;
+    const permanentOf = new Map(ctx.state.battlefield.map((p) => [p.cardId, p]));
+    const treasure = new Map<string, boolean>();
+    for (const source of rootSources) {
+      const perm = permanentOf.get(source.cardId);
+      if (perm === undefined) return handBack;
+      treasure.set(source.cardId, charsOf(perm).subtypes.includes('Treasure'));
+      if (source.productionSpec !== undefined) {
+        // What `payManaCost` would read after the tap: the spec resolved against a board that
+        // differs only in that tap, which no dynamic kind reads.
+        const production = resolveDynamicAmount(
+          ctx,
+          resolveDynamicUnits(ctx, resolveConditionalUnits(ctx, source.productionSpec, perm), perm),
+          perm,
+        );
+        if (
+          JSON.stringify(production.units) !== JSON.stringify(source.units) ||
+          (production.linked === true) !== (source.linked === true)
+        )
+          return handBack;
+      }
+    }
+    // `manaSourcesFor` ranks sources by what the untapped rest can still make, so the order
+    // changes as permanents are tapped. Rebuild it the same way: tier, then board order (the
+    // ranking's stable input, recovered from the root list by a stable sort), then the ranking.
+    const tierOf = (cardId: string): number => {
+      const types = charsOf(permanentOf.get(cardId)!).types;
+      return types.includes('Land') ? 0 : types.includes('Creature') ? 2 : 1;
+    };
+    const boardIndex = new Map(ctx.state.battlefield.map((p, index) => [p.cardId, index]));
+    const boardOrder = [...rootSources].sort(
+      (a, b) =>
+        tierOf(a.cardId) - tierOf(b.cardId) ||
+        boardIndex.get(a.cardId)! - boardIndex.get(b.cardId)!,
+    );
+    let demand: ParsedManaCost[] | undefined;
+    const demandOf = () => (demand ??= otherManaDemand(ctx, payer.id));
+    if (
+      JSON.stringify(orderByKeepValue(boardOrder, tierOf, demandOf)) !==
+      JSON.stringify(rootSources)
+    )
+      return handBack;
+    const tapped: string[] = [];
+    const pool: ManaEntry[] = [...payer.manaEntries];
+    const seenStates = new Set<string>();
+    let visited = 0;
+    const tapOnlyVisit = (): PaymentPlan | null | typeof handBack => {
+      const availableSources = orderByKeepValue(
+        boardOrder.filter((source) => !tapped.includes(source.cardId)),
+        tierOf,
+        demandOf,
+      );
+      if ((lifeReserved === 0 || (!lifeLocked && life >= lifeReserved)) && energy >= energyReserved) {
+        const final = planPayment(
+          cost,
+          pool,
+          [],
+          allows,
+          lifeLocked ? 0 : Math.max(0, life - lifeReserved),
+        );
+        if (final)
+          return {
+            ...final,
+            tapSources: [...sources, ...final.tapSources],
+            tapCardIds: [...sources.map((s) => s.cardId), ...final.tapCardIds],
+            produced: [...produced, ...final.produced],
+          };
+      }
+      if (
+        energy < energyReserved ||
+        (lifeReserved > 0 && !lifeCanRise && (lifeLocked || life < lifeReserved))
+      )
+        return null;
+      const key = JSON.stringify([
+        [...tapped].sort(),
+        pool.map((entry) => JSON.stringify(entry)).sort(),
+      ]);
+      if (seenStates.has(key)) return null;
+      seenStates.add(key);
+      const ceilings = availableSources.map(ceilingUnits);
+      if (ceilings.every((units) => units !== null)) {
+        const remaining = new Map<string, number>();
+        for (const [index, source] of availableSources.entries())
+          remaining.set(
+            source.cardId,
+            Math.max(remaining.get(source.cardId) ?? 0, ceilings[index]!.length),
+          );
+        if (
+          pool.length + [...remaining.values()].reduce((sum, count) => sum + count, 0) <
+          totalPips(cost) - (cost.phyrexian?.length ?? 0)
+        )
+          return null;
+        if (
+          (cost.phyrexian?.length ?? 0) === 0 &&
+          planPayment(
+            cost,
+            pool,
+            availableSources.map((source, index) => ({ ...source, units: ceilings[index]! })),
+            allows,
+          ) === null
+        )
+          return null;
+      }
+      if (++visited > bounds.states) return handBack;
+      if (sources.length >= bounds.activations) return availableSources.length ? handBack : null;
+      const deduplicated = new Set<string>();
+      for (const candidate of availableSources) {
+        const { activation: _activation, ...signature } = candidate;
+        const sourceKey = JSON.stringify(signature);
+        if (deduplicated.has(sourceKey)) continue;
+        deduplicated.add(sourceKey);
+        const source = { ...candidate, activation: sources.length };
+        let choices: ProducedMana[][];
+        try {
+          choices = productions(source, source.activation);
+        } catch {
+          return handBack;
+        }
+        if (choices.length === 0) return handBack;
+        for (const units of choices) {
+          const entries = entriesFor(source, units, treasure.get(source.cardId)!);
+          tapped.push(source.cardId);
+          pool.push(...entries);
+          sources.push(source);
+          produced.push(...units);
+          const found = tapOnlyVisit();
+          produced.splice(produced.length - units.length, units.length);
+          sources.pop();
+          pool.splice(pool.length - entries.length, entries.length);
+          tapped.pop();
+          if (found !== null) return found;
+        }
+      }
+      return null;
+    };
+    return tapOnlyVisit();
+  }
+
+  // The same search over tapped sets instead of copied games, for a board where activating a
+  // source only taps it and adds its mana (see `tapOnlySource`). It mirrors `visit` step for step
+  // and gives the same plan; anything it cannot mirror exactly hands the payment back to `visit`.
+  if (current) {
+    const light = searchTapOnly();
+    if (light !== handBack) return light;
+  }
   const result = visit(clone(ctx));
   if (!result && outsideScope)
     unsupported(
