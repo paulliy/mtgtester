@@ -62,6 +62,19 @@ from combat (CR 506.4), so it cannot.
   red and white haste Soldier differed from the catalog's white Soldier. A creature token's name does
   not fix what it is; a Treasure's does (CR 111.10). Fixed with a test, and the card was promoted.
 
+## Checks on the promoted tree
+
+- `run.ts verify`: additive. 78 cards promoted and nothing else changed.
+- `bun run test`: 779 files passed and 2 failed in the full run. Both are viewer-evidence tests that
+  need a clean tree, and two documentation files were committed while the run was going. Rerun on a
+  clean, quiet tree, both pass (80 tests).
+- `typecheck`, `typecheck:tests`, `lint`, `format:check`, `snapshots:check`, `check:ratchets` and
+  `audit:card-ir` pass.
+- Fuzz, two pods for each promoted card: 145 of 156 games passed. Ten failures are the
+  mana-payment planner halts that plain games without a promoted card also hit (see chunk 001). The
+  eleventh, Temur Battle Rage, hit the 300-second limit; replayed with a longer limit it finished
+  normally in 553 seconds, so it is slow, not stuck.
+
 ## Engine findings for the backlog
 
 New in this chunk. None is fixed here, because a promotion may not change engine source.
