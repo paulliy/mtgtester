@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A game-wide 'until end of turn' rule adding {B} whenever any player taps a Swamp has no form: manaActivationRider is a static of a permanent source, and grantAbilityUntilEot grants only to a target object."}
