@@ -1,0 +1,34 @@
+{
+  "populations": [
+    {
+      "name": "fixture decks",
+      "source": "the coverage deck fixtures, Oracle text from `packages/server/fixtures/coverage-oracle.json`",
+      "summary": {
+        "decks": 13,
+        "playableExactly": 13,
+        "playableWithProvisional": 13,
+        "atMostUnmodeled": {
+          "1": 13,
+          "2": 13,
+          "5": 13
+        }
+      },
+      "decks": [
+        {"name":"brigid-clachans-heart","verdict":"exact","uniqueCards":76,"modeled":76,"provisional":[],"blocking":[]},
+        {"name":"draconic-destruction","verdict":"exact","uniqueCards":72,"modeled":72,"provisional":[],"blocking":[]},
+        {"name":"living-energy","verdict":"exact","uniqueCards":87,"modeled":87,"provisional":[],"blocking":[]},
+        {"name":"marchesa-the-black-rose","verdict":"exact","uniqueCards":80,"modeled":80,"provisional":[],"blocking":[]},
+        {"name":"necron-dynasties","verdict":"exact","uniqueCards":71,"modeled":71,"provisional":[],"blocking":[]},
+        {"name":"pramikon-sky-rampart","verdict":"exact","uniqueCards":86,"modeled":86,"provisional":[],"blocking":[]},
+        {"name":"queen-marchesa-queens-gambit","verdict":"exact","uniqueCards":93,"modeled":93,"provisional":[],"blocking":[]},
+        {"name":"ruby-the-most-daring-of-trackers","verdict":"exact","uniqueCards":74,"modeled":74,"provisional":[],"blocking":[]},
+        {"name":"silverquill-influence","verdict":"exact","uniqueCards":86,"modeled":86,"provisional":[],"blocking":[]},
+        {"name":"the-fantastic-four-marvel-super-heroes-commander-precon-decklist","verdict":"exact","uniqueCards":87,"modeled":87,"provisional":[],"blocking":[]},
+        {"name":"token-triumph","verdict":"exact","uniqueCards":73,"modeled":73,"provisional":[],"blocking":[]},
+        {"name":"urdragon","verdict":"exact","uniqueCards":93,"modeled":93,"provisional":[],"blocking":[]},
+        {"name":"white-black-control","verdict":"exact","uniqueCards":79,"modeled":79,"provisional":[],"blocking":[]}
+      ],
+      "unblock": []
+    }
+  ]
+}

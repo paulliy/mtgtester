@@ -21,6 +21,14 @@ packages/engine/tests/fixtures
 packages/server/fixtures/edhrec-triage.json
 docs/plans/edhrec-triage.md
 
+# The deck-coverage report and the EDHREC average-deck fixtures, written byte-for-byte by
+# `bun run deck-coverage` and `bun run edhrec:fetch --average-decks`; deck-coverage --check
+# compares the report byte-for-byte (part of snapshots:check).
+packages/server/fixtures/deck-coverage.json
+docs/plans/deck-coverage.md
+packages/server/fixtures/edhrec-average-decks.json
+packages/server/fixtures/edhrec-average-decks-oracle.json
+
 # Generated browser and graph analysis artifacts
 graphify-out
 test-results
