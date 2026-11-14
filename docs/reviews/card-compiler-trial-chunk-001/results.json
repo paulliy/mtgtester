@@ -94,9 +94,7 @@
     {
       "name": "Blackblade Reforged",
       "rank": 352,
-      "lines": [
-        "Equip legendary creature {3}"
-      ],
+      "lines": ["Equip legendary creature {3}"],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -151,9 +149,7 @@
     {
       "name": "Aetherflux Reservoir",
       "rank": 359,
-      "lines": [
-        "Whenever you cast a spell, you gain 1 life for each spell you've cast this turn."
-      ],
+      "lines": ["Whenever you cast a spell, you gain 1 life for each spell you've cast this turn."],
       "outcome": "smoke-failed",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -195,9 +191,7 @@
     {
       "name": "Mistrise Village",
       "rank": 362,
-      "lines": [
-        "{U}, {T}: The next spell you cast this turn can't be countered."
-      ],
+      "lines": ["{U}, {T}: The next spell you cast this turn can't be countered."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -345,9 +339,7 @@
     {
       "name": "Silence",
       "rank": 391,
-      "lines": [
-        "Your opponents can't cast spells this turn."
-      ],
+      "lines": ["Your opponents can't cast spells this turn."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -356,9 +348,7 @@
     {
       "name": "Fanatic of Rhonas",
       "rank": 400,
-      "lines": [
-        "Eternalize {2}{G}{G}"
-      ],
+      "lines": ["Eternalize {2}{G}{G}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -526,9 +516,7 @@
     {
       "name": "Cabal Ritual",
       "rank": 432,
-      "lines": [
-        "Add {B}{B}{B}{B}{B} instead if there are seven or more cards in your graveyard."
-      ],
+      "lines": ["Add {B}{B}{B}{B}{B} instead if there are seven or more cards in your graveyard."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -561,9 +549,7 @@
     {
       "name": "Simian Spirit Guide",
       "rank": 433,
-      "lines": [
-        "Exile this card from your hand: Add {R}."
-      ],
+      "lines": ["Exile this card from your hand: Add {R}."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -614,9 +600,7 @@
     {
       "name": "Bident of Thassa",
       "rank": 440,
-      "lines": [
-        "{1}{U}, {T}: Creatures your opponents control attack this turn if able."
-      ],
+      "lines": ["{1}{U}, {T}: Creatures your opponents control attack this turn if able."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -737,9 +721,7 @@
     {
       "name": "Mental Misstep",
       "rank": 470,
-      "lines": [
-        "Counter target spell with mana value 1."
-      ],
+      "lines": ["Counter target spell with mana value 1."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -809,9 +791,7 @@
     {
       "name": "Voice of Victory",
       "rank": 480,
-      "lines": [
-        "Mobilize 2"
-      ],
+      "lines": ["Mobilize 2"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -910,9 +890,7 @@
     {
       "name": "Gitaxian Probe",
       "rank": 523,
-      "lines": [
-        "Look at target player's hand."
-      ],
+      "lines": ["Look at target player's hand."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1049,9 +1027,7 @@
     {
       "name": "Second Harvest",
       "rank": 553,
-      "lines": [
-        "For each token you control, create a token that's a copy of that permanent."
-      ],
+      "lines": ["For each token you control, create a token that's a copy of that permanent."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1179,9 +1155,7 @@
     {
       "name": "Curiosity",
       "rank": 573,
-      "lines": [
-        "Whenever enchanted creature deals damage to an opponent, you may draw a card."
-      ],
+      "lines": ["Whenever enchanted creature deals damage to an opponent, you may draw a card."],
       "outcome": "inexpressible",
       "compileRounds": 2,
       "validatorIssues": [
@@ -1194,9 +1168,7 @@
     {
       "name": "Thespian's Stage",
       "rank": 579,
-      "lines": [
-        "{2}, {T}: ~ becomes a copy of target land, except it has this ability."
-      ],
+      "lines": ["{2}, {T}: ~ becomes a copy of target land, except it has this ability."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1227,9 +1199,7 @@
     {
       "name": "Access Tunnel",
       "rank": 592,
-      "lines": [
-        "{3}, {T}: Target creature with power 3 or less can't be blocked this turn."
-      ],
+      "lines": ["{3}, {T}: Target creature with power 3 or less can't be blocked this turn."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1280,9 +1250,7 @@
     {
       "name": "Realmwalker",
       "rank": 607,
-      "lines": [
-        "You may cast creature spells of the chosen type from the top of your library."
-      ],
+      "lines": ["You may cast creature spells of the chosen type from the top of your library."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1428,9 +1396,7 @@
     {
       "name": "Shizo, Death's Storehouse",
       "rank": 619,
-      "lines": [
-        "{B}, {T}: Target legendary creature gains fear until end of turn."
-      ],
+      "lines": ["{B}, {T}: Target legendary creature gains fear until end of turn."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1472,9 +1438,7 @@
     {
       "name": "Noxious Revival",
       "rank": 627,
-      "lines": [
-        "Put target card from a graveyard on top of its owner's library."
-      ],
+      "lines": ["Put target card from a graveyard on top of its owner's library."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1555,9 +1519,7 @@
     {
       "name": "All That Glitters",
       "rank": 636,
-      "lines": [
-        "Enchanted creature gets +1/+1 for each artifact and/or enchantment you control."
-      ],
+      "lines": ["Enchanted creature gets +1/+1 for each artifact and/or enchantment you control."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1608,9 +1570,7 @@
     {
       "name": "Gravecrawler",
       "rank": 641,
-      "lines": [
-        "You may cast this card from your graveyard as long as you control a Zombie."
-      ],
+      "lines": ["You may cast this card from your graveyard as long as you control a Zombie."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1661,9 +1621,7 @@
     {
       "name": "Borne Upon a Wind",
       "rank": 644,
-      "lines": [
-        "You may cast spells this turn as though they had flash."
-      ],
+      "lines": ["You may cast spells this turn as though they had flash."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1672,9 +1630,7 @@
     {
       "name": "Treasure Cruise",
       "rank": 645,
-      "lines": [
-        "Delve"
-      ],
+      "lines": ["Delve"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1683,9 +1639,7 @@
     {
       "name": "Trailblazer's Boots",
       "rank": 652,
-      "lines": [
-        "Equipped creature has nonbasic landwalk."
-      ],
+      "lines": ["Equipped creature has nonbasic landwalk."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1694,9 +1648,7 @@
     {
       "name": "Distant Melody",
       "rank": 656,
-      "lines": [
-        "Choose a creature type. Draw a card for each permanent you control of that type."
-      ],
+      "lines": ["Choose a creature type. Draw a card for each permanent you control of that type."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1716,9 +1668,7 @@
     {
       "name": "Starting Town",
       "rank": 676,
-      "lines": [
-        "~ enters tapped unless it's your first, second, or third turn of the game."
-      ],
+      "lines": ["~ enters tapped unless it's your first, second, or third turn of the game."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1780,9 +1730,7 @@
     {
       "name": "Changeling Outcast",
       "rank": 685,
-      "lines": [
-        "~ can't block and can't be blocked."
-      ],
+      "lines": ["~ can't block and can't be blocked."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1833,9 +1781,7 @@
     {
       "name": "Kindred Dominance",
       "rank": 688,
-      "lines": [
-        "Choose a creature type. Destroy all creatures that aren't of the chosen type."
-      ],
+      "lines": ["Choose a creature type. Destroy all creatures that aren't of the chosen type."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1886,9 +1832,7 @@
     {
       "name": "Reflections of Littjara",
       "rank": 693,
-      "lines": [
-        "Whenever you cast a spell of the chosen type, copy that spell."
-      ],
+      "lines": ["Whenever you cast a spell of the chosen type, copy that spell."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1950,9 +1894,7 @@
     {
       "name": "Archivist of Oghma",
       "rank": 699,
-      "lines": [
-        "Whenever an opponent searches their library, you gain 1 life and draw a card."
-      ],
+      "lines": ["Whenever an opponent searches their library, you gain 1 life and draw a card."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2014,9 +1956,7 @@
     {
       "name": "Muddle the Mixture",
       "rank": 703,
-      "lines": [
-        "Transmute {1}{U}{U}"
-      ],
+      "lines": ["Transmute {1}{U}{U}"],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2108,9 +2048,7 @@
     {
       "name": "Life from the Loam",
       "rank": 708,
-      "lines": [
-        "Dredge 3"
-      ],
+      "lines": ["Dredge 3"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2154,9 +2092,7 @@
     {
       "name": "Purphoros, God of the Forge",
       "rank": 711,
-      "lines": [
-        "As long as your devotion to red is less than five, ~ isn't a creature."
-      ],
+      "lines": ["As long as your devotion to red is less than five, ~ isn't a creature."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2306,9 +2242,7 @@
     {
       "name": "Champion's Helm",
       "rank": 729,
-      "lines": [
-        "As long as equipped creature is legendary, it has hexproof."
-      ],
+      "lines": ["As long as equipped creature is legendary, it has hexproof."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2447,9 +2381,7 @@
     {
       "name": "Oran-Rief, the Vastwood",
       "rank": 740,
-      "lines": [
-        "{T}: Put a +1/+1 counter on each green creature that entered this turn."
-      ],
+      "lines": ["{T}: Put a +1/+1 counter on each green creature that entered this turn."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2489,9 +2421,7 @@
     {
       "name": "Elvish Spirit Guide",
       "rank": 741,
-      "lines": [
-        "Exile this card from your hand: Add {G}."
-      ],
+      "lines": ["Exile this card from your hand: Add {G}."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2575,9 +2505,7 @@
     {
       "name": "Drannith Magistrate",
       "rank": 765,
-      "lines": [
-        "Your opponents can't cast spells from anywhere other than their hands."
-      ],
+      "lines": ["Your opponents can't cast spells from anywhere other than their hands."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2586,9 +2514,7 @@
     {
       "name": "Elspeth, Sun's Champion",
       "rank": 766,
-      "lines": [
-        "−7: You get an emblem with \"Creatures you control get +2/+2 and have flying.\""
-      ],
+      "lines": ["−7: You get an emblem with \"Creatures you control get +2/+2 and have flying.\""],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2597,9 +2523,7 @@
     {
       "name": "Reassembling Skeleton",
       "rank": 769,
-      "lines": [
-        "{1}{B}: Return this card from your graveyard to the battlefield tapped."
-      ],
+      "lines": ["{1}{B}: Return this card from your graveyard to the battlefield tapped."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2608,9 +2532,7 @@
     {
       "name": "Priest of Titania",
       "rank": 770,
-      "lines": [
-        "{T}: Add {G} for each Elf on the battlefield."
-      ],
+      "lines": ["{T}: Add {G} for each Elf on the battlefield."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2650,9 +2572,7 @@
     {
       "name": "Vanquish the Horde",
       "rank": 775,
-      "lines": [
-        "This spell costs {1} less to cast for each creature on the battlefield."
-      ],
+      "lines": ["This spell costs {1} less to cast for each creature on the battlefield."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2685,9 +2605,7 @@
     {
       "name": "Steel Overseer",
       "rank": 780,
-      "lines": [
-        "{T}: Put a +1/+1 counter on each artifact creature you control."
-      ],
+      "lines": ["{T}: Put a +1/+1 counter on each artifact creature you control."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2802,9 +2720,7 @@
     {
       "name": "Coruscation Mage",
       "rank": 797,
-      "lines": [
-        "Offspring {2}"
-      ],
+      "lines": ["Offspring {2}"],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2844,9 +2760,7 @@
     {
       "name": "Gilded Goose",
       "rank": 798,
-      "lines": [
-        "{T}, Sacrifice a Food: Add one mana of any color."
-      ],
+      "lines": ["{T}, Sacrifice a Food: Add one mana of any color."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2886,9 +2800,7 @@
     {
       "name": "Colossus Hammer",
       "rank": 802,
-      "lines": [
-        "Equipped creature gets +10/+10 and loses flying."
-      ],
+      "lines": ["Equipped creature gets +10/+10 and loses flying."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2994,9 +2906,7 @@
     {
       "name": "High Fae Trickster",
       "rank": 819,
-      "lines": [
-        "You may cast spells as though they had flash."
-      ],
+      "lines": ["You may cast spells as though they had flash."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3111,9 +3021,7 @@
     {
       "name": "Ledger Shredder",
       "rank": 829,
-      "lines": [
-        "Whenever a player casts their second spell each turn, this creature connives."
-      ],
+      "lines": ["Whenever a player casts their second spell each turn, this creature connives."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3239,9 +3147,7 @@
     {
       "name": "Gyre Sage",
       "rank": 832,
-      "lines": [
-        "Evolve"
-      ],
+      "lines": ["Evolve"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3314,9 +3220,7 @@
     {
       "name": "Lotus Field",
       "rank": 843,
-      "lines": [
-        "When this land enters, sacrifice two lands."
-      ],
+      "lines": ["When this land enters, sacrifice two lands."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3367,9 +3271,7 @@
     {
       "name": "The Wind Crystal",
       "rank": 846,
-      "lines": [
-        "If you would gain life, you gain twice that much life instead."
-      ],
+      "lines": ["If you would gain life, you gain twice that much life instead."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3453,9 +3355,7 @@
     {
       "name": "Evendo, Waking Haven",
       "rank": 857,
-      "lines": [
-        "12+ | {G}, {T}: Add {G} for each creature you control."
-      ],
+      "lines": ["12+ | {G}, {T}: Add {G} for each creature you control."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3495,9 +3395,7 @@
     {
       "name": "Splendid Reclamation",
       "rank": 859,
-      "lines": [
-        "Return all land cards from your graveyard to the battlefield tapped."
-      ],
+      "lines": ["Return all land cards from your graveyard to the battlefield tapped."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3559,9 +3457,7 @@
     {
       "name": "Reconnaissance",
       "rank": 867,
-      "lines": [
-        "{0}: Remove target attacking creature you control from combat and untap it."
-      ],
+      "lines": ["{0}: Remove target attacking creature you control from combat and untap it."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3581,9 +3477,7 @@
     {
       "name": "Blade of Selves",
       "rank": 872,
-      "lines": [
-        "Equipped creature has myriad."
-      ],
+      "lines": ["Equipped creature has myriad."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3855,9 +3749,7 @@
     {
       "name": "Archway of Innovation",
       "rank": 911,
-      "lines": [
-        "{U}, {T}: The next spell you cast this turn has improvise."
-      ],
+      "lines": ["{U}, {T}: The next spell you cast this turn has improvise."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3877,9 +3769,7 @@
     {
       "name": "Vesuva",
       "rank": 914,
-      "lines": [
-        "You may have this land enter tapped as a copy of any land on the battlefield."
-      ],
+      "lines": ["You may have this land enter tapped as a copy of any land on the battlefield."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3921,9 +3811,7 @@
     {
       "name": "Metallic Mimic",
       "rank": 928,
-      "lines": [
-        "~ is the chosen type in addition to its other types."
-      ],
+      "lines": ["~ is the chosen type in addition to its other types."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3974,9 +3862,7 @@
     {
       "name": "Evolution Witness",
       "rank": 931,
-      "lines": [
-        "{1}{G}: Adapt 2."
-      ],
+      "lines": ["{1}{G}: Adapt 2."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4011,16 +3897,12 @@
         }
       ],
       "backTranslation": "{G}: If there are no +1/+1 counters on this creature, put two +1/+1 counters on it.",
-      "differences": [
-        "The activation cost is {1}{G} in Text A but {G} in Text B."
-      ]
+      "differences": ["The activation cost is {1}{G} in Text A but {G} in Text B."]
     },
     {
       "name": "Desperate Ritual",
       "rank": 932,
-      "lines": [
-        "Splice onto Arcane {1}{R}"
-      ],
+      "lines": ["Splice onto Arcane {1}{R}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4073,9 +3955,7 @@
     {
       "name": "Devoted Druid",
       "rank": 954,
-      "lines": [
-        "Put a -1/-1 counter on this creature: Untap this creature."
-      ],
+      "lines": ["Put a -1/-1 counter on this creature: Untap this creature."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4095,9 +3975,7 @@
     {
       "name": "Jaheira, Friend of the Forest",
       "rank": 964,
-      "lines": [
-        "Choose a Background"
-      ],
+      "lines": ["Choose a Background"],
       "outcome": "inexpressible",
       "compileRounds": 2,
       "validatorIssues": [
@@ -4155,9 +4033,7 @@
     {
       "name": "Bristly Bill, Spine Sower",
       "rank": 969,
-      "lines": [
-        "{3}{G}{G}: Double the number of +1/+1 counters on each creature you control."
-      ],
+      "lines": ["{3}{G}{G}: Double the number of +1/+1 counters on each creature you control."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4166,9 +4042,7 @@
     {
       "name": "Karmic Guide",
       "rank": 971,
-      "lines": [
-        "Echo {3}{W}{W}"
-      ],
+      "lines": ["Echo {3}{W}{W}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4219,9 +4093,7 @@
     {
       "name": "Inspiring Statuary",
       "rank": 974,
-      "lines": [
-        "Nonartifact spells you cast have improvise."
-      ],
+      "lines": ["Nonartifact spells you cast have improvise."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4230,9 +4102,7 @@
     {
       "name": "Mindcrank",
       "rank": 977,
-      "lines": [
-        "Whenever an opponent loses life, that player mills that many cards."
-      ],
+      "lines": ["Whenever an opponent loses life, that player mills that many cards."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4263,9 +4133,7 @@
     {
       "name": "Angel of the Ruins",
       "rank": 985,
-      "lines": [
-        "When this creature enters, exile up to two target artifacts and/or enchantments."
-      ],
+      "lines": ["When this creature enters, exile up to two target artifacts and/or enchantments."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4305,9 +4173,7 @@
     {
       "name": "Fumigate",
       "rank": 988,
-      "lines": [
-        "Destroy all creatures. You gain 1 life for each creature destroyed this way."
-      ],
+      "lines": ["Destroy all creatures. You gain 1 life for each creature destroyed this way."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4316,9 +4182,7 @@
     {
       "name": "Decimate",
       "rank": 989,
-      "lines": [
-        "Destroy target artifact, target creature, target enchantment, and target land."
-      ],
+      "lines": ["Destroy target artifact, target creature, target enchantment, and target land."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4351,9 +4215,7 @@
     {
       "name": "Serra Ascendant",
       "rank": 996,
-      "lines": [
-        "As long as you have 30 or more life, this creature gets +5/+5 and has flying."
-      ],
+      "lines": ["As long as you have 30 or more life, this creature gets +5/+5 and has flying."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4439,9 +4301,7 @@
     {
       "name": "Force of Vigor",
       "rank": 1005,
-      "lines": [
-        "Destroy up to two target artifacts and/or enchantments."
-      ],
+      "lines": ["Destroy up to two target artifacts and/or enchantments."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4496,9 +4356,7 @@
     {
       "name": "Omniscience",
       "rank": 1014,
-      "lines": [
-        "You may cast spells from your hand without paying their mana costs."
-      ],
+      "lines": ["You may cast spells from your hand without paying their mana costs."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4562,9 +4420,7 @@
     {
       "name": "Spellskite",
       "rank": 1025,
-      "lines": [
-        "{U/P}: Change a target of target spell or ability to this creature."
-      ],
+      "lines": ["{U/P}: Change a target of target spell or ability to this creature."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4584,9 +4440,7 @@
     {
       "name": "Swarmyard",
       "rank": 1029,
-      "lines": [
-        "{T}: Regenerate target Insect, Rat, Spider, or Squirrel."
-      ],
+      "lines": ["{T}: Regenerate target Insect, Rat, Spider, or Squirrel."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4637,9 +4491,7 @@
     {
       "name": "Yahenni, Undying Partisan",
       "rank": 1037,
-      "lines": [
-        "Sacrifice another creature: ~ gains indestructible until end of turn."
-      ],
+      "lines": ["Sacrifice another creature: ~ gains indestructible until end of turn."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4793,9 +4645,7 @@
     {
       "name": "Abandoned Air Temple",
       "rank": 1067,
-      "lines": [
-        "~ enters tapped unless you control a basic land."
-      ],
+      "lines": ["~ enters tapped unless you control a basic land."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4835,9 +4685,7 @@
     {
       "name": "Slip Out the Back",
       "rank": 1068,
-      "lines": [
-        "Put a +1/+1 counter on target creature. It phases out."
-      ],
+      "lines": ["Put a +1/+1 counter on target creature. It phases out."],
       "outcome": "compiled-checked",
       "compileRounds": 2,
       "validatorIssues": [
@@ -4885,9 +4733,7 @@
     {
       "name": "Mesmeric Orb",
       "rank": 1077,
-      "lines": [
-        "Whenever a permanent becomes untapped, that permanent's controller mills a card."
-      ],
+      "lines": ["Whenever a permanent becomes untapped, that permanent's controller mills a card."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4973,9 +4819,7 @@
     {
       "name": "Alchemist's Refuge",
       "rank": 1098,
-      "lines": [
-        "{G}{U}, {T}: You may cast spells this turn as though they had flash."
-      ],
+      "lines": ["{G}{U}, {T}: You may cast spells this turn as though they had flash."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5006,9 +4850,7 @@
     {
       "name": "Shalai, Voice of Plenty",
       "rank": 1118,
-      "lines": [
-        "You, planeswalkers you control, and other creatures you control have hexproof."
-      ],
+      "lines": ["You, planeswalkers you control, and other creatures you control have hexproof."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5039,9 +4881,7 @@
     {
       "name": "Crackle with Power",
       "rank": 1130,
-      "lines": [
-        "~ deals five times X damage to each of up to X targets."
-      ],
+      "lines": ["~ deals five times X damage to each of up to X targets."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5083,9 +4923,7 @@
     {
       "name": "Fiery Inscription",
       "rank": 1150,
-      "lines": [
-        "When this enchantment enters, the Ring tempts you."
-      ],
+      "lines": ["When this enchantment enters, the Ring tempts you."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5171,9 +5009,7 @@
     {
       "name": "Triumph of the Hordes",
       "rank": 1165,
-      "lines": [
-        "Until end of turn, creatures you control get +1/+1 and gain trample and infect."
-      ],
+      "lines": ["Until end of turn, creatures you control get +1/+1 and gain trample and infect."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5217,9 +5053,7 @@
     {
       "name": "Homeward Path",
       "rank": 1171,
-      "lines": [
-        "{T}: Each player gains control of all creatures they own."
-      ],
+      "lines": ["{T}: Each player gains control of all creatures they own."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5261,9 +5095,7 @@
     {
       "name": "The Shire",
       "rank": 1175,
-      "lines": [
-        "~ enters tapped unless you control a legendary creature."
-      ],
+      "lines": ["~ enters tapped unless you control a legendary creature."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5303,9 +5135,7 @@
     {
       "name": "Millikin",
       "rank": 1182,
-      "lines": [
-        "{T}, Mill a card: Add {C}."
-      ],
+      "lines": ["{T}, Mill a card: Add {C}."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5325,9 +5155,7 @@
     {
       "name": "Captain Lannery Storm",
       "rank": 1191,
-      "lines": [
-        "Whenever you sacrifice a Treasure, ~ gets +1/+0 until end of turn."
-      ],
+      "lines": ["Whenever you sacrifice a Treasure, ~ gets +1/+0 until end of turn."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5411,9 +5239,7 @@
     {
       "name": "Uthros, Titanic Godcore",
       "rank": 1214,
-      "lines": [
-        "12+ | {U}, {T}: Add {U} for each artifact you control."
-      ],
+      "lines": ["12+ | {U}, {T}: Add {U} for each artifact you control."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5528,9 +5354,7 @@
     {
       "name": "Umbral Collar Zealot",
       "rank": 1233,
-      "lines": [
-        "Sacrifice another creature or artifact: Surveil 1."
-      ],
+      "lines": ["Sacrifice another creature or artifact: Surveil 1."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5581,9 +5405,7 @@
     {
       "name": "Agate Instigator",
       "rank": 1238,
-      "lines": [
-        "Offspring {1}{R}"
-      ],
+      "lines": ["Offspring {1}{R}"],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5645,9 +5467,7 @@
     {
       "name": "K'rrik, Son of Yawgmoth",
       "rank": 1246,
-      "lines": [
-        "For each {B} in a cost, you may pay 2 life rather than pay that mana."
-      ],
+      "lines": ["For each {B} in a cost, you may pay 2 life rather than pay that mana."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5667,9 +5487,7 @@
     {
       "name": "Topiary Stomper",
       "rank": 1258,
-      "lines": [
-        "~ can't attack or block unless you control seven or more lands."
-      ],
+      "lines": ["~ can't attack or block unless you control seven or more lands."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5789,9 +5607,7 @@
     {
       "name": "Nuka-Cola Vending Machine",
       "rank": 1272,
-      "lines": [
-        "Whenever you sacrifice a Food, create a tapped Treasure token."
-      ],
+      "lines": ["Whenever you sacrifice a Food, create a tapped Treasure token."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5844,9 +5660,7 @@
     {
       "name": "Dakmor Salvage",
       "rank": 1274,
-      "lines": [
-        "Dredge 2"
-      ],
+      "lines": ["Dredge 2"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5855,15 +5669,11 @@
     {
       "name": "Marwyn, the Nurturer",
       "rank": 1276,
-      "lines": [
-        "{T}: Add an amount of {G} equal to ~'s power."
-      ],
+      "lines": ["{T}: Add an amount of {G} equal to ~'s power."],
       "outcome": "inexpressible",
       "compileRounds": 2,
       "validatorIssues": [
-        [
-          "override.def.manaAbilities[0].amount: mana amount a mana ability cannot evaluate"
-        ]
+        ["override.def.manaAbilities[0].amount: mana amount a mana ability cannot evaluate"]
       ],
       "inexpressibleReason": "A mana ability amount cannot read the source's current power (powerOfSource is not evaluable there, and countersOnSelf would ignore other power modifiers)."
     },
@@ -6101,9 +5911,7 @@
     {
       "name": "Timeless Witness",
       "rank": 1307,
-      "lines": [
-        "Eternalize {5}{G}{G}"
-      ],
+      "lines": ["Eternalize {5}{G}{G}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6156,9 +5964,7 @@
     {
       "name": "Staff of Compleation",
       "rank": 1321,
-      "lines": [
-        "{T}, Pay 1 life: Destroy target permanent you own."
-      ],
+      "lines": ["{T}, Pay 1 life: Destroy target permanent you own."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6209,9 +6015,7 @@
     {
       "name": "Shimmer Myr",
       "rank": 1325,
-      "lines": [
-        "You may cast artifact spells as though they had flash."
-      ],
+      "lines": ["You may cast artifact spells as though they had flash."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6286,9 +6090,7 @@
     {
       "name": "Asceticism",
       "rank": 1335,
-      "lines": [
-        "{1}{G}: Regenerate target creature."
-      ],
+      "lines": ["{1}{G}: Regenerate target creature."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6405,9 +6207,7 @@
     {
       "name": "Bulk Up",
       "rank": 1372,
-      "lines": [
-        "Double target creature's power until end of turn."
-      ],
+      "lines": ["Double target creature's power until end of turn."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
