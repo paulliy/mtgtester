@@ -16,6 +16,7 @@
  * `exec` command (Anthropic API), a batch job, or an agent. `check` is idempotent: run it after
  * each round of answers until nothing is pending.
  */
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   existsSync,
@@ -759,6 +760,14 @@ function feedPrimitiveBacklog(trial: string, states: readonly CardState[]): void
   if (!existsSync(path)) return;
   const file = JSON.parse(readFileSync(path, 'utf8')) as BacklogGroupsFile;
   const trialPath = relative(process.cwd(), resolve(trial)).replace(/\\/g, '/');
+  // Only committed trials feed the backlog; a scratch or calibration run elsewhere must not
+  // touch the tracked groups file.
+  if (!trialPath.startsWith('docs/reviews/')) {
+    console.log(
+      `${trialPath} is not under docs/reviews/, so its refusals were not added to the primitive backlog`,
+    );
+    return;
+  }
   const added = appendRefusals(
     file,
     states
@@ -774,8 +783,11 @@ function feedPrimitiveBacklog(trial: string, states: readonly CardState[]): void
   );
   if (added.length === 0) return;
   writeFileSync(path, renderGroupsFile(file));
+  // Regenerate the queue and report so snapshots:check stays clean.
+  const regen = spawnSync('bun', ['run', 'primitive-backlog'], { stdio: 'inherit' });
+  if (regen.status !== 0) throw new Error('bun run primitive-backlog failed after adding refusals');
   console.log(
-    `added ${added.length} refusals to ${PRIMITIVE_BACKLOG_GROUPS_PATH} as ungrouped; group them, then run bun run primitive-backlog`,
+    `added ${added.length} refusals to ${PRIMITIVE_BACKLOG_GROUPS_PATH} as ungrouped; group them by hand, then run bun run primitive-backlog`,
   );
 }
 

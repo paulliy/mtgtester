@@ -177,6 +177,7 @@ packages/engine/tests/pilot-current
 packages/server/src/cards/pilot-current
 packages/engine/tests/grammar-diagnostics.test.ts
 packages/server/src/cards/edhrec-triage.test.ts
+packages/server/src/cards/primitive-backlog.test.ts
 packages/engine/tests/cards/edhrec-staples
 packages/engine/tests/cards/aetherize.test.ts
 packages/engine/tests/cards/craterhoof-behemoth.test.ts

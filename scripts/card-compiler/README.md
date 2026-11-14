@@ -68,7 +68,7 @@ Accepted patches are written to `<trial>/patches/`. Nothing here registers them 
 
 Refusals feed the primitive backlog. `report` appends each `inexpressible` card that
 `packages/server/fixtures/primitive-backlog-groups.json` does not list yet to its `ungrouped`
-list (run it from the repo root, with a repo-relative trial path). Move each one into a feature
+list (only for trials under `docs/reviews/`, run from the repo root) and regenerates the backlog. Move each one into a feature
 group, or into `oneOff`, by hand, then run `bun run primitive-backlog` to re-rank the missing
 features by deck slots (`docs/plans/primitive-backlog.md`).
 

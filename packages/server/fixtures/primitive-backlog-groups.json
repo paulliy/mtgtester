@@ -1,5 +1,5 @@
 {
-  "about": "Source of truth for the primitive backlog (E8). Each group is one missing IR feature; each card is a compiler refusal. A card listed in k groups counts 1/k toward each. oneOff holds cards whose line needs a bespoke mechanic; ungrouped holds new refusals that still need a group. Edit by hand, then run bun run primitive-backlog.",
+  "about": "Source of truth for the primitive backlog (E8). Each group is one missing IR feature; each card is a compiler refusal. A card that needs k missing features (the groups it is listed in plus its alsoNeeds) counts 1/k toward each group. oneOff holds cards whose line needs a bespoke mechanic; ungrouped holds new refusals that still need a group. Edit by hand, then run bun run primitive-backlog.",
   "xmageScan": "xmageBucket comes from the XMage scan of 2026-11-09 (project files xmage-scan/rows.json): xmage-known-classes means XMage implements the card with shared ability classes only.",
   "groups": [
     {
@@ -94,7 +94,10 @@
           "name": "Splendor Mare",
           "trial": "docs/reviews/card-compiler-trial-02",
           "reason": "No trigger event exists for cycling a card, and a discard trigger cannot fire from the hand, so \"when you cycle this card\" cannot be stated; the lifelink counter also has no keyword effect.",
-          "xmageBucket": "xmage-known-classes"
+          "xmageBucket": "xmage-known-classes",
+          "alsoNeeds": [
+            "keyword counters (a lifelink counter grants lifelink)"
+          ]
         },
         {
           "name": "Ancient Greenwarden",
@@ -304,7 +307,10 @@
           "name": "Breaching Leviathan",
           "trial": "docs/reviews/card-compiler-trial-02",
           "reason": "No condition tests that the creature was cast from your hand, and no effect makes the tapped creatures skip their controllers' next untap steps.",
-          "xmageBucket": "xmage-custom-classes"
+          "xmageBucket": "xmage-custom-classes",
+          "alsoNeeds": [
+            "skip the next untap step of chosen permanents"
+          ]
         },
         {
           "name": "Transpose",
@@ -664,7 +670,10 @@
           "name": "Commander Liara Portyr",
           "trial": "docs/reviews/card-compiler-trial-01",
           "reason": "The reduction is X = the number of players being attacked, which no Value expresses, and the reduction applies only to spells cast from exile this turn, which costReduction cannot restrict by zone.",
-          "xmageBucket": "xmage-custom-classes"
+          "xmageBucket": "xmage-custom-classes",
+          "alsoNeeds": [
+            "a Value for the number of players being attacked"
+          ]
         }
       ]
     },
@@ -827,6 +836,12 @@
           "trial": "docs/reviews/card-compiler-trial-01",
           "reason": "The cost 'Exile a creature card from your graveyard' has no AbilityCost form: exileOtherCardsFromGraveyard counts cards of any type and is the escape cost, so the creature-card restriction cannot be stated exactly.",
           "xmageBucket": "xmage-known-classes"
+        },
+        {
+          "name": "Titans' Nest",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Its graveyard-exile cost is not expressible as the mana ability's cost, and the spend restriction (a colored spell without {X} in its mana cost) has no selector.",
+          "xmageBucket": "xmage-custom-classes"
         }
       ]
     },
@@ -976,6 +991,12 @@
           "name": "Surrounded by Orcs",
           "trial": "docs/reviews/card-compiler-trial-01",
           "reason": "The schema has no reference to the amassed Army's power (amass returns no object reference), and the targeted mill op takes only a fixed number, so 'mills X cards where X is the Army's power' cannot be said.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "Overwhelming Forces",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "destroyEach takes a selector with no way to name the targeted opponent's creatures, and no value counts the creatures actually destroyed by that effect, so 'destroy all creatures target opponent controls, draw a card for each destroyed' cannot be stated exactly.",
           "xmageBucket": "xmage-custom-classes"
         }
       ]
@@ -1264,6 +1285,12 @@
           "name": "Release to the Wind",
           "trial": "docs/reviews/card-compiler-trial-01",
           "reason": "The schema has no way to say that the card's owner (not its controller) may cast the exiled card without paying its mana cost for as long as it remains exiled; the exile half alone would be an incomplete card.",
+          "xmageBucket": "xmage-custom-classes"
+        },
+        {
+          "name": "The Infamous Cruelclaw",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect exiles cards from the controller's library until a nonland is exiled and then offers casting that card by discarding a card as its alternative cost.",
           "xmageBucket": "xmage-custom-classes"
         }
       ]

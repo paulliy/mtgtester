@@ -82,7 +82,7 @@ describe('buildPrimitiveBacklog', () => {
       ['Mid Card', 1],
     ]);
     expect(b.xmageKnown).toBe(1);
-    expect(backlog.multiGroupCards).toBe(1);
+    expect(backlog.multiFeatureCards).toBe(1);
   });
 
   it('drops unblocked cards from the ranking and lists them', () => {
@@ -119,6 +119,46 @@ describe('buildPrimitiveBacklog', () => {
       'docs/reviews/card-compiler-trial-01',
       'docs/reviews/card-compiler-trial-02',
     ]);
+  });
+});
+
+describe('weighting and edge cases', () => {
+  it('counts alsoNeeds like another group in the 1/k weight', () => {
+    const groups = fixture();
+    groups.groups[0]!.cards[0]!.alsoNeeds = ['a bespoke mechanic'];
+    const backlog = build(groups);
+    const a = backlog.features.find((f) => f.feature === 'A')!;
+    expect(a.weightedDecks).toBe(450);
+    expect(a.members[0]!.weight).toBe(0.5);
+    expect(backlog.multiFeatureCards).toBe(2);
+  });
+
+  it('leaves out a group whose cards are all unblocked and names it', () => {
+    const backlog = build(
+      fixture(),
+      new Map<string, UnblockedBy>([
+        ['Done Card', 'modeled'],
+        ['Staple', 'review-queue'],
+      ]),
+    );
+    expect(backlog.features.map((f) => f.feature)).toEqual(['B', 'C']);
+    expect(backlog.clearedFeatures).toEqual(['A']);
+    expect(renderBacklogMarkdown(backlog)).toContain('Features with no blocked card left: A.');
+  });
+
+  it('counts a card shared by two tail features once in the tail summary', () => {
+    const markdown = renderBacklogMarkdown(build(), { top: 1 });
+    expect(markdown).toContain('2 more features, 3 cards together');
+  });
+
+  it('refuses a ranking with no slots', () => {
+    expect(() =>
+      buildPrimitiveBacklog({
+        groups: fixture(),
+        ranking: { ...ranking, totalSlots: 0 },
+        unblocked: new Map(),
+      }),
+    ).toThrow(/no slots/);
   });
 });
 

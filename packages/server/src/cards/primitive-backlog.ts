@@ -28,6 +28,11 @@ export interface RefusalEntry {
   trial: string;
   reason: string;
   xmageBucket?: XmageBucket;
+  /**
+   * Missing features this card also needs that are not tracked as groups (a bespoke mechanic).
+   * Each one counts like another group in the card's 1/k weight.
+   */
+  alsoNeeds?: string[];
 }
 
 export interface RefusalGroup {
@@ -47,15 +52,18 @@ export interface BacklogGroupsFile {
   ungrouped: RefusalEntry[];
 }
 
-/** Why a refused card no longer counts: it is modeled now, or a patch for it is in the queue. */
-export type UnblockedBy = 'modeled' | 'compiled-checked' | 'provisional';
+/**
+ * Why a refused card no longer counts: it is modeled now, or a checked patch for it waits in the
+ * review queue and is admissible as provisional (not rejected, not cross-check-differs, not demoted).
+ */
+export type UnblockedBy = 'modeled' | 'review-queue';
 
 export interface BacklogCard {
   name: string;
   /** EDHREC rank, 1-based, or null when the card is outside the frozen ranking. */
   rank: number | null;
   decks: number;
-  /** 1 / the number of groups the card is listed in. */
+  /** 1 / k, where k counts the groups the card is listed in plus its `alsoNeeds`. */
   weight: number;
   xmageBucket?: XmageBucket;
   trial: string;
@@ -84,10 +92,12 @@ export interface PrimitiveBacklog {
   /** Distinct refused cards in the groups file, blocked or not. */
   refusals: number;
   trials: string[];
-  /** Ranked by slot share, then weighted cards, then name. */
+  /** Ranked by slot share, then weighted cards, then name. Groups with no blocked card are left out. */
   features: BacklogFeature[];
-  /** Still-blocked cards listed in two or more groups. */
-  multiGroupCards: number;
+  /** Groups whose every card is unblocked now. */
+  clearedFeatures: string[];
+  /** Still-blocked grouped cards that need two or more missing features. */
+  multiFeatureCards: number;
   oneOff: BacklogCard[];
   ungrouped: BacklogCard[];
   unblocked: { name: string; by: UnblockedBy }[];
@@ -115,6 +125,7 @@ function byRank(a: BacklogCard, b: BacklogCard): number {
 /** Rank the groups file against the EDHREC ranking. Pure; the CLI does the file reads. */
 export function buildPrimitiveBacklog(input: BacklogInput): PrimitiveBacklog {
   const { groups, ranking, unblocked } = input;
+  if (!(ranking.totalSlots > 0)) throw new Error('EDHREC ranking has no slots (totalSlots <= 0)');
   const position = new Map<string, number>();
   ranking.cards.forEach(([name], index) => {
     position.set(name, index);
@@ -126,6 +137,16 @@ export function buildPrimitiveBacklog(input: BacklogInput): PrimitiveBacklog {
       groupCount.set(name, (groupCount.get(name) ?? 0) + 1);
     }
   }
+  const alsoNeeds = new Map<string, Set<string>>();
+  for (const entry of groups.groups.flatMap((group) => group.cards)) {
+    for (const need of entry.alsoNeeds ?? []) {
+      const set = alsoNeeds.get(entry.name) ?? new Set<string>();
+      set.add(need);
+      alsoNeeds.set(entry.name, set);
+    }
+  }
+  const needs = (name: string): number =>
+    (groupCount.get(name) ?? 1) + (alsoNeeds.get(name)?.size ?? 0);
 
   const unranked = new Set<string>();
   const toCard = (entry: RefusalEntry): BacklogCard => {
@@ -135,7 +156,7 @@ export function buildPrimitiveBacklog(input: BacklogInput): PrimitiveBacklog {
       name: entry.name,
       rank: index === undefined ? null : index + 1,
       decks: index === undefined ? 0 : ranking.cards[index]![1],
-      weight: 1 / (groupCount.get(entry.name) ?? 1),
+      weight: 1 / needs(entry.name),
       trial: entry.trial,
       reason: entry.reason,
     };
@@ -148,7 +169,7 @@ export function buildPrimitiveBacklog(input: BacklogInput): PrimitiveBacklog {
     return entries.filter((entry) => !seen.has(entry.name) && seen.add(entry.name) !== undefined);
   };
 
-  const features: BacklogFeature[] = groups.groups.map((group) => {
+  const allFeatures: BacklogFeature[] = groups.groups.map((group) => {
     const members = unique(group.cards).filter(blocked).map(toCard).sort(byRank);
     const weightedDecks = members.reduce((sum, card) => sum + card.decks * card.weight, 0);
     return {
@@ -162,6 +183,7 @@ export function buildPrimitiveBacklog(input: BacklogInput): PrimitiveBacklog {
       members,
     };
   });
+  const features = allFeatures.filter((feature) => feature.cards > 0);
   features.sort(
     (a, b) =>
       b.weightedDecks - a.weightedDecks ||
@@ -193,8 +215,12 @@ export function buildPrimitiveBacklog(input: BacklogInput): PrimitiveBacklog {
     refusals: names.size,
     trials: [...new Set(all.map((entry) => entry.trial))].sort(byName),
     features,
-    multiGroupCards: [...groupCount.entries()].filter(
-      ([name, count]) => count > 1 && !unblocked.has(name),
+    clearedFeatures: allFeatures
+      .filter((feature) => feature.cards === 0)
+      .map((feature) => feature.feature)
+      .sort(byName),
+    multiFeatureCards: [...groupCount.keys()].filter(
+      (name) => needs(name) > 1 && !unblocked.has(name),
     ).length,
     oneOff,
     ungrouped,
@@ -253,7 +279,8 @@ export function renderBacklogJson(backlog: PrimitiveBacklog): string {
     totalSlots: backlog.totalSlots,
     refusals: backlog.refusals,
     trials: backlog.trials,
-    multiGroupCards: backlog.multiGroupCards,
+    multiFeatureCards: backlog.multiFeatureCards,
+    clearedFeatures: backlog.clearedFeatures,
     features: backlog.features.map((feature, index) => ({
       rank: index + 1,
       feature: feature.feature,
@@ -309,7 +336,7 @@ export function renderBacklogMarkdown(
     '',
     `**Sample.** ${backlog.refusals} cards the card compiler refused as inexpressible, from ${backlog.trials.length} trial${backlog.trials.length === 1 ? '' : 's'} (${backlog.trials.map((trial) => `\`${trial}\``).join(', ')}). Each trial drew its cards from the pool of EDHREC cards blocked by one rules line, so this is a sample of the gaps, not a census. ${blockedCards} are still blocked; ${backlog.unblocked.length} have since been modeled or compiled and leave the ranking.`,
     '',
-    `**How the rank works.** A feature's score is the sum of its cards' EDHREC deck counts as a share of all ${backlog.totalSlots.toLocaleString('en-US')} nonbasic deck slots. A card that needs k features counts 1/k toward each (${backlog.multiGroupCards} card${backlog.multiGroupCards === 1 ? ' does' : 's do'} now), so a card that also needs another missing feature does not look free. Slot share, not card count, separates a staple from a long-tail card. "XMage spec" counts cards XMage implements with shared ability classes only, where its code can serve as a specification. Machine-readable queue: \`packages/server/fixtures/primitive-backlog.json\`.`,
+    `**How the rank works.** A feature's score is the sum of its cards' EDHREC deck counts as a share of all ${backlog.totalSlots.toLocaleString('en-US')} nonbasic deck slots. A card that needs k features counts 1/k toward each (${backlog.multiFeatureCards} card${backlog.multiFeatureCards === 1 ? ' does' : 's do'} now; a need with no group of its own is listed on the card as \`alsoNeeds\`), so a card that also needs another missing feature does not look free. Slot share, not card count, separates a staple from a long-tail card. "XMage spec" counts cards XMage implements with shared ability classes only, where its code can serve as a specification. Machine-readable queue: \`packages/server/fixtures/primitive-backlog.json\`.`,
     '',
     `## Top ${Math.min(top, backlog.features.length)} features`,
     '',
@@ -326,7 +353,7 @@ export function renderBacklogMarkdown(
   if (rest.length > 0) {
     out.push(
       '',
-      `${rest.length} more feature${rest.length === 1 ? '' : 's'}, ${rest.reduce((sum, f) => sum + f.cards, 0)} cards together, ${percent(rest.reduce((sum, f) => sum + f.slotShare, 0))} of slots: ${rest.map((f) => `${cell(f.feature)} (${f.cards})`).join('; ')}.`,
+      `${rest.length} more feature${rest.length === 1 ? '' : 's'}, ${new Set(rest.flatMap((f) => f.members.map((card) => card.name))).size} cards together, ${percent(rest.reduce((sum, f) => sum + f.slotShare, 0))} of slots: ${rest.map((f) => `${cell(f.feature)} (${f.cards})`).join('; ')}.`,
     );
   }
   out.push(
@@ -367,6 +394,12 @@ export function renderBacklogMarkdown(
       '## Unblocked since refusal',
       '',
       `These cards are modeled now or have a checked patch in the review queue, so they no longer count: ${backlog.unblocked.map((card) => `${cell(card.name)} (${card.by})`).join(', ')}.`,
+    );
+  }
+  if (backlog.clearedFeatures.length > 0) {
+    out.push(
+      '',
+      `Features with no blocked card left: ${backlog.clearedFeatures.map(cell).join(', ')}.`,
     );
   }
   if (backlog.unranked.length > 0) {

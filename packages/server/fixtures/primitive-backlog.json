@@ -7,16 +7,17 @@
     "docs/reviews/card-compiler-trial-01",
     "docs/reviews/card-compiler-trial-02"
   ],
-  "multiGroupCards": 0,
+  "multiFeatureCards": 6,
+  "clearedFeatures": [],
   "features": [
     {
       "rank": 1,
       "feature": "Trigger events and filters that do not exist yet",
       "description": "Add trigger events/filters for combat damage to a planeswalker or creature, playing a land, a permanent entering tapped, cycling a card, and a land-entering filter on trigger doubling.",
       "cards": 8,
-      "weightedCards": 8,
-      "weightedDecks": 793963,
-      "slotShare": 0.00094437,
+      "weightedCards": 7.5,
+      "weightedDecks": 788231,
+      "slotShare": 0.00093755,
       "xmageKnown": 3,
       "members": [
         {
@@ -71,6 +72,7 @@
           "name": "Splendor Mare",
           "rank": 10389,
           "decks": 11465,
+          "weight": 0.5,
           "xmageBucket": "xmage-known-classes",
           "trial": "docs/reviews/card-compiler-trial-02",
           "reason": "No trigger event exists for cycling a card, and a discard trigger cannot fire from the hand, so \"when you cycle this card\" cannot be stated; the lifelink counter also has no keyword effect."
@@ -157,10 +159,10 @@
       "rank": 3,
       "feature": "Ability cost forms",
       "description": "Add AbilityCost forms: exert this permanent, return a land you control to hand, exile a creature card from graveyard.",
-      "cards": 4,
-      "weightedCards": 4,
-      "weightedDecks": 390431,
-      "slotShare": 0.00046439,
+      "cards": 5,
+      "weightedCards": 4.5,
+      "weightedDecks": 396778,
+      "slotShare": 0.00047194,
       "xmageKnown": 4,
       "members": [
         {
@@ -194,6 +196,15 @@
           "xmageBucket": "xmage-known-classes",
           "trial": "docs/reviews/card-compiler-trial-02",
           "reason": "The exile cost needs a creature card from your graveyard, but the only graveyard exile cost (exileOtherCardsFromGraveyard) takes any cards, and exileCardFromHand is limited to the hand."
+        },
+        {
+          "name": "Titans' Nest",
+          "rank": 9777,
+          "decks": 12693,
+          "weight": 0.5,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Its graveyard-exile cost is not expressible as the mana ability's cost, and the spend restriction (a colored spell without {X} in its mana cost) has no selector."
         }
       ]
     },
@@ -526,9 +537,9 @@
       "feature": "Conditional spell cost modification",
       "description": "Extend costReduction/tax with conditions: spell cast from graveyard, target is tapped, spells targeting this creature, spells the drawing player casts.",
       "cards": 6,
-      "weightedCards": 6,
-      "weightedDecks": 184169,
-      "slotShare": 0.00021906,
+      "weightedCards": 5.5,
+      "weightedDecks": 175482,
+      "slotShare": 0.00020872,
       "xmageKnown": 4,
       "members": [
         {
@@ -559,6 +570,7 @@
           "name": "Commander Liara Portyr",
           "rank": 7968,
           "decks": 17375,
+          "weight": 0.5,
           "xmageBucket": "xmage-custom-classes",
           "trial": "docs/reviews/card-compiler-trial-01",
           "reason": "The reduction is X = the number of players being attacked, which no Value expresses, and the reduction applies only to spells cast from exile this turn, which costReduction cannot restrict by zone."
@@ -679,12 +691,57 @@
     },
     {
       "rank": 12,
+      "feature": "Cast a card from other zones with a rider",
+      "description": "Add cast-from-opponent-graveyard and reveal-top-then-cast-if-equal-mana-value ops.",
+      "cards": 4,
+      "weightedCards": 3.5,
+      "weightedDecks": 153426,
+      "slotShare": 0.00018249,
+      "xmageKnown": 1,
+      "members": [
+        {
+          "name": "Powerbalance",
+          "rank": 2523,
+          "decks": 65568,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot say 'reveal the top card and cast it free only if its mana value equals the opponent's spell's', leaving it on top otherwise: lookAtTopNCastOneFree compares mana value as 'or less' and bottoms the rest."
+        },
+        {
+          "name": "Tinybones, the Pickpocket",
+          "rank": 2616,
+          "decks": 63463,
+          "xmageBucket": "xmage-known-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect lets its controller cast a nonland permanent card from the damaged player's graveyard; castForLifeFromZones covers only artifacts from the controller's own zones."
+        },
+        {
+          "name": "The Infamous Cruelclaw",
+          "rank": 7095,
+          "decks": 20597,
+          "weight": 0.5,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect exiles cards from the controller's library until a nonland is exiled and then offers casting that card by discarding a card as its alternative cost."
+        },
+        {
+          "name": "Release to the Wind",
+          "rank": 9149,
+          "decks": 14096,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The schema has no way to say that the card's owner (not its controller) may cast the exiled card without paying its mana cost for as long as it remains exiled; the exile half alone would be an incomplete card."
+        }
+      ]
+    },
+    {
+      "rank": 13,
       "feature": "Conditions on the triggering object or event player",
       "description": "Add conditions on the trigger object/event player: power equals toughness, 'other than the entering permanent', event player's own turn, defending player poisoned, cast from hand.",
       "cards": 6,
-      "weightedCards": 6,
-      "weightedDecks": 146579,
-      "slotShare": 0.00017435,
+      "weightedCards": 5.5,
+      "weightedDecks": 140600,
+      "slotShare": 0.00016723,
       "xmageKnown": 3,
       "members": [
         {
@@ -731,45 +788,10 @@
           "name": "Breaching Leviathan",
           "rank": 10143,
           "decks": 11959,
+          "weight": 0.5,
           "xmageBucket": "xmage-custom-classes",
           "trial": "docs/reviews/card-compiler-trial-02",
           "reason": "No condition tests that the creature was cast from your hand, and no effect makes the tapped creatures skip their controllers' next untap steps."
-        }
-      ]
-    },
-    {
-      "rank": 13,
-      "feature": "Cast a card from other zones with a rider",
-      "description": "Add cast-from-opponent-graveyard and reveal-top-then-cast-if-equal-mana-value ops.",
-      "cards": 3,
-      "weightedCards": 3,
-      "weightedDecks": 143127,
-      "slotShare": 0.00017024,
-      "xmageKnown": 1,
-      "members": [
-        {
-          "name": "Powerbalance",
-          "rank": 2523,
-          "decks": 65568,
-          "xmageBucket": "xmage-custom-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The schema cannot say 'reveal the top card and cast it free only if its mana value equals the opponent's spell's', leaving it on top otherwise: lookAtTopNCastOneFree compares mana value as 'or less' and bottoms the rest."
-        },
-        {
-          "name": "Tinybones, the Pickpocket",
-          "rank": 2616,
-          "decks": 63463,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "No effect lets its controller cast a nonland permanent card from the damaged player's graveyard; castForLifeFromZones covers only artifacts from the controller's own zones."
-        },
-        {
-          "name": "Release to the Wind",
-          "rank": 9149,
-          "decks": 14096,
-          "xmageBucket": "xmage-custom-classes",
-          "trial": "docs/reviews/card-compiler-trial-01",
-          "reason": "The schema has no way to say that the card's owner (not its controller) may cast the exiled card without paying its mana cost for as long as it remains exiled; the exile half alone would be an incomplete card."
         }
       ]
     },
@@ -979,58 +1001,6 @@
     },
     {
       "rank": 19,
-      "feature": "Reveal/exile/mill-until loops with leftovers handling",
-      "description": "Add a repeat-until-predicate reveal/exile/mill op (until creature/land/instant card or N cards) with rest to bottom/graveyard and optional cast or hand.",
-      "cards": 5,
-      "weightedCards": 5,
-      "weightedDecks": 115283,
-      "slotShare": 0.00013712,
-      "xmageKnown": 1,
-      "members": [
-        {
-          "name": "Spinner of Souls",
-          "rank": 3694,
-          "decks": 44498,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The only reveal-until primitive is revealUntilAura (Aura-only), so revealing until a creature card with the rest put on the bottom cannot be stated."
-        },
-        {
-          "name": "Dazzling Sphinx",
-          "rank": 5390,
-          "decks": 29105,
-          "xmageBucket": "xmage-custom-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The schema's exile primitives take a fixed count, so they cannot exile cards until an instant or sorcery is exiled and then bottom the rest in random order."
-        },
-        {
-          "name": "The Infamous Cruelclaw",
-          "rank": 7095,
-          "decks": 20597,
-          "xmageBucket": "xmage-custom-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "No effect exiles cards from the controller's library until a nonland is exiled and then offers casting that card by discarding a card as its alternative cost."
-        },
-        {
-          "name": "Mind Funeral",
-          "rank": 9693,
-          "decks": 12880,
-          "xmageBucket": "xmage-custom-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "No effect reveals cards from a library until a stated number of land cards is revealed and then puts all revealed cards into the graveyard."
-        },
-        {
-          "name": "Helm of Obedience",
-          "rank": 12421,
-          "decks": 8203,
-          "xmageBucket": "xmage-custom-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The schema has no repeat-until loop that mills cards until a creature card or X cards are put into the graveyard, followed by a conditional sacrifice and put onto the battlefield."
-        }
-      ]
-    },
-    {
-      "rank": 20,
       "feature": "Global alternative cost for spells",
       "description": "Add a static alternative cost for all/some spells (pay WUBRG, pay {0} once per turn for colorless from hand).",
       "cards": 2,
@@ -1058,7 +1028,7 @@
       ]
     },
     {
-      "rank": 21,
+      "rank": 20,
       "feature": "Division/halving Value",
       "description": "Add Value division with round-down (half the Zombies, half the non-God creatures).",
       "cards": 2,
@@ -1082,6 +1052,59 @@
           "xmageBucket": "xmage-custom-classes",
           "trial": "docs/reviews/card-compiler-trial-02",
           "reason": "The schema has no value for half the non-God creatures a player controls, rounded down, so the sacrifice count cannot be stated."
+        }
+      ]
+    },
+    {
+      "rank": 21,
+      "feature": "Reveal/exile/mill-until loops with leftovers handling",
+      "description": "Add a repeat-until-predicate reveal/exile/mill op (until creature/land/instant card or N cards) with rest to bottom/graveyard and optional cast or hand.",
+      "cards": 5,
+      "weightedCards": 4.5,
+      "weightedDecks": 104985,
+      "slotShare": 0.00012487,
+      "xmageKnown": 1,
+      "members": [
+        {
+          "name": "Spinner of Souls",
+          "rank": 3694,
+          "decks": 44498,
+          "xmageBucket": "xmage-known-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The only reveal-until primitive is revealUntilAura (Aura-only), so revealing until a creature card with the rest put on the bottom cannot be stated."
+        },
+        {
+          "name": "Dazzling Sphinx",
+          "rank": 5390,
+          "decks": 29105,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema's exile primitives take a fixed count, so they cannot exile cards until an instant or sorcery is exiled and then bottom the rest in random order."
+        },
+        {
+          "name": "The Infamous Cruelclaw",
+          "rank": 7095,
+          "decks": 20597,
+          "weight": 0.5,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect exiles cards from the controller's library until a nonland is exiled and then offers casting that card by discarding a card as its alternative cost."
+        },
+        {
+          "name": "Mind Funeral",
+          "rank": 9693,
+          "decks": 12880,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No effect reveals cards from a library until a stated number of land cards is revealed and then puts all revealed cards into the graveyard."
+        },
+        {
+          "name": "Helm of Obedience",
+          "rank": 12421,
+          "decks": 8203,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no repeat-until loop that mills cards until a creature card or X cards are put into the graveyard, followed by a conditional sacrifice and put onto the battlefield."
         }
       ]
     },
@@ -1519,45 +1542,46 @@
     },
     {
       "rank": 34,
-      "feature": "Mana spend restrictions by spell/cost predicate",
-      "description": "Extend ManaRestriction with predicates: costs containing X, colored spells without X, nonartifact spells only (abilities/artifact spells allowed).",
+      "feature": "Count of objects affected by the previous effect",
+      "description": "Add a Value for 'for each creature destroyed/sacrificed this way' counting results of the preceding effect.",
       "cards": 4,
-      "weightedCards": 4,
-      "weightedDecks": 61668,
-      "slotShare": 0.00007335,
-      "xmageKnown": 2,
+      "weightedCards": 3.5,
+      "weightedDecks": 57953,
+      "slotShare": 0.00006893,
+      "xmageKnown": 0,
       "members": [
         {
-          "name": "Nexos",
-          "rank": 5125,
-          "decks": 30853,
+          "name": "Voracious Fell Beast",
+          "rank": 6730,
+          "decks": 22163,
           "xmageBucket": "xmage-custom-classes",
           "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The granted mana may be spent only on costs containing {X}, and ManaRestriction has no predicate for costs containing X."
+          "reason": "The schema has no value for the number of creatures sacrificed this way, so one Food token per sacrificed creature cannot be stated."
         },
         {
-          "name": "Titans' Nest",
-          "rank": 9777,
-          "decks": 12693,
+          "name": "Death Begets Life",
+          "rank": 7533,
+          "decks": 18902,
           "xmageBucket": "xmage-custom-classes",
           "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "Its graveyard-exile cost is not expressible as the mana ability's cost, and the spend restriction (a colored spell without {X} in its mana cost) has no selector."
+          "reason": "The schema cannot count the permanents that destroyEach destroys in the same resolution, so it cannot draw one card for each of them."
         },
         {
-          "name": "The Great Mound",
-          "rank": 11319,
-          "decks": 9871,
-          "xmageBucket": "xmage-known-classes",
+          "name": "Overwhelming Forces",
+          "rank": 9881,
+          "decks": 12470,
+          "weight": 0.5,
+          "xmageBucket": "xmage-custom-classes",
           "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The Vibranium's mana cannot be spent to cast a nonartifact spell while still allowing abilities and artifact spells, and the mana restriction schema cannot express that exclusion exactly."
+          "reason": "destroyEach takes a selector with no way to name the targeted opponent's creatures, and no value counts the creatures actually destroyed by that effect, so 'destroy all creatures target opponent controls, draw a card for each destroyed' cannot be stated exactly."
         },
         {
-          "name": "Vibranium Mining Mech",
-          "rank": 12384,
-          "decks": 8251,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The Vibranium token's mana may not be spent to cast nonartifact spells, but a ManaRestriction filter also applies to abilities and cannot express that exactly."
+          "name": "Surrounded by Orcs",
+          "rank": 10847,
+          "decks": 10653,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The schema has no reference to the amassed Army's power (amass returns no object reference), and the targeted mill op takes only a fixed number, so 'mills X cards where X is the Army's power' cannot be said."
         }
       ]
     },
@@ -1591,6 +1615,51 @@
     },
     {
       "rank": 36,
+      "feature": "Mana spend restrictions by spell/cost predicate",
+      "description": "Extend ManaRestriction with predicates: costs containing X, colored spells without X, nonartifact spells only (abilities/artifact spells allowed).",
+      "cards": 4,
+      "weightedCards": 3.5,
+      "weightedDecks": 55322,
+      "slotShare": 0.0000658,
+      "xmageKnown": 2,
+      "members": [
+        {
+          "name": "Nexos",
+          "rank": 5125,
+          "decks": 30853,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The granted mana may be spent only on costs containing {X}, and ManaRestriction has no predicate for costs containing X."
+        },
+        {
+          "name": "Titans' Nest",
+          "rank": 9777,
+          "decks": 12693,
+          "weight": 0.5,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Its graveyard-exile cost is not expressible as the mana ability's cost, and the spend restriction (a colored spell without {X} in its mana cost) has no selector."
+        },
+        {
+          "name": "The Great Mound",
+          "rank": 11319,
+          "decks": 9871,
+          "xmageBucket": "xmage-known-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The Vibranium's mana cannot be spent to cast a nonartifact spell while still allowing abilities and artifact spells, and the mana restriction schema cannot express that exclusion exactly."
+        },
+        {
+          "name": "Vibranium Mining Mech",
+          "rank": 12384,
+          "decks": 8251,
+          "xmageBucket": "xmage-known-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The Vibranium token's mana may not be spent to cast nonartifact spells, but a ManaRestriction filter also applies to abilities and cannot express that exactly."
+        }
+      ]
+    },
+    {
+      "rank": 37,
       "feature": "Shares-a-creature-type selector",
       "description": "Add a selector for cards sharing a creature type with the source or dying creature.",
       "cards": 2,
@@ -1614,42 +1683,6 @@
           "xmageBucket": "xmage-custom-classes",
           "trial": "docs/reviews/card-compiler-trial-02",
           "reason": "No selector matches a card that shares a creature type with the source, so the kinship look-at-top filter cannot be expressed."
-        }
-      ]
-    },
-    {
-      "rank": 37,
-      "feature": "Count of objects affected by the previous effect",
-      "description": "Add a Value for 'for each creature destroyed/sacrificed this way' counting results of the preceding effect.",
-      "cards": 3,
-      "weightedCards": 3,
-      "weightedDecks": 51718,
-      "slotShare": 0.00006152,
-      "xmageKnown": 0,
-      "members": [
-        {
-          "name": "Voracious Fell Beast",
-          "rank": 6730,
-          "decks": 22163,
-          "xmageBucket": "xmage-custom-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The schema has no value for the number of creatures sacrificed this way, so one Food token per sacrificed creature cannot be stated."
-        },
-        {
-          "name": "Death Begets Life",
-          "rank": 7533,
-          "decks": 18902,
-          "xmageBucket": "xmage-custom-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The schema cannot count the permanents that destroyEach destroys in the same resolution, so it cannot draw one card for each of them."
-        },
-        {
-          "name": "Surrounded by Orcs",
-          "rank": 10847,
-          "decks": 10653,
-          "xmageBucket": "xmage-custom-classes",
-          "trial": "docs/reviews/card-compiler-trial-01",
-          "reason": "The schema has no reference to the amassed Army's power (amass returns no object reference), and the targeted mill op takes only a fixed number, so 'mills X cards where X is the Army's power' cannot be said."
         }
       ]
     },
@@ -1802,9 +1835,9 @@
       "feature": "Select-by-target-player scope",
       "description": "Let selectors/ops scope to a targeted player's permanents (tap all, destroy all, return each commander).",
       "cards": 3,
-      "weightedCards": 3,
-      "weightedDecks": 42921,
-      "slotShare": 0.00005105,
+      "weightedCards": 2.5,
+      "weightedDecks": 36686,
+      "slotShare": 0.00004364,
       "xmageKnown": 1,
       "members": [
         {
@@ -1827,6 +1860,7 @@
           "name": "Overwhelming Forces",
           "rank": 9881,
           "decks": 12470,
+          "weight": 0.5,
           "xmageBucket": "xmage-custom-classes",
           "trial": "docs/reviews/card-compiler-trial-02",
           "reason": "destroyEach takes a selector with no way to name the targeted opponent's creatures, and no value counts the creatures actually destroyed by that effect, so 'destroy all creatures target opponent controls, draw a card for each destroyed' cannot be stated exactly."
