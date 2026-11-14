@@ -131,16 +131,45 @@ describe('what the back-translator is shown', () => {
 });
 
 describe('smoke target choice', () => {
-  it('never announces the same object for two target slots', () => {
-    // "Target creature you control fights another target creature": both slots offer your
-    // creatures, and a game that picked one twice threw "illegal target" (chunk 003).
-    const patch = JSON.parse(
-      readFileSync(
-        resolve(root, 'docs/reviews/card-compiler-trial-chunk-003/patches/ulvenwald-tracker.json'),
-        'utf8',
-      ),
-    ) as { def: Parameters<typeof smokeTest>[1] };
-    const runs = smokeTest(targetOf('Ulvenwald Tracker'), patch.def);
-    expect(runs.filter((result) => !result.ok).map((result) => result.detail)).toEqual([]);
-  }, 60_000);
+  it('never announces the same object for two target slots', async () => {
+    // "Target creature you control fights another target creature": both slots offer the same
+    // creatures, and a game that picked one twice threw "illegal target" (Ulvenwald Tracker in
+    // chunk 003, Gleaming Splendor in chunk 002).
+    const { firstTargets } = await import('../../../../scripts/card-compiler/lib');
+    const { Prng } = await import('../../../engine/src/rng/prng');
+    const options = ['a', 'b'];
+    for (let seed = 0; seed < 50; seed++) {
+      const choices = firstTargets(
+        {
+          targets: [
+            { slot: 0, options, min: 1, max: 1 },
+            { slot: 1, options, min: 1, max: 1 },
+          ] as never,
+        },
+        new Prng(`seed-${seed}`),
+      );
+      expect(choices.map((choice) => choice.slot)).toEqual([0, 1]);
+      expect(new Set(choices.map((choice) => choice.choice)).size).toBe(2);
+    }
+  });
+
+  it('gives a slot with one option that option, before the wider slot chooses', async () => {
+    const { firstTargets } = await import('../../../../scripts/card-compiler/lib');
+    const { Prng } = await import('../../../engine/src/rng/prng');
+    for (let seed = 0; seed < 20; seed++) {
+      const choices = firstTargets(
+        {
+          targets: [
+            { slot: 0, options: ['a', 'b'], min: 1, max: 1 },
+            { slot: 1, options: ['a'], min: 1, max: 1 },
+          ] as never,
+        },
+        new Prng(`seed-${seed}`),
+      );
+      expect(choices).toEqual([
+        { slot: 0, choice: 'b' },
+        { slot: 1, choice: 'a' },
+      ]);
+    }
+  });
 });

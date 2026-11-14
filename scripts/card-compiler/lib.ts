@@ -728,7 +728,10 @@ function finish(
  * creature" offers the same creatures to both slots, and picking one twice is an illegal
  * announcement, not a defect of the card. Slots with fewer options choose first.
  */
-function firstTargets(action: DecisionRequest['legalActions'][number], rng: Prng): TargetChoice[] {
+export function firstTargets(
+  action: Pick<DecisionRequest['legalActions'][number], 'targets'>,
+  rng: Prng,
+): TargetChoice[] {
   const slots = action.targets ?? [];
   const taken = new Set<string>();
   const chosen = new Map<number, string>();
