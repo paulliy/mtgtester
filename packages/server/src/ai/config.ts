@@ -84,7 +84,7 @@ export interface AiConfig {
    * Who answers tactical decisions the local plan, heuristics and cache leave (ADR 0039).
    * `model`: the tactician LLM, as before. `bot`: the card-aware heuristic bot, steered by the
    * strategist's knobs, with the model asked only as `botEscalation` allows.
-   * Env: `AI_TACTICAL_MODE`. Default: `model`.
+   * Env: `AI_TACTICAL_MODE`. Default: `bot` (since 2026-11-14; ADR 0039).
    */
   tacticalMode: 'model' | 'bot';
   /**
@@ -314,7 +314,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   strategistConcurrency: 1,
   heuristicsEnabled: true,
   decisionCacheEnabled: true,
-  tacticalMode: 'model',
+  tacticalMode: 'bot',
   botEscalation: [],
   botEscalationShadow: [],
   botEscalationMargin: 1,
@@ -343,7 +343,10 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
     preferredMinThroughput: 100,
   },
   tactician: {
-    models: ['qwen/qwen3.7-flash', 'sao10k/l3-lunaris-8b:nitro', 'poolside/laguna-s-2.1'],
+    // Checked on OpenRouter 2026-11-14: all three have live endpoints and take `response_format`.
+    // poolside/laguna-s-2.1 has no provider left and sao10k/l3-lunaris-8b rate-limited the
+    // 2026-11-10 duel (ADR 0039), so both left the chain. DeepSeek V4 Flash has 13 providers.
+    models: ['qwen/qwen3.7-flash', 'deepseek/deepseek-v4-flash', 'upstage/solar-mini4'],
     reasoningEnabled: false,
     reasoningEffort: 'none',
     // 85 tokens routinely truncates menu decisions once JSON targets are included. Keep a
@@ -358,7 +361,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   archetype: {
     // Import-time only, one call per deck, and a heuristic tag already exists to fall back on —
     // so this is the cheapest, fastest profile in the file rather than the smartest.
-    models: ['qwen/qwen3.7-flash', 'poolside/laguna-s-2.1'],
+    models: ['qwen/qwen3.7-flash', 'deepseek/deepseek-v4-flash'],
     reasoningEnabled: false,
     reasoningEffort: 'none',
     maxOutputTokens: 60,

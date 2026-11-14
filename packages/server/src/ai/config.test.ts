@@ -175,9 +175,10 @@ describe('AI Config', () => {
     expect(config.strategist.models).toEqual(['z-ai/glm-5.3-flash', 'deepseek/deepseek-v4-flash']);
     expect(config.tactician.models).toEqual([
       'qwen/qwen3.7-flash',
-      'sao10k/l3-lunaris-8b:nitro',
-      'poolside/laguna-s-2.1',
+      'deepseek/deepseek-v4-flash',
+      'upstage/solar-mini4',
     ]);
+    expect(config.archetype.models).toEqual(['qwen/qwen3.7-flash', 'deepseek/deepseek-v4-flash']);
   });
 
   it('keeps Jev pinned and disabled until explicitly configured', () => {

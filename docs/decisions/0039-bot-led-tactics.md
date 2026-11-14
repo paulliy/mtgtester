@@ -53,8 +53,19 @@ or object id drifts, which is the expensive half of the tactician's job done bad
    each mode. `bun run bot-league` plays bot configurations against each other, two seats each,
    each seed twice with seats swapped.
 
-`AI_TACTICAL_MODE` stays `model` by default in this change. The quality evidence here is bot
+`AI_TACTICAL_MODE` stayed `model` by default in this change. The quality evidence here is bot
 against bot; the switch should flip after one comparison against the real tactician in paid games.
+
+**Update 2026-11-14: the default is now `bot`.** Paul decided on 2026-11-10 that the bot is the
+default tactician. The same change replaced the tactician chain, which still answers escalations
+and every seat that sets `AI_TACTICAL_MODE=model`: `poolside/laguna-s-2.1` had no OpenRouter
+provider left and `sao10k/l3-lunaris-8b` rate-limited the first duel, so the chain is now
+`qwen/qwen3.7-flash`, `deepseek/deepseek-v4-flash`, `upstage/solar-mini4` (all three listed live
+endpoints on 2026-11-14). A fair duel, three seeds each played with seats swapped, is the
+check against the model tactician; its numbers go under Measurements. The bar, set before the run: bot-led seats win at least 40%
+of games and make under a third of the model seats' calls per turn, and the duel is rerun if model
+seats fell back on more than 5% of tactician calls (`tacticianFallbackShare` in each report).
+`bun run ai-mode-duel --offline` plays the same game with no key for a free wiring check.
 
 ## Measurements
 
