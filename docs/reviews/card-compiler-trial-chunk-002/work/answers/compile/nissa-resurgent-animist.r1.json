@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"There is no reveal-until-matching-card op that puts the first Elf or Elemental card into hand and bottoms the rest in random order (revealUntilAura is Aura-only and lookAtTopN only looks at a fixed count)."}
