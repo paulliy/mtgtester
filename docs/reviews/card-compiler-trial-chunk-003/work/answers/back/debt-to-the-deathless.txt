@@ -1,0 +1,2 @@
+Each opponent loses twice X life.
+You gain life equal to the life lost this way.
