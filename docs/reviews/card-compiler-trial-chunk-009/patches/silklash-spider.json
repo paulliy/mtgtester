@@ -1,0 +1,59 @@
+{
+  "name": "Silklash Spider",
+  "oracleId": "2d0c73da-ed8c-44fc-abd9-7c344b1f890d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{X}{G}{G}: ~ deals X damage to each creature with flying."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 2
+              },
+              "colorless": 0,
+              "x": 1
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "damageEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "hasKeyword",
+                    "keyword": "flying"
+                  }
+                ]
+              },
+              "amount": {
+                "kind": "xValue"
+              }
+            }
+          ],
+          "description": "{X}{G}{G}: This creature deals X damage to each creature with flying."
+        }
+      }
+    ]
+  }
+}

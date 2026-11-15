@@ -1,0 +1,17 @@
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/spider-man-no-more.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/spider-man-no-more.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/electrolyze.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/electrolyze.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/search-the-premises.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/search-the-premises.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/exhibition-tidecaller.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/exhibition-tidecaller.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/samut-vizier-of-naktamun.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/samut-vizier-of-naktamun.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/omnath-locus-of-creation.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/omnath-locus-of-creation.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/kyoshi-island-plaza.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/kyoshi-island-plaza.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/glarb-calamity-s-augur.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/glarb-calamity-s-augur.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/spider-food.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/spider-food.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/might-of-the-masses.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/might-of-the-masses.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/diary-of-dreams.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/diary-of-dreams.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/split-decision.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/split-decision.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/ring-of-evos-isle.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/ring-of-evos-isle.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/thundering-raiju.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/thundering-raiju.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/rise-from-the-tides.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/rise-from-the-tides.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/illusionist-s-stratagem.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/illusionist-s-stratagem.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/battle-screech.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/battle-screech.txt

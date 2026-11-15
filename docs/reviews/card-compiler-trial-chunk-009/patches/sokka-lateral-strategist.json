@@ -1,0 +1,35 @@
+{
+  "name": "Sokka, Lateral Strategist",
+  "oracleId": "427f8ef9-12b3-4fa0-b303-28153566b6dc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ and at least one other creature attack, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          },
+          "withOtherAttackers": 1
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever Sokka and at least one other creature attack, draw a card."
+      }
+    ]
+  }
+}

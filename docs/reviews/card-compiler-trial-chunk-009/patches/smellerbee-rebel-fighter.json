@@ -1,0 +1,54 @@
+{
+  "name": "Smellerbee, Rebel Fighter",
+  "oracleId": "127bc05b-2945-434c-bc6a-283a267cc72a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ attacks, you may discard your hand. If you do, draw cards equal to the number of attacking creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "discardHand"
+          },
+          {
+            "op": "draw",
+            "count": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "combatRole",
+                    "role": "attacking"
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "Whenever Smellerbee attacks, you may discard your hand. If you do, draw cards equal to the number of attacking creatures."
+      }
+    ]
+  }
+}
