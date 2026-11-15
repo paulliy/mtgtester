@@ -53,7 +53,11 @@ show. Furnace of Rath repeats a chunk 003 finding; the other three are new engin
 - `run.ts verify`: additive. 72 cards promoted and nothing else changed.
 - `typecheck`, `typecheck:tests`, `lint`, `format:check`, `snapshots:check`, `check:ratchets` and
   `audit:card-ir` pass.
-- Full suite and fuzz: see below.
+- `bun run test`, clean tree: 781 files and 12,657 tests passed.
+- Fuzz, two pods for each promoted card: 137 of 144 games passed. Four failures are the
+  mana-payment planner halts that games without a promoted card also hit; one is an out-of-memory
+  in the mana solver (Siphon Insight, as Tragic Slip in chunk 001); two hit the 300-second limit
+  (Chocobo Knights, Growing Ranks) and finished normally in replays with a longer limit.
 
 ## Findings for the backlog
 
