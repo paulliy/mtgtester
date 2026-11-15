@@ -5,14 +5,18 @@ import type { AiClient } from './client';
 import { DEFAULT_AI_CONFIG, loadAiConfig } from './config';
 import { assembleStrategistPrompt } from './strategy-context';
 import {
-  applyStrategistDelta,
-  compactStrategistPayload,
+  applyStrategistDelta as applyDelta,
+  compactStrategistPayload as compact_,
   deltaBaseFrom,
   STRATEGIST_DELTA_PRIMER_TEXT,
 } from './strategist-delta';
 import { StrategyCoordinator } from './strategy-coordinator';
 
 type Payload = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+const compactStrategistPayload = (payload: Payload): Payload => compact_(payload) as Payload;
+const applyStrategistDelta = (...args: Parameters<typeof applyDelta>): Payload =>
+  applyDelta(...args) as Payload;
 
 const RUBY_TEXT =
   'Haste\nWhenever Ruby attacks while you control a creature with power 4 or greater.';
@@ -353,7 +357,7 @@ describe('assembleStrategistPrompt with delta prompts', () => {
     const a = assembleStrategistPrompt(strategyRequest(), view, [], 'Gruul', { botSteering: true });
     const b = assembleStrategistPrompt(strategyRequest(), view, [], 'Gruul', {
       botSteering: true,
-      delta: undefined,
+      tacticianFlag: false,
     });
     expect(b).toEqual(a);
     expect(a.messages[0]!.content).not.toContain('sinceYourLastPlan');
