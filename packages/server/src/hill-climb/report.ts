@@ -65,6 +65,8 @@ export type FingerprintVerdict = 'identical' | 'changed' | 'not-compared';
 export interface Comparison {
   rows: MetricRow[];
   sameMachine: boolean;
+  /** Both sides were measured at least three times, so the narrow noise floor applied. */
+  repeated: boolean;
   fingerprints: {
     verdict: FingerprintVerdict;
     compared: number;
@@ -194,7 +196,7 @@ export function compareReports(
       `games changed on seed(s) ${fingerprints.changed.join(', ')}: a performance change must ` +
         'leave every fingerprint identical',
     );
-  return { rows, sameMachine: same, fingerprints, ok: failures.length === 0, failures };
+  return { rows, sameMachine: same, repeated, fingerprints, ok: failures.length === 0, failures };
 }
 
 function compareFingerprints(
@@ -255,15 +257,7 @@ export function renderComparison(comparison: Comparison): string {
         ? `games: all ${fingerprints.compared} fingerprints identical`
         : `games: CHANGED on seed(s) ${fingerprints.changed.join(', ')} of ${fingerprints.compared}`,
   );
-  if (
-    comparison.sameMachine &&
-    comparison.rows.some(
-      (row) =>
-        row.kind === 'timed' &&
-        row.threshold >= UNREPEATED_FLOOR &&
-        row.threshold < CROSS_MACHINE_FLOOR,
-    )
-  )
+  if (comparison.sameMachine && !comparison.repeated)
     lines.push('timings: for a tighter verdict, measure both sides with --repeat 3');
   if (!comparison.sameMachine)
     lines.push(
