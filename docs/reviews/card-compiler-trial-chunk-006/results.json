@@ -13,10 +13,7 @@
     "cases": 9,
     "pending": [],
     "missed": [],
-    "falseAlarms": [
-      "horrific-assault",
-      "the-fifth-doctor"
-    ]
+    "falseAlarms": ["horrific-assault", "the-fifth-doctor"]
   },
   "cards": [
     {
@@ -77,9 +74,7 @@
     {
       "name": "Nullpriest of Oblivion",
       "rank": 4719,
-      "lines": [
-        "Kicker {3}{B}"
-      ],
+      "lines": ["Kicker {3}{B}"],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -130,9 +125,7 @@
     {
       "name": "Tale's End",
       "rank": 4724,
-      "lines": [
-        "Counter target activated ability, triggered ability, or legendary spell."
-      ],
+      "lines": ["Counter target activated ability, triggered ability, or legendary spell."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -141,9 +134,7 @@
     {
       "name": "Platinum Emperion",
       "rank": 4725,
-      "lines": [
-        "Your life total can't change."
-      ],
+      "lines": ["Your life total can't change."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -287,9 +278,7 @@
     {
       "name": "Sinister Gnarlbark",
       "rank": 4740,
-      "lines": [
-        "At the beginning of your end step, draw a card and blight 1."
-      ],
+      "lines": ["At the beginning of your end step, draw a card and blight 1."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -331,9 +320,7 @@
     {
       "name": "Alrund's Epiphany",
       "rank": 4742,
-      "lines": [
-        "Foretell {4}{U}{U}"
-      ],
+      "lines": ["Foretell {4}{U}{U}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -364,9 +351,7 @@
     {
       "name": "Containment Priest",
       "rank": 4749,
-      "lines": [
-        "If a nontoken creature would enter and it wasn't cast, exile it instead."
-      ],
+      "lines": ["If a nontoken creature would enter and it wasn't cast, exile it instead."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -397,9 +382,7 @@
     {
       "name": "Behind the Scenes",
       "rank": 4756,
-      "lines": [
-        "Creatures you control have skulk."
-      ],
+      "lines": ["Creatures you control have skulk."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -496,9 +479,7 @@
     {
       "name": "The Wandering Rescuer",
       "rank": 4766,
-      "lines": [
-        "Other tapped creatures you control have hexproof."
-      ],
+      "lines": ["Other tapped creatures you control have hexproof."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -879,9 +860,7 @@
     {
       "name": "Biomass Mutation",
       "rank": 4805,
-      "lines": [
-        "Creatures you control have base power and toughness X/X until end of turn."
-      ],
+      "lines": ["Creatures you control have base power and toughness X/X until end of turn."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -923,9 +902,7 @@
     {
       "name": "Baneslayer Angel",
       "rank": 4811,
-      "lines": [
-        "Flying, first strike, lifelink, protection from Demons and from Dragons"
-      ],
+      "lines": ["Flying, first strike, lifelink, protection from Demons and from Dragons"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -987,9 +964,7 @@
     {
       "name": "Ensnaring Bridge",
       "rank": 4817,
-      "lines": [
-        "Creatures with power greater than the number of cards in your hand can't attack."
-      ],
+      "lines": ["Creatures with power greater than the number of cards in your hand can't attack."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -998,9 +973,7 @@
     {
       "name": "Maelstrom Nexus",
       "rank": 4820,
-      "lines": [
-        "The first spell you cast each turn has cascade."
-      ],
+      "lines": ["The first spell you cast each turn has cascade."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1020,9 +993,7 @@
     {
       "name": "Doomskar",
       "rank": 4829,
-      "lines": [
-        "Foretell {1}{W}{W}"
-      ],
+      "lines": ["Foretell {1}{W}{W}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1037,9 +1008,7 @@
       "outcome": "meaning-differs",
       "compileRounds": 2,
       "validatorIssues": [
-        [
-          "override.def: Capability IR: unclassified field card.triggers[0].condition"
-        ]
+        ["override.def: Capability IR: unclassified field card.triggers[0].condition"]
       ],
       "smoke": [
         {
@@ -1101,9 +1070,7 @@
     {
       "name": "Wandertale Mentor",
       "rank": 4835,
-      "lines": [
-        "Whenever you expend 4, put a +1/+1 counter on this creature."
-      ],
+      "lines": ["Whenever you expend 4, put a +1/+1 counter on this creature."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1284,9 +1251,7 @@
     {
       "name": "Lord of Atlantis",
       "rank": 4868,
-      "lines": [
-        "Other Merfolk get +1/+1 and have islandwalk."
-      ],
+      "lines": ["Other Merfolk get +1/+1 and have islandwalk."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1394,9 +1359,7 @@
     {
       "name": "Cut Down",
       "rank": 4888,
-      "lines": [
-        "Destroy target creature with total power and toughness 5 or less."
-      ],
+      "lines": ["Destroy target creature with total power and toughness 5 or less."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1416,9 +1379,7 @@
     {
       "name": "Cyber Conversion",
       "rank": 4890,
-      "lines": [
-        "Turn target creature face down. It's a 2/2 Cyberman artifact creature."
-      ],
+      "lines": ["Turn target creature face down. It's a 2/2 Cyberman artifact creature."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1544,9 +1505,7 @@
     {
       "name": "Song of Creation",
       "rank": 4899,
-      "lines": [
-        "At the beginning of your end step, discard your hand."
-      ],
+      "lines": ["At the beginning of your end step, discard your hand."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1676,9 +1635,7 @@
     {
       "name": "Ankh of Mishra",
       "rank": 4922,
-      "lines": [
-        "Whenever a land enters, this artifact deals 2 damage to that land's controller."
-      ],
+      "lines": ["Whenever a land enters, this artifact deals 2 damage to that land's controller."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1784,9 +1741,7 @@
     {
       "name": "Stalwart Shield-Bearers",
       "rank": 4930,
-      "lines": [
-        "Other creatures you control with defender get +0/+2."
-      ],
+      "lines": ["Other creatures you control with defender get +0/+2."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1850,9 +1805,7 @@
     {
       "name": "Gaze of Granite",
       "rank": 4935,
-      "lines": [
-        "Destroy each nonland permanent with mana value X or less."
-      ],
+      "lines": ["Destroy each nonland permanent with mana value X or less."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1927,9 +1880,7 @@
     {
       "name": "Splinter's Technique",
       "rank": 4950,
-      "lines": [
-        "Sneak {1}{B}"
-      ],
+      "lines": ["Sneak {1}{B}"],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2018,9 +1969,7 @@
     {
       "name": "Inkwell Leviathan",
       "rank": 4961,
-      "lines": [
-        "Islandwalk"
-      ],
+      "lines": ["Islandwalk"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2029,9 +1978,7 @@
     {
       "name": "Haystack",
       "rank": 4962,
-      "lines": [
-        "{2}, {T}: Target creature you control phases out."
-      ],
+      "lines": ["{2}, {T}: Target creature you control phases out."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2071,9 +2018,7 @@
     {
       "name": "Reclaim",
       "rank": 4964,
-      "lines": [
-        "Put target card from your graveyard on top of your library."
-      ],
+      "lines": ["Put target card from your graveyard on top of your library."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2117,9 +2062,7 @@
     {
       "name": "Krark's Thumb",
       "rank": 4970,
-      "lines": [
-        "If you would flip a coin, instead flip two coins and ignore one."
-      ],
+      "lines": ["If you would flip a coin, instead flip two coins and ignore one."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2139,9 +2082,7 @@
     {
       "name": "Fecundity",
       "rank": 4977,
-      "lines": [
-        "Whenever a creature dies, that creature's controller may draw a card."
-      ],
+      "lines": ["Whenever a creature dies, that creature's controller may draw a card."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2273,9 +2214,7 @@
     {
       "name": "Rhet-Tomb Mystic",
       "rank": 4986,
-      "lines": [
-        "Each creature card in your hand has cycling {1}{U}."
-      ],
+      "lines": ["Each creature card in your hand has cycling {1}{U}."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2361,9 +2300,7 @@
     {
       "name": "Robe of the Archmagi",
       "rank": 4996,
-      "lines": [
-        "Equip Shaman, Warlock, or Wizard {1}"
-      ],
+      "lines": ["Equip Shaman, Warlock, or Wizard {1}"],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2447,9 +2384,7 @@
     {
       "name": "Unsubstantiate",
       "rank": 5015,
-      "lines": [
-        "Return target spell or creature to its owner's hand."
-      ],
+      "lines": ["Return target spell or creature to its owner's hand."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2612,9 +2547,7 @@
     {
       "name": "Entreat the Angels",
       "rank": 5033,
-      "lines": [
-        "Miracle {X}{W}{W}"
-      ],
+      "lines": ["Miracle {X}{W}{W}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2623,9 +2556,7 @@
     {
       "name": "Rockalanche",
       "rank": 5034,
-      "lines": [
-        "Earthbend X, where X is the number of Forests you control."
-      ],
+      "lines": ["Earthbend X, where X is the number of Forests you control."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2640,9 +2571,7 @@
       "outcome": "meaning-differs",
       "compileRounds": 2,
       "validatorIssues": [
-        [
-          "override.def: Capability IR: unclassified field card.triggers[0].condition"
-        ]
+        ["override.def: Capability IR: unclassified field card.triggers[0].condition"]
       ],
       "smoke": [
         {
@@ -2842,9 +2771,7 @@
     {
       "name": "Congregate",
       "rank": 5058,
-      "lines": [
-        "Target player gains 2 life for each creature on the battlefield."
-      ],
+      "lines": ["Target player gains 2 life for each creature on the battlefield."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2888,9 +2815,7 @@
     {
       "name": "Slash the Ranks",
       "rank": 5063,
-      "lines": [
-        "Destroy all creatures and planeswalkers except for commanders."
-      ],
+      "lines": ["Destroy all creatures and planeswalkers except for commanders."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2969,9 +2894,7 @@
     {
       "name": "Stitch in Time",
       "rank": 5066,
-      "lines": [
-        "Flip a coin. If you win the flip, take an extra turn after this one."
-      ],
+      "lines": ["Flip a coin. If you win the flip, take an extra turn after this one."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3101,9 +3024,7 @@
     {
       "name": "Spider-Woman, Stunning Savior",
       "rank": 5081,
-      "lines": [
-        "Venom Blast — Artifacts and creatures your opponents control enter tapped."
-      ],
+      "lines": ["Venom Blast — Artifacts and creatures your opponents control enter tapped."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3143,9 +3064,7 @@
     {
       "name": "Necrotic Sliver",
       "rank": 5098,
-      "lines": [
-        "All Slivers have \"{3}, Sacrifice this permanent: Destroy target permanent.\""
-      ],
+      "lines": ["All Slivers have \"{3}, Sacrifice this permanent: Destroy target permanent.\""],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3240,9 +3159,7 @@
     {
       "name": "Snarling Gorehound",
       "rank": 5105,
-      "lines": [
-        "Whenever another creature you control with power 2 or less enters, surveil 1."
-      ],
+      "lines": ["Whenever another creature you control with power 2 or less enters, surveil 1."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3282,9 +3199,7 @@
     {
       "name": "Remorseful Cleric",
       "rank": 5106,
-      "lines": [
-        "Sacrifice this creature: Exile target player's graveyard."
-      ],
+      "lines": ["Sacrifice this creature: Exile target player's graveyard."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3438,9 +3353,7 @@
     {
       "name": "Pyrokinesis",
       "rank": 5117,
-      "lines": [
-        "~ deals 4 damage divided as you choose among any number of target creatures."
-      ],
+      "lines": ["~ deals 4 damage divided as you choose among any number of target creatures."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3484,9 +3397,7 @@
     {
       "name": "Pacifism",
       "rank": 5121,
-      "lines": [
-        "Enchanted creature can't attack or block."
-      ],
+      "lines": ["Enchanted creature can't attack or block."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3517,9 +3428,7 @@
     {
       "name": "Song of the Worldsoul",
       "rank": 5128,
-      "lines": [
-        "Whenever you cast a spell, populate."
-      ],
+      "lines": ["Whenever you cast a spell, populate."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3634,9 +3543,7 @@
     {
       "name": "Wave of Reckoning",
       "rank": 5137,
-      "lines": [
-        "Each creature deals damage to itself equal to its power."
-      ],
+      "lines": ["Each creature deals damage to itself equal to its power."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3645,9 +3552,7 @@
     {
       "name": "Sami, Wildcat Captain",
       "rank": 5138,
-      "lines": [
-        "Spells you cast have affinity for artifacts."
-      ],
+      "lines": ["Spells you cast have affinity for artifacts."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3720,9 +3625,7 @@
     {
       "name": "Underworld Connections",
       "rank": 5147,
-      "lines": [
-        "Enchanted land has \"{T}, Pay 1 life: Draw a card.\""
-      ],
+      "lines": ["Enchanted land has \"{T}, Pay 1 life: Draw a card.\""],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3775,9 +3678,7 @@
     {
       "name": "Boompile",
       "rank": 5150,
-      "lines": [
-        "{T}: Flip a coin. If you win the flip, destroy all nonland permanents."
-      ],
+      "lines": ["{T}: Flip a coin. If you win the flip, destroy all nonland permanents."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3903,9 +3804,7 @@
     {
       "name": "Harmless Offering",
       "rank": 5167,
-      "lines": [
-        "Target opponent gains control of target permanent you control."
-      ],
+      "lines": ["Target opponent gains control of target permanent you control."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3982,9 +3881,7 @@
     {
       "name": "Ingot Chewer",
       "rank": 5172,
-      "lines": [
-        "Evoke {R}"
-      ],
+      "lines": ["Evoke {R}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4099,9 +3996,7 @@
     {
       "name": "Benthic Biomancer",
       "rank": 5189,
-      "lines": [
-        "{1}{U}: Adapt 1."
-      ],
+      "lines": ["{1}{U}: Adapt 1."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4220,9 +4115,7 @@
     {
       "name": "Caltrops",
       "rank": 5198,
-      "lines": [
-        "Whenever a creature attacks, this artifact deals 1 damage to it."
-      ],
+      "lines": ["Whenever a creature attacks, this artifact deals 1 damage to it."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4385,9 +4278,7 @@
     {
       "name": "Fear of Impostors",
       "rank": 5220,
-      "lines": [
-        "When this creature enters, counter target spell. Its controller manifests dread."
-      ],
+      "lines": ["When this creature enters, counter target spell. Its controller manifests dread."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4418,9 +4309,7 @@
     {
       "name": "Breaker of Armies",
       "rank": 5224,
-      "lines": [
-        "All creatures able to block this creature do so."
-      ],
+      "lines": ["All creatures able to block this creature do so."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4429,9 +4318,7 @@
     {
       "name": "Venerated Stormsinger",
       "rank": 5225,
-      "lines": [
-        "Mobilize 1"
-      ],
+      "lines": ["Mobilize 1"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4462,9 +4349,7 @@
     {
       "name": "Saproling Symbiosis",
       "rank": 5241,
-      "lines": [
-        "You may cast this spell as though it had flash if you pay {2} more to cast it."
-      ],
+      "lines": ["You may cast this spell as though it had flash if you pay {2} more to cast it."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4500,9 +4385,7 @@
     {
       "name": "Delete",
       "rank": 5242,
-      "lines": [
-        "~ deals X damage to each nonartifact creature and each player."
-      ],
+      "lines": ["~ deals X damage to each nonartifact creature and each player."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4667,9 +4550,7 @@
     {
       "name": "Vampiric Link",
       "rank": 5251,
-      "lines": [
-        "Whenever enchanted creature deals damage, you gain that much life."
-      ],
+      "lines": ["Whenever enchanted creature deals damage, you gain that much life."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4678,9 +4559,7 @@
     {
       "name": "Dimir Infiltrator",
       "rank": 5252,
-      "lines": [
-        "Transmute {1}{U}{B}"
-      ],
+      "lines": ["Transmute {1}{U}{B}"],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4745,9 +4624,7 @@
     {
       "name": "Capsize",
       "rank": 5260,
-      "lines": [
-        "Buyback {3}"
-      ],
+      "lines": ["Buyback {3}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4789,9 +4666,7 @@
     {
       "name": "Telepathy",
       "rank": 5270,
-      "lines": [
-        "Your opponents play with their hands revealed."
-      ],
+      "lines": ["Your opponents play with their hands revealed."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4800,9 +4675,7 @@
     {
       "name": "Wash Out",
       "rank": 5271,
-      "lines": [
-        "Return all permanents of the color of your choice to their owners' hands."
-      ],
+      "lines": ["Return all permanents of the color of your choice to their owners' hands."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4864,9 +4737,7 @@
     {
       "name": "Hidden Cataract",
       "rank": 5288,
-      "lines": [
-        "{4}{U}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
-      ],
+      "lines": ["{4}{U}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5062,9 +4933,7 @@
     {
       "name": "Spear of Heliod",
       "rank": 5302,
-      "lines": [
-        "{1}{W}{W}, {T}: Destroy target creature that dealt damage to you this turn."
-      ],
+      "lines": ["{1}{W}{W}, {T}: Destroy target creature that dealt damage to you this turn."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5084,9 +4953,7 @@
     {
       "name": "Squirrel Mob",
       "rank": 5307,
-      "lines": [
-        "~ gets +1/+1 for each other Squirrel on the battlefield."
-      ],
+      "lines": ["~ gets +1/+1 for each other Squirrel on the battlefield."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5137,9 +5004,7 @@
     {
       "name": "Shardmage's Rescue",
       "rank": 5310,
-      "lines": [
-        "As long as this Aura entered this turn, enchanted creature has hexproof."
-      ],
+      "lines": ["As long as this Aura entered this turn, enchanted creature has hexproof."],
       "outcome": "smoke-failed",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5201,9 +5066,7 @@
     {
       "name": "Turtle Lair",
       "rank": 5317,
-      "lines": [
-        "{3}, {T}: Target Ninja or Turtle can't be blocked this turn."
-      ],
+      "lines": ["{3}, {T}: Target Ninja or Turtle can't be blocked this turn."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5243,9 +5106,7 @@
     {
       "name": "Final Vengeance",
       "rank": 5323,
-      "lines": [
-        "As an additional cost to cast this spell, sacrifice a creature or enchantment."
-      ],
+      "lines": ["As an additional cost to cast this spell, sacrifice a creature or enchantment."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5313,9 +5174,7 @@
     {
       "name": "Throes of Chaos",
       "rank": 5331,
-      "lines": [
-        "Retrace"
-      ],
+      "lines": ["Retrace"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5372,9 +5231,7 @@
     {
       "name": "True Ancestry",
       "rank": 5334,
-      "lines": [
-        "Create a Clue token."
-      ],
+      "lines": ["Create a Clue token."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5383,9 +5240,7 @@
     {
       "name": "Hibernation Sliver",
       "rank": 5335,
-      "lines": [
-        "All Slivers have \"Pay 2 life: Return this permanent to its owner's hand.\""
-      ],
+      "lines": ["All Slivers have \"Pay 2 life: Return this permanent to its owner's hand.\""],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5449,9 +5304,7 @@
     {
       "name": "Back to Basics",
       "rank": 5341,
-      "lines": [
-        "Nonbasic lands don't untap during their controllers' untap steps."
-      ],
+      "lines": ["Nonbasic lands don't untap during their controllers' untap steps."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5546,9 +5399,7 @@
     {
       "name": "Crypt Sliver",
       "rank": 5354,
-      "lines": [
-        "All Slivers have \"{T}: Regenerate target Sliver.\""
-      ],
+      "lines": ["All Slivers have \"{T}: Regenerate target Sliver.\""],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5719,9 +5570,7 @@
     {
       "name": "Jubilation",
       "rank": 5374,
-      "lines": [
-        "Encore {7}{G}{G}"
-      ],
+      "lines": ["Encore {7}{G}{G}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5730,9 +5579,7 @@
     {
       "name": "Sprout Swarm",
       "rank": 5376,
-      "lines": [
-        "Buyback {3}"
-      ],
+      "lines": ["Buyback {3}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5805,9 +5652,7 @@
     {
       "name": "Hindering Light",
       "rank": 5384,
-      "lines": [
-        "Counter target spell that targets you or a permanent you control."
-      ],
+      "lines": ["Counter target spell that targets you or a permanent you control."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5880,9 +5725,7 @@
     {
       "name": "Rabbit Battery",
       "rank": 5394,
-      "lines": [
-        "Reconfigure {R}"
-      ],
+      "lines": ["Reconfigure {R}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5891,9 +5734,7 @@
     {
       "name": "Prosperous Bandit",
       "rank": 5395,
-      "lines": [
-        "Offspring {1}"
-      ],
+      "lines": ["Offspring {1}"],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6187,9 +6028,7 @@
     {
       "name": "Astrid Peth",
       "rank": 5420,
-      "lines": [
-        "Brand-new Sky — Whenever you sacrifice a Clue or Food, ~ explores."
-      ],
+      "lines": ["Brand-new Sky — Whenever you sacrifice a Clue or Food, ~ explores."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6229,9 +6068,7 @@
     {
       "name": "Zegana, Utopian Speaker",
       "rank": 5422,
-      "lines": [
-        "{4}{G}{U}: Adapt 4."
-      ],
+      "lines": ["{4}{G}{U}: Adapt 4."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6282,9 +6119,7 @@
     {
       "name": "Daemogoth Titan",
       "rank": 5430,
-      "lines": [
-        "Whenever this creature attacks or blocks, sacrifice a creature."
-      ],
+      "lines": ["Whenever this creature attacks or blocks, sacrifice a creature."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6324,9 +6159,7 @@
     {
       "name": "Glorious Gale",
       "rank": 5432,
-      "lines": [
-        "Counter target creature spell. If it was a legendary spell, the Ring tempts you."
-      ],
+      "lines": ["Counter target creature spell. If it was a legendary spell, the Ring tempts you."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6335,9 +6168,7 @@
     {
       "name": "Pili-Pala",
       "rank": 5434,
-      "lines": [
-        "{2}, {Q}: Add one mana of any color."
-      ],
+      "lines": ["{2}, {Q}: Add one mana of any color."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6346,9 +6177,7 @@
     {
       "name": "Expansion Algorithm",
       "rank": 5438,
-      "lines": [
-        "Proliferate X times."
-      ],
+      "lines": ["Proliferate X times."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6399,9 +6228,7 @@
     {
       "name": "Armadillo Cloak",
       "rank": 5442,
-      "lines": [
-        "Whenever enchanted creature deals damage, you gain that much life."
-      ],
+      "lines": ["Whenever enchanted creature deals damage, you gain that much life."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6410,9 +6237,7 @@
     {
       "name": "Spectrum Sentinel",
       "rank": 5444,
-      "lines": [
-        "Whenever a nonbasic land an opponent controls enters, you gain 1 life."
-      ],
+      "lines": ["Whenever a nonbasic land an opponent controls enters, you gain 1 life."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6496,9 +6321,7 @@
     {
       "name": "Angelic Chorus",
       "rank": 5460,
-      "lines": [
-        "Whenever a creature you control enters, you gain life equal to its toughness."
-      ],
+      "lines": ["Whenever a creature you control enters, you gain life equal to its toughness."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
