@@ -28,6 +28,11 @@ import {
 import type { CardDefinition } from '../../packages/engine/src/cards/definition';
 import { textCheck } from './render';
 import {
+  loadScreen,
+  screenLines,
+  type ScreenRule,
+} from '../../packages/server/src/cards/compiler-screen';
+import {
   applyPatch,
   behaviorOf,
   compileTarget,
@@ -93,7 +98,12 @@ export interface CardState {
   textCheck?: 'renderer' | 'model';
   /** Compile rounds answered so far. */
   rounds: number;
-  stage: 'compile' | 'invalid' | 'inexpressible' | 'back' | 'judge' | 'done' | 'stale';
+  stage: 'compile' | 'screened' | 'invalid' | 'inexpressible' | 'back' | 'judge' | 'done' | 'stale';
+  /**
+   * For `screened`: the pre-call screen rule that declined the card with no model call
+   * (packages/server/src/cards/compiler-screen.ts). Screened cards are not refusal evidence.
+   */
+  screenedBy?: string;
   validatorIssues: string[][];
   inexpressibleReason?: string;
   smoke?: SmokeResult[];
@@ -152,7 +162,18 @@ function saveState(trial: string, states: Map<string, CardState>): void {
   write(paths(trial).state, `${JSON.stringify([...states.values()], null, 2)}\n`);
 }
 
-function prepare(trial: string): void {
+let activeRules: ScreenRule[] | undefined;
+/** The pre-call screen's confirmed rules, built once from the committed evidence. */
+function screenRules(): ScreenRule[] {
+  activeRules ??= loadScreen().active;
+  return activeRules;
+}
+
+/**
+ * Writes the compile prompts. Unless `--no-screen` is given, a card whose line names a primitive
+ * the IR is known to lack is declined here as `screened`, and no prompt is written for it.
+ */
+function prepare(trial: string, useScreen: boolean): void {
   const p = paths(trial);
   const rows = JSON.parse(readFileSync(`${trial}/targets.json`, 'utf8')) as TargetRow[];
   const targets = loadTargets(trial);
@@ -160,6 +181,7 @@ function prepare(trial: string): void {
   write(p.prefix('compile'), compilePrefix());
   write(p.prefix('back'), BACK_PREFIX);
   write(p.prefix('judge'), JUDGE_PREFIX);
+  let screened = 0;
   for (const row of rows) {
     const target = targets.get(row.name);
     if (target === undefined) {
@@ -167,6 +189,20 @@ function prepare(trial: string): void {
       continue;
     }
     if (states.has(row.name)) continue;
+    const hit = useScreen ? screenLines(target.lines, screenRules(), target.name) : null;
+    if (hit !== null) {
+      states.set(row.name, {
+        ...row,
+        lines: target.lines,
+        rounds: 0,
+        stage: 'screened',
+        validatorIssues: [],
+        screenedBy: hit.rule.id,
+        inexpressibleReason: `${hit.rule.missing} (screened before compile: "${hit.line}")`,
+      });
+      screened++;
+      continue;
+    }
     states.set(row.name, {
       ...row,
       lines: target.lines,
@@ -177,7 +213,9 @@ function prepare(trial: string): void {
     write(p.prompt('compile', row.name, 1), compileSuffix(target));
   }
   saveState(trial, states);
-  console.log(`prepared ${states.size} cards`);
+  console.log(
+    `prepared ${states.size} cards; ${screened} declined by the screen with no model call${useScreen ? '' : ' (screen off)'}`,
+  );
 }
 
 function check(trial: string): void {
@@ -698,20 +736,23 @@ function report(trial: string): void {
         ? 'stale'
         : state.stage === 'inexpressible'
           ? 'inexpressible'
-          : state.stage === 'invalid'
-            ? 'invalid'
-            : state.valid !== true
-              ? 'pending'
-              : !smokeOk(state)
-                ? 'smoke-failed'
-                : state.verdict === 'same'
-                  ? 'compiled-checked'
-                  : state.verdict === 'different'
-                    ? 'meaning-differs'
-                    : 'pending',
+          : state.stage === 'screened'
+            ? 'screened'
+            : state.stage === 'invalid'
+              ? 'invalid'
+              : state.valid !== true
+                ? 'pending'
+                : !smokeOk(state)
+                  ? 'smoke-failed'
+                  : state.verdict === 'same'
+                    ? 'compiled-checked'
+                    : state.verdict === 'different'
+                      ? 'meaning-differs'
+                      : 'pending',
     compileRounds: state.rounds,
     validatorIssues: state.validatorIssues,
     inexpressibleReason: state.inexpressibleReason,
+    screenedBy: state.screenedBy,
     smoke: state.smoke?.map((run) => ({
       scenario: run.scenario,
       ok: run.ok,
@@ -744,16 +785,18 @@ if (executorFlag >= 0) {
   executor = value;
   argv.splice(executorFlag, 2);
 }
+const noScreenFlag = argv.indexOf('--no-screen');
+if (noScreenFlag >= 0) argv.splice(noScreenFlag, 1);
 const [command, trial, stage] = argv;
 if (trial === undefined)
   throw new Error(
-    'usage: run.ts <prepare|exec|check|report|recheck|import|queue> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity]',
+    'usage: run.ts <prepare|exec|check|report|recheck|import|queue> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity] [--no-screen]',
   );
 if (command === 'queue') queue(process.argv.slice(3));
 else if (command === 'import') {
   if (stage === undefined) throw new Error('usage: run.ts import <trial-dir> <patch-dir>');
   importPatches(trial, stage);
-} else if (command === 'prepare') prepare(trial);
+} else if (command === 'prepare') prepare(trial, noScreenFlag < 0);
 else if (command === 'check') check(trial);
 else if (command === 'report') report(trial);
 else if (command === 'recheck') recheck(trial);

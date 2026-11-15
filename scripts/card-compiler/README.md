@@ -9,6 +9,18 @@ model cannot invent primitives.
 
 1. **Select** (`select.ts`): unmodeled cards from the pinned EDHREC pool whose only blockers are
    unparsed rules lines, spread across rank.
+
+   **Screen** (`packages/server/src/cards/compiler-screen.ts`, free): `prepare` declines a card
+   with no model call when one of its lines names a primitive the IR is known to lack, and records
+   it as `screened` with the rule and reason. A rule is a Comprehensive Rules keyword the engine
+   does not implement (701 actions, 702 abilities) or a hand-written phrase (`PHRASE_RULES`). It
+   screens only once a past compile refusal confirmed it (a refused line matches it and the
+   model's reason names it), and it retires itself as soon as a modeled card or any validated
+   patch uses the wording. Screened cards are not refusal evidence, so a rule can never confirm
+   itself. On trial 02 it declines 31 of the 191 refused cards and none of the 109 that compiled;
+   judged leave-one-out (each card by a screen built without it) it declines 11 and still loses
+   none. `prepare --no-screen` turns it off.
+
 2. **Compile** (`prompts.ts`, compile stage): the model gets a fixed prefix (rules plus the IR schema,
    extracted from the engine's own type declarations by `schema.ts`) and a per-card suffix (the card,
    what the parser already produced, and the six most similar modeled cards with their IR from
