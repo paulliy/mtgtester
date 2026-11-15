@@ -116,13 +116,30 @@ export async function censusGame(
   const decks = Array.from({ length: 4 }, (_, i) =>
     generateCommanderDeck(pool, { seed: `${seed}-seat${i + 1}` }),
   );
+  return censusPod(
+    decks.map((d) => ({ commanders: [d.commander], cards: d.cards })),
+    seed,
+    turnCap,
+    mode,
+    observe,
+  );
+}
+
+/** The census over four given decks, so a caller can hold the decks fixed as the pool grows. */
+export async function censusPod(
+  decks: ReadonlyArray<{ commanders: OracleCard[]; cards: OracleCard[] }>,
+  seed: string,
+  turnCap: number,
+  mode: Pick<Mode, 'config'>,
+  observe?: (engine: Engine) => void,
+): Promise<CensusCounts> {
   const engine = new Engine({
     gameId: `census-${seed}`,
     seed,
     players: decks.map((d, i) => ({
       id: `P${i + 1}`,
       deckId: `census-${i + 1}`,
-      commanders: [d.commander],
+      commanders: d.commanders,
       cards: d.cards,
     })),
     turnCap,

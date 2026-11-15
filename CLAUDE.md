@@ -26,6 +26,7 @@ Limits (prompt rules):
 Read these only when the task needs them:
 
 - **Before changing engine, bot, or provider code:** [rules-engine constraints](docs/guides/rules-engine-constraints.md)
+- **Performance or cost work:** [hill climbing](docs/guides/hill-climbing.md)
 - **Package overview, audit residual risks:** [current state](docs/guides/current-state.md)
 - **Modeling or auditing cards, template layer, snapshots, coverage backlog:** [card coverage workflow](docs/guides/card-coverage-workflow.md)
 - **Test requirements and change discipline:** [testing discipline](docs/guides/testing-discipline.md)

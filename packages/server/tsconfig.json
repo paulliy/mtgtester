@@ -18,7 +18,10 @@
     "src/cli/fuzz.ts",
     "src/cli/fuzz-game.ts",
     "src/cli/fuzz-plan.ts",
-    "src/cli/engine-bench.ts"
+    "src/cli/engine-bench.ts",
+    "src/cli/engine-bench-game.ts",
+    "src/cli/hill-climb.ts",
+    "src/hill-climb"
   ],
   "references": [{ "path": "../shared" }, { "path": "../engine" }, { "path": "../bot" }]
 }

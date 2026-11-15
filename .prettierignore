@@ -36,3 +36,6 @@ packages/server/fixtures/edhrec-pinned-oracle.json
 
 # Card compiler trial working files: raw model answers kept exactly as returned
 docs/reviews/card-compiler-trial-*/work
+
+# The hill-climb baseline, written by `bun run hill-climb --write-baseline`
+packages/server/fixtures/hill-climb-baseline.json
