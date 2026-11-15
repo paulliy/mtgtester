@@ -16,6 +16,7 @@ import {
   scenarioAction,
   scenarioPattern,
   scenarioTargets,
+  type CardResolver,
   type CardScenario,
   type CardScenarioFile,
   type ScenarioStep,
@@ -56,16 +57,18 @@ const MAX_DECISIONS = 2_000;
 export { describeRequest };
 
 /**
- * Play a scenario's script, passing priority between its steps. With `stopAtChoice`, a decision
+ * Play a scenario's script, passing priority between its steps. `resolve` finds cards by name
+ * (default: the pin store, then basics); promotion scaffolds pass one that also knows the card
+ * under review. With `stopAtChoice`, a decision
  * other than priority that arrives after the last step stops the run there (`stoppedAt`) instead
  * of failing it, so a test can assert what the engine asks next.
  */
 export function runScenario(
   file: CardScenarioFile,
   scenario: CardScenario,
-  options: { stopAtChoice?: true } = {},
+  options: { stopAtChoice?: true; resolve?: CardResolver } = {},
 ): ScenarioRun {
-  const { engine } = buildCardScenario(file, scenario, resolveScenarioCard, {
+  const { engine } = buildCardScenario(file, scenario, options.resolve ?? resolveScenarioCard, {
     gameId: `scenario-${scenario.id}`,
     strictInvariants: true,
   });
