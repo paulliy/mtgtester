@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The activation condition \"a non-Skeleton creature died under your control this turn\" needs a filtered count of creature deaths by controller and subtype, and creaturesDiedThisTurn counts all creatures."}
