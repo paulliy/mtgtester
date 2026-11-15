@@ -1,0 +1,16 @@
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/archetype-of-finality.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/archetype-of-finality.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/noble-s-purse.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/noble-s-purse.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/treetop-village.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/treetop-village.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/abjure.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/abjure.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/katara-the-fearless.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/katara-the-fearless.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/thorn-mammoth.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/thorn-mammoth.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/heritage-druid.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/heritage-druid.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/woodland-bellower.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/woodland-bellower.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/scale-the-heights.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/scale-the-heights.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/mercurial-spelldancer.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/mercurial-spelldancer.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/stony-silence.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/stony-silence.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/double-down.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/double-down.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/gimli-counter-of-kills.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/gimli-counter-of-kills.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/fateful-absence.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/fateful-absence.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/burning-earth.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/burning-earth.txt
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/back/essence-capture.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/back/essence-capture.txt
