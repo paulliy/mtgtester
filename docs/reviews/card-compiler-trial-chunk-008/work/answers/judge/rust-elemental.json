@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A's trigger always happens: if you can't sacrifice another artifact, the creature becomes tapped and you lose 4 life. Text B adds an intervening condition ('if you control one or more other artifacts'), so with no other artifacts the trigger does nothing and you do not lose 4 life or tap the creature."]}
