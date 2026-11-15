@@ -173,3 +173,25 @@ describe('smoke target choice', () => {
     }
   });
 });
+
+describe('what the judge is shown', () => {
+  it('carries the reminder text that says what a token on the line under test does', async () => {
+    // Chunk 006: two judges in a row passed a Voldaren Estate patch whose Blood token had no
+    // ability, because the line under test was only "Create a Blood token".
+    const { reminderTextFor, judgeSuffix } =
+      await import('../../../../scripts/card-compiler/prompts');
+    const target = targetOf('Voldaren Estate');
+    expect(reminderTextFor(target)).toEqual([
+      'It\'s an artifact with "{1}, {T}, Discard a card, Sacrifice this token: Draw a card."',
+    ]);
+    expect(judgeSuffix(target, 'B')).toContain('Reminder text on those lines');
+  });
+
+  it('matches a line that names the card, and leaves out reminders of other lines', async () => {
+    const { reminderTextFor } = await import('../../../../scripts/card-compiler/prompts');
+    const minas = reminderTextFor(targetOf('Minas Morgul, Dark Fortress'));
+    expect(minas).toHaveLength(1);
+    expect(minas[0]).toContain('shadow');
+    expect(reminderTextFor(targetOf('Yavimaya Hollow'))).toEqual([]);
+  });
+});
