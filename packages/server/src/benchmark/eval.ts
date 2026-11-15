@@ -251,11 +251,9 @@ export async function evaluateCases(
           const prompt = roleConfig.providerPromptCacheLayoutEnabled
             ? preparePromptForCaching(assembledPrompt, {
                 role: caseValue.role,
-                ...(caseValue.role === 'strategist' && caseValue.input.profile !== undefined
-                  ? { staticContext: { yourStrategyProfile: caseValue.input.profile } }
-                  : {}),
+                // The same layout the live strategy coordinator sends.
                 ...(caseValue.role === 'strategist'
-                  ? { removeDynamicKeys: ['yourStrategyProfile'] }
+                  ? { staticKeys: ['strategyTask', 'yourStrategyProfile'] }
                   : {}),
               })
             : assembledPrompt;

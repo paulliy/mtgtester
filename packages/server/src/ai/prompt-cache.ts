@@ -15,7 +15,6 @@ export interface PromptCacheMetadata {
 export interface PromptCacheOptions {
   role: PromptCacheMetadata['role'];
   staticContext?: Record<string, unknown>;
-  removeDynamicKeys?: string[];
   /**
    * Top-level payload keys that never change for this seat in this game. Each one present is moved,
    * value unchanged, from the changing observation into the stable prefix. Moving rather than
@@ -96,7 +95,6 @@ export function preparePromptForCaching(prompt: AiPrompt, options: PromptCacheOp
   const movedContext: Record<string, unknown> = {};
   try {
     const parsed = JSON.parse(dynamicContent) as Record<string, unknown>;
-    for (const key of options.removeDynamicKeys ?? []) delete parsed[key];
     for (const key of options.staticKeys ?? []) {
       if (parsed[key] === undefined) continue;
       movedContext[key] = parsed[key];
