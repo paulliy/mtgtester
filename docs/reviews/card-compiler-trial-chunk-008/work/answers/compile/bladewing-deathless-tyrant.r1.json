@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The trigger fires on combat damage to a player or a planeswalker, but dealsCombatDamageToPlayer covers players only and no trigger covers planeswalker combat damage."}
