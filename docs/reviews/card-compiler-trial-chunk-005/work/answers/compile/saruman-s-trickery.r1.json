@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"spell"}],"effects":[{"op":"counter","target":0},{"op":"amass","subtype":"Orc","count":{"kind":"const","n":1}}],"description":"Counter target spell. Amass Orcs 1."}}}

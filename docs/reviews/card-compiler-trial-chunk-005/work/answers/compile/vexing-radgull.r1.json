@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Giving the damaged player two rad counters has no effect in the schema: no op places rad counters on a player, and the rad-counter check is not a condition."}
