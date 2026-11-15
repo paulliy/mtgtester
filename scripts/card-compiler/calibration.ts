@@ -65,7 +65,11 @@ const KNOWN_WRONG: Record<string, string> = {
  * are not here: a back-translation cannot show them, and they belong to the validator. Urza's
  * Power Plant was here and was taken out after chunk 004: its patch reads "a permanent named
  * Urza's Mine", which only differs from the card's "an Urza's Mine" to a reader who knows Urza's
- * Mine is a land type, and two judges in a row read both as names.
+ * Mine is a land type, and two judges in a row read both as names. Voldaren Estate was taken out
+ * after chunk 006: its back-translation says "create a Blood artifact token" and nothing more,
+ * and three judges in a row called that the card's "create a Blood token", the last one with the
+ * token's reminder text in front of it. Telling them apart needs the judge to notice an ability
+ * that is absent, which the back-translator is told not to remark on.
  */
 const CAMPAIGN_WRONG: { slug: string; trial: string; origin: string }[] = [
   {
@@ -83,11 +87,6 @@ const CAMPAIGN_WRONG: { slug: string; trial: string; origin: string }[] = [
     slug: 'minas-morgul-dark-fortress',
     trial: 'docs/reviews/card-compiler-trial-chunk-002',
     origin: 'chunk 002 audit: the Wraith type is a static of the land, not of the resolved ability',
-  },
-  {
-    slug: 'voldaren-estate',
-    trial: 'docs/reviews/card-compiler-trial-chunk-003',
-    origin: 'chunk 003 audit: the Blood token has no ability',
   },
   {
     slug: 'artifact-mutation',
