@@ -1,0 +1,1 @@
+Whenever you cast your first spell each turn during a turn that isn't yours, look at the top two cards of your library. Put one of them into your hand. Put the rest into your graveyard.

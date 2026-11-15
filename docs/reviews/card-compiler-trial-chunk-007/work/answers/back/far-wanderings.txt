@@ -1,0 +1,2 @@
+If there are seven or more cards in your graveyard, search your library for three basic land cards, put them onto the battlefield tapped, then shuffle.
+Otherwise, search your library for a basic land card, put it onto the battlefield tapped, then shuffle.
