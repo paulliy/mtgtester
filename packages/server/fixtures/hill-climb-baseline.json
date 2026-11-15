@@ -8,34 +8,35 @@
         "engine",
         "setup",
         "model",
-        "coverage"
+        "coverage",
+        "compiler"
       ],
-      "commit": "ccd3472",
+      "commit": "e62aefa2",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 62.87,
+      "calibrationMs": 59.2,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 7.22,
+          "value": 6.63,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.222
+          "spread": 0.367
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.97,
+          "value": 6.64,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.27
+          "spread": 0.3
         },
         "setup.msPerGame": {
-          "value": 65.52,
+          "value": 67.12,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.212
+          "spread": 0.048
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -90,6 +91,18 @@
           "unit": "%",
           "better": "higher",
           "kind": "exact"
+        },
+        "compiler.textCheckSettledPatches": {
+          "value": 45,
+          "unit": "patches",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "compiler.textCheckPoolMatches": {
+          "value": 951,
+          "unit": "cards",
+          "better": "higher",
+          "kind": "exact"
         }
       },
       "fingerprints": {
@@ -105,34 +118,35 @@
         "engine",
         "setup",
         "model",
-        "coverage"
+        "coverage",
+        "compiler"
       ],
-      "commit": "ccd3472",
+      "commit": "e62aefa2",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 59.03,
+      "calibrationMs": 58.17,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 51.89,
+          "value": 50.63,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.009
+          "spread": 0.107
         },
         "engine.medianGameMsPerDecision": {
-          "value": 12.18,
+          "value": 12.84,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.193
+          "spread": 0.084
         },
         "setup.msPerGame": {
-          "value": 69.01,
+          "value": 63.02,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.073
+          "spread": 0.046
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -185,6 +199,18 @@
         "coverage.fixtureDeckCardsModeledPct": {
           "value": 100,
           "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "compiler.textCheckSettledPatches": {
+          "value": 45,
+          "unit": "patches",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "compiler.textCheckPoolMatches": {
+          "value": 951,
+          "unit": "cards",
           "better": "higher",
           "kind": "exact"
         }
