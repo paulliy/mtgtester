@@ -1,0 +1,2 @@
+Whenever this creature attacks, create a Treasure token. Each opponent creates a Treasure token.
+Treasure tokens have "{T}, Sacrifice this artifact: Add {W}, {U}, {B}, {R}, or {G}."
