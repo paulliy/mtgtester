@@ -1,3 +1,4 @@
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/restless-bivouac.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/restless-bivouac.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/clive-s-hideaway.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/clive-s-hideaway.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/lavabelly-sliver.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/lavabelly-sliver.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/caltrops.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/caltrops.json
@@ -9,6 +10,7 @@ docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/shelinda-yevon-aco
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/progenitor-mimic.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/progenitor-mimic.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/saproling-symbiosis.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/saproling-symbiosis.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/digsite-engineer.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/digsite-engineer.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/szarel-genesis-shepherd.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/szarel-genesis-shepherd.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/slash-the-ranks.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/slash-the-ranks.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/nullpriest-of-oblivion.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/nullpriest-of-oblivion.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/the-fifth-doctor.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/the-fifth-doctor.json
@@ -17,9 +19,7 @@ docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/fecundity.md	docs/
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/dauntless-scrapbot.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/dauntless-scrapbot.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/remorseful-cleric.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/remorseful-cleric.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/saheeli-the-sun-s-brilliance.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/saheeli-the-sun-s-brilliance.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/magma-opus.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/magma-opus.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/shardmage-s-rescue.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/shardmage-s-rescue.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/pugnacious-hammerskull.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/pugnacious-hammerskull.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/silverclad-ferocidons.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/silverclad-ferocidons.json
-docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/fiendlash.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/fiendlash.json
-docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/twinflame-travelers.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/twinflame-travelers.json
-docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/sliver-hive.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/sliver-hive.json

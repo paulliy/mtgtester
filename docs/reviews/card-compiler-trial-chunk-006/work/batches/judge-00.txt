@@ -13,6 +13,7 @@ docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/open-the-gates.md	
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/flaming-fist.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/flaming-fist.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/minas-morgul-dark-fortress.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/minas-morgul-dark-fortress.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/daemogoth-titan.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/daemogoth-titan.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/reef-worm.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/reef-worm.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/spider-ham-peter-porker.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/spider-ham-peter-porker.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/rampart-architect.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/rampart-architect.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/rile.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/rile.json
@@ -22,4 +23,3 @@ docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/spiteful-sliver.md
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/march-from-the-black-gate.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/march-from-the-black-gate.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/charmbreaker-devils.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/charmbreaker-devils.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/prosperous-bandit.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/prosperous-bandit.json
-docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/fumulus-the-infestation.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/fumulus-the-infestation.json

@@ -1,3 +1,4 @@
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/fumulus-the-infestation.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/fumulus-the-infestation.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/hidden-cataract.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/hidden-cataract.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/astral-cornucopia.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/astral-cornucopia.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/final-vengeance.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/final-vengeance.json
@@ -22,4 +23,3 @@ docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/necrotic-sliver.md
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/loyal-inventor.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/loyal-inventor.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/ruinous-intrusion.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/ruinous-intrusion.json
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/combat-tutorial.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/combat-tutorial.json
-docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/restless-bivouac.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/restless-bivouac.json
