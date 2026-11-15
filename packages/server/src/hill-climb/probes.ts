@@ -16,6 +16,7 @@ import type { FuzzDeck } from '../cli/fuzz-game';
 import { loadDecks, pod } from '../cli/fuzz-plan';
 import { TABLE_ENGINE_LIMITS } from '../match/engine-limits';
 import type { Metric, Report } from './report';
+import { measureSettle, poolTextMatches } from '../../../../scripts/card-compiler/settle';
 
 export interface Profile {
   /** Heuristic-only benchmark games played, and their turn cap. */
@@ -33,7 +34,7 @@ export const PROFILES: Record<string, Profile> = {
   standard: { engineGames: 6, engineTurnCap: 40, setupReps: 10, censusGames: 4, censusTurnCap: 40 },
 };
 
-export const PROBES = ['engine', 'setup', 'model', 'coverage'] as const;
+export const PROBES = ['engine', 'setup', 'model', 'coverage', 'compiler'] as const;
 export type Probe = (typeof PROBES)[number];
 
 type Metrics = Record<string, Metric>;
@@ -264,6 +265,18 @@ export function coverageProbe(decks: FuzzDeck[]): Metrics {
 }
 
 /**
+ * The card compiler's free meaning check (`scripts/card-compiler/render.ts`): how many committed
+ * trial patches it settles with no model call, and how many modeled pool cards it renders to
+ * their Oracle text (the same check run on the parser's output, a proxy for future patches).
+ */
+export function compilerProbe(): Metrics {
+  return {
+    'compiler.textCheckSettledPatches': exact(measureSettle().settled.length, 'patches', 'higher'),
+    'compiler.textCheckPoolMatches': exact(poolTextMatches(), 'cards', 'higher'),
+  };
+}
+
+/**
  * A fixed workload shaped like the engine's (object copies, sorts, JSON), timed as the fastest of
  * seven runs after a warm-up. Timings from two machines are scaled by the ratio of their calibration times.
  */
@@ -326,6 +339,7 @@ export async function measure(options: MeasureOptions): Promise<Report> {
     } else if (probe === 'setup')
       Object.assign(metrics, setupProbe(decks, profile, options.repeats));
     else if (probe === 'model') Object.assign(metrics, await modelProbe(decks, profile));
+    else if (probe === 'compiler') Object.assign(metrics, compilerProbe());
     else Object.assign(metrics, coverageProbe(decks));
   }
   // The machine's speed drifts over a long run, so calibrate again and keep the faster reading.

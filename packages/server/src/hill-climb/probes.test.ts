@@ -8,6 +8,7 @@ import {
   PROFILES,
   backlogRefusals,
   calibrate,
+  compilerProbe,
   coverageProbe,
   edhrecCoverage,
   engineProbe,
@@ -71,6 +72,20 @@ describe('hill-climb gate: exact metrics against the committed baseline', () => 
     const comparison = compareReports(baseline.profiles['quick']!, current);
     expect(comparison.failures).toEqual([]);
     expect(comparison.rows.length).toBeGreaterThanOrEqual(3);
+  }, 120_000);
+});
+
+describe('hill-climb gate: the compiler text check', () => {
+  it('settles no fewer trial patches and matches no fewer pool cards', () => {
+    const current: Report = {
+      ...baseline.profiles['quick']!,
+      probes: ['compiler'],
+      metrics: compilerProbe(),
+      fingerprints: {},
+    };
+    const comparison = compareReports(baseline.profiles['quick']!, current);
+    expect(comparison.failures).toEqual([]);
+    expect(comparison.rows.length).toBeGreaterThanOrEqual(2);
   }, 120_000);
 });
 

@@ -1,0 +1,237 @@
+[
+  {
+    "name": "Acolyte of Aclazotz",
+    "verdict": "correct",
+    "note": "Correct; the model judge's flag was a false alarm. No allowSelf, so the sacrifice excludes the source (\"another\"); the other part restates it."
+  },
+  {
+    "name": "Ahriman",
+    "verdict": "correct",
+    "note": "Correct; the model judge's flag was a false alarm. Same sacrifice shape as Acolyte of Aclazotz."
+  },
+  {
+    "name": "Ascendant Evincar",
+    "verdict": "correct",
+    "note": "Correct. Applies to every nonblack creature, as printed."
+  },
+  {
+    "name": "Bloodforged Battle-Axe",
+    "verdict": "correct",
+    "note": "Trial 01 hand audit: correct."
+  },
+  {
+    "name": "Bramble Wurm",
+    "verdict": "correct",
+    "note": "Correct. Activated from the graveyard with the exile-self cost."
+  },
+  {
+    "name": "Captain Sisay",
+    "verdict": "correct",
+    "note": "Correct. Legendary card, revealed, to hand, then shuffle."
+  },
+  {
+    "name": "Cloak of Mists",
+    "verdict": "correct",
+    "note": "Correct. The Aura's enchanted creature can't be blocked."
+  },
+  {
+    "name": "Cloudpost",
+    "verdict": "correct",
+    "note": "Trial 01 hand audit: correct."
+  },
+  {
+    "name": "Damning Verdict",
+    "verdict": "correct",
+    "note": "Trial 01 hand audit: correct."
+  },
+  {
+    "name": "Death Baron",
+    "verdict": "correct",
+    "note": "Correct. Skeletons you control and other Zombies you control, two statics with the same affected set."
+  },
+  {
+    "name": "Dragon's Rage Channeler",
+    "verdict": "correct",
+    "note": "Correct. Three statics under the delirium condition."
+  },
+  {
+    "name": "Dualcaster Mage",
+    "verdict": "correct",
+    "note": "Trial 01 hand audit: correct."
+  },
+  {
+    "name": "Glistening Oil",
+    "verdict": "correct",
+    "note": "Correct. Counter on the enchanted creature each upkeep."
+  },
+  {
+    "name": "Goblin Burrows",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Goblin-town",
+    "verdict": "correct",
+    "note": "Correct. Sorcery-speed, target Goblin or Orc permanent you control."
+  },
+  {
+    "name": "Harbinger of the Seas",
+    "verdict": "correct",
+    "note": "Correct. Same IR the parser builds for Blood Moon."
+  },
+  {
+    "name": "Hard-Hitting Question",
+    "verdict": "correct",
+    "note": "Trial 01 hand audit: correct. The damage amount reads the power of the source slot (0), which is the creature dealing the damage."
+  },
+  {
+    "name": "Horobi, Death's Wail",
+    "verdict": "correct",
+    "note": "Trial 01 hand audit: correct."
+  },
+  {
+    "name": "Horrific Assault",
+    "verdict": "correct",
+    "note": "Trial 01 hand audit: correct. The Eldrazi check is made on resolution, as printed."
+  },
+  {
+    "name": "Into the North",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Koma, World-Eater",
+    "verdict": "correct",
+    "note": "Correct. The tokens are named Koma's Coil."
+  },
+  {
+    "name": "Morcant's Loyalist",
+    "verdict": "correct",
+    "note": "Correct. The other part compares card ids (selector.ts), so the dead Loyalist's own card is excluded."
+  },
+  {
+    "name": "Mudflat Village",
+    "verdict": "correct",
+    "note": "Correct. Graveyard owner defaults to you."
+  },
+  {
+    "name": "Novijen, Heart of Progress",
+    "verdict": "correct",
+    "note": "Correct. Mana symbol order differs only."
+  },
+  {
+    "name": "Okina, Temple to the Grandfathers",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Plaxcaster Frogling",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Pulse of Murasa",
+    "verdict": "correct",
+    "note": "Trial 01 hand audit: correct."
+  },
+  {
+    "name": "Rabid Bite",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Rite of Passage",
+    "verdict": "correct",
+    "note": "Correct. The counter goes on the creature that was dealt damage."
+  },
+  {
+    "name": "Rockslide Sorcerer",
+    "verdict": "correct",
+    "note": "Correct. Instant, sorcery or Wizard-subtype spells."
+  },
+  {
+    "name": "Skyknight Squire",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Smaug the Magnificent",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Sporesower Thallid",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Stormclaw Rager",
+    "verdict": "correct",
+    "note": "Correct; the model judge's flag was a false alarm. Counter on itself, draw, sorcery speed, sacrifice another creature or artifact."
+  },
+  {
+    "name": "Tamiyo's Safekeeping",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Thalia's Lancers",
+    "verdict": "correct",
+    "note": "Correct. The optional covers search and shuffle together, as printed."
+  },
+  {
+    "name": "Traitorous Blood",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Treasure Mage",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Wake the Reflections",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Wellwisher",
+    "verdict": "correct",
+    "note": "Correct. Counts every Elf on the battlefield."
+  },
+  {
+    "name": "Witch's Clinic",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Worldslayer",
+    "verdict": "correct",
+    "note": "Correct. Destroys every permanent but the Equipment."
+  },
+  {
+    "name": "Wurmwall Sweeper",
+    "verdict": "correct",
+    "note": "Trial 01 hand audit: correct."
+  },
+  {
+    "name": "Yavimaya Hollow",
+    "verdict": "correct",
+    "note": "Trial 01 hand audit: correct."
+  },
+  {
+    "name": "Zealous Conscripts",
+    "verdict": "correct",
+    "note": "Correct."
+  },
+  {
+    "name": "Charmbreaker Devils",
+    "verdict": "wrong",
+    "note": "Trial 01 hand audit: the patch targets the random card; the printed card does not target."
+  },
+  {
+    "name": "Thran Turbine",
+    "verdict": "wrong",
+    "note": "Trial 01 hand audit: the patch limits the mana to activating abilities; the printed card only forbids casting spells."
+  }
+]

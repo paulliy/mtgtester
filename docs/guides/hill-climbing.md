@@ -6,18 +6,20 @@ played differently. It uses no network and no paid model.
 
 ## What it measures
 
-| Metric                                                   | What it is                                                                                                                              | Kind  |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| `engine.msPerDecision`                                   | Engine time per decision over the seeded benchmark games (`engine-bench` pods). The mean, so the slowest game dominates it.             | timed |
-| `engine.medianGameMsPerDecision`                         | The same, for the median game: what a typical game costs.                                                                               | timed |
-| `setup.msPerGame`                                        | Time to construct a four-player game: card interpretation, shuffles, opening hands.                                                     | timed |
-| `model.<mode>.callsPerTurn`                              | Tactician plus strategist calls per turn, from the call census on fixed decks. Modes: `default` (what a new game uses), `model`, `bot`. | exact |
-| `model.<mode>.promptTokensPerTurn`                       | Prompt tokens those calls would send per turn.                                                                                          | exact |
-| `coverage.edhrecModeledCards`                            | Pinned EDHREC cards the interpreter models with no reasons, computed live.                                                              | exact |
-| `coverage.edhrecSlotSharePct`                            | Share of all EDHREC deck slots those cards fill.                                                                                        | exact |
-| `coverage.fixtureDeckCardsModeledPct`                    | Share of the coverage decks' cards that model.                                                                                          | exact |
-| `coverage.compilerRefusals`, `coverage.playableDecksPct` | Read from `primitive-backlog.json` and `deck-coverage.json` when those reports exist.                                                   | exact |
-| fingerprints                                             | One hash per benchmark game over every decision request, every answer and the event log.                                                | exact |
+| Metric                                                   | What it is                                                                                                                                                                                | Kind  |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| `engine.msPerDecision`                                   | Engine time per decision over the seeded benchmark games (`engine-bench` pods). The mean, so the slowest game dominates it.                                                               | timed |
+| `engine.medianGameMsPerDecision`                         | The same, for the median game: what a typical game costs.                                                                                                                                 | timed |
+| `setup.msPerGame`                                        | Time to construct a four-player game: card interpretation, shuffles, opening hands.                                                                                                       | timed |
+| `model.<mode>.callsPerTurn`                              | Tactician plus strategist calls per turn, from the call census on fixed decks. Modes: `default` (what a new game uses), `model`, `bot`.                                                   | exact |
+| `model.<mode>.promptTokensPerTurn`                       | Prompt tokens those calls would send per turn.                                                                                                                                            | exact |
+| `coverage.edhrecModeledCards`                            | Pinned EDHREC cards the interpreter models with no reasons, computed live.                                                                                                                | exact |
+| `coverage.edhrecSlotSharePct`                            | Share of all EDHREC deck slots those cards fill.                                                                                                                                          | exact |
+| `coverage.fixtureDeckCardsModeledPct`                    | Share of the coverage decks' cards that model.                                                                                                                                            | exact |
+| `coverage.compilerRefusals`, `coverage.playableDecksPct` | Read from `primitive-backlog.json` and `deck-coverage.json` when those reports exist.                                                                                                     | exact |
+| `compiler.textCheckSettledPatches`                       | Committed card-compiler trial patches the free text check settles with no model call (`scripts/card-compiler/settle.ts`). Guarded by `text-check.test.ts` against settling a wrong patch. | exact |
+| `compiler.textCheckPoolMatches`                          | Modeled pinned-pool cards whose parsed IR renders to exactly their Oracle text: renderer coverage on the lines future patches look like.                                                  | exact |
+| fingerprints                                             | One hash per benchmark game over every decision request, every answer and the event log.                                                                                                  | exact |
 
 Exact metrics repeat to the last digit on any machine, so any move in the wrong direction fails.
 Timed metrics only count as changed when they move by more than the noise: 10% when both sides
