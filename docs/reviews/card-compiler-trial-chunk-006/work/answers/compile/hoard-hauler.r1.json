@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The Treasure count is the number of artifacts the damaged player controls; countPermanents only counts relative to the resolving controller (you, opponents or all), and countPermanentsControlledByTarget is documented for an announced player target, which a combat-damage trigger does not have."}

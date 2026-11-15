@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"addMana's colors 'any' lets each mana pick its own color, but the card says add X mana of any ONE color, and addMana has no linked (same-symbol) form."}
