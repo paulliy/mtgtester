@@ -1,0 +1,7 @@
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/back/necrotic-hex.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/back/necrotic-hex.txt
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/back/dualcaster-mage.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/back/dualcaster-mage.txt
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/back/diary-of-dreams.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/back/diary-of-dreams.txt
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/back/winged-hive-tyrant.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/back/winged-hive-tyrant.txt
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/back/military-intelligence.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/back/military-intelligence.txt
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/back/dogged-detective.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/back/dogged-detective.txt
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/back/horobi-death-s-wail.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/back/horobi-death-s-wail.txt

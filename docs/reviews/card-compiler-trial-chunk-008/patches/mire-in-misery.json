@@ -1,0 +1,34 @@
+{
+  "name": "Mire in Misery",
+  "oracleId": "da1d1f64-e239-4b92-9eb9-fe9ea06aa18a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each opponent sacrifices a creature or enchantment of their choice."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "sacrificeOneEachOpponent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Enchantment"
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Each opponent sacrifices a creature or enchantment of their choice."
+    }
+  }
+}
