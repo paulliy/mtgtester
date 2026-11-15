@@ -55,8 +55,8 @@ validator does not say so.
   planner halts; most such halts also hit games without a promoted card, but two (Dictate of
   Karametra, a static mana rider, and Gene Pollinator, which taps another permanent as a cost) name
   exactly the payment forms the planner says are outside its scope, so those two cards may make
-  the planner halt more often. Two games hit the 300-second limit (Carnivorous Canopy, Cruel
-  Ultimatum).
+  the planner halt more often. Two games hit the 300-second limit: Carnivorous Canopy finished normally in a replay with a
+  longer limit; Cruel Ultimatum was still running after 1,500 seconds and is not traced to a cause.
 
 ## Findings for the backlog
 
