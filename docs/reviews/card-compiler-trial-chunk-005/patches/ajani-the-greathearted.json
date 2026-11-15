@@ -1,0 +1,69 @@
+{
+  "name": "Ajani, the Greathearted",
+  "oracleId": "f5d9be71-91d0-4166-ba58-cbbf5d490c40",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "−2: Put a +1/+1 counter on each creature you control and a loyalty counter on each other planeswalker you control."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "loyalty",
+            "delta": -2
+          }
+        ],
+        "timing": "sorcery",
+        "oncePerTurn": true,
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              },
+              "counter": "+1/+1",
+              "count": 1
+            },
+            {
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              },
+              "counter": "loyalty",
+              "count": 1
+            }
+          ],
+          "description": "−2: Put a +1/+1 counter on each creature you control and a loyalty counter on each other planeswalker you control."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "name": "Crawling Infestation",
+  "oracleId": "a42262b8-8a26-4570-a6ee-24b239d095fc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever one or more creature cards are put into your graveyard from anywhere during your turn, create a 1/1 green Insect creature token. This ability triggers only once each turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "putIntoGraveyardFromAnywhere",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "owner",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "aggregate": true,
+          "oncePerTurn": true,
+          "condition": {
+            "kind": "yourTurn"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Insect",
+              "typeLine": "Token Creature — Insect",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Insect"
+              ],
+              "colors": [
+                "G"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever one or more creature cards are put into your graveyard from anywhere during your turn, create a 1/1 green Insect creature token. This ability triggers only once each turn."
+      }
+    ]
+  }
+}
