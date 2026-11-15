@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A gainsLife trigger carries no scope value for the amount of life gained, so \"put that many +1/+1 counters\" cannot be read; the schema only offers a count of 1 or a damage-based value."}
