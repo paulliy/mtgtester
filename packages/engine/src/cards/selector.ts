@@ -278,6 +278,26 @@ export type Selector =
   | { kind: 'anyOf'; of: Selector[] }
   | { kind: 'not'; of: Selector };
 
+/**
+ * Reads of tapped status, counted so a layer pass can tell whether it read any (ADR 0007, amendment 2). The
+ * layer cache leaves `tapped` out of its key while the last pass read none, which is what keeps a
+ * tap (every state the mana planner searches) from forcing a fresh pass. So every read of tapped
+ * status that a layer pass can reach must go through `tappedState`: a raw `.tapped` read there
+ * would let the cache return characteristics computed for the permanent untapped.
+ * `tests/layer-tap-reads.test.ts` checks the files a pass reaches for raw reads.
+ */
+let tapReads = 0;
+
+export function tappedState(permanent: { readonly tapped?: boolean }): boolean {
+  tapReads++;
+  return permanent.tapped === true;
+}
+
+/** How many times `tappedState` has run, for a layer pass to compare before and after. */
+export function tapReadCount(): number {
+  return tapReads;
+}
+
 export const SELF: Selector = { kind: 'self' };
 export const OTHER: Selector = { kind: 'other' };
 export const YOURS: Selector = { kind: 'controller', who: 'you' };
@@ -500,7 +520,7 @@ export function selectMatches(
     case 'isToken':
       return candidate.isToken;
     case 'tapped':
-      return candidate.tapped === true;
+      return tappedState(candidate);
     case 'enteredThisTurn':
       return candidate.enteredThisTurn;
     case 'isCommander':

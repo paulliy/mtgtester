@@ -19,6 +19,12 @@
  * of the key — which is sound, because a change no effect reads cannot change the answer, and
  * a Tarmogoyf *entering* changes the battlefield portion of the digest and forces a miss.
  *
+ * Tapped status is gated the same way (ADR 0007, amendment 2), for a different reason: it is
+ * cheap to fold but changes constantly, and the mana planner taps a land in every state it
+ * searches. Only a few conditions and values read it (Iymrith's "as long as it's untapped"), each
+ * through `tappedState`, which counts its reads, so the pass knows exactly whether it read any.
+ * Unread, a different tapped mix of the same board has the same answer.
+ *
  * `MTG_VERIFY_LAYER_CACHE=1` recomputes on every hit and throws if the results disagree. It is
  * ~20× slower, so it needs a raised timeout or the whole-game tests fail as timeouts rather
  * than staleness:
@@ -34,6 +40,11 @@ export interface LayerCacheEntry {
   digest: number;
   /** Whether the computed pass read graveyard contents (a state-dependent `Value`). */
   usedGraveyards: boolean;
+  /**
+   * Whether the computed pass read any permanent's tapped status. When it did not, `tapped` is
+   * left out of the next lookup's key, so a tap alone does not cost a pass.
+   */
+  usedTapped: boolean;
   /** Identity of the off-battlefield permanent folded into this pass, if any. */
   extraCardId: string | null;
   map: Map<string, Characteristics>;
@@ -250,6 +261,7 @@ export function digestOf(
   ctx: GameContext,
   extra: EnginePermanent | undefined,
   includeGraveyards: boolean,
+  includeTapped: boolean,
 ): number {
   const s = ctx.state;
   startDigest();
@@ -275,9 +287,10 @@ export function digestOf(
     // A bestowed Aura's type-changing effect ends as it becomes unattached (CR 702.103f).
     feed(perm.bestowed === true ? 1 : 0);
     // A static ability can be conditional on being untapped (Iymrith's ward {4}), so tapping is
-    // a layer input like any other. Omitting it meant a query before tapping and a query after
-    // it returned the same cached characteristics, and ward is read during targeting/payment.
-    feed(perm.tapped ? 1 : 0);
+    // a layer input whenever the last pass read it. Omitting it then meant a query before tapping
+    // and a query after it returned the same cached characteristics, and ward is read during
+    // targeting/payment.
+    if (includeTapped) feed(perm.tapped ? 1 : 0);
     // Combat-dependent statics must expire even if no other characteristic input changes.
     // `attackingDefenderId` also reads whether it attacks a planeswalker, and whether that one is
     // still in combat.
@@ -439,37 +452,43 @@ export function withReadScope<T>(ctx: GameContext, read: () => T): T {
   }
   if (ctx.strictInvariants === true || VERIFY_SCOPES) {
     for (const [key, digest] of digests) {
-      if (key.startsWith('-|') && digestOf(ctx, undefined, key === '-|g') !== digest)
+      if (
+        key.startsWith('-|') &&
+        digestOf(ctx, undefined, key[2] === 'g', key[3] === 't') !== digest
+      )
         throw new Error(STALE);
     }
   }
   return result;
 }
 
-/** `digestOf`, computed once per read scope for each distinct `extra` and graveyard flag. */
+/** `digestOf`, computed once per read scope for each distinct `extra` and pair of flags. */
 export function scopedDigestOf(
   ctx: GameContext,
   extra: EnginePermanent | undefined,
   includeGraveyards: boolean,
+  includeTapped: boolean,
 ): number {
   const scope = SCOPES.get(ctx);
   if (scope === undefined) {
     countWork('layerDigests');
-    return digestOf(ctx, extra, includeGraveyards);
+    return digestOf(ctx, extra, includeGraveyards, includeTapped);
   }
+  // `-|` then the two flags for the board alone, which `withReadScope` re-checks on close.
   const key =
     (extra === undefined ? '-' : `${extra.cardId}:${extra.timestamp}:${extra.oracleId}`) +
-    (includeGraveyards ? '|g' : '|n');
+    (includeGraveyards ? '|g' : '|n') +
+    (includeTapped ? 't' : 'n');
   const known = scope.get(key);
   if (known === undefined) {
     countWork('layerDigests');
-    const digest = digestOf(ctx, extra, includeGraveyards);
+    const digest = digestOf(ctx, extra, includeGraveyards, includeTapped);
     scope.set(key, digest);
     return digest;
   }
   if (
     (VERIFY_SCOPES || sampleHit(SCOPED_HITS, ctx)) &&
-    digestOf(ctx, extra, includeGraveyards) !== known
+    digestOf(ctx, extra, includeGraveyards, includeTapped) !== known
   )
     throw new Error(STALE);
   return known;

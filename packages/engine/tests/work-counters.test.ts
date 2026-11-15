@@ -114,7 +114,7 @@ describe('engine work counters', () => {
     const digest = (): number => {
       const { ctx } = game();
       computeAllCharacteristics(ctx);
-      return digestOf(ctx, undefined, true);
+      return digestOf(ctx, undefined, true, true);
     };
     const first = digest();
     for (let other = 0; other < 3; other++) computeAllCharacteristics(game().ctx);

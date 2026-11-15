@@ -36,7 +36,7 @@ describe('layer digest', () => {
     const seen = new Set<number>();
     for (let mask = 0; mask < 1 << lands.length; mask++) {
       lands.forEach((land, i) => (land.tapped = ((mask >> i) & 1) === 1));
-      seen.add(digestOf(ctx, undefined, false));
+      seen.add(digestOf(ctx, undefined, false, true));
     }
     expect(seen.size).toBe(1 << lands.length);
   });
@@ -54,7 +54,7 @@ describe('layer digest', () => {
           p2!.life = life2;
           a.counters['+1/+1'] = counters & 3;
           b.counters['-1/-1'] = counters >> 2;
-          seen.add(digestOf(ctx, undefined, false));
+          seen.add(digestOf(ctx, undefined, false, true));
         }
     expect(seen.size).toBe(160_000);
   });
@@ -65,7 +65,7 @@ describe('layer digest', () => {
     let above32 = 0;
     for (let n = 0; n < 64; n++) {
       perm.counters['+1/+1'] = n;
-      const digest = digestOf(ctx, undefined, false);
+      const digest = digestOf(ctx, undefined, false, true);
       expect(Number.isSafeInteger(digest)).toBe(true);
       expect(digest).toBeGreaterThanOrEqual(0);
       if (digest > 0xffffffff) above32++;
@@ -79,17 +79,17 @@ describe('layer digest', () => {
     const perm = spawn(ctx, 'P1', bear());
     perm.copyAddSupertypes = ['Legendary'];
     perm.copyRemoveSupertypes = [];
-    const added = digestOf(ctx, undefined, false);
+    const added = digestOf(ctx, undefined, false, true);
     perm.copyAddSupertypes = [];
     perm.copyRemoveSupertypes = ['Legendary'];
-    expect(digestOf(ctx, undefined, false)).not.toBe(added);
+    expect(digestOf(ctx, undefined, false, true)).not.toBe(added);
   });
 
   it('layer-digest-deterministic — one state digests the same in a fresh game', () => {
     const build = () => {
       const ctx = game();
       spawn(ctx, 'P1', bear()).counters['+1/+1'] = 2;
-      return digestOf(ctx, undefined, true);
+      return digestOf(ctx, undefined, true, true);
     };
     expect(build()).toBe(build());
   });
