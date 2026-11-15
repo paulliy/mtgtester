@@ -1,0 +1,1 @@
+This spell deals X damage to each creature that isn't an artifact. This spell deals X damage to each player.
