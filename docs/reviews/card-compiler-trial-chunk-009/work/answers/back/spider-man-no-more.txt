@@ -1,0 +1,3 @@
+Enchanted creature is a Citizen creature.
+Enchanted creature loses all abilities and has defender.
+Enchanted creature has base power and toughness 1/1.

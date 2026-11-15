@@ -1,0 +1,2 @@
+When this enters, target creature gets +1/+0 until end of turn and can't be blocked this turn.
+Whenever you cast a noncreature spell, target creature gets +1/+0 until end of turn and can't be blocked this turn.
