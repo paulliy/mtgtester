@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The static must key on the entering object being a Wizard, but triggerAdditionalTime filters the triggering permanent and triggerAdditionalOnArtifactOrCreatureEntry is broader (any artifact or creature entering), so neither matches."}
