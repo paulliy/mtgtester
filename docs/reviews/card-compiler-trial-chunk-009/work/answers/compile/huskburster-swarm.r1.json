@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The cost reduction counts creature cards in exile and in the graveyard together, but countCardsInZone takes one zone from graveyard, hand or library and Value has no sum of two counts."}
