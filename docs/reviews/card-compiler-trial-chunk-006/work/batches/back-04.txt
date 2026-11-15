@@ -1,0 +1,11 @@
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/the-odd-acorn-gang.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/the-odd-acorn-gang.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/song-of-the-worldsoul.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/song-of-the-worldsoul.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/delete.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/delete.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/benthic-biomancer.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/benthic-biomancer.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/scale-the-heights.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/scale-the-heights.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/wolfwillow-haven.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/wolfwillow-haven.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/honden-of-infinite-rage.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/honden-of-infinite-rage.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/haystack.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/haystack.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/voldaren-epicure.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/voldaren-epicure.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/sanctum-of-calm-waters.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/sanctum-of-calm-waters.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/stonehoof-chieftain.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/stonehoof-chieftain.txt

@@ -1,0 +1,39 @@
+{
+  "name": "Caltrops",
+  "oracleId": "b13f97b3-56ae-4131-a93b-b162c8ff7cca",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature attacks, this artifact deals 1 damage to it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": "triggerObject",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature attacks, this artifact deals 1 damage to it."
+      }
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "name": "The Odd Acorn Gang",
+  "oracleId": "1d9d8028-d946-4245-ae0c-7508023f619a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Squirrels you control have \"{T}: Target Squirrel gets +2/+2 and gains trample until end of turn. Activate only as a sorcery.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Squirrel"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "sorcery",
+            "ability": {
+              "kind": "activated",
+              "targets": [
+                {
+                  "kind": "creature",
+                  "filter": {
+                    "kind": "subtype",
+                    "value": "Squirrel"
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "op": "pumpUntilEot",
+                  "target": 0,
+                  "power": 2,
+                  "toughness": 2
+                },
+                {
+                  "op": "grantKeywordUntilEot",
+                  "target": 0,
+                  "keyword": "trample"
+                }
+              ],
+              "description": "{T}: Target Squirrel gets +2/+2 and gains trample until end of turn. Activate only as a sorcery."
+            }
+          }
+        }
+      }
+    ]
+  }
+}
