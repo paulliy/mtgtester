@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A's trigger is at the beginning of the end step (this turn's end step only); Text B's 'at the beginning of each end step' fires in every turn's end step, including opponents' turns."]}
