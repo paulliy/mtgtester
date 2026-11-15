@@ -252,6 +252,7 @@ const SOURCE_FILES = [
   'packages/engine/src/turn/turn.ts',
   'packages/engine/src/view/spectator.ts',
   'packages/engine/src/view/view.ts',
+  'packages/engine/src/work-counters.ts',
   'packages/engine/tests/fixtures/draconic-engine-batch1-oracle.json',
   'packages/engine/tests/fixtures/draconic-engine-batch2-oracle.json',
   'packages/engine/tests/fixtures/draconic-engine-batch3-oracle.json',
