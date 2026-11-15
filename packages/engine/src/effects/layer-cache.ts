@@ -28,6 +28,7 @@
 
 import type { EnginePermanent, GameContext } from '../state/types';
 import type { Characteristics } from '../cards/continuous-types';
+import { countWork } from '../work-counters';
 
 export interface LayerCacheEntry {
   digest: number;
@@ -111,18 +112,47 @@ function hashStringUncached(s: string): number {
  * A number for each definition object, so the digest sees a definition replaced under the same
  * oracle id (`ctx.defs.set`). The engine adds definitions only under new oracle ids, but a test
  * or a tool that swaps one must not read the old one's results. Weak, so definitions are not kept.
+ *
+ * The numbers are per game (per definitions map, shared with the planner's copies through
+ * `shareDefinitionIds`). Numbered process-wide, the same game digested to different values
+ * depending on how many games the process had played before, so which states happened to share
+ * a digest, and with it the engine's work, changed from run to run (found by the work counters).
  */
-const DEFINITION_IDS = new WeakMap<object, number>();
-let nextDefinitionId = 1;
+interface DefinitionIds {
+  ids: WeakMap<object, number>;
+  next: number;
+}
+const DEFINITION_IDS = new WeakMap<object, DefinitionIds>();
+/** The last table looked up: a digest asks once per permanent, almost always of one game. */
+let lastDefs: object | null = null;
+let lastTable: DefinitionIds | null = null;
 
-function definitionId(definition: object | undefined): number {
+function definitionIds(defs: object): DefinitionIds {
+  if (defs === lastDefs) return lastTable!;
+  let table = DEFINITION_IDS.get(defs);
+  if (table === undefined) {
+    table = { ids: new WeakMap(), next: 1 };
+    DEFINITION_IDS.set(defs, table);
+  }
+  lastDefs = defs;
+  lastTable = table;
+  return table;
+}
+
+function definitionId(ctx: GameContext, definition: object | undefined): number {
   if (definition === undefined) return 0;
-  let id = DEFINITION_IDS.get(definition);
+  const table = definitionIds(ctx.defs);
+  let id = table.ids.get(definition);
   if (id === undefined) {
-    id = nextDefinitionId++;
-    DEFINITION_IDS.set(definition, id);
+    id = table.next++;
+    table.ids.set(definition, id);
   }
   return id;
+}
+
+/** A copy of `from` with its own definitions map numbers definitions as `from` does. */
+export function shareDefinitionIds(from: GameContext, to: GameContext): void {
+  DEFINITION_IDS.set(to.defs, definitionIds(from.defs));
 }
 
 /**
@@ -165,7 +195,7 @@ export function digestOf(
         (perm.unlockedDoors?.includes('right') ? 2 : 0),
     );
     h = mix(h, hashString(perm.oracleId));
-    h = mix(h, definitionId(ctx.defs.get(perm.oracleId)));
+    h = mix(h, definitionId(ctx, ctx.defs.get(perm.oracleId)));
     // Selectors read the controller ("creatures you control"). Nothing reassigns this today —
     // layer 2 is not implemented — but folding it keeps the digest honest when it arrives.
     h = mix(h, hashString(perm.controllerId));
@@ -240,7 +270,7 @@ export function digestOf(
   }
 
   h = mix(h, extra === undefined ? 0 : extra.timestamp + 1);
-  if (extra !== undefined) h = mix(h, definitionId(ctx.defs.get(extra.oracleId)));
+  if (extra !== undefined) h = mix(h, definitionId(ctx, ctx.defs.get(extra.oracleId)));
 
   // A static ability's `condition` can read game-level state no permanent carries: "as long as
   // it entered this turn" (the turn number), "during your turn" (the active player), graveyard,
@@ -332,12 +362,16 @@ export function scopedDigestOf(
   includeGraveyards: boolean,
 ): number {
   const scope = SCOPES.get(ctx);
-  if (scope === undefined) return digestOf(ctx, extra, includeGraveyards);
+  if (scope === undefined) {
+    countWork('layerDigests');
+    return digestOf(ctx, extra, includeGraveyards);
+  }
   const key =
     (extra === undefined ? '-' : `${extra.cardId}:${extra.timestamp}:${extra.oracleId}`) +
     (includeGraveyards ? '|g' : '|n');
   const known = scope.get(key);
   if (known === undefined) {
+    countWork('layerDigests');
     const digest = digestOf(ctx, extra, includeGraveyards);
     scope.set(key, digest);
     return digest;

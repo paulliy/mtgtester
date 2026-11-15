@@ -1,5 +1,5 @@
 import { copyData } from '../state/copy-data';
-import { getCached, setCached } from '../effects/layer-cache';
+import { getCached, setCached, shareDefinitionIds } from '../effects/layer-cache';
 import { playerLifeLocked } from '../state/phasing';
 import type { EnginePlayerState, GameContext } from '../state/types';
 import type {
@@ -17,6 +17,7 @@ import { battlefieldCharacteristics } from '../effects/continuous';
 import type { ManaAbilitySpec } from '../cards/ability';
 import { activationInvariantProduction } from '../cards/mana-production';
 import { totalPips } from './cost';
+import { countWork } from '../work-counters';
 
 const bounds = { states: 2048, activations: 32, productions: 256 };
 /**
@@ -27,6 +28,7 @@ const bounds = { states: 2048, activations: 32, productions: 256 };
  * made each searched state of a 58-turn fuzz game cost over a second.
  */
 function clone(ctx: GameContext): GameContext {
+  countWork('stateCopies');
   const { sequenceSnapshots: _snapshots, eventLog, ...state } = ctx.state;
   const copy: GameContext = {
     state: { ...copyData(state), eventLog: eventLog.slice() },
@@ -37,6 +39,7 @@ function clone(ctx: GameContext): GameContext {
   // The copy starts with the original's layer results: its state is the same, and the cache is
   // checked against a digest of the copy's own state on every read, so a copy that diverges
   // recomputes. Starting cold cost a full layer pass for every state the search visits.
+  shareDefinitionIds(ctx, copy);
   const layers = getCached(ctx);
   if (layers !== undefined) setCached(copy, layers);
   return copy;
@@ -162,6 +165,7 @@ export function planStatefulManaPayment(
     return choices;
   };
   const visit = (snapshot: GameContext): PaymentPlan | null => {
+    countWork('manaPlannerStates');
     const payer = snapshot.state.players.find((p) => p.id === player.id)!;
     const availableSources = sourcesFor(snapshot, payer);
     if (
@@ -383,6 +387,7 @@ export function planStatefulManaPayment(
     }
     return null;
   };
+  countWork('manaPlannerSearches');
   const result = visit(clone(ctx));
   if (!result && outsideScope)
     unsupported(

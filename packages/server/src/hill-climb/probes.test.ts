@@ -60,6 +60,35 @@ describe('hill-climb gate: exact metrics against the committed baseline', () => 
     expect(comparison.rows.length).toBeGreaterThanOrEqual(6);
   }, 120_000);
 
+  /**
+   * The engine work counters repeat exactly, so a pure performance change that makes the same
+   * games do more work fails here on any machine. When main has changed the games since the
+   * baseline was written, the counts measure different work and are not compared (the command
+   * prints INCOMPARABLE); rewriting the baseline restores the gate.
+   */
+  it('does no more engine work in the same benchmark games', async () => {
+    const decks = await loadDecks();
+    const quick = baseline.profiles['quick']!;
+    const exactOnly = (metrics: Report['metrics']): Report['metrics'] =>
+      Object.fromEntries(Object.entries(metrics).filter(([, metric]) => metric.kind === 'exact'));
+    const engine = engineProbe(decks, PROFILES['quick']!, 1, () => {});
+    const comparison = compareReports(
+      { ...quick, metrics: exactOnly(quick.metrics) },
+      {
+        ...quick,
+        probes: ['engine'],
+        metrics: exactOnly(engine.metrics),
+        fingerprints: engine.fingerprints,
+      },
+      { allowBehaviorChange: true },
+    );
+    expect(comparison.failures).toEqual([]);
+    const work = comparison.rows.filter((row) => row.id.startsWith('engine.work.'));
+    expect(work.length).toBeGreaterThanOrEqual(8);
+    if (comparison.fingerprints.verdict === 'identical')
+      expect(work.every((row) => row.verdict !== 'incomparable')).toBe(true);
+  }, 120_000);
+
   it('models no fewer cards', async () => {
     const decks = await loadDecks();
     const current: Report = {
@@ -84,6 +113,12 @@ describe('engineProbe', () => {
     expect(second.fingerprints).toEqual(first.fingerprints);
     expect(first.metrics['engine.msPerDecision']!.kind).toBe('timed');
     expect(first.metrics['engine.msPerDecision']!.value).toBeGreaterThan(0);
+    // The work counters are exact: the same games count the same work in another probe run.
+    const work = (metrics: Report['metrics']) =>
+      Object.fromEntries(Object.entries(metrics).filter(([id]) => id.startsWith('engine.work.')));
+    expect(Object.keys(work(first.metrics))).toHaveLength(8);
+    expect(first.metrics['engine.work.layerPasses']!.value).toBeGreaterThan(0);
+    expect(work(second.metrics)).toEqual(work(first.metrics));
   }, 120_000);
 });
 

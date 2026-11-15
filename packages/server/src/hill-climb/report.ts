@@ -18,6 +18,13 @@ export interface Metric {
   kind: 'exact' | 'timed';
   /** Timed only: (slowest - fastest) / fastest over the repeats, 0 when measured once. */
   spread?: number;
+  /**
+   * The metric counts work the benchmark games needed (the engine work counters), so it compares
+   * only when both sides played identical games. Otherwise its verdict is `incomparable`.
+   */
+  sameGames?: boolean;
+  /** Shown for diagnosis, never a win or a regression: a better design may move it either way. */
+  informational?: boolean;
 }
 
 export interface Report {
@@ -44,7 +51,16 @@ export interface Baseline {
   profiles: Record<string, Report>;
 }
 
-export type Verdict = 'improved' | 'unchanged' | 'regressed' | 'missing' | 'new';
+export type Verdict =
+  | 'improved'
+  | 'unchanged'
+  | 'regressed'
+  | 'missing'
+  | 'new'
+  /** A `sameGames` metric when the games differ: the counts measure different work. */
+  | 'incomparable'
+  /** An `informational` metric that moved. */
+  | 'changed';
 
 export interface MetricRow {
   id: string;
@@ -127,6 +143,7 @@ export function compareReports(
   const floor = !same ? CROSS_MACHINE_FLOOR : repeated ? SAME_MACHINE_FLOOR : UNREPEATED_FLOOR;
   const rows: MetricRow[] = [];
   const failures: string[] = [];
+  const fingerprints = compareFingerprints(baseline, current, ran.has('engine'));
   const ids = new Set([...Object.keys(baseline.metrics), ...Object.keys(current.metrics)]);
   for (const id of [...ids].sort()) {
     const before = baseline.metrics[id];
@@ -172,7 +189,14 @@ export function compareReports(
           ? 0
           : Math.sign(value) * Infinity
         : (value - before.value) / Math.abs(before.value);
-    const verdict = verdictFor(change, threshold, after.better);
+    const verdict: Verdict =
+      after.sameGames === true && fingerprints.verdict !== 'identical'
+        ? 'incomparable'
+        : after.informational === true
+          ? change === 0
+            ? 'unchanged'
+            : 'changed'
+          : verdictFor(change, threshold, after.better);
     rows.push({
       id,
       unit: after.unit,
@@ -190,7 +214,6 @@ export function compareReports(
       );
   }
 
-  const fingerprints = compareFingerprints(baseline, current, ran.has('engine'));
   if (fingerprints.verdict === 'changed' && options.allowBehaviorChange !== true)
     failures.push(
       `games changed on seed(s) ${fingerprints.changed.join(', ')}: a performance change must ` +

@@ -12,6 +12,8 @@ export const ENGINE_VERSION = '0.2.0-phase2';
 
 // The driver.
 export { Engine } from './engine';
+export { engineWork, engineWorkSince } from './work-counters';
+export type { EngineWork } from './work-counters';
 export type { EngineDriver, EngineOptions } from './engine';
 export type { PreparedScenarioSpec } from './testing/prepared-scenario';
 export {

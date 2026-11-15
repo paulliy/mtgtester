@@ -1,6 +1,7 @@
 import type { CardDefinition } from '../cards/definition';
 import { getCached, setCached } from '../effects/layer-cache';
 import type { EngineCardObject, EngineStackObject, GameContext } from '../state/types';
+import { countWork } from '../work-counters';
 
 /** Fixture-only settled stack entry; arranging a scenario does not perform or emit a cast. */
 export function preparedScenarioSpell(
@@ -34,6 +35,7 @@ export function castingPreviewContext(
   controllerId = card.ownerId,
   spellDefinition?: CardDefinition,
 ): GameContext {
+  countWork('castPreviews');
   const proposedCard: EngineCardObject = {
     ...card,
     id: `o-${ctx.state.nextObjectNum}`,

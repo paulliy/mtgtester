@@ -49,6 +49,7 @@ import { manaValueOf, parseManaCost, type ParsedManaCost } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { cardZoneCandidate } from '../state/queries';
 import { getCached, sampleCacheHit, scopedDigestOf, setCached } from './layer-cache';
+import { countWork } from '../work-counters';
 
 /** Basic-land subtype → intrinsic mana ability (CR 305.6), for Blood Moon's mana override. */
 const BASIC_LAND_MANA: Record<string, ManaUnit> = {
@@ -1200,6 +1201,7 @@ export function computeAllCharacteristics(
   const digest = scopedDigestOf(ctx, extra, includeGraveyards);
 
   if (cached !== undefined && cached.digest === digest && cached.extraCardId === extraCardId) {
+    countWork('layerCacheHits');
     if (!VERIFY_CACHE && !sampleCacheHit(ctx)) return cached.map;
     const fresh = runLayers(ctx, permsFor(ctx, extra));
     const a = canonicalJson(cached.map);
@@ -1212,6 +1214,7 @@ export function computeAllCharacteristics(
     return cached.map;
   }
 
+  countWork('layerPasses');
   const { map, usedGraveyards } = runLayers(ctx, permsFor(ctx, extra));
   setCached(ctx, {
     // Re-digest with the flag this pass actually established, so the next comparison matches.

@@ -22,7 +22,8 @@ played the same through their fingerprints. The full guide is `docs/guides/hill-
 2. Make one change.
 3. `bun run hill-climb --repeat 3 --against <scratch>/before.json`.
 4. Keep the change only if the table shows `IMPROVED` on the target metric, no `REGRESSED` row, and
-   every fingerprint identical. `UNCHANGED` means the change is inside the noise: drop it.
+   every fingerprint identical. For engine CPU, the exact `engine.work.*` counters (layer passes,
+   state copies, mana planner states) prove a win the noisy timings cannot. `UNCHANGED` means the change is inside the noise: drop it.
 5. Paste the table in the pull request, then bank the win with `bun run hill-climb --write-baseline`.
 
 Never rewrite the baseline to make a regression pass. A change meant to alter play passes
