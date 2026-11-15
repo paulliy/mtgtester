@@ -1,3 +1,8 @@
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/thopter-assembly.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/thopter-assembly.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/underworld-connections.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/underworld-connections.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/dark-fortress.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/dark-fortress.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/restless-prairie.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/restless-prairie.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/samut-vizier-of-naktamun.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/samut-vizier-of-naktamun.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/the-odd-acorn-gang.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/the-odd-acorn-gang.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/song-of-the-worldsoul.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/song-of-the-worldsoul.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/delete.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/delete.txt

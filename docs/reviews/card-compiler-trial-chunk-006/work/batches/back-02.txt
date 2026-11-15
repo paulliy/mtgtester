@@ -1,3 +1,4 @@
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/restless-bivouac.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/restless-bivouac.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/clive-s-hideaway.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/clive-s-hideaway.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/lavabelly-sliver.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/lavabelly-sliver.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/caltrops.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/caltrops.txt
@@ -9,6 +10,7 @@ docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/shelinda-yevon-acol
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/progenitor-mimic.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/progenitor-mimic.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/saproling-symbiosis.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/saproling-symbiosis.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/digsite-engineer.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/digsite-engineer.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/szarel-genesis-shepherd.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/szarel-genesis-shepherd.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/slash-the-ranks.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/slash-the-ranks.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/nullpriest-of-oblivion.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/nullpriest-of-oblivion.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/the-fifth-doctor.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/the-fifth-doctor.txt
@@ -17,9 +19,7 @@ docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/fecundity.md	docs/r
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/dauntless-scrapbot.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/dauntless-scrapbot.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/remorseful-cleric.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/remorseful-cleric.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/saheeli-the-sun-s-brilliance.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/saheeli-the-sun-s-brilliance.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/magma-opus.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/magma-opus.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/shardmage-s-rescue.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/shardmage-s-rescue.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/pugnacious-hammerskull.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/pugnacious-hammerskull.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/silverclad-ferocidons.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/silverclad-ferocidons.txt
-docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/fiendlash.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/fiendlash.txt
-docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/twinflame-travelers.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/twinflame-travelers.txt
-docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/sliver-hive.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/sliver-hive.txt

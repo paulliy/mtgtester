@@ -13,6 +13,7 @@ docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/open-the-gates.md	d
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/flaming-fist.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/flaming-fist.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/minas-morgul-dark-fortress.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/minas-morgul-dark-fortress.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/daemogoth-titan.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/daemogoth-titan.txt
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/reef-worm.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/reef-worm.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/spider-ham-peter-porker.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/spider-ham-peter-porker.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/rampart-architect.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/rampart-architect.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/rile.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/rile.txt
@@ -22,4 +23,3 @@ docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/spiteful-sliver.md	
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/march-from-the-black-gate.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/march-from-the-black-gate.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/charmbreaker-devils.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/charmbreaker-devils.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/prosperous-bandit.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/prosperous-bandit.txt
-docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/fumulus-the-infestation.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/fumulus-the-infestation.txt

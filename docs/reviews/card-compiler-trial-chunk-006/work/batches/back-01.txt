@@ -1,3 +1,4 @@
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/fumulus-the-infestation.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/fumulus-the-infestation.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/hidden-cataract.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/hidden-cataract.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/astral-cornucopia.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/astral-cornucopia.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/final-vengeance.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/final-vengeance.txt
@@ -22,4 +23,3 @@ docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/necrotic-sliver.md	
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/loyal-inventor.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/loyal-inventor.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/ruinous-intrusion.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/ruinous-intrusion.txt
 docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/combat-tutorial.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/combat-tutorial.txt
-docs/reviews/card-compiler-trial-chunk-006/work/prompts/back/restless-bivouac.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/back/restless-bivouac.txt
