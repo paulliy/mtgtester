@@ -119,26 +119,57 @@ describe('card authoring validation', () => {
       },
     });
 
-    it('takes a scoped token power only where a resolving effect creates the token', () => {
+    const FIXED =
+      'this token power and toughness are read with no ability scope (a token spec outside an effect, or an op that changes the game before it creates); only a fixed value fits here';
+    const CHOSEN =
+      'an entering permanent settles its counters and enters-tapped condition before its as-enters choice; a chosen option cannot be read here';
+
+    it('takes a scoped token power only where a resolving effect creates the token first', () => {
       // Warden of the Grove: an X/X token where X is the counters on the creature. It validated,
       // then threw "source counters need a layer evaluation scope" when the token was made. An
       // effect's spec is now read with the resolving ability's scope (compiled-patch-findings
       // test), so it stays valid there.
       const scoped = { kind: 'countersOnSelf', counter: '+1/+1' };
       expect(messages(tokenOn(spirit(scoped)))).toEqual([]);
-      // A token spec outside an effect is still read with no scope at all.
+      // An op that destroys first would read the game before the destroy: fixed values only.
+      const destroyFirst = (power: unknown) => ({
+        spellAbility: {
+          kind: 'spell',
+          targets: [{ kind: 'creature' }],
+          effects: [
+            {
+              op: 'destroyAndCreateTokenForController',
+              target: 0,
+              spec: spirit(power),
+              count: { kind: 'const', n: 1 },
+            },
+          ],
+          description: 'Destroy target creature. Its controller creates a token.',
+        },
+      });
+      expect(messages(destroyFirst(scoped))).toEqual([
+        `override.def.spellAbility.effects[0].spec.power: ${FIXED}`,
+        `override.def.spellAbility.effects[0].spec.toughness: ${FIXED}`,
+      ]);
+      expect(messages(destroyFirst(3))).toEqual([]);
+      // A token spec outside an effect is read with no scope at all.
       expect(messages({ tokenCreationReplacement: spirit(scoped) })).toEqual([
-        'override.def.tokenCreationReplacement.power: token power and toughness outside an effect are read with no ability scope; only a fixed value fits here',
-        'override.def.tokenCreationReplacement.toughness: token power and toughness outside an effect are read with no ability scope; only a fixed value fits here',
+        `override.def.tokenCreationReplacement.power: ${FIXED}`,
+        `override.def.tokenCreationReplacement.toughness: ${FIXED}`,
       ]);
       for (const power of [1, { kind: 'cardTypesInAllGraveyards' }])
         expect(
           messages({ tokenCreationReplacement: spirit(power) }),
           JSON.stringify(power),
         ).toEqual([]);
+      // A layer-only value throws when a resolving ability reads it.
+      expect(messages(tokenOn(spirit({ kind: 'timesAttackedThisTurn' })))).toEqual([
+        'override.def.spellAbility.effects[0].spec.power: a token power and toughness cannot read a value that exists only in a layer',
+        'override.def.spellAbility.effects[0].spec.toughness: a token power and toughness cannot read a value that exists only in a layer',
+      ]);
     });
 
-    it('rejects an entering counter count over the as-enters choice (Banner of Kinship)', () => {
+    it('rejects an entry choice read before it is made (Banner of Kinship)', () => {
       // The count is taken before the choice exists, so it was always zero.
       const banner = (selector: unknown) => ({
         entersChoosingOption: { prompt: 'choose a creature type', domain: 'creatureType' },
@@ -153,70 +184,84 @@ describe('card authoring validation', () => {
             of: [{ kind: 'chosenSubtype' }, { kind: 'type', value: 'Creature' }],
           }),
         ),
-      ).toEqual([
-        'override.def.entersWithCounters.fellowship: an entering permanent counts its counters before its as-enters choice; a chosen option cannot be read here',
-      ]);
+      ).toEqual([`override.def.entersWithCounters.fellowship: ${CHOSEN}`]);
       expect(messages(banner({ kind: 'type', value: 'Creature' }))).toEqual([]);
+      // Enters-tapped is settled even earlier.
+      expect(
+        messages({
+          entersChoosingOption: {
+            prompt: 'choose a color',
+            domain: 'options',
+            options: [{ key: 'red', label: 'Red' }],
+          },
+          entersTappedUnless: { kind: 'chosenOptionIs', value: 'red' },
+        }),
+      ).toEqual([`override.def.entersTappedUnless: ${CHOSEN}`]);
     });
 
-    it('rejects two distinct player targets chosen together (Gleaming Splendor)', () => {
-      // "{2}{W}: Two target players each draw a card." Each slot's menu lists every player and
-      // the engine refuses the same one twice, so a smoke game stopped on "illegal target".
+    it('checks the scope of a mass graveyard return', () => {
+      const back = (scope: unknown) => ({
+        spellAbility: {
+          kind: 'spell',
+          targets: [],
+          effects: [
+            {
+              op: 'graveyardToBattlefieldEach',
+              filter: { kind: 'type', value: 'Creature' },
+              scope,
+            },
+          ],
+          description: 'Return all creature cards.',
+        },
+      });
+      expect(messages(back('all'))).toEqual([]);
+      expect(messages(back('you'))).toEqual([]);
+      expect(messages(back('opponents'))).toEqual([
+        'override.def.spellAbility.effects[0].scope: expected you | all',
+      ]);
+    });
+
+    it('accepts distinct targets on any ability (Gleaming Splendor)', () => {
+      // "{2}{W}: Two target players each draw a card." The engine now offers activated abilities
+      // and triggers one target menu per legal assignment, as it did spells (compiled-patch-
+      // findings test), so the shape that once threw "illegal target" is valid everywhere.
       const draw = (target: number) => ({
         op: 'drawTarget',
         target,
         count: { kind: 'const', n: 1 },
       });
-      const pair = (kind: 'activated' | 'triggered', second: Record<string, unknown>) => ({
+      const pair = (kind: 'activated' | 'triggered' | 'spell') => ({
         kind,
         ...(kind === 'triggered'
           ? { trigger: { when: 'upkeep', player: 'you' }, optional: false }
           : {}),
-        targets: [{ kind: 'player' }, { kind: 'player', ...second }],
+        targets: [{ kind: 'player' }, { kind: 'player', differentFromSlots: [0] }],
         effects: [draw(0), draw(1)],
         description: 'Two target players each draw a card.',
       });
-      const activated = (second: Record<string, unknown>) => ({
-        activatedAbilities: [
-          {
-            costs: [{ kind: 'mana', cost: mana }],
-            timing: 'any',
-            ability: pair('activated', second),
-          },
-        ],
-      });
-      expect(messages(activated({ differentFromSlots: [0] }))).toEqual([
-        'override.def.activatedAbilities[0].ability.targets[1].differentFromSlots: distinct player targets are supported only on a triggered ability; a spell or activated ability offers each slot every player',
-      ]);
-      expect(
-        messages({
-          spellAbility: { ...pair('activated', { differentFromSlots: [0] }), kind: 'spell' },
-        }),
-      ).toEqual([
-        'override.def.spellAbility.targets[1].differentFromSlots: distinct player targets are supported only on a triggered ability; a spell or activated ability offers each slot every player',
-      ]);
-      // A trigger is offered whole legal target combinations, so it may keep two players apart.
-      expect(messages({ triggers: [pair('triggered', { differentFromSlots: [0] })] })).toEqual([]);
-      // Distinct object targets on an activated ability stay valid (Saheeli, Sublime Artificer).
       expect(
         messages({
           activatedAbilities: [
-            {
-              costs: [{ kind: 'mana', cost: mana }],
-              timing: 'any',
-              ability: {
-                kind: 'activated',
-                targets: [{ kind: 'creature' }, { kind: 'creature', differentFromSlots: [0] }],
-                effects: [
-                  { op: 'tapTarget', target: 0 },
-                  { op: 'tapTarget', target: 1 },
-                ],
-                description: 'Tap target creature and another target creature.',
-              },
-            },
+            { costs: [{ kind: 'mana', cost: mana }], timing: 'any', ability: pair('activated') },
           ],
         }),
       ).toEqual([]);
+      expect(messages({ spellAbility: pair('spell') })).toEqual([]);
+      expect(messages({ triggers: [pair('triggered')] })).toEqual([]);
+      // `differentPlayerTargetSlots` stays a modal-trigger field, reported once.
+      expect(
+        messages({
+          spellAbility: {
+            ...pair('spell'),
+            targets: [
+              { kind: 'player', differentPlayerTargetSlots: [1] },
+              { kind: 'player', differentPlayerTargetSlots: [0] },
+            ],
+          },
+        }),
+      ).toEqual([
+        'override.def.spellAbility: distinct player target slots require nonrepeatable triggered modes',
+      ]);
     });
   });
 

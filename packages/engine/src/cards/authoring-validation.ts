@@ -28,6 +28,7 @@ import type { ReferenceContract, TargetDomain } from './effect-reference-contrac
 import { assertNever } from '../utils/assert-never';
 import { layerEvaluable } from './value';
 import type { Value } from './value';
+import { TOKEN_OPS_ACTING_FIRST, tokenCharacteristicFixed } from './tokens';
 import { TRIGGER_SCOPE_FIELDS, VALUE_SCOPE_NEEDS } from './scope-contracts';
 import type { ScopeField } from './scope-contracts';
 
@@ -163,28 +164,7 @@ function checkReference(
   }
 }
 
-/** True when a target slot of this kind can name a player. Unknown kinds are reported elsewhere. */
-function admitsPlayer(spec: TargetSpec | undefined): boolean {
-  if (spec === undefined || spec === null || typeof spec !== 'object') return false;
-  try {
-    return targetDomains(spec.kind).includes('player');
-  } catch {
-    return false;
-  }
-}
-
-/**
- * `chosenTogether`: a spell or activated ability, whose targets the engine offers as one menu per
- * slot and takes in a single response. A trigger's targets are offered as whole legal
- * combinations instead (`targets/announcement.ts`), so only a trigger can keep two player slots
- * apart.
- */
-function validateTargets(
-  targets: TargetSpec[],
-  path: string,
-  issues: AuthoringIssue[],
-  chosenTogether = false,
-): void {
+function validateTargets(targets: TargetSpec[], path: string, issues: AuthoringIssue[]): void {
   let seenCounted = false;
   for (const [slot, spec] of targets.entries()) {
     const at = `${path}[${slot}]`;
@@ -204,21 +184,6 @@ function validateTargets(
       issues.push({
         path: `${at}.differentFromSlots`,
         message: 'another target requires earlier ordinary slots',
-      });
-    // "Two target players each draw a card" on an activated ability (Gleaming Splendor). Each
-    // slot's menu lists every player, nothing tells a client the two must differ, and the engine
-    // refuses the same player twice as an illegal target, so the bot or a smoke game that picks
-    // one player for both slots stops the game. Distinct object slots keep working because the
-    // bot reads "another target" in the description; a player pair has no such words.
-    else if (
-      chosenTogether &&
-      Array.isArray(spec.differentFromSlots) &&
-      (admitsPlayer(spec) || spec.differentFromSlots.some((other) => admitsPlayer(targets[other])))
-    )
-      issues.push({
-        path: `${at}.differentFromSlots`,
-        message:
-          'distinct player targets are supported only on a triggered ability; a spell or activated ability offers each slot every player',
       });
     if (spec.differentPlayerTargetSlots !== undefined) {
       const others = spec.differentPlayerTargetSlots;
@@ -246,12 +211,6 @@ function validateTargets(
           path: `${at}.differentPlayerTargetSlots`,
           message:
             'distinct player targets require every other ordinary player slot in the same domain',
-        });
-      else if (chosenTogether)
-        issues.push({
-          path: `${at}.differentPlayerTargetSlots`,
-          message:
-            'distinct player targets are supported only on a triggered ability; a spell or activated ability offers each slot every player',
         });
     }
     if (
@@ -621,7 +580,7 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       return;
     }
     const targets = record['targets'] as TargetSpec[];
-    validateTargets(targets, `${path}.targets`, issues, record['kind'] !== 'triggered');
+    validateTargets(targets, `${path}.targets`, issues);
     const trigger = record['trigger'] as { when?: string; subject?: { kind?: string } } | undefined;
     const eventObject =
       record['kind'] !== 'triggered'
@@ -1097,36 +1056,27 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
     );
   }
 
-  // A token's printed power and toughness are fixed as the token is created. A resolving effect's
-  // `spec` has its values read with that ability's scope first (`withTokenCharacteristicsFixed`
-  // in effects/resolve.ts). Any other token spec (a replacement's, a static's) reaches
+  // A token's printed power and toughness are fixed as the token is created. A token-creating
+  // effect's own `spec` has its values read with the resolving ability's scope first
+  // (`withTokenCharacteristicsFixed` in effects/resolve.ts), except an op that destroys, exiles,
+  // mills or counters before it creates (`TOKEN_OPS_ACTING_FIRST`), which would read the game
+  // before that change. Every other token spec (`tokenCreationReplacement`) reaches
   // `registerTokenDef`, which reads a value with no scope at all, so a value that needs one
-  // would throw in play the way Warden of the Grove's "X/X where X is the counters on this
-  // creature" did before effect specs were fixed. A card definition's own power is always a
-  // number, so an object here is a token's.
-  if (
-    typeof record['op'] === 'string' &&
-    record['spec'] !== null &&
-    typeof record['spec'] === 'object'
-  )
-    effectTokenSpecs.add(record['spec']);
-  if (typeof record['typeLine'] === 'string' && !effectTokenSpecs.has(record))
-    for (const field of ['power', 'toughness']) {
-      const operand = record[field];
-      if (operand === null || typeof operand !== 'object') continue;
-      // A malformed value is reported where the IR graph is checked; only judge a well-formed one.
-      const shape: AuthoringIssue[] = [];
-      validateExpression('value', operand, `${path}.${field}`, shape);
-      if (shape.length === 0 && !tokenCharacteristicEvaluable(operand as Value))
-        issues.push({
-          path: `${path}.${field}`,
-          message:
-            'token power and toughness outside an effect are read with no ability scope; only a fixed value fits here',
-        });
-    }
-  // "~ enters with a counter for each creature of the chosen type" (Banner of Kinship). The
-  // count is taken as the permanent is built, before its as-enters choice is made, and the
-  // value's selectors never see a chosen option, so the count would always be zero.
+  // throws in play, as Warden of the Grove's "X/X where X is the counters on this creature" did.
+  // A card definition's own power is always a number, so an object here is a token's.
+  if (typeof record['op'] === 'string' && isTokenSpec(record['spec']))
+    checkTokenCharacteristics(
+      record['spec'],
+      `${path}.spec`,
+      TOKEN_OPS_ACTING_FIRST.has(record['op'] as Effect['op']) ? 'fixed' : 'resolving',
+      issues,
+    );
+  else if (isTokenSpec(record) && !path.endsWith('.spec'))
+    checkTokenCharacteristics(record, path, 'fixed', issues);
+  // "~ enters with a counter for each creature of the chosen type" (Banner of Kinship). An
+  // entering permanent's counters and its enters-tapped condition are settled as it is built,
+  // before its as-enters choice is made (state/objects.ts), so a chosen option read there would
+  // never match and the count would always be zero.
   if (
     record['entersWithCounters'] !== null &&
     typeof record['entersWithCounters'] === 'object' &&
@@ -1136,10 +1086,11 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       if (amount !== null && typeof amount === 'object' && readsChosenOption(amount))
         issues.push({
           path: `${path}.entersWithCounters.${counter}`,
-          message:
-            'an entering permanent counts its counters before its as-enters choice; a chosen option cannot be read here',
+          message: CHOSEN_BEFORE_CHOICE,
         });
     }
+  if (record['entersTappedUnless'] !== undefined && readsChosenOption(record['entersTappedUnless']))
+    issues.push({ path: `${path}.entersTappedUnless`, message: CHOSEN_BEFORE_CHOICE });
   if (record['layer'] === 7) {
     for (const field of ['power', 'toughness']) {
       const operand = record[field];
@@ -1489,38 +1440,65 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   }
 }
 
-/** Token specs that are an effect's `spec`, whose values the resolving ability reads. */
-const effectTokenSpecs = new WeakSet<object>();
+const CHOSEN_BEFORE_CHOICE =
+  'an entering permanent settles its counters and enters-tapped condition before its as-enters choice; a chosen option cannot be read here';
 
-/** Selectors that read the source's as-enters `chosenOption`. */
-const CHOSEN_OPTION_SELECTORS = new Set([
+/** Selectors and conditions that read the source's as-enters `chosenOption`. */
+const CHOSEN_OPTION_KINDS = new Set([
   'chosenColor',
   'chosenType',
   'chosenSubtype',
   'attackingChosenPlayer',
+  'chosenOptionIs',
 ]);
 
 function readsChosenOption(value: unknown): boolean {
-  if (Array.isArray(value)) return value.some(readsChosenOption);
-  if (value === null || typeof value !== 'object') return false;
-  const record = value as Record<string, unknown>;
-  if (typeof record['kind'] === 'string' && CHOSEN_OPTION_SELECTORS.has(record['kind']))
-    return true;
-  return Object.values(record).some(readsChosenOption);
+  return containsKind(value, CHOSEN_OPTION_KINDS);
 }
 
-/** Values `evaluateValue` answers with no scope at all, which is how a token spec's are read. */
-function tokenCharacteristicEvaluable(value: Value): boolean {
-  switch (value.kind) {
-    case 'plus':
-    case 'negate':
-    case 'times':
-      return tokenCharacteristicEvaluable(value.of);
-    case 'const':
-    case 'cardTypesInAllGraveyards':
-      return true;
-    default:
-      return false;
+function containsKind(value: unknown, kinds: ReadonlySet<string>): boolean {
+  if (Array.isArray(value)) return value.some((entry) => containsKind(entry, kinds));
+  if (value === null || typeof value !== 'object') return false;
+  const record = value as Record<string, unknown>;
+  if (typeof record['kind'] === 'string' && kinds.has(record['kind'])) return true;
+  return Object.values(record).some((entry) => containsKind(entry, kinds));
+}
+
+function isTokenSpec(value: unknown): value is Record<string, unknown> {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    typeof (value as Record<string, unknown>)['typeLine'] === 'string'
+  );
+}
+
+/** Values a resolving ability cannot read: they exist only per affected object in a layer. */
+const LAYER_ONLY_VALUES = new Set(['timesAttackedThisTurn']);
+
+function checkTokenCharacteristics(
+  spec: Record<string, unknown>,
+  path: string,
+  readWith: 'fixed' | 'resolving',
+  issues: AuthoringIssue[],
+): void {
+  for (const field of ['power', 'toughness']) {
+    const operand = spec[field];
+    if (operand === null || typeof operand !== 'object') continue;
+    // A malformed value is reported by the capability IR check; judge only a well-formed one.
+    const shape: AuthoringIssue[] = [];
+    validateExpression('value', operand, `${path}.${field}`, shape);
+    if (shape.length > 0) continue;
+    if (readWith === 'fixed' && !tokenCharacteristicFixed(operand as Value))
+      issues.push({
+        path: `${path}.${field}`,
+        message:
+          'this token power and toughness are read with no ability scope (a token spec outside an effect, or an op that changes the game before it creates); only a fixed value fits here',
+      });
+    else if (readWith === 'resolving' && containsKind(operand, LAYER_ONLY_VALUES))
+      issues.push({
+        path: `${path}.${field}`,
+        message: 'a token power and toughness cannot read a value that exists only in a layer',
+      });
   }
 }
 

@@ -11,6 +11,9 @@ import { interpretCard } from '../src/cards/interpret';
 import { ofType } from '../src/cards/selector';
 import { computeCharacteristics } from '../src/effects/continuous';
 import { executeAbility } from '../src/effects/resolve';
+import { computePriorityOptions } from '../src/actions/legal';
+import { priorityCheckpoint } from '../src/sba/sba';
+import { moveObject } from '../src/state/objects';
 import { getDefByOracleId } from '../src/state/queries';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
@@ -268,5 +271,210 @@ describe('a token power written as a value is read from the creating ability', (
     // Fixed as it was created: the token does not follow the source's counters afterwards.
     warden.counters['+1/+1'] = 5;
     expect(computeCharacteristics(ctx, token!).power).toBe(2);
+  });
+});
+
+describe('targets that must differ are offered as legal assignments', () => {
+  // Gleaming Splendor ("Two target players each draw a card") and Ulvenwald Tracker-style "target
+  // creature and another target creature". An activated ability and a trigger offered each slot
+  // every candidate, so a client could name one object twice: the activation threw "illegal
+  // target", and a trigger took the duplicate. A spell already split its menus this way.
+  const twoCreatures: Ability['targets'] = [
+    { kind: 'creature' },
+    { kind: 'creature', differentFromSlots: [0] },
+  ];
+  const tapBoth: Effect[] = [
+    { op: 'tapTarget', target: 0 },
+    { op: 'tapTarget', target: 1 },
+  ];
+  function main(seed: string): GameContext {
+    const ctx = game(seed);
+    Object.assign(ctx.state, {
+      currentTurnPlayer: 'P1',
+      activePlayerIndex: 0,
+      turnNumber: 4,
+      phase: 'precombatMain',
+      step: null,
+    });
+    return ctx;
+  }
+  const tapper = (ctx: GameContext, targets: Ability['targets'], effects: Effect[]) => {
+    const card = oracle({
+      name: 'Finding Tapper',
+      typeLine: 'Artifact',
+      manaCost: '{1}',
+      power: null,
+      toughness: null,
+      oracleText: '{T}: Draw a card.',
+    });
+    const definition = interpretCard(card);
+    definition.activatedAbilities[0]!.ability = {
+      kind: 'activated',
+      targets,
+      effects,
+      description: '{T}: Tap two target things.',
+    };
+    expect(validateCardDefinition(definition)).toEqual([]);
+    ctx.defs.set(card.oracleId, definition);
+    return spawn(ctx, 'P1', card);
+  };
+  const activations = (ctx: GameContext) =>
+    computePriorityOptions(ctx, ctx.state.players[0]!).filter((option) =>
+      option.description.startsWith('Finding Tapper'),
+    );
+
+  it('splits an activated ability into one action per distinct pair', () => {
+    const ctx = main('distinct-activated');
+    tapper(ctx, twoCreatures, tapBoth);
+    const a = spawn(ctx, 'P2', bear('Finding Bear A'));
+    const b = spawn(ctx, 'P2', bear('Finding Bear B'));
+    const pairs = activations(ctx).map((option) =>
+      option.targets!.map((slot) => {
+        expect(slot.options).toHaveLength(1);
+        return slot.options[0];
+      }),
+    );
+    expect(pairs.sort()).toEqual(
+      [
+        [a.id, b.id],
+        [b.id, a.id],
+      ].sort(),
+    );
+  });
+
+  it('offers no activation when only one object could fill both slots (CR 602.2b)', () => {
+    const ctx = main('distinct-activated-one');
+    tapper(ctx, twoCreatures, tapBoth);
+    spawn(ctx, 'P2', bear('Finding Bear A'));
+    expect(activations(ctx)).toEqual([]);
+  });
+
+  it('lets two target players be chosen apart (Gleaming Splendor)', () => {
+    const ctx = main('distinct-players');
+    tapper(
+      ctx,
+      [{ kind: 'player' }, { kind: 'player', differentFromSlots: [0] }],
+      [
+        { op: 'drawTarget', target: 0, count: { kind: 'const', n: 1 } },
+        { op: 'drawTarget', target: 1, count: { kind: 'const', n: 1 } },
+      ],
+    );
+    const pairs = activations(ctx).map((option) => option.targets!.map((slot) => slot.options[0]));
+    // Three players: six ordered pairs, none naming one player twice.
+    expect(pairs).toHaveLength(6);
+    expect(pairs.every(([first, second]) => first !== second)).toBe(true);
+  });
+
+  const pushTrigger = (ctx: GameContext, source: { cardId: string; oracleId: string }) =>
+    ctx.state.pendingTriggers.push({
+      controllerId: 'P1',
+      sourceCardId: source.cardId,
+      sourceOracleId: source.oracleId,
+      sourceName: 'Finding Trigger',
+      ability: {
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: { kind: 'self' } },
+        targets: twoCreatures,
+        effects: tapBoth,
+        description: 'Tap target creature and another target creature.',
+      },
+    });
+
+  it('offers a trigger one menu per distinct pair and takes the chosen one', () => {
+    const ctx = main('distinct-trigger');
+    const a = spawn(ctx, 'P2', bear('Finding Bear A'));
+    const b = spawn(ctx, 'P2', bear('Finding Bear B'));
+    pushTrigger(ctx, source(ctx));
+    const offered: string[][][] = [];
+    pump(
+      priorityCheckpoint(ctx),
+      (decision) => {
+        if (decision.decisionType !== 'chooseTargets') return undefined;
+        offered.push(
+          decision.options.map((option) => option.targets!.map((s) => s.options)).flat(),
+        );
+        const index = decision.options.findIndex(
+          (option) => option.targets![0]!.options[0] === b.id,
+        );
+        return { index, targets: new Map() };
+      },
+      { strict: true },
+    );
+    expect(offered).toHaveLength(1);
+    expect(ctx.state.stack.at(-1)!.targets).toEqual([b.id, a.id]);
+  });
+
+  it('removes a trigger with no distinct assignment (CR 603.3d)', () => {
+    const ctx = main('distinct-trigger-one');
+    spawn(ctx, 'P2', bear('Finding Bear A'));
+    pushTrigger(ctx, source(ctx));
+    pump(priorityCheckpoint(ctx), undefined, { strict: true });
+    expect(ctx.state.stack).toHaveLength(0);
+    expect(ctx.state.eventLog.some((event) => event.type === 'triggerRemovedNoTargets')).toBe(true);
+  });
+});
+
+describe('explore by a legal target that left during the resolution', () => {
+  it('still explores, as the permanent last existed (CR 701.44c)', () => {
+    const ctx = game('explore-lki');
+    // A token: once destroyed it ceases to exist (CR 111.7), so nothing is left to refer to.
+    const explorer = spawn(ctx, 'P1', bear('Finding Explorer'), { isToken: true });
+    conjure(ctx, 'P1', relic('Finding Top Relic'), 'library');
+    const ability: Ability = {
+      kind: 'activated',
+      targets: [{ kind: 'creature', controller: 'you' }],
+      effects: [
+        { op: 'destroy', target: 0 },
+        { op: 'explore', target: 0 },
+      ],
+      description: 'Destroy target creature you control. It explores.',
+    };
+    pump(
+      executeAbility(ctx, source(ctx), ability, [explorer.id]),
+      (decision) => pick(decision, /Keep/),
+      { strict: true },
+    );
+    expect(ctx.state.battlefield.includes(explorer)).toBe(false);
+    const explored = ctx.state.eventLog.filter((event) => event.type === 'explore');
+    expect(explored.map((event) => [event.payload['player'], event.payload['permanent']])).toEqual([
+      ['P1', 'Finding Explorer'],
+    ]);
+  });
+});
+
+describe('an entry counter replacement over the chosen type', () => {
+  it("reads the replacement source's as-enters choice", () => {
+    // "Each creature you control of the chosen type enters with an additional +1/+1 counter."
+    // The source is already on the battlefield, so its choice exists; its selector was not told.
+    const ctx = game('entry-counters-chosen');
+    const card = relic('Finding Banner');
+    ctx.defs.set(card.oracleId, {
+      ...interpretCard(card),
+      additionalCountersOnEntry: [
+        {
+          affects: {
+            kind: 'allOf',
+            of: [{ kind: 'type', value: 'Creature' }, { kind: 'chosenSubtype' }],
+          },
+          counter: '+1/+1',
+          count: { kind: 'const', n: 1 },
+        },
+      ],
+    });
+    const banner = spawn(ctx, 'P1', card);
+    banner.chosenOption = 'Bear';
+    const entering = conjure(ctx, 'P1', bear('Finding Bear'), 'hand');
+    const other = conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Finding Elf', typeLine: 'Creature — Elf', manaCost: '{G}' }),
+      'hand',
+    );
+    pumpStrict(moveObject(ctx, entering, { zone: 'battlefield', controllerId: 'P1' }));
+    pumpStrict(moveObject(ctx, other, { zone: 'battlefield', controllerId: 'P1' }));
+    const counters = (name: string) =>
+      ctx.state.battlefield.find((perm) => perm.name === name)!.counters['+1/+1'];
+    expect(counters('Finding Bear')).toBe(1);
+    expect(counters('Finding Elf')).toBeUndefined();
   });
 });
