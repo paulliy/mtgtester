@@ -3,17 +3,16 @@
   "estimatedCost": {
     "compileUsd": 0.3855256650000017,
     "compileCalls": 306,
-    "backUsd": 0.004152400000000006,
-    "backCalls": 111,
-    "judgeUsd": 0.0034731749999999954,
-    "judgeCalls": 111,
-    "totalUsd": 0.3931512400000017
+    "backUsd": 0.004336300000000004,
+    "backCalls": 116,
+    "judgeUsd": 0.0036075249999999955,
+    "judgeCalls": 116,
+    "totalUsd": 0.3934694900000017
   },
   "calibration": {
     "cases": 10,
     "pending": [],
     "missed": [
-      "charmbreaker-devils",
       "minas-morgul-dark-fortress",
       "voldaren-estate"
     ],
@@ -26,7 +25,7 @@
       "lines": [
         "Whenever ~ or another nontoken creature you control dies, return that card to the battlefield under your control at the beginning of the next end step."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -59,10 +58,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a nontoken creature you control dies, register a delayed trigger: at the beginning of the next end step, put that card from its graveyard onto the battlefield. The delayed trigger is controlled by this permanent's controller and expires at the end step.",
-      "differences": [
-        "Text A returns the card to the battlefield under your control; Text B puts it onto the battlefield without 'under your control', so it would enter under its owner's control"
-      ]
+      "backTranslation": "Whenever a nontoken creature you control dies, register a delayed trigger that expires at the end step. The delayed trigger is controlled by this permanent's controller. When it triggers at the beginning of the end step, put that card from its graveyard onto the battlefield.",
+      "differences": []
     },
     {
       "name": "Goblin Lackey",
@@ -156,7 +153,7 @@
       "lines": [
         "When this creature enters, put a +1/+1 counter on each of any number of target creatures and a charge counter on each of any number of target artifacts."
       ],
-      "outcome": "pending",
+      "outcome": "compiled-checked",
       "compileRounds": 2,
       "validatorIssues": [
         [
@@ -193,7 +190,9 @@
           "abilityResolved": true,
           "detail": "game ended"
         }
-      ]
+      ],
+      "backTranslation": "When this creature enters, choose any number of target creatures and any number of target artifacts. Put a +1/+1 counter on each chosen creature and a charge counter on each chosen artifact.",
+      "differences": []
     },
     {
       "name": "Spiteful Sliver",
@@ -322,9 +321,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of your end step, draw a card. Then put a -1/-1 counter on a creature of your choice.",
+      "backTranslation": "At the beginning of your end step, draw a card, then put a -1/-1 counter on a creature of choice.",
       "differences": [
-        "Blight 1 puts the -1/-1 counter only on a creature you control; Text B says 'a creature of your choice' with no restriction to creatures you control"
+        "Text A's blight 1 puts the -1/-1 counter only on a creature you control; Text B puts it on a creature of choice with no 'you control' restriction, so it allows counters on opponents' creatures."
       ]
     },
     {
@@ -467,7 +466,7 @@
       ],
       "backTranslation": "Whenever you cast an instant or sorcery spell, you may copy that spell.",
       "differences": [
-        "Text A lets the controller choose new targets for the copy; Text B omits the choice of new targets"
+        "Text A lets the controller choose new targets for the copy (\"You may choose new targets for the copy\"); Text B omits this, so the copy's targets are not addressed and no choice of new targets is given."
       ]
     },
     {
@@ -520,7 +519,7 @@
       "lines": [
         "~ deals 4 damage divided as you choose among any number of targets. Tap two target permanents. Create a 4/4 blue and red Elemental creature token. Draw two cards."
       ],
-      "outcome": "pending",
+      "outcome": "compiled-checked",
       "compileRounds": 2,
       "validatorIssues": [
         [
@@ -552,7 +551,9 @@
           "abilityResolved": false,
           "detail": "game ended"
         }
-      ]
+      ],
+      "backTranslation": "Choose a target permanent, another target permanent different from the first, and any number of other targets. This spell deals 4 damage divided among the chosen any-target targets. Tap the first target permanent. Tap the second target permanent. Create a 4/4 blue and red Elemental creature token. Draw two cards.",
+      "differences": []
     },
     {
       "name": "Faerie Artisans",
@@ -626,7 +627,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}{R}{W}: Until end of turn, this land becomes a 2/2 red and white Ox creature.",
+      "backTranslation": "{1}{R}{W}: Until end of turn, this becomes a 2/2 red and white Ox creature.",
       "differences": []
     },
     {
@@ -635,7 +636,7 @@
       "lines": [
         "Put a +1/+1 counter on target creature you control. It gains reach, trample, and indestructible until end of turn. Untap it."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -661,11 +662,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Put a +1/+1 counter on target creature you control.\nTarget creature you control gains reach until end of turn.\nTarget creature you control gains trample until end of turn.\nTarget creature you control gains indestructible until end of turn.\nUntap target creature you control.",
-      "differences": [
-        "Text A has one target creature you control that receives the counter, gains reach, trample and indestructible, and is untapped. Text B uses separate targets for each effect, so different creatures could receive each effect.",
-        "Text B's untap is a separate targeted effect (\"Untap target creature you control\") that need not be the creature that got the counter and keywords."
-      ]
+      "backTranslation": "Put a +1/+1 counter on target creature you control. That creature gains reach until end of turn. That creature gains trample until end of turn. That creature gains indestructible until end of turn. Untap that creature.",
+      "differences": []
     },
     {
       "name": "Aunt May",
@@ -748,7 +746,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{R}, {T}, Sacrifice this land: Activate only if there are seven or more cards in your graveyard. This deals 2 damage to any target.",
+      "backTranslation": "{R}, {T}, Sacrifice this land: This ability can be activated only if there are seven or more cards in your graveyard. This land deals 2 damage to any target.",
       "differences": []
     },
     {
@@ -790,7 +788,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Each Squirrel creature you control has \"{T}: Target Squirrel creature gets +2/+2 until end of turn and gains trample until end of turn. Activate only as a sorcery.\"",
+      "backTranslation": "Squirrels you control have \"{T}: Target Squirrel creature gets +2/+2 until end of turn and gains trample until end of turn. Activate only as a sorcery.\"",
       "differences": []
     },
     {
@@ -834,7 +832,7 @@
       ],
       "backTranslation": "{2}, {T}: If you control four or more legendary creatures, play the exiled card without paying its mana cost. Otherwise, nothing happens.",
       "differences": [
-        "Text A lets the controller choose whether to play the exiled card (\"You may play\"); Text B makes playing it mandatory when the condition is met."
+        "Text A says 'You may play the exiled card'; Text B makes the play mandatory ('play the exiled card') once the condition is met, so the optional choice is missing."
       ]
     },
     {
@@ -869,7 +867,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Search your library for a card that is either a basic land card or a Gate land card, reveal it, and put it into your hand. Then shuffle.",
+      "backTranslation": "Search your library for a basic land card or a land card with the subtype Gate, reveal it, put it into your hand, then shuffle.",
       "differences": []
     },
     {
@@ -1030,7 +1028,7 @@
       "lines": [
         "Whenever you sacrifice another nontoken permanent during your turn, put a number of +1/+1 counters equal to ~'s power on up to one other target creature."
       ],
-      "outcome": "pending",
+      "outcome": "meaning-differs",
       "compileRounds": 2,
       "validatorIssues": [
         [
@@ -1066,6 +1064,10 @@
           "abilityResolved": false,
           "detail": "game ended"
         }
+      ],
+      "backTranslation": "Whenever another nontoken creature you control is sacrificed during your turn, put a number of +1/+1 counters equal to this creature's power on up to one target creature other than this creature.",
+      "differences": [
+        "Text A triggers whenever you sacrifice another nontoken permanent during your turn; Text B triggers only when another nontoken creature you control is sacrificed, so sacrificed noncreature permanents no longer trigger it."
       ]
     },
     {
@@ -1184,7 +1186,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever equipped creature is dealt damage, equipped creature deals damage equal to its power to target player or planeswalker.",
+      "backTranslation": "Whenever equipped creature is dealt damage, that creature deals damage equal to its power to target player or planeswalker.",
       "differences": []
     },
     {
@@ -1226,7 +1228,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}{G}{U}: Until end of turn, this land becomes a 3/3 green and blue Elemental creature with hexproof.",
+      "backTranslation": "{2}{G}{U}: Until end of turn, this land becomes a 3/3 Elemental creature with hexproof. It is green and blue.",
       "differences": []
     },
     {
@@ -1323,11 +1325,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of your precombat main phase, you may do the following. If you control a creature, create a token that is an Artifact Treasure with \"{T}, Sacrifice this artifact: Add one mana of any color.\" Otherwise, do nothing. Then put a -1/-1 counter on a creature of your choice.",
+      "backTranslation": "At the beginning of your precombat main phase, you may have this ability. If you control a creature, create a Treasure artifact token with \"{T}, Sacrifice this token: Add one mana of any color.\" Then put a -1/-1 counter on a creature you control of your choice.",
       "differences": [
-        "Text A makes the -1/-1 counter a cost of the optional choice (blight 1 on a creature you control) and creates the Treasure only if that counter is placed; Text B creates the Treasure first and then puts the -1/-1 counter after it, reversing the order of steps.",
-        "Text A requires the -1/-1 counter to go on a creature you control; Text B says 'a creature of your choice' with no controller restriction, so it allows a creature an opponent controls.",
-        "Text B's 'Otherwise, do nothing' branch and the unconditional counter step after it do not match Text A, where no creature means the blight cannot be done and no counter or Treasure happens."
+        "Text A makes the blight 1 the optional first step and creates the Treasure only if the player blights; Text B creates the Treasure first (conditioned on controlling a creature) and then puts the -1/-1 counter afterward, so the order of the steps differs.",
+        "Text B adds an explicit condition (\"If you control a creature\") for the Treasure that Text A does not state as a separate condition, and it uses \"precombat main phase\" where Text A says \"first main phase\"."
       ]
     },
     {
@@ -1508,7 +1509,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever you cast an artifact spell, you may pay {2}. If you do, create a token. That token is a colorless Construct artifact creature token with base power 0 and base toughness 0, and it gets +X/+X, where X is the number of artifacts you control.",
+      "backTranslation": "Whenever you cast an artifact spell, you may pay {2}. If you do, create a token that is a 0/0 colorless Construct artifact creature with \"This creature gets +X/+X, where X is the number of artifacts you control.\"",
       "differences": []
     },
     {
@@ -1618,7 +1619,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Choose target creature you control and target creature an opponent controls.\nIf the first target is legendary, put a +1/+1 counter on the first target. Otherwise, nothing happens.\nThen those creatures fight each other.",
+      "backTranslation": "Choose target creature you control and target creature an opponent controls. If the creature you control is legendary, put a +1/+1 counter on it. Then those creatures fight each other.",
       "differences": []
     },
     {
@@ -1627,7 +1628,7 @@
       "lines": [
         "{1}{U}: ~ becomes a 2/1 blue Faerie creature with flying until end of turn. It's still a land."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -1660,8 +1661,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}{U}: Until end of turn, this land becomes a 2/1 blue Faerie creature with flying. This ability can be activated at any time.",
-      "differences": []
+      "backTranslation": "{1}{U}: Until end of turn, this land becomes a 2/1 blue Faerie creature with flying.",
+      "differences": [
+        "Text A says the land \"is still a land\" after becoming a creature; Text B omits this, so the land's continued land type is not stated."
+      ]
     },
     {
       "name": "Ankh of Mishra",
@@ -1680,7 +1683,7 @@
       "lines": [
         "Flurry — Whenever you cast your second spell each turn, put a rally counter on this enchantment. Then create a 1/1 white Monk creature token with prowess for each rally counter on it."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -1713,10 +1716,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever you cast your second spell, put a rally counter on this enchantment, then create a 1/1 white Monk creature token for each rally counter on this enchantment.\nThe token has \"Whenever you cast a spell that isn't a creature spell, this creature gets +1/+1 until end of turn.\"",
-      "differences": [
-        "Text A's trigger is for your second spell each turn; Text B drops 'each turn' and so triggers on the second spell cast in any turn"
-      ]
+      "backTranslation": "Whenever you cast your second spell in a turn, put a rally counter on this enchantment, then create a 1/1 white Monk creature token for each rally counter on this enchantment. That token has \"Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.\"",
+      "differences": []
     },
     {
       "name": "Sliver Hive",
@@ -1788,7 +1789,7 @@
       "lines": [
         "{T}: Add {B} or {R}. Activate only if this land entered this turn or if you control a basic land."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -1821,10 +1822,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}: Add {B}{R}. This mana ability can be activated only if this land entered this turn or you control at least one basic land.",
-      "differences": [
-        "Text A taps for one mana of either black or red; Text B taps for {B}{R}, adding both black and red mana"
-      ]
+      "backTranslation": "{T}: Add {B} or {R}. Activate only if this entered the battlefield this turn or you control a basic land.",
+      "differences": []
     },
     {
       "name": "Storm of Souls",
@@ -1946,10 +1945,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "During your turn, in the declare blockers step, you may cast this spell by paying {1}{B} and returning an unblocked attacker to its owner's hand, rather than paying its mana cost. This spell can be cast at instant speed. It has no other effect.",
+      "backTranslation": "You may cast this spell by paying {1}{B} and returning an unblocked attacker to its owner's hand rather than paying its mana cost. You may cast this spell only during your turn, during the declare blockers step. This spell has no effects and does nothing.",
       "differences": [
-        "Text B says the spell has no other effect, so it omits the effect of searching the library for a card, putting it into hand, and shuffling.",
-        "Text B restricts casting the alternative cost to your turn during the declare blockers step (\"During your turn, in the declare blockers step\"); Text A has no such timing or turn restriction."
+        "Text B adds that the spell may be cast only during your turn; Text A gives only the declare blockers step timing, so B adds a restriction absent from A.",
+        "Text B says the spell has no effects and does nothing, but the whole card's spell searches your library for a card, puts it into your hand, then shuffles; that effect is missing from B."
       ]
     },
     {
@@ -2002,7 +2001,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Triggered abilities of each other Elemental you control trigger an additional time.",
+      "backTranslation": "Triggered abilities of other Elemental permanents you control trigger one additional time.",
       "differences": []
     },
     {
@@ -2055,7 +2054,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}, {T}: Target creature you control phases out.",
+      "backTranslation": "{2}, {T}: Phase out target creature you control.",
       "differences": []
     },
     {
@@ -2090,7 +2089,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Put target card from your graveyard on top of its owner's library.",
+      "backTranslation": "Put target card from your graveyard on top of your library.",
       "differences": []
     },
     {
@@ -2165,7 +2164,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a creature dies, the player who controlled that creature may draw a card.",
+      "backTranslation": "Whenever a creature dies, its controller may draw a card.",
       "differences": []
     },
     {
@@ -2207,7 +2206,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this creature enters, exile each card in each opponent's graveyard. Create a colorless Lander artifact token with \"{2}, {T}, Sacrifice this token: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.\"",
+      "backTranslation": "When this creature enters, exile each card in each opponent's graveyard. Create a token that is a colorless Lander artifact with \"{2}, {T}, Sacrifice this artifact: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.\"",
       "differences": []
     },
     {
@@ -2253,9 +2252,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Put target creature card from a graveyard onto the battlefield. Then proliferate.",
+      "backTranslation": "Put a single target creature card from a graveyard onto the battlefield. Then proliferate.",
       "differences": [
-        "Text A puts the creature card onto the battlefield under your control; Text B omits 'under your control', so the creature would enter under its owner's control."
+        "Text A puts the creature card onto the battlefield under your control; Text B omits \"under your control\", so the controller is not specified and could be the card's owner."
       ]
     },
     {
@@ -2308,7 +2307,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever another creature you control that is a Frog, Rabbit, Raccoon, or Squirrel enters, put a +1/+1 counter on this creature.",
+      "backTranslation": "Whenever another Frog, Rabbit, Raccoon, or Squirrel you control enters, put a +1/+1 counter on this creature.",
       "differences": []
     },
     {
@@ -2486,7 +2485,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "If an opponent controls more lands than you do, search your library for three Plains cards (you may find fewer), reveal them, put them into your hand, then shuffle.",
+      "backTranslation": "If an opponent controls more lands than you, search your library for three Plains cards (the search may find fewer), reveal them, put them into your hand, then shuffle.",
       "differences": []
     },
     {
@@ -2570,7 +2569,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}{G}{W}: Until end of turn, this land becomes a 3/3 green and white Llama creature with no keywords.",
+      "backTranslation": "{2}{G}{W}: This becomes a 3/3 green and white Llama creature until end of turn.",
       "differences": []
     },
     {
@@ -2623,7 +2622,7 @@
       "lines": [
         "Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, create a 1/1 red Goblin creature token that's tapped and attacking."
       ],
-      "outcome": "pending",
+      "outcome": "meaning-differs",
       "compileRounds": 2,
       "validatorIssues": [
         [
@@ -2659,6 +2658,11 @@
           "abilityResolved": true,
           "detail": "game ended"
         }
+      ],
+      "backTranslation": "Whenever this creature attacks, if the total power of creatures attacking is 6 or greater, create a 1/1 red Goblin creature token attacking.",
+      "differences": [
+        "Text A checks whether you attacked with creatures of total power 6 or greater this combat (creatures attacked with, even if no longer attacking); Text B checks only the total power of creatures currently attacking.",
+        "Text A's Goblin token is created tapped and attacking; Text B's token is created attacking only, not tapped."
       ]
     },
     {
@@ -2733,7 +2737,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Each creature that is your commander and that you own has \"Whenever this creature attacks, it gains double strike until end of turn.\"",
+      "backTranslation": "Each creature you own that is your commander has \"Whenever this creature attacks, it gains double strike until end of turn.\"",
       "differences": []
     },
     {
@@ -2898,7 +2902,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Destroy each creature and each planeswalker on the battlefield that is not a commander.",
+      "backTranslation": "Destroy each creature and each planeswalker that isn't a commander.",
       "differences": []
     },
     {
@@ -2933,7 +2937,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "If there are four or more card types among cards in your graveyard, search your library for a creature or land card, reveal it, and put it into your hand. Otherwise, search your library for a basic land card, reveal it, and put it into your hand. Then shuffle.",
+      "backTranslation": "If there are four or more card types among cards in your graveyard, search your library for a creature or land card. Otherwise, search your library for a basic land card. Reveal that card and put it into your hand. Then shuffle.",
       "differences": []
     },
     {
@@ -2979,7 +2983,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Flip a coin. If you win the flip, take an extra turn after this one. If you lose the flip, nothing happens.",
+      "backTranslation": "Flip a coin. If you win the flip, take an extra turn. If you lose the flip, nothing happens.",
       "differences": []
     },
     {
@@ -3118,7 +3122,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Other permanents that are artifacts or creatures and are controlled by your opponents enter the battlefield tapped.",
+      "backTranslation": "Each artifact and creature that your opponents control enters the battlefield tapped.",
       "differences": []
     },
     {
@@ -3160,7 +3164,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "All Slivers have \"{3}, Sacrifice this permanent: Destroy target permanent.\"",
+      "backTranslation": "Each Sliver has \"{3}, Sacrifice this: Destroy target permanent.\"",
       "differences": []
     },
     {
@@ -3202,7 +3206,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this enters, each opponent is dealt 1 damage.\nWhen this enters, create a Blood token. A Blood token has \"{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card.\"",
+      "backTranslation": "When this enters, each opponent takes 1 damage.\nWhen this enters, create a Blood token. It has \"{1}, {T}, Discard a card, Sacrifice this: Draw a card.\"",
       "differences": []
     },
     {
@@ -3297,7 +3301,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Sacrifice this creature: Exile target player's graveyard.",
+      "backTranslation": "Sacrifice this creature: Exile all cards from target player's graveyard.",
       "differences": []
     },
     {
@@ -3339,7 +3343,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever you are dealt damage, you may create a number of 1/1 white Soldier creature tokens equal to the amount of damage dealt.",
+      "backTranslation": "Whenever you are dealt damage, you may create a number of 1/1 white Soldier creature tokens equal to the damage dealt.",
       "differences": []
     },
     {
@@ -3374,7 +3378,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Up to one target artifact, creature, or enchantment you control.\nExile each chosen permanent, then return it to the battlefield under its owner's control.\nDraw a card.",
+      "backTranslation": "Choose up to one target artifact, creature, or enchantment you control. Blink each chosen permanent: exile it, then return it to the battlefield under its owner's control.\nDraw a card.",
       "differences": []
     },
     {
@@ -3574,7 +3578,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this creature or another Ally you control enters, count how many times this ability has resolved this turn, including this resolution, using a hidden key. If that count is 2, you gain 1 life and draw a card. Otherwise, you gain 1 life.",
+      "backTranslation": "Whenever this creature or another Ally you control enters, count how many times this ability has resolved this turn. If that count is 2, you gain 1 life and draw a card. Otherwise, you gain 1 life.",
       "differences": []
     },
     {
@@ -3627,7 +3631,7 @@
       "lines": [
         "Spells you cast have affinity for artifacts."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -3660,10 +3664,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Spells you cast cost less to cast, by an amount equal to the number of artifacts you control.",
-      "differences": [
-        "Affinity reduces only the generic mana portion of the cost ({1} per artifact); Text B reduces the total cost by the artifact count without restricting the reduction to generic mana, so it can reduce colored mana or change costs that Text A would not."
-      ]
+      "backTranslation": "Spells you cast cost {1} less to cast for each artifact you control.",
+      "differences": []
     },
     {
       "name": "Lake of the Dead",
@@ -3739,7 +3741,7 @@
       ],
       "backTranslation": "Enchanted creature has \"{T}, Pay 1 life: Draw a card.\"",
       "differences": [
-        "Text A enchants a land ('Enchanted land has ...'); Text B says 'Enchanted creature has ...', changing what the aura can enchant"
+        "Text A gives the granted ability to the enchanted land (the Aura enchants a land); Text B gives it to an enchanted creature, a different object and a different restriction on what the Aura can enchant."
       ]
     },
     {
@@ -3792,7 +3794,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}: Flip a coin. If you win the flip, destroy each permanent on the battlefield that isn't a land. If you lose the flip, nothing happens.",
+      "backTranslation": "{T}: Flip a coin. If you win the flip, destroy each permanent that isn't a land. If you lose the flip, nothing happens.",
       "differences": []
     },
     {
@@ -3869,7 +3871,7 @@
       ],
       "backTranslation": "At the beginning of your precombat main phase, you may draw a number of cards equal to the number of Shrines you control, then discard a card.",
       "differences": [
-        "Text A discards a card only if you drew the cards (\"If you do\"); Text B discards a card unconditionally, even if you decline the optional draw."
+        "Text A discards a card only if you chose to draw (\"If you do, discard a card\"); Text B makes the discard follow the optional draw without that condition, so B can require a discard even when no cards are drawn."
       ]
     },
     {
@@ -4023,7 +4025,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of your upkeep, this deals X damage to any target, where X is the number of Shrines you control.",
+      "backTranslation": "At the beginning of your upkeep, this deals damage equal to the number of Shrines you control to any target.",
       "differences": []
     },
     {
@@ -4065,7 +4067,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a creature with defender you control dies, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+      "backTranslation": "Whenever a creature you control with defender dies, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
       "differences": []
     },
     {
@@ -4118,7 +4120,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}{U}: If there are no +1/+1 counters on this creature, put a +1/+1 counter on this creature. Otherwise, nothing happens.",
+      "backTranslation": "{1}{U}: If there are no +1/+1 counters on this, put a +1/+1 counter on this.",
       "differences": []
     },
     {
@@ -4160,7 +4162,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this creature enters, you may search your library for an artifact card with mana value 4 or 5, reveal it, put it into your hand, then shuffle.",
+      "backTranslation": "When this enters, you may search your library for an artifact card with mana value 4 or 5, reveal it, put it into your hand, then shuffle.",
       "differences": []
     },
     {
@@ -4195,9 +4197,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature you control deals 1 damage to itself. Target creature you control gains trample until end of turn.",
+      "backTranslation": "Target creature you control deals 1 damage to that creature and gains trample until end of turn.",
       "differences": [
-        "Text A has one target creature you control: Rile itself deals 1 damage to it, and that same creature gains trample. Text B has two separate targets, and the targeted creature deals the 1 damage to itself (the creature is the damage source), so the damage source differs and the trample creature may be a different creature."
+        "Text A has Rile itself deal the 1 damage to the target creature you control; Text B has the target creature deal the damage to itself, so the damage source differs.",
+        "Text B omits the whole card's 'Draw a card' effect, which the spell has and B must give."
       ]
     },
     {
@@ -4239,7 +4242,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a creature attacks, this artifact deals 1 damage to that attacking creature.",
+      "backTranslation": "Whenever a creature attacks, this deals 1 damage to that creature.",
       "differences": []
     },
     {
@@ -4474,10 +4477,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "You may cast this spell by paying {5}{G} rather than paying its mana cost. This spell can be cast at instant speed. It has no other effect.",
+      "backTranslation": "You may cast this spell by paying {5}{G} rather than paying its mana cost. This spell can be cast as though it had flash. This spell has no effects and does nothing.",
       "differences": [
-        "Text A lets the spell be cast with flash by paying {2} more; Text B gives an alternative cost of {5}{G} instead of the mana cost, which Text A does not have.",
-        "Text B says the spell has no other effect, so it omits the effect of creating a 1/1 green Saproling token for each creature you control."
+        "Text A is a cost option that lets the spell be cast with flash for {2} more; Text B instead gives an alternative cost of {5}{G} that is not in Text A, and B drops the flash-for-{2} option as written.",
+        "Text B says the spell has no effects and does nothing, but the whole card's spell creates a 1/1 green Saproling token for each creature you control, so the spell's effect is missing."
       ]
     },
     {
@@ -4512,7 +4515,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "This spell deals X damage to each creature that isn't an artifact.\nThis spell deals X damage to each player.",
+      "backTranslation": "This spell deals X damage to each creature that isn't an artifact. This spell deals X damage to each player.",
       "differences": []
     },
     {
@@ -4554,7 +4557,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever another creature you control enters, put a +1/+1 counter on that creature if its power is less than or equal to this creature's power minus 1. Otherwise, put a +1/+1 counter on this creature.",
+      "backTranslation": "Whenever another creature you control enters, do the following. If that creature's power is less than or equal to this creature's power minus 1, put a +1/+1 counter on that creature. Otherwise, put a +1/+1 counter on this creature.",
       "differences": []
     },
     {
@@ -4596,9 +4599,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever this creature is dealt damage, each opponent sacrifices a permanent other than this creature.",
+      "backTranslation": "Whenever this creature is dealt damage, each opponent sacrifices a creature other than this creature.",
       "differences": [
-        "Text A makes the opponent sacrifice a permanent of their choice, which may be the creature itself; Text B excludes this creature (\"a permanent other than this creature\"), so the opponent cannot choose it."
+        "Text A makes each opponent sacrifice a permanent of their choice; Text B makes each opponent sacrifice a creature other than this one, which restricts the sacrificed object to creatures and excludes noncreature permanents."
       ]
     },
     {
@@ -4640,7 +4643,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a land you control enters, tap target creature an opponent controls and put a stun counter on that creature.",
+      "backTranslation": "Whenever a land you control enters, tap target creature an opponent controls and put a stun counter on it.",
       "differences": []
     },
     {
@@ -4693,9 +4696,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}{U}{B}, Discard this card: Activate only as a sorcery and only from your hand. Search your library for a card with mana value at most 2 and mana value at least 2. Reveal that card, put it into your hand, then shuffle.",
+      "backTranslation": "{1}{U}{B}, Discard this card: Activate only as a sorcery and only from hand. Search your library for a card with mana value exactly 2 and reveal it. Put it into your hand. Then shuffle.",
       "differences": [
-        "Text A searches for a card with the same mana value as this card; Text B searches only for a card with mana value exactly 2 (\"at most 2 and at least 2\")."
+        "Text A's transmute searches for a card with the same mana value as this card; Text B fixes the search to mana value exactly 2, which is a different amount and does not track this card's mana value."
       ]
     },
     {
@@ -4836,7 +4839,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this creature enters, if at least one creature died this turn, draw a card. Otherwise, each player sacrifices a creature.",
+      "backTranslation": "When this creature enters, if a creature died this turn, draw a card. Otherwise, each player sacrifices a creature.",
       "differences": []
     },
     {
@@ -4887,7 +4890,7 @@
       "lines": [
         "{U}{R}, {T}: Create a token that's a copy of another target creature or artifact you control, except it's an artifact in addition to its other types. It gains haste. Sacrifice it at the beginning of the next end step."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -4920,10 +4923,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{U}{R}, {T}: Create a token that's a copy of target other creature or artifact you control, except it's an artifact in addition to its other types and it has haste. Sacrifice that token at the end step.",
-      "differences": [
-        "Text A sacrifices the token at the beginning of the next end step; Text B sacrifices it at \"the end step\" with no \"beginning of\" and no \"next\", which is a different timing."
-      ]
+      "backTranslation": "{U}{R}, {T}: Create a token that's a copy of target creature or artifact you control other than this permanent. The token is an artifact in addition to its other types and has haste. Sacrifice that token at the end step.",
+      "differences": []
     },
     {
       "name": "Scryb Ranger",
@@ -5034,8 +5035,7 @@
       ],
       "backTranslation": "Put a number of +1/+1 counters on target creature you control equal to the mana value of target artifact or enchantment. Then exile that artifact or enchantment.",
       "differences": [
-        "Text A exiles the target first and then sets X to the mana value of the permanent exiled this way; Text B puts the counters first and then exiles, reversing the order of steps.",
-        "Text B's counter amount is taken from the target artifact or enchantment before it is exiled, which is the same permanent, but the step order still differs from Text A."
+        "Text A exiles the target artifact or enchantment first, then puts the +1/+1 counters (X = its mana value); Text B puts the counters first and exiles afterward, so the order of the steps differs."
       ]
     },
     {
@@ -5216,7 +5216,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{3}, {T}: Target creature that is a Ninja or a Turtle can't be blocked this turn.",
+      "backTranslation": "{3}, {T}: Target Ninja or Turtle creature can't be blocked this turn.",
       "differences": []
     },
     {
@@ -5225,7 +5225,7 @@
       "lines": [
         "As an additional cost to cast this spell, sacrifice a creature or enchantment."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -5251,8 +5251,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "As an additional cost to cast this spell, sacrifice another creature or enchantment you control. The sacrificed permanent may be this spell's source.",
-      "differences": []
+      "backTranslation": "As an additional cost to cast this spell, sacrifice a creature or enchantment you control (this spell's source may be the permanent sacrificed).\nThis spell has no effects other than its additional cost.",
+      "differences": [
+        "Text B says the spell has no effects other than its additional cost, but the whole card's spell also has \"Exile target creature.\" Text B omits that effect, which is required for a sorcery-type spell."
+      ]
     },
     {
       "name": "Mobilizer Mech",
@@ -5330,9 +5332,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "If there are three or more Lesson cards in your graveyard, look at the top three cards of your library. Put all three of them into your hand. Put the rest on the bottom of your library in any order.\nOtherwise, look at the top three cards of your library. Put cards from among them into your hand as required, with no number specified. Put the rest on the bottom of your library in any order.",
+      "backTranslation": "If there are three or more Lesson cards in your graveyard, look at the top three cards of your library. Put all three of them into your hand. Put the rest on the bottom of your library in any order.\nOtherwise, look at the top three cards of your library. Put any of those cards into your hand (required, with no count given). Put the rest on the bottom of your library in any order.",
       "differences": [
-        "Text A puts exactly one card from the top three into hand in the otherwise case; Text B says cards are put into hand 'as required, with no number specified', which allows any number, including zero, instead of exactly one."
+        "Text A puts exactly one of the three looked-at cards into hand in the normal case; Text B says \"any of those cards\" with no count, which allows choosing any number of them (including more than one)."
       ]
     },
     {
@@ -5396,9 +5398,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Each Sliver has \"Pay 2 life: Return this permanent to its owner's hand.\"",
+      "backTranslation": "All Sliver creatures have \"Pay 2 life: Return this to its owner's hand.\"",
       "differences": [
-        "Text A gives the ability to all Slivers on the battlefield (\"All Slivers\"); Text B gives it only to Slivers you control (\"Each Sliver creature you control\")."
+        "Text A gives the granted ability to all Slivers (not only creatures); Text B restricts it to Sliver creatures, so non-creature Slivers would gain the ability in A but not in B."
       ]
     },
     {
@@ -5559,7 +5561,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Each Sliver has \"{T}: Regenerate target Sliver.\"",
+      "backTranslation": "All Slivers have \"{T}: Regenerate target Sliver.\"",
       "differences": []
     },
     {
@@ -5623,9 +5625,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "This creature enters as a copy of a creature on the battlefield.\nAt the beginning of your upkeep, if this permanent is not a token, create a token that's a copy of this creature.",
+      "backTranslation": "This enters as a copy of a creature on the battlefield. It has \"At the beginning of your upkeep, if this is not a token, create a token that's a copy of this creature.\"",
       "differences": [
-        "Text A makes the copy effect optional (\"You may have this creature enter as a copy\"); Text B makes it mandatory (\"This creature enters as a copy\")."
+        "Text A says 'You may have this creature enter as a copy' (optional); Text B says 'This enters as a copy' (mandatory), so the choice to not copy is missing."
       ]
     },
     {
@@ -5667,7 +5669,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of your upkeep, if you control no other Thopters, return this creature to hand. Then create five 1/1 colorless Thopter artifact creature tokens with flying.",
+      "backTranslation": "At the beginning of your upkeep, if you control no other Thopters, return this to its owner's hand and create five 1/1 colorless Thopter artifact creature tokens with flying.",
       "differences": []
     },
     {
@@ -5903,7 +5905,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "As an additional cost to cast this spell, you may pay {1}.\nWhen this creature enters, create a token that is a copy of this creature with base power and toughness 1/1, once for each time the additional cost was paid.",
+      "backTranslation": "As you cast this spell, you may pay an additional {1}.\nWhen this creature enters, create a token copy of this creature for each time the additional cost was paid. Each token copy has base power and toughness 1/1.",
       "differences": []
     },
     {
@@ -5923,7 +5925,7 @@
       "lines": [
         "When this creature dies, create a 3/3 blue Fish creature token with \"When this token dies, create a 6/6 blue Whale creature token with 'When this token dies, create a 9/9 blue Kraken creature token.'\""
       ],
-      "outcome": "pending",
+      "outcome": "compiled-checked",
       "compileRounds": 2,
       "validatorIssues": [
         [
@@ -5959,7 +5961,9 @@
           "abilityResolved": true,
           "detail": "game ended"
         }
-      ]
+      ],
+      "backTranslation": "When this creature dies, create a 3/3 blue Fish creature token with \"When this creature dies, create a 6/6 blue Whale creature token with \"When this creature dies, create a 9/9 blue Kraken creature token.\"\"",
+      "differences": []
     },
     {
       "name": "Thunderherd Migration",
@@ -6044,7 +6048,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Each Sliver creature you control has \"When this creature enters, it deals 1 damage to target player or planeswalker and you gain 1 life.\"",
+      "backTranslation": "Each Sliver creature you control has \"When this creature enters, this creature deals 1 damage to target player or planeswalker and you gain 1 life.\"",
       "differences": []
     },
     {
@@ -6064,7 +6068,7 @@
       "lines": [
         "{3}{W}{U}: Until end of turn, this land becomes a 4/4 white and blue Elemental creature with flying and vigilance. It's still a land."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -6097,8 +6101,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{3}{W}{U}: Until end of turn, this land becomes a 4/4 white and blue Elemental creature with flying and vigilance. This ability can be activated at any time.",
-      "differences": []
+      "backTranslation": "{3}{W}{U}: Until end of turn, this land becomes a 4/4 white and blue Elemental creature with flying and vigilance.",
+      "differences": [
+        "Text A says the land \"is still a land\" after becoming a creature; Text B omits this, so under Text B the permanent might be read as no longer a land."
+      ]
     },
     {
       "name": "Loyal Inventor",
@@ -6139,11 +6145,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this creature enters, you may shuffle your library. Then if you control one or more Assassins, search your library for an artifact card, reveal it, and put it into your hand. Otherwise, search your library for an artifact card, reveal it, and put it on top of your library.",
+      "backTranslation": "When this enters, you may shuffle. Then if you control an Assassin, search your library for an artifact card, reveal it, and put it into your hand. Otherwise, search your library for an artifact card, reveal it, and put it on top of your library.",
       "differences": [
-        "Text A makes the whole search optional ('you may search ... then shuffle'); Text B makes only the shuffle optional, so the search in both branches is mandatory.",
-        "Text A shuffles after the search; Text B shuffles before the search, which reverses the order of steps.",
-        "Text A puts the found card into hand if you control an Assassin and otherwise on top of the library; Text B's branches match that outcome, but the optionality and shuffle order differ."
+        "Text A makes the whole search optional (\"you may search\") and shuffles after the search; Text B makes only the shuffle optional and makes the search mandatory, with the shuffle happening before the search.",
+        "Text B makes the search and placement steps separate branches, and the shuffle timing differs from Text A."
       ]
     },
     {
@@ -6198,7 +6203,7 @@
       ],
       "backTranslation": "Whenever a Clue or Food you control is sacrificed, this creature explores.",
       "differences": [
-        "Text A triggers only when you sacrifice a Clue or Food; Text B triggers whenever a Clue or Food you control is sacrificed by anyone, including an opponent."
+        "Text A triggers only when you (the controller) sacrifice a Clue or Food; Text B triggers whenever a Clue or Food you control is sacrificed by anyone, including an opponent's effect."
       ]
     },
     {
@@ -6240,7 +6245,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{4}{G}{U}: If this creature has no +1/+1 counters on it, put four +1/+1 counters on it.",
+      "backTranslation": "{4}{G}{U}: If there are no +1/+1 counters on this creature, put four +1/+1 counters on this creature.",
       "differences": []
     },
     {
@@ -6293,7 +6298,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever this creature attacks, sacrifice a creature you control.\nWhenever this creature blocks, sacrifice a creature you control.",
+      "backTranslation": "Whenever this creature attacks, sacrifice a creature.\nWhenever this creature blocks, sacrifice a creature.",
       "differences": []
     },
     {
