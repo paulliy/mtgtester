@@ -112,6 +112,14 @@ export interface AiConfig {
   /** Most own turns a seat's knobs are reused before the strategist is asked again. Default 3. */
   strategistMaxReuseTurns: number;
   /**
+   * Hill-climb S6: in `bot` mode, send the strategist its last intent and knobs plus what changed,
+   * instead of the whole board again (`strategist-delta.ts`). Env:
+   * `AI_STRATEGIST_DELTA_ENABLED`. Default: off until a paid duel shows knob quality holds.
+   */
+  strategistDeltaEnabled: boolean;
+  /** Delta prompts a seat may get in a row before a full one. Env: `AI_STRATEGIST_DELTA_REFRESH`. Default 3. */
+  strategistDeltaRefreshEvery: number;
+  /**
    * ADR 0045 decision 5: whether the bot-led strategist's primer offers the typed
    * `tacticianRequest` field. `shadow` adds it and logs every request (it is never acted on);
    * `off` keeps the primer as it was, so knob quality can be compared with and without it.
@@ -325,6 +333,8 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   botEscalationMargin: 1,
   strategistReplan: 'onChange',
   strategistMaxReuseTurns: 3,
+  strategistDeltaEnabled: false,
+  strategistDeltaRefreshEvery: 3,
   strategistTacticianFlag: 'off',
   filterNonCachingProviders: true,
   streamResponses: true,
@@ -738,6 +748,14 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     strategistMaxReuseTurns: parseNonNegativeInt(
       env['AI_STRATEGIST_MAX_REUSE_TURNS'],
       DEFAULT_AI_CONFIG.strategistMaxReuseTurns,
+    ),
+    strategistDeltaEnabled: parseBoolean(
+      env['AI_STRATEGIST_DELTA_ENABLED'],
+      DEFAULT_AI_CONFIG.strategistDeltaEnabled,
+    ),
+    strategistDeltaRefreshEvery: parseNonNegativeInt(
+      env['AI_STRATEGIST_DELTA_REFRESH'],
+      DEFAULT_AI_CONFIG.strategistDeltaRefreshEvery,
     ),
     filterNonCachingProviders: parseBoolean(
       env['AI_FILTER_NON_CACHING_PROVIDERS'] || env['OPENROUTER_FILTER_NON_CACHING'],

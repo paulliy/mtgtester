@@ -21,6 +21,12 @@ export interface PromptCacheOptions {
    * removing means a key can never be dropped from the prompt by accident.
    */
   staticKeys?: string[];
+  /**
+   * Move commander rules text into the prefix (default true). Strategist delta prompts (S6) keep
+   * it in the observation instead, where a delta omits text the seat was already shown, so the
+   * prefix stays the same for full and delta prompts.
+   */
+  splitCommanders?: boolean;
 }
 
 function splitCommanderDefinitions(
@@ -100,7 +106,7 @@ export function preparePromptForCaching(prompt: AiPrompt, options: PromptCacheOp
       movedContext[key] = parsed[key];
       delete parsed[key];
     }
-    extractedCommanders = splitCommanderDefinitions(parsed);
+    if (options.splitCommanders !== false) extractedCommanders = splitCommanderDefinitions(parsed);
     dynamicContent = JSON.stringify(parsed);
   } catch {
     // Non-JSON prompts still benefit from a stable system prefix; leave their body untouched.

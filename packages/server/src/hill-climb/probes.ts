@@ -158,6 +158,16 @@ const CENSUS_MODES: Array<{ key: string; config: Partial<AiConfig> }> = [
     key: 'bot',
     config: { tacticalMode: 'bot', botEscalation: [], strategistReplan: 'onChange' },
   },
+  {
+    // Hill-climb S6: bot mode with strategist delta prompts, off by default until a paid duel.
+    key: 'botDelta',
+    config: {
+      tacticalMode: 'bot',
+      botEscalation: [],
+      strategistReplan: 'onChange',
+      strategistDeltaEnabled: true,
+    },
+  },
 ];
 
 /**

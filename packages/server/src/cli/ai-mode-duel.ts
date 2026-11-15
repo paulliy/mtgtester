@@ -5,11 +5,14 @@
  * (`.env` is read by Bun), so the endpoint, models and key are the same ones the app uses.
  *
  *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]
- *                        [--escalation T1,T2] [--shadow T1,T2] [--opponents model|bot-never]
+ *                        [--escalation T1,T2] [--shadow T1,T2] [--opponents model|bot-never] [--delta]
  *
  * ADR 0044's game step: `--escalation` makes triggers live for the bot seats (default `never`),
  * `--shadow` logs others, and `--opponents bot-never` seats the bot-led bot with no escalation in
  * P2 and P4 instead of the model tactician, so a trigger is played against `never`.
+ *
+ * `--delta` gives the `bot` seats strategist delta prompts (hill-climb S6) and keeps them off for
+ * the others. With `--opponents bot-never` the two sides then differ only in the strategist prompt.
  *
  * Spend caps: once the provider-reported cost reaches `--max-usd` (default 2) or the call count
  * reaches `--max-calls` (default 1500), no further model call is made and every seat plays the
@@ -262,9 +265,11 @@ async function main(): Promise<void> {
   const opponents = arg(argv, '--opponents') ?? 'model';
   if (opponents !== 'model' && opponents !== 'bot-never')
     throw new Error('--opponents must be model or bot-never');
+  const delta = argv.includes('--delta');
   const configs: Record<ModeName, AiConfig> = {
     bot: {
       ...base,
+      strategistDeltaEnabled: delta,
       tacticalMode: 'bot',
       botEscalation: escalation as LiveEscalationTrigger[],
       botEscalationShadow: shadow,
@@ -272,9 +277,10 @@ async function main(): Promise<void> {
     },
     model:
       opponents === 'model'
-        ? { ...base, tacticalMode: 'model' }
+        ? { ...base, tacticalMode: 'model', strategistDeltaEnabled: false }
         : {
             ...base,
+            strategistDeltaEnabled: false,
             tacticalMode: 'bot',
             botEscalation: [],
             botEscalationShadow: shadow,
@@ -301,7 +307,11 @@ async function main(): Promise<void> {
   console.log(`Seed ${seed}, turn cap ${turnCap}`);
   // With `--opponents bot-never` the "model" seats play the bot-led bot that never escalates.
   const label = (mode: ModeName): string =>
-    mode === 'model' && opponents === 'bot-never' ? 'bot-never' : mode;
+    mode === 'model' && opponents === 'bot-never'
+      ? 'bot-never'
+      : mode === 'bot' && delta
+        ? 'bot+delta'
+        : mode;
   decks.forEach((d, i) =>
     console.log(`  ${SEATS[i]} [${label(modeOf(SEATS[i]!))}]  ${d.commander.name}`),
   );
@@ -401,6 +411,8 @@ async function main(): Promise<void> {
     seats: Object.fromEntries(SEATS.map((s) => [s, modeOf(s)])),
     /** What the `model` seats played: the model tactician, or the bot-led bot with no escalation. */
     opponents,
+    /** Whether the `bot` seats' strategist got delta prompts (S6). */
+    delta,
     escalation,
     shadow,
     perMode: Object.fromEntries(

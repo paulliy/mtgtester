@@ -6,20 +6,20 @@ played differently. It uses no network and no paid model.
 
 ## What it measures
 
-| Metric                                                   | What it is                                                                                                                               | Kind  |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| `engine.msPerDecision`                                   | Engine time per decision over the seeded benchmark games (`engine-bench` pods). The mean, so the slowest game dominates it.              | timed |
-| `engine.medianGameMsPerDecision`                         | The same, for the median game: what a typical game costs.                                                                                | timed |
-| `setup.msPerGame`                                        | Time to construct a four-player game: card interpretation, shuffles, opening hands.                                                      | timed |
-| `model.<mode>.callsPerTurn`                              | Tactician plus strategist calls per turn, from the call census on fixed decks. Modes: `default` (what a new game uses), `model`, `bot`.  | exact |
-| `model.<mode>.promptTokensPerTurn`                       | Prompt tokens those calls would send per turn.                                                                                           | exact |
-| `model.<mode>.cacheablePromptSharePct`                   | Share of that prompt text that repeats, in whole 256-character blocks, the start of an earlier prompt to the same role in the same game. | exact |
-| `model.<mode>.uncachedPromptTokensPerTurn`               | Prompt tokens per turn left once that share is read from a provider prefix cache: the input you pay full price for.                      | exact |
-| `coverage.edhrecModeledCards`                            | Pinned EDHREC cards the interpreter models with no reasons, computed live.                                                               | exact |
-| `coverage.edhrecSlotSharePct`                            | Share of all EDHREC deck slots those cards fill.                                                                                         | exact |
-| `coverage.fixtureDeckCardsModeledPct`                    | Share of the coverage decks' cards that model.                                                                                           | exact |
-| `coverage.compilerRefusals`, `coverage.playableDecksPct` | Read from `primitive-backlog.json` and `deck-coverage.json` when those reports exist.                                                    | exact |
-| fingerprints                                             | One hash per benchmark game over every decision request, every answer and the event log.                                                 | exact |
+| Metric                                                   | What it is                                                                                                                                                                                  | Kind  |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| `engine.msPerDecision`                                   | Engine time per decision over the seeded benchmark games (`engine-bench` pods). The mean, so the slowest game dominates it.                                                                 | timed |
+| `engine.medianGameMsPerDecision`                         | The same, for the median game: what a typical game costs.                                                                                                                                   | timed |
+| `setup.msPerGame`                                        | Time to construct a four-player game: card interpretation, shuffles, opening hands.                                                                                                         | timed |
+| `model.<mode>.callsPerTurn`                              | Tactician plus strategist calls per turn, from the call census on fixed decks. Modes: `default` (what a new game uses), `model`, `bot`, `botDelta` (bot with strategist delta prompts, S6). | exact |
+| `model.<mode>.promptTokensPerTurn`                       | Prompt tokens those calls would send per turn.                                                                                                                                              | exact |
+| `model.<mode>.cacheablePromptSharePct`                   | Share of that prompt text that repeats, in whole 256-character blocks, the start of an earlier prompt to the same role in the same game.                                                    | exact |
+| `model.<mode>.uncachedPromptTokensPerTurn`               | Prompt tokens per turn left once that share is read from a provider prefix cache: the input you pay full price for.                                                                         | exact |
+| `coverage.edhrecModeledCards`                            | Pinned EDHREC cards the interpreter models with no reasons, computed live.                                                                                                                  | exact |
+| `coverage.edhrecSlotSharePct`                            | Share of all EDHREC deck slots those cards fill.                                                                                                                                            | exact |
+| `coverage.fixtureDeckCardsModeledPct`                    | Share of the coverage decks' cards that model.                                                                                                                                              | exact |
+| `coverage.compilerRefusals`, `coverage.playableDecksPct` | Read from `primitive-backlog.json` and `deck-coverage.json` when those reports exist.                                                                                                       | exact |
+| fingerprints                                             | One hash per benchmark game over every decision request, every answer and the event log.                                                                                                    | exact |
 
 Exact metrics repeat to the last digit on any machine, so any move in the wrong direction fails.
 Timed metrics only count as changed when they move by more than the noise: 10% when both sides
