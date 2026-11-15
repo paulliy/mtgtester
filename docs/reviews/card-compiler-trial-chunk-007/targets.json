@@ -44,9 +44,7 @@
   {
     "name": "Dalek Squadron",
     "rank": 5482,
-    "lines": [
-      "Myriad"
-    ]
+    "lines": ["Myriad"]
   },
   {
     "name": "Far Wanderings",
@@ -58,9 +56,7 @@
   {
     "name": "Sea Gate Wreckage",
     "rank": 5490,
-    "lines": [
-      "{2}{C}, {T}: Draw a card. Activate only if you have no cards in hand."
-    ]
+    "lines": ["{2}{C}, {T}: Draw a card. Activate only if you have no cards in hand."]
   },
   {
     "name": "Needle Spires",
@@ -79,9 +75,7 @@
   {
     "name": "Ambrosia Whiteheart",
     "rank": 5500,
-    "lines": [
-      "When ~ enters, you may return another permanent you control to its owner's hand."
-    ]
+    "lines": ["When ~ enters, you may return another permanent you control to its owner's hand."]
   },
   {
     "name": "Dragonback Assault",
@@ -93,9 +87,7 @@
   {
     "name": "Copperhorn Scout",
     "rank": 5506,
-    "lines": [
-      "Whenever this creature attacks, untap each other creature you control."
-    ]
+    "lines": ["Whenever this creature attacks, untap each other creature you control."]
   },
   {
     "name": "Radiant Lotus",
@@ -142,16 +134,12 @@
   {
     "name": "Crypt Rats",
     "rank": 5524,
-    "lines": [
-      "{X}: ~ deals X damage to each creature and each player. Spend only black mana on X."
-    ]
+    "lines": ["{X}: ~ deals X damage to each creature and each player. Spend only black mana on X."]
   },
   {
     "name": "Change of Fortune",
     "rank": 5525,
-    "lines": [
-      "Discard your hand, then draw a card for each card you've discarded this turn."
-    ]
+    "lines": ["Discard your hand, then draw a card for each card you've discarded this turn."]
   },
   {
     "name": "Éomer, Marshal of Rohan",
@@ -191,9 +179,7 @@
   {
     "name": "Stensia Masquerade",
     "rank": 5535,
-    "lines": [
-      "Madness {2}{R}"
-    ]
+    "lines": ["Madness {2}{R}"]
   },
   {
     "name": "Honden of Night's Reach",
@@ -219,9 +205,7 @@
   {
     "name": "Elemental Eruption",
     "rank": 5545,
-    "lines": [
-      "Create a 4/4 red Dragon Elemental creature token with flying and prowess."
-    ]
+    "lines": ["Create a 4/4 red Dragon Elemental creature token with flying and prowess."]
   },
   {
     "name": "Fevered Suspicion",
@@ -233,9 +217,7 @@
   {
     "name": "Fractured Powerstone",
     "rank": 5552,
-    "lines": [
-      "{T}: Roll the planar die. Activate only as a sorcery."
-    ]
+    "lines": ["{T}: Roll the planar die. Activate only as a sorcery."]
   },
   {
     "name": "Hellrider",
@@ -261,9 +243,7 @@
   {
     "name": "Shadowmage Infiltrator",
     "rank": 5564,
-    "lines": [
-      "Fear"
-    ]
+    "lines": ["Fear"]
   },
   {
     "name": "Hollowhenge Overlord",
@@ -275,9 +255,7 @@
   {
     "name": "Mindslicer",
     "rank": 5569,
-    "lines": [
-      "When this creature dies, each player discards their hand."
-    ]
+    "lines": ["When this creature dies, each player discards their hand."]
   },
   {
     "name": "Ivory Tower",
@@ -324,37 +302,27 @@
   {
     "name": "Lamentation",
     "rank": 5600,
-    "lines": [
-      "Encore {6}{B}{B}"
-    ]
+    "lines": ["Encore {6}{B}{B}"]
   },
   {
     "name": "Brinelin, the Moon Kraken",
     "rank": 5604,
-    "lines": [
-      "Partner"
-    ]
+    "lines": ["Partner"]
   },
   {
     "name": "Hidden Courtyard",
     "rank": 5608,
-    "lines": [
-      "{4}{W}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
-    ]
+    "lines": ["{4}{W}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."]
   },
   {
     "name": "Wild Ride",
     "rank": 5609,
-    "lines": [
-      "Harmonize {4}{R}"
-    ]
+    "lines": ["Harmonize {4}{R}"]
   },
   {
     "name": "Garruk Wildspeaker",
     "rank": 5613,
-    "lines": [
-      "+1: Untap two target lands."
-    ]
+    "lines": ["+1: Untap two target lands."]
   },
   {
     "name": "The Seedcore",
@@ -394,9 +362,7 @@
   {
     "name": "Wrong Turn",
     "rank": 5627,
-    "lines": [
-      "Target opponent gains control of target creature."
-    ]
+    "lines": ["Target opponent gains control of target creature."]
   },
   {
     "name": "Tangletrove Kelp",
@@ -422,9 +388,7 @@
   {
     "name": "Sarkhan, Fireblood",
     "rank": 5631,
-    "lines": [
-      "+1: You may discard a card. If you do, draw a card."
-    ]
+    "lines": ["+1: You may discard a card. If you do, draw a card."]
   },
   {
     "name": "Dreadmaw's Ire",
@@ -478,9 +442,7 @@
   {
     "name": "Wand of the Worldsoul",
     "rank": 5643,
-    "lines": [
-      "{T}: The next spell you cast this turn has convoke."
-    ]
+    "lines": ["{T}: The next spell you cast this turn has convoke."]
   },
   {
     "name": "Day's Undoing",
@@ -513,9 +475,7 @@
   {
     "name": "Fateful Absence",
     "rank": 5651,
-    "lines": [
-      "Destroy target creature or planeswalker. Its controller investigates."
-    ]
+    "lines": ["Destroy target creature or planeswalker. Its controller investigates."]
   },
   {
     "name": "Curator's Ward",
@@ -534,9 +494,7 @@
   {
     "name": "Eel Umbra",
     "rank": 5656,
-    "lines": [
-      "Umbra armor"
-    ]
+    "lines": ["Umbra armor"]
   },
   {
     "name": "Soldevi Adnate",
@@ -562,9 +520,7 @@
   {
     "name": "Shepherd of Rot",
     "rank": 5666,
-    "lines": [
-      "{T}: Each player loses 1 life for each Zombie on the battlefield."
-    ]
+    "lines": ["{T}: Each player loses 1 life for each Zombie on the battlefield."]
   },
   {
     "name": "Hex Parasite",
@@ -583,16 +539,12 @@
   {
     "name": "Archetype of Finality",
     "rank": 5673,
-    "lines": [
-      "Creatures your opponents control lose deathtouch and can't have or gain deathtouch."
-    ]
+    "lines": ["Creatures your opponents control lose deathtouch and can't have or gain deathtouch."]
   },
   {
     "name": "Electrosiphon",
     "rank": 5674,
-    "lines": [
-      "Counter target spell. You get an amount of {E} equal to its mana value."
-    ]
+    "lines": ["Counter target spell. You get an amount of {E} equal to its mana value."]
   },
   {
     "name": "Aberrant Return",
@@ -611,9 +563,7 @@
   {
     "name": "Gene Pollinator",
     "rank": 5678,
-    "lines": [
-      "{T}, Tap an untapped permanent you control: Add one mana of any color."
-    ]
+    "lines": ["{T}, Tap an untapped permanent you control: Add one mana of any color."]
   },
   {
     "name": "Dreadhound",
@@ -632,9 +582,7 @@
   {
     "name": "Soothing of Sméagol",
     "rank": 5683,
-    "lines": [
-      "Return target nontoken creature to its owner's hand. The Ring tempts you."
-    ]
+    "lines": ["Return target nontoken creature to its owner's hand. The Ring tempts you."]
   },
   {
     "name": "Firbolg Flutist",
@@ -646,9 +594,7 @@
   {
     "name": "Keep Safe",
     "rank": 5689,
-    "lines": [
-      "Counter target spell that targets a permanent you control."
-    ]
+    "lines": ["Counter target spell that targets a permanent you control."]
   },
   {
     "name": "Majestic Genesis",
@@ -674,9 +620,7 @@
   {
     "name": "Explore the Underdark",
     "rank": 5700,
-    "lines": [
-      "You take the initiative."
-    ]
+    "lines": ["You take the initiative."]
   },
   {
     "name": "Vivi's Persistence",
@@ -723,9 +667,7 @@
   {
     "name": "Dalkovan Packbeasts",
     "rank": 5717,
-    "lines": [
-      "Mobilize 3"
-    ]
+    "lines": ["Mobilize 3"]
   },
   {
     "name": "Blinkmoth Urn",
@@ -751,9 +693,7 @@
   {
     "name": "Thought Collapse",
     "rank": 5732,
-    "lines": [
-      "Counter target spell. Its controller mills three cards."
-    ]
+    "lines": ["Counter target spell. Its controller mills three cards."]
   },
   {
     "name": "Elven Farsight",
@@ -786,9 +726,7 @@
   {
     "name": "Spirit of the Labyrinth",
     "rank": 5744,
-    "lines": [
-      "Each player can't draw more than one card each turn."
-    ]
+    "lines": ["Each player can't draw more than one card each turn."]
   },
   {
     "name": "Earth Rumble",
@@ -821,9 +759,7 @@
   {
     "name": "Dizzy Spell",
     "rank": 5754,
-    "lines": [
-      "Transmute {1}{U}{U}"
-    ]
+    "lines": ["Transmute {1}{U}{U}"]
   },
   {
     "name": "Heartless Conscription",
@@ -870,9 +806,7 @@
   {
     "name": "Aberrant",
     "rank": 5774,
-    "lines": [
-      "Ravenous"
-    ]
+    "lines": ["Ravenous"]
   },
   {
     "name": "Reconstruct History",
@@ -884,16 +818,12 @@
   {
     "name": "Fanatical Devotion",
     "rank": 5780,
-    "lines": [
-      "Sacrifice a creature: Regenerate target creature."
-    ]
+    "lines": ["Sacrifice a creature: Regenerate target creature."]
   },
   {
     "name": "Thieves' Tools",
     "rank": 5784,
-    "lines": [
-      "Equipped creature can't be blocked as long as its power is 3 or less."
-    ]
+    "lines": ["Equipped creature can't be blocked as long as its power is 3 or less."]
   },
   {
     "name": "Copycrook",
@@ -933,16 +863,12 @@
   {
     "name": "Killing Wave",
     "rank": 5803,
-    "lines": [
-      "For each creature, its controller sacrifices it unless they pay X life."
-    ]
+    "lines": ["For each creature, its controller sacrifices it unless they pay X life."]
   },
   {
     "name": "Tervigon",
     "rank": 5807,
-    "lines": [
-      "Ravenous"
-    ]
+    "lines": ["Ravenous"]
   },
   {
     "name": "No More Lies",
@@ -968,16 +894,12 @@
   {
     "name": "Spider Umbra",
     "rank": 5816,
-    "lines": [
-      "Umbra armor"
-    ]
+    "lines": ["Umbra armor"]
   },
   {
     "name": "Vona, Butcher of Magan",
     "rank": 5819,
-    "lines": [
-      "{T}, Pay 7 life: Destroy target nonland permanent. Activate only during your turn."
-    ]
+    "lines": ["{T}, Pay 7 life: Destroy target nonland permanent. Activate only during your turn."]
   },
   {
     "name": "Cruel Ultimatum",
@@ -989,9 +911,7 @@
   {
     "name": "Phyrexian Soulgorger",
     "rank": 5821,
-    "lines": [
-      "Cumulative upkeep—Sacrifice a creature."
-    ]
+    "lines": ["Cumulative upkeep—Sacrifice a creature."]
   },
   {
     "name": "Telling Time",
@@ -1017,9 +937,7 @@
   {
     "name": "Doran, the Siege Tower",
     "rank": 5827,
-    "lines": [
-      "Each creature assigns combat damage equal to its toughness rather than its power."
-    ]
+    "lines": ["Each creature assigns combat damage equal to its toughness rather than its power."]
   },
   {
     "name": "Owlbear Cub",
@@ -1059,9 +977,7 @@
   {
     "name": "Heritage Druid",
     "rank": 5842,
-    "lines": [
-      "Tap three untapped Elves you control: Add {G}{G}{G}."
-    ]
+    "lines": ["Tap three untapped Elves you control: Add {G}{G}{G}."]
   },
   {
     "name": "Mindblade Render",
@@ -1080,9 +996,7 @@
   {
     "name": "Mutagen Man, Living Ooze",
     "rank": 5849,
-    "lines": [
-      "Activated abilities of artifact tokens you control cost {1} less to activate."
-    ]
+    "lines": ["Activated abilities of artifact tokens you control cost {1} less to activate."]
   },
   {
     "name": "Breath of Fury",
@@ -1101,16 +1015,12 @@
   {
     "name": "Merry, Warden of Isengard",
     "rank": 5853,
-    "lines": [
-      "Partner with Pippin, Warden of Isengard"
-    ]
+    "lines": ["Partner with Pippin, Warden of Isengard"]
   },
   {
     "name": "Wall of Junk",
     "rank": 5855,
-    "lines": [
-      "When this creature blocks, return it to its owner's hand at end of combat."
-    ]
+    "lines": ["When this creature blocks, return it to its owner's hand at end of combat."]
   },
   {
     "name": "Oran-Rief Hydra",
@@ -1122,9 +1032,7 @@
   {
     "name": "Blessed Sanctuary",
     "rank": 5860,
-    "lines": [
-      "Prevent all noncombat damage that would be dealt to you and creatures you control."
-    ]
+    "lines": ["Prevent all noncombat damage that would be dealt to you and creatures you control."]
   },
   {
     "name": "Become the Avalanche",
@@ -1143,9 +1051,7 @@
   {
     "name": "Oboro Breezecaller",
     "rank": 5867,
-    "lines": [
-      "{2}, Return a land you control to its owner's hand: Untap target land."
-    ]
+    "lines": ["{2}, Return a land you control to its owner's hand: Untap target land."]
   },
   {
     "name": "Siren's Ruse",
@@ -1164,23 +1070,17 @@
   {
     "name": "Counterflux",
     "rank": 5873,
-    "lines": [
-      "Counter target spell you don't control."
-    ]
+    "lines": ["Counter target spell you don't control."]
   },
   {
     "name": "Vorrac Battlehorns",
     "rank": 5874,
-    "lines": [
-      "Equipped creature has trample and can't be blocked by more than one creature."
-    ]
+    "lines": ["Equipped creature has trample and can't be blocked by more than one creature."]
   },
   {
     "name": "Corrupted Conscience",
     "rank": 5876,
-    "lines": [
-      "You control enchanted creature."
-    ]
+    "lines": ["You control enchanted creature."]
   },
   {
     "name": "Kari Zev, Skyship Raider",
@@ -1199,9 +1099,7 @@
   {
     "name": "Distortion Strike",
     "rank": 5887,
-    "lines": [
-      "Target creature gets +1/+0 until end of turn and can't be blocked this turn."
-    ]
+    "lines": ["Target creature gets +1/+0 until end of turn and can't be blocked this turn."]
   },
   {
     "name": "Stormsurge Kraken",
@@ -1248,9 +1146,7 @@
   {
     "name": "Hidden Necropolis",
     "rank": 5898,
-    "lines": [
-      "{4}{B}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
-    ]
+    "lines": ["{4}{B}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."]
   },
   {
     "name": "Hidden Lair",
@@ -1297,9 +1193,7 @@
   {
     "name": "Dream Trawler",
     "rank": 5914,
-    "lines": [
-      "Discard a card: ~ gains hexproof until end of turn. Tap it."
-    ]
+    "lines": ["Discard a card: ~ gains hexproof until end of turn. Tap it."]
   },
   {
     "name": "Fungal Rebirth",
@@ -1318,37 +1212,27 @@
   {
     "name": "Star Whale",
     "rank": 5928,
-    "lines": [
-      "Suspend 6—{1}{U}"
-    ]
+    "lines": ["Suspend 6—{1}{U}"]
   },
   {
     "name": "Drover of the Mighty",
     "rank": 5930,
-    "lines": [
-      "~ gets +2/+2 as long as you control a Dinosaur."
-    ]
+    "lines": ["~ gets +2/+2 as long as you control a Dinosaur."]
   },
   {
     "name": "Ominous Cemetery",
     "rank": 5931,
-    "lines": [
-      "{5}, {T}, Exile this land: Target creature's owner shuffles it into their library."
-    ]
+    "lines": ["{5}, {T}, Exile this land: Target creature's owner shuffles it into their library."]
   },
   {
     "name": "Undermine",
     "rank": 5932,
-    "lines": [
-      "Counter target spell. Its controller loses 3 life."
-    ]
+    "lines": ["Counter target spell. Its controller loses 3 life."]
   },
   {
     "name": "Muster the Departed",
     "rank": 5936,
-    "lines": [
-      "At the beginning of your end step, if a creature died this turn, populate."
-    ]
+    "lines": ["At the beginning of your end step, if a creature died this turn, populate."]
   },
   {
     "name": "Kindred Charge",
@@ -1360,9 +1244,7 @@
   {
     "name": "Molt Tender",
     "rank": 5939,
-    "lines": [
-      "{T}, Exile a card from your graveyard: Add one mana of any color."
-    ]
+    "lines": ["{T}, Exile a card from your graveyard: Add one mana of any color."]
   },
   {
     "name": "Endless Sands",
@@ -1388,23 +1270,17 @@
   {
     "name": "Tannuk, Steadfast Second",
     "rank": 5951,
-    "lines": [
-      "Artifact cards and red creature cards in your hand have warp {2}{R}."
-    ]
+    "lines": ["Artifact cards and red creature cards in your hand have warp {2}{R}."]
   },
   {
     "name": "Meriadoc Brandybuck",
     "rank": 5955,
-    "lines": [
-      "Whenever one or more Halflings you control attack a player, create a Food token."
-    ]
+    "lines": ["Whenever one or more Halflings you control attack a player, create a Food token."]
   },
   {
     "name": "Sakashima's Protege",
     "rank": 5957,
-    "lines": [
-      "You may have this creature enter as a copy of any permanent that entered this turn."
-    ]
+    "lines": ["You may have this creature enter as a copy of any permanent that entered this turn."]
   },
   {
     "name": "Minion of the Mighty",
@@ -1423,9 +1299,7 @@
   {
     "name": "Tune the Narrative",
     "rank": 5968,
-    "lines": [
-      "Draw a card. You get {E}{E} ."
-    ]
+    "lines": ["Draw a card. You get {E}{E} ."]
   },
   {
     "name": "Kamahl's Druidic Vow",
@@ -1458,16 +1332,12 @@
   {
     "name": "Tanglespan Lookout",
     "rank": 5981,
-    "lines": [
-      "Whenever an Aura you control enters, draw a card."
-    ]
+    "lines": ["Whenever an Aura you control enters, draw a card."]
   },
   {
     "name": "Energybending",
     "rank": 5982,
-    "lines": [
-      "Lands you control gain all basic land types until end of turn."
-    ]
+    "lines": ["Lands you control gain all basic land types until end of turn."]
   },
   {
     "name": "Ghyrson Starn, Kelermorph",
@@ -1493,9 +1363,7 @@
   {
     "name": "Quicken",
     "rank": 5991,
-    "lines": [
-      "The next sorcery spell you cast this turn can be cast as though it had flash."
-    ]
+    "lines": ["The next sorcery spell you cast this turn can be cast as though it had flash."]
   },
   {
     "name": "Raised by Giants",
@@ -1521,9 +1389,7 @@
   {
     "name": "Perimeter Captain",
     "rank": 6003,
-    "lines": [
-      "Whenever a creature you control with defender blocks, you may gain 2 life."
-    ]
+    "lines": ["Whenever a creature you control with defender blocks, you may gain 2 life."]
   },
   {
     "name": "Visions of Glory",
@@ -1535,9 +1401,7 @@
   {
     "name": "Lava Dart",
     "rank": 6011,
-    "lines": [
-      "Flashback—Sacrifice a Mountain."
-    ]
+    "lines": ["Flashback—Sacrifice a Mountain."]
   },
   {
     "name": "Froghemoth",
@@ -1556,9 +1420,7 @@
   {
     "name": "Oathsworn Vampire",
     "rank": 6017,
-    "lines": [
-      "You may cast this card from your graveyard if you gained life this turn."
-    ]
+    "lines": ["You may cast this card from your graveyard if you gained life this turn."]
   },
   {
     "name": "Oreskos Explorer",
@@ -1584,9 +1446,7 @@
   {
     "name": "Mirrorform",
     "rank": 6027,
-    "lines": [
-      "Each nonland permanent you control becomes a copy of target non-Aura permanent."
-    ]
+    "lines": ["Each nonland permanent you control becomes a copy of target non-Aura permanent."]
   },
   {
     "name": "Foray of Orcs",
@@ -1612,9 +1472,7 @@
   {
     "name": "Teacher's Pest",
     "rank": 6036,
-    "lines": [
-      "{B}{G}: Return this card from your graveyard to the battlefield tapped."
-    ]
+    "lines": ["{B}{G}: Return this card from your graveyard to the battlefield tapped."]
   },
   {
     "name": "Golden Argosy",
@@ -1633,16 +1491,12 @@
   {
     "name": "Body Double",
     "rank": 6042,
-    "lines": [
-      "You may have this creature enter as a copy of any creature card in a graveyard."
-    ]
+    "lines": ["You may have this creature enter as a copy of any creature card in a graveyard."]
   },
   {
     "name": "Abjure",
     "rank": 6044,
-    "lines": [
-      "As an additional cost to cast this spell, sacrifice a blue permanent."
-    ]
+    "lines": ["As an additional cost to cast this spell, sacrifice a blue permanent."]
   },
   {
     "name": "Crystal Shard",
@@ -1689,9 +1543,7 @@
   {
     "name": "Clarion Conqueror",
     "rank": 6069,
-    "lines": [
-      "Activated abilities of artifacts, creatures, and planeswalkers can't be activated."
-    ]
+    "lines": ["Activated abilities of artifacts, creatures, and planeswalkers can't be activated."]
   },
   {
     "name": "Show and Tell",
@@ -1724,9 +1576,7 @@
   {
     "name": "Steel Golem",
     "rank": 6081,
-    "lines": [
-      "You can't cast creature spells."
-    ]
+    "lines": ["You can't cast creature spells."]
   },
   {
     "name": "Sigarda, Host of Herons",
@@ -1752,16 +1602,12 @@
   {
     "name": "Rupture Spire",
     "rank": 6099,
-    "lines": [
-      "When this land enters, sacrifice it unless you pay {1}."
-    ]
+    "lines": ["When this land enters, sacrifice it unless you pay {1}."]
   },
   {
     "name": "Twincast",
     "rank": 6100,
-    "lines": [
-      "Copy target instant or sorcery spell. You may choose new targets for the copy."
-    ]
+    "lines": ["Copy target instant or sorcery spell. You may choose new targets for the copy."]
   },
   {
     "name": "Voracious Vermin",
@@ -1773,9 +1619,7 @@
   {
     "name": "Frog Butler",
     "rank": 6105,
-    "lines": [
-      "{2}: ~ gains reach until end of turn."
-    ]
+    "lines": ["{2}: ~ gains reach until end of turn."]
   },
   {
     "name": "Deploy to the Front",
@@ -1808,16 +1652,12 @@
   {
     "name": "Rumbleweed",
     "rank": 6113,
-    "lines": [
-      "This spell costs {1} less to cast for each land card in your graveyard."
-    ]
+    "lines": ["This spell costs {1} less to cast for each land card in your graveyard."]
   },
   {
     "name": "Brazen Dwarf",
     "rank": 6116,
-    "lines": [
-      "Whenever you roll one or more dice, this creature deals 1 damage to each opponent."
-    ]
+    "lines": ["Whenever you roll one or more dice, this creature deals 1 damage to each opponent."]
   },
   {
     "name": "Osteomancer Adept",
@@ -1857,9 +1697,7 @@
   {
     "name": "Double Down",
     "rank": 6130,
-    "lines": [
-      "Whenever you cast an outlaw spell, copy that spell."
-    ]
+    "lines": ["Whenever you cast an outlaw spell, copy that spell."]
   },
   {
     "name": "Flopsie, Bumi's Buddy",
@@ -1878,9 +1716,7 @@
   {
     "name": "Dosan the Falling Leaf",
     "rank": 6139,
-    "lines": [
-      "Players can cast spells only during their own turns."
-    ]
+    "lines": ["Players can cast spells only during their own turns."]
   },
   {
     "name": "Price of Freedom",
@@ -1913,9 +1749,7 @@
   {
     "name": "Hall of Tagsin",
     "rank": 6156,
-    "lines": [
-      "{4}, {T}: Create a tapped Powerstone token."
-    ]
+    "lines": ["{4}, {T}: Create a tapped Powerstone token."]
   },
   {
     "name": "Jodah, the Unifier",
@@ -1927,16 +1761,12 @@
   {
     "name": "Magmatic Insight",
     "rank": 6159,
-    "lines": [
-      "As an additional cost to cast this spell, discard a land card."
-    ]
+    "lines": ["As an additional cost to cast this spell, discard a land card."]
   },
   {
     "name": "Massive Raid",
     "rank": 6165,
-    "lines": [
-      "~ deals damage to any target equal to the number of creatures you control."
-    ]
+    "lines": ["~ deals damage to any target equal to the number of creatures you control."]
   },
   {
     "name": "Pir's Whim",
@@ -1969,9 +1799,7 @@
   {
     "name": "Leveler",
     "rank": 6182,
-    "lines": [
-      "When this creature enters, exile all cards from your library."
-    ]
+    "lines": ["When this creature enters, exile all cards from your library."]
   },
   {
     "name": "Oni-Cult Anvil",
@@ -2011,9 +1839,7 @@
   {
     "name": "Stony Silence",
     "rank": 6205,
-    "lines": [
-      "Activated abilities of artifacts can't be activated."
-    ]
+    "lines": ["Activated abilities of artifacts can't be activated."]
   },
   {
     "name": "Gran-Gran",
@@ -2032,30 +1858,22 @@
   {
     "name": "Don't Make a Sound",
     "rank": 6209,
-    "lines": [
-      "Counter target spell unless its controller pays {2}. If they do, surveil 2."
-    ]
+    "lines": ["Counter target spell unless its controller pays {2}. If they do, surveil 2."]
   },
   {
     "name": "Jirina, Dauntless General",
     "rank": 6213,
-    "lines": [
-      "When ~ enters, exile target player's graveyard."
-    ]
+    "lines": ["When ~ enters, exile target player's graveyard."]
   },
   {
     "name": "Noble's Purse",
     "rank": 6216,
-    "lines": [
-      "~ enters tapped and with three coin counters on it."
-    ]
+    "lines": ["~ enters tapped and with three coin counters on it."]
   },
   {
     "name": "Medomai the Ageless",
     "rank": 6217,
-    "lines": [
-      "~ can't attack during extra turns."
-    ]
+    "lines": ["~ can't attack during extra turns."]
   },
   {
     "name": "Gimli, Counter of Kills",
@@ -2081,9 +1899,7 @@
   {
     "name": "Cracked Earth Technique",
     "rank": 6226,
-    "lines": [
-      "Earthbend 3, then earthbend 3. You gain 3 life."
-    ]
+    "lines": ["Earthbend 3, then earthbend 3. You gain 3 life."]
   },
   {
     "name": "Epic Experiment",
