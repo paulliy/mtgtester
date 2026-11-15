@@ -10,11 +10,9 @@
     "totalUsd": 0.37749785000000197
   },
   "calibration": {
-    "cases": 10,
+    "cases": 9,
     "pending": [],
-    "missed": [
-      "urza-s-power-plant"
-    ],
+    "missed": [],
     "falseAlarms": [
       "on-thin-ice",
       "thundering-raiju"

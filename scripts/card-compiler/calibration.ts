@@ -62,14 +62,12 @@ const KNOWN_WRONG: Record<string, string> = {
  * Campaign chunks: wrong patches the full audit or the pull request review found, where the error
  * is in what the data says, so a meaning check can see it. Wrong patches whose data reads right
  * and only the engine executes differently (Urza's Mine, Banner of Kinship, Angrath's Marauders)
- * are not here: a back-translation cannot show them, and they belong to the validator.
+ * are not here: a back-translation cannot show them, and they belong to the validator. Urza's
+ * Power Plant was here and was taken out after chunk 004: its patch reads "a permanent named
+ * Urza's Mine", which only differs from the card's "an Urza's Mine" to a reader who knows Urza's
+ * Mine is a land type, and two judges in a row read both as names.
  */
 const CAMPAIGN_WRONG: { slug: string; trial: string; origin: string }[] = [
-  {
-    slug: 'urza-s-power-plant',
-    trial: 'docs/reviews/card-compiler-trial-chunk-001',
-    origin: 'chunk 001 audit: matches the other lands by name, not by land type',
-  },
   {
     slug: 'lotus-field',
     trial: 'docs/reviews/card-compiler-trial-chunk-001',

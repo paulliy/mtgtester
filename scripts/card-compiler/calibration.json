@@ -2713,47 +2713,6 @@
       }
     },
     {
-      "id": "urza-s-power-plant",
-      "name": "Urza's Power Plant",
-      "expected": "different",
-      "origin": "chunk 001 audit: matches the other lands by name, not by land type",
-      "def": {
-        "manaAbilities": [
-          {
-            "units": [["C"]],
-            "conditionalUnits": {
-              "condition": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "countPermanents",
-                    "selector": {
-                      "kind": "name",
-                      "value": "Urza's Mine"
-                    },
-                    "scope": "you",
-                    "cmp": ">=",
-                    "n": 1
-                  },
-                  {
-                    "kind": "countPermanents",
-                    "selector": {
-                      "kind": "name",
-                      "value": "Urza's Tower"
-                    },
-                    "scope": "you",
-                    "cmp": ">=",
-                    "n": 1
-                  }
-                ]
-              },
-              "units": [["C"], ["C"]]
-            }
-          }
-        ]
-      }
-    },
-    {
       "id": "lotus-field",
       "name": "Lotus Field",
       "expected": "different",

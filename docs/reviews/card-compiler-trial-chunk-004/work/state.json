@@ -28,8 +28,8 @@
         "abilityResolved": true,
         "resolved": [
           "Inferno Titan",
-          "Inferno Titan — Whenever this creature enters or attacks, it deals 3 damage divided as you choose among one, two, or three targets.",
-          "Inferno Titan — {R}: ~ gets +1/+0 until end of turn."
+          "Inferno Titan \u2014 Whenever this creature enters or attacks, it deals 3 damage divided as you choose among one, two, or three targets.",
+          "Inferno Titan \u2014 {R}: ~ gets +1/+0 until end of turn."
         ],
         "detail": "game ended",
         "decisions": 15,
@@ -66,7 +66,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Inferno Titan — {R}: ~ gets +1/+0 until end of turn."
+          "Inferno Titan \u2014 {R}: ~ gets +1/+0 until end of turn."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -101,8 +101,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Inferno Titan — {R}: ~ gets +1/+0 until end of turn.",
-          "Inferno Titan — {R}: ~ gets +1/+0 until end of turn."
+          "Inferno Titan \u2014 {R}: ~ gets +1/+0 until end of turn.",
+          "Inferno Titan \u2014 {R}: ~ gets +1/+0 until end of turn."
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -142,9 +142,9 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Inferno Titan — {R}: ~ gets +1/+0 until end of turn.",
-          "Inferno Titan — {R}: ~ gets +1/+0 until end of turn.",
-          "Inferno Titan — Whenever this creature enters or attacks, it deals 3 damage divided as you choose among one, two, or three targets."
+          "Inferno Titan \u2014 {R}: ~ gets +1/+0 until end of turn.",
+          "Inferno Titan \u2014 {R}: ~ gets +1/+0 until end of turn.",
+          "Inferno Titan \u2014 Whenever this creature enters or attacks, it deals 3 damage divided as you choose among one, two, or three targets."
         ],
         "detail": "game ended",
         "decisions": 42,
@@ -409,7 +409,7 @@
         "abilityResolved": true,
         "resolved": [
           "Celestial Armor",
-          "Celestial Armor — When this Equipment enters, attach it to target creature you control. That creature gains hexproof and indestructible until end of turn."
+          "Celestial Armor \u2014 When this Equipment enters, attach it to target creature you control. That creature gains hexproof and indestructible until end of turn."
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -475,7 +475,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Celestial Armor — Equip {3}{W}"
+          "Celestial Armor \u2014 Equip {3}{W}"
         ],
         "detail": "game ended",
         "decisions": 19,
@@ -515,7 +515,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Celestial Armor — Equip {3}{W}"
+          "Celestial Armor \u2014 Equip {3}{W}"
         ],
         "detail": "game ended",
         "decisions": 19,
@@ -1156,14 +1156,14 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you attack with one or more Birds, scry 2.",
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance."
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you attack with one or more Birds, scry 2.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance."
         ],
         "detail": "game ended",
         "decisions": 24,
@@ -1204,14 +1204,14 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
-          "Hermes, Overseer of Elpis — Whenever you attack with one or more Birds, scry 2."
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+          "Hermes, Overseer of Elpis \u2014 Whenever you attack with one or more Birds, scry 2."
         ],
         "detail": "game ended",
         "decisions": 25,
@@ -1275,7 +1275,7 @@
     "inexpressibleReason": "No op lets each opponent choose to sacrifice a nontoken creature or else lose life per instant and sorcery card in your graveyard (sacrificeOneEachOpponent is mandatory)."
   },
   {
-    "name": "Gríma, Saruman's Footman",
+    "name": "Gr\u00edma, Saruman's Footman",
     "rank": 3185,
     "lines": [
       "Whenever ~ deals combat damage to a player, that player exiles cards from the top of their library until they exile an instant or sorcery card. You may cast that card without paying its mana cost. Then that player puts the exiled cards that weren't cast this way on the bottom of their library in a random order."
@@ -1630,10 +1630,10 @@
     "inexpressibleReason": "The removeCounters cost names one counter kind, so it cannot remove a counter of any kind from a nonland permanent you control."
   },
   {
-    "name": "Éowyn, Fearless Knight",
+    "name": "\u00c9owyn, Fearless Knight",
     "rank": 3233,
     "lines": [
-      "When Éowyn enters, exile target creature an opponent controls with greater power. Legendary creatures you control gain protection from each of that creature's colors until end of turn."
+      "When \u00c9owyn enters, exile target creature an opponent controls with greater power. Legendary creatures you control gain protection from each of that creature's colors until end of turn."
     ],
     "rounds": 1,
     "stage": "inexpressible",
@@ -1720,10 +1720,10 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Ogre Battledriver — Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn.",
-          "Ogre Battledriver — Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn.",
-          "Ogre Battledriver — Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn.",
-          "Ogre Battledriver — Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn."
+          "Ogre Battledriver \u2014 Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn.",
+          "Ogre Battledriver \u2014 Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn.",
+          "Ogre Battledriver \u2014 Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn.",
+          "Ogre Battledriver \u2014 Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn."
         ],
         "detail": "game ended",
         "decisions": 24,
@@ -1766,10 +1766,10 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Ogre Battledriver — Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn.",
-          "Ogre Battledriver — Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn.",
-          "Ogre Battledriver — Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn.",
-          "Ogre Battledriver — Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn."
+          "Ogre Battledriver \u2014 Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn.",
+          "Ogre Battledriver \u2014 Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn.",
+          "Ogre Battledriver \u2014 Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn.",
+          "Ogre Battledriver \u2014 Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn."
         ],
         "detail": "game ended",
         "decisions": 21,
@@ -1815,7 +1815,7 @@
     "name": "Exalted Flamer of Tzeentch",
     "rank": 3240,
     "lines": [
-      "Sorcerous Inspiration — At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand."
+      "Sorcerous Inspiration \u2014 At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand."
     ],
     "rounds": 1,
     "stage": "inexpressible",
@@ -1902,7 +1902,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Leonin Warleader — Whenever this creature attacks, create two 1/1 white Cat creature tokens with lifelink that are tapped and attacking."
+          "Leonin Warleader \u2014 Whenever this creature attacks, create two 1/1 white Cat creature tokens with lifelink that are tapped and attacking."
         ],
         "detail": "game ended",
         "decisions": 25,
@@ -1944,7 +1944,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Leonin Warleader — Whenever this creature attacks, create two 1/1 white Cat creature tokens with lifelink that are tapped and attacking."
+          "Leonin Warleader \u2014 Whenever this creature attacks, create two 1/1 white Cat creature tokens with lifelink that are tapped and attacking."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -2188,7 +2188,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Rampant Rejuvenator — When this creature dies, search your library for up to X basic land cards, where X is this creature's power, put them onto the battlefield, then shuffle."
+          "Rampant Rejuvenator \u2014 When this creature dies, search your library for up to X basic land cards, where X is this creature's power, put them onto the battlefield, then shuffle."
         ],
         "detail": "game ended",
         "decisions": 28,
@@ -2223,7 +2223,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Rampant Rejuvenator — When this creature dies, search your library for up to X basic land cards, where X is this creature's power, put them onto the battlefield, then shuffle."
+          "Rampant Rejuvenator \u2014 When this creature dies, search your library for up to X basic land cards, where X is this creature's power, put them onto the battlefield, then shuffle."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -2265,7 +2265,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Rampant Rejuvenator — When this creature dies, search your library for up to X basic land cards, where X is this creature's power, put them onto the battlefield, then shuffle."
+          "Rampant Rejuvenator \u2014 When this creature dies, search your library for up to X basic land cards, where X is this creature's power, put them onto the battlefield, then shuffle."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -2362,7 +2362,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Goblin Chirurgeon — Sacrifice a Goblin: Regenerate target creature."
+          "Goblin Chirurgeon \u2014 Sacrifice a Goblin: Regenerate target creature."
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -2397,7 +2397,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Goblin Chirurgeon — Sacrifice a Goblin: Regenerate target creature."
+          "Goblin Chirurgeon \u2014 Sacrifice a Goblin: Regenerate target creature."
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -2440,7 +2440,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Goblin Chirurgeon — Sacrifice a Goblin: Regenerate target creature."
+          "Goblin Chirurgeon \u2014 Sacrifice a Goblin: Regenerate target creature."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -3377,7 +3377,7 @@
     "name": "Ensnared by the Mara",
     "rank": 3302,
     "lines": [
-      "Each opponent faces a villainous choice — They exile cards from the top of their library until they exile a nonland card, then you may cast that card without paying its mana cost, or that player exiles the top four cards of their library and ~ deals damage equal to the total mana value of those exiled cards to that player."
+      "Each opponent faces a villainous choice \u2014 They exile cards from the top of their library until they exile a nonland card, then you may cast that card without paying its mana cost, or that player exiles the top four cards of their library and ~ deals damage equal to the total mana value of those exiled cards to that player."
     ],
     "rounds": 1,
     "stage": "inexpressible",
@@ -3573,7 +3573,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Vorel of the Hull Clade — {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land."
+          "Vorel of the Hull Clade \u2014 {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land."
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -3608,7 +3608,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Vorel of the Hull Clade — {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land."
+          "Vorel of the Hull Clade \u2014 {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land."
         ],
         "detail": "game ended",
         "decisions": 20,
@@ -3649,8 +3649,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Vorel of the Hull Clade — {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land.",
-          "Vorel of the Hull Clade — {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land."
+          "Vorel of the Hull Clade \u2014 {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land.",
+          "Vorel of the Hull Clade \u2014 {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -3732,7 +3732,7 @@
         "abilityResolved": true,
         "resolved": [
           "Coalition Relic",
-          "Coalition Relic — {T}: Put a charge counter on this artifact."
+          "Coalition Relic \u2014 {T}: Put a charge counter on this artifact."
         ],
         "detail": "game ended",
         "decisions": 28,
@@ -3769,7 +3769,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Coalition Relic — {T}: Put a charge counter on this artifact."
+          "Coalition Relic \u2014 {T}: Put a charge counter on this artifact."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -3804,7 +3804,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Coalition Relic — {T}: Put a charge counter on this artifact."
+          "Coalition Relic \u2014 {T}: Put a charge counter on this artifact."
         ],
         "detail": "game ended",
         "decisions": 24,
@@ -3847,9 +3847,9 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Coalition Relic — {T}: Put a charge counter on this artifact.",
-          "Coalition Relic — {T}: Put a charge counter on this artifact.",
-          "Coalition Relic — At the beginning of your first main phase, remove all charge counters from this artifact. Add one mana of any color for each charge counter removed this way."
+          "Coalition Relic \u2014 {T}: Put a charge counter on this artifact.",
+          "Coalition Relic \u2014 {T}: Put a charge counter on this artifact.",
+          "Coalition Relic \u2014 At the beginning of your first main phase, remove all charge counters from this artifact. Add one mana of any color for each charge counter removed this way."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -3922,9 +3922,9 @@
         "abilityResolved": true,
         "resolved": [
           "Lembas",
-          "Lembas — When this artifact enters, scry 1, then draw a card.",
-          "Lembas — When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library.",
-          "Lembas — {2}, {T}, Sacrifice this artifact: You gain 3 life."
+          "Lembas \u2014 When this artifact enters, scry 1, then draw a card.",
+          "Lembas \u2014 When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library.",
+          "Lembas \u2014 {2}, {T}, Sacrifice this artifact: You gain 3 life."
         ],
         "detail": "game ended",
         "decisions": 30,
@@ -3965,8 +3965,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Lembas — When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library.",
-          "Lembas — {2}, {T}, Sacrifice this artifact: You gain 3 life."
+          "Lembas \u2014 When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library.",
+          "Lembas \u2014 {2}, {T}, Sacrifice this artifact: You gain 3 life."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -4005,8 +4005,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Lembas — When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library.",
-          "Lembas — {2}, {T}, Sacrifice this artifact: You gain 3 life."
+          "Lembas \u2014 When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library.",
+          "Lembas \u2014 {2}, {T}, Sacrifice this artifact: You gain 3 life."
         ],
         "detail": "game ended",
         "decisions": 19,
@@ -4050,8 +4050,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Lembas — When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library.",
-          "Lembas — {2}, {T}, Sacrifice this artifact: You gain 3 life."
+          "Lembas \u2014 When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library.",
+          "Lembas \u2014 {2}, {T}, Sacrifice this artifact: You gain 3 life."
         ],
         "detail": "game ended",
         "decisions": 21,
@@ -4336,7 +4336,7 @@
     "name": "Blitzball",
     "rank": 3352,
     "lines": [
-      "GOOOOAAAALLL! — {T}, Sacrifice this artifact: Draw two cards. Activate only if an opponent was dealt combat damage by a legendary creature this turn."
+      "GOOOOAAAALLL! \u2014 {T}, Sacrifice this artifact: Draw two cards. Activate only if an opponent was dealt combat damage by a legendary creature this turn."
     ],
     "rounds": 1,
     "stage": "inexpressible",
@@ -4493,7 +4493,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Eye of Nidhogg — When ~ is put into a graveyard from the battlefield, return it to its owner's hand.",
+          "Eye of Nidhogg \u2014 When ~ is put into a graveyard from the battlefield, return it to its owner's hand.",
           "Eye of Nidhogg"
         ],
         "detail": "game ended",
@@ -4530,9 +4530,9 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Eye of Nidhogg — When ~ is put into a graveyard from the battlefield, return it to its owner's hand.",
+          "Eye of Nidhogg \u2014 When ~ is put into a graveyard from the battlefield, return it to its owner's hand.",
           "Eye of Nidhogg",
-          "Eye of Nidhogg — When ~ is put into a graveyard from the battlefield, return it to its owner's hand."
+          "Eye of Nidhogg \u2014 When ~ is put into a graveyard from the battlefield, return it to its owner's hand."
         ],
         "detail": "game ended",
         "decisions": 21,
@@ -4572,7 +4572,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Eye of Nidhogg — When ~ is put into a graveyard from the battlefield, return it to its owner's hand.",
+          "Eye of Nidhogg \u2014 When ~ is put into a graveyard from the battlefield, return it to its owner's hand.",
           "Eye of Nidhogg"
         ],
         "detail": "game ended",
@@ -4966,12 +4966,12 @@
     "name": "Ulamog's Dreadsire",
     "rank": 3397,
     "lines": [
-      "Ward—Sacrifice a permanent with mana value 1 or greater."
+      "Ward\u2014Sacrifice a permanent with mana value 1 or greater."
     ],
     "rounds": 1,
     "stage": "inexpressible",
     "validatorIssues": [],
-    "inexpressibleReason": "WardCost has only a mana and a life form, so 'Ward—Sacrifice a permanent with mana value 1 or greater' cannot be stated."
+    "inexpressibleReason": "WardCost has only a mana and a life form, so 'Ward\u2014Sacrifice a permanent with mana value 1 or greater' cannot be stated."
   },
   {
     "name": "Wirewood Symbiote",
@@ -5035,7 +5035,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Heliod, God of the Sun — {2}{W}{W}: Create a 2/1 white Cleric enchantment creature token."
+          "Heliod, God of the Sun \u2014 {2}{W}{W}: Create a 2/1 white Cleric enchantment creature token."
         ],
         "detail": "game ended",
         "decisions": 24,
@@ -5070,7 +5070,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Heliod, God of the Sun — {2}{W}{W}: Create a 2/1 white Cleric enchantment creature token."
+          "Heliod, God of the Sun \u2014 {2}{W}{W}: Create a 2/1 white Cleric enchantment creature token."
         ],
         "detail": "game ended",
         "decisions": 19,
@@ -5109,8 +5109,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Heliod, God of the Sun — {2}{W}{W}: Create a 2/1 white Cleric enchantment creature token.",
-          "Heliod, God of the Sun — {2}{W}{W}: Create a 2/1 white Cleric enchantment creature token."
+          "Heliod, God of the Sun \u2014 {2}{W}{W}: Create a 2/1 white Cleric enchantment creature token.",
+          "Heliod, God of the Sun \u2014 {2}{W}{W}: Create a 2/1 white Cleric enchantment creature token."
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -5219,7 +5219,7 @@
         "abilityResolved": true,
         "resolved": [
           "Nylea, God of the Hunt",
-          "Nylea, God of the Hunt — {3}{G}: Target creature gets +2/+2 until end of turn."
+          "Nylea, God of the Hunt \u2014 {3}{G}: Target creature gets +2/+2 until end of turn."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -5255,7 +5255,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Nylea, God of the Hunt — {3}{G}: Target creature gets +2/+2 until end of turn."
+          "Nylea, God of the Hunt \u2014 {3}{G}: Target creature gets +2/+2 until end of turn."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -5290,8 +5290,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Nylea, God of the Hunt — {3}{G}: Target creature gets +2/+2 until end of turn.",
-          "Nylea, God of the Hunt — {3}{G}: Target creature gets +2/+2 until end of turn."
+          "Nylea, God of the Hunt \u2014 {3}{G}: Target creature gets +2/+2 until end of turn.",
+          "Nylea, God of the Hunt \u2014 {3}{G}: Target creature gets +2/+2 until end of turn."
         ],
         "detail": "game ended",
         "decisions": 33,
@@ -5330,8 +5330,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Nylea, God of the Hunt — {3}{G}: Target creature gets +2/+2 until end of turn.",
-          "Nylea, God of the Hunt — {3}{G}: Target creature gets +2/+2 until end of turn."
+          "Nylea, God of the Hunt \u2014 {3}{G}: Target creature gets +2/+2 until end of turn.",
+          "Nylea, God of the Hunt \u2014 {3}{G}: Target creature gets +2/+2 until end of turn."
         ],
         "detail": "game ended",
         "decisions": 48,
@@ -5390,7 +5390,7 @@
     "name": "Ardyn, the Usurper",
     "rank": 3414,
     "lines": [
-      "Starscourge — At the beginning of combat on your turn, exile up to one target creature card from a graveyard. If you exiled a card this way, create a token that's a copy of that card, except it's a 5/5 black Demon."
+      "Starscourge \u2014 At the beginning of combat on your turn, exile up to one target creature card from a graveyard. If you exiled a card this way, create a token that's a copy of that card, except it's a 5/5 black Demon."
     ],
     "rounds": 1,
     "stage": "inexpressible",
@@ -5448,7 +5448,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Lathril, Blade of the Elves — Whenever ~ deals combat damage to a player, create that many 1/1 green Elf Warrior creature tokens."
+          "Lathril, Blade of the Elves \u2014 Whenever ~ deals combat damage to a player, create that many 1/1 green Elf Warrior creature tokens."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -5483,7 +5483,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Lathril, Blade of the Elves — Whenever ~ deals combat damage to a player, create that many 1/1 green Elf Warrior creature tokens."
+          "Lathril, Blade of the Elves \u2014 Whenever ~ deals combat damage to a player, create that many 1/1 green Elf Warrior creature tokens."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -5525,7 +5525,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Lathril, Blade of the Elves — Whenever ~ deals combat damage to a player, create that many 1/1 green Elf Warrior creature tokens."
+          "Lathril, Blade of the Elves \u2014 Whenever ~ deals combat damage to a player, create that many 1/1 green Elf Warrior creature tokens."
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -5886,7 +5886,7 @@
     ]
   },
   {
-    "name": "Andúril, Flame of the West",
+    "name": "And\u00faril, Flame of the West",
     "rank": 3428,
     "lines": [
       "Whenever equipped creature attacks, create two tapped 1/1 white Spirit creature tokens with flying. If that creature is legendary, instead create two of those tokens that are tapped and attacking."
@@ -5902,9 +5902,9 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Andúril, Flame of the West",
-          "Andúril, Flame of the West — Equip {2}",
-          "Andúril, Flame of the West — Whenever equipped creature attacks, create two tapped 1/1 white Spirit creature tokens with flying. If that creature is legendary, instead create two of those tokens that are tapped and attacking."
+          "And\u00faril, Flame of the West",
+          "And\u00faril, Flame of the West \u2014 Equip {2}",
+          "And\u00faril, Flame of the West \u2014 Whenever equipped creature attacks, create two tapped 1/1 white Spirit creature tokens with flying. If that creature is legendary, instead create two of those tokens that are tapped and attacking."
         ],
         "detail": "game ended",
         "decisions": 28,
@@ -5943,7 +5943,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Andúril, Flame of the West — Equip {2}"
+          "And\u00faril, Flame of the West \u2014 Equip {2}"
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -5978,7 +5978,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Andúril, Flame of the West — Equip {2}"
+          "And\u00faril, Flame of the West \u2014 Equip {2}"
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -6020,7 +6020,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Andúril, Flame of the West — Equip {2}"
+          "And\u00faril, Flame of the West \u2014 Equip {2}"
         ],
         "detail": "game ended",
         "decisions": 21,
@@ -6192,10 +6192,10 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Devilish Valet — Whenever another creature you control enters, double this creature's power until end of turn.",
-          "Devilish Valet — Whenever another creature you control enters, double this creature's power until end of turn.",
-          "Devilish Valet — Whenever another creature you control enters, double this creature's power until end of turn.",
-          "Devilish Valet — Whenever another creature you control enters, double this creature's power until end of turn."
+          "Devilish Valet \u2014 Whenever another creature you control enters, double this creature's power until end of turn.",
+          "Devilish Valet \u2014 Whenever another creature you control enters, double this creature's power until end of turn.",
+          "Devilish Valet \u2014 Whenever another creature you control enters, double this creature's power until end of turn.",
+          "Devilish Valet \u2014 Whenever another creature you control enters, double this creature's power until end of turn."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -6826,10 +6826,10 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Good-Fortune Unicorn — Whenever another creature you control enters, put a +1/+1 counter on that creature.",
-          "Good-Fortune Unicorn — Whenever another creature you control enters, put a +1/+1 counter on that creature.",
-          "Good-Fortune Unicorn — Whenever another creature you control enters, put a +1/+1 counter on that creature.",
-          "Good-Fortune Unicorn — Whenever another creature you control enters, put a +1/+1 counter on that creature."
+          "Good-Fortune Unicorn \u2014 Whenever another creature you control enters, put a +1/+1 counter on that creature.",
+          "Good-Fortune Unicorn \u2014 Whenever another creature you control enters, put a +1/+1 counter on that creature.",
+          "Good-Fortune Unicorn \u2014 Whenever another creature you control enters, put a +1/+1 counter on that creature.",
+          "Good-Fortune Unicorn \u2014 Whenever another creature you control enters, put a +1/+1 counter on that creature."
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -6947,7 +6947,7 @@
         "abilityResolved": true,
         "resolved": [
           "Soul of New Phyrexia",
-          "Soul of New Phyrexia — {5}: Permanents you control gain indestructible until end of turn."
+          "Soul of New Phyrexia \u2014 {5}: Permanents you control gain indestructible until end of turn."
         ],
         "detail": "game ended",
         "decisions": 25,
@@ -6983,7 +6983,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Soul of New Phyrexia — {5}: Permanents you control gain indestructible until end of turn."
+          "Soul of New Phyrexia \u2014 {5}: Permanents you control gain indestructible until end of turn."
         ],
         "detail": "game ended",
         "decisions": 28,
@@ -7019,8 +7019,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Soul of New Phyrexia — {5}: Permanents you control gain indestructible until end of turn.",
-          "Soul of New Phyrexia — {5}: Permanents you control gain indestructible until end of turn."
+          "Soul of New Phyrexia \u2014 {5}: Permanents you control gain indestructible until end of turn.",
+          "Soul of New Phyrexia \u2014 {5}: Permanents you control gain indestructible until end of turn."
         ],
         "detail": "game ended",
         "decisions": 18,
@@ -7058,8 +7058,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Soul of New Phyrexia — {5}: Permanents you control gain indestructible until end of turn.",
-          "Soul of New Phyrexia — {5}: Permanents you control gain indestructible until end of turn."
+          "Soul of New Phyrexia \u2014 {5}: Permanents you control gain indestructible until end of turn.",
+          "Soul of New Phyrexia \u2014 {5}: Permanents you control gain indestructible until end of turn."
         ],
         "detail": "game ended",
         "decisions": 32,
@@ -7516,7 +7516,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Nesting Dragon — Landfall — Whenever a land you control enters, create a 0/2 red Dragon Egg creature token with defender and \"When this token dies, create a 2/2 red Dragon creature token with flying and '{R}: This token gets +1/+0 until end of turn.'\""
+          "Nesting Dragon \u2014 Landfall \u2014 Whenever a land you control enters, create a 0/2 red Dragon Egg creature token with defender and \"When this token dies, create a 2/2 red Dragon creature token with flying and '{R}: This token gets +1/+0 until end of turn.'\""
         ],
         "detail": "game ended",
         "decisions": 20,
@@ -7556,7 +7556,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Nesting Dragon — Landfall — Whenever a land you control enters, create a 0/2 red Dragon Egg creature token with defender and \"When this token dies, create a 2/2 red Dragon creature token with flying and '{R}: This token gets +1/+0 until end of turn.'\""
+          "Nesting Dragon \u2014 Landfall \u2014 Whenever a land you control enters, create a 0/2 red Dragon Egg creature token with defender and \"When this token dies, create a 2/2 red Dragon creature token with flying and '{R}: This token gets +1/+0 until end of turn.'\""
         ],
         "detail": "game ended",
         "decisions": 20,
@@ -7851,7 +7851,7 @@
         "abilityResolved": true,
         "resolved": [
           "Captivating Crew",
-          "Captivating Crew — {3}{R}: Gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until end of turn. Activate only as a sorcery."
+          "Captivating Crew \u2014 {3}{R}: Gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until end of turn. Activate only as a sorcery."
         ],
         "detail": "game ended",
         "decisions": 29,
@@ -7888,7 +7888,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Captivating Crew — {3}{R}: Gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until end of turn. Activate only as a sorcery."
+          "Captivating Crew \u2014 {3}{R}: Gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until end of turn. Activate only as a sorcery."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -7924,7 +7924,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Captivating Crew — {3}{R}: Gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until end of turn. Activate only as a sorcery."
+          "Captivating Crew \u2014 {3}{R}: Gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until end of turn. Activate only as a sorcery."
         ],
         "detail": "game ended",
         "decisions": 18,
@@ -7964,7 +7964,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Captivating Crew — {3}{R}: Gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until end of turn. Activate only as a sorcery."
+          "Captivating Crew \u2014 {3}{R}: Gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until end of turn. Activate only as a sorcery."
         ],
         "detail": "game ended",
         "decisions": 19,
@@ -8338,9 +8338,9 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Animar, Soul of Elements — Whenever you cast a creature spell, put a +1/+1 counter on ~.",
-          "Animar, Soul of Elements — Whenever you cast a creature spell, put a +1/+1 counter on ~.",
-          "Animar, Soul of Elements — Whenever you cast a creature spell, put a +1/+1 counter on ~."
+          "Animar, Soul of Elements \u2014 Whenever you cast a creature spell, put a +1/+1 counter on ~.",
+          "Animar, Soul of Elements \u2014 Whenever you cast a creature spell, put a +1/+1 counter on ~.",
+          "Animar, Soul of Elements \u2014 Whenever you cast a creature spell, put a +1/+1 counter on ~."
         ],
         "detail": "game ended",
         "decisions": 21,
@@ -8687,8 +8687,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Karametra, God of Harvests — Whenever you cast a creature spell, you may search your library for a Forest or Plains card, put it onto the battlefield tapped, then shuffle.",
-          "Karametra, God of Harvests — Whenever you cast a creature spell, you may search your library for a Forest or Plains card, put it onto the battlefield tapped, then shuffle."
+          "Karametra, God of Harvests \u2014 Whenever you cast a creature spell, you may search your library for a Forest or Plains card, put it onto the battlefield tapped, then shuffle.",
+          "Karametra, God of Harvests \u2014 Whenever you cast a creature spell, you may search your library for a Forest or Plains card, put it onto the battlefield tapped, then shuffle."
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -8732,7 +8732,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Karametra, God of Harvests — Whenever you cast a creature spell, you may search your library for a Forest or Plains card, put it onto the battlefield tapped, then shuffle."
+          "Karametra, God of Harvests \u2014 Whenever you cast a creature spell, you may search your library for a Forest or Plains card, put it onto the battlefield tapped, then shuffle."
         ],
         "detail": "game ended",
         "decisions": 24,
@@ -9114,7 +9114,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Polyraptor — Whenever this creature is dealt damage, create a token that's a copy of this creature."
+          "Polyraptor \u2014 Whenever this creature is dealt damage, create a token that's a copy of this creature."
         ],
         "detail": "game ended",
         "decisions": 21,
@@ -9208,7 +9208,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Kor Haven — {1}{W}, {T}: Prevent all combat damage that would be dealt by target attacking creature this turn."
+          "Kor Haven \u2014 {1}{W}, {T}: Prevent all combat damage that would be dealt by target attacking creature this turn."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -9245,7 +9245,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Kor Haven — {1}{W}, {T}: Prevent all combat damage that would be dealt by target attacking creature this turn."
+          "Kor Haven \u2014 {1}{W}, {T}: Prevent all combat damage that would be dealt by target attacking creature this turn."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -9281,7 +9281,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Kor Haven — {1}{W}, {T}: Prevent all combat damage that would be dealt by target attacking creature this turn."
+          "Kor Haven \u2014 {1}{W}, {T}: Prevent all combat damage that would be dealt by target attacking creature this turn."
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -9324,7 +9324,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Kor Haven — {1}{W}, {T}: Prevent all combat damage that would be dealt by target attacking creature this turn."
+          "Kor Haven \u2014 {1}{W}, {T}: Prevent all combat damage that would be dealt by target attacking creature this turn."
         ],
         "detail": "game ended",
         "decisions": 24,
@@ -9904,7 +9904,7 @@
     "name": "Overlord of the Mistmoors",
     "rank": 3641,
     "lines": [
-      "Impending 4—{2}{W}{W}"
+      "Impending 4\u2014{2}{W}{W}"
     ],
     "rounds": 1,
     "stage": "inexpressible",
@@ -9962,7 +9962,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Sharding Sphinx — Whenever an artifact creature you control deals combat damage to a player, you may create a 1/1 blue Thopter artifact creature token with flying."
+          "Sharding Sphinx \u2014 Whenever an artifact creature you control deals combat damage to a player, you may create a 1/1 blue Thopter artifact creature token with flying."
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -9997,7 +9997,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Sharding Sphinx — Whenever an artifact creature you control deals combat damage to a player, you may create a 1/1 blue Thopter artifact creature token with flying."
+          "Sharding Sphinx \u2014 Whenever an artifact creature you control deals combat damage to a player, you may create a 1/1 blue Thopter artifact creature token with flying."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -10116,7 +10116,7 @@
         "abilityResolved": true,
         "resolved": [
           "Pack Rat",
-          "Pack Rat — {2}{B}, Discard a card: Create a token that's a copy of this creature."
+          "Pack Rat \u2014 {2}{B}, Discard a card: Create a token that's a copy of this creature."
         ],
         "detail": "game ended",
         "decisions": 29,
@@ -10153,7 +10153,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Pack Rat — {2}{B}, Discard a card: Create a token that's a copy of this creature."
+          "Pack Rat \u2014 {2}{B}, Discard a card: Create a token that's a copy of this creature."
         ],
         "detail": "game ended",
         "decisions": 29,
@@ -10189,8 +10189,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Pack Rat — {2}{B}, Discard a card: Create a token that's a copy of this creature.",
-          "Pack Rat — {2}{B}, Discard a card: Create a token that's a copy of this creature."
+          "Pack Rat \u2014 {2}{B}, Discard a card: Create a token that's a copy of this creature.",
+          "Pack Rat \u2014 {2}{B}, Discard a card: Create a token that's a copy of this creature."
         ],
         "detail": "game ended",
         "decisions": 31,
@@ -10230,8 +10230,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Pack Rat — {2}{B}, Discard a card: Create a token that's a copy of this creature.",
-          "Pack Rat — {2}{B}, Discard a card: Create a token that's a copy of this creature."
+          "Pack Rat \u2014 {2}{B}, Discard a card: Create a token that's a copy of this creature.",
+          "Pack Rat \u2014 {2}{B}, Discard a card: Create a token that's a copy of this creature."
         ],
         "detail": "game ended",
         "decisions": 56,
@@ -10557,7 +10557,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Hidden Nursery — {4}{G}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
+          "Hidden Nursery \u2014 {4}{G}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
         ],
         "detail": "game ended",
         "decisions": 29,
@@ -10594,7 +10594,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Hidden Nursery — {4}{G}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
+          "Hidden Nursery \u2014 {4}{G}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
         ],
         "detail": "game ended",
         "decisions": 20,
@@ -10636,7 +10636,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Hidden Nursery — {4}{G}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
+          "Hidden Nursery \u2014 {4}{G}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
         ],
         "detail": "game ended",
         "decisions": 20,
@@ -10795,8 +10795,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Stocking the Pantry — Whenever you put one or more +1/+1 counters on a creature you control, put a supply counter on this enchantment.",
-          "Stocking the Pantry — {2}, Remove a supply counter from this enchantment: Draw a card."
+          "Stocking the Pantry \u2014 Whenever you put one or more +1/+1 counters on a creature you control, put a supply counter on this enchantment.",
+          "Stocking the Pantry \u2014 {2}, Remove a supply counter from this enchantment: Draw a card."
         ],
         "detail": "game ended",
         "decisions": 21,
@@ -11028,7 +11028,7 @@
         "abilityResolved": true,
         "resolved": [
           "Infiltration Lens",
-          "Infiltration Lens — Equip {1}"
+          "Infiltration Lens \u2014 Equip {1}"
         ],
         "detail": "game ended",
         "decisions": 30,
@@ -11067,7 +11067,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Infiltration Lens — Equip {1}"
+          "Infiltration Lens \u2014 Equip {1}"
         ],
         "detail": "game ended",
         "decisions": 24,
@@ -11103,7 +11103,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Infiltration Lens — Equip {1}"
+          "Infiltration Lens \u2014 Equip {1}"
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -11145,7 +11145,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Infiltration Lens — Equip {1}"
+          "Infiltration Lens \u2014 Equip {1}"
         ],
         "detail": "game ended",
         "decisions": 21,
@@ -11671,7 +11671,7 @@
         "abilityResolved": true,
         "resolved": [
           "Sunblast Angel",
-          "Sunblast Angel — When this creature enters, destroy all tapped creatures."
+          "Sunblast Angel \u2014 When this creature enters, destroy all tapped creatures."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -11835,7 +11835,7 @@
     "name": "Wheel of Fate",
     "rank": 3721,
     "lines": [
-      "Suspend 4—{1}{R}"
+      "Suspend 4\u2014{1}{R}"
     ],
     "rounds": 1,
     "stage": "inexpressible",
@@ -11860,9 +11860,9 @@
         "abilityResolved": true,
         "resolved": [
           "Cryogen Relic",
-          "Cryogen Relic — When this artifact enters or leaves the battlefield, draw a card.",
-          "Cryogen Relic — When this artifact enters or leaves the battlefield, draw a card.",
-          "Cryogen Relic — {1}{U}, Sacrifice this artifact: Put a stun counter on up to one target tapped creature."
+          "Cryogen Relic \u2014 When this artifact enters or leaves the battlefield, draw a card.",
+          "Cryogen Relic \u2014 When this artifact enters or leaves the battlefield, draw a card.",
+          "Cryogen Relic \u2014 {1}{U}, Sacrifice this artifact: Put a stun counter on up to one target tapped creature."
         ],
         "detail": "game ended",
         "decisions": 28,
@@ -11899,8 +11899,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Cryogen Relic — When this artifact enters or leaves the battlefield, draw a card.",
-          "Cryogen Relic — {1}{U}, Sacrifice this artifact: Put a stun counter on up to one target tapped creature."
+          "Cryogen Relic \u2014 When this artifact enters or leaves the battlefield, draw a card.",
+          "Cryogen Relic \u2014 {1}{U}, Sacrifice this artifact: Put a stun counter on up to one target tapped creature."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -11936,8 +11936,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Cryogen Relic — When this artifact enters or leaves the battlefield, draw a card.",
-          "Cryogen Relic — {1}{U}, Sacrifice this artifact: Put a stun counter on up to one target tapped creature."
+          "Cryogen Relic \u2014 When this artifact enters or leaves the battlefield, draw a card.",
+          "Cryogen Relic \u2014 {1}{U}, Sacrifice this artifact: Put a stun counter on up to one target tapped creature."
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -11980,8 +11980,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Cryogen Relic — When this artifact enters or leaves the battlefield, draw a card.",
-          "Cryogen Relic — {1}{U}, Sacrifice this artifact: Put a stun counter on up to one target tapped creature."
+          "Cryogen Relic \u2014 When this artifact enters or leaves the battlefield, draw a card.",
+          "Cryogen Relic \u2014 {1}{U}, Sacrifice this artifact: Put a stun counter on up to one target tapped creature."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -12039,16 +12039,16 @@
     "name": "Commissar Severina Raine",
     "rank": 3727,
     "lines": [
-      "Leading from the Front — Whenever ~ attacks, each opponent loses X life, where X is the number of other attacking creatures."
+      "Leading from the Front \u2014 Whenever ~ attacks, each opponent loses X life, where X is the number of other attacking creatures."
     ],
     "rounds": 2,
     "stage": "inexpressible",
     "validatorIssues": [
       [
-        "unrecognized rules text: \"Summary Execution — {2}, Sacrifice another creature: You gain 2 life and draw a card.\""
+        "unrecognized rules text: \"Summary Execution \u2014 {2}, Sacrifice another creature: You gain 2 life and draw a card.\""
       ]
     ],
-    "inexpressibleReason": "The patch itself is expressible, but once any non-empty patch is registered the interpreter stops stripping the generic label from the sibling line \"Summary Execution — {2}, Sacrifice another creature: ...\", so that already-modeled line is reported as unrecognized and no patch field can claim it."
+    "inexpressibleReason": "The patch itself is expressible, but once any non-empty patch is registered the interpreter stops stripping the generic label from the sibling line \"Summary Execution \u2014 {2}, Sacrifice another creature: ...\", so that already-modeled line is reported as unrecognized and no patch field can claim it."
   },
   {
     "name": "Kess, Dissident Mage",
@@ -12702,8 +12702,8 @@
         "abilityResolved": true,
         "resolved": [
           "Palani's Hatcher",
-          "Palani's Hatcher — When this creature enters, create two 0/1 green Dinosaur Egg creature tokens.",
-          "Palani's Hatcher — At the beginning of combat on your turn, if you control one or more Eggs, sacrifice an Egg, then create a 3/3 green Dinosaur creature token."
+          "Palani's Hatcher \u2014 When this creature enters, create two 0/1 green Dinosaur Egg creature tokens.",
+          "Palani's Hatcher \u2014 At the beginning of combat on your turn, if you control one or more Eggs, sacrifice an Egg, then create a 3/3 green Dinosaur creature token."
         ],
         "detail": "game ended",
         "decisions": 30,
@@ -12769,7 +12769,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Palani's Hatcher — At the beginning of combat on your turn, if you control one or more Eggs, sacrifice an Egg, then create a 3/3 green Dinosaur creature token."
+          "Palani's Hatcher \u2014 At the beginning of combat on your turn, if you control one or more Eggs, sacrifice an Egg, then create a 3/3 green Dinosaur creature token."
         ],
         "detail": "game ended",
         "decisions": 24,
@@ -12811,7 +12811,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Palani's Hatcher — At the beginning of combat on your turn, if you control one or more Eggs, sacrifice an Egg, then create a 3/3 green Dinosaur creature token."
+          "Palani's Hatcher \u2014 At the beginning of combat on your turn, if you control one or more Eggs, sacrifice an Egg, then create a 3/3 green Dinosaur creature token."
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -13064,7 +13064,7 @@
         "abilityResolved": true,
         "resolved": [
           "Fanatic of Mogis",
-          "Fanatic of Mogis — When this creature enters, it deals damage to each opponent equal to your devotion to red."
+          "Fanatic of Mogis \u2014 When this creature enters, it deals damage to each opponent equal to your devotion to red."
         ],
         "detail": "game ended",
         "decisions": 24,
@@ -13229,7 +13229,7 @@
     "name": "Aboleth Spawn",
     "rank": 3793,
     "lines": [
-      "Probing Telepathy — Whenever a creature entering under an opponent's control causes a triggered ability of that creature to trigger, you may copy that ability. You may choose new targets for the copy."
+      "Probing Telepathy \u2014 Whenever a creature entering under an opponent's control causes a triggered ability of that creature to trigger, you may copy that ability. You may choose new targets for the copy."
     ],
     "rounds": 1,
     "stage": "inexpressible",
@@ -13541,7 +13541,7 @@
         "abilityResolved": true,
         "resolved": [
           "Arbaaz Mir",
-          "Arbaaz Mir — Whenever Arbaaz Mir or another nontoken historic permanent you control enters, Arbaaz Mir deals 1 damage to each opponent and you gain 1 life."
+          "Arbaaz Mir \u2014 Whenever Arbaaz Mir or another nontoken historic permanent you control enters, Arbaaz Mir deals 1 damage to each opponent and you gain 1 life."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -13700,7 +13700,7 @@
         "abilityResolved": true,
         "resolved": [
           "Harmonic Sliver",
-          "Harmonic Sliver — When this permanent enters, destroy target artifact or enchantment."
+          "Harmonic Sliver \u2014 When this permanent enters, destroy target artifact or enchantment."
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -13859,7 +13859,7 @@
         "abilityResolved": true,
         "resolved": [
           "Hero's Heirloom",
-          "Hero's Heirloom — Equip {2}"
+          "Hero's Heirloom \u2014 Equip {2}"
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -13925,7 +13925,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Hero's Heirloom — Equip {2}"
+          "Hero's Heirloom \u2014 Equip {2}"
         ],
         "detail": "game ended",
         "decisions": 21,
@@ -13966,7 +13966,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Hero's Heirloom — Equip {2}"
+          "Hero's Heirloom \u2014 Equip {2}"
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -14498,7 +14498,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Eumidian Hatchery — {T}, Pay 1 life: Add {B}. Put a hatchling counter on this land."
+          "Eumidian Hatchery \u2014 {T}, Pay 1 life: Add {B}. Put a hatchling counter on this land."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -14536,7 +14536,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Eumidian Hatchery — {T}, Pay 1 life: Add {B}. Put a hatchling counter on this land."
+          "Eumidian Hatchery \u2014 {T}, Pay 1 life: Add {B}. Put a hatchling counter on this land."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -14573,7 +14573,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Eumidian Hatchery — {T}, Pay 1 life: Add {B}. Put a hatchling counter on this land."
+          "Eumidian Hatchery \u2014 {T}, Pay 1 life: Add {B}. Put a hatchling counter on this land."
         ],
         "detail": "game ended",
         "decisions": 24,
@@ -14617,8 +14617,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Eumidian Hatchery — {T}, Pay 1 life: Add {B}. Put a hatchling counter on this land.",
-          "Eumidian Hatchery — {T}, Pay 1 life: Add {B}. Put a hatchling counter on this land."
+          "Eumidian Hatchery \u2014 {T}, Pay 1 life: Add {B}. Put a hatchling counter on this land.",
+          "Eumidian Hatchery \u2014 {T}, Pay 1 life: Add {B}. Put a hatchling counter on this land."
         ],
         "detail": "game ended",
         "decisions": 24,
@@ -14679,7 +14679,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Roadside Reliquary — {2}, {T}, Sacrifice this land: Draw a card if you control an artifact. Draw a card if you control an enchantment."
+          "Roadside Reliquary \u2014 {2}, {T}, Sacrifice this land: Draw a card if you control an artifact. Draw a card if you control an enchantment."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -14716,7 +14716,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Roadside Reliquary — {2}, {T}, Sacrifice this land: Draw a card if you control an artifact. Draw a card if you control an enchantment."
+          "Roadside Reliquary \u2014 {2}, {T}, Sacrifice this land: Draw a card if you control an artifact. Draw a card if you control an enchantment."
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -14752,7 +14752,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Roadside Reliquary — {2}, {T}, Sacrifice this land: Draw a card if you control an artifact. Draw a card if you control an enchantment."
+          "Roadside Reliquary \u2014 {2}, {T}, Sacrifice this land: Draw a card if you control an artifact. Draw a card if you control an enchantment."
         ],
         "detail": "game ended",
         "decisions": 21,
@@ -14793,7 +14793,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Roadside Reliquary — {2}, {T}, Sacrifice this land: Draw a card if you control an artifact. Draw a card if you control an enchantment."
+          "Roadside Reliquary \u2014 {2}, {T}, Sacrifice this land: Draw a card if you control an artifact. Draw a card if you control an enchantment."
         ],
         "detail": "game ended",
         "decisions": 21,
@@ -15022,7 +15022,7 @@
         "abilityResolved": true,
         "resolved": [
           "Extinguisher Battleship",
-          "Extinguisher Battleship — When this Spacecraft enters, destroy target noncreature permanent. Then this Spacecraft deals 4 damage to each creature."
+          "Extinguisher Battleship \u2014 When this Spacecraft enters, destroy target noncreature permanent. Then this Spacecraft deals 4 damage to each creature."
         ],
         "detail": "game ended",
         "decisions": 20,
@@ -15085,8 +15085,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Extinguisher Battleship — Station",
-          "Extinguisher Battleship — Station"
+          "Extinguisher Battleship \u2014 Station",
+          "Extinguisher Battleship \u2014 Station"
         ],
         "detail": "game ended",
         "decisions": 25,
@@ -15128,8 +15128,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Extinguisher Battleship — Station",
-          "Extinguisher Battleship — Station"
+          "Extinguisher Battleship \u2014 Station",
+          "Extinguisher Battleship \u2014 Station"
         ],
         "detail": "game ended",
         "decisions": 25,
@@ -15232,7 +15232,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Llanowar Loamspeaker — {T}: Target land you control becomes a 3/3 Elemental creature with haste until end of turn. It's still a land. Activate only as a sorcery."
+          "Llanowar Loamspeaker \u2014 {T}: Target land you control becomes a 3/3 Elemental creature with haste until end of turn. It's still a land. Activate only as a sorcery."
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -15304,7 +15304,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Llanowar Loamspeaker — {T}: Target land you control becomes a 3/3 Elemental creature with haste until end of turn. It's still a land. Activate only as a sorcery."
+          "Llanowar Loamspeaker \u2014 {T}: Target land you control becomes a 3/3 Elemental creature with haste until end of turn. It's still a land. Activate only as a sorcery."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -15439,7 +15439,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Workshop Assistant — When this creature dies, return another target artifact card from your graveyard to your hand."
+          "Workshop Assistant \u2014 When this creature dies, return another target artifact card from your graveyard to your hand."
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -15597,8 +15597,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Honor-Worn Shaku — Tap an untapped legendary permanent you control: Untap this artifact.",
-          "Honor-Worn Shaku — Tap an untapped legendary permanent you control: Untap this artifact."
+          "Honor-Worn Shaku \u2014 Tap an untapped legendary permanent you control: Untap this artifact.",
+          "Honor-Worn Shaku \u2014 Tap an untapped legendary permanent you control: Untap this artifact."
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -15639,8 +15639,8 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Honor-Worn Shaku — Tap an untapped legendary permanent you control: Untap this artifact.",
-          "Honor-Worn Shaku — Tap an untapped legendary permanent you control: Untap this artifact."
+          "Honor-Worn Shaku \u2014 Tap an untapped legendary permanent you control: Untap this artifact.",
+          "Honor-Worn Shaku \u2014 Tap an untapped legendary permanent you control: Untap this artifact."
         ],
         "detail": "game ended",
         "decisions": 39,
@@ -15754,7 +15754,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Svyelun of Sea and Sky — Whenever ~ attacks, draw a card."
+          "Svyelun of Sea and Sky \u2014 Whenever ~ attacks, draw a card."
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -15787,7 +15787,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Svyelun of Sea and Sky — Whenever ~ attacks, draw a card."
+          "Svyelun of Sea and Sky \u2014 Whenever ~ attacks, draw a card."
         ],
         "detail": "game ended",
         "decisions": 23,
@@ -15918,7 +15918,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Rampaging Brontodon — Whenever this creature attacks, it gets +1/+1 until end of turn for each land you control."
+          "Rampaging Brontodon \u2014 Whenever this creature attacks, it gets +1/+1 until end of turn for each land you control."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -15953,7 +15953,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Rampaging Brontodon — Whenever this creature attacks, it gets +1/+1 until end of turn for each land you control."
+          "Rampaging Brontodon \u2014 Whenever this creature attacks, it gets +1/+1 until end of turn for each land you control."
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -15996,7 +15996,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Rampaging Brontodon — Whenever this creature attacks, it gets +1/+1 until end of turn for each land you control."
+          "Rampaging Brontodon \u2014 Whenever this creature attacks, it gets +1/+1 until end of turn for each land you control."
         ],
         "detail": "game ended",
         "decisions": 22,
@@ -16059,10 +16059,10 @@
     "stage": "inexpressible",
     "validatorIssues": [
       [
-        "unrecognized rules text: \"Eukrasia — Whenever you cast your second spell each turn, draw a card.\""
+        "unrecognized rules text: \"Eukrasia \u2014 Whenever you cast your second spell each turn, draw a card.\""
       ]
     ],
-    "inexpressibleReason": "The Partner-with trigger is expressible, but once any non-empty patch is registered the interpreter stops stripping the generic label from the sibling line \"Eukrasia — Whenever you cast your second spell each turn, draw a card.\", so that already-modeled line is reported as unrecognized and no patch field can claim it."
+    "inexpressibleReason": "The Partner-with trigger is expressible, but once any non-empty patch is registered the interpreter stops stripping the generic label from the sibling line \"Eukrasia \u2014 Whenever you cast your second spell each turn, draw a card.\", so that already-modeled line is reported as unrecognized and no patch field can claim it."
   },
   {
     "name": "Arcane Adaptation",
@@ -16204,7 +16204,7 @@
     "name": "The Fifth Doctor",
     "rank": 11545,
     "lines": [
-      "Peaceful Coexistence — At the beginning of your end step, put a +1/+1 counter on each creature you control that didn't attack or enter this turn. Untap those creatures."
+      "Peaceful Coexistence \u2014 At the beginning of your end step, put a +1/+1 counter on each creature you control that didn't attack or enter this turn. Untap those creatures."
     ],
     "rounds": 0,
     "stage": "done",
@@ -16236,23 +16236,6 @@
       "Text A counts only modified creatures, where modified means having +1/+1 counters, equipped, or enchanted by an Aura you control. Text B counts any other creature you control that has any counter on it, which is broader than +1/+1 counters.",
       "Text A counts creatures with Equipment you control attached. Text B counts creatures that are equipped by any Equipment, not only Equipment you control."
     ]
-  },
-  {
-    "name": "Urza's Power Plant",
-    "rank": 830,
-    "lines": [
-      "{T}: Add {C}. If you control an Urza's Mine and an Urza's Tower, add {C}{C} instead."
-    ],
-    "rounds": 0,
-    "stage": "done",
-    "validatorIssues": [],
-    "calibration": {
-      "id": "urza-s-power-plant",
-      "expected": "different"
-    },
-    "backTranslation": "{T}: Add {C}.\nIf you control at least one permanent named Urza's Mine and at least one permanent named Urza's Tower, this ability adds {C}{C} instead.",
-    "verdict": "same",
-    "differences": []
   },
   {
     "name": "Wurmwall Sweeper",
