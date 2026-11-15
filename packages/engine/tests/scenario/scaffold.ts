@@ -163,6 +163,38 @@ interface Draft {
   outcome: string[];
   /** Library cards the draft has used, so two library effects do not share them. */
   libraryUsed: boolean;
+  /** Names a later choice may pick by (a search's "Find Island"). */
+  prefer: string[];
+  /** Basics the draft pays with, which a search must not find. */
+  avoid: Set<string>;
+}
+
+const BASIC_TYPES: Record<string, string> = {
+  Plains: 'Plains',
+  Island: 'Island',
+  Swamp: 'Swamp',
+  Mountain: 'Mountain',
+  Forest: 'Forest',
+};
+
+/** Whether a basic land matches a search filter built from type, subtype and supertype leaves. */
+function basicMatches(selector: Record<string, unknown>, basic: string): boolean | null {
+  switch (selector['kind']) {
+    case 'allOf':
+    case 'anyOf': {
+      const results = (selector['of'] as Record<string, unknown>[]).map((child) => basicMatches(child, basic));
+      if (results.some((result) => result === null)) return null;
+      return selector['kind'] === 'allOf' ? results.every(Boolean) : results.some(Boolean);
+    }
+    case 'type':
+      return selector['value'] === 'Land';
+    case 'subtype':
+      return selector['value'] === basic;
+    case 'supertype':
+      return selector['value'] === 'Basic';
+    default:
+      return null;
+  }
 }
 
 /** "Harmful" target effects aim at P2's permanent or P2; helpful ones at P1's. */
@@ -407,6 +439,32 @@ function addEffect(
       }
       return null;
     }
+    case 'shuffle':
+      // Nothing to see in a seeded library; a search before it carries the expectations.
+      return ability.effects.some((other) => other.op === 'searchLibrary') ? null : 'a lone shuffle';
+    case 'searchLibrary': {
+      const destinations = e['destinations'] as Array<{ zone: string; tapped?: boolean }>;
+      const count = e['count'] === undefined ? 1 : constant(e['count'] as Value);
+      if (destinations.length !== 1 || count !== 1) return 'a search for several cards';
+      const [destination] = destinations;
+      if (destination!.zone !== 'battlefield' && destination!.zone !== 'hand')
+        return `a search to the ${destination!.zone}`;
+      if (draft.libraryUsed) return 'two library effects in one ability';
+      const found = Object.keys(BASIC_TYPES).find(
+        (basic) => !draft.avoid.has(basic) && basicMatches(e['filter'] as Record<string, unknown>, basic) === true,
+      );
+      if (found === undefined) return 'a search filter the generator cannot satisfy with a basic';
+      draft.libraryUsed = true;
+      draft.seats.P1.libraryTop = [found];
+      draft.prefer.push(found);
+      draft.expect.push({ zone: { player: 'P1', zone: destination!.zone as 'hand', has: [found] } });
+      if (destination!.zone === 'battlefield')
+        draft.expect.push({ tapped: { card: found, equals: destination!.tapped === true, player: 'P1' } });
+      draft.outcome.push(
+        `P1 finds ${found} and puts it ${destination!.zone === 'hand' ? 'into their hand' : `onto the battlefield${destination!.tapped === true ? ' tapped' : ''}`}`,
+      );
+      return null;
+    }
     case 'createToken': {
       if (e['powerOverride'] !== undefined || e['toughnessOverride'] !== undefined)
         return 'a token with changed size';
@@ -465,9 +523,14 @@ function landsFor(cost: ParsedManaCost | null, colors: readonly string[]): strin
 
 // ── Recording the script ─────────────────────────────────────────────────────────────────────
 
+/** The recorder's answer when no priority action started the ability. */
+const NOT_OFFERED = 'the engine never offered the action that starts it';
+
 interface Intent {
   /** Matches the one priority action that starts the ability. */
   match: (description: string, type: string) => boolean;
+  /** The starting action's targets by slot, when they are not the ability's own (a removal spell that kills the card). */
+  targets?: string[];
 }
 
 /**
@@ -501,7 +564,7 @@ function recordScript(
     if (step.kind === 'gameOver') {
       if (step.result.halted)
         return `the game halted: ${step.result.haltReason ?? step.result.haltSite ?? 'no reason'}`;
-      return started ? steps : 'the game ended before the ability started';
+      return started ? steps : NOT_OFFERED;
     }
     if (step.kind === 'continue') continue;
     const request = step.request;
@@ -512,13 +575,14 @@ function recordScript(
         const actions = request.legalActions.filter((action) =>
           intent.match(action.description, action.type),
         );
+        if (actions.length === 0) return NOT_OFFERED;
         if (actions.length !== 1)
           return `${actions.length} actions start the ability:\n${request.legalActions.map((a) => `  ${a.description}`).join('\n')}`;
         const action = actions[0]!;
         const lookup = names();
         const targets: string[] = [];
         for (const slot of action.targets ?? []) {
-          const want = draft.slotChoice.get(slot.slot);
+          const want = intent.targets?.[slot.slot] ?? draft.slotChoice.get(slot.slot);
           const offered = slot.options.map((option) => lookup.get(option) ?? option);
           if (want === undefined || !offered.includes(want))
             return `target ${slot.slot + 1} offers ${offered.join(', ') || 'nothing'}, not ${want ?? 'a known choice'}`;
@@ -577,13 +641,19 @@ function recordScript(
       continue;
     }
     // A target decision offered as one action per candidate.
-    const named = [...draft.slotChoice.values()];
+    const named = [...draft.slotChoice.values(), ...draft.prefer];
     const byName = request.legalActions.filter((action) =>
-      named.some((name) => action.description === name || action.description.endsWith(` ${name}`)),
+      named.some((name) => new RegExp(`(?:^|\\s)${escapeRegex(name)}(?:\\s|$)`).test(action.description)),
     );
-    const choice = yes ?? (byName.length === 1 ? byName[0] : undefined);
+    // Identical descriptions are one choice to the runner ("Put Plains …" for each Plains).
+    const oneChoice =
+      byName.length > 0 && byName.every((action) => action.description === byName[0]!.description);
+    const choice = yes ?? (oneChoice ? byName[0] : undefined);
     if (choice === undefined)
-      return `an unexpected ${request.decisionType} decision: "${request.prompt}"`;
+      return `an unexpected ${request.decisionType} decision: "${request.prompt}" [${request.legalActions
+        .slice(0, 6)
+        .map((action) => action.description)
+        .join(' | ')}]`;
     steps.push({
       player: request.decidingPlayer as Seat,
       choose: `/^${escapeRegex(choice.description)}$/`,
@@ -600,11 +670,59 @@ interface Part {
   clause: number | null;
   ability: Ability;
   /** How the ability starts, and where the card is arranged. */
-  start: 'cast' | 'activate';
+  start: 'cast' | 'activate' | 'die' | 'watch';
+  /** For `watch`: the support card P1 plays or casts to fire the trigger. */
+  watch?: Watcher;
   activated?: ActivatedAbility;
 }
 
-const ALLOWED_COSTS = new Set(['tap', 'sacrificeSelf']);
+const ALLOWED_COSTS = new Set(['tap', 'sacrificeSelf', 'payLife']);
+
+/** A support card P1 plays or casts to fire a trigger on another permanent or spell. */
+interface Watcher {
+  spec: SupportCardSpec;
+  /** The basics it costs. */
+  lands: string[];
+  play: boolean;
+  /** It targets P4 with "gains 1 life", so the draft's P4 life moves by one. */
+  p4Life: number;
+}
+
+/**
+ * Tried in order for a trigger that watches other objects; the first whose draft passes wins.
+ * Each one's own effect lands only on P4, which no drafted effect touches.
+ */
+const WATCHERS: Watcher[] = [
+  { spec: { name: 'Scaffold Plot', typeLine: 'Land' }, lands: [], play: true, p4Life: 0 },
+  {
+    spec: { name: 'Scaffold Recruit', typeLine: 'Creature — Human Soldier', manaCost: '{W}', power: '1', toughness: '1' },
+    lands: ['Plains'],
+    play: false,
+    p4Life: 0,
+  },
+  {
+    spec: { name: 'Scaffold Spark', typeLine: 'Sorcery', manaCost: '{R}', oracleText: 'Target player gains 1 life.' },
+    lands: ['Mountain'],
+    play: false,
+    p4Life: 1,
+  },
+  {
+    spec: { name: 'Scaffold Flicker', typeLine: 'Instant', manaCost: '{U}', oracleText: 'Target player gains 1 life.' },
+    lands: ['Island'],
+    play: false,
+    p4Life: 1,
+  },
+  { spec: { name: 'Scaffold Trinket', typeLine: 'Artifact', manaCost: '{1}' }, lands: ['Plains'], play: false, p4Life: 0 },
+  { spec: { name: 'Scaffold Wardstone', typeLine: 'Enchantment', manaCost: '{1}' }, lands: ['Plains'], play: false, p4Life: 0 },
+];
+
+/** The removal spell a dies-trigger draft casts on the card. */
+const SNUFF: SupportCardSpec = {
+  name: 'Scaffold Snuff',
+  typeLine: 'Instant',
+  manaCost: '{B}',
+  oracleText: 'Destroy target creature.',
+};
 
 function emptyDraft(): Draft {
   return {
@@ -616,6 +734,8 @@ function emptyDraft(): Draft {
     expect: [],
     outcome: [],
     libraryUsed: false,
+    prefer: [],
+    avoid: new Set(),
   };
 }
 
@@ -645,6 +765,16 @@ function draftPart(
   const gap = envelopeGap(part.ability);
   if (gap !== null) return { gap };
   const draft = emptyDraft();
+  // A search must not find a basic the draft pays with, or the expectations could not tell them apart.
+  const payCost =
+    part.start === 'activate'
+      ? ((part.activated!.costs.find((cost) => cost.kind === 'mana') as { cost: ParsedManaCost } | undefined)?.cost ?? null)
+      : part.start === 'die'
+        ? null
+        : definition.manaCost;
+  for (const land of landsFor(payCost, definition.colors) ?? []) draft.avoid.add(land);
+  if (part.start === 'die') draft.avoid.add('Swamp');
+  for (const land of part.watch?.lands ?? []) draft.avoid.add(land);
   for (const effect of part.ability.effects) {
     const reason = addEffect(draft, effect, part.ability, card.name);
     if (reason !== null) return { gap: reason };
@@ -662,21 +792,57 @@ function draftPart(
     if (definition.hasUnsupportedCost) return { gap: `the mana cost ${card.manaCost ?? ''}` };
     const lands = landsFor(definition.manaCost, definition.colors);
     if (lands === null) return { gap: `the mana cost ${card.manaCost ?? ''}` };
-    if (definition.types.includes('Land')) return { gap: 'a land played, not cast' };
+    const isLand = definition.types.includes('Land');
     p1.hand = [card.name];
-    p1.battlefield = [...lands, ...(p1.battlefield ?? [])];
-    intent = {
-      match: (description, type) =>
-        type === 'castSpell' && scenarioPattern(`/^Cast ${escapeRegex(card.name)} \\(/`)(description),
-    };
-    instructions.push(`Cast ${card.name}${draft.slotChoice.size > 0 ? ` targeting ${[...draft.slotChoice.values()].join(' and ')}` : ''}, and let it resolve.`);
+    p1.battlefield = [...(isLand ? [] : lands), ...(p1.battlefield ?? [])];
+    intent = isLand
+      ? { match: (description) => description.startsWith(`Play ${card.name}`) }
+      : {
+          match: (description, type) =>
+            type === 'castSpell' &&
+            scenarioPattern(`/^Cast ${escapeRegex(card.name)} \\(/`)(description),
+        };
+    instructions.push(`${isLand ? 'Play' : 'Cast'} ${card.name}${draft.slotChoice.size > 0 ? ` targeting ${[...draft.slotChoice.values()].join(' and ')}` : ''}, and let it resolve.`);
     if (isPermanent) draft.expect.unshift({ zone: { player: 'P1', zone: 'battlefield', has: [card.name] } });
+  } else if (part.start === 'watch') {
+    const watcher = part.watch!;
+    p1.battlefield = [card.name, ...watcher.lands, ...(p1.battlefield ?? [])];
+    p1.hand = [watcher.spec.name];
+    draft.support.set(watcher.spec.name, watcher.spec);
+    for (const land of watcher.lands) draft.avoid.add(land);
+    draft.lifeDelta.P4 += watcher.p4Life;
+    intent = watcher.play
+      ? { match: (description) => description.startsWith(`Play ${watcher.spec.name}`) }
+      : {
+          match: (description, type) =>
+            type === 'castSpell' && description.startsWith(`Cast ${watcher.spec.name} (`),
+          ...(watcher.p4Life > 0 && { targets: ['P4'] }),
+        };
+    instructions.push(
+      `${watcher.play ? 'Play' : 'Cast'} ${watcher.spec.name}${watcher.p4Life > 0 ? ' targeting P4' : ''} with ${card.name} on the battlefield, and let everything resolve.`,
+    );
+    if (watcher.spec.typeLine !== 'Sorcery' && watcher.spec.typeLine !== 'Instant')
+      draft.expect.unshift({ zone: { player: 'P1', zone: 'battlefield', has: [watcher.spec.name] } });
+  } else if (part.start === 'die') {
+    if (!definition.types.includes('Creature')) return { gap: 'a dies trigger on a noncreature' };
+    p1.battlefield = [card.name, 'Swamp', ...(p1.battlefield ?? [])];
+    p1.hand = [SNUFF.name];
+    draft.support.set(SNUFF.name, SNUFF);
+    intent = {
+      match: (description, type) => type === 'castSpell' && description.startsWith(`Cast ${SNUFF.name} (`),
+      targets: [card.name],
+    };
+    instructions.push(`Cast ${SNUFF.name} on ${card.name}, and let the dies trigger resolve.`);
+    draft.expect.unshift({ zone: { player: 'P1', zone: 'graveyard', has: [card.name] } });
+    draft.outcome.unshift(`${card.name} dies`);
   } else {
     const activated = part.activated!;
     const costs = activated.costs.filter((cost) => cost.kind !== 'mana');
-    const extra = costs.find((cost) => !ALLOWED_COSTS.has(cost.kind));
+    const zone = activated.zone ?? 'battlefield';
+    const allowed = zone === 'hand' ? new Set(['discardSelf']) : ALLOWED_COSTS;
+    const extra = costs.find((cost) => !allowed.has(cost.kind));
     if (extra !== undefined) return { gap: `the ${extra.kind} cost` };
-    if ((activated.zone ?? 'battlefield') !== 'battlefield') return { gap: 'an ability activated from another zone' };
+    if (zone !== 'battlefield' && zone !== 'hand') return { gap: `an ability activated from the ${zone}` };
     const a = activated as ActivatedAbility & Record<string, unknown>;
     for (const flag of ['condition', 'requiresAttackedThisTurn', 'exhaust', 'loyalty'])
       if (a[flag] !== undefined) return { gap: `an activation with ${flag}` };
@@ -685,7 +851,10 @@ function draftPart(
       | undefined;
     const lands = landsFor(manaCost?.cost ?? null, definition.colors);
     if (lands === null) return { gap: 'an activation mana cost with X, hybrid or Phyrexian symbols' };
-    p1.battlefield = [card.name, ...lands, ...(p1.battlefield ?? [])];
+    if (zone === 'hand') {
+      p1.hand = [card.name];
+      p1.battlefield = [...lands, ...(p1.battlefield ?? [])];
+    } else p1.battlefield = [card.name, ...lands, ...(p1.battlefield ?? [])];
     const index = definition.activatedAbilities.indexOf(activated);
     const description = part.ability.description;
     intent = {
@@ -697,6 +866,15 @@ function draftPart(
           : text === `${card.name}: ${description}`),
     };
     instructions.push(`Activate ${card.name}'s ability${index > 0 ? ` #${index + 1}` : ''}${draft.slotChoice.size > 0 ? ` targeting ${[...draft.slotChoice.values()].join(' and ')}` : ''}, and let it resolve.`);
+    for (const cost of costs)
+      if (cost.kind === 'payLife') {
+        draft.lifeDelta.P1 -= cost.amount;
+        draft.outcome.unshift(`P1 pays ${cost.amount} life`);
+      }
+    if (costs.some((cost) => cost.kind === 'discardSelf')) {
+      draft.expect.unshift({ zone: { player: 'P1', zone: 'graveyard', has: [card.name] } });
+      draft.outcome.unshift(`${card.name} is discarded`);
+    }
     if (costs.some((cost) => cost.kind === 'sacrificeSelf')) {
       draft.expect.unshift({ zone: { player: 'P1', zone: 'graveyard', has: [card.name] } });
       draft.outcome.unshift(`${card.name} is sacrificed`);
@@ -729,6 +907,7 @@ function draftPart(
   const support = [...draft.support.values()];
   const file: CardScenarioFile = { schemaVersion: 1, card: card.name, supportCards: support, scenarios: [scenario] };
   const script = recordScript(file, scenario, intent, draft, resolve);
+  if (script === NOT_OFFERED) return { gap: NOT_OFFERED };
   if (typeof script === 'string') return { failure: script };
   scenario.script = script;
   // The confirming run: the real runner, a fresh engine, the draft's own expectations.
@@ -765,6 +944,10 @@ function draftKeywords(
   }
   if (definition.types.includes('Instant') || definition.types.includes('Sorcery'))
     return { part: 'keywords', clause: null, status: 'unsupported', reason: 'keywords on a spell', scenarioIds: [] };
+  if (definition.subtypes.includes('Aura'))
+    return { part: 'keywords', clause: null, status: 'unsupported', reason: 'keywords on an Aura', scenarioIds: [] };
+  if (definition.types.includes('Creature') && !((definition.toughness ?? 0) > 0))
+    return { part: 'keywords', clause: null, status: 'unsupported', reason: 'a creature with no printed toughness', scenarioIds: [] };
   const id = `${slugOf(card.name)}-scaffold-keywords`;
   const scenario: CardScenario = {
     id,
@@ -785,6 +968,164 @@ function draftKeywords(
     return { part: 'keywords', clause: scenario.clauses[0]!, status: 'failed', reason: (error as Error).message.split('\n')[0]!, scenarioIds: [] };
   }
   return { part: 'keywords', clause: scenario.clauses[0]!, status: 'scaffolded', scenarioIds: [id], scenario };
+}
+
+/** Runs one draft through the real runner on a fresh engine; returns its failures. */
+function confirm(file: CardScenarioFile, resolve: CardResolver): string[] {
+  try {
+    const parsed = parseCardScenarioFile(JSON.parse(JSON.stringify(file)));
+    return scenarioFailures(runScenario(parsed, parsed.scenarios[0]!, { resolve }), parsed.scenarios[0]!);
+  } catch (error) {
+    return [(error as Error).message.split('\n')[0]!];
+  }
+}
+
+const SIMPLE_MANA_KEYS = new Set(['units', 'costs']);
+const SYMBOL_TEXT: Record<string, string> = { W: 'W', U: 'U', B: 'B', R: 'R', G: 'G', C: 'C' };
+
+/**
+ * Mana ability drafts, one per symbol a choice offers: the card alone pays a support creature
+ * whose cost is exactly what the ability makes, and ends up tapped. Only `{T}`-cost abilities with
+ * fixed output; riders, restrictions and dynamic amounts are left to the agent.
+ */
+function draftMana(
+  card: OracleCard,
+  definition: CardDefinition,
+  index: number,
+  clause: number | null,
+  resolve: CardResolver,
+): { unit: ScaffoldUnit; scenarios: CardScenario[]; support: SupportCardSpec[] } {
+  const part = `manaAbilities[${index}]`;
+  const ability = definition.manaAbilities[index]!;
+  const unit = (status: ScaffoldUnit['status'], reason?: string, ids: string[] = []): ScaffoldUnit => ({
+    part,
+    clause,
+    status,
+    ...(reason !== undefined && { reason }),
+    scenarioIds: ids,
+  });
+  const extra = Object.keys(ability).find(
+    (key) => !SIMPLE_MANA_KEYS.has(key) && (ability as unknown as Record<string, unknown>)[key] !== undefined,
+  );
+  if (extra !== undefined) return { unit: unit('unsupported', `a mana ability with ${extra}`), scenarios: [], support: [] };
+  if (ability.costs !== undefined && !(ability.costs.length === 1 && ability.costs[0]!.kind === 'tap'))
+    return { unit: unit('unsupported', 'a mana ability with a cost other than {T}'), scenarios: [], support: [] };
+  if (clause === null) return { unit: unit('unsupported', 'no single Oracle line names this ability'), scenarios: [], support: [] };
+  if (definition.types.includes('Creature') && !((definition.toughness ?? 0) > 0))
+    return { unit: unit('unsupported', 'a creature with no printed toughness'), scenarios: [], support: [] };
+  const widest = Math.max(...ability.units.map((choice) => choice.length));
+  const scenarios: CardScenario[] = [];
+  const support: SupportCardSpec[] = [];
+  for (let pick = 0; pick < widest; pick++) {
+    const symbols = ability.units.map((choice) => choice[Math.min(pick, choice.length - 1)]!);
+    if (symbols.some((symbol) => SYMBOL_TEXT[symbol] === undefined))
+      return { unit: unit('unsupported', 'a mana symbol the generator cannot spend'), scenarios: [], support: [] };
+    const cost = symbols.map((symbol) => `{${symbol}}`).join('');
+    const sink: SupportCardSpec = {
+      name: `Scaffold Sink ${symbols.join('')}`,
+      typeLine: 'Creature — Construct',
+      manaCost: cost,
+      power: '1',
+      toughness: '1',
+    };
+    const scenario: CardScenario = {
+      id: `${slugOf(card.name)}-scaffold-${slugOf(part)}-${symbols.join('').toLowerCase()}`,
+      title: `${card.name}: its mana ability pays ${cost} (generated scaffold v${SCAFFOLD_VERSION}, review against the Oracle line)`,
+      clauses: [clause],
+      instructions: [`Cast ${sink.name} (${cost}) with only ${card.name}'s mana.`],
+      expectedOutcome: `${sink.name} is on the battlefield and ${card.name} is tapped.`,
+      seats: { P1: { hand: [sink.name], battlefield: [card.name] } },
+      script: [{ player: 'P1', choose: `/^Cast ${escapeRegex(sink.name)} \\(/` }],
+      expect: [
+        { zone: { player: 'P1', zone: 'battlefield', has: [sink.name] } },
+        { tapped: { card: card.name, equals: true, player: 'P1' } },
+      ],
+    };
+    const failures = confirm({ schemaVersion: 1, card: card.name, supportCards: [sink], scenarios: [scenario] }, resolve);
+    if (failures.length > 0) return { unit: unit('failed', failures.join('; ')), scenarios: [], support: [] };
+    scenarios.push(scenario);
+    support.push(sink);
+  }
+  return { unit: unit('scaffolded', undefined, scenarios.map((scenario) => scenario.id)), scenarios, support };
+}
+
+/**
+ * The arrival draft for replacement fields: play or cast the card and check it enters tapped
+ * (`entersTapped`) or with its counters (`entersWithCounters`, constant counts only).
+ */
+function draftArrival(
+  card: OracleCard,
+  definition: CardDefinition,
+  lines: string[],
+  resolve: CardResolver,
+): { units: ScaffoldUnit[]; scenario?: CardScenario } {
+  const parts: string[] = [];
+  const expect: ScenarioExpectation[] = [{ zone: { player: 'P1', zone: 'battlefield', has: [card.name] } }];
+  const outcome: string[] = [];
+  const clauses = new Set<number>();
+  const units: ScaffoldUnit[] = [];
+  if (definition.entersTapped) {
+    const line = lines.findIndex((text) => /\benters(?: the battlefield)? tapped\b/i.test(text));
+    if (definition.entersTappedUnless !== undefined || line === -1)
+      units.push({ part: 'entersTapped', clause: null, status: 'unsupported', reason: 'a conditional or unnamed enters-tapped line', scenarioIds: [] });
+    else {
+      parts.push('entersTapped');
+      clauses.add(line + 1);
+      expect.push({ tapped: { card: card.name, equals: true, player: 'P1' } });
+      outcome.push('it enters tapped');
+    }
+  }
+  if (definition.entersWithCounters !== undefined) {
+    const line = lines.findIndex((text) => /\benters(?: the battlefield)? with\b/i.test(text));
+    const counts = Object.entries(definition.entersWithCounters).map(([counter, value]) => [counter, constant(value as Value | number)] as const);
+    if (line === -1 || counts.some(([, n]) => n === null))
+      units.push({ part: 'entersWithCounters', clause: null, status: 'unsupported', reason: 'counters of a non-constant count', scenarioIds: [] });
+    else {
+      parts.push('entersWithCounters');
+      clauses.add(line + 1);
+      for (const [counter, n] of counts) {
+        expect.push({ counters: { card: card.name, counter, equals: n!, player: 'P1' } });
+        outcome.push(`it enters with ${n} ${counter} counter(s)`);
+      }
+    }
+  }
+  if (parts.length === 0) return { units };
+  const isLand = definition.types.includes('Land');
+  const lands = isLand ? [] : landsFor(definition.manaCost, definition.colors);
+  const failAll = (status: ScaffoldUnit['status'], reason: string) => ({
+    units: [...units, ...parts.map((part) => ({ part, clause: null, status, reason, scenarioIds: [] }))],
+  });
+  if (lands === null || definition.hasUnsupportedCost) return failAll('unsupported', `the mana cost ${card.manaCost ?? ''}`);
+  const scenario: CardScenario = {
+    id: `${slugOf(card.name)}-scaffold-arrival`,
+    title: `${card.name}: ${outcome.join('; ')} (generated scaffold v${SCAFFOLD_VERSION}, review against the Oracle line)`,
+    clauses: [...clauses].sort((a, b) => a - b),
+    instructions: [`${isLand ? 'Play' : 'Cast'} ${card.name}.`],
+    expectedOutcome: `${card.name} is on the battlefield; ${outcome.join('; ')}.`,
+    seats: { P1: { hand: [card.name], ...(lands.length > 0 && { battlefield: lands }) } },
+    script: [],
+    expect,
+  };
+  const file: CardScenarioFile = { schemaVersion: 1, card: card.name, scenarios: [scenario] };
+  const draft = emptyDraft();
+  const script = recordScript(
+    file,
+    scenario,
+    isLand
+      ? { match: (description) => description.startsWith(`Play ${card.name}`) }
+      : { match: (description, type) => type === 'castSpell' && description.startsWith(`Cast ${card.name} (`) },
+    draft,
+    resolve,
+  );
+  if (script === NOT_OFFERED) return failAll('unsupported', NOT_OFFERED);
+  if (typeof script === 'string') return failAll('failed', script);
+  scenario.script = script;
+  const failures = confirm(file, resolve);
+  if (failures.length > 0) return failAll('failed', failures.join('; '));
+  return {
+    units: [...units, ...parts.map((part) => ({ part, clause: scenario.clauses[0]!, status: 'scaffolded' as const, scenarioIds: [scenario.id] }))],
+    scenario,
+  };
 }
 
 /**
@@ -837,6 +1178,22 @@ export function scaffoldCard(card: OracleCard, resolve: CardResolver): ScaffoldR
   definition.triggers.forEach((ability, index) => {
     const part = `triggers[${index}]`;
     const trigger = ability.trigger as { when?: string; subject?: { kind: string } } | undefined;
+    if (trigger?.when === 'dies' && trigger.subject?.kind === 'self') {
+      const dies = triggerLines.filter((line) => /\bdies\b/i.test(lines[line - 1]!));
+      parts.push({ part, clause: bestLine(ability.description, dies, lines), ability, start: 'die' });
+      return;
+    }
+    const caster = (trigger as { caster?: string } | undefined)?.caster;
+    const watches =
+      (trigger?.when === 'enters' && trigger.subject?.kind === 'permanent') ||
+      (trigger?.when === 'castsSpell' && (caster === 'you' || caster === 'each'));
+    if (watches) {
+      const candidates = triggerLines.filter((line) =>
+        trigger.when === 'enters' ? /\benters\b/i.test(lines[line - 1]!) : /\bcasts?\b/i.test(lines[line - 1]!),
+      );
+      parts.push({ part, clause: bestLine(ability.description, candidates, lines), ability, start: 'watch' });
+      return;
+    }
     if (trigger?.when !== 'enters' || trigger.subject?.kind !== 'self') {
       units.push({ part, clause: null, status: 'unsupported', reason: `the ${trigger?.when ?? 'unknown'} trigger`, scenarioIds: [] });
       return;
@@ -854,13 +1211,26 @@ export function scaffoldCard(card: OracleCard, resolve: CardResolver): ScaffoldR
     });
   });
 
+  const attempt = (part: Part): ReturnType<typeof draftPart> => {
+    try {
+      return draftPart(card, definition, part, resolve);
+    } catch (error) {
+      return { failure: (error as Error).message.split('\n')[0]! };
+    }
+  };
   for (const part of parts) {
     let result: ReturnType<typeof draftPart>;
-    try {
-      result = draftPart(card, definition, part, resolve);
-    } catch (error) {
-      result = { failure: (error as Error).message.split('\n')[0]! };
-    }
+    if (part.start === 'watch') {
+      // The first support card whose draft passes; an effect gap stops the search at once.
+      result = { gap: 'no support card fires this trigger' };
+      for (const watch of WATCHERS) {
+        const tried = attempt({ ...part, watch });
+        if (tried.scenario !== undefined || (tried.gap !== undefined && tried.gap !== NOT_OFFERED)) {
+          result = tried;
+          break;
+        }
+      }
+    } else result = attempt(part);
     if (result.scenario !== undefined) {
       scenarios.push(result.scenario);
       for (const spec of result.support ?? []) support.set(spec.name, spec);
@@ -869,6 +1239,26 @@ export function scaffoldCard(card: OracleCard, resolve: CardResolver): ScaffoldR
       units.push({ part: part.part, clause: part.clause, status: 'failed', reason: result.failure, scenarioIds: [] });
     else units.push({ part: part.part, clause: part.clause, status: 'unsupported', reason: result.gap!, scenarioIds: [] });
   }
+  // Reminder text counts here: a basic land type's mana ability is only reminder text.
+  const rawLines = card.oracleText.split('\n');
+  const manaLines = rawLines.flatMap((line, index) => (/\{T\}: Add\b/.test(line) ? [index + 1] : []));
+  definition.manaAbilities.forEach((_, index) => {
+    // Lines and abilities pair up in order when there are as many of each; a single line
+    // ("{T}: Add {U} or {B}.") can hold several abilities.
+    const clause =
+      manaLines.length === definition.manaAbilities.length
+        ? manaLines[index]!
+        : manaLines.length === 1
+          ? manaLines[0]!
+          : null;
+    const result = draftMana(card, definition, index, clause, resolve);
+    units.push(result.unit);
+    scenarios.push(...result.scenarios);
+    for (const spec of result.support) support.set(spec.name, spec);
+  });
+  const arrival = draftArrival(card, definition, lines, resolve);
+  units.push(...arrival.units);
+  if (arrival.scenario !== undefined) scenarios.push(arrival.scenario);
   return {
     card: card.name,
     file: {
