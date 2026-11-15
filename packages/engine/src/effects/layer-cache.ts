@@ -79,33 +79,102 @@ export function clearCached(ctx: GameContext): void {
 }
 
 /**
- * Oracle ids and counter names are drawn from a small fixed vocabulary and are shared across
- * games, so hashing them once is safe and bounded.
+ * The digest is a 53-bit hash of a stream of 32-bit words, built from two independent
+ * MurmurHash3-style lanes. It used to be one 32-bit lane of `h = (h ^ x) * prime`, which is
+ * weak for structured words: the multiply only carries low bits upward, so flipping the top bit
+ * of one word and of the next cancels (`(h ^ x ^ 2^31) * p = (h ^ x) * p ^ 2^31` for an odd
+ * `p`), and the work counters measured about 3 collisions in 16 benchmark games, each one a
+ * cache hit on a different state. Every word is now scrambled before it enters a lane, and the
+ * two lanes rotate and multiply differently, so a collision needs both 32-bit lanes to collide
+ * at once on a full-avalanche hash: about 2^-53 per comparison.
+ *
+ * The lanes are module state, not a returned value, so a digest allocates nothing. `digestOf`
+ * is not reentrant (nothing it calls digests), and it resets them on entry.
  */
-const STRING_HASH = new Map<string, number>();
+let laneA = 0;
+let laneB = 0;
+let words = 0;
 
-function mix(h: number, x: number): number {
-  return Math.imul((h ^ x) >>> 0, 0x01000193) >>> 0;
+function feed(x: number): void {
+  let k = Math.imul(x | 0, 0xcc9e2d51);
+  k = (k << 15) | (k >>> 17);
+  laneA ^= Math.imul(k, 0x1b873593);
+  laneA = (laneA << 13) | (laneA >>> 19);
+  laneA = (Math.imul(laneA, 5) + 0xe6546b64) | 0;
+  let j = Math.imul(x | 0, 0x85ebca6b);
+  j = (j << 16) | (j >>> 16);
+  laneB ^= Math.imul(j, 0xc2b2ae35);
+  laneB = (laneB << 17) | (laneB >>> 15);
+  laneB = (Math.imul(laneB, 9) + 0x2b6a8e19) | 0;
+  words++;
 }
 
-function hashString(s: string): number {
-  const cached = STRING_HASH.get(s);
-  if (cached !== undefined) return cached;
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) h = mix(h, s.charCodeAt(i));
-  STRING_HASH.set(s, h);
-  return h;
+function fmix(h: number): number {
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+
+function startDigest(): void {
+  laneA = 0x811c9dc5 | 0;
+  laneB = 0x9e3779b9 | 0;
+  words = 0;
+}
+
+/** The 53 bits a JS number holds exactly: 21 from lane B above 32 from lane A. */
+function finishDigest(): number {
+  const a = fmix(laneA ^ words);
+  const b = fmix(laneB ^ Math.imul(words, 0x27d4eb2f));
+  return (b >>> 11) * 0x100000000 + a;
 }
 
 /**
- * Like `hashString`, but uncached — for values with effectively unbounded cardinality
+ * A string's own digest, as one 53-bit number. Oracle ids and counter names are drawn from a
+ * small fixed vocabulary and are shared across games, so hashing them once is safe and bounded.
+ * Hashed with the same lanes, saved and restored around the string, so a string folds in as two
+ * well-mixed words rather than one 32-bit value that could collide with another string's.
+ */
+const STRING_HASH = new Map<string, number>();
+
+function stringDigest(s: string): number {
+  const a = laneA;
+  const b = laneB;
+  const n = words;
+  startDigest();
+  feed(s.length);
+  for (let i = 0; i < s.length; i++) feed(s.charCodeAt(i));
+  const digest = finishDigest();
+  laneA = a;
+  laneB = b;
+  words = n;
+  return digest;
+}
+
+function feedDigest(digest: number): void {
+  feed(digest >>> 0);
+  feed(Math.floor(digest / 0x100000000));
+}
+
+function feedString(s: string): void {
+  let digest = STRING_HASH.get(s);
+  if (digest === undefined) {
+    digest = stringDigest(s);
+    STRING_HASH.set(s, digest);
+  }
+  feedDigest(digest);
+}
+
+/**
+ * Like `feedString`, but uncached — for values with effectively unbounded cardinality
  * (`attachedTo`'s `ObjectId`s grow with every object a long game creates), where memoizing
  * every distinct value in the module-level `STRING_HASH` map would leak across games.
  */
-function hashStringUncached(s: string): number {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) h = mix(h, s.charCodeAt(i));
-  return h;
+function feedStringUncached(s: string): void {
+  feed(s.length);
+  for (let i = 0; i < s.length; i++) feed(s.charCodeAt(i));
 }
 
 /**
@@ -160,14 +229,15 @@ export function shareDefinitionIds(from: GameContext, to: GameContext): void {
  * that starts reading a new counter kind cannot silently get a stale answer. String key order
  * is insertion order, which is deterministic.
  */
-function foldCounters(h: number, perm: EnginePermanent): number {
+function foldCounters(perm: EnginePermanent): void {
   for (const name in perm.counters) {
-    h = mix(h, hashString(name));
-    // Offset so that negative counts stay distinct under the xor.
-    h = mix(h, (perm.counters[name] ?? 0) + 0x10000);
-    h = mix(h, perm.counterTimestamps?.[name] ?? perm.timestamp);
+    feedString(name);
+    // Offset so that negative counts stay positive words.
+    feed((perm.counters[name] ?? 0) + 0x10000);
+    feed(perm.counterTimestamps?.[name] ?? perm.timestamp);
   }
-  return h;
+  // Ends the variable-length run, so counters cannot be read as the fields that follow.
+  feed(0x7fffffff);
 }
 
 /**
@@ -182,39 +252,36 @@ export function digestOf(
   includeGraveyards: boolean,
 ): number {
   const s = ctx.state;
-  let h = 0x811c9dc5;
-
-  h = mix(h, s.battlefield.length);
+  startDigest();
+  feed(s.battlefield.length);
   for (const perm of s.battlefield) {
-    h = mix(h, perm.timestamp);
-    h = mix(h, perm.classLevel ?? 1);
+    feed(perm.timestamp);
+    feed(perm.classLevel ?? 1);
     // A Room's characteristics are its unlocked doors' (CR 709.5).
-    h = mix(
-      h,
+    feed(
       (perm.unlockedDoors?.includes('left') ? 1 : 0) +
         (perm.unlockedDoors?.includes('right') ? 2 : 0),
     );
-    h = mix(h, hashString(perm.oracleId));
-    h = mix(h, definitionId(ctx, ctx.defs.get(perm.oracleId)));
+    feedString(perm.oracleId);
+    feed(definitionId(ctx, ctx.defs.get(perm.oracleId)));
     // Selectors read the controller ("creatures you control"). Nothing reassigns this today —
     // layer 2 is not implemented — but folding it keeps the digest honest when it arrives.
-    h = mix(h, hashString(perm.controllerId));
-    h = mix(h, (perm.power ?? 0) + 0x10000);
-    h = mix(h, (perm.toughness ?? 0) + 0x10000);
-    h = mix(h, perm.faceDown === true ? 1 : 0);
-    h = mix(h, perm.faceDownWard === true ? 1 : 0);
-    h = mix(h, perm.transformed ? 1 : 0);
+    feedString(perm.controllerId);
+    feed((perm.power ?? 0) + 0x10000);
+    feed((perm.toughness ?? 0) + 0x10000);
+    feed(perm.faceDown === true ? 1 : 0);
+    feed(perm.faceDownWard === true ? 1 : 0);
+    feed(perm.transformed ? 1 : 0);
     // A bestowed Aura's type-changing effect ends as it becomes unattached (CR 702.103f).
-    h = mix(h, perm.bestowed === true ? 1 : 0);
+    feed(perm.bestowed === true ? 1 : 0);
     // A static ability can be conditional on being untapped (Iymrith's ward {4}), so tapping is
     // a layer input like any other. Omitting it meant a query before tapping and a query after
     // it returned the same cached characteristics, and ward is read during targeting/payment.
-    h = mix(h, perm.tapped ? 1 : 0);
+    feed(perm.tapped ? 1 : 0);
     // Combat-dependent statics must expire even if no other characteristic input changes.
     // `attackingDefenderId` also reads whether it attacks a planeswalker, and whether that one is
     // still in combat.
-    h = mix(
-      h,
+    feed(
       perm.attacking !== null
         ? 1 +
             (perm.attackingPlaneswalker !== null ? 2 : 0) +
@@ -224,38 +291,57 @@ export function digestOf(
           : 0,
     );
     // `timesAttackedThisTurn` feeds a layer-7 value (Moraug).
-    h = mix(h, perm.timesAttackedThisTurn ?? 0);
+    feed(perm.timesAttackedThisTurn ?? 0);
     // The `hadToAttackThisCombat` condition reads this per-combat flag.
-    h = mix(h, perm.hadToAttackThisCombat === true ? 1 : 0);
+    feed(perm.hadToAttackThisCombat === true ? 1 : 0);
     // `?? []` would allocate a throwaway array on every digest call for the overwhelming
     // majority of permanents, which never set any of these — an `undefined` guard keeps the
     // fast path (this function runs on every characteristics query) allocation-free.
-    if (perm.copyAddTypes !== undefined)
-      for (const type of perm.copyAddTypes) h = mix(h, hashString(type));
-    if (perm.copyAddKeywords !== undefined)
-      for (const kw of perm.copyAddKeywords) h = mix(h, hashString(kw));
-    if (perm.copyRemoveSupertypes !== undefined)
-      for (const st of perm.copyRemoveSupertypes) h = mix(h, hashString(st));
-    if (perm.copyAddSupertypes !== undefined)
-      for (const st of perm.copyAddSupertypes) h = mix(h, hashString(st));
-    if (perm.copyAddTriggers !== undefined)
-      for (const tr of perm.copyAddTriggers) h = mix(h, hashString(tr.description ?? ''));
+    if (perm.copyAddTypes !== undefined) {
+      feed(perm.copyAddTypes.length);
+      for (const type of perm.copyAddTypes) feedString(type);
+    }
+    if (perm.copyAddKeywords !== undefined) {
+      feed(perm.copyAddKeywords.length);
+      for (const kw of perm.copyAddKeywords) feedString(kw);
+    }
+    if (perm.copyRemoveSupertypes !== undefined) {
+      feed(perm.copyRemoveSupertypes.length);
+      for (const st of perm.copyRemoveSupertypes) feedString(st);
+    }
+    if (perm.copyAddSupertypes !== undefined) {
+      feed(perm.copyAddSupertypes.length);
+      for (const st of perm.copyAddSupertypes) feedString(st);
+    }
+    if (perm.copyAddTriggers !== undefined) {
+      feed(perm.copyAddTriggers.length);
+      for (const tr of perm.copyAddTriggers) feedString(tr.description ?? '');
+    }
     // Duplicant reads which linked cards are still in exile (CR 607.2a).
+    if (perm.exiledWithIds !== undefined) feed(perm.exiledWithIds.length);
     if (perm.exiledWithIds !== undefined)
       for (const id of perm.exiledWithIds) {
-        h = mix(h, hashString(id));
-        h = mix(h, s.exile.some((card) => card.id === id) ? 1 : 0);
+        feedString(id);
+        feed(s.exile.some((card) => card.id === id) ? 1 : 0);
       }
-    h = foldCounters(h, perm);
+    foldCounters(perm);
     // `attachedToSource`/`isEnchanted`/`isEquipped` read this; attaching/detaching changes
     // none of the fields above, so it must be folded in explicitly (ADR 0007).
-    h = mix(h, perm.attachedTo === null ? 0 : hashStringUncached(perm.attachedTo));
+    if (perm.attachedTo === null) feed(0);
+    else {
+      feed(1);
+      feedStringUncached(perm.attachedTo);
+    }
     // `chosenColor`/`chosenType` selectors read this (Caged Sun, Cloud Key, Flickering Ward).
-    h = mix(h, perm.chosenOption === undefined ? 0 : hashString(perm.chosenOption));
+    if (perm.chosenOption === undefined) feed(0);
+    else {
+      feed(1);
+      feedString(perm.chosenOption);
+    }
   }
 
-  h = mix(h, s.effects.length);
-  for (const eff of s.effects) h = mix(h, eff.timestamp);
+  feed(s.effects.length);
+  for (const eff of s.effects) feed(eff.timestamp);
 
   // Commander's Insignia and similar static P/T ops read this (`commanderCastCount`, a
   // resolving-scope Value the layer engine now answers from the source's controller). It is
@@ -263,52 +349,57 @@ export function digestOf(
   // it costs nothing to fold in unconditionally rather than gating it behind a "did a pass
   // actually use it" flag.
   for (const player of s.players) {
+    feed(0x7ffffffe);
     for (const cardId in player.commanderCastCount) {
-      h = mix(h, hashStringUncached(cardId));
-      h = mix(h, (player.commanderCastCount[cardId] ?? 0) + 0x10000);
+      feedStringUncached(cardId);
+      feed((player.commanderCastCount[cardId] ?? 0) + 0x10000);
     }
   }
 
-  h = mix(h, extra === undefined ? 0 : extra.timestamp + 1);
-  if (extra !== undefined) h = mix(h, definitionId(ctx, ctx.defs.get(extra.oracleId)));
+  feed(extra === undefined ? 0 : extra.timestamp + 1);
+  if (extra !== undefined) feed(definitionId(ctx, ctx.defs.get(extra.oracleId)));
 
   // A static ability's `condition` can read game-level state no permanent carries: "as long as
   // it entered this turn" (the turn number), "during your turn" (the active player), graveyard,
   // hand and life counts, spells cast this turn, the monarch. Each is a cheap scalar, so fold
   // them all rather than learn which one a new condition starts reading from a stale cache.
-  h = mix(h, s.turnNumber + 0x10000);
-  h = mix(h, hashString(s.currentTurnPlayer ?? ''));
-  h = mix(h, hashString(s.phase ?? ''));
-  h = mix(h, hashString(s.step ?? ''));
-  h = mix(h, s.monarchPlayerId === null ? 0 : hashString(s.monarchPlayerId));
-  h = mix(h, s.eliminatedPlayers.length);
-  h = mix(h, s.creaturesDiedThisTurn + 0x10000);
-  h = mix(h, Object.keys(s.modifiedCreatureDiedThisTurn ?? {}).length);
-  h = mix(h, s.excessDamageControllerIds.length);
+  feed(s.turnNumber + 0x10000);
+  feedString(s.currentTurnPlayer ?? '');
+  feedString(s.phase ?? '');
+  feedString(s.step ?? '');
+  if (s.monarchPlayerId === null) feed(0);
+  else {
+    feed(1);
+    feedString(s.monarchPlayerId);
+  }
+  feed(s.eliminatedPlayers.length);
+  feed(s.creaturesDiedThisTurn + 0x10000);
+  feed(Object.keys(s.modifiedCreatureDiedThisTurn ?? {}).length);
+  feed(s.excessDamageControllerIds.length);
   for (const player of s.players) {
     // A player who has lost is no opponent (Nighthawk Scavenger's count), from the loss until
     // the elimination that removes their cards: `eliminatedPlayers` alone misses that window.
-    h = mix(h, player.hasLost ? 1 : 0);
-    h = mix(h, player.life + 0x10000);
-    h = mix(h, player.hand.length);
-    h = mix(h, player.library.length);
-    h = mix(h, player.graveyard.length);
-    h = mix(h, player.spellsCastThisTurn);
-    h = mix(h, player.noncreatureSpellsCastThisTurn);
-    h = mix(h, player.cardsDrawnThisTurn);
-    h = mix(h, player.cardsDrawnThisDrawStep);
-    h = mix(h, (s.damageDealtToPlayersThisTurn[player.id] ?? 0) + 0x10000);
-    h = mix(h, s.createdTokenThisTurn?.[player.id] === true ? 1 : 0);
+    feed(player.hasLost ? 1 : 0);
+    feed(player.life + 0x10000);
+    feed(player.hand.length);
+    feed(player.library.length);
+    feed(player.graveyard.length);
+    feed(player.spellsCastThisTurn);
+    feed(player.noncreatureSpellsCastThisTurn);
+    feed(player.cardsDrawnThisTurn);
+    feed(player.cardsDrawnThisDrawStep);
+    feed((s.damageDealtToPlayersThisTurn[player.id] ?? 0) + 0x10000);
+    feed(s.createdTokenThisTurn?.[player.id] === true ? 1 : 0);
   }
 
   if (includeGraveyards) {
     for (const player of s.players) {
-      h = mix(h, player.graveyard.length);
-      for (const card of player.graveyard) h = mix(h, hashString(card.oracleId));
+      feed(player.graveyard.length);
+      for (const card of player.graveyard) feedString(card.oracleId);
     }
   }
 
-  return h;
+  return finishDigest();
 }
 
 /**
