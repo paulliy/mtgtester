@@ -76,7 +76,8 @@ spell effects the patch drops found only Rile.
 - `bun run test`, clean tree: 781 files and 12,659 tests passed.
 - Fuzz, two pods for each promoted card: 173 of 178 games passed. Four failures are the
   mana-payment planner halts that games without a promoted card also hit; one hit the 300-second
-  limit (Dauntless Scrapbot).
+  limit (Dauntless Scrapbot) and was still running when a replay hit a 1,500-second limit; it is
+  not traced to a cause.
 
 ## Findings for the backlog
 
