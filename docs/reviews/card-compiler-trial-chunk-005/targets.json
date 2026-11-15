@@ -30,9 +30,7 @@
   {
     "name": "Bygone Colossus",
     "rank": 3914,
-    "lines": [
-      "Warp {3}"
-    ]
+    "lines": ["Warp {3}"]
   },
   {
     "name": "Clown Car",
@@ -44,9 +42,7 @@
   {
     "name": "Haru, Hidden Talent",
     "rank": 3920,
-    "lines": [
-      "Whenever another Ally you control enters, earthbend 1."
-    ]
+    "lines": ["Whenever another Ally you control enters, earthbend 1."]
   },
   {
     "name": "Count on Luck",
@@ -86,9 +82,7 @@
   {
     "name": "Merrow Reejerey",
     "rank": 3928,
-    "lines": [
-      "Whenever you cast a Merfolk spell, you may tap or untap target permanent."
-    ]
+    "lines": ["Whenever you cast a Merfolk spell, you may tap or untap target permanent."]
   },
   {
     "name": "Mana Echoes",
@@ -107,23 +101,17 @@
   {
     "name": "Wildsear, Scouring Maw",
     "rank": 3938,
-    "lines": [
-      "Enchantment spells you cast from your hand have cascade."
-    ]
+    "lines": ["Enchantment spells you cast from your hand have cascade."]
   },
   {
     "name": "Hidden Volcano",
     "rank": 3939,
-    "lines": [
-      "{4}{R}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
-    ]
+    "lines": ["{4}{R}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."]
   },
   {
     "name": "Pentad Prism",
     "rank": 3941,
-    "lines": [
-      "Sunburst"
-    ]
+    "lines": ["Sunburst"]
   },
   {
     "name": "Rug of Smothering",
@@ -163,16 +151,12 @@
   {
     "name": "Protection Magic",
     "rank": 3959,
-    "lines": [
-      "Put a shield counter on each of up to three target creatures."
-    ]
+    "lines": ["Put a shield counter on each of up to three target creatures."]
   },
   {
     "name": "Shield Sphere",
     "rank": 3960,
-    "lines": [
-      "Whenever this creature blocks, put a -0/-1 counter on it."
-    ]
+    "lines": ["Whenever this creature blocks, put a -0/-1 counter on it."]
   },
   {
     "name": "Scavenged Brawler",
@@ -198,16 +182,12 @@
   {
     "name": "Desolation Twin",
     "rank": 3968,
-    "lines": [
-      "When you cast this spell, create a 10/10 colorless Eldrazi creature token."
-    ]
+    "lines": ["When you cast this spell, create a 10/10 colorless Eldrazi creature token."]
   },
   {
     "name": "Lotus Bloom",
     "rank": 3970,
-    "lines": [
-      "Suspend 3—{0}"
-    ]
+    "lines": ["Suspend 3—{0}"]
   },
   {
     "name": "Preston, the Vanisher",
@@ -240,9 +220,7 @@
   {
     "name": "Devastation Tide",
     "rank": 3977,
-    "lines": [
-      "Miracle {1}{U}"
-    ]
+    "lines": ["Miracle {1}{U}"]
   },
   {
     "name": "Composer of Spring",
@@ -268,9 +246,7 @@
   {
     "name": "Angel of Finality",
     "rank": 3989,
-    "lines": [
-      "When this creature enters, exile target player's graveyard."
-    ]
+    "lines": ["When this creature enters, exile target player's graveyard."]
   },
   {
     "name": "Firion, Wild Rose Warrior",
@@ -317,16 +293,12 @@
   {
     "name": "Matoya, Archon Elder",
     "rank": 4013,
-    "lines": [
-      "Whenever you scry or surveil, draw a card."
-    ]
+    "lines": ["Whenever you scry or surveil, draw a card."]
   },
   {
     "name": "Birthday Escape",
     "rank": 4015,
-    "lines": [
-      "Draw a card. The Ring tempts you."
-    ]
+    "lines": ["Draw a card. The Ring tempts you."]
   },
   {
     "name": "Nazgûl Battle-Mace",
@@ -387,9 +359,7 @@
   {
     "name": "Horizon Stone",
     "rank": 4041,
-    "lines": [
-      "If you would lose unspent mana, that mana becomes colorless instead."
-    ]
+    "lines": ["If you would lose unspent mana, that mana becomes colorless instead."]
   },
   {
     "name": "Zur the Enchanter",
@@ -422,9 +392,7 @@
   {
     "name": "Children of Korlis",
     "rank": 4050,
-    "lines": [
-      "Sacrifice this creature: You gain life equal to the life you've lost this turn."
-    ]
+    "lines": ["Sacrifice this creature: You gain life equal to the life you've lost this turn."]
   },
   {
     "name": "Dance with Calamity",
@@ -464,9 +432,7 @@
   {
     "name": "Sam's Desperate Rescue",
     "rank": 4064,
-    "lines": [
-      "Return target creature card from your graveyard to your hand. The Ring tempts you."
-    ]
+    "lines": ["Return target creature card from your graveyard to your hand. The Ring tempts you."]
   },
   {
     "name": "Soaring Lightbringer",
@@ -485,9 +451,7 @@
   {
     "name": "Merfolk Sovereign",
     "rank": 4074,
-    "lines": [
-      "{T}: Target Merfolk creature can't be blocked this turn."
-    ]
+    "lines": ["{T}: Target Merfolk creature can't be blocked this turn."]
   },
   {
     "name": "Liliana's Contract",
@@ -499,9 +463,7 @@
   {
     "name": "Shoot the Sheriff",
     "rank": 4079,
-    "lines": [
-      "Destroy target non-outlaw creature."
-    ]
+    "lines": ["Destroy target non-outlaw creature."]
   },
   {
     "name": "Karn's Temporal Sundering",
@@ -569,9 +531,7 @@
   {
     "name": "Murderous Redcap",
     "rank": 4105,
-    "lines": [
-      "When this creature enters, it deals damage equal to its power to any target."
-    ]
+    "lines": ["When this creature enters, it deals damage equal to its power to any target."]
   },
   {
     "name": "Beza, the Bounding Spring",
@@ -590,9 +550,7 @@
   {
     "name": "Scroll of Fate",
     "rank": 4115,
-    "lines": [
-      "{T}: Manifest a card from your hand."
-    ]
+    "lines": ["{T}: Manifest a card from your hand."]
   },
   {
     "name": "Tectonic Edge",
@@ -625,9 +583,7 @@
   {
     "name": "Angel of Invention",
     "rank": 4129,
-    "lines": [
-      "Fabricate 2"
-    ]
+    "lines": ["Fabricate 2"]
   },
   {
     "name": "Turnabout",
@@ -639,9 +595,7 @@
   {
     "name": "Gothmog, Morgul Lieutenant",
     "rank": 4135,
-    "lines": [
-      "When ~ enters, amass Orcs 1."
-    ]
+    "lines": ["When ~ enters, amass Orcs 1."]
   },
   {
     "name": "Realms Uncharted",
@@ -653,9 +607,7 @@
   {
     "name": "Vizier of the Menagerie",
     "rank": 4142,
-    "lines": [
-      "You can spend mana of any type to cast creature spells."
-    ]
+    "lines": ["You can spend mana of any type to cast creature spells."]
   },
   {
     "name": "Angelic Field Marshal",
@@ -688,9 +640,7 @@
   {
     "name": "Thrilling Discovery",
     "rank": 4156,
-    "lines": [
-      "You gain 2 life. Then you may discard two cards. If you do, draw three cards."
-    ]
+    "lines": ["You gain 2 life. Then you may discard two cards. If you do, draw three cards."]
   },
   {
     "name": "Murmuration",
@@ -709,16 +659,12 @@
   {
     "name": "Throne of the High City",
     "rank": 4170,
-    "lines": [
-      "{4}, {T}, Sacrifice this land: You become the monarch."
-    ]
+    "lines": ["{4}, {T}, Sacrifice this land: You become the monarch."]
   },
   {
     "name": "Zhur-Taa Druid",
     "rank": 4172,
-    "lines": [
-      "Whenever you tap this creature for mana, it deals 1 damage to each opponent."
-    ]
+    "lines": ["Whenever you tap this creature for mana, it deals 1 damage to each opponent."]
   },
   {
     "name": "Restless Spire",
@@ -751,9 +697,7 @@
   {
     "name": "Braid of Fire",
     "rank": 4190,
-    "lines": [
-      "Cumulative upkeep—Add {R}."
-    ]
+    "lines": ["Cumulative upkeep—Add {R}."]
   },
   {
     "name": "Indulging Patrician",
@@ -828,9 +772,7 @@
   {
     "name": "Mathemagics",
     "rank": 4241,
-    "lines": [
-      "Target player draws 2ˣ cards."
-    ]
+    "lines": ["Target player draws 2ˣ cards."]
   },
   {
     "name": "Diffusion Sliver",
@@ -877,16 +819,12 @@
   {
     "name": "Titania, Nature's Force",
     "rank": 4259,
-    "lines": [
-      "You may play Forests from your graveyard."
-    ]
+    "lines": ["You may play Forests from your graveyard."]
   },
   {
     "name": "Vexilus Praetor",
     "rank": 4261,
-    "lines": [
-      "Aegis of the Emperor — Commanders you control have protection from everything."
-    ]
+    "lines": ["Aegis of the Emperor — Commanders you control have protection from everything."]
   },
   {
     "name": "Dazzling Denial",
@@ -898,9 +836,7 @@
   {
     "name": "Waterbending Lesson",
     "rank": 4264,
-    "lines": [
-      "Draw three cards. Then discard a card unless you waterbend {2}."
-    ]
+    "lines": ["Draw three cards. Then discard a card unless you waterbend {2}."]
   },
   {
     "name": "Drag to the Roots",
@@ -919,9 +855,7 @@
   {
     "name": "Undying Evil",
     "rank": 4269,
-    "lines": [
-      "Target creature gains undying until end of turn."
-    ]
+    "lines": ["Target creature gains undying until end of turn."]
   },
   {
     "name": "Timberwatch Elf",
@@ -933,16 +867,12 @@
   {
     "name": "Dissipation Field",
     "rank": 4274,
-    "lines": [
-      "Whenever a permanent deals damage to you, return it to its owner's hand."
-    ]
+    "lines": ["Whenever a permanent deals damage to you, return it to its owner's hand."]
   },
   {
     "name": "Shifting Sliver",
     "rank": 4275,
-    "lines": [
-      "Slivers can't be blocked except by Slivers."
-    ]
+    "lines": ["Slivers can't be blocked except by Slivers."]
   },
   {
     "name": "Horn of the Mark",
@@ -961,9 +891,7 @@
   {
     "name": "Unwanted Remake",
     "rank": 4285,
-    "lines": [
-      "Destroy target creature. Its controller manifests dread."
-    ]
+    "lines": ["Destroy target creature. Its controller manifests dread."]
   },
   {
     "name": "Agonasaur Rex",
@@ -1038,9 +966,7 @@
   {
     "name": "Ossification",
     "rank": 4318,
-    "lines": [
-      "Enchant basic land you control"
-    ]
+    "lines": ["Enchant basic land you control"]
   },
   {
     "name": "Legion Loyalist",
@@ -1052,9 +978,7 @@
   {
     "name": "Mothdust Changeling",
     "rank": 4322,
-    "lines": [
-      "Tap an untapped creature you control: ~ gains flying until end of turn."
-    ]
+    "lines": ["Tap an untapped creature you control: ~ gains flying until end of turn."]
   },
   {
     "name": "Master Chef",
@@ -1087,30 +1011,22 @@
   {
     "name": "Zo-Zu the Punisher",
     "rank": 4333,
-    "lines": [
-      "Whenever a land enters, ~ deals 2 damage to that land's controller."
-    ]
+    "lines": ["Whenever a land enters, ~ deals 2 damage to that land's controller."]
   },
   {
     "name": "Bone-Cairn Butcher",
     "rank": 4334,
-    "lines": [
-      "Mobilize 2"
-    ]
+    "lines": ["Mobilize 2"]
   },
   {
     "name": "Mox Tantalite",
     "rank": 4337,
-    "lines": [
-      "Suspend 3—{0}"
-    ]
+    "lines": ["Suspend 3—{0}"]
   },
   {
     "name": "Tidal Barracuda",
     "rank": 4340,
-    "lines": [
-      "Any player may cast spells as though they had flash."
-    ]
+    "lines": ["Any player may cast spells as though they had flash."]
   },
   {
     "name": "Compulsive Research",
@@ -1143,9 +1059,7 @@
   {
     "name": "Boon Reflection",
     "rank": 4355,
-    "lines": [
-      "If you would gain life, you gain twice that much life instead."
-    ]
+    "lines": ["If you would gain life, you gain twice that much life instead."]
   },
   {
     "name": "Jackdaw Savior",
@@ -1199,9 +1113,7 @@
   {
     "name": "Earthbending Lesson",
     "rank": 4381,
-    "lines": [
-      "Earthbend 4."
-    ]
+    "lines": ["Earthbend 4."]
   },
   {
     "name": "The Golden Throne",
@@ -1262,9 +1174,7 @@
   {
     "name": "Keiga, the Tide Star",
     "rank": 4409,
-    "lines": [
-      "When ~ dies, gain control of target creature."
-    ]
+    "lines": ["When ~ dies, gain control of target creature."]
   },
   {
     "name": "Call the Spirit Dragons",
@@ -1276,9 +1186,7 @@
   {
     "name": "Vizkopa Guildmage",
     "rank": 4412,
-    "lines": [
-      "{1}{W}{B}: Whenever you gain life this turn, each opponent loses that much life."
-    ]
+    "lines": ["{1}{W}{B}: Whenever you gain life this turn, each opponent loses that much life."]
   },
   {
     "name": "Clavileño, First of the Blessed",
@@ -1311,9 +1219,7 @@
   {
     "name": "Haze of Rage",
     "rank": 4425,
-    "lines": [
-      "Buyback {2}"
-    ]
+    "lines": ["Buyback {2}"]
   },
   {
     "name": "Rundvelt Hordemaster",
@@ -1353,16 +1259,12 @@
   {
     "name": "Dream Fracture",
     "rank": 4439,
-    "lines": [
-      "Counter target spell. Its controller draws a card."
-    ]
+    "lines": ["Counter target spell. Its controller draws a card."]
   },
   {
     "name": "Cerulean Wisps",
     "rank": 4440,
-    "lines": [
-      "Target creature becomes blue until end of turn. Untap that creature."
-    ]
+    "lines": ["Target creature becomes blue until end of turn. Untap that creature."]
   },
   {
     "name": "Descendants' Fury",
@@ -1374,16 +1276,12 @@
   {
     "name": "Peek",
     "rank": 4444,
-    "lines": [
-      "Look at target player's hand."
-    ]
+    "lines": ["Look at target player's hand."]
   },
   {
     "name": "Grim Affliction",
     "rank": 4446,
-    "lines": [
-      "Put a -1/-1 counter on target creature, then proliferate."
-    ]
+    "lines": ["Put a -1/-1 counter on target creature, then proliferate."]
   },
   {
     "name": "Brightglass Gearhulk",
@@ -1409,9 +1307,7 @@
   {
     "name": "Stifle",
     "rank": 4472,
-    "lines": [
-      "Counter target activated or triggered ability."
-    ]
+    "lines": ["Counter target activated or triggered ability."]
   },
   {
     "name": "Gimli's Reckless Might",
@@ -1451,16 +1347,12 @@
   {
     "name": "Mindslaver",
     "rank": 4482,
-    "lines": [
-      "{4}, {T}, Sacrifice ~: You control target player during that player's next turn."
-    ]
+    "lines": ["{4}, {T}, Sacrifice ~: You control target player during that player's next turn."]
   },
   {
     "name": "Growing Ranks",
     "rank": 4484,
-    "lines": [
-      "At the beginning of your upkeep, populate."
-    ]
+    "lines": ["At the beginning of your upkeep, populate."]
   },
   {
     "name": "Research Thief",
@@ -1472,9 +1364,7 @@
   {
     "name": "Labyrinth of Skophos",
     "rank": 4489,
-    "lines": [
-      "{4}, {T}: Remove target attacking or blocking creature from combat."
-    ]
+    "lines": ["{4}, {T}: Remove target attacking or blocking creature from combat."]
   },
   {
     "name": "Nerd Rage",
@@ -1493,9 +1383,7 @@
   {
     "name": "Voidslime",
     "rank": 4496,
-    "lines": [
-      "Counter target spell, activated ability, or triggered ability."
-    ]
+    "lines": ["Counter target spell, activated ability, or triggered ability."]
   },
   {
     "name": "High Score",
@@ -1542,9 +1430,7 @@
   {
     "name": "Price of Fame",
     "rank": 4508,
-    "lines": [
-      "This spell costs {2} less to cast if it targets a legendary creature."
-    ]
+    "lines": ["This spell costs {2} less to cast if it targets a legendary creature."]
   },
   {
     "name": "Katara, Water Tribe's Hope",
@@ -1556,16 +1442,12 @@
   {
     "name": "Deranged Assistant",
     "rank": 4515,
-    "lines": [
-      "{T}, Mill a card: Add {C}."
-    ]
+    "lines": ["{T}, Mill a card: Add {C}."]
   },
   {
     "name": "Eagle Vision",
     "rank": 4516,
-    "lines": [
-      "Freerunning {1}{U}"
-    ]
+    "lines": ["Freerunning {1}{U}"]
   },
   {
     "name": "Tower Winder",
@@ -1591,23 +1473,17 @@
   {
     "name": "Wizard's Retort",
     "rank": 4521,
-    "lines": [
-      "This spell costs {1} less to cast if you control a Wizard."
-    ]
+    "lines": ["This spell costs {1} less to cast if you control a Wizard."]
   },
   {
     "name": "Ichorclaw Myr",
     "rank": 4522,
-    "lines": [
-      "Whenever this creature becomes blocked, it gets +2/+2 until end of turn."
-    ]
+    "lines": ["Whenever this creature becomes blocked, it gets +2/+2 until end of turn."]
   },
   {
     "name": "Nemesis of Reason",
     "rank": 4523,
-    "lines": [
-      "Whenever this creature attacks, defending player mills ten cards."
-    ]
+    "lines": ["Whenever this creature attacks, defending player mills ten cards."]
   },
   {
     "name": "Everything Comes to Dust",
@@ -1626,9 +1502,7 @@
   {
     "name": "Big Mother Mouser",
     "rank": 4528,
-    "lines": [
-      "Whenever this creature attacks, double the number of +1/+1 counters on it."
-    ]
+    "lines": ["Whenever this creature attacks, double the number of +1/+1 counters on it."]
   },
   {
     "name": "Serpent of Yawning Depths",
@@ -1668,9 +1542,7 @@
   {
     "name": "Azami, Lady of Scrolls",
     "rank": 4542,
-    "lines": [
-      "Tap an untapped Wizard you control: Draw a card."
-    ]
+    "lines": ["Tap an untapped Wizard you control: Draw a card."]
   },
   {
     "name": "Cleaver Skaab",
@@ -1682,9 +1554,7 @@
   {
     "name": "Fanatical Offering",
     "rank": 4552,
-    "lines": [
-      "Draw two cards and create a Map token."
-    ]
+    "lines": ["Draw two cards and create a Map token."]
   },
   {
     "name": "Angelic Skirmisher",
@@ -1724,9 +1594,7 @@
   {
     "name": "Blatant Thievery",
     "rank": 4563,
-    "lines": [
-      "For each opponent, gain control of target permanent that player controls."
-    ]
+    "lines": ["For each opponent, gain control of target permanent that player controls."]
   },
   {
     "name": "Snort",
@@ -1752,9 +1620,7 @@
   {
     "name": "Restart Sequence",
     "rank": 4571,
-    "lines": [
-      "Freerunning {1}{B}"
-    ]
+    "lines": ["Freerunning {1}{B}"]
   },
   {
     "name": "Apprentice Necromancer",
@@ -1808,9 +1674,7 @@
   {
     "name": "Armored Scrapgorger",
     "rank": 4591,
-    "lines": [
-      "~ gets +3/+0 as long as it has three or more oil counters on it."
-    ]
+    "lines": ["~ gets +3/+0 as long as it has three or more oil counters on it."]
   },
   {
     "name": "Helping Hand",
@@ -1836,9 +1700,7 @@
   {
     "name": "Slaughter Specialist",
     "rank": 4604,
-    "lines": [
-      "When this creature enters, each opponent creates a 1/1 white Human creature token."
-    ]
+    "lines": ["When this creature enters, each opponent creates a 1/1 white Human creature token."]
   },
   {
     "name": "Stolen Strategy",
@@ -1850,16 +1712,12 @@
   {
     "name": "Galvanic Blast",
     "rank": 4607,
-    "lines": [
-      "~ deals 4 damage instead if you control three or more artifacts."
-    ]
+    "lines": ["~ deals 4 damage instead if you control three or more artifacts."]
   },
   {
     "name": "Rite of Harmony",
     "rank": 4614,
-    "lines": [
-      "Whenever a creature or enchantment you control enters this turn, draw a card."
-    ]
+    "lines": ["Whenever a creature or enchantment you control enters this turn, draw a card."]
   },
   {
     "name": "Frogify",
@@ -1871,9 +1729,7 @@
   {
     "name": "Thrumming Hivepool",
     "rank": 4624,
-    "lines": [
-      "Affinity for Slivers"
-    ]
+    "lines": ["Affinity for Slivers"]
   },
   {
     "name": "Spawning Bed",
@@ -1885,9 +1741,7 @@
   {
     "name": "Psychotic Fury",
     "rank": 4627,
-    "lines": [
-      "Target multicolored creature gains double strike until end of turn."
-    ]
+    "lines": ["Target multicolored creature gains double strike until end of turn."]
   },
   {
     "name": "Volcanic Vision",
@@ -1913,9 +1767,7 @@
   {
     "name": "Glimmervoid",
     "rank": 4634,
-    "lines": [
-      "At the beginning of the end step, if you control no artifacts, sacrifice this land."
-    ]
+    "lines": ["At the beginning of the end step, if you control no artifacts, sacrifice this land."]
   },
   {
     "name": "Assemble the Players",
@@ -1934,9 +1786,7 @@
   {
     "name": "Wilson, Refined Grizzly",
     "rank": 4641,
-    "lines": [
-      "Choose a Background"
-    ]
+    "lines": ["Choose a Background"]
   },
   {
     "name": "Sarinth Steelseeker",
@@ -1948,16 +1798,12 @@
   {
     "name": "Saruman's Trickery",
     "rank": 4645,
-    "lines": [
-      "Amass Orcs 1."
-    ]
+    "lines": ["Amass Orcs 1."]
   },
   {
     "name": "Ravnica at War",
     "rank": 4646,
-    "lines": [
-      "Exile all multicolored permanents."
-    ]
+    "lines": ["Exile all multicolored permanents."]
   },
   {
     "name": "Indomitable Might",
@@ -1997,16 +1843,12 @@
   {
     "name": "Glacier Godmaw",
     "rank": 4666,
-    "lines": [
-      "When this creature enters, create a Lander token."
-    ]
+    "lines": ["When this creature enters, create a Lander token."]
   },
   {
     "name": "Reject Imperfection",
     "rank": 4667,
-    "lines": [
-      "Counter target spell. If that spell's mana value was 3 or less, proliferate."
-    ]
+    "lines": ["Counter target spell. If that spell's mana value was 3 or less, proliferate."]
   },
   {
     "name": "Trenzalore Clocktower",
@@ -2081,9 +1923,7 @@
   {
     "name": "Back in Town",
     "rank": 4697,
-    "lines": [
-      "Return X target outlaw creature cards from your graveyard to the battlefield."
-    ]
+    "lines": ["Return X target outlaw creature cards from your graveyard to the battlefield."]
   },
   {
     "name": "Mulch",
