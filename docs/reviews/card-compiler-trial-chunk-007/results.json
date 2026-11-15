@@ -5,9 +5,9 @@
     "compileCalls": 308,
     "backUsd": 0.004279600000000005,
     "backCalls": 119,
-    "judgeUsd": 0.004168600000000004,
-    "judgeCalls": 116,
-    "totalUsd": 0.3965665650000014
+    "judgeUsd": 0.004257120000000002,
+    "judgeCalls": 119,
+    "totalUsd": 0.3966550850000014
   },
   "calibration": {
     "cases": 10,
@@ -3788,7 +3788,7 @@
       "lines": [
         "{4}{B}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
       ],
-      "outcome": "pending",
+      "outcome": "compiled-checked",
       "compileRounds": 2,
       "validatorIssues": [
         [
@@ -3825,7 +3825,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{4}{B}, {T}, Sacrifice this: Discover 4. Activate only as a sorcery."
+      "backTranslation": "{4}{B}, {T}, Sacrifice this: Discover 4. Activate only as a sorcery.",
+      "differences": []
     },
     {
       "name": "Hidden Lair",
@@ -4603,7 +4604,7 @@
       "lines": [
         "When this creature dies, each opponent loses X life and you gain X life, where X is its power."
       ],
-      "outcome": "pending",
+      "outcome": "compiled-checked",
       "compileRounds": 2,
       "validatorIssues": [
         [
@@ -4641,7 +4642,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this creature dies, each opponent loses life equal to this creature's power. You gain life equal to this creature's power."
+      "backTranslation": "When this creature dies, each opponent loses life equal to this creature's power. You gain life equal to this creature's power.",
+      "differences": []
     },
     {
       "name": "Proteus Staff",
@@ -6145,7 +6147,7 @@
       "lines": [
         "Whenever one or more artifacts you control leave the battlefield during your turn, create a 1/1 colorless Construct artifact creature token. This ability triggers only once each turn."
       ],
-      "outcome": "pending",
+      "outcome": "compiled-checked",
       "compileRounds": 2,
       "validatorIssues": [
         [
@@ -6182,7 +6184,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Once each turn, when one or more artifacts you control leave the battlefield during your turn, create a 1/1 colorless Construct artifact creature token."
+      "backTranslation": "Once each turn, when one or more artifacts you control leave the battlefield during your turn, create a 1/1 colorless Construct artifact creature token.",
+      "differences": []
     },
     {
       "name": "Carnivorous Canopy",

@@ -10596,7 +10596,7 @@
       "{4}{B}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
     ],
     "rounds": 2,
-    "stage": "judge",
+    "stage": "done",
     "validatorIssues": [
       [
         "answer is not valid JSON in the required shape: Error: answer has no \"def\" object"
@@ -10756,7 +10756,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "{4}{B}, {T}, Sacrifice this: Discover 4. Activate only as a sorcery."
+    "backTranslation": "{4}{B}, {T}, Sacrifice this: Discover 4. Activate only as a sorcery.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Hidden Lair",
@@ -13133,7 +13135,7 @@
       "When this creature dies, each opponent loses X life and you gain X life, where X is its power."
     ],
     "rounds": 2,
-    "stage": "judge",
+    "stage": "done",
     "validatorIssues": [
       [
         "override.def.triggers[0].effects[0].amount: event object information requires an owning permanent event scope",
@@ -13298,7 +13300,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "When this creature dies, each opponent loses life equal to this creature's power. You gain life equal to this creature's power."
+    "backTranslation": "When this creature dies, each opponent loses life equal to this creature's power. You gain life equal to this creature's power.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Proteus Staff",
@@ -17529,7 +17533,7 @@
       "Whenever one or more artifacts you control leave the battlefield during your turn, create a 1/1 colorless Construct artifact creature token. This ability triggers only once each turn."
     ],
     "rounds": 2,
-    "stage": "judge",
+    "stage": "done",
     "validatorIssues": [
       [
         "override.def: Capability IR: unclassified field card.triggers[0].condition"
@@ -17712,7 +17716,9 @@
       }
     ],
     "textCheck": "model",
-    "backTranslation": "Once each turn, when one or more artifacts you control leave the battlefield during your turn, create a 1/1 colorless Construct artifact creature token."
+    "backTranslation": "Once each turn, when one or more artifacts you control leave the battlefield during your turn, create a 1/1 colorless Construct artifact creature token.",
+    "verdict": "same",
+    "differences": []
   },
   {
     "name": "Carnivorous Canopy",
