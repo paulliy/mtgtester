@@ -10,32 +10,32 @@
         "model",
         "coverage"
       ],
-      "commit": "ccd3472",
+      "commit": "1e5f9c0",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 62.87,
+      "calibrationMs": 61.64,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 7.22,
+          "value": 7.63,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.222
+          "spread": 0.141
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.97,
+          "value": 7.74,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.27
+          "spread": 0.065
         },
         "setup.msPerGame": {
-          "value": 65.52,
+          "value": 71.87,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.212
+          "spread": 0.039
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -44,7 +44,19 @@
           "kind": "exact"
         },
         "model.default.promptTokensPerTurn": {
-          "value": 9112,
+          "value": 9302,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.default.cacheablePromptSharePct": {
+          "value": 25.32,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.default.uncachedPromptTokensPerTurn": {
+          "value": 6946,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -56,7 +68,19 @@
           "kind": "exact"
         },
         "model.model.promptTokensPerTurn": {
-          "value": 9112,
+          "value": 9302,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.model.cacheablePromptSharePct": {
+          "value": 25.32,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.model.uncachedPromptTokensPerTurn": {
+          "value": 6946,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -68,7 +92,19 @@
           "kind": "exact"
         },
         "model.bot.promptTokensPerTurn": {
-          "value": 1292,
+          "value": 1335,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.bot.cacheablePromptSharePct": {
+          "value": 29.43,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.bot.uncachedPromptTokensPerTurn": {
+          "value": 942,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -107,32 +143,32 @@
         "model",
         "coverage"
       ],
-      "commit": "ccd3472",
+      "commit": "1e5f9c0",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 59.03,
+      "calibrationMs": 52.83,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 51.89,
+          "value": 50.18,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.009
+          "spread": 0.053
         },
         "engine.medianGameMsPerDecision": {
-          "value": 12.18,
+          "value": 12.52,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.193
+          "spread": 0.072
         },
         "setup.msPerGame": {
-          "value": 69.01,
+          "value": 69.14,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.073
+          "spread": 0.134
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -141,7 +177,19 @@
           "kind": "exact"
         },
         "model.default.promptTokensPerTurn": {
-          "value": 19149,
+          "value": 19418,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.default.cacheablePromptSharePct": {
+          "value": 18.98,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.default.uncachedPromptTokensPerTurn": {
+          "value": 15732,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -153,7 +201,19 @@
           "kind": "exact"
         },
         "model.model.promptTokensPerTurn": {
-          "value": 19149,
+          "value": 19418,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.model.cacheablePromptSharePct": {
+          "value": 18.98,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.model.uncachedPromptTokensPerTurn": {
+          "value": 15732,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -165,7 +225,19 @@
           "kind": "exact"
         },
         "model.bot.promptTokensPerTurn": {
-          "value": 2490,
+          "value": 2548,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.bot.cacheablePromptSharePct": {
+          "value": 21.95,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.bot.uncachedPromptTokensPerTurn": {
+          "value": 1989,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
