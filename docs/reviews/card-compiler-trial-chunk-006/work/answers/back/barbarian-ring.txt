@@ -1,0 +1,2 @@
+{R}, {T}, Sacrifice this land: Activate only if there are seven or more cards in your graveyard.
+This ability deals 2 damage to any target.
