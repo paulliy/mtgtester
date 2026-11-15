@@ -11,7 +11,7 @@ export const AI_VERSIONS = Object.freeze({
   planLifecycle: 'plan-lifecycle-v1',
   replay: 'fresh-engine-replay-v1',
   counterfactual: 'bounded-counterfactual-v1',
-  promptCache: 'stable-prefix-v1',
+  promptCache: 'stable-prefix-v2',
   parser: 'decision-parser-v1',
   validator: 'legal-menu-validator-v1',
   evaluator: 'snapshot-evaluator-v1',

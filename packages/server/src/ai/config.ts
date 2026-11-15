@@ -173,7 +173,12 @@ export interface AiConfig {
   planLifecycleScopedInvalidationEnabled: boolean;
   /** Log an interpretable route while retaining the fixed production policy. */
   strategyRouterShadowEnabled: boolean;
-  /** Use the stable-prefix prompt layout. Off until measured cache experiments pass. */
+  /**
+   * Use the stable-prefix prompt layout: per-game constants (commander texts, strategy task and
+   * profile) ahead of the changing observation, so provider prefix caches can serve them. On by
+   * default since 2026-11-15 (hill-climb S5); `AI_PROVIDER_PROMPT_CACHE_LAYOUT_ENABLED=false`
+   * restores the plain layout.
+   */
   providerPromptCacheLayoutEnabled: boolean;
   /** Reserved feature flag for exact engine-derived combat previews. */
   combatRolloutsEnabled: boolean;
@@ -393,7 +398,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   contextInputTokenBudget: 6_000,
   planLifecycleScopedInvalidationEnabled: false,
   strategyRouterShadowEnabled: false,
-  providerPromptCacheLayoutEnabled: false,
+  providerPromptCacheLayoutEnabled: true,
   combatRolloutsEnabled: false,
   jevEnabled: false,
   jevShadowEnabled: false,

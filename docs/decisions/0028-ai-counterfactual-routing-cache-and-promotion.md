@@ -37,3 +37,19 @@ are reported separately.
 - Router and cache experiments can be audited without inferring savings from configuration alone.
 - Manual live workflows use protected credentials; pull-request checks remain deterministic and
   secret-free. Repository CI cannot prove that branch protection requires a particular check.
+
+## Update 2026-11-15: stable-prefix layout on by default
+
+`providerPromptCacheLayoutEnabled` now defaults to true (hill-climb suggestion S5), with layout
+`stable-prefix-v2`: the strategist's `strategyTask` and `yourStrategyProfile` move, unchanged, into
+the stable prefix after the commander definitions, and a definition no longer repeats the
+commander's name. v1 deleted `yourStrategyProfile` from the observation and restored it only for a
+versioned profile, so a seat with just the legacy archetype tag lost it; v2 moves keys instead of
+deleting them, and a test checks that both layouts send the same values.
+
+The evidence is the offline hill-climb census, not provider usage: on the standard profile the
+cacheable share of bot-mode prompt text rose from 9.9% to 21.9% and uncached prompt tokens per turn
+fell 12.3% (model mode 10.0%), while total prompt tokens rose 1.1 to 1.2% from the extra prefix
+message. The census models an ideal prefix cache, so the decision above still holds: a saving is
+claimed only from the provider's reported cache reads, which `ai-mode-duel` now sums per mode.
+`AI_PROVIDER_PROMPT_CACHE_LAYOUT_ENABLED=false` restores the plain layout.

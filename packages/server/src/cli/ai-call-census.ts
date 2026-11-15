@@ -18,6 +18,7 @@ import type { DecisionRequest, OracleCard, PlayerId } from '@mtg/shared';
 import { Engine, runToCompletionAsync } from '@mtg/engine';
 import { decide, Rng } from '@mtg/bot';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
+import { inferArchetype } from '../decks/archetype';
 import { generateCommanderDeck } from '../decks/generate';
 import {
   DEFAULT_AI_CONFIG,
@@ -27,6 +28,7 @@ import {
 } from '../ai/config';
 import { OpenAiDecisionProvider } from '../ai/provider';
 import { StrategyCoordinator } from '../ai/strategy-coordinator';
+import { PrefixCacheModel } from '../ai/prompt-cache';
 import type { AiClient } from '../ai/client';
 import { localCallMeta } from '../ai/logger';
 import { knowledgeFor } from '../ai/bot-tactician';
@@ -77,6 +79,11 @@ export interface CensusCounts {
   strategistReused: number;
   tacticianPromptTokens: number;
   strategistPromptTokens: number;
+  /** Prompt characters sent, and how many of them repeat an earlier prompt's prefix (exact). */
+  tacticianPromptChars: number;
+  tacticianCacheableChars: number;
+  strategistPromptChars: number;
+  strategistCacheableChars: number;
   byDecisionType: Record<string, number>;
   /** Times each trigger fired (live or shadow), summed over seats. */
   triggerFired: Record<string, number>;
@@ -98,6 +105,10 @@ function emptyCounts(): CensusCounts {
     strategistReused: 0,
     tacticianPromptTokens: 0,
     strategistPromptTokens: 0,
+    tacticianPromptChars: 0,
+    tacticianCacheableChars: 0,
+    strategistPromptChars: 0,
+    strategistCacheableChars: 0,
     byDecisionType: {},
     triggerFired: {},
     triggerEscalated: {},
@@ -132,6 +143,13 @@ export async function censusPod(
   turnCap: number,
   mode: Pick<Mode, 'config'>,
   observe?: (engine: Engine) => void,
+  options: {
+    /**
+     * Give each seat's strategist its inferred archetype, as a live match does. Off by default so
+     * existing census figures keep their meaning.
+     */
+    archetypes?: boolean;
+  } = {},
 ): Promise<CensusCounts> {
   const engine = new Engine({
     gameId: `census-${seed}`,
@@ -146,11 +164,17 @@ export async function censusPod(
   });
   const counts: CensusCounts = emptyCounts();
   const knowledge = knowledgeFor(engine);
+  // One cache per role: the two roles may run on different models, and a pod is one session.
+  const tacticianCache = new PrefixCacheModel();
+  const strategistCache = new PrefixCacheModel();
   const tactician: AiClient = {
     activeModel: 'census-stub',
     requestDecision(prompt, request: DecisionRequest) {
       counts.tactician++;
       counts.tacticianPromptTokens += prompt.estimatedTokens;
+      const seen = tacticianCache.observe(prompt.messages);
+      counts.tacticianPromptChars += seen.chars;
+      counts.tacticianCacheableChars += seen.cacheableChars;
       counts.byDecisionType[request.decisionType] =
         (counts.byDecisionType[request.decisionType] ?? 0) + 1;
       const view = engine.view(request.decidingPlayer);
@@ -162,6 +186,9 @@ export async function censusPod(
     activeModel: 'census-stub',
     requestDecision(prompt, request: DecisionRequest) {
       counts.strategistPromptTokens += prompt.estimatedTokens;
+      const seen = strategistCache.observe(prompt.messages);
+      counts.strategistPromptChars += seen.chars;
+      counts.strategistCacheableChars += seen.cacheableChars;
       return Promise.resolve({
         response: {
           requestId: request.requestId,
@@ -174,7 +201,28 @@ export async function censusPod(
   };
   const config: AiConfig = { ...DEFAULT_AI_CONFIG, ...mode.config };
   const queue = { enqueue: <T>(fn: () => Promise<T>): Promise<T> => fn() };
-  const coordinator = new StrategyCoordinator(strategist, queue, engine, config);
+  const archetypes =
+    options.archetypes === true
+      ? new Map(
+          decks.map((deck, i) => [
+            `P${i + 1}` as PlayerId,
+            inferArchetype({
+              commanders: deck.commanders,
+              cards: deck.cards.map((card) => ({ card, quantity: 1 })),
+              colorIdentity: [...new Set(deck.commanders.flatMap((c) => c.colorIdentity))],
+            }).tag,
+          ]),
+        )
+      : undefined;
+  const coordinator = new StrategyCoordinator(
+    strategist,
+    queue,
+    engine,
+    config,
+    undefined,
+    undefined,
+    archetypes,
+  );
   const providers = new Map<PlayerId, OpenAiDecisionProvider>();
   const result = await runToCompletionAsync(
     engine,
