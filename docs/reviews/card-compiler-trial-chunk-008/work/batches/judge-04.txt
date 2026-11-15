@@ -1,3 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-008/work/prompts/judge/dogged-detective.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/judge/dogged-detective.json
-docs/reviews/card-compiler-trial-chunk-008/work/prompts/judge/horobi-death-s-wail.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/judge/horobi-death-s-wail.json
-docs/reviews/card-compiler-trial-chunk-008/work/prompts/judge/etali-s-favor.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/judge/etali-s-favor.json
