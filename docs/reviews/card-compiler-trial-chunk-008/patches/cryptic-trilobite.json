@@ -1,0 +1,36 @@
+{
+  "name": "Cryptic Trilobite",
+  "oracleId": "28c0fd21-a88a-4a40-853f-2c1810517bc3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Remove a +1/+1 counter from this creature: Add {C}{C}. Spend this mana only to activate abilities."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "C"
+          ],
+          [
+            "C"
+          ]
+        ],
+        "costs": [
+          {
+            "kind": "removeCounters",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "restriction": {
+          "purposes": [
+            "activateAbility"
+          ],
+          "description": "Spend this mana only to activate abilities."
+        }
+      }
+    ]
+  }
+}

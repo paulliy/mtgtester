@@ -1,0 +1,64 @@
+{
+  "name": "Adelbert Steiner",
+  "oracleId": "657a4500-4b47-4c78-945b-a7791af7d10e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ gets +1/+1 for each Equipment you control."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": {
+            "kind": "times",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Equipment"
+                  }
+                ]
+              },
+              "scope": "you"
+            },
+            "n": 1
+          },
+          "toughness": {
+            "kind": "times",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Equipment"
+                  }
+                ]
+              },
+              "scope": "you"
+            },
+            "n": 1
+          }
+        }
+      }
+    ]
+  }
+}
