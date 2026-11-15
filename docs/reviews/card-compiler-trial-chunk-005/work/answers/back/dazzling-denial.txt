@@ -1,0 +1,1 @@
+If you control at least one Bird, counter target spell unless its controller pays {4}. Otherwise, counter target spell unless its controller pays {2}.

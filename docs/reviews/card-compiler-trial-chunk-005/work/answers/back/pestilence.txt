@@ -1,0 +1,1 @@
+At the beginning of each end step, if there are no creatures on the battlefield, sacrifice this.
