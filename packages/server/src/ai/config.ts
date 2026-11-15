@@ -175,9 +175,9 @@ export interface AiConfig {
   strategyRouterShadowEnabled: boolean;
   /**
    * Use the stable-prefix prompt layout: per-game constants (commander texts, strategy task and
-   * profile) ahead of the changing observation, so provider prefix caches can serve them. On by
-   * default since 2026-11-15 (hill-climb S5); `AI_PROVIDER_PROMPT_CACHE_LAYOUT_ENABLED=false`
-   * restores the plain layout.
+   * profile) ahead of the changing observation, so provider prefix caches can serve them. Off
+   * until a paid run shows provider cache reads worth more than the extra prefix tokens; the
+   * hill-climb `botCached` census mode measures it offline.
    */
   providerPromptCacheLayoutEnabled: boolean;
   /** Reserved feature flag for exact engine-derived combat previews. */
@@ -398,7 +398,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   contextInputTokenBudget: 6_000,
   planLifecycleScopedInvalidationEnabled: false,
   strategyRouterShadowEnabled: false,
-  providerPromptCacheLayoutEnabled: true,
+  providerPromptCacheLayoutEnabled: false,
   combatRolloutsEnabled: false,
   jevEnabled: false,
   jevShadowEnabled: false,

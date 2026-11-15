@@ -38,18 +38,19 @@ are reported separately.
 - Manual live workflows use protected credentials; pull-request checks remain deterministic and
   secret-free. Repository CI cannot prove that branch protection requires a particular check.
 
-## Update 2026-11-15: stable-prefix layout on by default
+## Update 2026-11-15: stable-prefix layout v2, measured offline, still off by default
 
-`providerPromptCacheLayoutEnabled` now defaults to true (hill-climb suggestion S5), with layout
-`stable-prefix-v2`: the strategist's `strategyTask` and `yourStrategyProfile` move, unchanged, into
-the stable prefix after the commander definitions, and a definition no longer repeats the
-commander's name. v1 deleted `yourStrategyProfile` from the observation and restored it only for a
-versioned profile, so a seat with just the legacy archetype tag lost it; v2 moves keys instead of
-deleting them, and a test checks that both layouts send the same values.
+Layout `stable-prefix-v2` (hill-climb suggestion S5) moves the strategist's `strategyTask` and
+`yourStrategyProfile` into the stable prefix after the commander definitions, unchanged, and a
+definition no longer repeats the commander's name. v1 deleted `yourStrategyProfile` from the
+observation and restored it only for a versioned profile, so a seat with only the legacy archetype
+tag lost it. v2 moves keys and never deletes them, and a test checks that both layouts send the
+same values. The bug never reached production because the flag was off.
 
-The evidence is the offline hill-climb census, not provider usage: on the standard profile the
-cacheable share of bot-mode prompt text rose from 9.9% to 21.9% and uncached prompt tokens per turn
-fell 12.3% (model mode 10.0%), while total prompt tokens rose 1.1 to 1.2% from the extra prefix
-message. The census models an ideal prefix cache, so the decision above still holds: a saving is
-claimed only from the provider's reported cache reads, which `ai-mode-duel` now sums per mode.
-`AI_PROVIDER_PROMPT_CACHE_LAYOUT_ENABLED=false` restores the plain layout.
+`providerPromptCacheLayoutEnabled` stays false. The hill-climb census measures the layout as its own
+mode, `botCached`. Against plain bot mode, it raises the cacheable share of prompt text from 9.9% to
+21.9% and cuts uncached prompt tokens per turn by 12.3%, but it sends 1.2% more prompt tokens. The
+stable prefix is about 3,000 characters, roughly 750 tokens, and `longPrefixCacheableSharePct`
+reads 0% for it: below the 1,024-token minimum several provider caches need, it may earn nothing.
+The decision above stands. The default flips only after a paid run (`ai-mode-duel` now sums provider
+cache reads per mode) shows cache reads worth more than the added tokens.

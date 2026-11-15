@@ -84,6 +84,9 @@ export interface CensusCounts {
   tacticianCacheableChars: number;
   strategistPromptChars: number;
   strategistCacheableChars: number;
+  /** The cacheable characters of prompts whose cached prefix is at least 1,024 tokens. */
+  tacticianLongPrefixChars: number;
+  strategistLongPrefixChars: number;
   byDecisionType: Record<string, number>;
   /** Times each trigger fired (live or shadow), summed over seats. */
   triggerFired: Record<string, number>;
@@ -109,6 +112,8 @@ function emptyCounts(): CensusCounts {
     tacticianCacheableChars: 0,
     strategistPromptChars: 0,
     strategistCacheableChars: 0,
+    tacticianLongPrefixChars: 0,
+    strategistLongPrefixChars: 0,
     byDecisionType: {},
     triggerFired: {},
     triggerEscalated: {},
@@ -175,6 +180,7 @@ export async function censusPod(
       const seen = tacticianCache.observe(prompt.messages);
       counts.tacticianPromptChars += seen.chars;
       counts.tacticianCacheableChars += seen.cacheableChars;
+      counts.tacticianLongPrefixChars += seen.longPrefixChars;
       counts.byDecisionType[request.decisionType] =
         (counts.byDecisionType[request.decisionType] ?? 0) + 1;
       const view = engine.view(request.decidingPlayer);
@@ -189,6 +195,7 @@ export async function censusPod(
       const seen = strategistCache.observe(prompt.messages);
       counts.strategistPromptChars += seen.chars;
       counts.strategistCacheableChars += seen.cacheableChars;
+      counts.strategistLongPrefixChars += seen.longPrefixChars;
       return Promise.resolve({
         response: {
           requestId: request.requestId,

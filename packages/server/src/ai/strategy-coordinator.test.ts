@@ -1103,10 +1103,12 @@ describe('StrategyCoordinator — wake reasons under everyTurn (ADR 0045)', () =
 /**
  * S5 (2026-11-15): the stable-prefix layout used to delete `yourStrategyProfile` from the
  * observation and re-add it only when a versioned profile existed, so a seat that had only the
- * legacy archetype tag lost it. These guard the layout as the production default.
+ * legacy archetype tag lost it. These guard the layout for when it is turned on.
  */
 describe('StrategyCoordinator with the stable-prefix layout', () => {
-  async function promptFor(config = DEFAULT_AI_CONFIG) {
+  const LAYOUT = { ...DEFAULT_AI_CONFIG, providerPromptCacheLayoutEnabled: true };
+
+  async function promptFor(config = LAYOUT) {
     const client = strategist();
     const engine = {
       view: vi.fn().mockReturnValue(view),
@@ -1128,8 +1130,8 @@ describe('StrategyCoordinator with the stable-prefix layout', () => {
     return call[0];
   }
 
-  it('is the default layout', () => {
-    expect(DEFAULT_AI_CONFIG.providerPromptCacheLayoutEnabled).toBe(true);
+  it('stays off by default until a paid run shows provider cache reads', () => {
+    expect(DEFAULT_AI_CONFIG.providerPromptCacheLayoutEnabled).toBe(false);
   });
 
   it('keeps the legacy archetype tag, in the stable prefix', async () => {

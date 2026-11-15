@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AiPrompt } from './context';
 import {
+  MIN_CACHED_PREFIX_CHARS,
   PREFIX_CACHE_BLOCK_CHARS,
   preparePromptForCaching,
   PrefixCacheModel,
@@ -44,6 +45,20 @@ describe('PrefixCacheModel', () => {
     const text = 'm'.repeat(BLOCK * 2);
     cache.observe([{ role: 'system', content: text }]);
     expect(cache.observe([{ role: 'user', content: text }]).cacheableChars).toBe(0);
+  });
+
+  it('counts a long-prefix hit only when the repeated prefix reaches 1,024 tokens', () => {
+    const cache = new PrefixCacheModel();
+    const short = [{ role: 'system' as const, content: 's'.repeat(BLOCK * 2) }];
+    cache.observe(short);
+    expect(cache.observe(short)).toMatchObject({ cacheableChars: BLOCK * 2, longPrefixChars: 0 });
+    const long = [
+      { role: 'system' as const, content: 'l'.repeat(MIN_CACHED_PREFIX_CHARS + BLOCK) },
+    ];
+    cache.observe(long);
+    const seen = cache.observe(long);
+    expect(seen.cacheableChars).toBeGreaterThanOrEqual(MIN_CACHED_PREFIX_CHARS);
+    expect(seen.longPrefixChars).toBe(seen.cacheableChars);
   });
 
   it('serves a repeat of any earlier prompt, not only the last one', () => {
