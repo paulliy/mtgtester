@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A targets a creature or land card in a graveyard. Text B targets any card in any player's graveyard, which allows non-creature, non-land cards and cards from opponents' graveyards.","Text A returns the card to its owner's hand. Text B puts it into a hand without naming the owner, so the restriction on the destination differs."]}

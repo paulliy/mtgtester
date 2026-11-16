@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The engine still reports the \"Designed Only for Killing\" static line as unrecognized and already holds a partial parse of it, so restating the -1/-1 effect would double it and the schema offers no way to replace it."}
