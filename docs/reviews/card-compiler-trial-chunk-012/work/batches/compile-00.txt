@@ -1,4 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-012/work/prompts/compile/sierra-nuka-s-biggest-fan.r2.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/compile/sierra-nuka-s-biggest-fan.r2.json
-docs/reviews/card-compiler-trial-chunk-012/work/prompts/compile/raven-eagle.r2.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/compile/raven-eagle.r2.json
-docs/reviews/card-compiler-trial-chunk-012/work/prompts/compile/cemetery-recruitment.r2.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/compile/cemetery-recruitment.r2.json
-docs/reviews/card-compiler-trial-chunk-012/work/prompts/compile/vulpine-harvester.r2.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/compile/vulpine-harvester.r2.json

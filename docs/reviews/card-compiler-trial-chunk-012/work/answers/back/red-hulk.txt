@@ -1,0 +1,2 @@
+Whenever this creature is dealt damage, put a +1/+1 counter on this creature.
+When you do, this creature deals damage equal to the number of +1/+1 counters on this creature to target creature, player, planeswalker, or battle.

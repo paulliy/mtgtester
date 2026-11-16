@@ -1,0 +1,1 @@
+{4}, {T}: Put one card from hand onto the battlefield. The card must be an artifact, a legendary card, or a Saga card. Activate at any time.
