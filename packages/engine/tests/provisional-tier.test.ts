@@ -14,6 +14,7 @@ import { Engine } from '../src/engine';
 import { RandomDecisionProvider } from '../src/providers/providers';
 import { EngineUsageError } from '../src/errors';
 import { createGame } from '../src/state/game';
+import { createToken, tokenSpecCopying } from '../src/state/objects';
 import { provisionalUseOf, stampProvisional } from '../src/state/provisional-use';
 import { buildSpectatorState, formatSpectatorLog } from '../src/view/spectator';
 import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
@@ -236,6 +237,25 @@ describe('the game opt-in', () => {
     expect(buildSpectatorState(ctx).battlefield.find((p) => p.id === perm.id)?.provisional).toBe(
       true,
     );
+  });
+
+  it('stamps each deck card once, even after a token copies it', () => {
+    const ctx = createGame(
+      gameConfig(seats(), { allowProvisional: true, provisionalDefinitions: [provisionalDef()] }),
+    );
+    const perm = spawn(ctx, 'P1', oddity());
+    const token = createToken(ctx, tokenSpecCopying(ctx, perm, false), 'P2');
+    // The copy keeps its provenance under a definition of its own.
+    expect(ctx.defs.get(token.oracleId)?.trust).toBe('provisional');
+    const stamped = stampProvisional(ctx, {
+      gameId: 'g',
+      winnerSeat: null,
+      finishingOrder: [],
+      turnCount: 1,
+      halted: false,
+      haltReason: null,
+    });
+    expect(stamped.provisionalCards).toEqual(['Test Provisional Oddity']);
   });
 
   it('stamps the result a driven game returns', () => {

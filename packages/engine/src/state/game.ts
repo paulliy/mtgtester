@@ -201,6 +201,11 @@ export function createGame(config: GameConfig): GameContext {
     temporaryGraveyardAbilities: {},
     turnCap: config.turnCap ?? DEFAULT_TURN_CAP,
   };
+  const provisionalNames = new Set<string>();
+  for (const p of config.players)
+    for (const card of [...p.commanders, ...p.cards, ...(p.companion != null ? [p.companion] : [])])
+      if (defs.get(card.oracleId)?.trust === 'provisional') provisionalNames.add(card.name);
+  if (provisionalNames.size > 0) state.provisionalDeckCards = [...provisionalNames].sort();
 
   const diagnostics = config.diagnostics ?? defaultDiagnostics();
   return {

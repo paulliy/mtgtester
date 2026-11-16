@@ -1010,6 +1010,12 @@ export interface EngineState extends GameState {
    */
   provisionalAnnounced?: string[];
   /**
+   * Names of the provisional cards the decks held when the game began (H1), sorted. Fixed at
+   * creation, so tokens and copies of a provisional card, which keep its trust marking, never
+   * add to it. Absent in a game with no provisional card.
+   */
+  provisionalDeckCards?: string[];
+  /**
    * Additional combat phases waiting to run, most recently inserted first (CR 500.8): each runs
    * directly after the phase it was created in, ahead of anything scheduled after that phase
    * earlier. Emptied at the end of the turn.

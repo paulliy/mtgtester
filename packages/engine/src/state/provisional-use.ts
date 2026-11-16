@@ -9,11 +9,13 @@ import { emit } from '../log/log';
 import type { PriorityActionPayload } from '../actions/legal';
 import type { EngineObject, EnginePlayerState, GameContext } from './types';
 
-/** Names of the provisional cards in this game's decks, sorted; empty for most games. */
+/**
+ * Names of the provisional cards in this game's decks, sorted; empty for most games. Read from
+ * the list fixed at creation, because tokens and copies of a provisional card keep its trust
+ * marking under definitions of their own.
+ */
 export function provisionalCardNames(ctx: GameContext): string[] {
-  const names: string[] = [];
-  for (const def of ctx.defs.values()) if (def.trust === 'provisional') names.push(def.name);
-  return names.sort();
+  return [...(ctx.state.provisionalDeckCards ?? [])];
 }
 
 /** The result, stamped with the provisional cards its decks held. Unchanged when there are none. */
