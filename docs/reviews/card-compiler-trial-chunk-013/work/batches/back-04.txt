@@ -1,0 +1,5 @@
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/back/vernal-bloom.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/back/vernal-bloom.txt
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/back/bristlebane-battler.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/back/bristlebane-battler.txt
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/back/fire-servant.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/back/fire-servant.txt
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/back/kessig-cagebreakers.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/back/kessig-cagebreakers.txt
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/back/mystical-dispute.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/back/mystical-dispute.txt

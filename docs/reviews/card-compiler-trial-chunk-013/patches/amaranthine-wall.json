@@ -1,0 +1,44 @@
+{
+  "name": "Amaranthine Wall",
+  "oracleId": "3c9fcda6-3ebc-4f9d-9f73-2bb4252d9420",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}: ~ gains indestructible until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": "source",
+              "keyword": "indestructible"
+            }
+          ],
+          "description": "{2}: This creature gains indestructible until end of turn."
+        }
+      }
+    ]
+  }
+}
