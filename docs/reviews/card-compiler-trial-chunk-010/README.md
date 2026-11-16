@@ -4,7 +4,8 @@ Chunk 010 of the [batch card compile campaign](../../plans/batch-card-compile-ca
 next 300 pinned EDHREC cards by rank that no trial had seen (ranks 7,785 to 8,537). Every valid
 patch was audited by the main thread, and every flagged one reviewed by a Sonnet reviewer.
 
-**77 cards were promoted.** The pinned pool now models 4,508 of 8,972 cards (3,718 before the
+**77 cards were promoted.** Plate Armor was retired later, in chunk 012, when that chunk's review showed
+its own cost reduction is never applied ([chunk 012](../card-compiler-trial-chunk-012/README.md)). The pinned pool now models 4,508 of 8,972 cards (3,718 before the
 campaign). They are `implemented-unreviewed`
 ([ADR 0047](../../decisions/0047-compiled-cards-as-unreviewed-overrides.md)).
 
