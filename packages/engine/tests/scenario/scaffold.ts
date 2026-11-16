@@ -30,6 +30,7 @@ import {
   type CardResolver,
   type CardScenario,
   type CardScenarioFile,
+  type PlacedSpec,
   type ScenarioExpectation,
   type ScenarioStep,
   type SeatSpec,
@@ -1107,6 +1108,279 @@ function draftKeywords(
   };
 }
 
+// ── Static abilities ──────────────────────────────────────────────────────────────────────────
+
+/** A creature a static draft places, and what a selector can ask of it. */
+interface StaticSubject {
+  name: string;
+  seat: Seat;
+  self: boolean;
+  types: string[];
+  subtypes: string[];
+  colors: string[];
+  attached: boolean;
+  power: number;
+  toughness: number;
+}
+
+/**
+ * Whether a static's `affects` selector covers a subject, for the leaves a draft can arrange; null
+ * for any other leaf, which leaves the static to the agent.
+ */
+function staticCovers(selector: Record<string, unknown>, subject: StaticSubject): boolean | null {
+  const of = selector['of'];
+  switch (selector['kind']) {
+    case 'self':
+      return subject.self;
+    case 'other':
+      return !subject.self;
+    case 'attachedToSource':
+      return subject.attached;
+    case 'isToken':
+      return false;
+    case 'type':
+      return subject.types.includes(selector['value'] as string);
+    case 'subtype':
+      return subject.subtypes.includes(selector['value'] as string);
+    case 'color':
+      return subject.colors.includes(selector['value'] as string);
+    case 'controller': {
+      const who = selector['who'];
+      if (who === 'you') return subject.seat === 'P1';
+      if (who === 'opponents') return subject.seat !== 'P1';
+      return null;
+    }
+    case 'not': {
+      const inner = staticCovers(of as Record<string, unknown>, subject);
+      return inner === null ? null : !inner;
+    }
+    case 'allOf': {
+      let all = true;
+      for (const part of of as Array<Record<string, unknown>>) {
+        const covered = staticCovers(part, subject);
+        if (covered === null) return null;
+        all &&= covered;
+      }
+      return all;
+    }
+    default:
+      return null;
+  }
+}
+
+/** Every `value` of one leaf kind in a selector. */
+function selectorValues(selector: unknown, kind: string): string[] {
+  if (selector === null || typeof selector !== 'object') return [];
+  const record = selector as Record<string, unknown>;
+  const own = record['kind'] === kind ? [record['value'] as string] : [];
+  return [
+    ...own,
+    ...Object.values(record).flatMap((value) =>
+      Array.isArray(value)
+        ? value.flatMap((item) => selectorValues(item, kind))
+        : selectorValues(value, kind),
+    ),
+  ];
+}
+
+const COLOR_SYMBOL: Record<string, string> = { W: 'W', U: 'U', B: 'B', R: 'R', G: 'G' };
+
+/**
+ * A static ability's draft: the card on P1's battlefield with creatures arranged on both sides of
+ * its selector, each expected to have the keyword or the power and toughness the IR gives exactly
+ * when the selector covers it. Creatures it does not cover are expected unchanged, so the draft
+ * also catches a widened selector. Covers layer 6 keyword grants and layer 7c/7d constant P/T
+ * changes; anything else is left to the agent.
+ */
+function draftStatic(
+  card: OracleCard,
+  definition: CardDefinition,
+  index: number,
+  lines: string[],
+  candidates: number[],
+  resolve: CardResolver,
+): ScaffoldUnit & { scenario?: CardScenario; support?: SupportCardSpec[] } {
+  const part = `staticEffects[${index}]`;
+  const unit = (status: ScaffoldUnit['status'], reason?: string, clause: number | null = null) => ({
+    part,
+    clause,
+    status,
+    ...(reason !== undefined && { reason }),
+    scenarioIds: [],
+  });
+  const effect = definition.staticEffects[index]!;
+  if (effect.condition !== undefined) return unit('unsupported', 'a static with a condition');
+  const op = effect.op as Record<string, unknown>;
+  let keyword: string | null = null;
+  let delta: { power: number; toughness: number } | null = null;
+  if (op['layer'] === 6 && typeof op['addKeyword'] === 'string' && Object.keys(op).length === 2)
+    keyword = op['addKeyword'];
+  else if (op['layer'] === 7 && (op['sublayer'] === 'c' || op['sublayer'] === 'd')) {
+    const power = constant(op['power'] as Value | number | undefined);
+    const toughness = constant(op['toughness'] as Value | number | undefined);
+    if (power === null || toughness === null || Object.keys(op).length !== 4)
+      return unit('unsupported', 'a static power/toughness change that is not constant');
+    delta = { power, toughness };
+  } else
+    return unit(
+      'unsupported',
+      `the static ${Object.keys(op)
+        .filter((key) => key !== 'layer' && key !== 'sublayer')
+        .join(', ')} (layer ${String(op['layer'])}${(op['sublayer'] as string | undefined) ?? ''})`,
+    );
+
+  // The line: the only candidate, or the one naming the keyword or the +N/+N.
+  const signed = (n: number) => (n < 0 ? `-${-n}` : `+${n}`);
+  const named = candidates.filter((line) => {
+    const text = lines[line - 1]!.toLowerCase();
+    return keyword !== null
+      ? text.includes(keywordText(keyword))
+      : text.includes(`${signed(delta!.power)}/${signed(delta!.toughness)}`);
+  });
+  const clause = candidates.length === 1 ? candidates[0]! : named.length === 1 ? named[0]! : null;
+  if (clause === null) return unit('unsupported', 'no single Oracle line names this static');
+
+  const affects = effect.affects as Record<string, unknown>;
+  const attaches = JSON.stringify(affects).includes('"attachedToSource"');
+  const isCreature = definition.types.includes('Creature');
+  if (attaches && isCreature)
+    return unit('unsupported', 'a creature that grants to what it is attached to');
+  if (attaches && !definition.subtypes.some((type) => type === 'Equipment' || type === 'Aura'))
+    return unit('unsupported', 'an attached static on neither an Aura nor an Equipment');
+  const subtypes = [...new Set(selectorValues(affects, 'subtype'))];
+  const colors = [...new Set(selectorValues(affects, 'color'))];
+  if (colors.some((color) => COLOR_SYMBOL[color] === undefined))
+    return unit('unsupported', 'a color the draft cannot give a creature');
+  const toughness = 2 + Math.max(0, -(delta?.toughness ?? 0));
+  // Support cards are shared by name across a file's drafts, so a non-default creature gets a
+  // name of its own.
+  const distinct = subtypes.length > 0 || colors.length > 0 || toughness !== 2;
+  const nameOf = (base: string) => (distinct ? `${base} ${index + 1}` : base);
+  const squire = nameOf('Scaffold Squire');
+  const subject = (
+    name: string,
+    seat: Seat,
+    withFilters: boolean,
+    attached = false,
+  ): StaticSubject & { spec: SupportCardSpec } => {
+    const types = withFilters && subtypes.length > 0 ? subtypes : ['Bear'];
+    const hue = withFilters && colors.length > 0 ? colors[0]! : 'G';
+    return {
+      name,
+      seat,
+      self: false,
+      types: ['Creature'],
+      subtypes: types,
+      colors: [hue],
+      attached,
+      power: 2,
+      toughness,
+      spec: {
+        name,
+        typeLine: `Creature — ${types.join(' ')}`,
+        manaCost: `{${COLOR_SYMBOL[hue]!}}`,
+        power: '2',
+        toughness: String(toughness),
+      },
+    };
+  };
+  const subjects = [
+    subject(squire, 'P1', true, attaches),
+    subject(nameOf('Scaffold Rival'), 'P2', true),
+    ...(subtypes.length > 0 || colors.length > 0
+      ? [subject(nameOf('Scaffold Stranger'), 'P1', false)]
+      : []),
+  ];
+  const printedPower = Number(card.power);
+  const printedToughness = Number(card.toughness);
+  const selfSubject: StaticSubject | null =
+    isCreature && Number.isInteger(printedPower) && Number.isInteger(printedToughness)
+      ? {
+          name: card.name,
+          seat: 'P1',
+          self: true,
+          types: definition.types,
+          subtypes: definition.subtypes,
+          colors: definition.colors,
+          attached: false,
+          power: printedPower,
+          toughness: printedToughness,
+        }
+      : null;
+  if (isCreature && selfSubject === null)
+    return unit('unsupported', 'a creature with no printed power and toughness', clause);
+
+  const expect: ScenarioExpectation[] = [];
+  const outcome: string[] = [];
+  for (const target of [...(selfSubject === null ? [] : [selfSubject]), ...subjects]) {
+    const covered = staticCovers(affects, target);
+    if (covered === null)
+      return unit('unsupported', 'a static selector the draft cannot arrange', clause);
+    if (target.self && delta !== null && covered && target.toughness + delta.toughness <= 0)
+      return unit('unsupported', 'a static that would kill the card itself', clause);
+    if (keyword !== null)
+      expect.push({
+        keywords: {
+          card: target.name,
+          player: target.seat,
+          ...(covered ? { has: [keyword] } : { lacks: [keyword] }),
+        },
+      });
+    else
+      expect.push({
+        stats: {
+          card: target.name,
+          player: target.seat,
+          power: target.power + (covered ? delta!.power : 0),
+          toughness: target.toughness + (covered ? delta!.toughness : 0),
+        },
+      });
+    if (covered)
+      outcome.push(
+        keyword !== null
+          ? `${target.name} (${target.seat}) has ${keywordText(keyword)}`
+          : `${target.name} (${target.seat}) is ${target.power + delta!.power}/${target.toughness + delta!.toughness}`,
+      );
+  }
+  if (outcome.length === 0)
+    return unit('unsupported', 'no arranged creature falls under the static', clause);
+  // A keyword the subject has printed would pass whether or not the static works.
+  if (keyword !== null && selfSubject !== null && definition.keywords.includes(keyword as never))
+    return unit('unsupported', 'the card already has the keyword it grants', clause);
+
+  const p1Battlefield: Array<string | PlacedSpec> = [
+    attaches ? { card: card.name, attachedTo: { player: 'P1', card: squire } } : card.name,
+    ...subjects.filter((target) => target.seat === 'P1').map((target) => target.name),
+  ];
+  const id = `${slugOf(card.name)}-scaffold-${slugOf(part)}`;
+  const scenario: CardScenario = {
+    id,
+    title: `${card.name}: ${outcome.join('; ')} ${DRAFT_MARK}`,
+    clauses: [clause],
+    instructions: [
+      `Look at ${card.name}${attaches ? ` attached to ${squire}` : ''} and the creatures on each side.`,
+    ],
+    expectedOutcome: `${outcome.join('; ')}; the other arranged creatures are unchanged.`,
+    seats: {
+      P1: { battlefield: p1Battlefield },
+      P2: { battlefield: subjects.filter((target) => target.seat === 'P2').map((t) => t.name) },
+    },
+    script: [],
+    expect,
+  };
+  const support = subjects.map((target) => target.spec);
+  const file: CardScenarioFile = {
+    schemaVersion: 1,
+    card: card.name,
+    supportCards: support,
+    scenarios: [scenario],
+  };
+  const verdict = confirmVerdict(file, resolve);
+  if (verdict.thrown !== undefined) return unit('unsupported', verdict.thrown, clause);
+  if (verdict.failures.length > 0) return unit('failed', verdict.failures.join('; '), clause);
+  return { ...unit('scaffolded', undefined, clause), scenarioIds: [id], scenario, support };
+}
+
 /**
  * Runs one draft through the real runner on a fresh engine. `failures` are expectations that did
  * not hold, the only outcome reported as a failed draft; `thrown` is a run that did not fit its
@@ -1477,6 +1751,19 @@ export function scaffoldCard(card: OracleCard, resolve: CardResolver): ScaffoldR
       start: 'activate',
       activated,
     });
+  });
+
+  // Statics: each on its own, against creatures arranged on both sides of its selector.
+  const staticLines = spellLines(lines, keywordLines);
+  definition.staticEffects.forEach((_, index) => {
+    const unit = draftStatic(card, definition, index, lines, staticLines, resolve);
+    if (unit.scenario !== undefined) {
+      scenarios.push(unit.scenario);
+      for (const spec of unit.support ?? []) support.set(spec.name, spec);
+    }
+    delete unit.scenario;
+    delete unit.support;
+    units.push(unit);
   });
 
   const attempt = (part: Part): ReturnType<typeof draftPart> => {

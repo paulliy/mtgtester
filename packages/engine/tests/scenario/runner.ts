@@ -239,6 +239,20 @@ export function scenarioFailures(run: ScenarioRun, scenario: CardScenario): stri
         for (const keyword of lacks)
           if (keywords.includes(keyword)) failures.push(`${card} has ${keyword}`);
       }
+    } else if ('stats' in expectation) {
+      const { card, power, toughness, player: controller } = expectation.stats;
+      const permanent = onePermanent(card, controller);
+      if (permanent !== undefined) {
+        const view = run.engine
+          .view(permanent.controllerId)
+          .battlefield.find((candidate) => candidate.id === permanent.id);
+        if (power !== undefined && view?.power !== power)
+          failures.push(`${card} has power ${view?.power ?? 'none'}, expected ${power}`);
+        if (toughness !== undefined && view?.toughness !== toughness)
+          failures.push(
+            `${card} has toughness ${view?.toughness ?? 'none'}, expected ${toughness}`,
+          );
+      }
     } else if ('tapped' in expectation) {
       const permanent = onePermanent(expectation.tapped.card, expectation.tapped.player);
       if (permanent !== undefined && permanent.tapped !== expectation.tapped.equals)
