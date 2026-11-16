@@ -7,7 +7,8 @@ found about 3% of fully checked patches wrong). Haiku workers answered every com
 back-translation and judge prompt; a Sonnet worker did the retry round and reviewed the flagged
 patches; the main thread audited every valid patch against Oracle text and the engine.
 
-**82 cards were promoted.** The pinned pool now models 3,956 of 8,972 cards (3,718 before the
+**82 cards were promoted.** Blade of the Bloodchief was retired later, in chunk 011, when that
+chunk's review showed its Vampire check can never pass ([chunk 011](../card-compiler-trial-chunk-011/README.md)). The pinned pool now models 3,956 of 8,972 cards (3,718 before the
 campaign). They are `implemented-unreviewed`
 ([ADR 0047](../../decisions/0047-compiled-cards-as-unreviewed-overrides.md)).
 
