@@ -1,0 +1,17 @@
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/spider-man-no-more.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/spider-man-no-more.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/electrolyze.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/electrolyze.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/search-the-premises.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/search-the-premises.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/exhibition-tidecaller.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/exhibition-tidecaller.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/samut-vizier-of-naktamun.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/samut-vizier-of-naktamun.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/omnath-locus-of-creation.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/omnath-locus-of-creation.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/kyoshi-island-plaza.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/kyoshi-island-plaza.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/glarb-calamity-s-augur.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/glarb-calamity-s-augur.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/spider-food.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/spider-food.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/might-of-the-masses.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/might-of-the-masses.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/diary-of-dreams.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/diary-of-dreams.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/split-decision.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/split-decision.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/ring-of-evos-isle.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/ring-of-evos-isle.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/thundering-raiju.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/thundering-raiju.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/rise-from-the-tides.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/rise-from-the-tides.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/illusionist-s-stratagem.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/illusionist-s-stratagem.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/battle-screech.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/battle-screech.json
