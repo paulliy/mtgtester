@@ -1,0 +1,1 @@
+Each creature that is a Barbarian, a Warrior, or a Berserker gets +2/+2 and has haste.

@@ -1,7 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-013/work/prompts/compile/pink-horror.r2.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/compile/pink-horror.r2.json
-docs/reviews/card-compiler-trial-chunk-013/work/prompts/compile/ignis-scientia.r2.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/compile/ignis-scientia.r2.json
-docs/reviews/card-compiler-trial-chunk-013/work/prompts/compile/iridian-maelstrom.r2.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/compile/iridian-maelstrom.r2.json
-docs/reviews/card-compiler-trial-chunk-013/work/prompts/compile/liliana-the-repentant.r2.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/compile/liliana-the-repentant.r2.json
-docs/reviews/card-compiler-trial-chunk-013/work/prompts/compile/relic-vial.r2.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/compile/relic-vial.r2.json
-docs/reviews/card-compiler-trial-chunk-013/work/prompts/compile/seedship-agrarian.r2.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/compile/seedship-agrarian.r2.json
-docs/reviews/card-compiler-trial-chunk-013/work/prompts/compile/skirsdag-high-priest.r2.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/compile/skirsdag-high-priest.r2.json

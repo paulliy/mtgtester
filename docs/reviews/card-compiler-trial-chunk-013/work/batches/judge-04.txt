@@ -1,0 +1,5 @@
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/judge/vernal-bloom.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/judge/vernal-bloom.json
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/judge/bristlebane-battler.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/judge/bristlebane-battler.json
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/judge/fire-servant.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/judge/fire-servant.json
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/judge/kessig-cagebreakers.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/judge/kessig-cagebreakers.json
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/judge/mystical-dispute.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/judge/mystical-dispute.json
