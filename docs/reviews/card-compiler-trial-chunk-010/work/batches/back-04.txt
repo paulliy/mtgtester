@@ -1,2 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/back/horobi-death-s-wail.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/back/horobi-death-s-wail.txt
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/back/lashwrithe.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/back/lashwrithe.txt
