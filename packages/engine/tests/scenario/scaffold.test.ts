@@ -3,6 +3,8 @@
  * real card, fails on a wrong one, and carries expectations read from the IR rather than from
  * the engine; these tests hold each of those.
  */
+import { readFileSync } from 'node:fs';
+import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../../src/cards/interpret';
 import { parseCardScenarioFile } from '../../src/testing/card-scenario';
@@ -12,6 +14,20 @@ import { resolveScenarioCard, runScenario, scenarioFailures } from './runner';
 import { SCAFFOLD_VERSION, scaffoldCard } from './scaffold';
 
 const scaffold = (name: string) => scaffoldCard(pinStore.get(name), resolveScenarioCard);
+
+// The EDHREC pinned pool, for shapes the pin store has no card for.
+const pinned = new Map(
+  (
+    JSON.parse(
+      readFileSync(
+        new URL('../../../server/fixtures/edhrec-pinned-oracle.json', import.meta.url),
+        'utf8',
+      ),
+    ) as Array<{ card: OracleCard }>
+  ).map((pin) => [pin.card.name, pin.card]),
+);
+const resolvePool = (name: string): OracleCard => pinned.get(name) ?? resolveScenarioCard(name);
+const scaffoldPool = (name: string) => scaffoldCard(resolvePool(name), resolvePool);
 
 describe('scaffoldCard', () => {
   it('drafts a removal spell from its IR: cast it on a legal target, expect the target destroyed', () => {
@@ -98,5 +114,91 @@ describe('scaffoldCard', () => {
     expect(scaffoldCard(unmodeled, resolveScenarioCard).units).toEqual([
       expect.objectContaining({ part: 'card', status: 'unsupported' }),
     ]);
+  });
+
+  it('drafts a static on both sides of its selector, so a widened selector fails too', () => {
+    const { file, units } = scaffoldPool('Glorious Anthem');
+    expect(units).toEqual([
+      expect.objectContaining({ part: 'staticEffects[0]', status: 'scaffolded' }),
+    ]);
+    expect(file.scenarios[0]!.expect).toEqual([
+      { stats: { card: 'Scaffold Squire', player: 'P1', power: 3, toughness: 3 } },
+      { stats: { card: 'Scaffold Rival', player: 'P2', power: 2, toughness: 2 } },
+    ]);
+  });
+
+  it('attaches an Equipment to its subject for an attached static', () => {
+    const { file } = scaffoldPool('Lightning Greaves');
+    const [haste] = file.scenarios;
+    expect(haste!.seats.P1!.battlefield).toContainEqual({
+      card: 'Lightning Greaves',
+      attachedTo: { player: 'P1', card: 'Scaffold Squire' },
+    });
+    expect(haste!.expect).toContainEqual({
+      keywords: { card: 'Scaffold Rival', player: 'P2', lacks: ['haste'] },
+    });
+  });
+
+  it('reaches an upkeep trigger through the turn structure, from the seat before P1', () => {
+    const { file, units } = scaffoldPool('Phyrexian Arena');
+    expect(units[0]).toMatchObject({ part: 'triggers[0]', status: 'scaffolded' });
+    expect(file.scenarios[0]).toMatchObject({
+      turn: { player: 'P4' },
+      continue: { throughUpkeeps: 1 },
+      end: 'gameOver',
+      script: [],
+    });
+    expect(file.scenarios[0]!.expect).toContainEqual({ life: { player: 'P1', equals: 39 } });
+  });
+
+  it('bottoms a scried card so the draw after it shows the scry happened', () => {
+    const { file } = scaffoldPool('Opt');
+    const [scenario] = file.scenarios;
+    expect(scenario!.clauses).toEqual([1, 2]);
+    expect(scenario!.expect).toContainEqual({
+      zone: { player: 'P1', zone: 'hand', has: ['Scaffold Page 2'] },
+    });
+    expect(scenario!.expect).toContainEqual({
+      event: { type: 'scry', payload: '"looked":1,"bottomed":1', count: 1 },
+    });
+  });
+
+  it('expects the exact power and toughness a pump gives its target', () => {
+    const { file } = scaffoldPool('Giant Growth');
+    expect(file.scenarios[0]!.expect).toContainEqual({
+      stats: { card: 'Scaffold Ally', power: 4, toughness: 5, player: 'P1' },
+    });
+  });
+
+  it('drafts each mode of a modal spell through the cast action that names it', () => {
+    const { file, units } = scaffold('Rakdos Charm');
+    expect(units.map((unit) => unit.status)).toEqual(['unsupported', 'scaffolded', 'unsupported']);
+    expect(file.scenarios.map((scenario) => scenario.id)).toEqual([
+      'rakdos-charm-scaffold-spellability-mode-2',
+    ]);
+    expect(file.scenarios[0]!.script[0]!.choose).toMatch(/Destroy target artifact/);
+  });
+
+  it('fails a static draft under a wrong power change', () => {
+    const right = scaffoldPool('Glorious Anthem').file;
+    const previous = installDefinitionTransform((definition) =>
+      definition.name === 'Glorious Anthem'
+        ? {
+            ...definition,
+            staticEffects: definition.staticEffects.map((effect) => ({
+              ...effect,
+              op: { ...effect.op, power: 2 } as typeof effect.op,
+            })),
+          }
+        : definition,
+    );
+    try {
+      const scenario = right.scenarios[0]!;
+      expect(
+        scenarioFailures(runScenario(right, scenario, { resolve: resolvePool }), scenario),
+      ).toContain('Scaffold Squire has power 4, expected 3');
+    } finally {
+      installDefinitionTransform(previous);
+    }
   });
 });

@@ -81,7 +81,8 @@ still writes. The probe drafts every modeled EDHREC card's promotion scaffold
 runs the passing drafts under each mutant in process, and counts what is left. Only an expectation
 failure counts as a kill, as in `mutate-cards`. The quick profile samples every 8th card; the
 standard profile measures all of them. `packages/server/src/hill-climb/authoring.test.ts` gates the
-quick sample in the normal suite.
+quick sample in the normal suite. A part counts as scaffolded only when every unit of it has a
+passing draft: a modal spell with one mode drafted and another not does not count.
 
 To climb it, run `bun run hill-climb --only authoring --save <scratch>/before.json` before a
 generator change and `--against` it after. Teaching the generator a new effect or trigger

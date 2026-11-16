@@ -493,6 +493,16 @@ before naming it in the manifest. The drafts are positives only: negatives (a re
 declined "you may", an unpaid cost) and the shapes it reports as `unsupported` are still yours, and
 the command lists the mutants the drafts leave alive.
 
+What it drafts: spells (each mode of a "choose one" spell separately, and an instant or sorcery
+spanning several lines as one draft), self-enters, dies and watch triggers, upkeep, end step and
+beginning of combat triggers (played through the scenario's `continue`), the card's own attack and
+combat damage triggers (it attacks P2 unblocked), activated abilities with tap, sacrifice, life or
+cycling costs, plain {T} mana abilities, arrival replacements, and static keyword grants and
+constant power/toughness changes (creatures placed on both sides of the selector, so the draft
+also fails a widened selector). A scry or surveil draft sends every looked-at card away, so a draw
+after it shows the scry happened. A scenario expectation `stats` checks power and toughness after
+layers.
+
 Reviewed drafts may satisfy manifest clauses. A fresh draft's title ends `(generated scaffold vN,
 review against the Oracle line)`; once you have read it against its line, `card:scaffold --approve`
 rewrites that to `(generated scaffold vN, reviewed)` and adds

@@ -182,10 +182,21 @@ interface Draft {
   outcome: string[];
   /** Library cards the draft has used, so two library effects do not share them. */
   libraryUsed: boolean;
+  /** Pages P1's library top has dealt so far to draw, mill, scry and surveil, in order. */
+  pagesTaken: number;
+  /** Where the last page-taking effect put its cards (null for the bottom). */
+  lastLibrary: 'hand' | 'graveyard' | null;
+  /** Exact descriptions of per-card choices to make (a scry's "Put … on the bottom"). */
+  choices: string[];
+  /** The card's printed power and toughness, for an effect on its own source. */
+  sourcePower: string | null;
+  sourceToughness: string | null;
   /** Names a later choice may pick by (a search's "Find Island"). */
   prefer: string[];
   /** Basics the draft pays with, which a search must not find. */
   avoid: Set<string>;
+  /** Creatures that attack P2 when a combat comes up. */
+  attackers: string[];
 }
 
 const BASIC_TYPES: Record<string, string> = {
@@ -272,6 +283,29 @@ function ownerOf(name: string): Seat {
   return name === ALLY ? 'P1' : 'P2';
 }
 
+/** The next `n` pages of P1's arranged library top, in order. */
+function takePages(draft: Draft, n: number): string[] {
+  const pages = Array.from({ length: n }, (_, index) => PAGE(draft.pagesTaken + index + 1));
+  draft.pagesTaken += n;
+  return pages;
+}
+
+/**
+ * Arranges the pages the effects took plus one more, and checks the extra one stayed where it
+ * was: not in the zone the last draw or mill put cards into.
+ */
+function finishLibrary(draft: Draft): void {
+  if (draft.pagesTaken === 0) return;
+  const pages = Array.from({ length: draft.pagesTaken + 1 }, (_, index) => PAGE(index + 1));
+  for (const page of pages) draft.support.set(page, creatureSpec(page, 1));
+  draft.seats.P1.libraryTop = pages;
+  draft.libraryUsed = true;
+  if (draft.lastLibrary !== null)
+    draft.expect.push({
+      zone: { player: 'P1', zone: draft.lastLibrary, lacks: [pages[draft.pagesTaken]!] },
+    });
+}
+
 /**
  * Adds one effect to the draft: what to arrange and what to expect. Returns null when the
  * effect is one the generator does not draft, with the reason.
@@ -299,18 +333,48 @@ function addEffect(
       const n = amountOf(e['count'] as Value);
       if (n === null || n === 0) return `${effect.op} a non-constant count`;
       if (draft.libraryUsed) return 'two library effects in one ability';
-      draft.libraryUsed = true;
-      const pages = Array.from({ length: n + 1 }, (_, index) => PAGE(index + 1));
-      for (const page of pages) draft.support.set(page, creatureSpec(page, 1));
-      draft.seats.P1.libraryTop = pages;
+      // Pages are dealt from P1's arranged library top in order; the one after the last card an
+      // effect takes must stay put, which `finishLibrary` checks.
+      const pages = takePages(draft, n);
       const zone = effect.op === 'draw' ? 'hand' : 'graveyard';
-      draft.expect.push({
-        zone: { player: 'P1', zone, has: pages.slice(0, n), lacks: [pages[n]!] },
-      });
+      draft.lastLibrary = zone;
+      draft.expect.push({ zone: { player: 'P1', zone, has: pages } });
       draft.outcome.push(
         effect.op === 'draw'
           ? `P1 draws exactly ${n} card${n === 1 ? '' : 's'}`
           : `P1 mills exactly ${n} card${n === 1 ? '' : 's'}`,
+      );
+      return null;
+    }
+    case 'scry':
+    case 'surveil': {
+      if ((e['player'] ?? 'controller') !== 'controller') return `${effect.op} for another player`;
+      const n = amountOf(e['count'] as Value);
+      if (n === null || n === 0) return `${effect.op} a non-constant count`;
+      if (draft.libraryUsed) return 'two library effects in one ability';
+      // Every looked-at card goes away (bottom or graveyard), so a later draw shows the scry
+      // happened, and the event counts how many were looked at.
+      const pages = takePages(draft, n);
+      if (effect.op === 'scry' && n > 1) draft.choices.push('Keep the current bottom order');
+      for (const page of pages)
+        draft.choices.push(
+          effect.op === 'scry' ? `Put ${page} on the bottom` : `Put ${page} into your graveyard`,
+        );
+      draft.expect.push({
+        event: {
+          type: effect.op,
+          payload: effect.op === 'scry' ? `"looked":${n},"bottomed":${n}` : `"looked":${n}`,
+          count: 1,
+        },
+      });
+      if (effect.op === 'surveil') {
+        draft.expect.push({ zone: { player: 'P1', zone: 'graveyard', has: pages } });
+        draft.lastLibrary = 'graveyard';
+      } else draft.lastLibrary = null;
+      draft.outcome.push(
+        effect.op === 'scry'
+          ? `P1 scries ${n} and puts ${pages.join(', ')} on the bottom`
+          : `P1 surveils ${n} and puts ${pages.join(', ')} into the graveyard`,
       );
       return null;
     }
@@ -359,7 +423,8 @@ function addEffect(
         draft.outcome.push(`the target player (${seat}) loses ${n} life`);
         return null;
       }
-      if (n === 0 || draft.libraryUsed) return 'drawTarget with a shared library';
+      if (n === 0 || draft.libraryUsed || draft.pagesTaken > 0)
+        return 'drawTarget with a shared library';
       draft.libraryUsed = true;
       const pages = Array.from({ length: n + 1 }, (_, index) => PAGE(index + 1));
       for (const page of pages) draft.support.set(page, creatureSpec(page, 1));
@@ -408,8 +473,33 @@ function addEffect(
     case 'tapTarget':
     case 'untapTarget':
     case 'putCounters':
+    case 'pumpUntilEot':
     case 'grantKeywordUntilEot': {
       const ref = e['target'];
+      if (
+        effect.op === 'pumpUntilEot' &&
+        (constant(e['power'] as Value) === null || constant(e['toughness'] as Value) === null)
+      )
+        return 'a pump of a non-constant size';
+      if (effect.op === 'pumpUntilEot' && ref === 'source') {
+        const p = constant(e['power'] as Value)!;
+        const t = constant(e['toughness'] as Value)!;
+        const basePower = Number(draft.sourcePower);
+        const baseToughness = Number(draft.sourceToughness);
+        if (!Number.isInteger(basePower) || !Number.isInteger(baseToughness))
+          return 'a pump on a source with no printed power and toughness';
+        if (baseToughness + t <= 0) return 'a pump that kills its source';
+        draft.expect.push({
+          stats: {
+            card: sourceName,
+            power: basePower + p,
+            toughness: baseToughness + t,
+            player: 'P1',
+          },
+        });
+        draft.outcome.push(`${sourceName} gets ${p >= 0 ? '+' : ''}${p}/${t >= 0 ? '+' : ''}${t}`);
+        return null;
+      }
       if (effect.op === 'putCounters' && ref === 'source') {
         const n = amountOf(e['count'] as Value);
         if (n === null) return 'counters of a non-constant count';
@@ -421,7 +511,16 @@ function addEffect(
       }
       const target = targetSlot(ref);
       if (target === null) return `${effect.op} on a non-target`;
-      const shrinks = effect.op === 'putCounters' && e['counter'] === '-1/-1';
+      const pump =
+        effect.op === 'pumpUntilEot'
+          ? {
+              power: constant(e['power'] as Value)!,
+              toughness: constant(e['toughness'] as Value)!,
+            }
+          : null;
+      const shrinks =
+        (effect.op === 'putCounters' && e['counter'] === '-1/-1') ||
+        (pump !== null && (pump.power < 0 || pump.toughness < 0));
       // A slot restricted to one side ("target creature you control") gets that side's permanent.
       const side = (target.spec as { controller?: string }).controller;
       const harmful =
@@ -429,9 +528,17 @@ function addEffect(
       const name = permanentFor(target.spec.kind, harmful);
       if (name === null) return `${effect.op} on a ${target.spec.kind} slot`;
       // -1/-1 counters: a target one tougher than the count survives to be counted.
-      const shrinkBy = shrinks ? amountOf(e['count'] as Value) : null;
+      const shrinkBy =
+        pump !== null
+          ? Math.max(0, -pump.toughness)
+          : shrinks
+            ? amountOf(e['count'] as Value)
+            : null;
       if (shrinks && shrinkBy === null) return 'counters of a non-constant count';
-      placeTarget(draft, target.slot, name, shrinks ? shrinkBy! + 1 : 2);
+      // A pump expects exact power and toughness, so its target must be placed for it alone.
+      if (pump !== null && draft.support.has(name)) return 'a pump on a target another effect uses';
+      const placedToughness = shrinkBy !== null && shrinkBy > 0 ? shrinkBy + 1 : 2;
+      placeTarget(draft, target.slot, name, placedToughness);
       const owner = ownerOf(name);
       if (effect.op === 'destroy') {
         draft.expect.push(
@@ -464,6 +571,19 @@ function addEffect(
           counters: { card: name, counter: e['counter'] as string, equals: n, player: owner },
         });
         draft.outcome.push(`the target ${name} gets ${n} ${e['counter'] as string} counter(s)`);
+      } else if (pump !== null) {
+        if (name !== ALLY && name !== FOE) return 'a pump on a non-creature slot';
+        draft.expect.push({
+          stats: {
+            card: name,
+            power: 1 + pump.power,
+            toughness: placedToughness + pump.toughness,
+            player: owner,
+          },
+        });
+        draft.outcome.push(
+          `the target ${name} gets ${pump.power >= 0 ? '+' : ''}${pump.power}/${pump.toughness >= 0 ? '+' : ''}${pump.toughness} (1/${placedToughness} to ${1 + pump.power}/${placedToughness + pump.toughness})`,
+        );
       } else {
         const keyword = e['keyword'] as string;
         draft.expect.push({ keywords: { card: name, has: [keyword], player: owner } });
@@ -483,7 +603,7 @@ function addEffect(
       const [destination] = destinations;
       if (destination!.zone !== 'battlefield' && destination!.zone !== 'hand')
         return `a search to the ${destination!.zone}`;
-      if (draft.libraryUsed) return 'two library effects in one ability';
+      if (draft.libraryUsed || draft.pagesTaken > 0) return 'two library effects in one ability';
       const found = Object.keys(BASIC_TYPES).find(
         (basic) =>
           !draft.avoid.has(basic) &&
@@ -571,6 +691,11 @@ interface Intent {
   match: (description: string, type: string) => boolean;
   /** The starting action's targets by slot, when they are not the ability's own (a removal spell that kills the card). */
   targets?: string[];
+  /**
+   * No action starts it: the turn structure does (an upkeep or combat trigger, played through the
+   * scenario's `continue`). Priority is always passed and the run ends with the game.
+   */
+  byTurn?: true;
 }
 
 /**
@@ -597,7 +722,7 @@ function recordScript(
     return map;
   };
   const steps: ScenarioStep[] = [];
-  let started = false;
+  let started = intent.byTurn === true;
   for (let count = 0; count < 200; count++) {
     const step = engine.advance();
     // A prepared position ends its game once its priority window closes (no `continue`).
@@ -610,7 +735,7 @@ function recordScript(
     const request = step.request;
     const stackEmpty = engine.getState().stack.length === 0;
     if (request.decisionType === 'priority') {
-      if (started && stackEmpty) return steps;
+      if (started && stackEmpty && intent.byTurn !== true) return steps;
       if (!started && request.decidingPlayer === 'P1') {
         const actions = request.legalActions.filter((action) =>
           intent.match(action.description, action.type),
@@ -653,6 +778,41 @@ function recordScript(
       continue;
     }
     if (!started) return `a ${request.decisionType} decision before the ability started`;
+    // Combat: the draft's attackers attack P2 and every other creature stays home; nobody blocks.
+    if (request.decisionType === 'declareAttackers' || request.decisionType === 'declareBlockers') {
+      const action = request.legalActions.find((candidate) => (candidate.targets ?? []).length > 0);
+      if (action === undefined || request.legalActions.length !== 1)
+        return `an unexpected ${request.decisionType} menu`;
+      const lookup = names();
+      const subjects = ((action as { data?: { subjects?: Array<{ subjectId: string }> } }).data
+        ?.subjects ?? []) as Array<{ subjectId: string }>;
+      const targets: string[] = [];
+      for (const slot of action.targets!) {
+        const subject = subjects[slot.slot];
+        const attacks =
+          request.decisionType === 'declareAttackers' &&
+          subject !== undefined &&
+          draft.attackers.includes(lookup.get(subject.subjectId) ?? '');
+        const choice = attacks ? 'P2' : slot.options.find((option) => option.startsWith('__no'));
+        if (choice === undefined || !slot.options.includes(choice))
+          return `a ${request.decisionType} slot offers ${slot.options.join(', ')}`;
+        targets.push(choice);
+      }
+      steps.push({
+        player: request.decidingPlayer as Seat,
+        choose: `/^${escapeRegex(action.description)}$/`,
+        targets,
+      });
+      engine.submit({
+        requestId: request.requestId,
+        actionId: action.id,
+        targets: action.targets!.map((slot, index) => ({
+          slot: slot.slot,
+          choice: targets[index]!,
+        })),
+      });
+      continue;
+    }
     // A later choice: a trigger's targets, or "you may".
     const lookup = names();
     const yes = request.legalActions.find((action) => /^yes\b/i.test(action.description));
@@ -692,7 +852,10 @@ function recordScript(
     // Identical descriptions are one choice to the runner ("Put Plains …" for each Plains).
     const oneChoice =
       byName.length > 0 && byName.every((action) => action.description === byName[0]!.description);
-    const choice = yes ?? (oneChoice ? byName[0] : undefined);
+    const listed = request.legalActions.filter((action) =>
+      draft.choices.includes(action.description),
+    );
+    const choice = yes ?? (listed.length === 1 ? listed[0] : oneChoice ? byName[0] : undefined);
     if (choice === undefined)
       return `an unexpected ${request.decisionType} decision: "${request.prompt}" [${request.legalActions
         .slice(0, 6)
@@ -712,15 +875,85 @@ function recordScript(
 interface Part {
   part: string;
   clause: number | null;
+  /** Every line an instant or sorcery's one ability spans, when no single line says it all. */
+  clauses?: number[];
+  /** One mode of a modal spell: the cast action that names it, and the target slots it uses. */
+  mode?: { index: number; description: string; slots: number[] };
   ability: Ability;
   /** How the ability starts, and where the card is arranged. */
-  start: 'cast' | 'activate' | 'die' | 'watch';
+  start: 'cast' | 'activate' | 'die' | 'watch' | 'phase';
+  /** For `phase`: how the turn structure reaches the trigger, and whether the card attacks. */
+  phase?: PhaseStart;
   /** For `watch`: the support card P1 plays or casts to fire the trigger. */
   watch?: Watcher;
   activated?: ActivatedAbility;
 }
 
 const ALLOWED_COSTS = new Set(['tap', 'sacrificeSelf', 'payLife']);
+
+interface PhaseStart {
+  turn?: CardScenario['turn'];
+  continue: NonNullable<CardScenario['continue']>;
+  /** The card attacks P2 unblocked: its attack and combat damage triggers. */
+  attack: boolean;
+  /** Words the trigger's line has, to pick it among the card's trigger lines. */
+  line: RegExp;
+  says: string;
+}
+
+/** Turn-structure triggers the generator drafts, by `trigger.when` and its player or subject. */
+function phaseStart(trigger: Record<string, unknown>): PhaseStart | null {
+  const keys = Object.keys(trigger).sort().join(',');
+  const subject = trigger['subject'] as { kind?: string } | undefined;
+  switch (trigger['when']) {
+    case 'upkeep':
+      if (keys !== 'player,when' || (trigger['player'] !== 'you' && trigger['player'] !== 'each'))
+        return null;
+      // From P4's turn the next upkeep is P1's, which "your" and "each" upkeep both see.
+      return {
+        turn: { player: 'P4' },
+        continue: { throughUpkeeps: 1 },
+        attack: false,
+        line: /\bupkeep\b/i,
+        says: "P1's next upkeep begins",
+      };
+    case 'endStep':
+      if (keys !== 'player,when' || (trigger['player'] !== 'you' && trigger['player'] !== 'each'))
+        return null;
+      return {
+        continue: { toEndStep: true },
+        attack: false,
+        line: /\bend step\b/i,
+        says: "P1's end step begins",
+      };
+    case 'beginningOfCombat':
+      if (keys !== 'player,when' || trigger['player'] !== 'you') return null;
+      return {
+        continue: { throughCombat: true },
+        attack: false,
+        line: /\bbeginning of combat\b/i,
+        says: "combat on P1's turn begins",
+      };
+    case 'attacks':
+      if (keys !== 'subject,when' || subject?.kind !== 'self') return null;
+      return {
+        continue: { throughCombat: true },
+        attack: true,
+        line: /\battacks?\b/i,
+        says: 'it attacks P2, unblocked',
+      };
+    case 'dealsCombatDamageToPlayer':
+      if (keys !== 'subject,when' || subject?.kind !== 'self') return null;
+      return {
+        continue: { throughCombat: true },
+        attack: true,
+        line: /\bcombat damage\b/i,
+        says: 'it attacks P2, unblocked, and deals combat damage',
+      };
+    default:
+      return null;
+  }
+}
 
 /** A support card P1 plays or casts to fire a trigger on another permanent or spell. */
 interface Watcher {
@@ -804,8 +1037,14 @@ function emptyDraft(): Draft {
     expect: [],
     outcome: [],
     libraryUsed: false,
+    pagesTaken: 0,
+    lastLibrary: null,
+    choices: [],
+    sourcePower: null,
+    sourceToughness: null,
     prefer: [],
     avoid: new Set(),
+    attackers: [],
   };
 }
 
@@ -837,6 +1076,8 @@ function draftPart(
   const gap = envelopeGap(part.ability);
   if (gap !== null) return { gap };
   const draft = emptyDraft();
+  draft.sourcePower = card.power;
+  draft.sourceToughness = card.toughness;
   // A search must not find a basic the draft pays with, or the expectations could not tell them apart.
   const payCost =
     part.start === 'activate'
@@ -854,12 +1095,16 @@ function draftPart(
     const reason = addEffect(draft, effect, part.ability, card.name);
     if (reason !== null) return { gap: reason };
   }
+  finishLibrary(draft);
   // Every target slot needs a choice the draft placed.
-  for (let slot = 0; slot < part.ability.targets.length; slot++)
+  const slots = part.mode?.slots ?? part.ability.targets.map((_, slot) => slot);
+  for (const slot of slots)
     if (!draft.slotChoice.has(slot)) return { gap: `target slot ${slot + 1} is used by no effect` };
 
   const isPermanent = !definition.types.some((type) => type === 'Instant' || type === 'Sorcery');
-  const id = `${slugOf(card.name)}-scaffold-${slugOf(part.part)}`;
+  const id = `${slugOf(card.name)}-scaffold-${slugOf(part.part)}${
+    part.mode === undefined ? '' : `-mode-${part.mode.index + 1}`
+  }`;
   const instructions: string[] = [];
   let intent: Intent;
   const p1 = draft.seats.P1;
@@ -875,7 +1120,8 @@ function draftPart(
       : {
           match: (description, type) =>
             type === 'castSpell' &&
-            scenarioPattern(`/^Cast ${escapeRegex(card.name)} \\(/`)(description),
+            scenarioPattern(`/^Cast ${escapeRegex(card.name)} \\(/`)(description) &&
+            (part.mode === undefined || description.endsWith(` — ${part.mode.description}`)),
         };
     instructions.push(
       `${isLand ? 'Play' : 'Cast'} ${card.name}${draft.slotChoice.size > 0 ? ` targeting ${[...draft.slotChoice.values()].join(' and ')}` : ''}, and let it resolve.`,
@@ -903,6 +1149,24 @@ function draftPart(
       draft.expect.unshift({
         zone: { player: 'P1', zone: 'battlefield', has: [watcher.spec.name] },
       });
+  } else if (part.start === 'phase') {
+    const phase = part.phase!;
+    p1.battlefield = [card.name, ...(p1.battlefield ?? [])];
+    intent = { match: () => false, byTurn: true };
+    if (phase.attack) {
+      const power = Number(card.power);
+      if (!definition.types.includes('Creature') || !Number.isInteger(power) || power <= 0)
+        return { gap: 'an attack trigger on a card with no printed power' };
+      draft.attackers.push(card.name);
+      draft.lifeDelta.P2 -= power;
+      draft.outcome.unshift(`${card.name} deals ${power} combat damage to P2`);
+    }
+    draft.outcome.unshift(phase.says);
+    instructions.push(
+      phase.attack
+        ? `Go to combat; ${card.name} attacks P2 and nothing blocks. Let every trigger resolve.`
+        : `Pass until ${phase.says}, and let the trigger resolve.`,
+    );
   } else if (part.start === 'die') {
     if (!definition.types.includes('Creature')) return { gap: 'a dies trigger on a noncreature' };
     p1.battlefield = [card.name, 'Swamp', ...(p1.battlefield ?? [])];
@@ -965,11 +1229,12 @@ function draftPart(
     }
   }
   if (part.ability.optional === true) draft.outcome.unshift('P1 chooses to');
+  if (part.mode !== undefined) draft.outcome.unshift(`P1 chooses "${part.mode.description}"`);
 
   const scenario: CardScenario = {
     id,
     title: `${card.name}: ${draft.outcome.join('; ')} ${DRAFT_MARK}`,
-    clauses: part.clause === null ? [] : [part.clause],
+    clauses: part.clauses ?? (part.clause === null ? [] : [part.clause]),
     instructions,
     expectedOutcome: `${draft.outcome.join('; ')}.`.replace(/^./, (c) => c.toUpperCase()),
     seats: Object.fromEntries(
@@ -977,6 +1242,10 @@ function draftPart(
     ),
     script: [],
     expect: draft.expect,
+    ...(part.phase?.turn !== undefined && { turn: part.phase.turn }),
+    // Played to the end of the continuation: with `script` the run would stop at the arranged
+    // priority window whenever P1 has something to do there.
+    ...(part.phase !== undefined && { continue: part.phase.continue, end: 'gameOver' as const }),
   };
   const base = 40;
   for (const seat of ['P1', 'P2', 'P3', 'P4'] as const)
@@ -1687,12 +1956,42 @@ export function scaffoldCard(card: OracleCard, resolve: CardResolver): ScaffoldR
     ACTIVATED_LINE.test(line) && !MANA_LINE.test(line) ? [index + 1] : [],
   );
   if (definition.spellAbility !== undefined && definition.spellAbility !== null) {
-    parts.push({
-      part: 'spellAbility',
-      clause: bestLine(definition.spellAbility.description, spellLines(lines, keywordLines), lines),
-      ability: definition.spellAbility,
-      start: 'cast',
-    });
+    const candidates = spellLines(lines, keywordLines);
+    const clause = bestLine(definition.spellAbility.description, candidates, lines);
+    // An instant or sorcery is one ability however many lines it takes ("Scry 1." then "Draw a
+    // card."), so the draft names them all.
+    const spell = definition.types.some((type) => type === 'Instant' || type === 'Sorcery');
+    const modes = (
+      definition.spellAbility as {
+        modes?: {
+          maxChoices: number;
+          maxChoicesIf?: unknown;
+          options: Array<{ effects: Effect[]; description?: string; targetSlots?: number[] }>;
+        };
+      }
+    ).modes;
+    if (modes !== undefined && modes.maxChoices === 1 && modes.maxChoicesIf === undefined) {
+      // One draft per mode, each cast through the action that names its mode.
+      const bullets = lines.flatMap((line, index) => (/^•/.test(line) ? [index + 1] : []));
+      modes.options.forEach((option, index) => {
+        if (option.description === undefined) return;
+        const { modes: _modes, ...rest } = definition.spellAbility as Ability & { modes?: unknown };
+        parts.push({
+          part: 'spellAbility',
+          clause: bestLine(option.description, bullets, lines),
+          ability: { ...rest, effects: option.effects },
+          start: 'cast',
+          mode: { index, description: option.description, slots: option.targetSlots ?? [] },
+        });
+      });
+    } else
+      parts.push({
+        part: 'spellAbility',
+        clause: clause ?? (spell && candidates.length > 1 ? candidates[0]! : null),
+        ...(clause === null && spell && candidates.length > 1 && { clauses: candidates }),
+        ability: definition.spellAbility,
+        start: 'cast',
+      });
   }
   definition.triggers.forEach((ability, index) => {
     const part = `triggers[${index}]`;
@@ -1722,6 +2021,18 @@ export function scaffoldCard(card: OracleCard, resolve: CardResolver): ScaffoldR
         clause: bestLine(ability.description, candidates, lines),
         ability,
         start: 'watch',
+      });
+      return;
+    }
+    const phase = trigger === undefined ? null : phaseStart(trigger as Record<string, unknown>);
+    if (phase !== null) {
+      const candidates = triggerLines.filter((line) => phase.line.test(lines[line - 1]!));
+      parts.push({
+        part,
+        clause: bestLine(ability.description, candidates, lines),
+        ability,
+        start: 'phase',
+        phase,
       });
       return;
     }

@@ -36,7 +36,7 @@ export interface CardAuthoring {
   card: string;
   /** Top-level definition parts (abilities, statics, keywords, replacement fields). */
   parts: string[];
-  /** Parts with at least one passing draft. */
+  /** Parts whose every unit has a passing draft (each mode of a modal spell, for one). */
   scaffoldedParts: string[];
   mutants: number;
   /** Mutants a passing draft's expectation catches. */
@@ -64,8 +64,15 @@ export function measureCard(
   const result = scaffoldCard(card, resolve);
   const killedIndexes =
     result.file.scenarios.length === 0 ? [] : mutantKills(definition, result.file, resolve);
+  // A part counts once every unit of it has a draft: a modal spell with one mode drafted and
+  // another not is not done.
+  const open = new Set(
+    result.units.filter((unit) => unit.status !== 'scaffolded').map((unit) => unit.part),
+  );
   const scaffolded = new Set(
-    result.units.filter((unit) => unit.status === 'scaffolded').map((unit) => unit.part),
+    result.units
+      .filter((unit) => unit.status === 'scaffolded' && !open.has(unit.part))
+      .map((unit) => unit.part),
   );
   return {
     card: card.name,
