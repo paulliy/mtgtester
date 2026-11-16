@@ -1,0 +1,1 @@
+Target creature you control deals damage equal to its power to target permanent. Then if you control an Eldrazi, you gain 3 life.

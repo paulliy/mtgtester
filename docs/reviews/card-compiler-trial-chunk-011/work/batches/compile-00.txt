@@ -1,6 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-011/work/prompts/compile/erinis-gloom-stalker.r2.md	docs/reviews/card-compiler-trial-chunk-011/work/answers/compile/erinis-gloom-stalker.r2.json
-docs/reviews/card-compiler-trial-chunk-011/work/prompts/compile/abnormal-endurance.r2.md	docs/reviews/card-compiler-trial-chunk-011/work/answers/compile/abnormal-endurance.r2.json
-docs/reviews/card-compiler-trial-chunk-011/work/prompts/compile/emissary-escort.r2.md	docs/reviews/card-compiler-trial-chunk-011/work/answers/compile/emissary-escort.r2.json
-docs/reviews/card-compiler-trial-chunk-011/work/prompts/compile/sigil-of-valor.r2.md	docs/reviews/card-compiler-trial-chunk-011/work/answers/compile/sigil-of-valor.r2.json
-docs/reviews/card-compiler-trial-chunk-011/work/prompts/compile/empyrial-plate.r2.md	docs/reviews/card-compiler-trial-chunk-011/work/answers/compile/empyrial-plate.r2.json
-docs/reviews/card-compiler-trial-chunk-011/work/prompts/compile/shao-jun.r2.md	docs/reviews/card-compiler-trial-chunk-011/work/answers/compile/shao-jun.r2.json
