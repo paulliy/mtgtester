@@ -54,7 +54,10 @@ profile.
 - Do not edit the baseline by hand, and do not rewrite it to make a regression pass.
 - A change that trades one metric for another (fewer calls for weaker play, say) needs the quality
   evidence too: `bun run bot-league` for the bot, a duel for the models. Paid model runs need
-  Paul's approval first.
+  Paul's approval first. For strategist call schedules, the league's `proxy-every-turn`,
+  `proxy-v1` and `proxy-v2` arms steer the bot with a deterministic stand-in strategist; check
+  the arm against `fixed` first, since a league that cannot see the strategist cannot see its
+  staleness either.
 
 ## What guards main
 
