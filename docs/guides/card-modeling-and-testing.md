@@ -457,6 +457,7 @@ bun run card:new "<name>"                 # pin it; unparsed lines, handledLines
 bun run card:new "<name>" --batch <id>    # ...and write the scaffold: unimplemented() stub, manifest clauses, it.todo runner tests, gate entry
 bun run card:check "<name>"               # the edit loop: interpret, validate, this card's override-snapshot diff
 bun run card:scaffold "<name>" [--write]  # draft positive scenarios from the IR, each already passing; lists the mutants left
+bun run card:scaffold "<name>" --approve <id>|all  # after reading a draft against its line: mark it reviewed, name it in the manifest
 bun run pin-store add "<name>"            # pin a card in packages/engine/tests/fixtures/pin-store.json
 ```
 
@@ -491,6 +492,13 @@ matches the Oracle text. Read each draft's `expectedOutcome` against the line it
 before naming it in the manifest. The drafts are positives only: negatives (a refused target, a
 declined "you may", an unpaid cost) and the shapes it reports as `unsupported` are still yours, and
 the command lists the mutants the drafts leave alive.
+
+Reviewed drafts may satisfy manifest clauses. A fresh draft's title ends `(generated scaffold vN,
+review against the Oracle line)`; once you have read it against its line, `card:scaffold --approve`
+rewrites that to `(generated scaffold vN, reviewed)` and adds
+`scenario/scenarios.test.ts::<id>` to the clause whose Oracle text is the draft's line.
+`check:manifest-tests` refuses a manifest reference to a draft still carrying the unreviewed mark,
+however it got there. `card:new` prints the drafts for a card the engine already models.
 
 **Forge scripts are a reference, never a source.** `card:new` shows a card's Forge script when the
 network allows; it is GPL-3.0 and must not enter this repository in any form, including retyped by

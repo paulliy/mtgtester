@@ -40,6 +40,24 @@ import { runScenario, scenarioFailures } from './runner';
 /** Bumped when the generator's output changes shape, so a reviewer knows which drafts are whose. */
 export const SCAFFOLD_VERSION = 1;
 
+/**
+ * Every draft's title ends with this until a person or agent has read its expectations against
+ * the Oracle line its `clauses` names. Reviewed drafts may satisfy manifest clauses (Paul,
+ * 2026-11-16); `bun run card:scaffold "<name>" --approve <id>` rewrites the mark to
+ * "(generated scaffold vN, reviewed)" and names the draft in the manifest, and `check:manifest-tests` refuses a
+ * manifest reference to a draft that still carries this mark.
+ */
+export const DRAFT_MARK = `(generated scaffold v${SCAFFOLD_VERSION}, review against the Oracle line)`;
+const DRAFT_MARK_PATTERN = /\(generated scaffold v(\d+), review against the Oracle line\)$/;
+export const REVIEWED_DRAFT_MARK_PATTERN = /\(generated scaffold v(\d+), reviewed\)$/;
+
+/** Whether a scenario title is a generated draft nobody has reviewed yet. */
+export const isUnreviewedDraft = (title: string): boolean => DRAFT_MARK_PATTERN.test(title);
+
+/** The title with its draft mark rewritten as reviewed; any other title is returned unchanged. */
+export const markReviewed = (title: string): string =>
+  title.replace(DRAFT_MARK_PATTERN, '(generated scaffold v$1, reviewed)');
+
 /** One part of a card the generator looked at, and what became of it. */
 export interface ScaffoldUnit {
   /** The definition part, as mutation labels name it: `spellAbility`, `triggers[0]`, `keywords`. */
@@ -949,7 +967,7 @@ function draftPart(
 
   const scenario: CardScenario = {
     id,
-    title: `${card.name}: ${draft.outcome.join('; ')} (generated scaffold v${SCAFFOLD_VERSION}, review against the Oracle line)`,
+    title: `${card.name}: ${draft.outcome.join('; ')} ${DRAFT_MARK}`,
     clauses: part.clause === null ? [] : [part.clause],
     instructions,
     expectedOutcome: `${draft.outcome.join('; ')}.`.replace(/^./, (c) => c.toUpperCase()),
@@ -1052,7 +1070,7 @@ function draftKeywords(
   const id = `${slugOf(card.name)}-scaffold-keywords`;
   const scenario: CardScenario = {
     id,
-    title: `${card.name}: it has ${keywords.map(keywordText).join(', ')} on the battlefield (generated scaffold v${SCAFFOLD_VERSION}, review against the Oracle line)`,
+    title: `${card.name}: it has ${keywords.map(keywordText).join(', ')} on the battlefield ${DRAFT_MARK}`,
     clauses: [...clauses].sort((a, b) => a - b),
     instructions: [`Look at ${card.name} on P1's battlefield.`],
     expectedOutcome: `${card.name} has ${keywords.map(keywordText).join(', ')}.`,
@@ -1192,7 +1210,7 @@ function draftMana(
     };
     const scenario: CardScenario = {
       id: `${slugOf(card.name)}-scaffold-${slugOf(part)}-${symbols.join('').toLowerCase()}`,
-      title: `${card.name}: its mana ability pays ${cost} (generated scaffold v${SCAFFOLD_VERSION}, review against the Oracle line)`,
+      title: `${card.name}: its mana ability pays ${cost} ${DRAFT_MARK}`,
       clauses: [clause],
       instructions: [`Cast ${sink.name} (${cost}) with only ${card.name}'s mana.`],
       expectedOutcome: `${sink.name} is on the battlefield and ${card.name} is tapped.`,
@@ -1302,7 +1320,7 @@ function draftArrival(
     return failAll('unsupported', `the mana cost ${card.manaCost ?? ''}`);
   const scenario: CardScenario = {
     id: `${slugOf(card.name)}-scaffold-arrival`,
-    title: `${card.name}: ${outcome.join('; ')} (generated scaffold v${SCAFFOLD_VERSION}, review against the Oracle line)`,
+    title: `${card.name}: ${outcome.join('; ')} ${DRAFT_MARK}`,
     clauses: [...clauses].sort((a, b) => a - b),
     instructions: [`${isLand ? 'Play' : 'Cast'} ${card.name}.`],
     expectedOutcome: `${card.name} is on the battlefield; ${outcome.join('; ')}.`,
