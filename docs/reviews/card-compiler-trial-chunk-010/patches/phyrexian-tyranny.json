@@ -1,0 +1,50 @@
+{
+  "name": "Phyrexian Tyranny",
+  "oracleId": "55082cd0-a33c-4f1d-9f46-9578f63e6bb6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a player draws a card, that player loses 2 life unless they pay {2}."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "drawsCard",
+          "player": "each"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "unlessPays",
+            "payer": "eventPlayer",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            },
+            "then": [
+              {
+                "op": "loseLifeTarget",
+                "target": "eventPlayer",
+                "amount": {
+                  "kind": "const",
+                  "n": 2
+                }
+              }
+            ]
+          }
+        ],
+        "description": "Whenever a player draws a card, that player loses 2 life unless they pay {2}."
+      }
+    ]
+  }
+}
