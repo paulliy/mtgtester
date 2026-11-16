@@ -1,1 +1,0 @@
-{"status":"inexpressible","reason":"The draw is conditional per player ('each player who controls a multicolored creature draws'), and the schema's eachPlayerDraws has no per-player controls-a-matching-creature condition."}
