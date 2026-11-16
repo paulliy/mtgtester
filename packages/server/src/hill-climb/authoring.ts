@@ -20,19 +20,15 @@ import { readFileSync, readdirSync } from 'node:fs';
 import type { OracleCard } from '@mtg/shared';
 import type { CardDefinition } from '../../../engine/src/cards/definition';
 import { interpretCard } from '../../../engine/src/cards/interpret';
-import type { CardScenarioFile } from '../../../engine/src/testing/card-scenario';
-import { installDefinitionTransform } from '../../../engine/src/testing/definition-transform';
-import { cardMutants, mutate, unmutatedParts } from '../../../engine/tests/mutation/operators';
+import { mutantKills } from '../../../engine/tests/mutation/kills';
+import { cardMutants, unmutatedParts } from '../../../engine/tests/mutation/operators';
 import { pinStore } from '../../../engine/tests/scenario/pin-store';
-import {
-  loadScenarioFile,
-  resolveScenarioCard,
-  runScenario,
-  scenarioFailures,
-} from '../../../engine/tests/scenario/runner';
+import { loadScenarioFile, resolveScenarioCard } from '../../../engine/tests/scenario/runner';
 import { scaffoldCard, type ScaffoldUnit } from '../../../engine/tests/scenario/scaffold';
 import { PINNED_ORACLE_PATH, type PinnedCard } from '../cards/edhrec-pins';
 import type { Metric } from './report';
+
+export { mutantKills };
 
 const SCENARIO_DIR = 'packages/engine/tests/scenarios';
 
@@ -53,39 +49,6 @@ export interface CardAuthoring {
   draftLines: number;
 }
 
-/**
- * Runs `file`'s scenarios under each mutant of the card and returns the indexes a scenario's
- * expectations catch. A mutant that makes a run throw (the script no longer fits, the game
- * halts) is not counted as killed, exactly as `mutate-cards` counts only assertion failures.
- */
-export function mutantKills(
-  definition: CardDefinition,
-  file: CardScenarioFile,
-  resolve: (name: string) => OracleCard,
-): number[] {
-  const mutants = cardMutants(definition);
-  const killed: number[] = [];
-  const names = new Set([definition.name, ...definition.name.split(' // ')]);
-  for (let index = 0; index < mutants.length; index++) {
-    const previous = installDefinitionTransform((candidate) =>
-      names.has(candidate.name) ? mutate(candidate, index) : candidate,
-    );
-    try {
-      const caught = file.scenarios.some((scenario) => {
-        try {
-          return scenarioFailures(runScenario(file, scenario, { resolve }), scenario).length > 0;
-        } catch {
-          return false;
-        }
-      });
-      if (caught) killed.push(index);
-    } finally {
-      installDefinitionTransform(previous);
-    }
-  }
-  return killed;
-}
-
 function partsOf(definition: CardDefinition): string[] {
   return [
     ...new Set([...cardMutants(definition).map((m) => m.part), ...unmutatedParts(definition)]),
@@ -93,7 +56,10 @@ function partsOf(definition: CardDefinition): string[] {
 }
 
 /** One card's scaffold, measured against its own mutants. */
-export function measureCard(card: OracleCard, resolve: (name: string) => OracleCard): CardAuthoring {
+export function measureCard(
+  card: OracleCard,
+  resolve: (name: string) => OracleCard,
+): CardAuthoring {
   const definition = interpretCard(card);
   const result = scaffoldCard(card, resolve);
   const killedIndexes =
@@ -110,7 +76,9 @@ export function measureCard(card: OracleCard, resolve: (name: string) => OracleC
     killedIndexes,
     failures: result.units.filter((unit) => unit.status === 'failed'),
     draftLines:
-      result.file.scenarios.length === 0 ? 0 : JSON.stringify(result.file, null, 2).split('\n').length,
+      result.file.scenarios.length === 0
+        ? 0
+        : JSON.stringify(result.file, null, 2).split('\n').length,
   };
 }
 
@@ -170,7 +138,9 @@ export function measureReference(): ReferenceCard[] {
     .filter((name) => name.endsWith('.json'))
     .sort()
     .flatMap((name) => {
-      const file = loadScenarioFile(new URL(`../../../../${SCENARIO_DIR}/${name}`, import.meta.url));
+      const file = loadScenarioFile(
+        new URL(`../../../../${SCENARIO_DIR}/${name}`, import.meta.url),
+      );
       if (!pinStore.has(file.card)) return [];
       const card = pinStore.get(file.card);
       const definition = interpretCard(card);
@@ -227,7 +197,11 @@ export function authoringProbe(poolStride: number, log: (line: string) => void =
       '%',
       'higher',
     ),
-    'authoring.poolCardsFullyScaffolded': exact(poolSummary.fullyScaffoldedCards, 'cards', 'higher'),
+    'authoring.poolCardsFullyScaffolded': exact(
+      poolSummary.fullyScaffoldedCards,
+      'cards',
+      'higher',
+    ),
     'authoring.poolDraftFailures': exact(poolSummary.failures, 'drafts', 'lower'),
     'authoring.referenceKillsReproducedPct': exact(pct(reproduced, committed), '%', 'higher'),
     'authoring.referenceDraftFailures': exact(referenceSummary.failures, 'drafts', 'lower'),

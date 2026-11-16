@@ -446,7 +446,16 @@ export function buildCardScenario(
   file: CardScenarioFile,
   scenario: CardScenario,
   resolve: CardResolver,
-  options: { gameId: string; strictInvariants?: boolean },
+  /**
+   * `maxStepWork` and `maxObjects` halt a runaway loop (a mutant's self-retriggering ability)
+   * instead of hanging.
+   */
+  options: {
+    gameId: string;
+    strictInvariants?: boolean;
+    maxStepWork?: number;
+    maxObjects?: number;
+  },
 ): BuiltScenario {
   const lookup = (name: string): OracleCard => {
     const support = file.supportCards?.find((spec) => spec.name === name);
@@ -538,7 +547,11 @@ export function buildCardScenario(
       turnCap: scenario.turnCap ?? 12,
       ...(options.strictInvariants === true && { strictInvariants: true }),
     },
-    { preparedScenario: prepared },
+    {
+      preparedScenario: prepared,
+      ...(options.maxStepWork !== undefined && { maxStepWork: options.maxStepWork }),
+      ...(options.maxObjects !== undefined && { maxObjects: options.maxObjects }),
+    },
   );
   return { engine, players, prepared, seed };
 }

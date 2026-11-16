@@ -456,6 +456,7 @@ bun run dev                               # levels 5-6: real client (server :300
 bun run card:new "<name>"                 # pin it; unparsed lines, handledLines, nearest modeled cards, Forge reference, questions
 bun run card:new "<name>" --batch <id>    # ...and write the scaffold: unimplemented() stub, manifest clauses, it.todo runner tests, gate entry
 bun run card:check "<name>"               # the edit loop: interpret, validate, this card's override-snapshot diff
+bun run card:scaffold "<name>" [--write]  # draft positive scenarios from the IR, each already passing; lists the mutants left
 bun run pin-store add "<name>"            # pin a card in packages/engine/tests/fixtures/pin-store.json
 ```
 
@@ -481,6 +482,15 @@ What the runner offers, from the phase 6 pilot ([review](../reviews/card-authori
 - An override's `handledLines` are the interpreter's unparsed lines exactly as `card:new` prints
   them, with the card's own name as `~`. Claiming a line the interpreter parses leaves the card
   unmodeled, which a behavior test that never checks `modeled` does not notice.
+
+**Promotion scaffolds.** `card:scaffold` drafts positive scenarios for a modeled, pinned card from
+its interpreted IR: it arranges a position, plays the ability through the normal cast or activation
+path, expects what the IR says ("draw 2" expects exactly the top two cards in hand), and keeps only
+drafts the runner passes. A draft proves the engine does what the IR says; it does not prove the IR
+matches the Oracle text. Read each draft's `expectedOutcome` against the line its `clauses` names
+before naming it in the manifest. The drafts are positives only: negatives (a refused target, a
+declined "you may", an unpaid cost) and the shapes it reports as `unsupported` are still yours, and
+the command lists the mutants the drafts leave alive.
 
 **Forge scripts are a reference, never a source.** `card:new` shows a card's Forge script when the
 network allows; it is GPL-3.0 and must not enter this repository in any form, including retyped by

@@ -66,17 +66,27 @@ export { describeRequest };
 export function runScenario(
   file: CardScenarioFile,
   scenario: CardScenario,
-  options: { stopAtChoice?: true; resolve?: CardResolver } = {},
+  options: {
+    stopAtChoice?: true;
+    resolve?: CardResolver;
+    maxStepWork?: number;
+    maxObjects?: number;
+    /** Decisions before the run gives up (default 2,000); mutation runs pass a lower cap. */
+    maxDecisions?: number;
+  } = {},
 ): ScenarioRun {
   const { engine } = buildCardScenario(file, scenario, options.resolve ?? resolveScenarioCard, {
     gameId: `scenario-${scenario.id}`,
     strictInvariants: true,
+    ...(options.maxStepWork !== undefined && { maxStepWork: options.maxStepWork }),
+    ...(options.maxObjects !== undefined && { maxObjects: options.maxObjects }),
   });
   const firstSequence = engine.getState().eventLog.length;
   const end = scenario.end ?? 'script';
   const answered: ScenarioRun['answered'] = [];
   let next = 0;
-  for (let count = 0; count < MAX_DECISIONS; count++) {
+  const maxDecisions = options.maxDecisions ?? MAX_DECISIONS;
+  for (let count = 0; count < maxDecisions; count++) {
     const stepResult = engine.advance();
     if (stepResult.kind === 'gameOver') {
       const result = stepResult.result;
@@ -130,7 +140,7 @@ export function runScenario(
       }:\n${describeRequest(request)}`,
     );
   }
-  throw new Error(`${scenario.id}: no end after ${MAX_DECISIONS} decisions`);
+  throw new Error(`${scenario.id}: no end after ${maxDecisions} decisions`);
 }
 
 /** The scenario's expectations that do not hold at the end of the run. */
