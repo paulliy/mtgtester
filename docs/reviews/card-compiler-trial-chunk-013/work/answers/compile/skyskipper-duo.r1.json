@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no delayed return to the battlefield at the next end step for a chosen up-to-one creature: blinkEachChosen returns immediately, and exileTargetReturnAtNextEndStep needs exactly one target."}
