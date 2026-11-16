@@ -1,0 +1,1 @@
+Whenever an opponent casts a spell, that player may pay {1}. If the player doesn't, that player sacrifices a permanent.
