@@ -1294,6 +1294,14 @@ export function normalizeLine(text: string, cardName: string): string {
     .trim();
 }
 
+/** Use up one copy of `line` from `pool`; false when none is left. */
+function consumeOne(pool: Map<string, number>, line: string): boolean {
+  const left = pool.get(line) ?? 0;
+  if (left === 0) return false;
+  pool.set(line, left - 1);
+  return true;
+}
+
 export type TextCheck =
   | { verdict: 'match'; rendered: string[] }
   | { verdict: 'mismatch'; rendered: string[] }
@@ -1362,8 +1370,11 @@ export function textCheck(
     if (error instanceof Unrendered) return { verdict: 'unrendered', node: error.node };
     throw error;
   }
-  const covered = new Set(used);
-  ok = ok && required.every((line) => covered.has(normalize(line)));
+  // Every required line must be used up by its own rendered line: two identical printed lines
+  // need two rendered abilities, so coverage counts lines rather than testing membership.
+  const covered = new Map<string, number>();
+  for (const line of used) covered.set(line, (covered.get(line) ?? 0) + 1);
+  ok = ok && required.every((line) => consumeOne(covered, normalize(line)));
   return { verdict: ok ? 'match' : 'mismatch', rendered: rendered.map(firstWording) };
 }
 

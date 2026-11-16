@@ -129,6 +129,29 @@ describe('free text check wordings', () => {
     expect(check(def, oracle)).toBe('mismatch');
   });
 
+  it('needs one rendered ability for each of two identical printed lines', () => {
+    const forest = {
+      affects: { kind: 'self' },
+      op: { layer: 7, sublayer: 'd', power: 1, toughness: 1 },
+      condition: {
+        kind: 'countPermanents',
+        selector: { kind: 'subtype', value: 'Forest' },
+        scope: 'you',
+        cmp: '>=',
+        n: 1,
+      },
+    };
+    const line = 'As long as you control a Forest, Twin gets +1/+1.';
+    const twice = card('Twin', `${line}\n${line}`);
+    const one = { staticEffects: [forest] } as unknown as Partial<CardDefinition>;
+    const two = { staticEffects: [forest, { ...forest }] } as unknown as Partial<CardDefinition>;
+    expect(check(one, card('Twin', line))).toBe('match');
+    expect(check(one, twice)).toBe('mismatch');
+    // Two identical statics in a row would also render as one grouped line, so check that the
+    // pair is at least not accepted for a single printed line.
+    expect(check(two, card('Twin', line))).not.toBe('match');
+  });
+
   it('ignores mana symbol order, ability words before triggers, and "he" or "she"', () => {
     const name = 'Smaug';
     expect(normalizeLine('{G}{U}, {T}: Draw a card.', name)).toBe(
