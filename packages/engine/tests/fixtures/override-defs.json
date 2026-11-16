@@ -564,38 +564,6 @@
     }
   },
   {
-    "oracleId": "04b7362d-0490-4cb0-b5d7-2a7732f659ce",
-    "name": "Bojuka Bog",
-    "handledLines": [
-      "When this land enters, exile target player's graveyard."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Enters — exile target player’s graveyard",
-          "effects": [
-            {
-              "op": "exileTargetPlayerGraveyard",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "05a4f8ff-49da-42af-add5-6248c4b0644b",
     "name": "Darksteel Mutation",
     "handledLines": [
@@ -1532,36 +1500,6 @@
           "amount": 1,
           "includePlaneswalkers": true,
           "kind": "attackTax"
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "0eaea4fd-a377-4541-9bdd-14921034a975",
-    "name": "Doorkeeper Thrull",
-    "handledLines": [
-      "unrecognized rules text: \"Artifacts and creatures entering don't cause abilities to trigger.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "events": [
-            "enters"
-          ],
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Artifact"
-              },
-              {
-                "kind": "type",
-                "value": "Creature"
-              }
-            ]
-          },
-          "kind": "suppressObjectTriggers"
         }
       ]
     }
@@ -5532,28 +5470,6 @@
     }
   },
   {
-    "oracleId": "3d21f710-6bbc-41ae-a8e5-02debe3e02bd",
-    "name": "Hushbringer",
-    "handledLines": [
-      "unrecognized rules text: \"Creatures entering or dying don't cause abilities to trigger.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "events": [
-            "enters",
-            "dies"
-          ],
-          "filter": {
-            "kind": "type",
-            "value": "Creature"
-          },
-          "kind": "suppressObjectTriggers"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "3d2bd4f6-174d-411a-b930-9161aeefd33a",
     "name": "Tinybones Joins Up",
     "handledLines": [
@@ -7202,22 +7118,6 @@
     }
   },
   {
-    "oracleId": "53e88e64-6f82-4154-a66e-6aeb0154b368",
-    "name": "Rule of Law",
-    "handledLines": [
-      "unrecognized rules text: \"Each player can't cast more than one spell each turn.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "any",
-          "kind": "spellCastLimit",
-          "limit": 1
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "5443557e-440f-4fdd-a29b-7740d7cec085",
     "name": "Biotransference",
     "handledLines": [
@@ -7365,33 +7265,6 @@
               "G"
             ]
           ]
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "55f3c721-e13a-406e-bc8e-d6cdc91ac477",
-    "name": "Authority of the Consuls",
-    "handledLines": [
-      "unrecognized rules text: \"Creatures your opponents control enter tapped.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
         }
       ]
     }
@@ -8128,41 +8001,6 @@
     }
   },
   {
-    "oracleId": "60433b48-d27f-413c-905c-43839b1943f1",
-    "name": "Mother of Runes",
-    "handledLines": [
-      "unrecognized rules text: \"{T}: Target creature you control gains protection from the color of your choice until end of turn.\""
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Target creature you control gains protection from a color of your choice until end of turn",
-            "effects": [
-              {
-                "op": "grantChosenColorProtectionUntilEot",
-                "target": 0
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "controller": "you",
-                "kind": "creature"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "60e7130a-d321-4e50-93a4-999013c76054",
     "name": "Gut, True Soul Zealot",
     "handledLines": [
@@ -8370,22 +8208,6 @@
       ]
     },
     "compose": "append"
-  },
-  {
-    "oracleId": "6284ef01-d17d-4584-aecb-1b841ae638e5",
-    "name": "Deafening Silence",
-    "handledLines": [
-      "unrecognized rules text: \"Each player can't cast more than one noncreature spell each turn.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "noncreature",
-          "kind": "spellCastLimit",
-          "limit": 1
-        }
-      ]
-    }
   },
   {
     "oracleId": "6288c0cb-cf32-4ae9-abf0-104ec71654fa",
@@ -10101,59 +9923,9 @@
     "oracleId": "73dad679-1edb-41c9-9d43-56dc93c3e9fe",
     "name": "Stone of Erech",
     "handledLines": [
-      "unrecognized rules text: \"If a creature an opponent controls would die, exile it instead.\"",
-      "unrecognized rules text: \"{2}, {T}, Sacrifice ~: Exile target player's graveyard. Draw a card.\""
+      "unrecognized rules text: \"If a creature an opponent controls would die, exile it instead.\""
     ],
     "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Exile target player's graveyard. Draw a card",
-            "effects": [
-              {
-                "op": "exileTargetPlayerGraveyard",
-                "target": 0
-              },
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "draw"
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "kind": "player"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 2
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            },
-            {
-              "kind": "sacrificeSelf"
-            }
-          ],
-          "timing": "any"
-        }
-      ],
       "ruleStatics": [
         {
           "basis": "controller",
@@ -15203,36 +14975,6 @@
     }
   },
   {
-    "oracleId": "aecc621f-67da-41a7-9d47-05ded302ae35",
-    "name": "Karn, Argent Defender",
-    "handledLines": [
-      "unrecognized rules text: \"Artifacts and creatures entering the battlefield don't cause abilities to trigger.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "events": [
-            "enters"
-          ],
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Artifact"
-              },
-              {
-                "kind": "type",
-                "value": "Creature"
-              }
-            ]
-          },
-          "kind": "suppressObjectTriggers"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "aeec8e85-6571-4da6-8a48-f5d3985ca10b",
     "name": "Sylvan Reclamation",
     "handledLines": [
@@ -17177,39 +16919,9 @@
     "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
     "name": "Bolt Bend",
     "handledLines": [
-      "Change the target of target spell or ability with a single target.",
-      "This spell costs {3} less to cast if you control a creature with power 4 or greater."
+      "Change the target of target spell or ability with a single target."
     ],
     "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 3
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                },
-                {
-                  "kind": "powerAtLeast",
-                  "n": 4
-                }
-              ]
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ],
       "spellAbility": {
         "description": "Change the target of target spell or ability with a single target",
         "effects": [
@@ -17963,46 +17675,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "ceef2d5a-77ea-4e56-9806-fd1a2d5be400",
-    "name": "Archon of Emeria",
-    "handledLines": [
-      "unrecognized rules text: \"Each player can't cast more than one spell each turn.\"",
-      "unrecognized rules text: \"Nonbasic lands your opponents control enter tapped.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "any",
-          "kind": "spellCastLimit",
-          "limit": 1
-        },
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Land"
-              },
-              {
-                "kind": "not",
-                "of": {
-                  "kind": "supertype",
-                  "value": "Basic"
-                }
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "cf7352bf-3971-4bb7-88b9-65ab9a219289",
     "name": "Loaming Shaman",
     "handledLines": [
@@ -18546,31 +18218,6 @@
           }
         }
       ]
-    }
-  },
-  {
-    "oracleId": "d54e4e37-042b-44a5-918d-757308545d4d",
-    "name": "Sejiri Shelter // Sejiri Glacier",
-    "handledLines": [
-      "unrecognized rules text: \"Target creature you control gains protection from the color of your choice until end of turn.\""
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature you control gains protection from a color of your choice until end of turn",
-        "effects": [
-          {
-            "op": "grantChosenColorProtectionUntilEot",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
     }
   },
   {
@@ -22254,31 +21901,6 @@
     }
   },
   {
-    "oracleId": "f5822e53-ddec-4c77-bcf4-091e35c1e731",
-    "name": "Rebuff the Wicked",
-    "handledLines": [
-      "unrecognized rules text: \"Counter target spell that targets a permanent you control.\""
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Counter target spell that targets a permanent you control",
-        "effects": [
-          {
-            "op": "counter",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "spell",
-            "spellTargetsPermanentYouControl": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "oracleId": "f586ecb8-310c-4f40-a766-6a7ca46a254d",
     "name": "Flare of Duplication",
     "handledLines": [
@@ -24877,46 +24499,6 @@
     }
   },
   {
-    "oracleId": "oracle-archon-of-emeria",
-    "name": "Archon of Emeria",
-    "handledLines": [
-      "unrecognized rules text: \"Each player can't cast more than one spell each turn.\"",
-      "unrecognized rules text: \"Nonbasic lands your opponents control enter tapped.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "any",
-          "kind": "spellCastLimit",
-          "limit": 1
-        },
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Land"
-              },
-              {
-                "kind": "not",
-                "of": {
-                  "kind": "supertype",
-                  "value": "Basic"
-                }
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-armored-skyhunter",
     "name": "Armored Skyhunter",
     "handledLines": [
@@ -25151,33 +24733,6 @@
             },
             "when": "castsSpell"
           }
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "oracle-authority-of-the-consuls",
-    "name": "Authority of the Consuls",
-    "handledLines": [
-      "unrecognized rules text: \"Creatures your opponents control enter tapped.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
         }
       ]
     }
@@ -25919,38 +25474,6 @@
     }
   },
   {
-    "oracleId": "oracle-bojuka-bog",
-    "name": "Bojuka Bog",
-    "handledLines": [
-      "When this land enters, exile target player's graveyard."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Enters — exile target player’s graveyard",
-          "effects": [
-            {
-              "op": "exileTargetPlayerGraveyard",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-bolas-s-citadel",
     "name": "Bolas's Citadel",
     "handledLines": [
@@ -26018,39 +25541,9 @@
     "oracleId": "oracle-bolt-bend",
     "name": "Bolt Bend",
     "handledLines": [
-      "Change the target of target spell or ability with a single target.",
-      "This spell costs {3} less to cast if you control a creature with power 4 or greater."
+      "Change the target of target spell or ability with a single target."
     ],
     "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 3
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                },
-                {
-                  "kind": "powerAtLeast",
-                  "n": 4
-                }
-              ]
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ],
       "spellAbility": {
         "description": "Change the target of target spell or ability with a single target",
         "effects": [
@@ -28647,22 +28140,6 @@
     }
   },
   {
-    "oracleId": "oracle-deafening-silence",
-    "name": "Deafening Silence",
-    "handledLines": [
-      "unrecognized rules text: \"Each player can't cast more than one noncreature spell each turn.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "noncreature",
-          "kind": "spellCastLimit",
-          "limit": 1
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-decoction-module",
     "name": "Decoction Module",
     "handledLines": [
@@ -29566,36 +29043,6 @@
       "spellAbility": null,
       "staticEffects": [],
       "triggers": []
-    }
-  },
-  {
-    "oracleId": "oracle-doorkeeper-thrull",
-    "name": "Doorkeeper Thrull",
-    "handledLines": [
-      "unrecognized rules text: \"Artifacts and creatures entering don't cause abilities to trigger.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "events": [
-            "enters"
-          ],
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Artifact"
-              },
-              {
-                "kind": "type",
-                "value": "Creature"
-              }
-            ]
-          },
-          "kind": "suppressObjectTriggers"
-        }
-      ]
     }
   },
   {
@@ -33010,28 +32457,6 @@
     }
   },
   {
-    "oracleId": "oracle-hushbringer",
-    "name": "Hushbringer",
-    "handledLines": [
-      "unrecognized rules text: \"Creatures entering or dying don't cause abilities to trigger.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "events": [
-            "enters",
-            "dies"
-          ],
-          "filter": {
-            "kind": "type",
-            "value": "Creature"
-          },
-          "kind": "suppressObjectTriggers"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-hymn-to-tourach",
     "name": "Hymn to Tourach",
     "handledLines": [
@@ -33946,36 +33371,6 @@
             },
             "when": "dies"
           }
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "oracle-karn-argent-defender",
-    "name": "Karn, Argent Defender",
-    "handledLines": [
-      "unrecognized rules text: \"Artifacts and creatures entering the battlefield don't cause abilities to trigger.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "events": [
-            "enters"
-          ],
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Artifact"
-              },
-              {
-                "kind": "type",
-                "value": "Creature"
-              }
-            ]
-          },
-          "kind": "suppressObjectTriggers"
         }
       ]
     }
@@ -36664,41 +36059,6 @@
             },
             "when": "dealsCombatDamageToPlayer"
           }
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "oracle-mother-of-runes",
-    "name": "Mother of Runes",
-    "handledLines": [
-      "unrecognized rules text: \"{T}: Target creature you control gains protection from the color of your choice until end of turn.\""
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Target creature you control gains protection from a color of your choice until end of turn",
-            "effects": [
-              {
-                "op": "grantChosenColorProtectionUntilEot",
-                "target": 0
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "controller": "you",
-                "kind": "creature"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
         }
       ]
     }
@@ -39406,31 +38766,6 @@
     }
   },
   {
-    "oracleId": "oracle-rebuff-the-wicked",
-    "name": "Rebuff the Wicked",
-    "handledLines": [
-      "unrecognized rules text: \"Counter target spell that targets a permanent you control.\""
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Counter target spell that targets a permanent you control",
-        "effects": [
-          {
-            "op": "counter",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "spell",
-            "spellTargetsPermanentYouControl": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "oracleId": "oracle-reckless-fireweaver",
     "name": "Reckless Fireweaver",
     "handledLines": [],
@@ -40293,22 +39628,6 @@
       "Phalanx Commander — When this creature enters, create two tapped 2/2 black Necron Warrior artifact creature tokens."
     ],
     "def": {}
-  },
-  {
-    "oracleId": "oracle-rule-of-law",
-    "name": "Rule of Law",
-    "handledLines": [
-      "unrecognized rules text: \"Each player can't cast more than one spell each turn.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "any",
-          "kind": "spellCastLimit",
-          "limit": 1
-        }
-      ]
-    }
   },
   {
     "oracleId": "oracle-runehorn-hellkite",
@@ -41192,31 +40511,6 @@
           }
         }
       ]
-    }
-  },
-  {
-    "oracleId": "oracle-sejiri-shelter-sejiri-glacier",
-    "name": "Sejiri Shelter // Sejiri Glacier",
-    "handledLines": [
-      "unrecognized rules text: \"Target creature you control gains protection from the color of your choice until end of turn.\""
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature you control gains protection from a color of your choice until end of turn",
-        "effects": [
-          {
-            "op": "grantChosenColorProtectionUntilEot",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
     }
   },
   {
@@ -42454,59 +41748,9 @@
     "oracleId": "oracle-stone-of-erech",
     "name": "Stone of Erech",
     "handledLines": [
-      "unrecognized rules text: \"If a creature an opponent controls would die, exile it instead.\"",
-      "unrecognized rules text: \"{2}, {T}, Sacrifice ~: Exile target player's graveyard. Draw a card.\""
+      "unrecognized rules text: \"If a creature an opponent controls would die, exile it instead.\""
     ],
     "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Exile target player's graveyard. Draw a card",
-            "effects": [
-              {
-                "op": "exileTargetPlayerGraveyard",
-                "target": 0
-              },
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "draw"
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "kind": "player"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 2
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            },
-            {
-              "kind": "sacrificeSelf"
-            }
-          ],
-          "timing": "any"
-        }
-      ],
       "ruleStatics": [
         {
           "basis": "controller",

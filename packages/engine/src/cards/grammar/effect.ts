@@ -2004,6 +2004,11 @@ function parseEffectSentenceUntraced(
   if (s === 'exile target card from a graveyard') {
     return [{ op: 'exileCard', target: alloc('cardInGraveyard', undefined, undefined, 'any') }];
   }
+  // "Exile target player's graveyard" (Angel of Finality, Boggart Trawler): the same op the
+  // Bojuka Bog-style overrides compose, any player as the target.
+  if (s === "exile target player's graveyard") {
+    return [{ op: 'exileTargetPlayerGraveyard', target: alloc('player') }];
+  }
   if (s === 'exile target attacking or blocking creature') {
     return [{ op: 'exile', target: alloc('creature', { kind: 'inCombat' }) }];
   }
@@ -2432,6 +2437,18 @@ function parseEffectSentenceUntraced(
       }
     }
   }
+  // "Target creature you control gains protection from the color of your choice until end of
+  // turn" (Gods Willing, Shelter): the color is chosen on resolution, the same op Mother of Runes
+  // uses.
+  {
+    const m = s.match(
+      /^target creature( you control)? gains protection from the color of your choice until end of turn$/,
+    );
+    if (m !== null) {
+      const target = alloc('creature', undefined, m[1] === undefined ? undefined : 'you');
+      return [{ op: 'grantChosenColorProtectionUntilEot', target }];
+    }
+  }
   // "target creature gains flying until end of turn"
   {
     const m = s.match(/^target creature gains ([a-z ,]+) until end of turn$/);
@@ -2839,7 +2856,7 @@ function parseEffectSentenceUntraced(
     // between "target" and "card" at all — the filter group is optional, and its absence means
     // an unrestricted `cardInGraveyard` slot (any card, CR 608.2b), not "any permanent card".
     const m = s.match(
-      /^return (?:up to (\w+) )?(other )?target(?: (.+?))? (?:card|cards)(?: with mana value (\d+) or (less|greater))? from (your|a) graveyard to (the battlefield|your hand)$/,
+      /^return (?:up to (\w+) )?(other |another )?target(?: (.+?))? (?:card|cards)(?: with mana value (\d+) or (less|greater))? from (your|a) graveyard to (the battlefield|your hand)$/,
     );
     if (m) {
       const typePhrase = m[3];
@@ -2852,8 +2869,11 @@ function parseEffectSentenceUntraced(
             ? manaValueAtMost(Number(m[4]))
             : manaValueAtLeast(Number(m[4]));
       if (typePhrase === undefined || typeFilter !== null) {
-        const filter =
+        const typed =
           bound === undefined ? typeFilter : typeFilter === null ? bound : allOf(typeFilter, bound);
+        // "another target artifact card" (Myr Retriever): any but the source, which a dies
+        // trigger finds in the same graveyard (CR 109.2, the Body Launderer reading below).
+        const filter = m[2] === undefined ? typed : typed === null ? OTHER : allOf(OTHER, typed);
         const target = alloc(
           'cardInGraveyard',
           filter ?? undefined,
