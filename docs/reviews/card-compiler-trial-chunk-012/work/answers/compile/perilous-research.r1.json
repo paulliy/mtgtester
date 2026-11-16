@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","description":"Draw two cards, then sacrifice a permanent.","targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":2}},{"op":"sacrificeOneThen","selector":{"kind":"controller","who":"you"},"then":[]}]}}}
