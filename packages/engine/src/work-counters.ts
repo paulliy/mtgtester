@@ -23,6 +23,10 @@ export interface EngineWork {
   castCheckpoints: number;
   /** Casting previews: a shallow projection of the game with the card moved to the stack. */
   castPreviews: number;
+  /** Mana source listings: every mana ability a player's permanents have, judged as payable now. */
+  manaSourceListings: number;
+  /** Spell payment searches: a joint witness for a spell's mana and non-mana costs. */
+  spellPaymentSearches: number;
   /** Payments the stateful mana planner searched (sources whose output depends on the state). */
   manaPlannerSearches: number;
   /** Game states the stateful mana planner visited. */
@@ -37,6 +41,8 @@ const WORK: EngineWork = {
   layerDigests: 0,
   castCheckpoints: 0,
   castPreviews: 0,
+  manaSourceListings: 0,
+  spellPaymentSearches: 0,
   manaPlannerSearches: 0,
   manaPlannerStates: 0,
   stateCopies: 0,

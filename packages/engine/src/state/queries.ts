@@ -49,6 +49,7 @@ import type {
 } from './types';
 import { spellManaValue } from './objects';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
+import { countWork } from '../work-counters';
 
 export function getDefByOracleId(
   ctx: GameContext,
@@ -1039,6 +1040,7 @@ export function manaSourcesFor(
   includeZeroProduction = false,
   order: 'payment' | 'board' = 'payment',
 ): ManaSource[] {
+  countWork('manaSourceListings');
   // Reads only: one layer digest serves every source's queries (`withReadScope`).
   return withReadScope(ctx, () => manaSources(ctx, playerId, includeZeroProduction, order));
 }
@@ -1112,7 +1114,7 @@ function manaSources(
       // from a tapped, summoning-sick creature. Availability is per ability, not per permanent.
       .filter((a) => canPayNonManaCosts(ctx, perm, a.costs ?? TAP_COST));
 
-    for (const entry of gatherRuleStatics(ctx)) {
+    for (const entry of statics) {
       const rider = entry.static;
       if (rider.kind !== 'manaActivationRider') continue;
       const riderSource = ctx.state.battlefield.find(

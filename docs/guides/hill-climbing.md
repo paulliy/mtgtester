@@ -40,6 +40,8 @@ fails if two repeats of the same games count differently.
 | `layerDigests`                     | Hashes of every layer input, once per read scope or per query outside one.     |
 | `castCheckpoints`                  | Casting checkpoints, each capturing every object in the game for rollback.     |
 | `castPreviews`                     | Casting previews: shallow projections of the game with a card on the stack.    |
+| `manaSourceListings`               | Listings of a player's mana sources: every mana ability judged payable now.    |
+| `spellPaymentSearches`             | Searches for a spell's joint payment of mana and non-mana costs.               |
 | `manaPlannerSearches`              | Payments the stateful mana planner searched.                                   |
 | `manaPlannerStates`, `stateCopies` | States that planner visited, and the deep copies of the game it made for them. |
 

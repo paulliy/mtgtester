@@ -18,6 +18,7 @@ import type { EnginePlayerState, GameContext } from '../state/types';
 import { planPayment } from './cost';
 import type { ManaSource, ParsedManaCost, PaymentPlan } from './cost';
 import { needsStatefulManaPayment, planStatefulManaPayment } from './stateful-payment';
+import { countWork } from '../work-counters';
 
 export interface SpellPaymentRequest {
   /** Already locked total mana cost, including reductions and additional mana costs. */
@@ -74,6 +75,7 @@ export function planSpellPayment(
   request: SpellPaymentRequest,
   prefix: readonly SpellPaymentChoice[] = [],
 ): SpellPaymentWitness | null {
+  countWork('spellPaymentSearches');
   const source = { cardId: request.sourceCardId, controllerId: player.id };
   const lockedCosts: AbilityCost[] = request.costs.map((cost) =>
     cost.kind === 'payLifeValue'
