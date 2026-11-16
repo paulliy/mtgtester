@@ -31233,74 +31233,6 @@ const BATCH_CHUNK_008: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '4a3a25ae-61f5-4bcd-ae3d-4b31feaa83d8',
-    name: 'Inquisitorial Rosette',
-    handledLines: [
-      "Inquisition Agents — Whenever equipped creature attacks, create a 2/2 white Astartes Warrior creature token with vigilance that's attacking. Then attacking creatures gain menace until end of turn.",
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'attacks',
-            subject: {
-              kind: 'permanent',
-              selector: {
-                kind: 'attachedToSource',
-              },
-            },
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'createTokenAttacking',
-              spec: {
-                name: 'Astartes Warrior',
-                typeLine: 'Token Creature — Astartes Warrior',
-                types: ['Creature'],
-                subtypes: ['Astartes', 'Warrior'],
-                colors: ['W'],
-                power: 2,
-                toughness: 2,
-                keywords: ['vigilance'],
-              },
-              count: {
-                kind: 'const',
-                n: 1,
-              },
-            },
-            {
-              op: 'grantKeywordEachUntilEot',
-              selector: {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'combatRole',
-                    role: 'attacking',
-                  },
-                  {
-                    kind: 'type',
-                    value: 'Creature',
-                  },
-                ],
-              },
-              keyword: 'menace',
-            },
-          ],
-          description:
-            "Inquisition Agents — Whenever equipped creature attacks, create a 2/2 white Astartes Warrior creature token with vigilance that's attacking. Then attacking creatures gain menace until end of turn.",
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-008',
-    patchSha256: 'f7f4128d88d386e529a7b4a4fa459abec4ff4eeb7a838d60885e65aac0a492a2',
-    behaviorSha256: 'cb30aa081c0c44699d90e85b8a20ba2661e7d789d06af6c3a09bfef10be09ab6',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '04f2c320-dfcc-440a-9e24-3c2083d74e7c',
     name: 'Jiang Yanggu, Wildcrafter',
     handledLines: [
@@ -46617,57 +46549,6 @@ const BATCH_CHUNK_011: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-011',
     patchSha256: '354a49f76f4e978ad9b3fb73f0369f34a0844406319269961ec68f5f6593a944',
     behaviorSha256: 'd258c77dabc0bda9b3a5a836c3ed983888a66ceb3bf4963c084ffa0c25ba0106',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'f1c4269a-1d99-4f3b-8107-a005df3468d5',
-    name: 'Sigiled Sword of Valeron',
-    handledLines: [
-      "Whenever equipped creature attacks, create a 2/2 white Knight creature token with vigilance that's attacking.",
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'attacks',
-            subject: {
-              kind: 'permanent',
-              selector: {
-                kind: 'attachedToSource',
-              },
-            },
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'createTokenAttacking',
-              spec: {
-                name: 'Knight',
-                typeLine: 'Token Creature — Knight',
-                types: ['Creature'],
-                subtypes: ['Knight'],
-                colors: ['W'],
-                power: 2,
-                toughness: 2,
-                keywords: ['vigilance'],
-              },
-              count: {
-                kind: 'const',
-                n: 1,
-              },
-            },
-          ],
-          description:
-            "Whenever equipped creature attacks, create a 2/2 white Knight creature token with vigilance that's attacking.",
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-011',
-    patchSha256: '63d9136afbad6f437135c4ba62ebb7931cc63fa57b20df372c7db37b3568fde8',
-    behaviorSha256: '5226917e250472f1575e94a8f718691149efff6bad69317f6196393d5156efa9',
     acceptedBy: 'main-thread',
   },
   {

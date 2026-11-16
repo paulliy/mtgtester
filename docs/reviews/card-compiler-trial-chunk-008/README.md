@@ -4,7 +4,7 @@ Chunk 008 of the [batch card compile campaign](../../plans/batch-card-compile-ca
 next 300 pinned EDHREC cards by rank that no trial had seen (ranks 6,233 to 7,001). Every valid
 patch was audited by the main thread, and every flagged one reviewed by a Sonnet reviewer.
 
-**76 cards were promoted.** The pinned pool now models 4,347 of 8,972 cards (3,718 before the
+**76 cards were promoted.** Inquisitorial Rosette was retired later, in chunk 013, when that chunk's audit showed its token enters tapped; the card's token is attacking but untapped ([chunk 013](../card-compiler-trial-chunk-013/README.md)). The pinned pool now models 4,347 of 8,972 cards (3,718 before the
 campaign). They are `implemented-unreviewed`
 ([ADR 0047](../../decisions/0047-compiled-cards-as-unreviewed-overrides.md)).
 

@@ -4,7 +4,7 @@ Chunk 011 of the [batch card compile campaign](../../plans/batch-card-compile-ca
 next 300 pinned EDHREC cards by rank that no trial had seen (ranks 8,541 to 9,293). Every valid
 patch was audited by the main thread, and every flagged one reviewed by a Sonnet reviewer.
 
-**80 cards were promoted, and two cards promoted in earlier chunks were retired** (Ring of Evos
+**80 cards were promoted, and two cards promoted in earlier chunks were retired** Sigiled Sword of Valeron was retired later, in chunk 013, when that chunk's audit showed its token enters tapped; the card's token is attacking but untapped ([chunk 013](../card-compiler-trial-chunk-013/README.md)). (Ring of Evos
 Isle from chunk 009 and Blade of the Bloodchief from chunk 003; see below). The pinned pool now
 models 4,586 of 8,972 cards (3,718 before the campaign). They are `implemented-unreviewed`
 ([ADR 0047](../../decisions/0047-compiled-cards-as-unreviewed-overrides.md)).
