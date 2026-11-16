@@ -1,7 +1,7 @@
 # Plan: batch-compiling the remaining EDHREC cards with Haiku workers
 
 Status: in progress (2026-11-15). Baseline: `fae4d11`. Stage 0 steps 1 to 6 are built and
-measured (see [Stage 0 status](#stage-0-status)). Eleven chunks are done:
+measured (see [Stage 0 status](#stage-0-status)). Twelve chunks are done:
 [001](../reviews/card-compiler-trial-chunk-001/README.md),
 [002](../reviews/card-compiler-trial-chunk-002/README.md),
 [003](../reviews/card-compiler-trial-chunk-003/README.md),
@@ -11,14 +11,15 @@ measured (see [Stage 0 status](#stage-0-status)). Eleven chunks are done:
 [007](../reviews/card-compiler-trial-chunk-007/README.md),
 [008](../reviews/card-compiler-trial-chunk-008/README.md),
 [009](../reviews/card-compiler-trial-chunk-009/README.md),
-[010](../reviews/card-compiler-trial-chunk-010/README.md) and
-[011](../reviews/card-compiler-trial-chunk-011/README.md). With six cards retired after review or
-fuzzing, 868 are promoted and the pool models 4,586 of 8,972. The audits found 22 wrong patches
-among the 830 that every automatic check passed (about 2.7%), so the audit stays at every card (decided
+[010](../reviews/card-compiler-trial-chunk-010/README.md),
+[011](../reviews/card-compiler-trial-chunk-011/README.md) and
+[012](../reviews/card-compiler-trial-chunk-012/README.md). With seven cards retired after review or
+fuzzing, 945 are promoted and the pool models 4,663 of 8,972. The audits found 26 wrong patches
+among the 902 that every automatic check passed (about 2.9%), so the audit stays at every card (decided
 2026-11-14): the ADR 0047 rule that lets audits drop to a sample is suspended until validator
 rules close the engine gaps behind those escapes. Chunk 004 tripped the calibration stop rule
 twice on one case, Urza's Power Plant; the owner decided to drop that case, since it tests Magic
-knowledge the judge is not given (chunk 004's README). Chunk 006 tripped it again; the owner chose to fix the judge prompt (it now carries the reminder text of the lines under test), and the one case still missed after that, Voldaren Estate, was dropped (chunk 006's README). Still to do: chunks 012 onward, a time limit for the smoke games (chunk 008's README), Stage 0
+knowledge the judge is not given (chunk 004's README). Chunk 006 tripped it again; the owner chose to fix the judge prompt (it now carries the reminder text of the lines under test), and the one case still missed after that, Voldaren Estate, was dropped (chunk 006's README). Still to do: chunks 013 onward, a time limit for the smoke games (chunk 008's README), Stage 0
 step 7 (optional), and the validator rules for the engine findings in the chunk READMEs.
 
 Scope: the 5,254 cards in the pinned EDHREC pool that do not model today. The plan runs them
