@@ -1157,6 +1157,12 @@ function draftPart(
       const power = Number(card.power);
       if (!definition.types.includes('Creature') || !Number.isInteger(power) || power <= 0)
         return { gap: 'an attack trigger on a card with no printed power' };
+      if (
+        draft.expect.some(
+          (expectation) => 'event' in expectation && expectation.event.type === 'damage',
+        )
+      )
+        return { gap: 'a damage event the combat damage would also match' };
       draft.attackers.push(card.name);
       draft.lifeDelta.P2 -= power;
       draft.outcome.unshift(`${card.name} deals ${power} combat damage to P2`);
@@ -1271,8 +1277,12 @@ function draftPart(
   scenario.script = script;
   // A target the draft arranged must have been asked for; the engine choosing it alone (one
   // legal candidate, perhaps not ours) or finding none means the arrangement missed the filter.
+  // Combat declarations carry targets too (defending players), but they are not the ability's.
   const ownTargets = script.filter(
-    (step, index) => step.targets !== undefined && !(index === 0 && intent.targets !== undefined),
+    (step, index) =>
+      step.targets !== undefined &&
+      !step.choose.startsWith('/^Declare ') &&
+      !(index === 0 && intent.targets !== undefined),
   );
   const autoTargeted = part.ability.targets.length > 0 && ownTargets.length === 0;
   // The confirming run: the real runner, a fresh engine, the draft's own expectations.
@@ -1281,6 +1291,12 @@ function draftPart(
   if (verdict.failures.length > 0 && autoTargeted)
     return {
       gap: 'the engine chose the only legal target itself, and it was not the arranged one',
+    };
+  // The card's other triggers can fire in the same run (an attack token entering under an
+  // "another creature enters" trigger), which the draft's expectations do not account for.
+  if (verdict.failures.length > 0 && definition.triggers.length > 1)
+    return {
+      gap: `another trigger of the card may have acted too: ${verdict.failures.join('; ')}`,
     };
   if (verdict.failures.length > 0) return { failure: verdict.failures.join('; ') };
   return { scenario, support };
@@ -1582,6 +1598,25 @@ function draftStatic(
   const expect: ScenarioExpectation[] = [];
   const outcome: string[] = [];
   for (const target of [...(selfSubject === null ? [] : [selfSubject]), ...subjects]) {
+    // Another static changing the same thing (a second P/T change, or the same keyword) would
+    // move the numbers this draft expects; a different keyword or a P/T beside a keyword does not.
+    const others = definition.staticEffects.filter((other, at) => {
+      if (at === index) return false;
+      const otherOp = other.op as Record<string, unknown>;
+      return keyword !== null
+        ? otherOp['addKeyword'] === keyword
+        : otherOp['layer'] === 7 || otherOp['layer'] === 4;
+    });
+    if (
+      others.some(
+        (other) => staticCovers(other.affects as Record<string, unknown>, target) !== false,
+      )
+    )
+      return unit(
+        'unsupported',
+        `another static of the card may also change ${target.name}`,
+        clause,
+      );
     const covered = staticCovers(affects, target);
     if (covered === null)
       return unit('unsupported', 'a static selector the draft cannot arrange', clause);
