@@ -1,6 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/judge/forced-adaptation.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/judge/forced-adaptation.json
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/judge/ashnod-s-intervention.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/judge/ashnod-s-intervention.json
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/judge/dogged-detective.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/judge/dogged-detective.json
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/judge/commence-the-endgame.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/judge/commence-the-endgame.json
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/judge/horobi-death-s-wail.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/judge/horobi-death-s-wail.json
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/judge/lashwrithe.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/judge/lashwrithe.json

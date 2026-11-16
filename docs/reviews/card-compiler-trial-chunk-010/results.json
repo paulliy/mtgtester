@@ -3,19 +3,16 @@
   "estimatedCost": {
     "compileUsd": 0.3637839650000019,
     "compileCalls": 305,
-    "backUsd": 0.0037555000000000075,
-    "backCalls": 104,
-    "judgeUsd": 0.0036389400000000054,
-    "judgeCalls": 102,
-    "totalUsd": 0.3711784050000019
+    "backUsd": 0.003771800000000008,
+    "backCalls": 107,
+    "judgeUsd": 0.0038533400000000054,
+    "judgeCalls": 107,
+    "totalUsd": 0.37140910500000185
   },
   "calibration": {
     "cases": 10,
     "pending": [],
-    "missed": [
-      "dogged-detective~flip-optional-to-false",
-      "exsanguinator-cavalry~widen-trigger-subject-drop-condition-n-"
-    ],
+    "missed": [],
     "falseAlarms": []
   },
   "cards": [
@@ -82,7 +79,7 @@
       "lines": [
         "Destroy target nonland permanent. Its controller creates a Lander token."
       ],
-      "outcome": "pending",
+      "outcome": "compiled-checked",
       "compileRounds": 2,
       "validatorIssues": [
         [
@@ -112,7 +109,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Destroy target nonland permanent. Its controller creates a token that is a colorless Artifact — Lander token with \"{2}, {T}, Sacrifice this artifact: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.\""
+      "backTranslation": "Destroy target nonland permanent. Its controller creates a Lander token. It is an artifact with \"{2}, {T}, Sacrifice this artifact: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.\"",
+      "differences": []
     },
     {
       "name": "Aurelia's Fury",
@@ -186,9 +184,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Enchanted creature gets +2/+2 and has first strike.\nEnchanted creature is subject to an attack restriction that includes planeswalkers.",
+      "backTranslation": "Enchanted creature gets +2/+2 and has first strike.\nEnchanted creature can't attack. This attack restriction also applies to planeswalkers.",
       "differences": [
-        "Text A says the enchanted creature can't attack you or planeswalkers you control; Text B only says it is subject to an attack restriction that includes planeswalkers, and does not say the restriction covers the controller of the aura (you) or limit it to planeswalkers you control."
+        "Text A says the enchanted creature can't attack you or planeswalkers you control; Text B says it can't attack at all, which also forbids attacking other players and planeswalkers.",
+        "Text B's sentence 'This attack restriction also applies to planeswalkers' does not match Text A, which restricts attacks only on you and planeswalkers you control."
       ]
     },
     {
@@ -261,7 +260,7 @@
       "lines": [
         "This spell costs {1} less to cast if it targets a creature you control with a +1/+1 counter on it."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -287,8 +286,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "This spell costs {1} less to cast. This reduction applies only when the spell's target filter matches: a creature you control that has a +1/+1 counter on it.",
-      "differences": []
+      "backTranslation": "This spell costs {1} less to cast if its target is a creature you control with a +1/+1 counter on it.\nIt has no other effects.",
+      "differences": [
+        "Text A's spell makes your creature fight the target creature you don't control (each deals damage equal to its power to the other); Text B says the spell has no other effects, omitting the fight entirely."
+      ]
     },
     {
       "name": "Kyler, Sigardian Emissary",
@@ -331,7 +332,7 @@
       ],
       "backTranslation": "Each other Human creature you control gets +1/+1 for each +1/+1 counter on this creature.",
       "differences": [
-        "Text A counts each counter of any kind on the source. Text B counts only +1/+1 counters."
+        "Text A counts every counter on Kyler (\"each counter on\"), while Text B counts only +1/+1 counters (\"each +1/+1 counter on\"). Any other kind of counter on Kyler changes the bonus in A but not in B."
       ]
     },
     {
@@ -373,7 +374,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of your upkeep, if you control at least one creature and the greatest power among creatures you control is greater than or equal to the greatest power among all creatures, draw a card. Otherwise, put a +1/+1 counter on a creature of your choice.",
+      "backTranslation": "At the beginning of your upkeep, if you control at least one creature and the greatest power among creatures you control is at least the greatest power among all creatures, draw a card. Otherwise, put a +1/+1 counter on a creature of your choice.",
       "differences": []
     },
     {
@@ -415,9 +416,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever you discard a card other than this creature, scry 1.",
+      "backTranslation": "Whenever you discard another card, scry 1.",
       "differences": [
-        "Text A triggers on cycling another card as well as discarding another card; Text B triggers only on discarding, so cycling no longer causes a scry 1."
+        "Text A's trigger fires whenever you cycle or discard another card; Text B omits cycling and covers only discarding, so cycling another card does not make Text B's trigger scry 1."
       ]
     },
     {
@@ -584,7 +585,7 @@
       ],
       "backTranslation": "Whenever you cast your second spell, amass Orcs 2.",
       "differences": [
-        "Text A triggers on the second spell each turn; Text B triggers on every second spell with no 'each turn' limit, so a later turn's second spell also triggers in B and the per-turn condition is missing."
+        "Text A's trigger is 'each turn' (the second spell cast in a turn); Text B says 'your second spell' with no 'each turn', so the trigger's scope differs."
       ]
     },
     {
@@ -637,7 +638,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a creature you control with mana value 5 or greater enters, you may attach this to it.",
+      "backTranslation": "Whenever a permanent with mana value 5 or greater that is a creature you control enters, you may attach this to it.",
       "differences": []
     },
     {
@@ -657,7 +658,7 @@
       "lines": [
         "2+ | {1}, {T}, Sacrifice a land: Draw two cards. You may play an additional land this turn."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -690,10 +691,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{1}, {T}, Sacrifice another land you control: Draw two cards. You may play an additional land this turn. Activate only if this has two or more charge counters on it.",
-      "differences": [
-        "Text A lets the player sacrifice a land (any land, including this permanent if it is a land); Text B requires sacrificing another land you control, so this permanent cannot be sacrificed."
-      ]
+      "backTranslation": "{1}, {T}, Sacrifice another land you control: Draw two cards. You may play an additional land this turn. Activate only if this artifact has two or more charge counters on it.",
+      "differences": []
     },
     {
       "name": "Valgavoth's Onslaught",
@@ -826,7 +825,7 @@
       ],
       "backTranslation": "When this enters, gain control of the enchanted creature for as long as this remains on the battlefield.",
       "differences": [
-        "Text A is a static ability of the Aura: while it is attached, its controller controls the enchanted creature. Text B is a one-time 'when this enters' triggered ability that gains control for as long as the Aura stays on the battlefield. B's control change is therefore set by a trigger that uses the creature enchanted at resolution, and it can be responded to, while A's control follows whatever creature the Aura is attached to at all times."
+        "Text A is a static ability of the Aura: you control the enchanted creature for as long as the Aura is attached, with no trigger or stack use. Text B is a triggered ability (\"When this enters\") that uses the stack and only then gains control, so it can be responded to, and if the Aura has left the battlefield before it resolves, the control change does not happen."
       ]
     },
     {
@@ -976,7 +975,7 @@
       ],
       "backTranslation": "At the beginning of your upkeep, put target creature card from a graveyard onto the battlefield.",
       "differences": [
-        "Text A puts the target creature card from a graveyard onto the battlefield under your control; Text B omits 'under your control', so the creature enters under its owner's control instead."
+        "Text A puts the creature card onto the battlefield under your control; Text B omits 'under your control', so the controller is unspecified."
       ]
     },
     {
@@ -1106,9 +1105,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Enchanted creature has \"{T}: Target creature gains trample and haste until end of turn.\"",
+      "backTranslation": "Enchanted creature has \"{T}: Target creature gains trample until end of turn and gains haste until end of turn.\"",
       "differences": [
-        "Text A gives the granted ability to the enchanted land; Text B gives it to the enchanted creature."
+        "Text A gives the enchanted LAND the ability; Text B gives the enchanted CREATURE the ability.",
+        "Text B grants trample and haste as two separate until-end-of-turn effects; the grant itself matches, but the enchanted object is different, so the granted ability is attached to a different permanent."
       ]
     },
     {
@@ -1233,7 +1233,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this enters, up to one target creature card with mana value 3 or less in your graveyard is put onto the battlefield under your control. Then put a +1/+1 counter on this for each creature you control.",
+      "backTranslation": "When this enters, return up to one target creature card with mana value 3 or less from your graveyard to the battlefield. Then put a +1/+1 counter on this for each creature you control.",
       "differences": []
     },
     {
@@ -1301,7 +1301,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Create X tapped 2/1 white and black Inkling creature tokens with flying.\nIf X is 6 or more, destroy each permanent that is neither a creature nor a land.",
+      "backTranslation": "Create X tapped 2/1 white and black Inkling creature tokens with flying, where X is the value of X paid for this spell.\nIf X is 6 or greater, destroy each permanent that is neither a creature nor a land.",
       "differences": []
     },
     {
@@ -1343,7 +1343,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever another nontoken creature you control that is an Elf or a Berserker dies, draw a card and lose 1 life.",
+      "backTranslation": "Whenever another nontoken Elf or Berserker you control dies, you draw a card and you lose 1 life.",
       "differences": []
     },
     {
@@ -1396,7 +1396,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{3}{W}{W}, Exile this card from your graveyard: Put a +1/+1 counter on each Soldier creature you control.",
+      "backTranslation": "{3}{W}{W}, Exile this card from your graveyard: Put a +1/+1 counter on each creature you control that is a Soldier. Activate only from a graveyard.",
       "differences": []
     },
     {
@@ -1676,7 +1676,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}, Sacrifice this artifact: Target creature can't be blocked this turn. If that creature is a Vampire, it gains lifelink until end of turn.",
+      "backTranslation": "{T}, Sacrifice this: Target creature can't be blocked this turn. If that creature is a Vampire, it gains lifelink until end of turn.",
       "differences": []
     },
     {
@@ -1757,7 +1757,7 @@
       ],
       "backTranslation": "Tap target untapped creature you control.\nAdd {C} equal to that creature's mana value.",
       "differences": [
-        "Text A adds {C} only if the tap was done ('If you do'). Text B adds {C} unconditionally after the tap instruction, so the mana is missing from the 'if you do' condition."
+        "Text A adds mana only \"if you do\", that is, only if the tap actually happened. Text B adds {C} unconditionally after tapping, so the mana is added even when the tap does not happen."
       ]
     },
     {
@@ -1799,10 +1799,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{5}: If this is not a creature, it becomes a 2/4 Wizard creature until end of turn. It gains \"Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn.\" until end of turn.",
+      "backTranslation": "{5}: If this is not a creature, it becomes a 2/4 Wizard creature until end of turn and gains \"Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn.\" until end of turn.",
       "differences": [
-        "Text A makes the land a 2/4 Wizard creature with no end date (permanently, as the land is not a creature); Text B makes it a creature only until end of turn.",
-        "Text A gives the land the +1/+0 ability with no end date; Text B gives it until end of turn only."
+        "Text A's effect has no duration: the land becomes a 2/4 Wizard creature permanently (it stays a creature). Text B makes it a creature only until end of turn."
       ]
     },
     {
@@ -1833,7 +1832,7 @@
       "lines": [
         "As long as there are seven or more cards in your graveyard, creatures your opponents control get -1/-0."
       ],
-      "outcome": "pending",
+      "outcome": "compiled-checked",
       "compileRounds": 2,
       "validatorIssues": [
         [
@@ -1870,7 +1869,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "As long as you have seven or more cards in your graveyard, creatures your opponents control get -1/+0."
+      "backTranslation": "As long as seven or more cards are in your graveyard, creatures your opponents control get -1/+0.",
+      "differences": []
     },
     {
       "name": "Herald of the Host",
@@ -1937,6 +1937,7 @@
           "detail": "game ended"
         }
       ],
+      "backTranslation": "Put a +1/+1 counter on target creature.\nProliferate.",
       "differences": []
     },
     {
@@ -2011,7 +2012,7 @@
       "lines": [
         "Search your library for a white card, a blue card, a black card, a red card, and a green card. Reveal those cards, put them into your hand, then shuffle."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -2038,9 +2039,7 @@
         }
       ],
       "backTranslation": "Search your library for a white card, reveal it, and put it into your hand.\nSearch your library for a blue card, reveal it, and put it into your hand.\nSearch your library for a black card, reveal it, and put it into your hand.\nSearch your library for a red card, reveal it, and put it into your hand.\nSearch your library for a green card, reveal it, and put it into your hand.\nShuffle your library.",
-      "differences": [
-        "Text A is a single search for five cards (one white, one blue, one black, one red, one green), with all the found cards revealed together and put into hand together, then one shuffle. Text B is five separate searches, each with its own reveal and put into hand, in sequence, with the shuffle at the end."
-      ]
+      "differences": []
     },
     {
       "name": "Nettling Nuisance",
@@ -2096,11 +2095,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "You may cast this from your graveyard by paying {3}{U} and discarding a card rather than paying its mana cost. If this spell is cast this way, exile it when it resolves.\nThis spell has no spell effects.",
+      "backTranslation": "You may cast this spell from a graveyard by paying {3}{U} and discarding a card rather than paying its mana cost.\nIf this spell was cast this way, exile it instead of putting it into its owner's graveyard as it resolves.",
       "differences": [
-        "Text B says the spell has no spell effects, but the whole card's spell draws two cards. Text B omits that effect, and this is a sorcery, so every effect must be given.",
-        "Text B says jump-start is paid by paying {3}{U} and discarding a card rather than paying the mana cost. Jump-start is in addition to paying the card's mana cost, not instead of it.",
-        "Text B says the card is exiled only when it resolves. Jump-start exiles the card after it leaves the stack by any means, such as being countered."
+        "Text A says the card is cast from the graveyard by discarding a card in addition to paying its other costs (its own mana cost). Text B says to pay {3}{U} and discard rather than paying its mana cost, which replaces the mana cost with a different fixed cost.",
+        "Text A exiles the card as part of the cast, so it is exiled whenever it leaves the stack, including if it is countered. Text B exiles it only \"as it resolves\", so a countered or otherwise non-resolving spell goes to the graveyard in B."
       ]
     },
     {
@@ -2146,11 +2144,11 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "You may pay {5}{W}{W} rather than pay this spell's mana cost, as a nonmana alternative cost. This spell may be cast at instant speed.",
+      "backTranslation": "You may pay {5}{W}{W} rather than pay this spell's mana cost. This spell has instant timing.",
       "differences": [
-        "Text A lets the spell be cast with flash by paying an additional {2}; Text B makes {5}{W}{W} an alternative cost that replaces the mana cost, which is a different cost of a different amount.",
-        "Text B makes the spell castable at instant speed without any extra payment, while Text A allows instant-speed casting only when the extra {2} is paid.",
-        "Text A's whole card includes 'Destroy all creatures. They can't be regenerated.' as the spell's effect; Text B gives no such effect, though the instructions require every effect of an instant or sorcery to be given."
+        "Text A gives an additional cost of {2} to cast the spell with flash timing; Text B gives an alternative cost of {5}{W}{W} paid instead of the mana cost. These are different costs and different mechanisms.",
+        "Text B omits the spell's effect 'Destroy all creatures.' which the whole card's spell has.",
+        "Text B omits 'They can't be regenerated.'"
       ]
     },
     {
@@ -2452,7 +2450,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When enchanted permanent dies, return this card from the graveyard to hand. Create a 1/3 black Demon creature token named Plaguebearer of Nurgle.",
+      "backTranslation": "When enchanted permanent dies, return this from the graveyard to its owner's hand. Create a 1/3 black Demon creature token.",
       "differences": []
     },
     {
@@ -2599,7 +2597,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature you control deals damage equal to its power to target creature or planeswalker an opponent controls.",
+      "backTranslation": "Target creature you control and target permanent an opponent controls that is a creature or planeswalker. The creature you control deals damage equal to its power to the permanent an opponent controls.",
       "differences": []
     },
     {
@@ -2641,7 +2639,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{T}, Discard two cards: Draw three cards. Put a fuse counter on this artifact. This artifact deals damage equal to the number of fuse counters on it to target opponent. Target opponent gains control of this artifact.",
+      "backTranslation": "{T}, Discard two cards: Draw three cards. Put a fuse counter on this. This deals damage to target opponent equal to the number of fuse counters on this. Target opponent gains control of this.",
       "differences": []
     },
     {
@@ -2650,7 +2648,7 @@
       "lines": [
         "{2}: ~ becomes a 2/2 Golem artifact creature until end of turn."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -2683,8 +2681,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}: Until end of turn, this artifact becomes a 2/2 Golem creature.",
-      "differences": []
+      "backTranslation": "{2}: Until end of turn, this becomes a 2/2 Golem creature.",
+      "differences": [
+        "Text A makes the permanent a 2/2 Golem artifact creature; Text B makes it a 2/2 Golem creature and omits the artifact card type."
+      ]
     },
     {
       "name": "Midnight Crusader Shuttle",
@@ -2758,7 +2758,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this enters, deal damage equal to the number of Goblins you control to target creature an opponent controls.",
+      "backTranslation": "When this enters, it deals damage to target creature an opponent controls equal to the number of Goblins you control.",
       "differences": []
     },
     {
@@ -2793,7 +2793,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Draw two cards.\nYou lose 2 life.\nCreate a Blood token.\nA Blood token has \"{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card.\"",
+      "backTranslation": "Draw two cards.\nYou lose 2 life.\nCreate a Blood artifact token. It has \"{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card.\"",
       "differences": []
     },
     {
@@ -2868,7 +2868,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a player draws a card, unless that player pays {2}, that player loses 2 life.",
+      "backTranslation": "Whenever a player draws a card, that player loses 2 life unless they pay {2}.",
       "differences": []
     },
     {
@@ -2888,7 +2888,7 @@
       "lines": [
         "{3}{G}{G}, Exile this card from your graveyard: Create two 2/2 green Bear creature tokens. Activate only as a sorcery."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -2921,10 +2921,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{3}{G}{G}, Exile this card from the graveyard: Create two 2/2 green Bear creature tokens. Activate only as a sorcery and only from the graveyard.",
-      "differences": [
-        "Text A requires exiling the card from your graveyard; Text B allows exiling it from the graveyard, with no ownership restriction (any graveyard)."
-      ]
+      "backTranslation": "{3}{G}{G}, Exile this card from your graveyard: Create two 2/2 green Bear creature tokens. Activate only as a sorcery.",
+      "differences": []
     },
     {
       "name": "Mitotic Slime",
@@ -2965,7 +2963,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this dies, create two 2/2 green Ooze creature tokens. Each of those tokens has \"When this dies, create two 1/1 green Ooze creature tokens.\"",
+      "backTranslation": "When this creature dies, create two 2/2 green Ooze creature tokens.\nEach of those tokens has \"When this creature dies, create two 1/1 green Ooze creature tokens.\"",
       "differences": []
     },
     {
@@ -3000,7 +2998,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature gets +2/+0 until end of turn. That creature gains \"When this creature leaves the battlefield and goes to a graveyard or exile, return that card to its owner's hand.\" until end of turn.",
+      "backTranslation": "Target creature gets +2/+0 until end of turn and gains \"When this creature leaves the battlefield and goes to a graveyard or exile, return that card to its owner's hand.\" until end of turn.",
       "differences": []
     },
     {
@@ -3053,7 +3051,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}{G}: Return this card from the graveyard to hand. Activate this ability only from the graveyard.",
+      "backTranslation": "{2}{G}: Return this card from your graveyard to your hand. Activate only while this card is in a graveyard.",
       "differences": []
     },
     {
@@ -3099,7 +3097,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Create a 6/6 black and red Dragon creature token with flying and menace. The token has \"Whenever this creature deals combat damage to a player, gain control of target artifact that player controls.\"",
+      "backTranslation": "Create a 6/6 black and red Dragon creature token with flying and menace. That token has \"Whenever this creature deals combat damage to a player, gain control of target artifact that player controls.\"",
       "differences": []
     },
     {
@@ -3163,7 +3161,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever another creature you control enters, put a +1/+1 counter on that creature and a +1/+1 counter on this creature.",
+      "backTranslation": "Whenever another creature you control enters, put a +1/+1 counter on that creature and a +1/+1 counter on this.",
       "differences": []
     },
     {
@@ -3216,7 +3214,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "{2}, Sacrifice this artifact: Exile target creature. Return it to the battlefield under its owner's control at the beginning of the next end step.",
+      "backTranslation": "{2}, Sacrifice this artifact: Exile target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
       "differences": []
     },
     {
@@ -3258,7 +3256,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a creature an opponent controls dies, create a Blood token.\nBlood token: {1}, {T}, Discard a card, Sacrifice this artifact: Draw a card.",
+      "backTranslation": "Whenever a creature an opponent controls dies, create a Blood token.\nBlood token: Artifact — Blood. {1}, {T}, Discard a card, Sacrifice this token: Draw a card.",
       "differences": []
     },
     {
@@ -3293,7 +3291,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "This deals 4 damage to each creature and each planeswalker.",
+      "backTranslation": "Deal 4 damage to each creature and each planeswalker.",
       "differences": []
     },
     {
@@ -3339,9 +3337,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "This spell deals 2 damage to any target.\nIf two or more spells were cast this turn, draw a card.",
+      "backTranslation": "Slick Sequence deals 2 damage to any target.\nIf two or more spells have been cast this turn, draw a card.",
       "differences": [
-        "Text A's draw condition is that you (the controller) have cast another spell this turn. Text B's condition is that two or more spells were cast this turn by any player, so an opponent's spell satisfies B but not A."
+        "Text A draws only if you (the controller) cast another spell this turn. Text B draws if two or more spells have been cast this turn by any player, so an opponent's spell satisfies B's condition but not A's."
       ]
     },
     {
@@ -3361,7 +3359,7 @@
       "lines": [
         "Whenever a player taps a land for mana, that player adds one mana of any type that land produced."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -3394,10 +3392,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever a land is tapped for mana, add one mana of one of the types that land produced.",
-      "differences": [
-        "Text A adds the mana to the player who tapped the land (\"that player\"); Text B says only \"add\", which gives the mana to the controller of the ability, not the tapping player."
-      ]
+      "backTranslation": "Whenever a land is tapped for mana, it produces one additional mana of one of the types that land produces.",
+      "differences": []
     },
     {
       "name": "Yuna's Whistle",
@@ -3471,9 +3467,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever this attacks, put a creature card from your hand onto the battlefield.",
+      "backTranslation": "Whenever this Spacecraft attacks, put a creature card from your hand onto the battlefield.",
       "differences": [
-        "Text A's attack trigger says 'you may put' a creature card from hand onto the battlefield (optional); Text B makes it mandatory with 'put a creature card from your hand onto the battlefield'."
+        "Text A says 'you may put' a creature card from hand onto the battlefield; Text B makes it mandatory."
       ]
     },
     {
@@ -3598,7 +3594,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature you control gets +1/+0 until end of turn.\nTarget creature an opponent controls is dealt damage equal to the power of the first target creature, and the first target creature is the source of that damage.",
+      "backTranslation": "Target creature you control gets +1/+0 until end of turn.\nThen that creature deals damage equal to its power to target creature an opponent controls.",
       "differences": []
     },
     {
@@ -3629,7 +3625,7 @@
       "lines": [
         "{2}: Untap target artifact creature."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -3662,7 +3658,10 @@
           "detail": "game ended"
         }
       ],
-      "differences": []
+      "backTranslation": "{2}: Untap target artifact.",
+      "differences": [
+        "Text A untaps only target artifact creatures. Text B untaps any target artifact, including non-creature artifacts."
+      ]
     },
     {
       "name": "Thirst for Meaning",
@@ -3714,7 +3713,7 @@
       "lines": [
         "Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Blood token."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -3740,10 +3739,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn.\nCreate a Blood token. Blood tokens are Artifact — Blood artifacts with \"{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card.\"\nYou may discard a card. If you do, draw a card.",
-      "differences": [
-        "Text B adds an optional loot effect (\"You may discard a card. If you do, draw a card.\") that Text A's whole card does not have."
-      ]
+      "backTranslation": "Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn.\nCreate a Blood token. It is an artifact with \"{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card.\"",
+      "differences": []
     },
     {
       "name": "Staff of the Death Magus",
@@ -3846,7 +3843,7 @@
       "lines": [
         "All Forests and all Saprolings are 1/1 green Saproling creatures and Forest lands in addition to their other types."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -3879,8 +3876,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Each Forest and each Saproling is a Saproling Forest creature land in addition to its other types, is green, and has base power and toughness 1/1.",
-      "differences": []
+      "backTranslation": "Each Forest and each Saproling is a green creature and land in addition to its other types. It gains the creature types Saproling and Forest, and it has base power and toughness 1/1.",
+      "differences": [
+        "Text B says each Forest gains the creature type Forest; Text A makes Forests Saproling creatures and Forest lands but does not give Forests the Forest creature type."
+      ]
     },
     {
       "name": "Harnesser of Storms",
@@ -4066,9 +4065,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Draw two cards.\nAmass Zombies X, where X is the number of cards in your hand.",
+      "backTranslation": "Draw two cards.\nAmass Zombie X, where X is the number of cards in your hand.",
       "differences": [
-        "Text A says the spell can't be countered; Text B omits this, and it is an effect of the whole spell that B must give because B gives the spell's effects."
+        "Text A says this spell can't be countered; Text B omits that restriction on the spell entirely."
       ]
     },
     {
@@ -4143,7 +4142,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Once each turn, whenever another creature you control with power 2 or less enters, you may discard a card. If you do, draw a card.",
+      "backTranslation": "Whenever another creature you control with power 2 or less enters, you may discard a card. If you do, draw a card. This ability triggers only once each turn.",
       "differences": []
     },
     {
@@ -4185,7 +4184,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "As long as it's your turn, equipped creature gets +2/+0 and has first strike.",
+      "backTranslation": "As long as it is your turn, equipped creature gets +2/+0 and has first strike.",
       "differences": []
     },
     {
@@ -4328,7 +4327,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Artifacts, Battles, creatures, enchantments, lands, and planeswalkers are enchantments in addition to their other types.",
+      "backTranslation": "Artifacts, battles, creatures, enchantments, lands, and planeswalkers are enchantments in addition to their other types.",
       "differences": []
     },
     {
@@ -4352,7 +4351,7 @@
       "lines": [
         "Whenever you tap a land for mana, add {G}."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -4385,8 +4384,11 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever you tap a land you control for mana, add an additional {G}.",
-      "differences": []
+      "backTranslation": "Whenever a land you control is tapped for mana, it adds an additional {G}.",
+      "differences": [
+        "Text A triggers when you (the controller) tap a land for mana; Text B triggers when a land you control is tapped for mana by anyone, so it also covers lands tapped by other effects or players.",
+        "Text A adds {G} to the mana pool; Text B says the land adds an additional {G}, which is worded as a replacement of the tapped land's mana rather than an extra mana added by the ability."
+      ]
     },
     {
       "name": "Grim Poppet",
@@ -4550,7 +4552,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature you control deals damage equal to its power to target creature an opponent controls.\nCreate a Food token. Food tokens are Artifact — Food artifacts with \"{2}, {T}, Sacrifice this artifact: You gain 3 life.\"",
+      "backTranslation": "Target creature you control deals damage equal to its power to target creature an opponent controls.\nCreate a Food token. It is an artifact with \"{2}, {T}, Sacrifice this artifact: You gain 3 life.\"",
       "differences": []
     },
     {
@@ -4603,7 +4605,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of your upkeep, put a +1/+1 counter on enchanted permanent.",
+      "backTranslation": "At the beginning of your upkeep, put a +1/+1 counter on enchanted creature.",
       "differences": []
     },
     {
@@ -4638,9 +4640,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature you control gains protection from the chosen color until end of turn.",
+      "backTranslation": "Target creature you control gains protection from the color of your choice until end of turn.",
       "differences": [
-        "Text A is an instant with rebound (exile it as it resolves and may cast it again from exile at the beginning of your next upkeep); Text B omits rebound, and the spell's effect is given without that second cast, which the instructions require for an instant's effects."
+        "Text A is a spell with rebound (whole card, same spell); Text B gives the spell's effect but omits rebound, so the spell would not be exiled on resolution and cast again at the beginning of the next upkeep."
       ]
     },
     {
@@ -4697,9 +4699,9 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "This spell costs {2} less to cast if you control at least one Wizard.\nThis spell has no other effect.",
+      "backTranslation": "This spell costs {2} less to cast if you control a Wizard.",
       "differences": [
-        "Text B says the spell has no other effect. Text A's spell also deals 3 damage to any target, which Text B omits. Since this is a sorcery/instant spell, B must give every effect of the whole card's spell."
+        "Text B gives only the cost reduction. It omits the spell's effect of dealing 3 damage to any target, which the whole card's spell has."
       ]
     },
     {
@@ -4785,6 +4787,7 @@
           "detail": "game ended"
         }
       ],
+      "backTranslation": "{4}{R}: Create a token that is a copy of this.",
       "differences": []
     },
     {
@@ -4821,7 +4824,7 @@
       ],
       "backTranslation": "You gain 2 life.\nYou may discard two cards. If you do, draw two cards.",
       "differences": [
-        "Text A lets you discard one card to draw two; Text B has you discard two cards to draw two, so the discard cost is different (one card versus two)."
+        "Text A has you discard a card (you may) and draw two if you do; Text B has you discard two cards (you may) and draw two if you do, so the discard count differs."
       ]
     },
     {
@@ -4922,10 +4925,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Put a +1/+1 counter on target creature. That creature gains flying until end of turn.\nCreate a combat-only damage shield on that creature, applying to damage it is dealt.",
+      "backTranslation": "Put a +1/+1 counter on target creature. That creature gains flying until end of turn.\nCreate a damage shield on that creature that applies only to combat damage dealt to it.",
       "differences": [
-        "Text A prevents all combat damage that would be dealt to the creature this turn; Text B creates a combat-only damage shield with no stated duration and no statement that it prevents all such damage.",
-        "Text B does not state that the damage prevention lasts until the end of this turn."
+        "Text A prevents all combat damage dealt to the creature for the rest of the turn; Text B creates a damage shield that covers only the next combat damage, so later combat damage this turn is not prevented.",
+        "Text B's damage shield is a separate effect with its own scope, and Text A's prevention is not described as a shield."
       ]
     },
     {
@@ -4960,7 +4963,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Choose up to two target creatures or planeswalkers. This deals 6 damage to each of them.",
+      "backTranslation": "Up to two target permanents that are creatures or planeswalkers each take 6 damage.",
       "differences": []
     },
     {
@@ -5094,7 +5097,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Target creature gets +2/+0 until end of turn. That creature gains \"When this creature dies, return it to the battlefield\" until end of turn.",
+      "backTranslation": "Target creature gets +2/+0 until end of turn.\nThat creature gains \"When this creature dies, return it to the battlefield.\" until end of turn.",
       "differences": []
     },
     {
@@ -5158,7 +5161,7 @@
       "lines": [
         "Target creature gets -X/-X until end of turn."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -5185,7 +5188,9 @@
         }
       ],
       "backTranslation": "Target creature gets -X/-X until end of turn.",
-      "differences": []
+      "differences": [
+        "Text A's spell can't be countered (including by ward); Text B omits this, so it does not say the spell is uncounterable."
+      ]
     },
     {
       "name": "This Is How It Ends",
@@ -5338,7 +5343,7 @@
       "lines": [
         "At the beginning of the end step, sacrifice this creature."
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -5371,8 +5376,10 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of each player's end step, sacrifice this creature.",
-      "differences": []
+      "backTranslation": "At the beginning of each end step, sacrifice this creature.",
+      "differences": [
+        "Text A sacrifices the creature at the beginning of the end step (only the turn it is controlled, i.e. your end step); Text B sacrifices it at the beginning of EACH end step, so it is also sacrificed on opponents' turns."
+      ]
     },
     {
       "name": "Willbender",
@@ -5415,7 +5422,7 @@
       ],
       "backTranslation": "When this creature is turned face up, change the target of target spell that has a single target.",
       "differences": [
-        "Text A can change the target of a target spell or target ability with a single target; Text B only covers a target spell, so abilities are missing."
+        "Text A lets the trigger change the target of a target spell OR ability with a single target; Text B allows only a spell with a single target, omitting abilities."
       ]
     },
     {
@@ -5457,7 +5464,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this enters, choose any number of targets (up to 999), each of which is any target. This deals 5 damage divided as you choose among them.",
+      "backTranslation": "When this enters, it deals 5 damage divided as you choose among any number of targets.",
       "differences": []
     },
     {
@@ -5488,7 +5495,7 @@
       "lines": [
         "Whenever you attack, put a shield counter on target attacking creature. Until end of turn, it gains \"Whenever this creature deals combat damage to a player, remove a shield counter from it. If you do, draw a card.\""
       ],
-      "outcome": "compiled-checked",
+      "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -5521,8 +5528,11 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever you attack, put a shield counter on target attacking creature. That creature gains \"Whenever this creature deals combat damage to a player, if it has a shield counter on it, remove a shield counter from it and draw a card.\" until end of turn.",
-      "differences": []
+      "backTranslation": "Whenever you attack, put a shield counter on target attacking creature. Until end of turn, that creature gains \"Whenever this creature deals combat damage to a player, if it has a shield counter on it, remove a shield counter from it and draw a card.\"",
+      "differences": [
+        "Text A's granted ability gives the shield counter's replacement effect as reminder text (damage or destruction removes a shield counter instead); Text B omits that the shield counter prevents damage and destruction, so the counter's meaning is missing.",
+        "Text B adds an intervening condition ('if it has a shield counter on it') and removes the counter and draws in one step, rather than removing a counter and drawing only if that removal succeeded; the wording differs in how the draw is conditioned."
+      ]
     },
     {
       "name": "Bristlebud Farmer",
@@ -5618,7 +5628,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "If one or more +1/+1 counters would be put on this creature, that many plus one +1/+1 counters are put on it instead.",
+      "backTranslation": "If one or more +1/+1 counters would be put on this creature, put one additional +1/+1 counter on it instead.",
       "differences": []
     },
     {
@@ -5671,7 +5681,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever another creature you control dies, if that creature was a Goblin or an Orc, put two +1/+1 counters on this creature. Otherwise, put one +1/+1 counter on this creature.",
+      "backTranslation": "Whenever another creature you control dies, if it was a Goblin or an Orc, put two +1/+1 counters on this. Otherwise, put one +1/+1 counter on this.",
       "differences": []
     },
     {
@@ -5724,7 +5734,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this enters, you may choose target creature. Then choose one: tap that creature; or untap that creature.\nWhen this leaves the battlefield, you may choose target creature. Then choose one: tap that creature; or untap that creature.",
+      "backTranslation": "When this enters, you may choose one: tap target creature, or untap target creature.\nWhen this leaves the battlefield, you may choose one: tap target creature, or untap target creature.",
       "differences": []
     },
     {
@@ -5916,7 +5926,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "When this enters, choose up to one target creature. This deals 10 damage to each creature chosen this way.",
+      "backTranslation": "When this Spacecraft enters, it deals 10 damage to up to one target creature.",
       "differences": []
     },
     {
@@ -5980,7 +5990,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "This ability costs {1} less to activate for each other Equipment you control.\n{3}: Attach this to target creature you control. Activate only as a sorcery.",
+      "backTranslation": "{3}: Attach this to target creature you control. Activate only as a sorcery.\nThis ability costs {1} less to activate for each other Equipment you control.",
       "differences": []
     },
     {
@@ -6108,7 +6118,7 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "Whenever an opponent casts a spell, unless that player pays {1}, that player sacrifices a permanent.",
+      "backTranslation": "Whenever an opponent casts a spell, that player may pay {1}. If the player doesn't, that player sacrifices a permanent.",
       "differences": []
     },
     {
@@ -6128,7 +6138,7 @@
       "lines": [
         "At the beginning of enchanted player's upkeep, that player loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card."
       ],
-      "outcome": "meaning-differs",
+      "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
       "smoke": [
@@ -6161,11 +6171,8 @@
           "detail": "game ended"
         }
       ],
-      "backTranslation": "At the beginning of the upkeep of enchanted player, that player sacrifices three nonland permanents, discards three cards, or loses 3 life.",
-      "differences": [
-        "Text A makes the player lose 3 life unless they sacrifice one nonland permanent of their choice or discard one card; Text B makes the player sacrifice three nonland permanents, discard three cards, or lose 3 life.",
-        "Text A lets the player choose the sacrifice-or-discard option with a single permanent or card; Text B requires three permanents or three cards."
-      ]
+      "backTranslation": "At the beginning of enchanted player's upkeep, that player sacrifices a nonland permanent, discards a card, or loses 3 life.",
+      "differences": []
     }
   ]
 }
