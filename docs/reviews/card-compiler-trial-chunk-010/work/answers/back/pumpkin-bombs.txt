@@ -1,0 +1,1 @@
+{T}, Discard two cards: Draw three cards. Put a fuse counter on this. This deals damage to target opponent equal to the number of fuse counters on this. Gain control of this.
