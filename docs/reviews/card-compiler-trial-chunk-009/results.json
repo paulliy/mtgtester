@@ -13,17 +13,13 @@
     "cases": 10,
     "pending": [],
     "missed": [],
-    "falseAlarms": [
-      "thundering-raiju"
-    ]
+    "falseAlarms": ["thundering-raiju"]
   },
   "cards": [
     {
       "name": "Utter Insignificance",
       "rank": 7004,
-      "lines": [
-        "Enchanted creature loses all abilities and has base power and toughness 1/1."
-      ],
+      "lines": ["Enchanted creature loses all abilities and has base power and toughness 1/1."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -105,9 +101,7 @@
     {
       "name": "Blazing Archon",
       "rank": 7014,
-      "lines": [
-        "Creatures can't attack you."
-      ],
+      "lines": ["Creatures can't attack you."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -138,9 +132,7 @@
     {
       "name": "Clear the Mind",
       "rank": 7022,
-      "lines": [
-        "Target player shuffles their graveyard into their library."
-      ],
+      "lines": ["Target player shuffles their graveyard into their library."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -213,9 +205,7 @@
     {
       "name": "Consign to Memory",
       "rank": 7027,
-      "lines": [
-        "Counter target triggered ability or colorless spell."
-      ],
+      "lines": ["Counter target triggered ability or colorless spell."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -224,9 +214,7 @@
     {
       "name": "Electrolyze",
       "rank": 7028,
-      "lines": [
-        "~ deals 2 damage divided as you choose among one or two targets."
-      ],
+      "lines": ["~ deals 2 damage divided as you choose among one or two targets."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -429,9 +417,7 @@
     {
       "name": "Batterbone",
       "rank": 7065,
-      "lines": [
-        "Living weapon"
-      ],
+      "lines": ["Living weapon"],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -610,9 +596,7 @@
     {
       "name": "Blightbeetle",
       "rank": 7076,
-      "lines": [
-        "Creatures your opponents control can't have +1/+1 counters put on them."
-      ],
+      "lines": ["Creatures your opponents control can't have +1/+1 counters put on them."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -663,9 +647,7 @@
     {
       "name": "Lodestone Golem",
       "rank": 7083,
-      "lines": [
-        "Nonartifact spells cost {1} more to cast."
-      ],
+      "lines": ["Nonartifact spells cost {1} more to cast."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -903,9 +885,7 @@
     {
       "name": "Fire Nation Attacks",
       "rank": 7104,
-      "lines": [
-        "Create two 2/2 red Soldier creature tokens with firebending 1."
-      ],
+      "lines": ["Create two 2/2 red Soldier creature tokens with firebending 1."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -925,9 +905,7 @@
     {
       "name": "Ultimecia, Temporal Threat",
       "rank": 7109,
-      "lines": [
-        "When ~ enters, tap all creatures your opponents control."
-      ],
+      "lines": ["When ~ enters, tap all creatures your opponents control."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1052,9 +1030,7 @@
     {
       "name": "Mystic Speculation",
       "rank": 7116,
-      "lines": [
-        "Buyback {2}"
-      ],
+      "lines": ["Buyback {2}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1155,9 +1131,7 @@
     {
       "name": "Search the Premises",
       "rank": 7129,
-      "lines": [
-        "Whenever a creature attacks you or a planeswalker you control, investigate."
-      ],
+      "lines": ["Whenever a creature attacks you or a planeswalker you control, investigate."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1221,9 +1195,7 @@
     {
       "name": "Vision of Love",
       "rank": 7139,
-      "lines": [
-        "You may sacrifice an artifact or discard a card. If you do, draw two cards."
-      ],
+      "lines": ["You may sacrifice an artifact or discard a card. If you do, draw two cards."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1265,9 +1237,7 @@
     {
       "name": "Sliver Overlord",
       "rank": 7147,
-      "lines": [
-        "{3}: Gain control of target Sliver."
-      ],
+      "lines": ["{3}: Gain control of target Sliver."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1377,9 +1347,7 @@
     {
       "name": "Moonsnare Specialist",
       "rank": 7157,
-      "lines": [
-        "Ninjutsu {2}{U}"
-      ],
+      "lines": ["Ninjutsu {2}{U}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1388,9 +1356,7 @@
     {
       "name": "You Are Already Dead",
       "rank": 7163,
-      "lines": [
-        "Destroy target creature that was dealt damage this turn."
-      ],
+      "lines": ["Destroy target creature that was dealt damage this turn."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1494,9 +1460,7 @@
     {
       "name": "Lash of the Balrog",
       "rank": 7175,
-      "lines": [
-        "As an additional cost to cast this spell, sacrifice a creature or pay {4}."
-      ],
+      "lines": ["As an additional cost to cast this spell, sacrifice a creature or pay {4}."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1527,9 +1491,7 @@
     {
       "name": "Achilles Davenport",
       "rank": 7188,
-      "lines": [
-        "Freerunning {U}{B}"
-      ],
+      "lines": ["Freerunning {U}{B}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1538,9 +1500,7 @@
     {
       "name": "Airborne Aid",
       "rank": 7189,
-      "lines": [
-        "Draw a card for each Bird on the battlefield."
-      ],
+      "lines": ["Draw a card for each Bird on the battlefield."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1573,9 +1533,7 @@
     {
       "name": "Primal Bellow",
       "rank": 7192,
-      "lines": [
-        "Target creature gets +1/+1 until end of turn for each Forest you control."
-      ],
+      "lines": ["Target creature gets +1/+1 until end of turn for each Forest you control."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1695,9 +1653,7 @@
     {
       "name": "Golem-Skin Gauntlets",
       "rank": 7197,
-      "lines": [
-        "Equipped creature gets +1/+0 for each Equipment attached to it."
-      ],
+      "lines": ["Equipped creature gets +1/+0 for each Equipment attached to it."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1706,9 +1662,7 @@
     {
       "name": "O-Naginata",
       "rank": 7206,
-      "lines": [
-        "~ can be attached only to a creature with power 3 or greater."
-      ],
+      "lines": ["~ can be attached only to a creature with power 3 or greater."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1717,9 +1671,7 @@
     {
       "name": "Feldon's Cane",
       "rank": 7208,
-      "lines": [
-        "{T}, Exile this artifact: Shuffle your graveyard into your library."
-      ],
+      "lines": ["{T}, Exile this artifact: Shuffle your graveyard into your library."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1869,9 +1821,7 @@
     {
       "name": "Sokka, Lateral Strategist",
       "rank": 7216,
-      "lines": [
-        "Whenever ~ and at least one other creature attack, draw a card."
-      ],
+      "lines": ["Whenever ~ and at least one other creature attack, draw a card."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1975,9 +1925,7 @@
     {
       "name": "Pearl of Wisdom",
       "rank": 7234,
-      "lines": [
-        "This spell costs {1} less to cast if you control an Otter."
-      ],
+      "lines": ["This spell costs {1} less to cast if you control an Otter."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2032,9 +1980,7 @@
     {
       "name": "Magus of the Vineyard",
       "rank": 7239,
-      "lines": [
-        "At the beginning of each player's first main phase, that player adds {G}{G}."
-      ],
+      "lines": ["At the beginning of each player's first main phase, that player adds {G}{G}."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2087,9 +2033,7 @@
     {
       "name": "Winding Canyons",
       "rank": 7264,
-      "lines": [
-        "{2}, {T}: You may cast creature spells this turn as though they had flash."
-      ],
+      "lines": ["{2}, {T}: You may cast creature spells this turn as though they had flash."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2234,9 +2178,7 @@
     {
       "name": "Treeshaker Chimera",
       "rank": 7284,
-      "lines": [
-        "All creatures able to block this creature do so."
-      ],
+      "lines": ["All creatures able to block this creature do so."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2351,9 +2293,7 @@
     {
       "name": "Future Sight",
       "rank": 7298,
-      "lines": [
-        "You may play lands and cast spells from the top of your library."
-      ],
+      "lines": ["You may play lands and cast spells from the top of your library."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2479,9 +2419,7 @@
     {
       "name": "Persistent Specimen",
       "rank": 7302,
-      "lines": [
-        "{2}{B}: Return this card from your graveyard to the battlefield tapped."
-      ],
+      "lines": ["{2}{B}: Return this card from your graveyard to the battlefield tapped."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2501,9 +2439,7 @@
     {
       "name": "Terminal Agony",
       "rank": 7304,
-      "lines": [
-        "Madness {B}{R}"
-      ],
+      "lines": ["Madness {B}{R}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2512,9 +2448,7 @@
     {
       "name": "Hex",
       "rank": 7308,
-      "lines": [
-        "Destroy six target creatures."
-      ],
+      "lines": ["Destroy six target creatures."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2677,9 +2611,7 @@
     {
       "name": "Silk, Web Weaver",
       "rank": 7325,
-      "lines": [
-        "Web-slinging {1}{G}{W}"
-      ],
+      "lines": ["Web-slinging {1}{G}{W}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2754,9 +2686,7 @@
     {
       "name": "Voracious Bibliophile",
       "rank": 7343,
-      "lines": [
-        "Whenever you cast a spell with one or more targets, draw that many cards."
-      ],
+      "lines": ["Whenever you cast a spell with one or more targets, draw that many cards."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2999,9 +2929,7 @@
     {
       "name": "Mask of Riddles",
       "rank": 7371,
-      "lines": [
-        "Equipped creature has fear."
-      ],
+      "lines": ["Equipped creature has fear."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3010,9 +2938,7 @@
     {
       "name": "Meltdown",
       "rank": 7372,
-      "lines": [
-        "Destroy each artifact with mana value X or less."
-      ],
+      "lines": ["Destroy each artifact with mana value X or less."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3063,9 +2989,7 @@
     {
       "name": "Glimpse of Nature",
       "rank": 7378,
-      "lines": [
-        "Whenever you cast a creature spell this turn, draw a card."
-      ],
+      "lines": ["Whenever you cast a creature spell this turn, draw a card."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3096,9 +3020,7 @@
     {
       "name": "Feed the Cycle",
       "rank": 7388,
-      "lines": [
-        "As an additional cost to cast this spell, forage or pay {B}."
-      ],
+      "lines": ["As an additional cost to cast this spell, forage or pay {B}."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3162,9 +3084,7 @@
     {
       "name": "Gloomshrieker",
       "rank": 7396,
-      "lines": [
-        "If this creature would die, exile it instead."
-      ],
+      "lines": ["If this creature would die, exile it instead."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3248,9 +3168,7 @@
     {
       "name": "Aegis of the Gods",
       "rank": 7404,
-      "lines": [
-        "You have hexproof."
-      ],
+      "lines": ["You have hexproof."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3301,9 +3219,7 @@
     {
       "name": "Kasmina's Transmutation",
       "rank": 7409,
-      "lines": [
-        "Enchanted creature loses all abilities and has base power and toughness 1/1."
-      ],
+      "lines": ["Enchanted creature loses all abilities and has base power and toughness 1/1."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3495,9 +3411,7 @@
     {
       "name": "Magus of the Moat",
       "rank": 7423,
-      "lines": [
-        "Creatures without flying can't attack."
-      ],
+      "lines": ["Creatures without flying can't attack."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3548,9 +3462,7 @@
     {
       "name": "M.O.D.O.K.",
       "rank": 7429,
-      "lines": [
-        "Mental Organism — Pay 3 life: ~ connives. Activate only during your turn."
-      ],
+      "lines": ["Mental Organism — Pay 3 life: ~ connives. Activate only during your turn."],
       "outcome": "inexpressible",
       "compileRounds": 2,
       "validatorIssues": [
@@ -3649,9 +3561,7 @@
     {
       "name": "Skycat Sovereign",
       "rank": 7450,
-      "lines": [
-        "~ gets +1/+1 for each other creature you control with flying."
-      ],
+      "lines": ["~ gets +1/+1 for each other creature you control with flying."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3770,9 +3680,7 @@
     {
       "name": "Polygoyf",
       "rank": 7466,
-      "lines": [
-        "Trample, myriad"
-      ],
+      "lines": ["Trample, myriad"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3865,9 +3773,7 @@
     {
       "name": "Lesser Masticore",
       "rank": 7469,
-      "lines": [
-        "As an additional cost to cast this spell, discard a card."
-      ],
+      "lines": ["As an additional cost to cast this spell, discard a card."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4057,9 +3963,7 @@
     {
       "name": "Might of the Masses",
       "rank": 7496,
-      "lines": [
-        "Target creature gets +1/+1 until end of turn for each creature you control."
-      ],
+      "lines": ["Target creature gets +1/+1 until end of turn for each creature you control."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4103,9 +4007,7 @@
     {
       "name": "Spyglass Siren",
       "rank": 7498,
-      "lines": [
-        "When this creature enters, create a Map token."
-      ],
+      "lines": ["When this creature enters, create a Map token."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4220,9 +4122,7 @@
     {
       "name": "Twiddle",
       "rank": 7509,
-      "lines": [
-        "You may tap or untap target artifact, creature, or land."
-      ],
+      "lines": ["You may tap or untap target artifact, creature, or land."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4242,9 +4142,7 @@
     {
       "name": "Overwhelming Remorse",
       "rank": 7517,
-      "lines": [
-        "This spell costs {1} less to cast for each creature card in your graveyard."
-      ],
+      "lines": ["This spell costs {1} less to cast for each creature card in your graveyard."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4279,9 +4177,7 @@
     {
       "name": "Battle Screech",
       "rank": 7521,
-      "lines": [
-        "Flashback—Tap three untapped white creatures you control."
-      ],
+      "lines": ["Flashback—Tap three untapped white creatures you control."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4325,9 +4221,7 @@
     {
       "name": "Ratcatcher",
       "rank": 7529,
-      "lines": [
-        "Fear"
-      ],
+      "lines": ["Fear"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4385,9 +4279,7 @@
     {
       "name": "Anafenza, Unyielding Lineage",
       "rank": 7536,
-      "lines": [
-        "Whenever another nontoken creature you control dies, ~ endures 2."
-      ],
+      "lines": ["Whenever another nontoken creature you control dies, ~ endures 2."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4396,9 +4288,7 @@
     {
       "name": "Ionize",
       "rank": 7538,
-      "lines": [
-        "Counter target spell. ~ deals 2 damage to that spell's controller."
-      ],
+      "lines": ["Counter target spell. ~ deals 2 damage to that spell's controller."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4488,9 +4378,7 @@
     {
       "name": "Hatred",
       "rank": 7548,
-      "lines": [
-        "Target creature gets +X/+0 until end of turn."
-      ],
+      "lines": ["Target creature gets +X/+0 until end of turn."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4565,9 +4453,7 @@
     {
       "name": "The First Sliver",
       "rank": 7552,
-      "lines": [
-        "Sliver spells you cast have cascade."
-      ],
+      "lines": ["Sliver spells you cast have cascade."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4631,9 +4517,7 @@
     {
       "name": "Repay in Kind",
       "rank": 7563,
-      "lines": [
-        "Each player's life total becomes the lowest life total among all players."
-      ],
+      "lines": ["Each player's life total becomes the lowest life total among all players."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4779,9 +4663,7 @@
     {
       "name": "Wyleth, Soul of Steel",
       "rank": 7568,
-      "lines": [
-        "Whenever ~ attacks, draw a card for each Aura and Equipment attached to it."
-      ],
+      "lines": ["Whenever ~ attacks, draw a card for each Aura and Equipment attached to it."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4882,9 +4764,7 @@
     {
       "name": "Unstable Experiment",
       "rank": 7586,
-      "lines": [
-        "Target player draws a card, then up to one target creature you control connives."
-      ],
+      "lines": ["Target player draws a card, then up to one target creature you control connives."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4979,9 +4859,7 @@
     {
       "name": "Grid Monitor",
       "rank": 7593,
-      "lines": [
-        "You can't cast creature spells."
-      ],
+      "lines": ["You can't cast creature spells."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5195,9 +5073,7 @@
     {
       "name": "Arwen Undómiel",
       "rank": 7617,
-      "lines": [
-        "Whenever you scry, put a +1/+1 counter on target creature."
-      ],
+      "lines": ["Whenever you scry, put a +1/+1 counter on target creature."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5217,9 +5093,7 @@
     {
       "name": "Role Reversal",
       "rank": 7619,
-      "lines": [
-        "Exchange control of two target permanents that share a permanent type."
-      ],
+      "lines": ["Exchange control of two target permanents that share a permanent type."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5294,9 +5168,7 @@
     {
       "name": "Mordor Muster",
       "rank": 7626,
-      "lines": [
-        "Amass Orcs 1."
-      ],
+      "lines": ["Amass Orcs 1."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5340,9 +5212,7 @@
     {
       "name": "Spectral Searchlight",
       "rank": 7630,
-      "lines": [
-        "{T}: Choose a player. That player adds one mana of any color they choose."
-      ],
+      "lines": ["{T}: Choose a player. That player adds one mana of any color they choose."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5406,9 +5276,7 @@
     {
       "name": "Hunter's Blowgun",
       "rank": 7638,
-      "lines": [
-        "Equipped creature has deathtouch during your turn. Otherwise, it has reach."
-      ],
+      "lines": ["Equipped creature has deathtouch during your turn. Otherwise, it has reach."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5618,9 +5486,7 @@
     {
       "name": "Mind Over Matter",
       "rank": 7651,
-      "lines": [
-        "Discard a card: You may tap or untap target artifact, creature, or land."
-      ],
+      "lines": ["Discard a card: You may tap or untap target artifact, creature, or land."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5797,9 +5663,7 @@
     {
       "name": "Slobad, Goblin Tinkerer",
       "rank": 7676,
-      "lines": [
-        "Sacrifice an artifact: Target artifact gains indestructible until end of turn."
-      ],
+      "lines": ["Sacrifice an artifact: Target artifact gains indestructible until end of turn."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5966,9 +5830,7 @@
     {
       "name": "Jodah, Archmage Eternal",
       "rank": 7702,
-      "lines": [
-        "You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast."
-      ],
+      "lines": ["You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5977,9 +5839,7 @@
     {
       "name": "Rolling Earthquake",
       "rank": 7703,
-      "lines": [
-        "~ deals X damage to each creature without horsemanship and each player."
-      ],
+      "lines": ["~ deals X damage to each creature without horsemanship and each player."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5999,9 +5859,7 @@
     {
       "name": "Shock Brigade",
       "rank": 7712,
-      "lines": [
-        "Mobilize 1"
-      ],
+      "lines": ["Mobilize 1"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6010,9 +5868,7 @@
     {
       "name": "Timber Protector",
       "rank": 7715,
-      "lines": [
-        "Other Treefolk and Forests you control have indestructible."
-      ],
+      "lines": ["Other Treefolk and Forests you control have indestructible."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6052,9 +5908,7 @@
     {
       "name": "Eladamri's Vineyard",
       "rank": 7718,
-      "lines": [
-        "At the beginning of each player's first main phase, that player adds {G}{G}."
-      ],
+      "lines": ["At the beginning of each player's first main phase, that player adds {G}{G}."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6308,9 +6162,7 @@
     {
       "name": "Blood Fountain",
       "rank": 7762,
-      "lines": [
-        "When this artifact enters, create a Blood token."
-      ],
+      "lines": ["When this artifact enters, create a Blood token."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6372,9 +6224,7 @@
     {
       "name": "Stonehorn Dignitary",
       "rank": 7772,
-      "lines": [
-        "When this creature enters, target opponent skips their next combat phase."
-      ],
+      "lines": ["When this creature enters, target opponent skips their next combat phase."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6394,9 +6244,7 @@
     {
       "name": "Silklash Spider",
       "rank": 7774,
-      "lines": [
-        "{X}{G}{G}: ~ deals X damage to each creature with flying."
-      ],
+      "lines": ["{X}{G}{G}: ~ deals X damage to each creature with flying."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6547,9 +6395,7 @@
     {
       "name": "Heroes' Bane",
       "rank": 7784,
-      "lines": [
-        "{2}{G}{G}: Put X +1/+1 counters on this creature, where X is its power."
-      ],
+      "lines": ["{2}{G}{G}: Put X +1/+1 counters on this creature, where X is its power."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],

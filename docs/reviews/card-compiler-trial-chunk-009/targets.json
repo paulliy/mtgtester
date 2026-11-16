@@ -2,9 +2,7 @@
   {
     "name": "Utter Insignificance",
     "rank": 7004,
-    "lines": [
-      "Enchanted creature loses all abilities and has base power and toughness 1/1."
-    ]
+    "lines": ["Enchanted creature loses all abilities and has base power and toughness 1/1."]
   },
   {
     "name": "Virulent Silencer",
@@ -16,9 +14,7 @@
   {
     "name": "Blazing Archon",
     "rank": 7014,
-    "lines": [
-      "Creatures can't attack you."
-    ]
+    "lines": ["Creatures can't attack you."]
   },
   {
     "name": "White Orchid Phantom",
@@ -37,9 +33,7 @@
   {
     "name": "Clear the Mind",
     "rank": 7022,
-    "lines": [
-      "Target player shuffles their graveyard into their library."
-    ]
+    "lines": ["Target player shuffles their graveyard into their library."]
   },
   {
     "name": "Vendilion Clique",
@@ -65,16 +59,12 @@
   {
     "name": "Consign to Memory",
     "rank": 7027,
-    "lines": [
-      "Counter target triggered ability or colorless spell."
-    ]
+    "lines": ["Counter target triggered ability or colorless spell."]
   },
   {
     "name": "Electrolyze",
     "rank": 7028,
-    "lines": [
-      "~ deals 2 damage divided as you choose among one or two targets."
-    ]
+    "lines": ["~ deals 2 damage divided as you choose among one or two targets."]
   },
   {
     "name": "Leonin Relic-Warder",
@@ -107,9 +97,7 @@
   {
     "name": "Indomitable Archangel",
     "rank": 7052,
-    "lines": [
-      "Artifacts you control have shroud as long as you control three or more artifacts."
-    ]
+    "lines": ["Artifacts you control have shroud as long as you control three or more artifacts."]
   },
   {
     "name": "Pia's Revolution",
@@ -128,9 +116,7 @@
   {
     "name": "Batterbone",
     "rank": 7065,
-    "lines": [
-      "Living weapon"
-    ]
+    "lines": ["Living weapon"]
   },
   {
     "name": "Skyserpent Seeker",
@@ -184,9 +170,7 @@
   {
     "name": "Blightbeetle",
     "rank": 7076,
-    "lines": [
-      "Creatures your opponents control can't have +1/+1 counters put on them."
-    ]
+    "lines": ["Creatures your opponents control can't have +1/+1 counters put on them."]
   },
   {
     "name": "Kaalia, Zenith Seeker",
@@ -198,9 +182,7 @@
   {
     "name": "Lodestone Golem",
     "rank": 7083,
-    "lines": [
-      "Nonartifact spells cost {1} more to cast."
-    ]
+    "lines": ["Nonartifact spells cost {1} more to cast."]
   },
   {
     "name": "Éowyn, Shieldmaiden",
@@ -254,9 +236,7 @@
   {
     "name": "Fire Nation Attacks",
     "rank": 7104,
-    "lines": [
-      "Create two 2/2 red Soldier creature tokens with firebending 1."
-    ]
+    "lines": ["Create two 2/2 red Soldier creature tokens with firebending 1."]
   },
   {
     "name": "Curse of Unbinding",
@@ -268,9 +248,7 @@
   {
     "name": "Ultimecia, Temporal Threat",
     "rank": 7109,
-    "lines": [
-      "When ~ enters, tap all creatures your opponents control."
-    ]
+    "lines": ["When ~ enters, tap all creatures your opponents control."]
   },
   {
     "name": "Split Decision",
@@ -296,9 +274,7 @@
   {
     "name": "Mystic Speculation",
     "rank": 7116,
-    "lines": [
-      "Buyback {2}"
-    ]
+    "lines": ["Buyback {2}"]
   },
   {
     "name": "Creeping Renaissance",
@@ -331,9 +307,7 @@
   {
     "name": "Search the Premises",
     "rank": 7129,
-    "lines": [
-      "Whenever a creature attacks you or a planeswalker you control, investigate."
-    ]
+    "lines": ["Whenever a creature attacks you or a planeswalker you control, investigate."]
   },
   {
     "name": "Stiltzkin, Moogle Merchant",
@@ -352,9 +326,7 @@
   {
     "name": "Vision of Love",
     "rank": 7139,
-    "lines": [
-      "You may sacrifice an artifact or discard a card. If you do, draw two cards."
-    ]
+    "lines": ["You may sacrifice an artifact or discard a card. If you do, draw two cards."]
   },
   {
     "name": "Game of Chaos",
@@ -380,9 +352,7 @@
   {
     "name": "Sliver Overlord",
     "rank": 7147,
-    "lines": [
-      "{3}: Gain control of target Sliver."
-    ]
+    "lines": ["{3}: Gain control of target Sliver."]
   },
   {
     "name": "Protection Racket",
@@ -408,16 +378,12 @@
   {
     "name": "Moonsnare Specialist",
     "rank": 7157,
-    "lines": [
-      "Ninjutsu {2}{U}"
-    ]
+    "lines": ["Ninjutsu {2}{U}"]
   },
   {
     "name": "You Are Already Dead",
     "rank": 7163,
-    "lines": [
-      "Destroy target creature that was dealt damage this turn."
-    ]
+    "lines": ["Destroy target creature that was dealt damage this turn."]
   },
   {
     "name": "Carrot Cake",
@@ -443,9 +409,7 @@
   {
     "name": "Lash of the Balrog",
     "rank": 7175,
-    "lines": [
-      "As an additional cost to cast this spell, sacrifice a creature or pay {4}."
-    ]
+    "lines": ["As an additional cost to cast this spell, sacrifice a creature or pay {4}."]
   },
   {
     "name": "Anzrag's Rampage",
@@ -464,23 +428,17 @@
   {
     "name": "Achilles Davenport",
     "rank": 7188,
-    "lines": [
-      "Freerunning {U}{B}"
-    ]
+    "lines": ["Freerunning {U}{B}"]
   },
   {
     "name": "Airborne Aid",
     "rank": 7189,
-    "lines": [
-      "Draw a card for each Bird on the battlefield."
-    ]
+    "lines": ["Draw a card for each Bird on the battlefield."]
   },
   {
     "name": "Primal Bellow",
     "rank": 7192,
-    "lines": [
-      "Target creature gets +1/+1 until end of turn for each Forest you control."
-    ]
+    "lines": ["Target creature gets +1/+1 until end of turn for each Forest you control."]
   },
   {
     "name": "Master of Death",
@@ -499,23 +457,17 @@
   {
     "name": "Golem-Skin Gauntlets",
     "rank": 7197,
-    "lines": [
-      "Equipped creature gets +1/+0 for each Equipment attached to it."
-    ]
+    "lines": ["Equipped creature gets +1/+0 for each Equipment attached to it."]
   },
   {
     "name": "O-Naginata",
     "rank": 7206,
-    "lines": [
-      "~ can be attached only to a creature with power 3 or greater."
-    ]
+    "lines": ["~ can be attached only to a creature with power 3 or greater."]
   },
   {
     "name": "Feldon's Cane",
     "rank": 7208,
-    "lines": [
-      "{T}, Exile this artifact: Shuffle your graveyard into your library."
-    ]
+    "lines": ["{T}, Exile this artifact: Shuffle your graveyard into your library."]
   },
   {
     "name": "Paladin Danse, Steel Maverick",
@@ -548,9 +500,7 @@
   {
     "name": "Sokka, Lateral Strategist",
     "rank": 7216,
-    "lines": [
-      "Whenever ~ and at least one other creature attack, draw a card."
-    ]
+    "lines": ["Whenever ~ and at least one other creature attack, draw a card."]
   },
   {
     "name": "Ayara's Oathsworn",
@@ -576,9 +526,7 @@
   {
     "name": "Pearl of Wisdom",
     "rank": 7234,
-    "lines": [
-      "This spell costs {1} less to cast if you control an Otter."
-    ]
+    "lines": ["This spell costs {1} less to cast if you control an Otter."]
   },
   {
     "name": "Littjara Mirrorlake",
@@ -597,9 +545,7 @@
   {
     "name": "Magus of the Vineyard",
     "rank": 7239,
-    "lines": [
-      "At the beginning of each player's first main phase, that player adds {G}{G}."
-    ]
+    "lines": ["At the beginning of each player's first main phase, that player adds {G}{G}."]
   },
   {
     "name": "Witch-king, Bringer of Ruin",
@@ -632,9 +578,7 @@
   {
     "name": "Winding Canyons",
     "rank": 7264,
-    "lines": [
-      "{2}, {T}: You may cast creature spells this turn as though they had flash."
-    ]
+    "lines": ["{2}, {T}: You may cast creature spells this turn as though they had flash."]
   },
   {
     "name": "Demonlord Belzenlok",
@@ -688,9 +632,7 @@
   {
     "name": "Treeshaker Chimera",
     "rank": 7284,
-    "lines": [
-      "All creatures able to block this creature do so."
-    ]
+    "lines": ["All creatures able to block this creature do so."]
   },
   {
     "name": "Flatline",
@@ -723,9 +665,7 @@
   {
     "name": "Future Sight",
     "rank": 7298,
-    "lines": [
-      "You may play lands and cast spells from the top of your library."
-    ]
+    "lines": ["You may play lands and cast spells from the top of your library."]
   },
   {
     "name": "Craterclaw Colossus",
@@ -744,9 +684,7 @@
   {
     "name": "Persistent Specimen",
     "rank": 7302,
-    "lines": [
-      "{2}{B}: Return this card from your graveyard to the battlefield tapped."
-    ]
+    "lines": ["{2}{B}: Return this card from your graveyard to the battlefield tapped."]
   },
   {
     "name": "Mindleech Mass",
@@ -758,16 +696,12 @@
   {
     "name": "Terminal Agony",
     "rank": 7304,
-    "lines": [
-      "Madness {B}{R}"
-    ]
+    "lines": ["Madness {B}{R}"]
   },
   {
     "name": "Hex",
     "rank": 7308,
-    "lines": [
-      "Destroy six target creatures."
-    ]
+    "lines": ["Destroy six target creatures."]
   },
   {
     "name": "Stirring Wildwood",
@@ -800,9 +734,7 @@
   {
     "name": "Gravepurge",
     "rank": 7320,
-    "lines": [
-      "Put any number of target creature cards from your graveyard on top of your library."
-    ]
+    "lines": ["Put any number of target creature cards from your graveyard on top of your library."]
   },
   {
     "name": "Immortal Obligation",
@@ -814,9 +746,7 @@
   {
     "name": "Silk, Web Weaver",
     "rank": 7325,
-    "lines": [
-      "Web-slinging {1}{G}{W}"
-    ]
+    "lines": ["Web-slinging {1}{G}{W}"]
   },
   {
     "name": "Altanak, the Thrice-Called",
@@ -863,16 +793,12 @@
   {
     "name": "Voracious Bibliophile",
     "rank": 7343,
-    "lines": [
-      "Whenever you cast a spell with one or more targets, draw that many cards."
-    ]
+    "lines": ["Whenever you cast a spell with one or more targets, draw that many cards."]
   },
   {
     "name": "Howlpack Resurgence",
     "rank": 7344,
-    "lines": [
-      "Each creature you control that's a Wolf or a Werewolf gets +1/+1 and has trample."
-    ]
+    "lines": ["Each creature you control that's a Wolf or a Werewolf gets +1/+1 and has trample."]
   },
   {
     "name": "Evil Reawakened",
@@ -926,9 +852,7 @@
   {
     "name": "Void Beckoner",
     "rank": 7368,
-    "lines": [
-      "When you cycle this card, put a deathtouch counter on target creature you control."
-    ]
+    "lines": ["When you cycle this card, put a deathtouch counter on target creature you control."]
   },
   {
     "name": "Broodhatch Nantuko",
@@ -940,16 +864,12 @@
   {
     "name": "Mask of Riddles",
     "rank": 7371,
-    "lines": [
-      "Equipped creature has fear."
-    ]
+    "lines": ["Equipped creature has fear."]
   },
   {
     "name": "Meltdown",
     "rank": 7372,
-    "lines": [
-      "Destroy each artifact with mana value X or less."
-    ]
+    "lines": ["Destroy each artifact with mana value X or less."]
   },
   {
     "name": "Ondu Cleric",
@@ -961,9 +881,7 @@
   {
     "name": "Glimpse of Nature",
     "rank": 7378,
-    "lines": [
-      "Whenever you cast a creature spell this turn, draw a card."
-    ]
+    "lines": ["Whenever you cast a creature spell this turn, draw a card."]
   },
   {
     "name": "Wizened Mentor",
@@ -982,9 +900,7 @@
   {
     "name": "Feed the Cycle",
     "rank": 7388,
-    "lines": [
-      "As an additional cost to cast this spell, forage or pay {B}."
-    ]
+    "lines": ["As an additional cost to cast this spell, forage or pay {B}."]
   },
   {
     "name": "Aatchik, Emerald Radian",
@@ -1003,9 +919,7 @@
   {
     "name": "Gloomshrieker",
     "rank": 7396,
-    "lines": [
-      "If this creature would die, exile it instead."
-    ]
+    "lines": ["If this creature would die, exile it instead."]
   },
   {
     "name": "Fork",
@@ -1038,23 +952,17 @@
   {
     "name": "Aegis of the Gods",
     "rank": 7404,
-    "lines": [
-      "You have hexproof."
-    ]
+    "lines": ["You have hexproof."]
   },
   {
     "name": "Nut Collector",
     "rank": 7408,
-    "lines": [
-      "All Squirrels get +2/+2 as long as there are seven or more cards in your graveyard."
-    ]
+    "lines": ["All Squirrels get +2/+2 as long as there are seven or more cards in your graveyard."]
   },
   {
     "name": "Kasmina's Transmutation",
     "rank": 7409,
-    "lines": [
-      "Enchanted creature loses all abilities and has base power and toughness 1/1."
-    ]
+    "lines": ["Enchanted creature loses all abilities and has base power and toughness 1/1."]
   },
   {
     "name": "Widespread Brutality",
@@ -1094,9 +1002,7 @@
   {
     "name": "Magus of the Moat",
     "rank": 7423,
-    "lines": [
-      "Creatures without flying can't attack."
-    ]
+    "lines": ["Creatures without flying can't attack."]
   },
   {
     "name": "Steel-Plume Marshal",
@@ -1108,9 +1014,7 @@
   {
     "name": "M.O.D.O.K.",
     "rank": 7429,
-    "lines": [
-      "Mental Organism — Pay 3 life: ~ connives. Activate only during your turn."
-    ]
+    "lines": ["Mental Organism — Pay 3 life: ~ connives. Activate only during your turn."]
   },
   {
     "name": "Arcum Dagsson",
@@ -1150,9 +1054,7 @@
   {
     "name": "Skycat Sovereign",
     "rank": 7450,
-    "lines": [
-      "~ gets +1/+1 for each other creature you control with flying."
-    ]
+    "lines": ["~ gets +1/+1 for each other creature you control with flying."]
   },
   {
     "name": "Benefactor's Draught",
@@ -1192,9 +1094,7 @@
   {
     "name": "Polygoyf",
     "rank": 7466,
-    "lines": [
-      "Trample, myriad"
-    ]
+    "lines": ["Trample, myriad"]
   },
   {
     "name": "Court Street Denizen",
@@ -1213,9 +1113,7 @@
   {
     "name": "Lesser Masticore",
     "rank": 7469,
-    "lines": [
-      "As an additional cost to cast this spell, discard a card."
-    ]
+    "lines": ["As an additional cost to cast this spell, discard a card."]
   },
   {
     "name": "Deathbringer Regent",
@@ -1255,9 +1153,7 @@
   {
     "name": "Might of the Masses",
     "rank": 7496,
-    "lines": [
-      "Target creature gets +1/+1 until end of turn for each creature you control."
-    ]
+    "lines": ["Target creature gets +1/+1 until end of turn for each creature you control."]
   },
   {
     "name": "Sphinx of Forgotten Lore",
@@ -1269,9 +1165,7 @@
   {
     "name": "Spyglass Siren",
     "rank": 7498,
-    "lines": [
-      "When this creature enters, create a Map token."
-    ]
+    "lines": ["When this creature enters, create a Map token."]
   },
   {
     "name": "Dark Salvation",
@@ -1304,9 +1198,7 @@
   {
     "name": "Twiddle",
     "rank": 7509,
-    "lines": [
-      "You may tap or untap target artifact, creature, or land."
-    ]
+    "lines": ["You may tap or untap target artifact, creature, or land."]
   },
   {
     "name": "Curse of Clinging Webs",
@@ -1318,16 +1210,12 @@
   {
     "name": "Overwhelming Remorse",
     "rank": 7517,
-    "lines": [
-      "This spell costs {1} less to cast for each creature card in your graveyard."
-    ]
+    "lines": ["This spell costs {1} less to cast for each creature card in your graveyard."]
   },
   {
     "name": "Battle Screech",
     "rank": 7521,
-    "lines": [
-      "Flashback—Tap three untapped white creatures you control."
-    ]
+    "lines": ["Flashback—Tap three untapped white creatures you control."]
   },
   {
     "name": "Ivy, Gleeful Spellthief",
@@ -1339,9 +1227,7 @@
   {
     "name": "Ratcatcher",
     "rank": 7529,
-    "lines": [
-      "Fear"
-    ]
+    "lines": ["Fear"]
   },
   {
     "name": "Illusionist's Stratagem",
@@ -1360,16 +1246,12 @@
   {
     "name": "Anafenza, Unyielding Lineage",
     "rank": 7536,
-    "lines": [
-      "Whenever another nontoken creature you control dies, ~ endures 2."
-    ]
+    "lines": ["Whenever another nontoken creature you control dies, ~ endures 2."]
   },
   {
     "name": "Ionize",
     "rank": 7538,
-    "lines": [
-      "Counter target spell. ~ deals 2 damage to that spell's controller."
-    ]
+    "lines": ["Counter target spell. ~ deals 2 damage to that spell's controller."]
   },
   {
     "name": "Teach by Example",
@@ -1409,9 +1291,7 @@
   {
     "name": "Hatred",
     "rank": 7548,
-    "lines": [
-      "Target creature gets +X/+0 until end of turn."
-    ]
+    "lines": ["Target creature gets +X/+0 until end of turn."]
   },
   {
     "name": "Hraesvelgr of the First Brood",
@@ -1423,9 +1303,7 @@
   {
     "name": "The First Sliver",
     "rank": 7552,
-    "lines": [
-      "Sliver spells you cast have cascade."
-    ]
+    "lines": ["Sliver spells you cast have cascade."]
   },
   {
     "name": "Towashi Guide-Bot",
@@ -1465,9 +1343,7 @@
   {
     "name": "Repay in Kind",
     "rank": 7563,
-    "lines": [
-      "Each player's life total becomes the lowest life total among all players."
-    ]
+    "lines": ["Each player's life total becomes the lowest life total among all players."]
   },
   {
     "name": "Thrilling Encore",
@@ -1500,9 +1376,7 @@
   {
     "name": "Wyleth, Soul of Steel",
     "rank": 7568,
-    "lines": [
-      "Whenever ~ attacks, draw a card for each Aura and Equipment attached to it."
-    ]
+    "lines": ["Whenever ~ attacks, draw a card for each Aura and Equipment attached to it."]
   },
   {
     "name": "Owlin Spiralmancer",
@@ -1535,9 +1409,7 @@
   {
     "name": "Unstable Experiment",
     "rank": 7586,
-    "lines": [
-      "Target player draws a card, then up to one target creature you control connives."
-    ]
+    "lines": ["Target player draws a card, then up to one target creature you control connives."]
   },
   {
     "name": "Splitskin Doll",
@@ -1556,9 +1428,7 @@
   {
     "name": "Grid Monitor",
     "rank": 7593,
-    "lines": [
-      "You can't cast creature spells."
-    ]
+    "lines": ["You can't cast creature spells."]
   },
   {
     "name": "Open into Wonder",
@@ -1619,9 +1489,7 @@
   {
     "name": "Arwen Undómiel",
     "rank": 7617,
-    "lines": [
-      "Whenever you scry, put a +1/+1 counter on target creature."
-    ]
+    "lines": ["Whenever you scry, put a +1/+1 counter on target creature."]
   },
   {
     "name": "Guardian of Ghirapur",
@@ -1633,9 +1501,7 @@
   {
     "name": "Role Reversal",
     "rank": 7619,
-    "lines": [
-      "Exchange control of two target permanents that share a permanent type."
-    ]
+    "lines": ["Exchange control of two target permanents that share a permanent type."]
   },
   {
     "name": "Huskburster Swarm",
@@ -1661,9 +1527,7 @@
   {
     "name": "Mordor Muster",
     "rank": 7626,
-    "lines": [
-      "Amass Orcs 1."
-    ]
+    "lines": ["Amass Orcs 1."]
   },
   {
     "name": "Amped Raptor",
@@ -1675,9 +1539,7 @@
   {
     "name": "Spectral Searchlight",
     "rank": 7630,
-    "lines": [
-      "{T}: Choose a player. That player adds one mana of any color they choose."
-    ]
+    "lines": ["{T}: Choose a player. That player adds one mana of any color they choose."]
   },
   {
     "name": "Spider-Man No More",
@@ -1696,9 +1558,7 @@
   {
     "name": "Hunter's Blowgun",
     "rank": 7638,
-    "lines": [
-      "Equipped creature has deathtouch during your turn. Otherwise, it has reach."
-    ]
+    "lines": ["Equipped creature has deathtouch during your turn. Otherwise, it has reach."]
   },
   {
     "name": "Sanctuary Warden",
@@ -1752,9 +1612,7 @@
   {
     "name": "Mind Over Matter",
     "rank": 7651,
-    "lines": [
-      "Discard a card: You may tap or untap target artifact, creature, or land."
-    ]
+    "lines": ["Discard a card: You may tap or untap target artifact, creature, or land."]
   },
   {
     "name": "Raiyuu, Storm's Edge",
@@ -1829,9 +1687,7 @@
   {
     "name": "Slobad, Goblin Tinkerer",
     "rank": 7676,
-    "lines": [
-      "Sacrifice an artifact: Target artifact gains indestructible until end of turn."
-    ]
+    "lines": ["Sacrifice an artifact: Target artifact gains indestructible until end of turn."]
   },
   {
     "name": "Dreamborn Muse",
@@ -1899,16 +1755,12 @@
   {
     "name": "Jodah, Archmage Eternal",
     "rank": 7702,
-    "lines": [
-      "You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast."
-    ]
+    "lines": ["You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast."]
   },
   {
     "name": "Rolling Earthquake",
     "rank": 7703,
-    "lines": [
-      "~ deals X damage to each creature without horsemanship and each player."
-    ]
+    "lines": ["~ deals X damage to each creature without horsemanship and each player."]
   },
   {
     "name": "Saffi Eriksdotter",
@@ -1920,23 +1772,17 @@
   {
     "name": "Shock Brigade",
     "rank": 7712,
-    "lines": [
-      "Mobilize 1"
-    ]
+    "lines": ["Mobilize 1"]
   },
   {
     "name": "Timber Protector",
     "rank": 7715,
-    "lines": [
-      "Other Treefolk and Forests you control have indestructible."
-    ]
+    "lines": ["Other Treefolk and Forests you control have indestructible."]
   },
   {
     "name": "Eladamri's Vineyard",
     "rank": 7718,
-    "lines": [
-      "At the beginning of each player's first main phase, that player adds {G}{G}."
-    ]
+    "lines": ["At the beginning of each player's first main phase, that player adds {G}{G}."]
   },
   {
     "name": "Dragonlord Kolaghan",
@@ -1969,9 +1815,7 @@
   {
     "name": "Pym Particles",
     "rank": 7730,
-    "lines": [
-      "Target creature gains vigilance until end of turn and can't be blocked this turn."
-    ]
+    "lines": ["Target creature gains vigilance until end of turn and can't be blocked this turn."]
   },
   {
     "name": "Signature Slam",
@@ -2025,9 +1869,7 @@
   {
     "name": "Blood Fountain",
     "rank": 7762,
-    "lines": [
-      "When this artifact enters, create a Blood token."
-    ]
+    "lines": ["When this artifact enters, create a Blood token."]
   },
   {
     "name": "Raph & Mikey, Troublemakers",
@@ -2046,9 +1888,7 @@
   {
     "name": "Stonehorn Dignitary",
     "rank": 7772,
-    "lines": [
-      "When this creature enters, target opponent skips their next combat phase."
-    ]
+    "lines": ["When this creature enters, target opponent skips their next combat phase."]
   },
   {
     "name": "The Red Terror",
@@ -2060,9 +1900,7 @@
   {
     "name": "Silklash Spider",
     "rank": 7774,
-    "lines": [
-      "{X}{G}{G}: ~ deals X damage to each creature with flying."
-    ]
+    "lines": ["{X}{G}{G}: ~ deals X damage to each creature with flying."]
   },
   {
     "name": "Wandering Fumarole",
@@ -2095,8 +1933,6 @@
   {
     "name": "Heroes' Bane",
     "rank": 7784,
-    "lines": [
-      "{2}{G}{G}: Put X +1/+1 counters on this creature, where X is its power."
-    ]
+    "lines": ["{2}{G}{G}: Put X +1/+1 counters on this creature, where X is its power."]
   }
 ]
