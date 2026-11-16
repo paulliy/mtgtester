@@ -1,0 +1,3142 @@
+[
+  {
+    "name": "Tiana, Ship's Caretaker",
+    "rank": 10744,
+    "lines": [
+      "Whenever an Aura or Equipment you control is put into a graveyard from the battlefield, you may return that card to its owner's hand at the beginning of the next end step."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Scarblade's Malice",
+    "rank": 10745,
+    "lines": [
+      "Target creature you control gains deathtouch and lifelink until end of turn. When that creature dies this turn, create a 2/2 black and green Elf creature token."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Marshland Bloodcaster",
+    "rank": 10748,
+    "lines": [
+      "{1}{B}, {T}: Rather than pay the mana cost of the next spell you cast this turn, you may pay life equal to that spell's mana value."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Mishra's Self-Replicator",
+    "rank": 10749,
+    "lines": [
+      "Whenever you cast a historic spell, you may pay {1}. If you do, create a token that's a copy of this creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Hunted Troll",
+    "rank": 10752,
+    "lines": [
+      "{G}: Regenerate this creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Schema Thief",
+    "rank": 10753,
+    "lines": [
+      "Whenever this creature deals combat damage to a player, create a token that's a copy of target artifact that player controls."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Ceaseless Conflict",
+    "rank": 10754,
+    "lines": [
+      "Destroy all creatures. Then create a 3/2 red and white Spirit creature token for each nontoken creature you controlled that was destroyed this way."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Scion of Opulence",
+    "rank": 10759,
+    "lines": [
+      "{R}, Sacrifice two artifacts: Exile the top card of your library. You may play that card this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Sergeant John Benton",
+    "rank": 10760,
+    "lines": [
+      "Share Intelligence — Whenever ~ deals combat damage to a player, you and that player each draw that many cards."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Dredge the Mire",
+    "rank": 10761,
+    "lines": [
+      "Each opponent chooses a creature card in their graveyard. Put those cards onto the battlefield under your control."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Dreadwing Scavenger",
+    "rank": 10762,
+    "lines": [
+      "~ gets +1/+1 and has deathtouch as long as there are seven or more cards in your graveyard."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Eye of Duskmantle",
+    "rank": 10764,
+    "lines": [
+      "You may play lands and cast spells from among cards in your graveyard you've surveilled this turn. If you cast a spell this way, you pay life equal to its mana value rather than paying its mana cost."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Perennation",
+    "rank": 10765,
+    "lines": [
+      "Return target permanent card from your graveyard to the battlefield with a hexproof counter and an indestructible counter on it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Knockout Maneuver",
+    "rank": 10766,
+    "lines": [
+      "Put a +1/+1 counter on target creature you control, then it deals damage equal to its power to target creature an opponent controls."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Sinister Concierge",
+    "rank": 10767,
+    "lines": [
+      "When this creature dies, you may exile it and put three time counters on it. If you do, exile up to one target creature and put three time counters on it. Each card exiled this way that doesn't have suspend gains suspend."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Betor, Ancestor's Voice",
+    "rank": 10771,
+    "lines": [
+      "At the beginning of your end step, put a number of +1/+1 counters on up to one other target creature you control equal to the amount of life you gained this turn. Return up to one target creature card with mana value less than or equal to the amount of life you lost this turn from your graveyard to the battlefield."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Reiver Demon",
+    "rank": 10773,
+    "lines": [
+      "When this creature enters, if you cast it from your hand, destroy all nonartifact, nonblack creatures. They can't be regenerated."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Synthesizer Labship",
+    "rank": 10777,
+    "lines": [
+      "2+ | At the beginning of combat on your turn, up to one other target artifact you control becomes an artifact creature with base power and toughness 2/2 and gains flying until end of turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Tuya Bearclaw",
+    "rank": 10778,
+    "lines": [
+      "Whenever ~ attacks, it gets +X/+X until end of turn, where X is the greatest power among other creatures you control."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Sly Instigator",
+    "rank": 10780,
+    "lines": [
+      "{U}, {T}: Until your next turn, target creature an opponent controls can't be blocked. Goad that creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Sylvan Messenger",
+    "rank": 10781,
+    "lines": [
+      "When this creature enters, reveal the top four cards of your library. Put all Elf cards revealed this way into your hand and the rest on the bottom of your library in any order."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Admiral Brass, Unsinkable",
+    "rank": 10782,
+    "lines": [
+      "At the beginning of combat on your turn, you may return target Pirate creature card from your graveyard to the battlefield with a finality counter on it. It has base power and toughness 4/4. It gains haste until end of turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Eivor, Wolf-Kissed",
+    "rank": 10788,
+    "lines": [
+      "Whenever ~ deals combat damage to a player, you mill that many cards. You may put a Saga card and/or a land card from among them onto the battlefield."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Commune with Evil",
+    "rank": 10789,
+    "lines": [
+      "Look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. You gain 3 life."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Root Maze",
+    "rank": 10790,
+    "lines": [
+      "Artifacts and lands enter tapped."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Pestermite",
+    "rank": 10791,
+    "lines": [
+      "When this creature enters, you may tap or untap target permanent."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Grow Extra Arms",
+    "rank": 10794,
+    "lines": [
+      "This spell costs {1} less to cast if it targets a Spider."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Carrion Grub",
+    "rank": 10797,
+    "lines": [
+      "~ gets +X/+0, where X is the greatest power among creature cards in your graveyard."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Stoneshaker Shaman",
+    "rank": 10798,
+    "lines": [
+      "At the beginning of each player's end step, that player sacrifices an untapped land of their choice."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Psychic Spiral",
+    "rank": 10800,
+    "lines": [
+      "Shuffle all cards from your graveyard into your library. Target player mills that many cards."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Liberated Dwarf",
+    "rank": 10804,
+    "lines": [
+      "{R}, Sacrifice this creature: Target green creature gets +1/+0 and gains first strike until end of turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Bretagard Stronghold",
+    "rank": 10810,
+    "lines": [
+      "{G}{W}{W}, {T}, Sacrifice this land: Put a +1/+1 counter on each of up to two target creatures you control. They gain vigilance and lifelink until end of turn. Activate only as a sorcery."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Spectral Steel",
+    "rank": 10812,
+    "lines": [
+      "{1}{W}, Exile this card from your graveyard: Return another target Aura or Equipment card from your graveyard to your hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Wickerfolk Thresher",
+    "rank": 10814,
+    "lines": [
+      "Whenever this creature attacks, if there are four or more card types among cards in your graveyard, look at the top card of your library. If it's a land card, you may put it onto the battlefield. If you don't put the card onto the battlefield, put it into your hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Shrine Steward",
+    "rank": 10815,
+    "lines": [
+      "When this creature enters, you may search your library for an Aura or Shrine card, reveal it, put it into your hand, then shuffle."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Serra Avenger",
+    "rank": 10819,
+    "lines": [
+      "You can't cast ~ during your first, second, or third turns of the game."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Call to the Kindred",
+    "rank": 10820,
+    "lines": [
+      "At the beginning of your upkeep, you may look at the top five cards of your library. If you do, you may put a creature card that shares a creature type with enchanted creature from among them onto the battlefield, then you put the rest of those cards on the bottom of your library in any order."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Ghoultree",
+    "rank": 10824,
+    "lines": [
+      "This spell costs {1} less to cast for each creature card in your graveyard."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "She-Hulk, Wallbreaker",
+    "rank": 10826,
+    "lines": [
+      "Whenever a Hero you control becomes blocked, put a +1/+1 counter on that Hero for each creature blocking it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Grip of Chaos",
+    "rank": 10827,
+    "lines": [
+      "Whenever a spell or ability is put onto the stack, if it has a single target, reselect its target at random."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Norin, Swift Survivalist",
+    "rank": 10828,
+    "lines": [
+      "Whenever a creature you control becomes blocked, you may exile it. You may play that card from exile this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Fiery Cannonade",
+    "rank": 10829,
+    "lines": [
+      "~ deals 2 damage to each non-Pirate creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Rise from the Grave",
+    "rank": 10830,
+    "lines": [
+      "Put target creature card from a graveyard onto the battlefield under your control. That creature is a black Zombie in addition to its other colors and types."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Loki, Lord of Misrule",
+    "rank": 10833,
+    "lines": [
+      "{U}, {T}: Choose target creature you control. Each creature you control other than the chosen creature becomes a copy of that creature until end of turn, except it isn't legendary. Activate only as a sorcery."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Silversmote Ghoul",
+    "rank": 10834,
+    "lines": [
+      "At the beginning of your end step, if you gained 3 or more life this turn, return this card from your graveyard to the battlefield tapped."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Tune Up",
+    "rank": 10835,
+    "lines": [
+      "Return target artifact card from your graveyard to the battlefield. If it's a Vehicle, it becomes an artifact creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Graven Lore",
+    "rank": 10838,
+    "lines": [
+      "Scry X, where X is the amount of {S} spent to cast this spell, then draw three cards."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Unnatural Moonrise",
+    "rank": 10840,
+    "lines": [
+      "It becomes night. Until end of turn, target creature gets +1/+0 and gains trample and \"Whenever this creature deals combat damage to a player, draw a card.\""
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Krosan Tusker",
+    "rank": 10844,
+    "lines": [
+      "When you cycle this card, you may search your library for a basic land card, reveal that card, put it into your hand, then shuffle."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Catapult Master",
+    "rank": 10845,
+    "lines": [
+      "Tap five untapped Soldiers you control: Exile target creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Akroan Crusader",
+    "rank": 10846,
+    "lines": [
+      "Whenever you cast a spell that targets this creature, create a 1/1 red Soldier creature token with haste."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Master's Guidance",
+    "rank": 10849,
+    "lines": [
+      "Whenever you attack with two or more legendary creatures, put a +1/+1 counter on each of up to two target attacking creatures."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Hurkyl's Recall",
+    "rank": 10851,
+    "lines": [
+      "Return all artifacts target player owns to their hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Hide in Plain Sight",
+    "rank": 10853,
+    "lines": [
+      "Look at the top five cards of your library, cloak two of them, and put the rest on the bottom of your library in a random order."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Skeletal Changeling",
+    "rank": 10855,
+    "lines": [
+      "{1}{B}: Regenerate this creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Ozox, the Clattering King",
+    "rank": 10856,
+    "lines": [
+      "When ~ dies, create Jumblebones, a legendary 2/1 black Skeleton creature token with \"Jumblebones can't block\" and \"When Jumblebones leaves the battlefield, return target card named ~ from your graveyard to your hand.\""
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Mysterio, Master of Illusion",
+    "rank": 10857,
+    "lines": [
+      "When ~ enters, create a 3/3 blue Illusion Villain creature token for each nontoken Villain you control. Exile those tokens when ~ leaves the battlefield."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Saheeli's Directive",
+    "rank": 10858,
+    "lines": [
+      "Reveal the top X cards of your library. You may put any number of artifact cards with mana value X or less from among them onto the battlefield. Then put all cards revealed this way that weren't put onto the battlefield into your graveyard."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Nightmare Lash",
+    "rank": 10861,
+    "lines": [
+      "Equip—Pay 3 life."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Truth or Consequences",
+    "rank": 10865,
+    "lines": [
+      "Each player secretly votes for truth or consequences, then those votes are revealed. You draw cards equal to the number of truth votes. Then choose an opponent at random. ~ deals 3 damage to that player for each consequences vote."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Lazotep Reaver",
+    "rank": 10870,
+    "lines": [
+      "When this creature enters, amass Zombies 1."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Riftsweeper",
+    "rank": 10875,
+    "lines": [
+      "When this creature enters, choose target face-up exiled card. Its owner shuffles it into their library."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Felidar Savior",
+    "rank": 10876,
+    "lines": [
+      "When this creature enters, put a +1/+1 counter on each of up to two other target creatures you control."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Public Enemy",
+    "rank": 10878,
+    "lines": [
+      "All creatures attack enchanted creature's controller each combat if able."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Darigaaz's Caldera",
+    "rank": 10880,
+    "lines": [
+      "When this land enters, sacrifice it unless you return a non-Lair land you control to its owner's hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Foul-Tongue Shriek",
+    "rank": 10881,
+    "lines": [
+      "Target opponent loses 1 life for each attacking creature you control. You gain that much life."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Long-Lost Lances",
+    "rank": 10885,
+    "lines": [
+      "During your turn, creatures you control that are equipped have first strike and vigilance."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Treasure Keeper",
+    "rank": 10888,
+    "lines": [
+      "When this creature dies, reveal cards from the top of your library until you reveal a nonland card with mana value 3 or less. You may cast that card without paying its mana cost. Put all revealed cards not cast this way on the bottom of your library in a random order."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Sanitarium Skeleton",
+    "rank": 10891,
+    "lines": [
+      "{2}{B}: Return this card from your graveyard to your hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Ephara's Dispersal",
+    "rank": 10895,
+    "lines": [
+      "This spell costs {2} less to cast if it targets an attacking creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Noosegraf Mob",
+    "rank": 10902,
+    "lines": [
+      "Whenever a player casts a spell, remove a +1/+1 counter from this creature. If you do, create a 2/2 black Zombie creature token."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Explosive Entry",
+    "rank": 10907,
+    "lines": [
+      "Destroy up to one target artifact. Put a +1/+1 counter on up to one target creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Iron Hills Blacksmith",
+    "rank": 10911,
+    "lines": [
+      "When this creature enters, create a colorless Equipment artifact token named Axe with \"Equipped creature gets +1/+0\" and equip {2}."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Restorative Technique",
+    "rank": 10914,
+    "lines": [
+      "Target player gains 2 life, then searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. Put a +1/+1 counter on up to one target creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Sauron, the Lidless Eye",
+    "rank": 10915,
+    "lines": [
+      "When ~ enters, gain control of target creature an opponent controls until end of turn. Untap it. It gains haste until end of turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Leeching Sliver",
+    "rank": 10921,
+    "lines": [
+      "Whenever a Sliver you control attacks, defending player loses 1 life."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Radiant Performer",
+    "rank": 10924,
+    "lines": [
+      "When this creature enters, if you cast it from your hand, choose target spell or ability that targets only a single permanent or player. Copy that spell or ability for each other permanent or player the spell or ability could target. Each copy targets a different one of those permanents and players."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Aid from the Cowl",
+    "rank": 10927,
+    "lines": [
+      "At the beginning of your end step, if a permanent left the battlefield under your control this turn, reveal the top card of your library. If it's a permanent card, you may put it onto the battlefield. Otherwise, you may put it on the bottom of your library."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Enslaved Dwarf",
+    "rank": 10929,
+    "lines": [
+      "{R}, Sacrifice this creature: Target black creature gets +1/+0 and gains first strike until end of turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Intrepid Adversary",
+    "rank": 10932,
+    "lines": [
+      "When this creature enters, you may pay {1}{W} any number of times. When you pay this cost one or more times, put that many valor counters on this creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Sheltering Ancient",
+    "rank": 10934,
+    "lines": [
+      "Cumulative upkeep—Put a +1/+1 counter on a creature an opponent controls."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Harvestrite Host",
+    "rank": 10942,
+    "lines": [
+      "Whenever this creature or another Rabbit you control enters, target creature you control gets +1/+0 until end of turn. Then draw a card if this is the second time this ability has resolved this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Entrancing Melody",
+    "rank": 10944,
+    "lines": [
+      "Gain control of target creature with mana value X."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Krosan Warchief",
+    "rank": 10945,
+    "lines": [
+      "{1}{G}: Regenerate target Beast."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Rally the Ancestors",
+    "rank": 10946,
+    "lines": [
+      "Return each creature card with mana value X or less from your graveyard to the battlefield. Exile those creatures at the beginning of your next upkeep. Exile ~."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Brotherhood Spy",
+    "rank": 10947,
+    "lines": [
+      "At the beginning of combat on your turn, if you control a legendary Assassin, this creature gets +1/+0 until end of turn and can't be blocked this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Crafty Cutpurse",
+    "rank": 10952,
+    "lines": [
+      "When this creature enters, each token that would be created under an opponent's control this turn is created under your control instead."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "The Scarlet Witch",
+    "rank": 10956,
+    "lines": [
+      "Instant and sorcery spells you cast with mana value 4 or greater cost {X} less to cast, where X is ~'s power."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Turn Inside Out",
+    "rank": 10962,
+    "lines": [
+      "Target creature gets +3/+0 until end of turn. When it dies this turn, manifest dread."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Felling Blow",
+    "rank": 10963,
+    "lines": [
+      "Put a +1/+1 counter on target creature you control. Then that creature deals damage equal to its power to target creature an opponent controls."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Ever After",
+    "rank": 10965,
+    "lines": [
+      "Return up to two target creature cards from your graveyard to the battlefield. Each of those creatures is a black Zombie in addition to its other colors and types. Put ~ on the bottom of its owner's library."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Banewhip Punisher",
+    "rank": 10968,
+    "lines": [
+      "{B}, Sacrifice this creature: Destroy target creature that has a -1/-1 counter on it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Wild Pair",
+    "rank": 10970,
+    "lines": [
+      "Whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto the battlefield, then shuffle."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "New Way Forward",
+    "rank": 10972,
+    "lines": [
+      "The next time a source of your choice would deal damage to you this turn, prevent that damage. When damage is prevented this way, ~ deals that much damage to that source's controller and you draw that many cards."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Stern Scolding",
+    "rank": 10975,
+    "lines": [
+      "Counter target creature spell with power or toughness 2 or less."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Vengeful Reaper",
+    "rank": 10976,
+    "lines": [
+      "Foretell {1}{B}"
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Scorpion, Seething Striker",
+    "rank": 10978,
+    "lines": [
+      "At the beginning of your end step, if a creature died this turn, target creature you control connives."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Corpse Cur",
+    "rank": 10981,
+    "lines": [
+      "When this creature enters, you may return target creature card with infect from your graveyard to your hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Yip Yip!",
+    "rank": 10983,
+    "lines": [
+      "Target creature you control gets +2/+2 until end of turn. If that creature is an Ally, it also gains flying until end of turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Diabolic Edict",
+    "rank": 10984,
+    "lines": [
+      "Target player sacrifices a creature of their choice."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Divergent Equation",
+    "rank": 10985,
+    "lines": [
+      "Return up to X target instant and/or sorcery cards from your graveyard to your hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Shrieking Affliction",
+    "rank": 10987,
+    "lines": [
+      "At the beginning of each opponent's upkeep, if that player has one or fewer cards in hand, they lose 3 life."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Nissa, Leyline Tamer",
+    "rank": 10988,
+    "lines": [
+      "Whenever a land you control enters, draw a card. Then if this is the first time this ability has resolved this turn, reveal cards from the top of your library until you reveal a creature card. Put that card onto the battlefield and the rest on the bottom of your library in a random order."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Dark Impostor",
+    "rank": 10989,
+    "lines": [
+      "~ has all activated abilities of all creature cards exiled with it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Zimone, Mystery Unraveler",
+    "rank": 10991,
+    "lines": [
+      "Whenever a land you control enters, manifest dread if this is the first time this ability has resolved this turn. Otherwise, you may turn a permanent you control face up."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Chains of Mephistopheles",
+    "rank": 10992,
+    "lines": [
+      "If a player would draw a card except the first one they draw in each of their draw steps, that player discards a card instead. If the player discards a card this way, they draw a card. If the player doesn't discard a card this way, they mill a card."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Attuma, Atlantean Warlord",
+    "rank": 10996,
+    "lines": [
+      "Whenever one or more Merfolk you control attack a player, draw a card."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Keeper of the Nine Gales",
+    "rank": 11000,
+    "lines": [
+      "{T}, Tap two untapped Birds you control: Return target permanent to its owner's hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Obzedat, Ghost Council",
+    "rank": 11005,
+    "lines": [
+      "At the beginning of your end step, you may exile ~. If you do, return it to the battlefield under its owner's control at the beginning of your next upkeep. It gains haste."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Bessie, the Doctor's Roadster",
+    "rank": 11007,
+    "lines": [
+      "Whenever ~ attacks, another target legendary creature can't be blocked this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Rendmaw, Creaking Nest",
+    "rank": 11009,
+    "lines": [
+      "When ~ enters and whenever you play a card with two or more card types, each player creates a tapped 2/2 black Bird creature token with flying. The tokens are goaded for the rest of the game."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Bioshift",
+    "rank": 11011,
+    "lines": [
+      "Move any number of +1/+1 counters from target creature onto another target creature with the same controller."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Aura Thief",
+    "rank": 11012,
+    "lines": [
+      "When this creature dies, you gain control of all enchantments."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Construct a Cosmic Cube",
+    "rank": 11013,
+    "lines": [
+      "When the seventh plan counter is put on this enchantment, sacrifice it. When you do, you control target opponent during their next turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Gollum's Bite",
+    "rank": 11020,
+    "lines": [
+      "{3}{B}, Exile this card from your graveyard: The Ring tempts you. Activate only as a sorcery."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Bosh, Iron Golem",
+    "rank": 11025,
+    "lines": [
+      "{3}{R}, Sacrifice an artifact: ~ deals damage equal to the sacrificed artifact's mana value to any target."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Arni Metalbrow",
+    "rank": 11026,
+    "lines": [
+      "Whenever a creature you control attacks or enters attacking, you may pay {1}{R}. If you do, you may put a creature card with mana value less than that creature's mana value from your hand onto the battlefield tapped and attacking."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Alchemist's Vial",
+    "rank": 11029,
+    "lines": [
+      "{1}, {T}, Sacrifice this artifact: Target creature can't attack or block this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Mole Module",
+    "rank": 11032,
+    "lines": [
+      "Whenever this Vehicle deals combat damage to a player, mill four cards. You may put a permanent card from among them onto the battlefield."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Jace, Arcane Strategist",
+    "rank": 11033,
+    "lines": [
+      "−7: Creatures you control can't be blocked this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Enlightened Confidant",
+    "rank": 11034,
+    "lines": [
+      "At the beginning of your end step, if you gained life this turn, surveil 1. If you put a card with mana value less than or equal to the amount of life you gained this turn into your graveyard this way, put that card into your hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Heroic Feast",
+    "rank": 11035,
+    "lines": [
+      "Whenever you gain life, choose up to that many target creatures you control. Put a +1/+1 counter on each of them."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Dual-Sun Technique",
+    "rank": 11039,
+    "lines": [
+      "Target creature you control gains double strike until end of turn. If it has a +1/+1 counter on it, draw a card."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Earth Kingdom Jailer",
+    "rank": 11041,
+    "lines": [
+      "When this creature enters, exile up to one target artifact, creature, or enchantment an opponent controls with mana value 3 or greater until this creature leaves the battlefield."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Shield of Kaldra",
+    "rank": 11042,
+    "lines": [
+      "Equipment named Sword of Kaldra, ~, and Helm of Kaldra have indestructible."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Daring Saboteur",
+    "rank": 11049,
+    "lines": [
+      "{2}{U}: ~ can't be blocked this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Ground Seal",
+    "rank": 11050,
+    "lines": [
+      "Cards in graveyards can't be the targets of spells or abilities."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Gate to the Aether",
+    "rank": 11052,
+    "lines": [
+      "At the beginning of each player's upkeep, that player reveals the top card of their library. If it's an artifact, creature, enchantment, or land card, the player may put it onto the battlefield."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Druid's Call",
+    "rank": 11054,
+    "lines": [
+      "Whenever enchanted creature is dealt damage, its controller creates that many 1/1 green Squirrel creature tokens."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Alien Symbiosis",
+    "rank": 11055,
+    "lines": [
+      "You may cast this card from your graveyard by discarding a card in addition to paying its other costs."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Spawn of Thraxes",
+    "rank": 11066,
+    "lines": [
+      "When this creature enters, it deals damage to any target equal to the number of Mountains you control."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Starseer Mentor",
+    "rank": 11068,
+    "lines": [
+      "At the beginning of your end step, if you gained or lost life this turn, target opponent loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Guildsworn Prowler",
+    "rank": 11073,
+    "lines": [
+      "When this creature dies, if it wasn't blocking, draw a card."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Early Harvest",
+    "rank": 11076,
+    "lines": [
+      "Target player untaps all basic lands they control."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Tivash, Gloom Summoner",
+    "rank": 11079,
+    "lines": [
+      "At the beginning of your end step, if you gained life this turn, you may pay X life, where X is the amount of life you gained this turn. If you do, create an X/X black Demon creature token with flying."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Haazda Marshal",
+    "rank": 11082,
+    "lines": [
+      "Whenever this creature and at least two other creatures attack, create a 1/1 white Soldier creature token with lifelink."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Caress of Phyrexia",
+    "rank": 11084,
+    "lines": [
+      "Target player draws three cards, loses 3 life, and gets three poison counters."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Unholy Indenture",
+    "rank": 11085,
+    "lines": [
+      "When enchanted creature dies, return that card to the battlefield under your control with a +1/+1 counter on it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Call a Surprise Witness",
+    "rank": 11088,
+    "lines": [
+      "Return target creature card with mana value 3 or less from your graveyard to the battlefield. Put a flying counter on it. It's a Spirit in addition to its other types."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Besmirch",
+    "rank": 11090,
+    "lines": [
+      "Until end of turn, gain control of target creature and it gains haste. Untap and goad that creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Forbidding Watchtower",
+    "rank": 11092,
+    "lines": [
+      "{1}{W}: ~ becomes a 1/5 white Soldier creature until end of turn. It's still a land."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Spider-Man, Peter Parker",
+    "rank": 11095,
+    "lines": [
+      "Whenever you gain life, put a +1/+1 counter on target creature you control. It gains indestructible until end of turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Dwarven Mauler",
+    "rank": 11096,
+    "lines": [
+      "Equip abilities you activate that target this creature cost {2} less to activate."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Challenger Troll",
+    "rank": 11099,
+    "lines": [
+      "Each creature you control with power 4 or greater can't be blocked by more than one creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Skybind",
+    "rank": 11101,
+    "lines": [
+      "Whenever this enchantment or another enchantment you control enters, exile target nonenchantment permanent. Return that card to the battlefield under its owner's control at the beginning of the next end step."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Icingdeath, Frost Tyrant",
+    "rank": 11102,
+    "lines": [
+      "When ~ dies, create ~, Frost Tongue, a legendary white Equipment artifact token with \"Equipped creature gets +2/+0,\" \"Whenever equipped creature attacks, tap target creature defending player controls,\" and equip {2}."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Imodane, the Pyrohammer",
+    "rank": 11104,
+    "lines": [
+      "Whenever an instant or sorcery spell you control that targets only a single creature deals damage to that creature, ~ deals that much damage to each opponent."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Transmogrant's Crown",
+    "rank": 11105,
+    "lines": [
+      "Equip {2} or {B}"
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Kotis, the Fangkeeper",
+    "rank": 11107,
+    "lines": [
+      "Whenever ~ deals combat damage to a player, exile the top X cards of their library, where X is the amount of damage dealt. You may cast any number of spells with mana value X or less from among them without paying their mana costs."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Lightmine Field",
+    "rank": 11108,
+    "lines": [
+      "Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Wayfaring Temple",
+    "rank": 11109,
+    "lines": [
+      "Whenever this creature deals combat damage to a player, populate."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Astral Slide",
+    "rank": 11110,
+    "lines": [
+      "Whenever a player cycles a card, you may exile target creature. If you do, return that card to the battlefield under its owner's control at the beginning of the next end step."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Feed the Pack",
+    "rank": 11116,
+    "lines": [
+      "At the beginning of your end step, you may sacrifice a nontoken creature. If you do, create X 2/2 green Wolf creature tokens, where X is the sacrificed creature's toughness."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Keys to the House",
+    "rank": 11117,
+    "lines": [
+      "{3}, {T}, Sacrifice this artifact: Lock or unlock a door of target Room you control. Activate only as a sorcery."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Triumphant Reckoning",
+    "rank": 11119,
+    "lines": [
+      "Return all artifact, enchantment, and planeswalker cards from your graveyard to the battlefield."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "The Fourth Doctor",
+    "rank": 11122,
+    "lines": [
+      "Would You Like A...? — Once each turn, you may play a historic land or cast a historic spell from the top of your library. When you do, create a Food token."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Priority Boarding",
+    "rank": 11125,
+    "lines": [
+      "Whenever you roll a die, you may reveal the top card of your library. Do this only once each turn. Whenever you reveal a card with mana value less than the result this way, you may exile it. If you do, you may play it this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Emergent Sequence",
+    "rank": 11127,
+    "lines": [
+      "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. That land becomes a 0/0 green and blue Fractal creature that's still a land. Put a +1/+1 counter on it for each land you had enter the battlefield under your control this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Ferocious Tigorilla",
+    "rank": 11128,
+    "lines": [
+      "~ enters with your choice of a trample counter or a menace counter on it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Web-Shooters",
+    "rank": 11129,
+    "lines": [
+      "Equipped creature gets +1/+1 and has reach and \"Whenever this creature attacks, tap target creature an opponent controls.\""
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Built to Smash",
+    "rank": 11130,
+    "lines": [
+      "Target attacking creature gets +3/+3 until end of turn. If it's an artifact creature, it gains trample until end of turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Gluttonous Hellkite",
+    "rank": 11132,
+    "lines": [
+      "When you cast this spell, each player sacrifices X creatures. ~ enters with two +1/+1 counters on it for each creature sacrificed this way."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Mirko Vosk, Mind Drinker",
+    "rank": 11140,
+    "lines": [
+      "Whenever ~ deals combat damage to a player, that player reveals cards from the top of their library until they reveal four land cards, then puts those cards into their graveyard."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Searing Touch",
+    "rank": 11144,
+    "lines": [
+      "Buyback {4}"
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Feast on the Fallen",
+    "rank": 11146,
+    "lines": [
+      "At the beginning of each upkeep, if an opponent lost life last turn, put a +1/+1 counter on target creature you control."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Nettle Guard",
+    "rank": 11150,
+    "lines": [
+      "Whenever this creature becomes the target of a spell or ability you control for the first time each turn, it gets +0/+2 until end of turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Shadow-Rite Priest",
+    "rank": 11152,
+    "lines": [
+      "{3}{B}{B}, {T}, Sacrifice another Cleric: Search your library for a black creature card, put it onto the battlefield, then shuffle."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Starlit Soothsayer",
+    "rank": 11155,
+    "lines": [
+      "At the beginning of your end step, if you gained or lost life this turn, surveil 1."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Kresh the Bloodbraided",
+    "rank": 11157,
+    "lines": [
+      "Whenever another creature dies, you may put X +1/+1 counters on ~, where X is that creature's power."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Little Bear",
+    "rank": 11161,
+    "lines": [
+      "When this creature enters, untap another target creature you control. If that creature is a Bear, put a +1/+1 counter on it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Miner's Guidewing",
+    "rank": 11163,
+    "lines": [
+      "When this creature dies, target creature you control explores."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Anointer Priest",
+    "rank": 11164,
+    "lines": [
+      "Embalm {3}{W}"
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Pit Fight",
+    "rank": 11167,
+    "lines": [
+      "Target creature you control fights another target creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Savage Thallid",
+    "rank": 11169,
+    "lines": [
+      "Sacrifice a Saproling: Regenerate target Fungus."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "The Nipton Lottery",
+    "rank": 11170,
+    "lines": [
+      "Choose a creature at random. You gain control of that creature until end of turn. Untap it. It gains haste until end of turn. Then destroy all other creatures."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Ghen, Arcanum Weaver",
+    "rank": 11173,
+    "lines": [
+      "{R}{W}{B}, {T}, Sacrifice an enchantment: Return target enchantment card from your graveyard to the battlefield."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Wingspan Stride",
+    "rank": 11175,
+    "lines": [
+      "{2}{U}: Return this Aura to its owner's hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Niv-Mizzet Reborn",
+    "rank": 11176,
+    "lines": [
+      "When Niv-Mizzet enters, reveal the top ten cards of your library. For each color pair, choose a card that's exactly those colors from among them. Put the chosen cards into your hand and the rest on the bottom of your library in a random order."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Eland Umbra",
+    "rank": 11178,
+    "lines": [
+      "Umbra armor"
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Phabine, Boss's Confidant",
+    "rank": 11179,
+    "lines": [
+      "Parley — At the beginning of combat on your turn, each player reveals the top card of their library. For each land card revealed this way, you create a 1/1 green and white Citizen creature token. Then creatures you control get +1/+1 until end of turn for each nonland card revealed this way. Then each player draws a card."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Valor Made Real",
+    "rank": 11180,
+    "lines": [
+      "Target creature can block any number of creatures this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Amazing Alliance",
+    "rank": 11185,
+    "lines": [
+      "Whenever you attack with one or more legendary creatures, you gain that much life."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Invoke the Winds",
+    "rank": 11186,
+    "lines": [
+      "Gain control of target artifact or creature. Untap it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Arcade Gannon",
+    "rank": 11191,
+    "lines": [
+      "For Auld Lang Syne — Once during each of your turns, you may cast an artifact or Human spell from your graveyard with mana value less than or equal to the number of quest counters on ~."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Windshaper Planetar",
+    "rank": 11194,
+    "lines": [
+      "When this creature enters during the declare attackers step, for each attacking creature, you may reselect which player or permanent that creature is attacking."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Agent Bishop, Man in Black",
+    "rank": 11195,
+    "lines": [
+      "At the beginning of combat on your turn, put a +1/+1 counter on each of up to two target creatures."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Vendetta",
+    "rank": 11203,
+    "lines": [
+      "Destroy target nonblack creature. It can't be regenerated. You lose life equal to that creature's toughness."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Cosmotronic Wave",
+    "rank": 11205,
+    "lines": [
+      "~ deals 1 damage to each creature your opponents control. Creatures your opponents control can't block this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Tariel, Reckoner of Souls",
+    "rank": 11206,
+    "lines": [
+      "{T}: Choose a creature card at random from target opponent's graveyard. Put that card onto the battlefield under your control."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Vampire's Kiss",
+    "rank": 11212,
+    "lines": [
+      "Target player loses 2 life and you gain 2 life. Create two Blood tokens."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Renegade Silent",
+    "rank": 11213,
+    "lines": [
+      "At the beginning of your end step, goad up to one target creature you don't control and put a +1/+1 counter on this creature. ~ phases out."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Informed Inkwright",
+    "rank": 11216,
+    "lines": [
+      "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, create a 1/1 white and black Inkling creature token with flying."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Calciform Pools",
+    "rank": 11220,
+    "lines": [
+      "{1}, Remove X storage counters from this land: Add X mana in any combination of {W} and/or {U}."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Vindictive Flamestoker",
+    "rank": 11221,
+    "lines": [
+      "{6}{R}, Sacrifice this creature: Discard your hand, then draw four cards. This ability costs {1} less to activate for each oil counter on this creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Icebind Pillar",
+    "rank": 11223,
+    "lines": [
+      "{S}, {T}: Tap target artifact or creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Shadow Sliver",
+    "rank": 11224,
+    "lines": [
+      "All Sliver creatures have shadow."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Stunning Reversal",
+    "rank": 11226,
+    "lines": [
+      "The next time you would lose the game this turn, instead draw seven cards and your life total becomes 1."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Shivan Meteor",
+    "rank": 11230,
+    "lines": [
+      "Suspend 2—{1}{R}{R}"
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Enduring Scalelord",
+    "rank": 11237,
+    "lines": [
+      "Whenever one or more +1/+1 counters are put on another creature you control, you may put a +1/+1 counter on this creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Fully Grown",
+    "rank": 11239,
+    "lines": [
+      "Target creature gets +3/+3 until end of turn. Put a trample counter on it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Cass, Hand of Vengeance",
+    "rank": 11240,
+    "lines": [
+      "Whenever ~ or another creature you control dies, if it was enchanted or equipped, return any number of Aura cards that were attached to it from your graveyard to the battlefield attached to target creature, then attach any number of Equipment that were attached to it to that creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Iron Man, Master of Machines",
+    "rank": 11241,
+    "lines": [
+      "Whenever ~ attacks, if an artifact entered the battlefield under your control this turn, draw a card."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Volcanic Spite",
+    "rank": 11242,
+    "lines": [
+      "~ deals 3 damage to target creature, planeswalker, or battle. You may put a card from your hand on the bottom of your library. If you do, draw a card."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Solemn Doomguide",
+    "rank": 11246,
+    "lines": [
+      "Each creature card in your graveyard that's a Cleric, Rogue, Warrior, and/or Wizard has unearth {1}{B}."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Patient Rebuilding",
+    "rank": 11247,
+    "lines": [
+      "At the beginning of your upkeep, target opponent mills three cards, then you draw a card for each land card put into their graveyard this way."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Yarok's Fenlurker",
+    "rank": 11249,
+    "lines": [
+      "When this creature enters, each opponent exiles a card from their hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Augusta, Order Returned",
+    "rank": 11251,
+    "lines": [
+      "Whenever ~ attacks, each player exiles a card from their graveyard. When one or more nonland cards are exiled this way, put that many +1/+1 counters on target attacking creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Treacherous Greed",
+    "rank": 11252,
+    "lines": [
+      "As an additional cost to cast this spell, sacrifice a creature that dealt damage this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Axis of Mortality",
+    "rank": 11255,
+    "lines": [
+      "At the beginning of your upkeep, you may have two target players exchange life totals."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Black Panther, Wakandan King",
+    "rank": 11256,
+    "lines": [
+      "Mine Vibranium — {3}: Move all +1/+1 counters from target land you control onto target creature. If one or more +1/+1 counters are moved this way, you gain that much life and draw a card."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Joo Dee, One of Many",
+    "rank": 11257,
+    "lines": [
+      "{B}, {T}: Surveil 1. Create a token that's a copy of this creature, then sacrifice an artifact or creature. Activate only as a sorcery."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Loki, the Deceiver",
+    "rank": 11258,
+    "lines": [
+      "Whenever ~ attacks, create a tapped and attacking token that's a copy of another target Villain you control, except it isn't legendary and it's an Illusion in addition to its other types. Sacrifice that token at the beginning of the next end step."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Rip, Spawn Hunter",
+    "rank": 11260,
+    "lines": [
+      "Survival — At the beginning of your second main phase, if ~ is tapped, reveal the top X cards of your library, where X is its power. Put any number of creature and/or Vehicle cards with different powers from among them into your hand. Put the rest on the bottom of your library in a random order."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Bagel and Schmear",
+    "rank": 11266,
+    "lines": [
+      "Share — {W}, {T}, Sacrifice this artifact: Put a +1/+1 counter on up to one target creature. Draw a card. Activate only as a sorcery."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Commander Sofia Daguerre",
+    "rank": 11267,
+    "lines": [
+      "Crash Landing — When ~ enters, destroy up to one target legendary permanent. That permanent's controller creates a Junk token."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Admiral's Order",
+    "rank": 11276,
+    "lines": [
+      "If you attacked this turn, you may pay {U} rather than pay this spell's mana cost."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Galloping Lizrog",
+    "rank": 11278,
+    "lines": [
+      "When this creature enters, you may remove any number of +1/+1 counters from among creatures you control. If you do, put twice that many +1/+1 counters on this creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Falkenrath Gorger",
+    "rank": 11281,
+    "lines": [
+      "Each Vampire creature card you own that isn't on the battlefield has madness. The madness cost is equal to its mana cost."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Venom, Evil Unleashed",
+    "rank": 11291,
+    "lines": [
+      "{2}{B}, Exile this card from your graveyard: Put two +1/+1 counters on target creature. It gains deathtouch until end of turn. Activate only as a sorcery."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Mask of the Schemer",
+    "rank": 11292,
+    "lines": [
+      "Whenever equipped creature deals combat damage to a player, it connives X, where X is the amount of damage it dealt to that player."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Kami of Transience",
+    "rank": 11294,
+    "lines": [
+      "At the beginning of each end step, if an enchantment was put into your graveyard from the battlefield this turn, you may return this card from your graveyard to your hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Phalanx Leader",
+    "rank": 11295,
+    "lines": [
+      "Whenever you cast a spell that targets this creature, put a +1/+1 counter on each creature you control."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Dakra Mystic",
+    "rank": 11298,
+    "lines": [
+      "{U}, {T}: Each player reveals the top card of their library. You may put the revealed cards into their owners' graveyards. If you don't, each player draws a card."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Defy Death",
+    "rank": 11301,
+    "lines": [
+      "Return target creature card from your graveyard to the battlefield. If it's an Angel, put two +1/+1 counters on it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Ethereal Absolution",
+    "rank": 11302,
+    "lines": [
+      "{2}{W}{B}: Exile target card from an opponent's graveyard. If it was a creature card, you create a 1/1 white and black Spirit creature token with flying."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Vindictive Warden",
+    "rank": 11304,
+    "lines": [
+      "Firebending 1"
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Wishing Well",
+    "rank": 11307,
+    "lines": [
+      "{T}: Put a coin counter on this artifact. When you do, you may cast target instant or sorcery card with mana value equal to the number of coin counters on this artifact from your graveyard without paying its mana cost. If that spell would be put into your graveyard, exile it instead. Activate only as a sorcery."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Angrath, Captain of Chaos",
+    "rank": 11311,
+    "lines": [
+      "−2: Amass Zombies 2."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Experiment Kraj",
+    "rank": 11312,
+    "lines": [
+      "~ has all activated abilities of each other creature with a +1/+1 counter on it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Illusory Ambusher",
+    "rank": 11315,
+    "lines": [
+      "Whenever this creature is dealt damage, draw that many cards."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Read the Runes",
+    "rank": 11316,
+    "lines": [
+      "Draw X cards. For each card drawn this way, discard a card unless you sacrifice a permanent."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Black Market Tycoon",
+    "rank": 11317,
+    "lines": [
+      "At the beginning of your upkeep, this creature deals 2 damage to you for each Treasure you control."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Mysterious Egg",
+    "rank": 11324,
+    "lines": [
+      "Whenever this creature mutates, put a +1/+1 counter on it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Grim Flayer",
+    "rank": 11329,
+    "lines": [
+      "~ gets +2/+2 as long as there are four or more card types among cards in your graveyard."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Avengers Assemble!",
+    "rank": 11330,
+    "lines": [
+      "At the beginning of each end step, if you attacked with a Hero this turn or a Hero entered the battlefield under your control this turn, draw a card."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Teferi's Veil",
+    "rank": 11334,
+    "lines": [
+      "Whenever a creature you control attacks, it phases out at end of combat."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "The Crystal's Chosen",
+    "rank": 11335,
+    "lines": [
+      "Create four 1/1 colorless Hero creature tokens. Then put a +1/+1 counter on each creature you control."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Birchlore Rangers",
+    "rank": 11336,
+    "lines": [
+      "Tap two untapped Elves you control: Add one mana of any color."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Essence Symbiote",
+    "rank": 11338,
+    "lines": [
+      "Whenever a creature you control mutates, put a +1/+1 counter on that creature and you gain 2 life."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Rattleback Apothecary",
+    "rank": 11340,
+    "lines": [
+      "Whenever you commit a crime, target creature you control gains your choice of menace or lifelink until end of turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Hunting Grounds",
+    "rank": 11342,
+    "lines": [
+      "As long as there are seven or more cards in your graveyard, this enchantment has \"Whenever an opponent casts a spell, you may put a creature card from your hand onto the battlefield.\""
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Venom's Hunger",
+    "rank": 11344,
+    "lines": [
+      "This spell costs {2} less to cast if you control a Villain."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Spider-Suit",
+    "rank": 11346,
+    "lines": [
+      "Equipped creature gets +2/+2 and is a Spider Hero in addition to its other types."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Arrest",
+    "rank": 11347,
+    "lines": [
+      "Enchanted creature can't attack or block, and its activated abilities can't be activated."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Desperate Measures",
+    "rank": 11348,
+    "lines": [
+      "Target creature gets +1/-1 until end of turn. When it dies under your control this turn, draw two cards."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Ceremonial Knife",
+    "rank": 11349,
+    "lines": [
+      "Equipped creature gets +1/+0 and has \"Whenever this creature deals combat damage, create a Blood token.\""
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Liege of the Tangle",
+    "rank": 11351,
+    "lines": [
+      "Whenever this creature deals combat damage to a player, you may choose any number of target lands you control and put an awakening counter on each of them. Each of those lands is an 8/8 green Elemental creature for as long as it has an awakening counter on it. They're still lands."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Angelic Ascension",
+    "rank": 11352,
+    "lines": [
+      "Exile target creature or planeswalker. Its controller creates a 4/4 white Angel creature token with flying."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Doublecast",
+    "rank": 11357,
+    "lines": [
+      "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Scrabbling Skullcrab",
+    "rank": 11358,
+    "lines": [
+      "Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, target player mills two cards."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Life's Finale",
+    "rank": 11359,
+    "lines": [
+      "Destroy all creatures, then search target opponent's library for up to three creature cards and put them into their graveyard. Then that player shuffles."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Luminate Primordial",
+    "rank": 11363,
+    "lines": [
+      "When this creature enters, for each opponent, exile up to one target creature that player controls and that player gains life equal to its power."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Ghastly Conscription",
+    "rank": 11365,
+    "lines": [
+      "Exile all creature cards from target player's graveyard in a face-down pile, shuffle that pile, then manifest those cards."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Legate Lanius, Caesar's Ace",
+    "rank": 11366,
+    "lines": [
+      "Decimate — When ~ enters, each opponent sacrifices a tenth of the creatures they control of their choice, rounded up."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Hushwing Gryff",
+    "rank": 11367,
+    "lines": [
+      "Creatures entering don't cause abilities to trigger."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Nico Minoru, Runaway",
+    "rank": 11370,
+    "lines": [
+      "{2}{R}, {T}, Discard a card: Exile cards from the top of your library until you exile a nonland card. You may cast that card without paying its mana cost."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Obeka, Brute Chronologist",
+    "rank": 11372,
+    "lines": [
+      "{T}: The player whose turn it is may end the turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Sleeper Agent",
+    "rank": 11373,
+    "lines": [
+      "When this creature enters, target opponent gains control of it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Clowning Around",
+    "rank": 11376,
+    "lines": [
+      "Create two 1/1 white Clown Robot artifact creature tokens, then roll a six-sided die. If the result is equal to or less than the number of Robots you control, create a 1/1 white Clown Robot artifact creature token."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Manabond",
+    "rank": 11377,
+    "lines": [
+      "At the beginning of your end step, you may reveal your hand and put all land cards from it onto the battlefield. If you do, discard your hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "All-Seeing Arbiter",
+    "rank": 11378,
+    "lines": [
+      "Whenever you discard a card, target creature an opponent controls gets -X/-0 until your next turn, where X is the number of different mana values among cards in your graveyard."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Defenders of Humanity",
+    "rank": 11385,
+    "lines": [
+      "{X}{2}{W}, Exile this enchantment: Create X 2/2 white Astartes Warrior creature tokens with vigilance. Activate only if you control no creatures and only during your turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Anje Falkenrath",
+    "rank": 11389,
+    "lines": [
+      "Whenever you discard a card, if it has madness, untap ~."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Norika Yamazaki, the Poet",
+    "rank": 11390,
+    "lines": [
+      "Whenever a Samurai or Warrior you control attacks alone, you may cast target enchantment card from your graveyard this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Hidden Footblade",
+    "rank": 11401,
+    "lines": [
+      "When this Equipment enters, attach it to target creature you control. That creature gains first strike until end of turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Valiant Endeavor",
+    "rank": 11405,
+    "lines": [
+      "Roll two d6 and choose one result. Destroy each creature with power greater than or equal to that result. Then create a number of 2/2 white Knight creature tokens with vigilance equal to the other result."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Death Denied",
+    "rank": 11406,
+    "lines": [
+      "Return X target creature cards from your graveyard to your hand."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Olivia, Mobilized for War",
+    "rank": 11407,
+    "lines": [
+      "Whenever another creature you control enters, you may discard a card. If you do, put a +1/+1 counter on that creature, it gains haste until end of turn, and it becomes a Vampire in addition to its other types."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Alliance of Arms",
+    "rank": 11410,
+    "lines": [
+      "Starting with you, each player may pay any amount of mana. Each player creates X 1/1 white Soldier creature tokens, where X is the total amount of mana paid this way."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Justice Strike",
+    "rank": 11411,
+    "lines": [
+      "Target creature deals damage to itself equal to its power."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Seahunter",
+    "rank": 11412,
+    "lines": [
+      "{3}, {T}: Search your library for a Merfolk permanent card, put it onto the battlefield, then shuffle."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Clammy Prowler",
+    "rank": 11414,
+    "lines": [
+      "Whenever this creature attacks, another target attacking creature can't be blocked this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Mirror of Life Trapping",
+    "rank": 11423,
+    "lines": [
+      "Whenever a creature enters, if it was cast, exile it, then return all other permanent cards exiled with this artifact to the battlefield under their owners' control."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Willowdusk, Essence Seer",
+    "rank": 11424,
+    "lines": [
+      "{1}, {T}: Choose another target creature. Put a number of +1/+1 counters on it equal to the amount of life you gained this turn or the amount of life you lost this turn, whichever is greater. Activate only as a sorcery."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Caller of the Pack",
+    "rank": 11425,
+    "lines": [
+      "Myriad"
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Thousand Winds",
+    "rank": 11429,
+    "lines": [
+      "When this creature is turned face up, return all other tapped creatures to their owners' hands."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "War Squeak",
+    "rank": 11430,
+    "lines": [
+      "When this Aura enters, target creature an opponent controls can't block this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Dark Sphere",
+    "rank": 11432,
+    "lines": [
+      "{T}, Sacrifice this artifact: The next time a source of your choice would deal damage to you this turn, prevent half that damage, rounded down."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Eldritch Pact",
+    "rank": 11434,
+    "lines": [
+      "Target player draws X cards and loses X life, where X is the number of cards in their graveyard."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Tempered Sliver",
+    "rank": 11435,
+    "lines": [
+      "Sliver creatures you control have \"Whenever this creature deals combat damage to a player, put a +1/+1 counter on it.\""
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Power Surge",
+    "rank": 11447,
+    "lines": [
+      "At the beginning of each player's upkeep, this enchantment deals X damage to that player, where X is the number of untapped lands they controlled at the beginning of this turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Aspect of Hydra",
+    "rank": 11448,
+    "lines": [
+      "Target creature gets +X/+X until end of turn, where X is your devotion to green."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Embrace Oblivion",
+    "rank": 11449,
+    "lines": [
+      "Destroy target creature or Spacecraft."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Eye of the Storm",
+    "rank": 11451,
+    "lines": [
+      "Whenever a player casts an instant or sorcery card, exile it. Then that player copies each instant or sorcery card exiled with this enchantment. For each copy, the player may cast the copy without paying its mana cost."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Glowcap Lantern",
+    "rank": 11452,
+    "lines": [
+      "Equipped creature has \"You may look at the top card of your library any time\" and \"Whenever this creature attacks, it explores.\""
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Spell Rupture",
+    "rank": 11456,
+    "lines": [
+      "Counter target spell unless its controller pays {X}, where X is the greatest power among creatures you control."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Distorted Curiosity",
+    "rank": 11457,
+    "lines": [
+      "This spell costs {2} less to cast if an opponent has three or more poison counters."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Enter the God-Eternals",
+    "rank": 11459,
+    "lines": [
+      "~ deals 4 damage to target creature and you gain life equal to the damage dealt this way. Target player mills four cards. Amass Zombies 4."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Gloom Ripper",
+    "rank": 11460,
+    "lines": [
+      "When this creature enters, target creature you control gets +X/+0 until end of turn and up to one target creature an opponent controls gets -0/-X until end of turn, where X is the number of Elves you control plus the number of Elf cards in your graveyard."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Barrier Breach",
+    "rank": 11461,
+    "lines": [
+      "Exile up to three target enchantments."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Krenko's Buzzcrusher",
+    "rank": 11467,
+    "lines": [
+      "When this creature enters, for each player, destroy up to one nonbasic land that player controls. For each land destroyed this way, its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Dark Privilege",
+    "rank": 11470,
+    "lines": [
+      "Sacrifice a creature: Regenerate enchanted creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Humility",
+    "rank": 11473,
+    "lines": [
+      "All creatures lose all abilities and have base power and toughness 1/1."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Raven of Fell Omens",
+    "rank": 11474,
+    "lines": [
+      "Whenever you commit a crime, each opponent loses 1 life and you gain 1 life. This ability triggers only once each turn."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Seedglaive Mentor",
+    "rank": 11476,
+    "lines": [
+      "Whenever this creature becomes the target of a spell or ability you control for the first time each turn, put a +1/+1 counter on it."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Aether Snap",
+    "rank": 11477,
+    "lines": [
+      "Remove all counters from all permanents and exile all tokens."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Evra, Halcyon Witness",
+    "rank": 11481,
+    "lines": [
+      "{4}: Exchange your life total with ~'s power."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Herald of Ilharg",
+    "rank": 11486,
+    "lines": [
+      "Whenever you cast a creature spell, put two +1/+1 counters on this creature. If that spell has mana value 5 or greater, this creature deals damage equal to the number of counters on it to each opponent."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Vexing Devil",
+    "rank": 11490,
+    "lines": [
+      "When this creature enters, any opponent may have it deal 4 damage to them. If a player does, sacrifice this creature."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Narset, Enlightened Master",
+    "rank": 11491,
+    "lines": [
+      "Whenever ~ attacks, exile the top four cards of your library. Until end of turn, you may cast noncreature spells from among those cards without paying their mana costs."
+    ],
+    "rounds": 0,
+    "stage": "compile",
+    "validatorIssues": []
+  },
+  {
+    "name": "Bramble Wurm",
+    "rank": 12458,
+    "lines": [
+      "{2}{G}, Exile this card from your graveyard: You gain 5 life."
+    ],
+    "rounds": 0,
+    "stage": "back",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "bramble-wurm~const-n-n",
+      "expected": "different"
+    }
+  },
+  {
+    "name": "Exsanguinator Cavalry",
+    "rank": 6760,
+    "lines": [
+      "Whenever a Knight you control deals combat damage to a player, put a +1/+1 counter on that creature and create a Blood token."
+    ],
+    "rounds": 0,
+    "stage": "back",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "exsanguinator-cavalry~widen-trigger-subject-drop-condition-n-",
+      "expected": "different"
+    }
+  },
+  {
+    "name": "Goblin Chainwhirler",
+    "rank": 4906,
+    "lines": [
+      "When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
+    ],
+    "rounds": 0,
+    "stage": "back",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "goblin-chainwhirler~flip-optional-to-true",
+      "expected": "different"
+    }
+  },
+  {
+    "name": "Guardian of Faith",
+    "rank": 1895,
+    "lines": [
+      "When this creature enters, any number of other target creatures you control phase out."
+    ],
+    "rounds": 0,
+    "stage": "back",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "guardian-of-faith",
+      "expected": "same"
+    }
+  },
+  {
+    "name": "Hard-Hitting Question",
+    "rank": 9792,
+    "lines": [
+      "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
+    ],
+    "rounds": 0,
+    "stage": "back",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "hard-hitting-question",
+      "expected": "same"
+    }
+  },
+  {
+    "name": "Lotus Field",
+    "rank": 843,
+    "lines": [
+      "When this land enters, sacrifice two lands."
+    ],
+    "rounds": 0,
+    "stage": "back",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "lotus-field",
+      "expected": "different"
+    }
+  },
+  {
+    "name": "Might of Old Krosa",
+    "rank": 10032,
+    "lines": [
+      "Target creature gets +2/+2 until end of turn. If you cast this spell during your main phase, that creature gets +4/+4 until end of turn instead."
+    ],
+    "rounds": 0,
+    "stage": "back",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "might-of-old-krosa~drop-effect-n",
+      "expected": "different"
+    }
+  },
+  {
+    "name": "Minas Morgul, Dark Fortress",
+    "rank": 2113,
+    "lines": [
+      "{3}{B}, {T}: Put a shadow counter on target creature. For as long as that creature has a shadow counter on it, it's a Wraith in addition to its other types."
+    ],
+    "rounds": 0,
+    "stage": "back",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "minas-morgul-dark-fortress",
+      "expected": "different"
+    }
+  },
+  {
+    "name": "Scale the Heights",
+    "rank": 6064,
+    "lines": [
+      "Put a +1/+1 counter on up to one target creature. You gain 2 life. You may play an additional land this turn."
+    ],
+    "rounds": 0,
+    "stage": "back",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "scale-the-heights",
+      "expected": "same"
+    }
+  },
+  {
+    "name": "Treeguard Duo",
+    "rank": 7787,
+    "lines": [
+      "When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
+    ],
+    "rounds": 0,
+    "stage": "back",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "treeguard-duo",
+      "expected": "same"
+    }
+  }
+]
