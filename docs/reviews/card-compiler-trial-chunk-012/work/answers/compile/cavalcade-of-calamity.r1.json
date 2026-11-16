@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The damage must go to the player or planeswalker the creature is attacking, and the schema's damage references reach only the attacked player (eventPlayer), not an attacked planeswalker."}
