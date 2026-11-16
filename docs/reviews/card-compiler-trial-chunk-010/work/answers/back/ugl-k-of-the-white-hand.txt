@@ -1,0 +1,1 @@
+Whenever another creature you control dies, if that creature was a Goblin or an Orc, put two +1/+1 counters on this creature. Otherwise, put one +1/+1 counter on this creature.
