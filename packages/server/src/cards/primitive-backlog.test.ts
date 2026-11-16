@@ -3,6 +3,8 @@ import type { EdhrecRanking } from './edhrec-ranking';
 import {
   appendRefusals,
   buildPrimitiveBacklog,
+  queueEntryUnblocks,
+  type QueueCard,
   renderBacklogJson,
   renderBacklogMarkdown,
   renderGroupsFile,
@@ -159,6 +161,43 @@ describe('weighting and edge cases', () => {
         unblocked: new Map(),
       }),
     ).toThrow(/no slots/);
+  });
+});
+
+describe('queueEntryUnblocks', () => {
+  const entry: QueueCard = {
+    name: 'Checked',
+    oracleId: 'oid',
+    status: 'compiled-checked',
+    patch: 'patches/checked.json',
+    patchSha256: 'abc',
+    review: null,
+  };
+  const hashes = (sha: string | null) => () => sha;
+  const none = new Set<string>();
+
+  it('admits a checked entry whose patch still matches its recorded hash', () => {
+    expect(queueEntryUnblocks(entry, none, hashes('abc'))).toBe(true);
+  });
+
+  it('rejects an edited or missing patch, or an entry with no patch', () => {
+    expect(queueEntryUnblocks(entry, none, hashes('0'.repeat(64)))).toBe(false);
+    expect(queueEntryUnblocks(entry, none, hashes(null))).toBe(false);
+    expect(queueEntryUnblocks({ ...entry, patch: null }, none, hashes('abc'))).toBe(false);
+    expect(queueEntryUnblocks({ ...entry, patchSha256: null }, none, hashes('abc'))).toBe(false);
+  });
+
+  it('rejects other statuses, rejected reviews, differing cross-checks and demoted patches', () => {
+    expect(queueEntryUnblocks({ ...entry, status: 'meaning-differs' }, none, hashes('abc'))).toBe(
+      false,
+    );
+    expect(
+      queueEntryUnblocks({ ...entry, review: { verdict: 'rejected' } }, none, hashes('abc')),
+    ).toBe(false);
+    expect(
+      queueEntryUnblocks({ ...entry, crossCheck: { verdict: 'differs' } }, none, hashes('abc')),
+    ).toBe(false);
+    expect(queueEntryUnblocks(entry, new Set(['oid|abc']), hashes('abc'))).toBe(false);
   });
 });
 

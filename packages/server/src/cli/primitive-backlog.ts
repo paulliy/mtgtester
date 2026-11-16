@@ -10,6 +10,7 @@
  * provisional tier would admit, leaves the ranking. Never uses the network.
  */
 
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { EdhrecRanking } from '../cards/edhrec-ranking';
@@ -19,6 +20,8 @@ import {
   renderBacklogMarkdown,
   type BacklogGroupsFile,
   PRIMITIVE_BACKLOG_GROUPS_PATH as GROUPS_PATH,
+  queueEntryUnblocks,
+  type QueueCard,
   type UnblockedBy,
 } from '../cards/primitive-backlog';
 
@@ -31,20 +34,17 @@ const MARKDOWN_PATH = 'docs/plans/primitive-backlog.md';
 
 const readJson = <T>(path: string): T => JSON.parse(readFileSync(resolve(path), 'utf8')) as T;
 
-interface QueueCard {
-  name: string;
-  oracleId: string;
-  status: string;
-  patchSha256: string | null;
-  review?: { verdict: string } | null;
-  crossCheck?: { verdict: string };
-}
-
 /**
  * Cards that left the backlog: modeled now, or a review-queue entry that the provisional tier
- * would admit (`compiled-checked`, not rejected, cross-check not `differs`, not demoted by fuzz).
+ * would admit (see `queueEntryUnblocks`).
  * The demotion file may not exist yet; then nothing is demoted.
  */
+function patchSha256Of(patch: string): string | null {
+  const path = resolve(patch);
+  if (!existsSync(path)) return null;
+  return createHash('sha256').update(readFileSync(path)).digest('hex');
+}
+
 function unblockedCards(): Map<string, UnblockedBy> {
   const unblocked = new Map<string, UnblockedBy>();
   for (const name of readJson<{ modeled: string[] }>(MODELED_PATH).modeled) {
@@ -60,11 +60,7 @@ function unblockedCards(): Map<string, UnblockedBy> {
   );
   for (const card of readJson<{ cards: QueueCard[] }>(QUEUE_PATH).cards) {
     if (unblocked.has(card.name)) continue;
-    if (card.status !== 'compiled-checked') continue;
-    if (card.review?.verdict === 'rejected') continue;
-    if (card.crossCheck?.verdict === 'differs') continue;
-    if (demoted.has(`${card.oracleId}|${card.patchSha256}`)) continue;
-    unblocked.set(card.name, 'review-queue');
+    if (queueEntryUnblocks(card, demoted, patchSha256Of)) unblocked.set(card.name, 'review-queue');
   }
   return unblocked;
 }

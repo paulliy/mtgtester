@@ -58,6 +58,36 @@ export interface BacklogGroupsFile {
  */
 export type UnblockedBy = 'modeled' | 'review-queue';
 
+/** The review-queue fields the backlog reads. */
+export interface QueueCard {
+  name: string;
+  oracleId: string;
+  status: string;
+  patch: string | null;
+  patchSha256: string | null;
+  review?: { verdict: string } | null;
+  crossCheck?: { verdict: string };
+}
+
+/**
+ * Whether a review-queue entry takes its card off the backlog: the same admission rule as the
+ * provisional tier. It must be `compiled-checked`, not rejected, its cross-check must not differ,
+ * its patch file must exist and still hash to `patchSha256`, and that patch must not be demoted.
+ * `patchSha256Of` returns the SHA-256 of the patch file's bytes, or null when the file is missing.
+ */
+export function queueEntryUnblocks(
+  card: QueueCard,
+  demoted: ReadonlySet<string>,
+  patchSha256Of: (patch: string) => string | null,
+): boolean {
+  if (card.status !== 'compiled-checked') return false;
+  if (card.review?.verdict === 'rejected') return false;
+  if (card.crossCheck?.verdict === 'differs') return false;
+  if (card.patch === null || card.patchSha256 === null) return false;
+  if (patchSha256Of(card.patch) !== card.patchSha256) return false;
+  return !demoted.has(`${card.oracleId}|${card.patchSha256}`);
+}
+
 export interface BacklogCard {
   name: string;
   /** EDHREC rank, 1-based, or null when the card is outside the frozen ranking. */
