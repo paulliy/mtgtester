@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The sacrifice-then-return needs to put the dead creature card back onto the battlefield untapped under its owner's control, and the schema's trigger-object return ops only return it tapped or at the next end step."}

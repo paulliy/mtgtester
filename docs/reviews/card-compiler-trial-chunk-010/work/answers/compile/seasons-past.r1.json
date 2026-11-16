@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Returning any number of cards with pairwise different mana values is a group constraint that no graveyard-to-hand effect expresses, and the schema cannot put the source on the bottom of its owner's library after resolving."}

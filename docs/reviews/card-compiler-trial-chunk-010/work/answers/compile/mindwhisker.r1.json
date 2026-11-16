@@ -1,0 +1,1 @@
+{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"controller","who":"opponents"},{"kind":"type","value":"Creature"}]},"op":{"layer":7,"sublayer":"d","power":-1,"toughness":0},"condition":{"kind":"cardsInYourGraveyard","cmp":">=","n":7}}]}
