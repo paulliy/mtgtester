@@ -9107,47 +9107,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "1e7bddbd-e448-4aea-9d18-b44bd45837c5",
-    "name": "Vow of Duty",
-    "handledLines": [
-      "Enchanted creature gets +2/+2, has vigilance, and can't attack you or planeswalkers you control."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "attachedToSource"
-          },
-          "includePlaneswalkers": true,
-          "kind": "attackRestriction"
-        }
-      ],
-      "staticEffects": [
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "layer": 7,
-            "power": 2,
-            "sublayer": "d",
-            "toughness": 2
-          }
-        },
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "addKeyword": "vigilance",
-            "layer": 6
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "1e9b3c9e-07ae-4de5-8607-93773825f655",
     "name": "Raiders' Karve",
     "handledLines": [
@@ -10281,47 +10240,6 @@
               "kind": "self"
             },
             "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "237b87f4-783b-40ac-9fcf-4ae76a33229d",
-    "name": "Vow of Torment",
-    "handledLines": [
-      "Enchanted creature gets +2/+2, has menace, and can't attack you or planeswalkers you control."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "attachedToSource"
-          },
-          "includePlaneswalkers": true,
-          "kind": "attackRestriction"
-        }
-      ],
-      "staticEffects": [
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "layer": 7,
-            "power": 2,
-            "sublayer": "d",
-            "toughness": 2
-          }
-        },
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "addKeyword": "menace",
-            "layer": 6
           }
         }
       ]
@@ -53162,47 +53080,6 @@
               "kind": "self"
             },
             "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "bfed67f3-70d2-49c2-8f25-16e4d10fa5be",
-    "name": "Vow of Lightning",
-    "handledLines": [
-      "Enchanted creature gets +2/+2, has first strike, and can't attack you or planeswalkers you control."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "attachedToSource"
-          },
-          "includePlaneswalkers": true,
-          "kind": "attackRestriction"
-        }
-      ],
-      "staticEffects": [
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "layer": 7,
-            "power": 2,
-            "sublayer": "d",
-            "toughness": 2
-          }
-        },
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "addKeyword": "first strike",
-            "layer": 6
           }
         }
       ]
@@ -142581,129 +142458,6 @@
             }
           ],
           "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-vow-of-duty",
-    "name": "Vow of Duty",
-    "handledLines": [
-      "Enchanted creature gets +2/+2, has vigilance, and can't attack you or planeswalkers you control."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "attachedToSource"
-          },
-          "includePlaneswalkers": true,
-          "kind": "attackRestriction"
-        }
-      ],
-      "staticEffects": [
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "layer": 7,
-            "power": 2,
-            "sublayer": "d",
-            "toughness": 2
-          }
-        },
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "addKeyword": "vigilance",
-            "layer": 6
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-vow-of-lightning",
-    "name": "Vow of Lightning",
-    "handledLines": [
-      "Enchanted creature gets +2/+2, has first strike, and can't attack you or planeswalkers you control."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "attachedToSource"
-          },
-          "includePlaneswalkers": true,
-          "kind": "attackRestriction"
-        }
-      ],
-      "staticEffects": [
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "layer": 7,
-            "power": 2,
-            "sublayer": "d",
-            "toughness": 2
-          }
-        },
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "addKeyword": "first strike",
-            "layer": 6
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-vow-of-torment",
-    "name": "Vow of Torment",
-    "handledLines": [
-      "Enchanted creature gets +2/+2, has menace, and can't attack you or planeswalkers you control."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "attachedToSource"
-          },
-          "includePlaneswalkers": true,
-          "kind": "attackRestriction"
-        }
-      ],
-      "staticEffects": [
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "layer": 7,
-            "power": 2,
-            "sublayer": "d",
-            "toughness": 2
-          }
-        },
-        {
-          "affects": {
-            "kind": "attachedToSource"
-          },
-          "op": {
-            "addKeyword": "menace",
-            "layer": 6
-          }
         }
       ]
     },

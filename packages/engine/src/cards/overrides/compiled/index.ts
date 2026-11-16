@@ -38875,51 +38875,6 @@ const BATCH_CHUNK_009: readonly CompiledCard[] = [
     behaviorSha256: 'ff5e67b993612dbe0c6b7e990a26cbc675f994d681ea5158c2451be634177344',
     acceptedBy: 'main-thread',
   },
-  {
-    oracleId: '1e7bddbd-e448-4aea-9d18-b44bd45837c5',
-    name: 'Vow of Duty',
-    handledLines: [
-      "Enchanted creature gets +2/+2, has vigilance, and can't attack you or planeswalkers you control.",
-    ],
-    def: {
-      staticEffects: [
-        {
-          affects: {
-            kind: 'attachedToSource',
-          },
-          op: {
-            layer: 7,
-            sublayer: 'd',
-            power: 2,
-            toughness: 2,
-          },
-        },
-        {
-          affects: {
-            kind: 'attachedToSource',
-          },
-          op: {
-            layer: 6,
-            addKeyword: 'vigilance',
-          },
-        },
-      ],
-      ruleStatics: [
-        {
-          kind: 'attackRestriction',
-          filter: {
-            kind: 'attachedToSource',
-          },
-          includePlaneswalkers: true,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-009',
-    patchSha256: '685738b2f55d5560ba1c9368b3139c598e0fabcf308e0d28bd1e2fab5808bbc7',
-    behaviorSha256: '29b9703cd4e8ca28ba1b056835637cc36ad6f213e5d9a15d0e8252203dccb6e3',
-    acceptedBy: 'main-thread',
-  },
 ];
 
 const BATCH_CHUNK_010: readonly CompiledCard[] = [
@@ -42901,51 +42856,6 @@ const BATCH_CHUNK_010: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-010',
     patchSha256: '2f638117a98b727df00b4e86f342a99eac0373d7d30ee73faabadb4a5557de5e',
     behaviorSha256: 'c7cc057fff402773aaeefad2a1512d8bd43b50d4f921a6f186268f75881ec4a3',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'bfed67f3-70d2-49c2-8f25-16e4d10fa5be',
-    name: 'Vow of Lightning',
-    handledLines: [
-      "Enchanted creature gets +2/+2, has first strike, and can't attack you or planeswalkers you control.",
-    ],
-    def: {
-      staticEffects: [
-        {
-          affects: {
-            kind: 'attachedToSource',
-          },
-          op: {
-            layer: 7,
-            sublayer: 'd',
-            power: 2,
-            toughness: 2,
-          },
-        },
-        {
-          affects: {
-            kind: 'attachedToSource',
-          },
-          op: {
-            layer: 6,
-            addKeyword: 'first strike',
-          },
-        },
-      ],
-      ruleStatics: [
-        {
-          kind: 'attackRestriction',
-          filter: {
-            kind: 'attachedToSource',
-          },
-          includePlaneswalkers: true,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-010',
-    patchSha256: '4f5b1747bc48a5d7dbc5e844d8cefdbc112c0a475f480706048552f0e3e551f4',
-    behaviorSha256: 'e9b6b396eeccd27ebd23f820210fd485f8bf53653010643f03dadfbea2addf32',
     acceptedBy: 'main-thread',
   },
   {
@@ -47184,51 +47094,6 @@ const BATCH_CHUNK_011: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-011',
     patchSha256: '8adf7201c41a55bb091ba7e36f287a0c7fdd5715b8b18ab1ac9639a1b3083e7e',
     behaviorSha256: 'a58513281ecdc2b3d7379d1a8ab3873a50de4b248bb85acf715534150f143ee8',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '237b87f4-783b-40ac-9fcf-4ae76a33229d',
-    name: 'Vow of Torment',
-    handledLines: [
-      "Enchanted creature gets +2/+2, has menace, and can't attack you or planeswalkers you control.",
-    ],
-    def: {
-      staticEffects: [
-        {
-          affects: {
-            kind: 'attachedToSource',
-          },
-          op: {
-            layer: 7,
-            sublayer: 'd',
-            power: 2,
-            toughness: 2,
-          },
-        },
-        {
-          affects: {
-            kind: 'attachedToSource',
-          },
-          op: {
-            layer: 6,
-            addKeyword: 'menace',
-          },
-        },
-      ],
-      ruleStatics: [
-        {
-          kind: 'attackRestriction',
-          filter: {
-            kind: 'attachedToSource',
-          },
-          includePlaneswalkers: true,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-011',
-    patchSha256: '4a12ae4fbc75a9c3b15e8242fde73304dc3264406d55b79dd62293e67720d088',
-    behaviorSha256: '6777ce91176efc39e2874654742bdd50c398f1f978d79d9ae138c8d5bd933caa',
     acceptedBy: 'main-thread',
   },
   {
