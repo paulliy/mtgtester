@@ -22,6 +22,7 @@ import { SELF_SUBJECT } from './ability';
 import type { Ability, Effect, KeywordAbility, TargetSpec, TokenSpec } from './ability';
 import { parseEntersAsCopy } from './grammar/copy';
 import {
+  CARD_TYPE_SINGULARS,
   COLOR_WORDS,
   KEYWORD_SET,
   parseAmount,
@@ -2026,11 +2027,215 @@ function parsePermanentTypeList(text: string): Selector | null {
 }
 
 /**
+ * One characteristic word of an object: a color ("red"), a card type ("artifact"), "non" plus a
+ * card type ("nonartifact"), or a known subtype ("giant", "sliver").
+ */
+function parseCharacteristicWord(word: string, card: OracleCard): Selector | null {
+  const color = COLOR_WORDS[word];
+  if (color !== undefined) return ofColor(color);
+  const type = CARD_TYPE_SINGULARS[word];
+  if (type !== undefined) return ofType(type);
+  const non = word.match(/^non(\w+)$/);
+  if (non !== null) {
+    const negated = CARD_TYPE_SINGULARS[non[1] as string];
+    return negated === undefined ? null : not(ofType(negated));
+  }
+  const subtype = resolveSubtype(titleCase(word), card);
+  return subtype === null ? null : ofSubtype(subtype);
+}
+
+/**
+ * Characteristic words that qualify a noun: a list ("lizard, mouse, otter, or raccoon", "red or
+ * artifact") matches any of them; adjacent words ("green creature") must all hold. Empty text
+ * means no restriction (`undefined`); `null` is an unknown word.
+ */
+function parseCharacteristicPhrase(text: string, card: OracleCard): Selector | undefined | null {
+  const trimmed = text.trim();
+  if (trimmed === '') return undefined;
+  const alternatives = trimmed
+    .split(/,? or |, /)
+    .map((part) => part.trim())
+    .filter((part) => part !== '');
+  const parsed: Selector[] = [];
+  for (const alternative of alternatives) {
+    const words = alternative.split(' ');
+    const each: Selector[] = [];
+    for (const word of words) {
+      const selector = parseCharacteristicWord(word, card);
+      if (selector === null) return null;
+      each.push(selector);
+    }
+    parsed.push(each.length === 1 ? each[0]! : allOf(...each));
+  }
+  return parsed.length === 1 ? parsed[0]! : anyOf(...parsed);
+}
+
+/**
+ * "[You|Any player] may cast [filter] spells as though they had flash" (Vedalken Orrery, Quick
+ * Sliver, Whirlwing Stormbrood's "sorcery spells and Dragon spells"), CR 601.3b.
+ */
+function parseCastAsThoughFlash(lower: string, card: OracleCard): RuleStatic[] | null {
+  const m = lower.match(/^(you|any player) may cast (?:(.+?) )?spells as though they had flash$/);
+  if (m === null) return null;
+  const allPlayers = m[1] === 'any player';
+  let filter: Selector | undefined;
+  if (m[2] === 'historic') filter = parseSpellFilter('historic spells', card) ?? undefined;
+  else if (m[2] !== undefined) {
+    const parts = (m[2] as string).split(' spells and ');
+    const selectors: Selector[] = [];
+    for (const part of parts) {
+      const selector = parseCharacteristicPhrase(part, card);
+      if (selector === null || selector === undefined) return null;
+      selectors.push(selector);
+    }
+    filter = selectors.length === 1 ? selectors[0]! : anyOf(...selectors);
+  }
+  return [
+    {
+      kind: 'castAsThoughFlash',
+      ...(filter === undefined ? {} : { filter }),
+      ...(allPlayers ? { allPlayers: true as const } : {}),
+    },
+  ];
+}
+
+/**
+ * Spell cost increases (CR 601.2f): "[filter] spells [your opponents cast] cost {N} more to cast"
+ * (Thalia, Grand Arbiter Augustin IV, Aura of Silence) and "Each spell costs {N} more to cast
+ * except during its controller's turn" (Defense Grid). A target-dependent increase ("spells your
+ * opponents cast that target ...", Kasmina) is a different price rule and stays unparsed.
+ */
+function parseSpellCostIncrease(lower: string, card: OracleCard): RuleStatic[] | null {
+  const grid = lower.match(
+    /^each spell costs \{(\d+)\} more to cast except during its controller's turn$/,
+  );
+  if (grid !== null)
+    return [{ kind: 'spellCostIncrease', amount: Number(grid[1]), exceptCastersTurn: true }];
+  const m = lower.match(/^(?:(.+?) )?spells (your opponents cast )?cost \{(\d+)\} more to cast$/);
+  if (m === null) return null;
+  let filter: Selector | undefined;
+  if (m[1] !== undefined) {
+    const words = m[1] as string;
+    const parsed = / and /.test(words)
+      ? parseSpellFilter(`${words} spells`, card)
+      : parseCharacteristicPhrase(words, card);
+    if (parsed === null || parsed === undefined) return null;
+    filter = parsed;
+  }
+  return [
+    {
+      kind: 'spellCostIncrease',
+      amount: Number(m[3]),
+      ...(filter === undefined ? {} : { filter }),
+      ...(m[2] === undefined ? {} : { opponentsOnly: true as const }),
+    },
+  ];
+}
+
+/**
+ * Damage replacements (CR 614.1a): "If [another] [qualifier] source [you control] would deal
+ * [noncombat] damage to <recipient>, it deals double/triple that damage [to ...] instead" and
+ * "... it deals that much damage plus N [to ...] instead" (Fiery Emancipation, Torbran, Solphim,
+ * Tor Wauki, Valley Flamecaller's "a Lizard, Mouse, Otter, or Raccoon you control").
+ */
+function parseDamageReplacement(lower: string, card: OracleCard): RuleStatic[] | null {
+  const m = lower.match(
+    /^if (?:(another) |an? )(.+?) would deal (noncombat )?damage to (a permanent or player|an opponent or a permanent an opponent controls|an opponent), it deals (double that damage|triple that damage|that much damage plus (\d+))(?: to that (?:permanent or player|player or permanent|player))? instead$/,
+  );
+  if (m === null) return null;
+  const recipient =
+    m[4] === 'a permanent or player'
+      ? ('any' as const)
+      : m[4] === 'an opponent'
+        ? ('opponentPlayers' as const)
+        : ('opponents' as const);
+  // The "to that ..." echo must name the recipient the sentence did.
+  const echo = lower.match(/ to that (permanent or player|player or permanent|player) instead$/);
+  if (echo !== null && (echo[1] === 'player') !== (recipient === 'opponentPlayers')) return null;
+  let subject = m[2] as string;
+  if (!/(?:^| )source(?: you control)?$/.test(subject)) {
+    // A creature subject with a condition ("a creature you control with a +1/+1 counter on it",
+    // Uncivil Unrest) reads as a trigger subject does, against the source as it deals damage.
+    const whole = /(?:^| )(?:creature|creatures)\b/.test(subject)
+      ? parseTriggerSubject(subject, card)
+      : null;
+    if (whole !== null && /\bwith\b/.test(subject)) {
+      return [
+        {
+          kind: 'damageReplacement',
+          sourceFilter: whole,
+          ...(m[1] === undefined ? {} : { excludesSelf: true as const }),
+          recipient,
+          ...(m[3] === undefined ? {} : { noncombatOnly: true as const }),
+          ...damageReplacementAmount(m[5] as string, m[6]),
+        },
+      ];
+    }
+  }
+  const yours = / you control$/.test(subject);
+  if (yours) subject = subject.replace(/ you control$/, '');
+  let filter: Selector | undefined;
+  if (subject === 'source' || / source$/.test(subject)) {
+    const qualifier = parseCharacteristicPhrase(subject.replace(/ ?source$/, ''), card);
+    if (qualifier === null) return null;
+    filter = qualifier;
+  } else {
+    // A creature-type list or "creature" itself (Valley Flamecaller, Gratuitous Violence).
+    const qualifier = parseCharacteristicPhrase(subject, card);
+    if (qualifier === null || qualifier === undefined) return null;
+    filter = qualifier;
+  }
+  if (yours) filter = filter === undefined ? YOURS : allOf(filter, YOURS);
+  return [
+    {
+      kind: 'damageReplacement',
+      ...(filter === undefined ? {} : { sourceFilter: filter }),
+      ...(m[1] === undefined ? {} : { excludesSelf: true as const }),
+      recipient,
+      ...(m[3] === undefined ? {} : { noncombatOnly: true as const }),
+      ...damageReplacementAmount(m[5] as string, m[6]),
+    },
+  ];
+}
+
+function damageReplacementAmount(
+  amount: string,
+  plus: string | undefined,
+): { factor: number } | { plus: number } {
+  return amount === 'double that damage'
+    ? { factor: 2 }
+    : amount === 'triple that damage'
+      ? { factor: 3 }
+      : { plus: Number(plus) };
+}
+
+/** "If you would gain life, you gain twice that much life / that much life plus N instead." */
+function parseLifeGainReplacement(lower: string): RuleStatic[] | null {
+  const m = lower.match(
+    /^if you would gain life, you gain (twice that much life|that much life plus (\d+)) instead$/,
+  );
+  if (m === null) return null;
+  return [
+    m[2] === undefined
+      ? { kind: 'lifeGainReplacement', factor: 2 }
+      : { kind: 'lifeGainReplacement', plus: Number(m[2]) },
+  ];
+}
+
+/**
  * Rule-modifying statics (ADR 0010, Inc 13)â€” cost reduction, "can't be countered", "opponents
  * can't cast spells", casting from a non-hand zone. These have no permanent to apply a layer op
  * to (`rule-statics.ts`), so they are collected separately from `parseStaticLine`.
  */
 function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | null {
+  {
+    const parsed =
+      parseCastAsThoughFlash(lower, card) ??
+      parseSpellCostIncrease(lower, card) ??
+      parseDamageReplacement(lower, card) ??
+      parseLifeGainReplacement(lower);
+    if (parsed !== null) return parsed;
+  }
   if (
     lower ===
     'if a source you control would deal damage to an opponent or a permanent an opponent controls, it deals double that damage instead'

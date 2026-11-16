@@ -1459,20 +1459,120 @@ export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
   return out;
 }
 
-/** Cost increases apply before reductions, including a zero alternative mana cost. */
-export function nonHandSpellCostIncreaseFor(
+/**
+ * The spell `def` as a selector candidate while `casterId` casts it (CR 601.2a-b): its printed
+ * characteristics, with the types an off-battlefield static adds (Biotransference). A spell's
+ * filter ("noncreature spells", "green creature spells") reads this.
+ */
+export function spellCandidate(
+  ctx: GameContext,
+  casterId: PlayerId,
+  def: CardDefinition,
+  cardId: string,
+): SelectorCandidate {
+  return {
+    cardId,
+    controllerId: casterId,
+    types: offBattlefieldTypes(ctx, def.types, casterId),
+    supertypes: def.supertypes,
+    subtypes: def.subtypes,
+    colors: def.colors,
+    power: def.power ?? 0,
+    keywords: def.keywords,
+    manaValue: spellManaValue(def, 0),
+    isToken: false,
+    enteredThisTurn: false,
+  };
+}
+
+/** The spell being priced or timed: the face cast, and the card it is cast from. */
+export interface SpellBeingCast {
+  def: CardDefinition;
+  cardId: string;
+}
+
+/**
+ * The generic mana every cost increase adds to a spell `casterId` casts from `zone` (CR 601.2f).
+ * Increases apply before reductions, including to a zero alternative mana cost and to a spell
+ * cast without paying its mana cost (CR 118.9d), and change no mana value.
+ *
+ * - `opponentNonHandSpellCostIncrease` (Aven Interrupter): opponents' spells from a graveyard or
+ *   exile.
+ * - `spellCostIncrease` (Thalia, Grand Arbiter, Defense Grid): spells matching its filter.
+ */
+export function spellCostIncreaseFor(
   ctx: GameContext,
   casterId: PlayerId,
   zone: string,
+  spell: SpellBeingCast,
 ): number {
-  if (zone !== 'graveyard' && zone !== 'exile') return 0;
-  return gatherRuleStatics(ctx).reduce(
-    (total, entry) =>
-      total +
-      (entry.static.kind === 'opponentNonHandSpellCostIncrease' && entry.controllerId !== casterId
-        ? entry.static.amount
-        : 0),
-    0,
+  let total = 0;
+  let candidate: SelectorCandidate | undefined;
+  for (const entry of gatherRuleStatics(ctx)) {
+    const rule = entry.static;
+    if (rule.kind === 'opponentNonHandSpellCostIncrease') {
+      if (entry.controllerId !== casterId && (zone === 'graveyard' || zone === 'exile'))
+        total += rule.amount;
+      continue;
+    }
+    if (rule.kind !== 'spellCostIncrease') continue;
+    if (rule.opponentsOnly === true && entry.controllerId === casterId) continue;
+    if (rule.exceptCastersTurn === true && ctx.state.currentTurnPlayer === casterId) continue;
+    if (rule.filter !== undefined) {
+      candidate ??= spellCandidate(ctx, casterId, spell.def, spell.cardId);
+      const from: SelectorSource = { cardId: entry.sourceCardId, controllerId: entry.controllerId };
+      if (!selectMatches(candidate, rule.filter, from)) continue;
+    }
+    total += rule.amount;
+  }
+  return total;
+}
+
+/**
+ * The flash permissions `playerId` has now (CR 601.3b): a turn-long grant (Borne Upon a Wind)
+ * makes every spell instant-speed; each `castAsThoughFlash` static adds its filter. `null` when
+ * there is none, the common case, so timing checks can skip the per-spell test.
+ */
+export interface FlashPermissions {
+  all: boolean;
+  filtered: { filter: Selector; source: SelectorSource }[];
+}
+
+export function flashPermissionsFor(ctx: GameContext, playerId: PlayerId): FlashPermissions | null {
+  let all = ctx.state.flashPermissionTurn?.[playerId] === ctx.state.turnNumber;
+  const filtered: FlashPermissions['filtered'] = [];
+  for (const entry of gatherRuleStatics(ctx)) {
+    const rule = entry.static;
+    if (rule.kind !== 'castAsThoughFlash') continue;
+    if (rule.allPlayers !== true && entry.controllerId !== playerId) continue;
+    if (rule.filter === undefined) all = true;
+    else
+      filtered.push({
+        filter: rule.filter,
+        source: { cardId: entry.sourceCardId, controllerId: entry.controllerId },
+      });
+  }
+  return all || filtered.length > 0 ? { all, filtered } : null;
+}
+
+/**
+ * May `playerId` cast `spell` any time they could cast an instant (CR 307.1, 601.3b)? An instant,
+ * a spell with flash, or one a flash permission covers. A land is never cast (CR 305.1), so no
+ * permission reaches it. `permissions` may be passed in when one caller asks for many spells.
+ */
+export function hasInstantTiming(
+  ctx: GameContext,
+  playerId: PlayerId,
+  spell: SpellBeingCast,
+  permissions: FlashPermissions | null = flashPermissionsFor(ctx, playerId),
+): boolean {
+  const { def } = spell;
+  if (def.types.includes('Instant') || def.keywords.includes('flash')) return true;
+  if (permissions === null || def.types.includes('Land')) return false;
+  if (permissions.all) return true;
+  const candidate = spellCandidate(ctx, playerId, def, spell.cardId);
+  return permissions.filtered.some(({ filter, source }) =>
+    selectMatches(candidate, filter, source),
   );
 }
 

@@ -996,6 +996,9 @@ export type Effect =
     }
   | { op: 'copyEachTargetedSpell'; targetSlot: number; newTargets?: true }
   | { op: 'angelGrace' }
+  /** "You may cast spells this turn as though they had flash" (Borne Upon a Wind, CR 601.3b):
+   * the controller's timing permission until the turn ends (CR 514.2). */
+  | { op: 'castAsThoughFlashThisTurn' }
   | { op: 'drawForEachOpponent' }
   | { op: 'drawTargetAndController'; target: EffectRef }
   | { op: 'inkshield' }

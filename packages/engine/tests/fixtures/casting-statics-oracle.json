@@ -1,0 +1,1521 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/edhrec-pinned-oracle.json",
+  "retrievedAt": "2026-11-16",
+  "cards": [
+    {
+      "sha256": "0c77209e147214c75bb59894e2dcf112970196876b183672e5965e6cabfc9723",
+      "card": {
+        "oracleId": "28c1a4a0-f58c-4d07-a918-51ff8a74f050",
+        "scryfallId": "7f1b93ea-1ec1-4010-9343-765742f5088b",
+        "name": "High Fae Trickster",
+        "manaCost": "{3}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Faerie Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Faerie",
+          "Wizard"
+        ],
+        "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nFlying\nYou may cast spells as though they had flash.",
+        "power": "4",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Flash"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "efc7a35bed59d1bb58c2c39dcdab68e0a178e96b644f9e6ed0ce7135ddcd4207",
+      "card": {
+        "oracleId": "e110ee80-37af-4989-a5fb-95d51dc7f102",
+        "scryfallId": "4f61479b-05e1-4c89-bf11-b79c06ace5e2",
+        "name": "Shimmer Myr",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Myr",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Myr"
+        ],
+        "oracleText": "Flash\nYou may cast artifact spells as though they had flash.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flash"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "845eca2c8bfd58e79328628ae0d357b856ccde0c44e449ac7980b8bf65033321",
+      "card": {
+        "oracleId": "60d640a4-032b-4279-ac75-8f200ca776fb",
+        "scryfallId": "44067327-6fe3-4222-b591-6d14d0e360d7",
+        "name": "Vedalken Orrery",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "You may cast spells as though they had flash.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b764525bab76aa375bfed17bb1b3ca11d8306748545c74fd652dfdeebdfc8df8",
+      "card": {
+        "oracleId": "2d513c3e-bd27-479e-af32-7f66d96d0de0",
+        "scryfallId": "67ff9ba3-cd2b-4970-b4da-22104b10a4a4",
+        "name": "Yeva, Nature's Herald",
+        "manaCost": "{2}{G}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Elf Shaman",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Shaman"
+        ],
+        "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nYou may cast green creature spells as though they had flash.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flash"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a49e4994d1c07b732ae01bf94861379b700b0eecfce14f2a9e932a91a4d88d97",
+      "card": {
+        "oracleId": "edfc0a46-414e-467d-9f27-e42d08ec127a",
+        "scryfallId": "aacdf4c2-9bc8-400a-8ffc-d6597d8d7da9",
+        "name": "Tidal Barracuda",
+        "manaCost": "{3}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Fish",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Fish"
+        ],
+        "oracleText": "Any player may cast spells as though they had flash.\nYour opponents can't cast spells during your turn.",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "31830ee9a1002208a546a1d767b7735a7778f34f56e6bbfe83a64ddf3b03cdd1",
+      "card": {
+        "oracleId": "530a5740-041c-42df-8fe0-fcea87258038",
+        "scryfallId": "f7749b2d-05a6-40ec-8d6a-8c1223cd5a09",
+        "name": "Quick Sliver",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Sliver",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Sliver"
+        ],
+        "oracleText": "Flash\nAny player may cast Sliver spells as though they had flash.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flash"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "02c159f24ae81382a7606790bc35c1e8ec60e97b75b0081397d244fcc7a33299",
+      "card": {
+        "oracleId": "4fbfc814-df10-4d61-ada9-c96cc8ee8d8c",
+        "scryfallId": "56a25eb1-bdb8-4f86-8d9a-3055ad1b2a13",
+        "name": "Whirlwing Stormbrood // Dynamic Soar",
+        "manaCost": "{4}{U}",
+        "cmc": 5,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "G",
+          "U"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flash\nFlying\nYou may cast sorcery spells and Dragon spells as though they had flash.",
+        "power": "4",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Flash"
+        ],
+        "layout": "adventure",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Dynamic Soar",
+          "typeLine": "Sorcery — Omen",
+          "oracleText": "Put three +1/+1 counters on target creature you control. (Then shuffle this card into its owner's library.)",
+          "manaCost": "{2}{G}",
+          "colors": [
+            "G"
+          ],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "371cf3cb4ef2b9558d516433e492f7cb29f0d6d9f2fe2790675f4454a9b34fb4",
+      "card": {
+        "oracleId": "13044ca1-76a3-43b2-a8e4-3bbc692c30c5",
+        "scryfallId": "c681e33b-3d60-4aaa-8186-51866d8b79d1",
+        "name": "Raff Capashen, Ship's Mage",
+        "manaCost": "{2}{W}{U}",
+        "cmc": 4,
+        "colors": [
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Wizard",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Wizard"
+        ],
+        "oracleText": "Flash\nFlying\nYou may cast historic spells as though they had flash. (Artifacts, legendaries, and Sagas are historic.)",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Flash"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7e2637769460cddb82eef8b216bd5f3797e37b50e72405217cd45c501fe96430",
+      "card": {
+        "oracleId": "7536eb66-959d-4dca-9b75-895572ef733c",
+        "scryfallId": "ab95f6e7-b806-47fe-a071-6c38b3176d94",
+        "name": "Emergence Zone",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}.\n{1}, {T}, Sacrifice this land: You may cast spells this turn as though they had flash.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "eddfa234f45575a53661fe8b7c561d2da786cbfcadb90ec16af2eb63654d47d3",
+      "card": {
+        "oracleId": "ce19962d-94f9-4b2b-b668-963c0acce308",
+        "scryfallId": "a9379675-1a32-4e2b-8aaf-5f908c595f31",
+        "name": "Borne Upon a Wind",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "You may cast spells this turn as though they had flash.\nDraw a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "aa982c7eb1c794e9522dfec8535bcb8fb81af28824d8333a12ec6d5f6d307653",
+      "card": {
+        "oracleId": "357ed28b-899f-404b-94ff-6fb2ef81d87b",
+        "scryfallId": "36a11c11-1ea9-48e2-b1bc-49cba1390620",
+        "name": "Alchemist's Refuge",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "G",
+          "U"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}.\n{G}{U}, {T}: You may cast spells this turn as though they had flash.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d2dff746bc6ced53e20d677aef0ba166137a4695d861179ce2b5ec39dcd0f993",
+      "card": {
+        "oracleId": "52159875-354c-47f9-bb1c-cd65395fcc68",
+        "scryfallId": "0b12e4b7-2c45-4795-94d3-901f89b8f290",
+        "name": "Fiery Emancipation",
+        "manaCost": "{3}{R}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "If a source you control would deal damage to a permanent or player, it deals triple that damage to that permanent or player instead.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Triple"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e3733272b51b59b8779911a8ab94a08fd77b1e80724dfff8e779f3de568d3032",
+      "card": {
+        "oracleId": "41eec4e8-92d3-4f98-9346-3a3e3cc602ce",
+        "scryfallId": "6f455cc1-a822-44ef-ba7c-bfcff69bd45e",
+        "name": "City on Fire",
+        "manaCost": "{5}{R}{R}{R}",
+        "cmc": 8,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nIf a source you control would deal damage to a permanent or player, it deals triple that damage instead.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Triple",
+          "Convoke"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "96e5f5dee4058d61eddfb47d40823723956e31af209f516b2047777982608222",
+      "card": {
+        "oracleId": "895f23a2-55b7-4cc0-8939-2efaaf097e6f",
+        "scryfallId": "c3a0c7f3-7fb9-43de-a9af-96532c31e5ed",
+        "name": "Solphim, Mayhem Dominus",
+        "manaCost": "{2}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Phyrexian Horror",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Phyrexian",
+          "Horror"
+        ],
+        "oracleText": "If a source you control would deal noncombat damage to an opponent or a permanent an opponent controls, it deals double that damage to that player or permanent instead.\n{1}{R/P}{R/P}, Discard two cards: Put an indestructible counter on Solphim. ({R/P} can be paid with either {R} or 2 life.)",
+        "power": "5",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "000911550b6c73735ec48ccbc611b08f7ec14fa45bfc16fde0721fdba82cfcaa",
+      "card": {
+        "oracleId": "8c3495bf-02e7-4ad9-949d-92eb3d2b662a",
+        "scryfallId": "79f591cd-d277-4ba5-b1bf-1c09cac9cb8a",
+        "name": "Torbran, Thane of Red Fell",
+        "manaCost": "{1}{R}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Dwarf Noble",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dwarf",
+          "Noble"
+        ],
+        "oracleText": "If a red source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 2 instead.",
+        "power": "2",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "bbdc6dc837c19271e4403e79ca97a4048c676ab160dacab91fe647bbfca137f2",
+      "card": {
+        "oracleId": "3d960d33-623a-4415-ae00-f8cffbc15f5a",
+        "scryfallId": "69cc93f2-8198-45b1-9193-7cfd1cf7ced4",
+        "name": "Dictate of the Twin Gods",
+        "manaCost": "{3}{R}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Flash\nIf a source would deal damage to a permanent or player, it deals double that damage to that permanent or player instead.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flash",
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "368e5e2eb5c1f05377bbb907b29b1d122b90d882f9fd2600942ecfa908009c07",
+      "card": {
+        "oracleId": "2d4976d4-649c-4d42-ac5a-ada4b46a480c",
+        "scryfallId": "cf0a0bef-ed72-4fdf-9799-6f6430c8a8a7",
+        "name": "Angrath's Marauders",
+        "manaCost": "{5}{R}{R}",
+        "cmc": 7,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Human Pirate",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Pirate"
+        ],
+        "oracleText": "If a source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f55a4eaca0a2086866ada702c87c5ec8dc9e2681a8e19e7929653660b21e77b8",
+      "card": {
+        "oracleId": "ab0dfae5-b9d4-417b-8a0d-2525ae3a73b9",
+        "scryfallId": "ebb44595-56f6-4be5-80bb-618ddd320f4a",
+        "name": "Fiendish Duo",
+        "manaCost": "{4}{R}{R}",
+        "cmc": 6,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Devil",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Devil"
+        ],
+        "oracleText": "First strike (This creature deals combat damage before creatures without first strike.)\nIf a source would deal damage to an opponent, it deals double that damage to that player instead.",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "First strike",
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "29705f3745b68a06421db1bac02427ae6f7012b82c38a917be33339de09be291",
+      "card": {
+        "oracleId": "c912a43b-8994-434e-84c0-f4cf58abbd42",
+        "scryfallId": "ba2d026f-bdca-4376-9d70-c81c707598e8",
+        "name": "Mechanized Warfare",
+        "manaCost": "{1}{R}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "If a red or artifact source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 1 instead.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9353feeb72bd4144e70cccf77dd42d64032f90fdb9542783f3f51a973a3303b9",
+      "card": {
+        "oracleId": "68715465-6cf9-4006-87e9-31f227fe9ed3",
+        "scryfallId": "d7f0e720-3c32-4040-b663-7f99ad5bc810",
+        "name": "Furnace of Rath",
+        "manaCost": "{1}{R}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "If a source would deal damage to a permanent or player, it deals double that damage to that permanent or player instead.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8ce6b50f6eaf782f1551813211084a87028f2e8ae40e1a8f0fbd04dc000f2e3a",
+      "card": {
+        "oracleId": "b44d5457-b4d6-4521-a25a-8ef96adba461",
+        "scryfallId": "adea296b-b320-4588-9d6e-cbb5db7c39e3",
+        "name": "Tor Wauki the Younger",
+        "manaCost": "{3}{B}{R}",
+        "cmc": 5,
+        "colors": [
+          "B",
+          "R"
+        ],
+        "colorIdentity": [
+          "B",
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Human Archer",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Archer"
+        ],
+        "oracleText": "Reach, lifelink\nIf another source you control would deal noncombat damage to a permanent or player, it deals that much damage plus 1 to that permanent or player instead.\nWhenever you cast an instant or sorcery spell, Tor Wauki deals 2 damage to any target.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Lifelink",
+          "Reach"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0cce073706a6b6a525724a8e9b0b15a2ef75e6859b5240297533d05338e5acc0",
+      "card": {
+        "oracleId": "60654004-7d9a-47ac-a70d-b246dd1728d3",
+        "scryfallId": "a0812db4-b7d1-4cf7-aaa5-9c0e784079a1",
+        "name": "Valley Flamecaller",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Lizard Warlock",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Lizard",
+          "Warlock"
+        ],
+        "oracleText": "If a Lizard, Mouse, Otter, or Raccoon you control would deal damage to a permanent or player, it deals that much damage plus 1 instead.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e3ecc4c9846dfa60da6851ce838e48a9ce37ae880741943150bac45c52599d95",
+      "card": {
+        "oracleId": "b3f7c4ac-b788-4307-9bc3-d99ce310e07c",
+        "scryfallId": "a15edad1-ff68-4f20-95f6-99fe549bea98",
+        "name": "Calamity Bearer",
+        "manaCost": "{2}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Giant Berserker",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Giant",
+          "Berserker"
+        ],
+        "oracleText": "If a Giant source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead.",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7805c4b8a3066706794d35ced7c8ac7ae1d06627f5292f31c3ccb71bf0dffb7e",
+      "card": {
+        "oracleId": "44c2fefb-5de3-4406-955a-3fabc46357d0",
+        "scryfallId": "3513c041-7147-467d-845d-3d1c83fb3328",
+        "name": "Thor, Asgard's Avenger",
+        "manaCost": "{2}{R}{R}",
+        "cmc": 4,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — God Warrior Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "God",
+          "Warrior",
+          "Hero"
+        ],
+        "oracleText": "Flying\nIf another source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 1 instead.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f80a85a896d5b3154109e8bcdec8aedea3318c67fda560acb3daa31e15a1d8c8",
+      "card": {
+        "oracleId": "7c340a39-4ee0-4ba1-bb66-6674f8020fda",
+        "scryfallId": "e89024c5-eef5-468c-92b4-e53dd212909c",
+        "name": "Gratuitous Violence",
+        "manaCost": "{2}{R}{R}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "If a creature you control would deal damage to a permanent or player, it deals double that damage instead.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a82c746f828dbda46e9d3bb9422adf1c94bd9da0593981d208b975d525bc5207",
+      "card": {
+        "oracleId": "bd655e8b-f192-4635-9e23-357b6f89ef8f",
+        "scryfallId": "31afae93-d3c7-49c3-9f00-2cd9621e0ff8",
+        "name": "Uncivil Unrest",
+        "manaCost": "{4}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Nontoken creatures you control have riot. (They enter with your choice of a +1/+1 counter or haste.)\nIf a creature you control with a +1/+1 counter on it would deal damage to a permanent or player, it deals double that damage instead.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b897cf7d73f2e10e81177dc728c055358ba5330b468edce17cf250413023e94e",
+      "card": {
+        "oracleId": "22ba474e-f6e6-450d-a4cf-0739f0b51079",
+        "scryfallId": "f939dac5-ad71-4163-adde-4f435412477c",
+        "name": "Defense Grid",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Each spell costs {3} more to cast except during its controller's turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c2882aca355c1101670ebca8df1ef82b2a1519aea6e2c62befc67b8e2a277c52",
+      "card": {
+        "oracleId": "1f8d4d5f-e82f-45f3-823e-1bb6b536eb18",
+        "scryfallId": "f43748ea-1d65-4ee8-9c66-221412a284c0",
+        "name": "Grand Arbiter Augustin IV",
+        "manaCost": "{2}{W}{U}",
+        "cmc": 4,
+        "colors": [
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Advisor",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Advisor"
+        ],
+        "oracleText": "White spells you cast cost {1} less to cast.\nBlue spells you cast cost {1} less to cast.\nSpells your opponents cast cost {1} more to cast.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8725a24fa5182ca29f7e6e8a811813152154c897b7b64f65175e6fde4e1b5e1e",
+      "card": {
+        "oracleId": "e7faf8eb-e829-4109-8dfe-42865a23ba86",
+        "scryfallId": "8223756e-6e63-455d-9e86-5608863b7643",
+        "name": "Aura of Silence",
+        "manaCost": "{1}{W}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Artifact and enchantment spells your opponents cast cost {2} more to cast.\nSacrifice this enchantment: Destroy target artifact or enchantment.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3fbebffd9b46a493bb4c79d3ca91c4d5e6feafd3369bea3d89736873d2e76e68",
+      "card": {
+        "oracleId": "9b7f1d05-707c-4ed3-9f0e-8ced1232c2ee",
+        "scryfallId": "c9f8b8fb-1cd8-450e-a1fe-892e7a323479",
+        "name": "Thalia, Guardian of Thraben",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Soldier",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Soldier"
+        ],
+        "oracleText": "First strike\nNoncreature spells cost {1} more to cast.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "First strike"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a0a45c008fdef659511b6aa0105a226bbeaa58109c7ac940b24f3574fdcebbfe",
+      "card": {
+        "oracleId": "183954d2-7b40-4c7e-adfa-d80191ab5ad6",
+        "scryfallId": "7dce06ba-c1e1-45ec-82a7-fc10b0fa8870",
+        "name": "God-Pharaoh's Statue",
+        "manaCost": "{6}",
+        "cmc": 6,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Legendary Artifact",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Spells your opponents cast cost {2} more to cast.\nAt the beginning of your end step, each opponent loses 1 life.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6ccfb88dfe2e408cda43224f1f2e05beee896db66ce60afb2452f8173ee82a7b",
+      "card": {
+        "oracleId": "0c6c5336-9233-4ab1-9d55-79f20be7ea57",
+        "scryfallId": "e472d4f5-add4-4de3-8718-31a47a35277c",
+        "name": "Thorn of Amethyst",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Noncreature spells cost {1} more to cast.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "221ec09bc1eab6583cc908574ed134744e86c234334c6e648ca35c301f1e21f6",
+      "card": {
+        "oracleId": "a698c9f5-325a-49f6-8902-eef09f4260c5",
+        "scryfallId": "683a5707-cddb-494d-9b41-51b4584ded69",
+        "name": "Lodestone Golem",
+        "manaCost": "{4}",
+        "cmc": 4,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Golem",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Golem"
+        ],
+        "oracleText": "Nonartifact spells cost {1} more to cast.",
+        "power": "5",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "4d5b4ed909e7ff36e39ae2872af82f3fc4830f4e098c51ce92d9e6854a7d21f2",
+      "card": {
+        "oracleId": "c7c241f2-d3cc-4032-a9da-149de73c2539",
+        "scryfallId": "17b59819-4746-4c67-b6e5-4157d498a065",
+        "name": "Vryn Wingmare",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Pegasus",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Pegasus"
+        ],
+        "oracleText": "Flying\nNoncreature spells cost {1} more to cast.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6608627f065c44be0b882c3f9a5aa9f8c810d770780fc7db976226fccc7379bc",
+      "card": {
+        "oracleId": "09c96077-3804-4f12-a613-5bebc5e0413f",
+        "scryfallId": "9ea2ae1d-91b4-44a0-b2e6-61839d8f4468",
+        "name": "Sphere of Resistance",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Spells cost {1} more to cast.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "45d22c40ee3d8f4cc5ac677a9c097ed97ceda1ab41edab70a2a83513c021c167",
+      "card": {
+        "oracleId": "240f0835-36af-4ad8-9336-d6d3d816d293",
+        "scryfallId": "19bd0885-baaa-40f2-9c59-b1ea53807540",
+        "name": "The Wind Crystal",
+        "manaCost": "{2}{W}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Artifact",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "White spells you cast cost {1} less to cast.\nIf you would gain life, you gain twice that much life instead.\n{4}{W}{W}, {T}: Creatures you control gain flying and lifelink until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "601d4a8fee53b737fb7aa3e3a91bed4892d3afd01fff7175fc91fd687e872919",
+      "card": {
+        "oracleId": "2abe9303-d498-4aad-b6b2-8b5064bd2ffd",
+        "scryfallId": "c79a8938-aae6-42ff-888c-2783e11a8d4f",
+        "name": "Rhox Faithmender",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Rhino Monk",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Rhino",
+          "Monk"
+        ],
+        "oracleText": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)\nIf you would gain life, you gain twice that much life instead.",
+        "power": "1",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Lifelink"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1770f1cc8aea88216e543e7658a0c85e79da8541d7a30c5461d2d329780636ac",
+      "card": {
+        "oracleId": "b86d3142-568a-4eea-b1ae-5fcfc1453533",
+        "scryfallId": "0d4032a7-600c-4b30-a012-fe3cde1be9c9",
+        "name": "Boon Reflection",
+        "manaCost": "{4}{W}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "If you would gain life, you gain twice that much life instead.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0db6ef3598d1a86b7e9c24aa570a7300ed5bd648e024cc726fa942e8458759f0",
+      "card": {
+        "oracleId": "801e55c7-f8a1-4a90-81cb-3ad7022290ba",
+        "scryfallId": "b7c7a54e-4df6-4745-8bae-aeefda934d82",
+        "name": "Knight of Dawn's Light",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Knight",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Knight"
+        ],
+        "oracleText": "First strike\nIf you would gain life, you gain that much life plus 1 instead.\n{1}{W}: This creature gets +1/+1 until end of turn.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "First strike"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "86d0eee25f055a3965774329b94623d53f322f3df3a781687fef8a8c50aac18f",
+      "card": {
+        "oracleId": "8e589dca-d31e-4d2f-81b1-18e5f9198795",
+        "scryfallId": "d61f8db1-0148-47bd-ae97-9aedccb83813",
+        "name": "Timely Ward",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment — Aura",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [
+          "Aura"
+        ],
+        "oracleText": "You may cast this spell as though it had flash if it targets a commander.\nEnchant creature\nEnchanted creature has indestructible.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Enchant"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8d52acb5b8dbbabbc1d774ff8888fc4b94b70912d52607218dc519ca8611746f",
+      "card": {
+        "oracleId": "84d648c7-655e-4590-a3e0-366a8a4a4cb3",
+        "scryfallId": "5741bbad-a6e4-45e0-b827-73f48c9975bf",
+        "name": "Radagast of Rhosgobel",
+        "manaCost": "{2}{G}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Avatar Wizard",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Avatar",
+          "Wizard"
+        ],
+        "oracleText": "The first creature spell you cast each turn costs {2} less to cast and can be cast as though it had flash.",
+        "power": "2",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "cd2037523407ee677e88c9a27092c38fb22b9b9c62ca3da3550acaa3071fcd08",
+      "card": {
+        "oracleId": "df561b38-fe2a-4db9-a9d4-ec25b1c7572a",
+        "scryfallId": "c77d9454-a78c-4063-ad66-46b2f5a030aa",
+        "name": "Kasmina, Enigmatic Mentor",
+        "manaCost": "{3}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Planeswalker — Kasmina",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Planeswalker"
+        ],
+        "subtypes": [
+          "Kasmina"
+        ],
+        "oracleText": "Spells your opponents cast that target a creature or planeswalker you control cost {2} more to cast.\n−2: Create a 2/2 blue Wizard creature token. Draw a card, then discard a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": "5",
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c81ec194b2af27184fa90b1d83aa513cec2df4b2d79e17aca1bf053a85a2f540",
+      "card": {
+        "oracleId": "aab55af7-8084-47b6-910f-75a75a6313a4",
+        "scryfallId": "7f8f2d69-fba9-40e5-8ef7-75e14ef4070a",
+        "name": "Jubilant Skybonder",
+        "manaCost": "{1}{W/U}{W/U}",
+        "cmc": 3,
+        "colors": [
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Creature — Human Wizard",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Wizard"
+        ],
+        "oracleText": "Flying\nCreatures you control with flying have \"Spells your opponents cast that target this creature cost {2} more to cast.\"",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "08258886a98949cc9cda08aa5f0efab389be96fcd8e3e8da7af3a721fb791e1a",
+      "card": {
+        "oracleId": "585eb5bc-5a3d-44d8-b593-1ff0d67f96a7",
+        "scryfallId": "1103da9c-300c-406b-997d-9e5bb7cd02d6",
+        "name": "Lightning, Army of One",
+        "manaCost": "{1}{R}{W}",
+        "cmc": 3,
+        "colors": [
+          "R",
+          "W"
+        ],
+        "colorIdentity": [
+          "R",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Soldier",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Soldier"
+        ],
+        "oracleText": "First strike, trample, lifelink\nStagger — Whenever Lightning deals combat damage to a player, until your next turn, if a source would deal damage to that player or a permanent that player controls, it deals double that damage instead.",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Lifelink",
+          "Stagger",
+          "First strike",
+          "Trample",
+          "Double"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

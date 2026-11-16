@@ -24,6 +24,30 @@ export type RuleStatic =
   | { kind: 'cantAttackOwner' }
   | { kind: 'opponentNonHandSpellCostIncrease'; amount: number }
   /**
+   * "Noncreature spells cost {1} more to cast" (Thalia), "Spells your opponents cast cost {1} more
+   * to cast" (Grand Arbiter Augustin IV), "Each spell costs {3} more to cast except during its
+   * controller's turn" (Defense Grid). A cost increase (CR 601.2f): it is added to the total cost
+   * before any reduction, applies to alternative and "without paying its mana cost" casts alike
+   * (CR 118.9d), and never changes the spell's mana value. `filter` is read against the spell as
+   * it is being cast; `opponentsOnly` exempts the static's controller; `exceptCastersTurn` turns it
+   * off on the caster's own turn.
+   */
+  | {
+      kind: 'spellCostIncrease';
+      amount: number;
+      filter?: Selector;
+      opponentsOnly?: true;
+      exceptCastersTurn?: true;
+    }
+  /**
+   * "You may cast [filter] spells as though they had flash" (Vedalken Orrery, Yeva) and "Any
+   * player may cast [filter] spells as though they had flash" (Tidal Barracuda): a timing
+   * permission only (CR 601.3b, 702.8a). It never lets a card be cast from another zone, changes
+   * no cost, and never lets a land be played. `filter` is read against the spell as it would be
+   * cast; `allPlayers` extends it to every player.
+   */
+  | { kind: 'castAsThoughFlash'; filter?: Selector; allPlayers?: true }
+  /**
    * CR 103.6a: a Leyline begins the game on the battlefield. Gemstone Caverns adds conditions and
    * a cost: only for a player who isn't the starting player, with one counter of `withCounter`,
    * and "if you do, exile a card from your hand".
@@ -178,6 +202,37 @@ export type RuleStatic =
   | { kind: 'damageDoubled'; sourceFilter: Selector }
   /** "Sources would deal damage to an opponent or their permanents" (Gisela). */
   | { kind: 'damageDoubledToOpponents'; sourceControllerOnly?: true }
+  /**
+   * A damage replacement (CR 614.1a, 616.1): "If a source you control would deal damage to a
+   * permanent or player, it deals triple that damage instead" (Fiery Emancipation), "If a red
+   * source you control would deal damage to an opponent or a permanent an opponent controls, it
+   * deals that much damage plus 2 instead" (Torbran). Each damage event (one source to one
+   * recipient) is replaced once (`factor` multiplies, `plus` adds); when several apply, the
+   * affected player orders them (`damage-modifiers.ts`).
+   *
+   * - `sourceFilter`: the source as it deals the damage, from this permanent's point of view
+   *   (`YOURS` for "you control"). Absent: any source.
+   * - `excludesSelf`: "another source" — never this permanent's own damage.
+   * - `recipient`: `any` ("a permanent or player"), `opponents` ("an opponent or a permanent an
+   *   opponent controls"), or `opponentPlayers` ("an opponent").
+   * - `noncombatOnly`: "noncombat damage" (Solphim, Tor Wauki).
+   */
+  | {
+      kind: 'damageReplacement';
+      sourceFilter?: Selector;
+      excludesSelf?: true;
+      recipient: 'any' | 'opponents' | 'opponentPlayers';
+      noncombatOnly?: true;
+      factor?: number;
+      plus?: number;
+    }
+  /**
+   * "If you would gain life, you gain twice that much life instead" (Rhox Faithmender), "...
+   * that much life plus 1 instead" (Knight of Dawn's Light): a replacement of each life-gain
+   * event of this permanent's controller (CR 614.1a, 119.10). Several are ordered by that player
+   * (CR 616.1); "whenever you gain life" sees only the final amount.
+   */
+  | { kind: 'lifeGainReplacement'; factor?: number; plus?: number }
   /** "Sources would deal damage to you or your permanents" (Gisela). */
   | { kind: 'damageHalvedToYou' }
   /**

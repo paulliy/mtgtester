@@ -6,9 +6,9 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 2462 | 11.39% |
+| effect | 2425 | 11.05% |
+| line | 1184 | 6.66% |
 | subject | 1162 | 5.71% |
-| line | 1147 | 6.32% |
 | trigger event | 391 | 1.55% |
 | cost | 298 | 1.26% |
 | condition | 154 | 0.69% |
@@ -19,7 +19,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (2462)
+## effect (2425)
 
 - 39 × `look at the top n cards of your library` (Thassa's Oracle, Loot, Exuberant Explorer, Experimental Augury)
 - 16 × `exile the top card of your library` (Blazing Crescendo, Cori Mountain Monastery, Count on Luck)
@@ -36,6 +36,24 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 8 × `create a token that's a copy of this creature` (Homunculus Horde, Giant Adephage, Polyraptor)
 - 8 × `discover n` (Hit the Mother Lode, Hidden Nursery, Hidden Volcano)
 - 8 × `populate` (Nesting Dovehawk, Determined Iteration, Growing Ranks)
+
+## line (1184)
+
+- 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
+- 10 × `when this land enters, it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
+- 10 × `toxic n` (Myr Convert, Bloated Contaminator, Blightbelly Rat)
+- 10 × `~ enters tapped unless a player has n or less life` (Razortrap Gorge, Neglected Manor, Raucous Carnival)
+- 9 × `storm` (Grapeshot, Empty the Warrens, Chatterstorm)
+- 8 × `when this land enters, return a land you control to its owner's hand` (Simic Growth Chamber, Golgari Rot Farm, Dimir Aqueduct)
+- 8 × `mobilize n` (Voice of Victory, Bone-Cairn Butcher, Venerated Stormsinger)
+- 8 × `myriad` (Goldlust Triad, Scion of Calamity, Dalek Squadron)
+- 7 × `when this creature enters, each opponent discards a card` (Burglar Rat, Virus Beetle, Elderfang Disciple)
+- 6 × `prevent all combat damage that would be dealt this turn` (Fog, Moment's Peace, Holy Day)
+- 6 × `squad {m}` (Ultramarines Honour Guard, Sicarian Infiltrator, Space Marine Devastator)
+- 5 × `prowess` (Stormcatch Mentor, Queen Brahne, Monastery Swiftspear)
+- 5 × `~ enters tapped with n charge counters on it` (Vivid Creek, Vivid Grove, Vivid Meadow)
+- 5 × `buyback {m}` (Capsize, Sprout Swarm, Mystic Speculation)
+- 4 × `~ doesn't untap during your untap step` (Basalt Monolith, Grim Monolith, Goblin Sharpshooter)
 
 ## subject (1162)
 
@@ -54,24 +72,6 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 6 × `artifact card with mana value n` (Whir of Invention, Trinket Mage, Trophy Mage)
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 - 6 × `cards in your hand` (Castle Locthwain, Alandra, Sky Dreamer, Jolrael, Mwonvuli Recluse)
-
-## line (1147)
-
-- 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
-- 10 × `when this land enters, it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
-- 10 × `toxic n` (Myr Convert, Bloated Contaminator, Blightbelly Rat)
-- 10 × `~ enters tapped unless a player has n or less life` (Razortrap Gorge, Neglected Manor, Raucous Carnival)
-- 9 × `storm` (Grapeshot, Empty the Warrens, Chatterstorm)
-- 8 × `when this land enters, return a land you control to its owner's hand` (Simic Growth Chamber, Golgari Rot Farm, Dimir Aqueduct)
-- 8 × `mobilize n` (Voice of Victory, Bone-Cairn Butcher, Venerated Stormsinger)
-- 8 × `myriad` (Goldlust Triad, Scion of Calamity, Dalek Squadron)
-- 7 × `when this creature enters, each opponent discards a card` (Burglar Rat, Virus Beetle, Elderfang Disciple)
-- 6 × `prevent all combat damage that would be dealt this turn` (Fog, Moment's Peace, Holy Day)
-- 6 × `squad {m}` (Ultramarines Honour Guard, Sicarian Infiltrator, Space Marine Devastator)
-- 5 × `prowess` (Stormcatch Mentor, Queen Brahne, Monastery Swiftspear)
-- 5 × `~ enters tapped with n charge counters on it` (Vivid Creek, Vivid Grove, Vivid Meadow)
-- 5 × `buyback {m}` (Capsize, Sprout Swarm, Mystic Speculation)
-- 4 × `~ doesn't untap during your untap step` (Basalt Monolith, Grim Monolith, Goblin Sharpshooter)
 
 ## trigger event (391)
 

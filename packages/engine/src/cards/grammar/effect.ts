@@ -1370,6 +1370,10 @@ function parseEffectSentenceUntraced(
   } = {},
 ): Effect[] | null {
   const s = sentence.toLowerCase();
+  // "You may cast spells this turn as though they had flash" (Borne Upon a Wind, Emergence Zone):
+  // a timing permission for the controller until the turn ends (CR 601.3b, 514.2).
+  if (s === 'you may cast spells this turn as though they had flash')
+    return [{ op: 'castAsThoughFlashThisTurn' }];
   // "transform this creature" is the modern templating; "transform ~" the older printing that
   // `substituteSelfName` produces. Both name the ability's own source (CR 701.28a).
   if (

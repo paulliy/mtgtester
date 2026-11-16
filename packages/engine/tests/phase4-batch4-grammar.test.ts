@@ -267,10 +267,10 @@ describe('Phase 4 batch 4: life-change trigger events', () => {
     expect(def.triggers[0]!.trigger).toEqual({ when: 'gainsLife', player: 'you' });
     const ctx = pod('p4-gain-trigger');
     spawn(ctx, 'P1', card);
-    gainLife(ctx, player(ctx, 'P1'), 3);
+    pump(gainLife(ctx, player(ctx, 'P1'), 3));
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     expect(ctx.state.pendingTriggers[0]!.scope).toMatchObject({ damageDealt: 3 });
-    gainLife(ctx, player(ctx, 'P2'), 3);
+    pump(gainLife(ctx, player(ctx, 'P2'), 3));
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     // P2 gained 3 above (which did not trigger P1's Bond), so 43 before the loss.
     run(ctx, card, def.triggers[0]!, ['P2'], { damageDealt: 3 });

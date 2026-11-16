@@ -118,7 +118,7 @@ describe("Teferi's Protection", () => {
     const ctx = game('pr11-teferi-lock');
     castTeferi(ctx);
     const life = player(ctx, 'P1').life;
-    gainLife(ctx, player(ctx, 'P1'), 4);
+    pump(gainLife(ctx, player(ctx, 'P1'), 4));
     loseLife(ctx, player(ctx, 'P1'), 4);
     expect(player(ctx, 'P1').life).toBe(life);
     conjure(ctx, 'P2', redBolt(), 'hand');
@@ -163,7 +163,7 @@ describe('The One Ring', () => {
     expect(playerLifeLocked(ctx, 'P1')).toBe(false);
     const life = player(ctx, 'P1').life;
     loseLife(ctx, player(ctx, 'P1'), 2);
-    gainLife(ctx, player(ctx, 'P1'), 1);
+    pump(gainLife(ctx, player(ctx, 'P1'), 1));
     expect(player(ctx, 'P1').life).toBe(life - 1);
     conjure(ctx, 'P2', redBolt(), 'hand');
     anyMana(ctx, 'P2', 1);

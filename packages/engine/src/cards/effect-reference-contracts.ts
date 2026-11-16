@@ -190,6 +190,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   nextCastThisTurn: {},
   copyEachTargetedSpell: { targetSlot: many(spell) },
   angelGrace: {},
+  castAsThoughFlashThisTurn: {},
   drawForEachOpponent: {},
   drawTargetAndController: { target: player },
   inkshield: {},

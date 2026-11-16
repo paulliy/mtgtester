@@ -266,7 +266,7 @@ describe('Perch Protection — pinned gift and phasing behavior', () => {
     const spell = castPerch(game, 'P2');
     pump(resolveTopOfStack(game));
     const originalLife = player(game, 'P1').life;
-    gainLife(game, player(game, 'P1'), 3);
+    pump(gainLife(game, player(game, 'P1'), 3));
     loseLife(game, player(game, 'P1'), 3);
     expect(player(game, 'P1').life).toBe(originalLife);
     expect(() => payLife(game, player(game, 'P1'), 1)).toThrow();

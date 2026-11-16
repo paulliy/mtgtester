@@ -38,7 +38,7 @@ import { queueAbilityCopy, queueReplicateCopy, queueSpellCopy } from '../stack/c
 import { chooseReplicateTargets } from '../stack/replicate-targets';
 import { allStackTargets, changeSingleStackTarget, chooseNewStackTargets } from '../stack/retarget';
 import { createPreparedCopy, newObjectId, stackAbilitySnapshot } from '../state/objects';
-import { findObjectByCardId, spellDefinitionOf } from '../state/queries';
+import { findObjectByCardId, gatherRuleStatics, spellDefinitionOf } from '../state/queries';
 import type { ProtectionSource } from '../state/queries';
 import { freeCardIsCastable, resolveFreeCard } from '../casting/free';
 import { permanentManaValue, targetIsLegal } from '../targets/legality';
@@ -368,7 +368,7 @@ export function* dealDamageToCreature(
   if (opts.sourceHasInfect === true) addCounters(ctx, source, target, '-1/-1', amount);
   else target.damageMarked += amount;
   if (opts.sourceHasDeathtouch) target.damagedByDeathtouch = true;
-  if (opts.sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
+  if (opts.sourceHasLifelink) yield* gainLife(ctx, playerById(ctx, source.controllerId), amount);
   // CR 702.90e: infect still counts as "dealt damage" for triggers even though it marks
   // -1/-1 counters instead of damage.
   if (opts.dealtTotals !== undefined)
@@ -402,7 +402,7 @@ export function* dealDamageToPlayer(
     sourceToxic?: number;
     /** Internal simultaneous player-damage batch: modifiers were planned before any life changed. */
     preparedAmount?: true;
-    deferredObservations?: (() => void)[];
+    deferredObservations?: (() => GameGen<void>)[];
   },
 ): GameGen<number> {
   if (amount <= 0) return 0;
@@ -477,8 +477,8 @@ export function* dealDamageToPlayer(
     target.commanderDamageTaken[source.cardId] =
       (target.commanderDamageTaken[source.cardId] ?? 0) + amount;
   }
-  const observe = () => {
-    if (opts.sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
+  const observe = function* (): GameGen<void> {
+    if (opts.sourceHasLifelink) yield* gainLife(ctx, playerById(ctx, source.controllerId), amount);
     emit(ctx, 'damage', {
       source: source.name,
       sourceCardId: source.cardId,
@@ -499,7 +499,7 @@ export function* dealDamageToPlayer(
         { permanent: damagingPermanent, amount, playerId: target.id },
       ]);
   };
-  if (opts.deferredObservations === undefined) observe();
+  if (opts.deferredObservations === undefined) yield* observe();
   else opts.deferredObservations.push(observe);
   return amount;
 }
@@ -521,7 +521,7 @@ function* dealDamageToPlayersTogether(
     });
     plans.push({ player: hit.player, amount: adjusted.amount });
   }
-  const observations: (() => void)[] = [];
+  const observations: (() => GameGen<void>)[] = [];
   // The source on the battlefield, found as dealDamageToObject finds it: by card, and by object
   // when the source names one.
   const permanent = ctx.state.battlefield.find(
@@ -546,8 +546,8 @@ function* dealDamageToPlayersTogether(
       preparedAmount: true,
       deferredObservations: observations,
     });
-  if (lifelink) gainLife(ctx, playerById(ctx, source.controllerId), total);
-  for (const observe of observations) observe();
+  if (lifelink) yield* gainLife(ctx, playerById(ctx, source.controllerId), total);
+  for (const observe of observations) yield* observe();
 }
 
 /**
@@ -578,7 +578,7 @@ function* dealDamageToLoyaltyOrDefense(
     ctx.state.excessDamageControllerIds.push(perm.controllerId);
   setCounterCount(perm.counters, counterKind, Math.max(0, have - amount));
   // Lifelink applies to damage dealt to any object or player (CR 702.15b).
-  if (opts.sourceHasLifelink) gainLife(ctx, playerById(ctx, source.controllerId), amount);
+  if (opts.sourceHasLifelink) yield* gainLife(ctx, playerById(ctx, source.controllerId), amount);
   emit(ctx, 'damage', {
     source: source.name,
     sourceCardId: source.cardId,
@@ -715,23 +715,98 @@ function* dealDamageToObject(
   });
 }
 
-export function gainLife(ctx: GameContext, player: EnginePlayerState, amount: number): void {
-  gainLifeForPlayers(ctx, [{ player, amount }]);
+export function* gainLife(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  amount: number,
+): GameGen<void> {
+  yield* gainLifeForPlayers(ctx, [{ player, amount }]);
 }
 
-/** Simultaneous gains update every life total before any trigger observes the event. */
-function gainLifeForPlayers(
+/**
+ * Simultaneous gains update every life total before any trigger observes the event. Each gain is
+ * replaced first by its player's life-gain replacements (Rhox Faithmender, CR 614.1a), so
+ * "whenever you gain life" sees the final amount once.
+ */
+function* gainLifeForPlayers(
   ctx: GameContext,
   grants: readonly { player: EnginePlayerState; amount: number }[],
-): void {
-  const gains = grants.filter(
-    ({ player, amount }) => amount > 0 && !playerLifeLocked(ctx, player.id),
-  );
+): GameGen<void> {
+  const gains: { player: EnginePlayerState; amount: number }[] = [];
+  for (const { player, amount } of grants) {
+    if (amount <= 0 || playerLifeLocked(ctx, player.id)) continue;
+    const replaced = yield* replaceLifeGain(ctx, player, amount);
+    if (replaced > 0) gains.push({ player, amount: replaced });
+  }
   for (const { player, amount } of gains) player.life += amount;
   for (const { player, amount } of gains) {
     emit(ctx, 'lifeGain', { player: player.id, amount, life: player.life });
     queuePlayerTriggersForEvent(ctx, 'gainsLife', player.id, amount);
   }
+}
+
+/**
+ * Apply `player`'s life-gain replacements to one gain (CR 616.1): each applies once; when the
+ * order changes the result ("plus 1" and "twice that much"), the player chooses which applies
+ * first, and the rest are re-checked after each one.
+ */
+function* replaceLifeGain(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  amount: number,
+): GameGen<number> {
+  const replacements: { id: string; label: string; apply: (n: number) => number }[] = [];
+  const perCard = new Map<string, number>();
+  for (const entry of gatherRuleStatics(ctx)) {
+    if (entry.static.kind !== 'lifeGainReplacement' || entry.controllerId !== player.id) continue;
+    const n = perCard.get(entry.sourceCardId) ?? 0;
+    perCard.set(entry.sourceCardId, n + 1);
+    const factor = entry.static.factor ?? 1;
+    const plus = entry.static.plus ?? 0;
+    const name =
+      ctx.state.battlefield.find((perm) => perm.cardId === entry.sourceCardId)?.name ??
+      entry.sourceCardId;
+    replacements.push({
+      id: `${entry.sourceCardId}:${n}`,
+      label:
+        plus > 0
+          ? `${name}: gain that much life plus ${plus}`
+          : `${name}: gain ${factor === 2 ? 'twice' : `${factor} times`} that much life`,
+      apply: (gain) => gain * factor + plus,
+    });
+  }
+  let pending = replacements;
+  while (pending.length > 0) {
+    let next = pending[0]!;
+    if (pending.length > 1) {
+      const finals = new Set(
+        pending.map((first) =>
+          [first, ...pending.filter((other) => other !== first)].reduce(
+            (gain, replacement) => replacement.apply(gain),
+            amount,
+          ),
+        ),
+      );
+      if (finals.size > 1) {
+        const outcome = yield {
+          decisionType: 'general',
+          player: player.id,
+          prompt: `Choose which effect applies first to gaining ${amount} life`,
+          options: pending.map((replacement) =>
+            plainOption({
+              type: 'lifeGainReplacement',
+              description: replacement.label,
+              verb: 'Apply first',
+            }),
+          ),
+        };
+        next = optionAt(pending, outcome, 'resolve.replaceLifeGain');
+      }
+    }
+    amount = next.apply(amount);
+    pending = pending.filter((replacement) => replacement !== next);
+  }
+  return amount;
 }
 
 export function loseLife(ctx: GameContext, player: EnginePlayerState, amount: number): void {
@@ -2740,7 +2815,7 @@ function* executeAbilityEffects(
           const sourcePerm = sourcePermanent();
           if (sourcePerm) addCounters(ctx, source, sourcePerm, '+1/+1', 1);
           const controller = ctx.state.players.find((p) => p.id === source.controllerId);
-          if (controller) gainLife(ctx, controller, 1);
+          if (controller) yield* gainLife(ctx, controller, 1);
         }
         break;
       }
@@ -3153,7 +3228,7 @@ function* executeAbilityEffects(
         const targetController = playerById(ctx, perm.controllerId);
         emit(ctx, 'exile', { target: perm.name, source: source.name });
         yield* moveObject(ctx, perm, { zone: 'exile' });
-        gainLife(ctx, targetController, life);
+        yield* gainLife(ctx, targetController, life);
         break;
       }
       case 'destroyAndCreateTokensEqualToManaValue': {
@@ -4432,7 +4507,7 @@ function* executeAbilityEffects(
         break;
       }
       case 'gainLife':
-        gainLife(ctx, controller, amountOf(effect.amount));
+        yield* gainLife(ctx, controller, amountOf(effect.amount));
         break;
       case 'loseLife':
         loseLife(ctx, controller, amountOf(effect.amount));
@@ -4451,7 +4526,7 @@ function* executeAbilityEffects(
         break;
       }
       case 'gainLifeEqualToLifeLostThisWay':
-        if (lifeLostThisWay > 0) gainLife(ctx, controller, lifeLostThisWay);
+        if (lifeLostThisWay > 0) yield* gainLife(ctx, controller, lifeLostThisWay);
         break;
       case 'loseLifeTarget':
       case 'loseHalfLifeTarget': {
@@ -4500,7 +4575,7 @@ function* executeAbilityEffects(
           });
           plans.push({ creature, player, amount: adjusted.amount });
         }
-        const observations: (() => void)[] = [];
+        const observations: (() => GameGen<void>)[] = [];
         for (const plan of plans)
           yield* dealDamageToPlayer(ctx, permanentSource(plan.creature), plan.player, plan.amount, {
             combat: false,
@@ -4510,9 +4585,12 @@ function* executeAbilityEffects(
             preparedAmount: true,
             deferredObservations: observations,
           });
-        for (const observe of observations) observe();
+        for (const observe of observations) yield* observe();
         break;
       }
+      case 'castAsThoughFlashThisTurn':
+        (ctx.state.flashPermissionTurn ??= {})[controller.id] = ctx.state.turnNumber;
+        break;
       case 'angelGrace':
         // Opponents can only win here as the last player left (CR 104.2a), which "can't lose"
         // already rules out.
@@ -4567,7 +4645,7 @@ function* executeAbilityEffects(
         const target =
           targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
         if (target === undefined || target.hasLost) break;
-        gainLife(ctx, target, amountOf(effect.amount));
+        yield* gainLife(ctx, target, amountOf(effect.amount));
         break;
       }
       case 'drawTarget': {
@@ -4615,7 +4693,7 @@ function* executeAbilityEffects(
           scope.eventPlayerId === undefined ? undefined : playerById(ctx, scope.eventPlayerId);
         if (caster === undefined) break;
         loseLife(ctx, caster, 2);
-        gainLife(ctx, controller, 2);
+        yield* gainLife(ctx, controller, 2);
         break;
       }
       case 'inkshield':
@@ -4990,7 +5068,7 @@ function* executeAbilityEffects(
         if (chosen !== null) {
           const power = effectivePT(ctx, chosen as EnginePermanent).power;
           yield* moveObject(ctx, chosen, { zone: 'graveyard', reason: 'sacrifice' });
-          gainLife(ctx, controller, power);
+          yield* gainLife(ctx, controller, power);
           yield* drawCards(ctx, controller, power);
         }
         break;
@@ -5476,7 +5554,7 @@ function* executeAbilityEffects(
         const opponent = optionAt(opponents, selected, 'resolve.halfLifeDrainTargetOpponent');
         const lost = Math.ceil(Math.max(0, opponent.life) / 2);
         loseLife(ctx, opponent, lost);
-        gainLife(ctx, controller, lost);
+        yield* gainLife(ctx, controller, lost);
         break;
       }
       case 'tombBladeHit': {
@@ -6410,7 +6488,7 @@ function* executeAbilityEffects(
         break;
       case 'eachPlayerGainsLife': {
         const amount = amountOf(effect.amount);
-        for (const player of playersInApnapOrder(ctx)) gainLife(ctx, player, amount);
+        for (const player of playersInApnapOrder(ctx)) yield* gainLife(ctx, player, amount);
         break;
       }
       case 'eachPlayerLosesLife': {
@@ -6746,7 +6824,7 @@ function* executeAbilityEffects(
                   computeCharacteristics(ctx, permanent).types.includes('Creature'),
               ).length,
           }));
-        gainLifeForPlayers(ctx, grants);
+        yield* gainLifeForPlayers(ctx, grants);
         break;
       }
       case 'createTokenForEachOpponent': {
@@ -10801,6 +10879,7 @@ function* proliferate(
 /** End all until-end-of-turn effects (cleanup, CR 514.2). */
 export function endUntilEotEffects(ctx: GameContext): void {
   delete ctx.state.playerHexproofTurn;
+  delete ctx.state.flashPermissionTurn;
   delete ctx.state.spellsProhibitedTurn;
   const expiring = ctx.state.effects.filter((effect) => effect.duration !== 'permanent');
   if (expiring.length > 0) {
@@ -11559,7 +11638,7 @@ export function* applyManaRider(
       return;
     case 'gainLife':
       // A mana rider has no ability scope, so its amount must be board-answerable.
-      gainLife(ctx, controller, evaluateValue(ctx, effect.amount));
+      yield* gainLife(ctx, controller, evaluateValue(ctx, effect.amount));
       return;
     case 'putCounters': {
       if (effect.target !== 'source') {

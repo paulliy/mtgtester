@@ -84,7 +84,9 @@ import {
   findPermanent,
   gatherRuleStatics,
   getDefByOracleId,
-  nonHandSpellCostIncreaseFor,
+  spellCostIncreaseFor,
+  flashPermissionsFor,
+  hasInstantTiming,
   landPlayLimitFor,
   manaSourcesFor,
   previewLandManaSymbols,
@@ -765,6 +767,9 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
     isActive &&
     s.stack.length === 0 &&
     (s.phase === 'precombatMain' || s.phase === 'postcombatMain');
+  // Flash permissions (Vedalken Orrery, Borne Upon a Wind; CR 601.3b), gathered once: every
+  // timing check below and `castSpell` read the same `hasInstantTiming`.
+  const flashPermissions = sorcerySpeed ? null : flashPermissionsFor(ctx, player.id);
 
   const sources = manaSourcesFor(ctx, player.id);
   const baseCastSources = sources;
@@ -955,22 +960,38 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
     const normalOptionsStart = options.length;
     if (spellCastingBlocked) return;
     // Morph (CR 702.37c): cast this card from hand face down as a 2/2 creature spell for {3}.
-    // The face-down spell has no abilities (CR 708.4), so it is cast at sorcery speed, and only
-    // reductions that apply to a vanilla colorless creature spell apply to it.
+    // The face-down spell has no abilities (CR 708.4), so it is cast at sorcery speed unless a
+    // flash permission covers a vanilla colorless creature spell, and only the increases and
+    // reductions that apply to such a spell apply to it.
     if (
       def.morphCost !== undefined &&
-      sorcerySpeed &&
       !fromCommand &&
       !fromLibraryTop &&
       !fromExile &&
-      !fromGraveyard
+      !fromGraveyard &&
+      (sorcerySpeed ||
+        (flashPermissions !== null &&
+          hasInstantTiming(
+            ctx,
+            player.id,
+            {
+              def: getDefByOracleId(ctx, faceDownSpellOracleId(ctx), 'face-down spell'),
+              cardId: obj.cardId,
+            },
+            flashPermissions,
+          )))
     ) {
       const faceDownId = faceDownSpellOracleId(ctx);
       const faceDownReduction = costReductionFor(ctx, player.id, faceDownId, obj.cardId);
+      const increase = spellCostIncreaseFor(ctx, player.id, 'hand', {
+        def: getDefByOracleId(ctx, faceDownId, 'face-down spell'),
+        cardId: obj.cardId,
+      });
+      const unreduced = addGeneric(FACE_DOWN_COST, increase);
       const cost = subtractGeneric(
         faceDownReduction.colored === undefined
-          ? FACE_DOWN_COST
-          : subtractColored(FACE_DOWN_COST, faceDownReduction.colored),
+          ? unreduced
+          : subtractColored(unreduced, faceDownReduction.colored),
         faceDownReduction.generic,
       );
       const faceDownAllows = allowanceFor(ctx, player.id, {
@@ -1009,7 +1030,12 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
         });
       }
     }
-    const instantSpeed = def.types.includes('Instant') || def.keywords.includes('flash');
+    const instantSpeed = hasInstantTiming(
+      ctx,
+      player.id,
+      { def, cardId: obj.cardId },
+      flashPermissions,
+    );
     // "Cast this spell only during an opponent's turn": a restriction on casting it at all, in
     // every way it can be cast (enforced again as it is cast, `casting/cast.ts`).
     if (
@@ -1081,7 +1107,11 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
       const additionalManaCost = manaPortionOf(spellAdditionalCosts);
       const unreduced = addGeneric(
         baseCost,
-        tax + nonHandSpellCostIncreaseFor(castCtx, player.id, obj.zone),
+        tax +
+          spellCostIncreaseFor(castCtx, player.id, obj.zone, {
+            def: castingDef,
+            cardId: obj.cardId,
+          }),
       );
       // CR 601.2f: reductions apply to the TOTAL cost — the mana cost with {X} given a value, plus
       // every additional cost (kicker, mode costs) — so a reduction can pay for X's share or a
@@ -1521,7 +1551,7 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
               ? ` as ${face.name}`
               : ` via ${alt.kind === 'mdfc' ? 'back face' : alt.kind}`,
           0,
-          face.types.includes('Instant') || face.keywords.includes('flash'),
+          hasInstantTiming(ctx, player.id, { def: face, cardId: obj.cardId }, flashPermissions),
           face.name,
         );
         applyZonePermission(
@@ -1594,7 +1624,7 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
           { alternativeCast: 'libraryTopLife', altIndex: index },
           ` as ${face.name} by paying ${life} life`,
           0,
-          face.types.includes('Instant') || face.keywords.includes('flash'),
+          hasInstantTiming(ctx, player.id, { def: face, cardId: obj.cardId }, flashPermissions),
           face.name,
         );
       }
@@ -1666,7 +1696,7 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
               { alternativeCast: alt.kind, altIndex: index },
               ` via ${alt.kind === 'omen' ? 'Omen' : 'Adventure'}`,
               0,
-              face.types.includes('Instant') || face.keywords.includes('flash'),
+              hasInstantTiming(ctx, player.id, { def: face, cardId: obj.cardId }, flashPermissions),
               face.name,
             );
             break;
@@ -1680,20 +1710,31 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
               { alternativeCast: alt.kind, altIndex: index },
               alt.fused === true ? ' fused' : ` as ${face.name}`,
               0,
-              face.types.includes('Instant') || face.keywords.includes('flash'),
+              hasInstantTiming(ctx, player.id, { def: face, cardId: obj.cardId }, flashPermissions),
               face.name,
             );
             break;
           }
-          case 'bestow':
+          case 'bestow': {
+            // The bestowed spell is an Aura, so a flash permission is asked about it (CR
+            // 702.103b), as `castSpell` does.
+            const bestowed = bestowedDefinition(def);
             offerCast(
               alt.manaCost,
               spellAdditionalCosts,
-              bestowedDefinition(def),
+              bestowed,
               { alternativeCast: alt.kind, altIndex: index },
               ' via Bestow',
+              0,
+              hasInstantTiming(
+                ctx,
+                player.id,
+                { def: bestowed, cardId: obj.cardId },
+                flashPermissions,
+              ),
             );
             break;
+          }
           case 'mdfc':
             if (alt.spellFace !== undefined) {
               const face = selectedSpellDefinition(def, alt);
@@ -1704,7 +1745,12 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
                 { alternativeCast: alt.kind, altIndex: index },
                 ' via back face',
                 0,
-                face.types.includes('Instant') || face.keywords.includes('flash'),
+                hasInstantTiming(
+                  ctx,
+                  player.id,
+                  { def: face, cardId: obj.cardId },
+                  flashPermissions,
+                ),
                 face.name,
               );
             }
@@ -1790,8 +1836,10 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
       if (affordableHandCardIds.has(obj.id)) return false;
       const cdef = getDefByOracleId(ctx, obj.oracleId, obj.name);
       if (!cdef.modeled || cdef.types.includes('Land') || cdef.manaCost === null) return false;
-      const instantSpeed = cdef.types.includes('Instant') || cdef.keywords.includes('flash');
-      return instantSpeed || sorcerySpeed;
+      return (
+        sorcerySpeed ||
+        hasInstantTiming(ctx, player.id, { def: cdef, cardId: obj.cardId }, flashPermissions)
+      );
     });
     for (const option of options) {
       if (option.type !== 'playLand') continue;
@@ -1809,7 +1857,10 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
         const baseManaCost = cdef.manaCost;
         if (baseManaCost === null) continue;
         const reduction = costReductionFor(ctx, player.id, cand.oracleId, cand.cardId);
-        let cost = addGeneric(baseManaCost, 0);
+        let cost = addGeneric(
+          baseManaCost,
+          spellCostIncreaseFor(ctx, player.id, 'hand', { def: cdef, cardId: cand.cardId }),
+        );
         if (reduction.colored !== undefined) cost = subtractColored(cost, reduction.colored);
         cost = subtractGeneric(cost, reduction.generic);
         const allows = allowanceFor(ctx, player.id, {

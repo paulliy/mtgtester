@@ -966,6 +966,11 @@ export interface EngineState extends GameState {
   cantLoseTurn?: Record<PlayerId, number>;
   spellsProhibitedTurn?: number;
   playerHexproofTurn?: Record<PlayerId, number>;
+  /**
+   * The turn number during which each player may cast spells as though they had flash (Borne
+   * Upon a Wind, CR 601.3b). Ends with the turn's until-end-of-turn effects (CR 514.2).
+   */
+  flashPermissionTurn?: Record<PlayerId, number>;
   extraTurns?: PlayerId[];
   phasedOut?: { permanent: EnginePermanent; phaseInPlayerId: PlayerId }[];
   playerProtectionUntilNextTurn?: Record<PlayerId, number>;

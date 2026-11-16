@@ -790,6 +790,50 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
   }
   if (valueKind === 'untapDuringOthersUntapSteps' && record['filter'] !== undefined)
     validateExpression('selector', record['filter'], `${path}.filter`, issues);
+  if (valueKind === 'spellCostIncrease') {
+    if (!Number.isSafeInteger(record['amount']) || (record['amount'] as number) < 1)
+      issues.push({
+        path: `${path}.amount`,
+        message: 'spell cost increase requires a positive integer',
+      });
+    if (record['filter'] !== undefined)
+      validateExpression('selector', record['filter'], `${path}.filter`, issues);
+    for (const flag of ['opponentsOnly', 'exceptCastersTurn'])
+      if (record[flag] !== undefined && record[flag] !== true)
+        issues.push({ path: `${path}.${flag}`, message: `${flag} must be true when present` });
+  }
+  if (valueKind === 'castAsThoughFlash') {
+    if (record['filter'] !== undefined)
+      validateExpression('selector', record['filter'], `${path}.filter`, issues);
+    if (record['allPlayers'] !== undefined && record['allPlayers'] !== true)
+      issues.push({ path: `${path}.allPlayers`, message: 'allPlayers must be true when present' });
+  }
+  if (valueKind === 'damageReplacement' || valueKind === 'lifeGainReplacement') {
+    // Exactly one of a factor of at least 2 ("double", "twice") or an addition of at least 1.
+    const factor = record['factor'];
+    const plus = record['plus'];
+    const validFactor = Number.isSafeInteger(factor) && (factor as number) >= 2;
+    const validPlus = Number.isSafeInteger(plus) && (plus as number) >= 1;
+    if ((factor === undefined) === (plus === undefined) || (factor !== undefined && !validFactor))
+      issues.push({
+        path: `${path}.factor`,
+        message: 'replacement requires either an integer factor of at least 2 or plus',
+      });
+    if (plus !== undefined && !validPlus)
+      issues.push({ path: `${path}.plus`, message: 'replacement plus must be a positive integer' });
+    if (valueKind === 'damageReplacement') {
+      if (!['any', 'opponents', 'opponentPlayers'].includes(record['recipient'] as string))
+        issues.push({
+          path: `${path}.recipient`,
+          message: 'damage replacement requires any, opponents or opponentPlayers',
+        });
+      if (record['sourceFilter'] !== undefined)
+        validateExpression('selector', record['sourceFilter'], `${path}.sourceFilter`, issues);
+      for (const flag of ['excludesSelf', 'noncombatOnly'])
+        if (record[flag] !== undefined && record[flag] !== true)
+          issues.push({ path: `${path}.${flag}`, message: `${flag} must be true when present` });
+    }
+  }
   if (valueKind === 'graveyardToExile') {
     if (!['all', 'opponents'].includes(record['scope'] as string))
       issues.push({

@@ -472,6 +472,7 @@ const effectExpressions = {
   copyTargetAbility: { count: positiveInteger, newTargets: optional(flag) },
   copyEachTargetedSpell: { newTargets: optional(flag) },
   angelGrace: {},
+  castAsThoughFlashThisTurn: {},
   drawForEachOpponent: {},
   drawTargetAndController: {},
   inkshield: {},
