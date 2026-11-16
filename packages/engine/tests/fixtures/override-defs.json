@@ -17609,60 +17609,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "4548f379-2647-4446-9e56-e7ef0662793a",
-    "name": "Ring of Evos Isle",
-    "handledLines": [
-      "At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's blue."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's blue.",
-          "effects": [
-            {
-              "condition": {
-                "cmp": ">=",
-                "kind": "countPermanents",
-                "n": 1,
-                "scope": "all",
-                "selector": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "attachedToSource"
-                    },
-                    {
-                      "kind": "color",
-                      "value": "U"
-                    }
-                  ]
-                }
-              },
-              "else": [],
-              "op": "conditionalEffect",
-              "then": [
-                {
-                  "count": 1,
-                  "counter": "+1/+1",
-                  "op": "putCounters",
-                  "target": "attachedToSource"
-                }
-              ]
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "player": "you",
-            "when": "upkeep"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "4573f044-7011-412e-81bd-ae8d0c21283b",
     "name": "Voyager Staff",
     "handledLines": [
@@ -33100,72 +33046,6 @@
           }
         ]
       }
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "8985e545-07c3-45f9-9058-fe3c1f50de04",
-    "name": "Blade of the Bloodchief",
-    "handledLines": [
-      "Whenever a creature dies, put a +1/+1 counter on equipped creature. If equipped creature is a Vampire, put two +1/+1 counters on it instead."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever a creature dies, put a +1/+1 counter on equipped creature. If equipped creature is a Vampire, put two +1/+1 counters on it instead.",
-          "effects": [
-            {
-              "condition": {
-                "cmp": ">=",
-                "kind": "countPermanents",
-                "n": 1,
-                "scope": "all",
-                "selector": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "attachedToSource"
-                    },
-                    {
-                      "kind": "subtype",
-                      "value": "Vampire"
-                    }
-                  ]
-                }
-              },
-              "else": [
-                {
-                  "count": 1,
-                  "counter": "+1/+1",
-                  "op": "putCounters",
-                  "target": "attachedToSource"
-                }
-              ],
-              "op": "conditionalEffect",
-              "then": [
-                {
-                  "count": 2,
-                  "counter": "+1/+1",
-                  "op": "putCounters",
-                  "target": "attachedToSource"
-                }
-              ]
-            }
-          ],
-          "kind": "triggered",
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "permanent",
-              "selector": {
-                "kind": "type",
-                "value": "Creature"
-              }
-            },
-            "when": "dies"
-          }
-        }
-      ]
     },
     "compose": "append"
   },
@@ -70963,72 +70843,6 @@
           }
         ]
       }
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-blade-of-the-bloodchief",
-    "name": "Blade of the Bloodchief",
-    "handledLines": [
-      "Whenever a creature dies, put a +1/+1 counter on equipped creature. If equipped creature is a Vampire, put two +1/+1 counters on it instead."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever a creature dies, put a +1/+1 counter on equipped creature. If equipped creature is a Vampire, put two +1/+1 counters on it instead.",
-          "effects": [
-            {
-              "condition": {
-                "cmp": ">=",
-                "kind": "countPermanents",
-                "n": 1,
-                "scope": "all",
-                "selector": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "attachedToSource"
-                    },
-                    {
-                      "kind": "subtype",
-                      "value": "Vampire"
-                    }
-                  ]
-                }
-              },
-              "else": [
-                {
-                  "count": 1,
-                  "counter": "+1/+1",
-                  "op": "putCounters",
-                  "target": "attachedToSource"
-                }
-              ],
-              "op": "conditionalEffect",
-              "then": [
-                {
-                  "count": 2,
-                  "counter": "+1/+1",
-                  "op": "putCounters",
-                  "target": "attachedToSource"
-                }
-              ]
-            }
-          ],
-          "kind": "triggered",
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "permanent",
-              "selector": {
-                "kind": "type",
-                "value": "Creature"
-              }
-            },
-            "when": "dies"
-          }
-        }
-      ]
     },
     "compose": "append"
   },
@@ -109275,60 +109089,6 @@
             },
             "colorless": 0,
             "generic": 4
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-ring-of-evos-isle",
-    "name": "Ring of Evos Isle",
-    "handledLines": [
-      "At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's blue."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's blue.",
-          "effects": [
-            {
-              "condition": {
-                "cmp": ">=",
-                "kind": "countPermanents",
-                "n": 1,
-                "scope": "all",
-                "selector": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "attachedToSource"
-                    },
-                    {
-                      "kind": "color",
-                      "value": "U"
-                    }
-                  ]
-                }
-              },
-              "else": [],
-              "op": "conditionalEffect",
-              "then": [
-                {
-                  "count": 1,
-                  "counter": "+1/+1",
-                  "op": "putCounters",
-                  "target": "attachedToSource"
-                }
-              ]
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "player": "you",
-            "when": "upkeep"
           }
         }
       ]
