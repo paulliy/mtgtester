@@ -159,6 +159,12 @@ function serializeForPrefix(messages: readonly OpenAiMessage[]): string {
 export const PREFIX_CACHE_BLOCK_CHARS = 256;
 
 /**
+ * 1,024 tokens at the census's four characters per token: the shortest prefix several provider
+ * caches will store. A shorter repeated prefix may earn nothing.
+ */
+export const MIN_CACHED_PREFIX_CHARS = 4_096;
+
+/**
  * An exact, offline model of an automatic prefix cache, for the hill-climb census. It remembers
  * every prompt it has seen (no expiry, no eviction) and reports how much of a new prompt repeats,
  * in whole blocks, a prefix of one already sent. That is the most a provider cache could serve, so
@@ -168,7 +174,12 @@ export class PrefixCacheModel {
   private readonly seen = new Set<string>();
 
   /** Records one prompt; returns its length and how many of its leading characters were cacheable. */
-  observe(messages: readonly OpenAiMessage[]): { chars: number; cacheableChars: number } {
+  observe(messages: readonly OpenAiMessage[]): {
+    chars: number;
+    cacheableChars: number;
+    /** `cacheableChars` when it reaches `MIN_CACHED_PREFIX_CHARS`, else 0. */
+    longPrefixChars: number;
+  } {
     const text = serializeForPrefix(messages);
     const blocks = Math.floor(text.length / PREFIX_CACHE_BLOCK_CHARS);
     let chain = '';
@@ -184,6 +195,11 @@ export class PrefixCacheModel {
       else stillCached = false;
       this.seen.add(chain);
     }
-    return { chars: text.length, cacheableChars: cacheableBlocks * PREFIX_CACHE_BLOCK_CHARS };
+    const cacheableChars = cacheableBlocks * PREFIX_CACHE_BLOCK_CHARS;
+    return {
+      chars: text.length,
+      cacheableChars,
+      longPrefixChars: cacheableChars >= MIN_CACHED_PREFIX_CHARS ? cacheableChars : 0,
+    };
   }
 }

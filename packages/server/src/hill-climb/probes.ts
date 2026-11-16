@@ -158,8 +158,20 @@ const CENSUS_MODES: Array<{ key: string; config: Partial<AiConfig> }> = [
     key: 'bot',
     config: { tacticalMode: 'bot', botEscalation: [], strategistReplan: 'onChange' },
   },
+  // Bot mode with the stable-prefix layout (off by default until a paid run backs it), so the
+  // layout's cost and cacheability are measured without changing what games send.
+  {
+    key: 'botCached',
+    config: {
+      tacticalMode: 'bot',
+      botEscalation: [],
+      strategistReplan: 'onChange',
+      providerPromptCacheLayoutEnabled: true,
+    },
+  },
   {
     // Hill-climb S6: bot mode with strategist delta prompts, off by default until a paid duel.
+    // The layout stays at its default, so this compares like for like with `bot`.
     key: 'botDelta',
     config: {
       tacticalMode: 'bot',
@@ -178,6 +190,8 @@ const CENSUS_MODES: Array<{ key: string; config: Partial<AiConfig> }> = [
  * The cache metrics replay every prompt through `PrefixCacheModel`: the share of prompt text that
  * repeats, in whole blocks, the start of an earlier prompt for the same role in the same game, and
  * the prompt tokens per turn left over once that share is read from a provider's prefix cache.
+ * `longPrefixCacheableSharePct` counts a repeated prefix only when it reaches 1,024 tokens, the
+ * minimum several provider caches need.
  * They score the prompt layout; what a provider actually caches is measured only by a paid run.
  */
 export async function modelProbe(decks: FuzzDeck[], profile: Profile): Promise<Metrics> {
@@ -186,8 +200,8 @@ export async function modelProbe(decks: FuzzDeck[], profile: Profile): Promise<M
     let turns = 0;
     let calls = 0;
     const roles = {
-      tactician: { tokens: 0, chars: 0, cacheable: 0 },
-      strategist: { tokens: 0, chars: 0, cacheable: 0 },
+      tactician: { tokens: 0, chars: 0, cacheable: 0, long: 0 },
+      strategist: { tokens: 0, chars: 0, cacheable: 0, long: 0 },
     };
     for (let game = 0; game < profile.censusGames; game++) {
       const counts = await censusPod(
@@ -203,14 +217,17 @@ export async function modelProbe(decks: FuzzDeck[], profile: Profile): Promise<M
       roles.tactician.tokens += counts.tacticianPromptTokens;
       roles.tactician.chars += counts.tacticianPromptChars;
       roles.tactician.cacheable += counts.tacticianCacheableChars;
+      roles.tactician.long += counts.tacticianLongPrefixChars;
       roles.strategist.tokens += counts.strategistPromptTokens;
       roles.strategist.chars += counts.strategistPromptChars;
       roles.strategist.cacheable += counts.strategistCacheableChars;
+      roles.strategist.long += counts.strategistLongPrefixChars;
     }
     const all = Object.values(roles);
     const tokens = all.reduce((sum, role) => sum + role.tokens, 0);
     const chars = all.reduce((sum, role) => sum + role.chars, 0);
     const cacheable = all.reduce((sum, role) => sum + role.cacheable, 0);
+    const long = all.reduce((sum, role) => sum + role.long, 0);
     const uncached = all.reduce(
       (sum, role) => sum + (role.chars === 0 ? 0 : role.tokens * (1 - role.cacheable / role.chars)),
       0,
@@ -223,6 +240,11 @@ export async function modelProbe(decks: FuzzDeck[], profile: Profile): Promise<M
     );
     metrics[`model.${mode.key}.cacheablePromptSharePct`] = exact(
       chars === 0 ? 0 : round((cacheable / chars) * 100, 2),
+      '%',
+      'higher',
+    );
+    metrics[`model.${mode.key}.longPrefixCacheableSharePct`] = exact(
+      chars === 0 ? 0 : round((long / chars) * 100, 2),
       '%',
       'higher',
     );

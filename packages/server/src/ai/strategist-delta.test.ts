@@ -473,7 +473,10 @@ describe('StrategyCoordinator with delta prompts', () => {
   });
 
   it('keeps one cacheable prefix for full and delta prompts', async () => {
-    const { sent } = await prompts({ strategistDeltaEnabled: true }, 2);
+    const { sent } = await prompts(
+      { strategistDeltaEnabled: true, providerPromptCacheLayoutEnabled: true },
+      2,
+    );
     expect(sent[1]!.messages.slice(0, -1)).toEqual(sent[0]!.messages.slice(0, -1));
     const prefix = JSON.parse(sent[0]!.messages[1]!.content);
     expect(prefix.immutableContext).not.toHaveProperty('commanderDefinitions');
