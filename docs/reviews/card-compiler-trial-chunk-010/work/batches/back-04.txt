@@ -1,7 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/back/vernal-sovereign.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/back/vernal-sovereign.txt
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/back/forced-adaptation.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/back/forced-adaptation.txt
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/back/ashnod-s-intervention.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/back/ashnod-s-intervention.txt
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/back/dogged-detective.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/back/dogged-detective.txt
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/back/commence-the-endgame.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/back/commence-the-endgame.txt
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/back/horobi-death-s-wail.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/back/horobi-death-s-wail.txt
-docs/reviews/card-compiler-trial-chunk-010/work/prompts/back/lashwrithe.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/back/lashwrithe.txt
