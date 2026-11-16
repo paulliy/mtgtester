@@ -1,0 +1,67 @@
+{
+  "name": "Swarming of Moria",
+  "oracleId": "c96402dc-1509-4136-bbfd-c86a85e3ee6f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Amass Orcs 2."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Treasure",
+            "typeLine": "Artifact — Treasure",
+            "types": [
+              "Artifact"
+            ],
+            "subtypes": [
+              "Treasure"
+            ],
+            "colors": [],
+            "power": null,
+            "toughness": null,
+            "manaAbilities": [
+              {
+                "units": [
+                  [
+                    "W",
+                    "U",
+                    "B",
+                    "R",
+                    "G"
+                  ]
+                ],
+                "costs": [
+                  {
+                    "kind": "tap"
+                  },
+                  {
+                    "kind": "sacrificeSelf"
+                  }
+                ]
+              }
+            ]
+          },
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        },
+        {
+          "op": "amass",
+          "subtype": "Orc",
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        }
+      ],
+      "description": "Create a Treasure token. Amass Orcs 2."
+    }
+  }
+}

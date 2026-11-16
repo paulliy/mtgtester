@@ -1,0 +1,41 @@
+{
+  "name": "Isperia, Supreme Judge",
+  "oracleId": "c46718dc-24dc-4b77-b455-aa4c89570b8d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature attacks you or a planeswalker you control, you may draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          },
+          "condition": {
+            "kind": "eventObjectDefendingPlayerIsYou"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature attacks you or a planeswalker you control, you may draw a card."
+      }
+    ]
+  }
+}
