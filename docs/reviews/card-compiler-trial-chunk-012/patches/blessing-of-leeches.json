@@ -1,0 +1,43 @@
+{
+  "name": "Blessing of Leeches",
+  "oracleId": "923b725a-e189-4b61-b01a-c5056f1328ba",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{0}: Regenerate enchanted creature."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "regenerate",
+              "target": "attachedToSource"
+            }
+          ],
+          "description": "{0}: Regenerate enchanted creature."
+        }
+      }
+    ]
+  }
+}

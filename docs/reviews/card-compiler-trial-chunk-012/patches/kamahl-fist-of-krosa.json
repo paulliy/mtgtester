@@ -1,0 +1,51 @@
+{
+  "name": "Kamahl, Fist of Krosa",
+  "oracleId": "8b21146d-3e92-46e7-b5d9-8240fba5088e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{G}: Target land becomes a 1/1 creature until end of turn. It's still a land."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "land"
+            }
+          ],
+          "effects": [
+            {
+              "op": "becomeCreatureUntilEot",
+              "target": 0,
+              "subtypes": [],
+              "power": 1,
+              "toughness": 1,
+              "keywords": []
+            }
+          ],
+          "description": "{G}: Target land becomes a 1/1 creature until end of turn. It's still a land."
+        }
+      }
+    ]
+  }
+}

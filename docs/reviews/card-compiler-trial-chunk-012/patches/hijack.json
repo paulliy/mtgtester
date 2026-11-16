@@ -1,0 +1,49 @@
+{
+  "name": "Hijack",
+  "oracleId": "fd5651f7-52f8-4845-8a1b-32e5d2e9b00e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Gain control of target artifact or creature until end of turn. Untap it. It gains haste until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "duration": "untilEndOfTurn"
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "haste"
+        }
+      ],
+      "description": "Gain control of target artifact or creature until end of turn. Untap it. It gains haste until end of turn."
+    }
+  }
+}
