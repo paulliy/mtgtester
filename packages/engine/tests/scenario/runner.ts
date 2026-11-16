@@ -63,11 +63,17 @@ export { describeRequest };
  * so `packages/engine/src` stays untouched (its tree hash pins the committed benchmark fixtures).
  * Objects are counted from the prepared position, so its cards do not count.
  */
-function capEngineWork(engine: Engine, maxStepWork?: number, maxObjects?: number): void {
+function capEngineWork(
+  engine: Engine,
+  maxStepWork?: number,
+  maxObjects?: number,
+  maxTurnObjects?: number,
+): void {
   const ctx = (engine as unknown as { ctx: GameContext }).ctx;
   ctx.budget = {
     ...(maxStepWork !== undefined && { maxStepWork }),
     ...(maxObjects !== undefined && { maxObjects }),
+    ...(maxTurnObjects !== undefined && { maxTurnObjects }),
     stepWork: { count: 0 },
     objectsAtStart: ctx.state.nextObjectNum,
   };
@@ -88,6 +94,7 @@ export function runScenario(
     resolve?: CardResolver;
     maxStepWork?: number;
     maxObjects?: number;
+    maxTurnObjects?: number;
     /** Decisions before the run gives up (default 2,000); mutation runs pass a lower cap. */
     maxDecisions?: number;
   } = {},
@@ -96,8 +103,12 @@ export function runScenario(
     gameId: `scenario-${scenario.id}`,
     strictInvariants: true,
   });
-  if (options.maxStepWork !== undefined || options.maxObjects !== undefined)
-    capEngineWork(engine, options.maxStepWork, options.maxObjects);
+  if (
+    options.maxStepWork !== undefined ||
+    options.maxObjects !== undefined ||
+    options.maxTurnObjects !== undefined
+  )
+    capEngineWork(engine, options.maxStepWork, options.maxObjects, options.maxTurnObjects);
   const firstSequence = engine.getState().eventLog.length;
   const end = scenario.end ?? 'script';
   const answered: ScenarioRun['answered'] = [];
