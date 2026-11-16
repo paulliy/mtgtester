@@ -9,6 +9,7 @@
 import { readFileSync } from 'node:fs';
 import type { DecisionRequest, GameEvent, GameResult, OracleCard } from '@mtg/shared';
 import type { Engine } from '../../src/engine';
+import type { GameContext } from '../../src/state/types';
 import {
   buildCardScenario,
   describeRequest,
@@ -57,6 +58,22 @@ const MAX_DECISIONS = 2_000;
 export { describeRequest };
 
 /**
+ * Halt a runaway loop (a mutant's self-retriggering ability) instead of hanging, with the same
+ * budget `EngineOptions.maxStepWork` / `maxObjects` install. Set here, after the engine is built,
+ * so `packages/engine/src` stays untouched (its tree hash pins the committed benchmark fixtures).
+ * Objects are counted from the prepared position, so its cards do not count.
+ */
+function capEngineWork(engine: Engine, maxStepWork?: number, maxObjects?: number): void {
+  const ctx = (engine as unknown as { ctx: GameContext }).ctx;
+  ctx.budget = {
+    ...(maxStepWork !== undefined && { maxStepWork }),
+    ...(maxObjects !== undefined && { maxObjects }),
+    stepWork: { count: 0 },
+    objectsAtStart: ctx.state.nextObjectNum,
+  };
+}
+
+/**
  * Play a scenario's script, passing priority between its steps. `resolve` finds cards by name
  * (default: the pin store, then basics); promotion scaffolds pass one that also knows the card
  * under review. With `stopAtChoice`, a decision
@@ -78,9 +95,9 @@ export function runScenario(
   const { engine } = buildCardScenario(file, scenario, options.resolve ?? resolveScenarioCard, {
     gameId: `scenario-${scenario.id}`,
     strictInvariants: true,
-    ...(options.maxStepWork !== undefined && { maxStepWork: options.maxStepWork }),
-    ...(options.maxObjects !== undefined && { maxObjects: options.maxObjects }),
   });
+  if (options.maxStepWork !== undefined || options.maxObjects !== undefined)
+    capEngineWork(engine, options.maxStepWork, options.maxObjects);
   const firstSequence = engine.getState().eventLog.length;
   const end = scenario.end ?? 'script';
   const answered: ScenarioRun['answered'] = [];
