@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"player"}],"effects":[{"op":"discardTarget","target":0,"count":{"kind":"xValue"},"atRandom":true}],"description":"Target player discards X cards at random."}}}
