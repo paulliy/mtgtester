@@ -259,7 +259,7 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
         if (targetControllerId === entry.controllerId) continue;
         if (rule.recipient === 'opponentPlayers' && recipient.kind !== 'player') continue;
       }
-      if (rule.excludesSelf === true && sourceIsCard(ctx, event.source, entry.sourceCardId))
+      if (rule.excludesSelf === true && sourceIsSelf(ctx, event.source, entry.sourceCardId))
         continue;
       if (rule.sourceFilter !== undefined) {
         const candidate = (sourceCandidate ??= damageSourceCandidate(ctx, event.source));
@@ -313,15 +313,16 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
 /**
  * The damage source as it deals the damage, for a replacement's source filter ("a red source you
  * control", "a Giant source"): a permanent as it is now, else a spell or departed object as it last
- * existed (CR 113.7a), else its card. Its controller is the source's controller.
+ * existed (CR 113.7a), else its card.
  */
 function damageSourceCandidate(ctx: GameContext, source: EffectSource): SelectorCandidate {
   const perm = ctx.state.battlefield.find((p) =>
     source.id !== undefined ? p.id === source.id : p.cardId === source.cardId,
   );
   if (perm !== undefined) return candidateOf(ctx, perm, computeCharacteristics(ctx, perm), true);
-  if (source.lastKnownFacts !== undefined)
-    return { ...source.lastKnownFacts.candidate, controllerId: source.controllerId };
+  // Last-known information includes the controller (CR 113.7a): a source stolen and then gone
+  // was last controlled by the thief, whoever controls the ability it left behind.
+  if (source.lastKnownFacts !== undefined) return source.lastKnownFacts.candidate;
   const spell = source.resolvingStackObject;
   const def =
     spell?.kind === 'spell'
@@ -348,10 +349,14 @@ function damageSourceCandidate(ctx: GameContext, source: EffectSource): Selector
   };
 }
 
-/** Is the damage source this card's object ("another source", Tor Wauki)? */
-function sourceIsCard(ctx: GameContext, source: EffectSource, cardId: string): boolean {
-  if (source.resolvingStackObject !== undefined) return false;
-  return source.cardId === cardId;
+/**
+ * Is the damage source the replacement's own permanent ("another source", Tor Wauki)? Compared by
+ * object (CR 400.7): an earlier incarnation of the same card that left and returned is another
+ * source.
+ */
+function sourceIsSelf(ctx: GameContext, source: EffectSource, cardId: string): boolean {
+  const self = ctx.state.battlefield.find((perm) => perm.cardId === cardId);
+  return self !== undefined && sourceIsObject(ctx, source, self.id);
 }
 
 function recipientKey(event: DamageEvent): string {
