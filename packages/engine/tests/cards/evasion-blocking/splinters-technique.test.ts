@@ -1,10 +1,6 @@
 /** Splinter's Technique (evasion-and-blocking batch): scenarios in ../../scenarios/splinters-technique.json. */
 import { describe, expect, it } from 'vitest';
-import {
-  loadScenarioFile,
-  runScenario,
-  scenarioFailures,
-} from '../../scenario/runner';
+import { loadScenarioFile, runScenario, scenarioFailures } from '../../scenario/runner';
 
 const file = loadScenarioFile(new URL('../../scenarios/splinters-technique.json', import.meta.url));
 

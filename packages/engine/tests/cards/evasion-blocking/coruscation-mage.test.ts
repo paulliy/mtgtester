@@ -1,5 +1,6 @@
 /** Coruscation Mage (evasion-and-blocking batch): scenarios in ../../scenarios/coruscation-mage.json. */
 import { describe, expect, it } from 'vitest';
+import type { EnginePermanent } from '../../../src/state/types';
 import {
   firstDecisionOf,
   loadScenarioFile,
@@ -18,7 +19,7 @@ describe('Coruscation Mage', () => {
   const copies = (id: string) =>
     runScenario(file, scenario(id))
       .engine.getState()
-      .battlefield.filter((perm) => perm.name === 'Coruscation Mage');
+      .battlefield.filter((perm) => perm.name === 'Coruscation Mage') as EnginePermanent[];
 
   it('offspring paid: the second copy is a 1/1 token, the first a card', () => {
     const [original, token] = copies(`coruscation-mage-offspring-paid`);

@@ -36,6 +36,7 @@ import {
   gameConfig,
   oracle,
   pump,
+  pumpStrict,
   registerCustomDef,
   spawn,
 } from './fixtures';
@@ -360,9 +361,9 @@ describe('return this card from your graveyard to the battlefield', () => {
     take(ctx, 'P1', optionFor(ctx, 'P1', skeleton.id)!.payload as PriorityActionPayload);
     // In response it is exiled and comes back: a new object (CR 400.7).
     const inGraveyard = playerById(ctx, 'P1').graveyard.find((c) => c.cardId === skeleton.cardId)!;
-    pump(moveObject(ctx, inGraveyard, { zone: 'exile' }));
+    pumpStrict(moveObject(ctx, inGraveyard, { zone: 'exile' }));
     const exiled = ctx.state.exile.find((c) => c.cardId === skeleton.cardId) as EngineCardObject;
-    pump(moveObject(ctx, exiled, { zone: 'graveyard' }));
+    pumpStrict(moveObject(ctx, exiled, { zone: 'graveyard' }));
     settle(ctx);
     expect(zoneOf(ctx, skeleton.cardId)).toBe('graveyard');
   });
@@ -373,13 +374,17 @@ describe('return this card from your graveyard to the battlefield', () => {
     const attacker = spawn(ctx, 'P1', oracle({ name: 'Lab Attacker', power: '2', toughness: '2' }));
     addMana(playerById(ctx, 'P1'), mana('BC'));
     expect(optionFor(ctx, 'P1', champion.id)).toBeUndefined();
-    pump(runCombatAndExtraCombats(ctx), (decision) => {
-      if (decision.presentationAttackDeclaration !== undefined)
-        return declareAttacks(decision, (id) => (id === attacker.id ? 'P2' : null));
-      if (decision.presentationBlockDeclaration !== undefined) return declareNoBlocks(decision);
-      const pass = decision.options.findIndex((option) => option.type === 'pass');
-      return { index: Math.max(pass, 0), targets: new Map() };
-    });
+    pump(
+      runCombatAndExtraCombats(ctx),
+      (decision) => {
+        if (decision.presentationAttackDeclaration !== undefined)
+          return declareAttacks(decision, (id) => (id === attacker.id ? 'P2' : null));
+        if (decision.presentationBlockDeclaration !== undefined) return declareNoBlocks(decision);
+        const pass = decision.options.findIndex((option) => option.type === 'pass');
+        return { index: Math.max(pass, 0), targets: new Map() };
+      },
+      { strict: true },
+    );
     givePriority(ctx, 'P1', 'postcombatMain');
     ctx.state.step = null;
     addMana(playerById(ctx, 'P1'), mana('BC'));
@@ -533,7 +538,7 @@ describe('embalm and eternalize', () => {
     take(ctx, 'P1', optionFor(ctx, 'P1', fanatic.id)!.payload as PriorityActionPayload);
     // The exile was the cost; moving the exiled card away does not stop the ability.
     const exiled = ctx.state.exile.find((c) => c.cardId === fanatic.cardId) as EngineCardObject;
-    pump(moveObject(ctx, exiled, { zone: 'library' }));
+    pumpStrict(moveObject(ctx, exiled, { zone: 'library' }));
     settle(ctx);
     const token = ctx.state.battlefield.find((p) => p.isToken && p.name === 'Fanatic of Rhonas');
     const chars = computeCharacteristics(ctx, token!);
@@ -596,7 +601,7 @@ describe('shuffle into its owner’s library instead of a graveyard', () => {
     expect(playerById(ctx, 'P2').graveyard).toHaveLength(0);
 
     const top = playerById(ctx, 'P2').library.find((c) => c.cardId === inHand.cardId)!;
-    pump(moveObject(ctx, top, { zone: 'graveyard' }));
+    pumpStrict(moveObject(ctx, top, { zone: 'graveyard' }));
     expect(zoneOf(ctx, inHand.cardId)).toBe('library');
   });
 

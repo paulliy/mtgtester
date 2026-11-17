@@ -370,7 +370,10 @@ describe('block restrictions in combat', () => {
   it('greater power — Ant-Man refuses a bigger blocker and allows an equal one', () => {
     const ctx = pod('ant-man');
     const ant = spawn(ctx, 'P1', pinned('Ant-Man, Elusive Avenger'));
-    const power = Number(ant.basePower ?? interpretCard(pinned('Ant-Man, Elusive Avenger')).power);
+    const power = Number(
+      (ant as { basePower?: number }).basePower ??
+        interpretCard(pinned('Ant-Man, Elusive Avenger')).power,
+    );
     const bigger = spawn(ctx, 'P2', body('Bigger', { power: power + 1 }));
     const equal = spawn(ctx, 'P2', body('Equal', { power }));
     const { offered } = combat(ctx, [ant]);
@@ -476,7 +479,7 @@ describe('override-proven keywords', () => {
     const coruscation = interpretCard(pinned('Coruscation Mage'));
     expect(coruscation.optionalAdditionalCost?.mechanic).toBe('offspring');
     const offspringTrigger = coruscation.triggers.find((t) =>
-      t.description.startsWith('Offspring'),
+      t.description?.startsWith('Offspring'),
     );
     expect(offspringTrigger).toEqual({
       kind: 'triggered',

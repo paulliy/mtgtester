@@ -1,5 +1,6 @@
 /** Prosperous Bandit (evasion-and-blocking batch): scenarios in ../../scenarios/prosperous-bandit.json. */
 import { describe, expect, it } from 'vitest';
+import type { EnginePermanent } from '../../../src/state/types';
 import {
   firstDecisionOf,
   loadScenarioFile,
@@ -18,7 +19,7 @@ describe('Prosperous Bandit', () => {
   const copies = (id: string) =>
     runScenario(file, scenario(id))
       .engine.getState()
-      .battlefield.filter((perm) => perm.name === 'Prosperous Bandit');
+      .battlefield.filter((perm) => perm.name === 'Prosperous Bandit') as EnginePermanent[];
 
   it('offspring paid: the second copy is a 1/1 token, the first a card', () => {
     const [original, token] = copies(`prosperous-bandit-offspring-paid`);

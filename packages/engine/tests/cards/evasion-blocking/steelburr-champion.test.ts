@@ -1,5 +1,6 @@
 /** Steelburr Champion (evasion-and-blocking batch): scenarios in ../../scenarios/steelburr-champion.json. */
 import { describe, expect, it } from 'vitest';
+import type { EnginePermanent } from '../../../src/state/types';
 import {
   firstDecisionOf,
   loadScenarioFile,
@@ -18,7 +19,7 @@ describe('Steelburr Champion', () => {
   const copies = (id: string) =>
     runScenario(file, scenario(id))
       .engine.getState()
-      .battlefield.filter((perm) => perm.name === 'Steelburr Champion');
+      .battlefield.filter((perm) => perm.name === 'Steelburr Champion') as EnginePermanent[];
 
   it('offspring paid: the second copy is a 1/1 token, the first a card', () => {
     const [original, token] = copies(`steelburr-champion-offspring-paid`);

@@ -1,5 +1,6 @@
 /** Agate Instigator (evasion-and-blocking batch): scenarios in ../../scenarios/agate-instigator.json. */
 import { describe, expect, it } from 'vitest';
+import type { EnginePermanent } from '../../../src/state/types';
 import {
   firstDecisionOf,
   loadScenarioFile,
@@ -18,7 +19,7 @@ describe('Agate Instigator', () => {
   const copies = (id: string) =>
     runScenario(file, scenario(id))
       .engine.getState()
-      .battlefield.filter((perm) => perm.name === 'Agate Instigator');
+      .battlefield.filter((perm) => perm.name === 'Agate Instigator') as EnginePermanent[];
 
   it('offspring paid: the second copy is a 1/1 token, the first a card', () => {
     const [original, token] = copies(`agate-instigator-offspring-paid`);
