@@ -236,14 +236,12 @@ export function registerPilotNewOverrides(): void {
   // "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top
   // card of that player's library. Until end of turn, you may cast that card." The card stays its
   // owner's; Ragavan's controller may cast it this turn, paying its costs (a Treasure helps), but
-  // not play it as a land. "Dash {1}{R}" (CR 702.109a): an alternative cost; the dashed Ragavan
-  // has haste and returns to its owner's hand at the beginning of the next end step.
+  // not play it as a land. "Dash {1}{R}" is interpreted (CR 702.109a).
   defineCard(
     '37108cd4-bbab-4ce3-9ed6-f60e8422e703',
     'Ragavan, Nimble Pilferer',
     [
       "Whenever ~ deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card.",
-      'Dash {1}{R}',
     ],
     {
       triggers: [
@@ -260,9 +258,6 @@ export function registerPilotNewOverrides(): void {
           description:
             "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card",
         }),
-      ],
-      alternativeCasts: [
-        { kind: 'nonMana', manaCost: manaCost('{1}{R}'), dashed: true, description: 'Dash {1}{R}' },
       ],
     },
   );

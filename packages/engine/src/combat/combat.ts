@@ -67,6 +67,7 @@ import {
   triggersOf,
 } from '../state/queries';
 import type { RuleStaticEntry } from '../state/queries';
+import type { KeywordAbility } from '../cards/ability';
 import { evaluateCondition } from '../cards/condition';
 import type {
   AttackRequirementEntry,
@@ -647,9 +648,108 @@ function canBlock(ctx: GameContext, blocker: EnginePermanent, attacker: EnginePe
   // (its colors, or creatures) cannot be blocked by it.
   if (hasProtectionFrom(ctx, attacker, computeCharacteristics(ctx, blocker))) return false;
   if (hasKeyword(ctx, attacker, 'flying')) {
-    return hasKeyword(ctx, blocker, 'flying') || hasKeyword(ctx, blocker, 'reach');
+    if (!hasKeyword(ctx, blocker, 'flying') && !hasKeyword(ctx, blocker, 'reach')) return false;
+  }
+  if (!evasionAllows(ctx, blocker, attacker)) return false;
+  return blockRestrictionsAllow(ctx, blocker, attacker);
+}
+
+/** Basic landwalk keywords and the land subtype each one looks for (CR 702.14c). */
+const LANDWALK: readonly (readonly [KeywordAbility, string])[] = [
+  ['plainswalk', 'Plains'],
+  ['islandwalk', 'Island'],
+  ['swampwalk', 'Swamp'],
+  ['mountainwalk', 'Mountain'],
+  ['forestwalk', 'Forest'],
+];
+
+/**
+ * The evasion keywords other than flying, read as blockers are declared (CR 509.1b): fear
+ * (702.36b), intimidate (702.13b), skulk (702.118b), shadow both ways (702.28b) and landwalk
+ * against the lands of the player the attacker attacks, or the controller of the planeswalker it
+ * attacks (702.14c; a nonbasic Island counts as an Island).
+ */
+function evasionAllows(
+  ctx: GameContext,
+  blocker: EnginePermanent,
+  attacker: EnginePermanent,
+): boolean {
+  const a = computeCharacteristics(ctx, attacker);
+  const b = computeCharacteristics(ctx, blocker);
+  if (a.keywords.includes('shadow') !== b.keywords.includes('shadow')) return false;
+  const artifactBlocker = b.types.includes('Artifact');
+  if (a.keywords.includes('fear') && !artifactBlocker && !b.colors.includes('B')) return false;
+  if (
+    a.keywords.includes('intimidate') &&
+    !artifactBlocker &&
+    !b.colors.some((color) => a.colors.includes(color))
+  )
+    return false;
+  if (a.keywords.includes('skulk') && b.power > a.power) return false;
+  const walks = LANDWALK.filter(([keyword]) => a.keywords.includes(keyword));
+  const nonbasicWalk = a.keywords.includes('nonbasic landwalk');
+  if ((walks.length > 0 || nonbasicWalk) && attacker.attacking !== null) {
+    for (const land of controlledPermanents(ctx, attacker.attacking)) {
+      const chars = computeCharacteristics(ctx, land);
+      if (!chars.types.includes('Land')) continue;
+      if (walks.some(([, subtype]) => chars.subtypes.includes(subtype))) return false;
+      if (nonbasicWalk && !chars.supertypes.includes('Basic')) return false;
+    }
   }
   return true;
+}
+
+/** The selector view of a rule static's source, with the creature it is attached to. */
+function ruleStaticView(
+  ctx: GameContext,
+  entry: RuleStaticEntry,
+): { cardId: string; controllerId: PlayerId; attachedToCardId?: string } {
+  const source = ctx.state.battlefield.find((perm) => perm.cardId === entry.sourceCardId);
+  const attachedToCardId =
+    source === undefined || source.attachedTo === null
+      ? undefined
+      : ctx.state.battlefield.find((perm) => perm.id === source.attachedTo)?.cardId;
+  return {
+    cardId: entry.sourceCardId,
+    controllerId: entry.controllerId,
+    ...(attachedToCardId !== undefined ? { attachedToCardId } : {}),
+  };
+}
+
+/** `blockRestriction` rule statics (Prowler's Helm, Steel Leaf Champion, Ant-Man), per blocker. */
+function blockRestrictionsAllow(
+  ctx: GameContext,
+  blocker: EnginePermanent,
+  attacker: EnginePermanent,
+): boolean {
+  for (const entry of gatherRuleStatics(ctx)) {
+    const rule = entry.static;
+    if (rule.kind !== 'blockRestriction') continue;
+    const view = ruleStaticView(ctx, entry);
+    if (!matchesSelector(ctx, attacker, rule.attackers, view)) continue;
+    if (rule.onlyBy !== undefined && !matchesSelector(ctx, blocker, rule.onlyBy, view))
+      return false;
+    if (rule.notBy !== undefined && matchesSelector(ctx, blocker, rule.notBy, view)) return false;
+    if (
+      rule.notByGreaterPower === true &&
+      effectivePT(ctx, blocker).power > effectivePT(ctx, attacker).power
+    )
+      return false;
+  }
+  return true;
+}
+
+/** "Can't be blocked by more than N creatures" (Alpha Authority): the smallest such N, or null. */
+function maxBlockersOf(ctx: GameContext, attacker: EnginePermanent): number | null {
+  let most: number | null = null;
+  for (const entry of gatherRuleStatics(ctx)) {
+    const rule = entry.static;
+    if (rule.kind !== 'blockRestriction' || rule.maxBlockers === undefined) continue;
+    const view = ruleStaticView(ctx, entry);
+    if (!matchesSelector(ctx, attacker, rule.attackers, view)) continue;
+    most = most === null ? rule.maxBlockers : Math.min(most, rule.maxBlockers);
+  }
+  return most;
 }
 
 function attackers(ctx: GameContext): EnginePermanent[] {
@@ -1443,6 +1543,16 @@ function validateBlockDeclaration(
           subjectId: blocker.id,
           kind: 'menace',
           message: `${attacker.name} has menace and can't be blocked by only one creature`,
+        });
+      }
+    // "Can't be blocked by more than one creature": the blockers past the limit are flagged.
+    const most = maxBlockersOf(ctx, attacker);
+    if (most !== null && blockers.length > most)
+      for (const blocker of blockers) {
+        violations.push({
+          subjectId: blocker.id,
+          kind: 'maxBlockers',
+          message: `${attacker.name} can't be blocked by more than ${most === 1 ? 'one creature' : `${most} creatures`}`,
         });
       }
     // "Can't be blocked except by N or more creatures": none, or at least N.

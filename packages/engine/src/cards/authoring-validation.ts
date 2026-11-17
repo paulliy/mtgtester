@@ -802,6 +802,30 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       if (record[flag] !== undefined && record[flag] !== true)
         issues.push({ path: `${path}.${flag}`, message: `${flag} must be true when present` });
   }
+  if (valueKind === 'blockRestriction') {
+    validateExpression('selector', record['attackers'], `${path}.attackers`, issues);
+    for (const key of ['onlyBy', 'notBy'])
+      if (record[key] !== undefined)
+        validateExpression('selector', record[key], `${path}.${key}`, issues);
+    if (record['notByGreaterPower'] !== undefined && record['notByGreaterPower'] !== true)
+      issues.push({
+        path: `${path}.notByGreaterPower`,
+        message: 'notByGreaterPower must be true when present',
+      });
+    const max = record['maxBlockers'];
+    if (max !== undefined && (!Number.isSafeInteger(max) || (max as number) < 1))
+      issues.push({
+        path: `${path}.maxBlockers`,
+        message: 'maxBlockers must be a positive integer',
+      });
+    if (
+      record['onlyBy'] === undefined &&
+      record['notBy'] === undefined &&
+      record['notByGreaterPower'] === undefined &&
+      max === undefined
+    )
+      issues.push({ path, message: 'block restriction restricts nothing' });
+  }
   if (valueKind === 'castAsThoughFlash') {
     if (record['filter'] !== undefined)
       validateExpression('selector', record['filter'], `${path}.filter`, issues);

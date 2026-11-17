@@ -411,6 +411,17 @@ export const IMPLEMENTED_KEYWORDS = [
   'storm',
   'rebound',
   'split second',
+  // Evasion (CR 509.1b): checked in `canBlock` as blockers are declared.
+  'fear',
+  'intimidate',
+  'skulk',
+  'shadow',
+  'plainswalk',
+  'islandwalk',
+  'swampwalk',
+  'mountainwalk',
+  'forestwalk',
+  'nonbasic landwalk',
 ] as const;
 export type KeywordAbility = (typeof IMPLEMENTED_KEYWORDS)[number];
 

@@ -308,6 +308,24 @@ export type RuleStatic =
    */
   | { kind: 'minBlockers'; minimum: number }
   /**
+   * A block restriction on attackers matching `attackers`, read from this permanent's view
+   * (`SELF`, `attachedToSource` for "equipped creature", or a group such as "Slivers"), CR 509.1b:
+   * - `onlyBy`: "can't be blocked except by Walls" (Prowler's Helm, Shifting Sliver);
+   * - `notBy`: "can't be blocked by creatures with power 2 or less" (Steel Leaf Champion, Ox Drover);
+   * - `notByGreaterPower`: "can't be blocked by creatures with greater power" (Ant-Man);
+   * - `maxBlockers`: "can't be blocked by more than one creature" (Alpha Authority, Flopsie), a
+   *   property of the whole declaration, so it is checked beside menace, not per blocker.
+   * Every check happens as blockers are declared; a later change never removes a blocker.
+   */
+  | {
+      kind: 'blockRestriction';
+      attackers: Selector;
+      onlyBy?: Selector;
+      notBy?: Selector;
+      notByGreaterPower?: true;
+      maxBlockers?: number;
+    }
+  /**
    * "Creatures with power less than this creature's power can't block creatures you control"
    * (Champion of Lambholt): attackers matching `attackerFilter`, read from this permanent's
    * controller's point of view, can't be blocked by a creature whose power is less than this
