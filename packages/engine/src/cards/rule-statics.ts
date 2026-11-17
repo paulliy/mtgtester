@@ -213,6 +213,9 @@ export type RuleStatic =
    * - `sourceFilter`: the source as it deals the damage, from this permanent's point of view
    *   (`YOURS` for "you control"). Absent: any source.
    * - `excludesSelf`: "another source" — never this permanent's own damage.
+   * - `permanentSource`: the subject names a permanent ("a creature you control", "a Lizard ...
+   *   you control") rather than a source (CR 109.2): a card dealing damage from another zone
+   *   (channel, a spell) is not matched; a permanent that has left is, as it last existed.
    * - `recipient`: `any` ("a permanent or player"), `opponents` ("an opponent or a permanent an
    *   opponent controls"), or `opponentPlayers` ("an opponent").
    * - `noncombatOnly`: "noncombat damage" (Solphim, Tor Wauki).
@@ -221,6 +224,7 @@ export type RuleStatic =
       kind: 'damageReplacement';
       sourceFilter?: Selector;
       excludesSelf?: true;
+      permanentSource?: true;
       recipient: 'any' | 'opponents' | 'opponentPlayers';
       noncombatOnly?: true;
       factor?: number;

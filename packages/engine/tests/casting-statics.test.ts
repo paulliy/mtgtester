@@ -553,8 +553,18 @@ describe('damage replacements', () => {
           anyOf(ofSubtype('Lizard'), ofSubtype('Mouse'), ofSubtype('Otter'), ofSubtype('Raccoon')),
           YOURS,
         ),
+        permanentSource: true,
         recipient: 'any',
         plus: 1,
+      },
+    ]);
+    expect(interpretCard(pinned('Gratuitous Violence')).ruleStatics).toEqual([
+      {
+        kind: 'damageReplacement',
+        sourceFilter: allOf(ofType('Creature'), YOURS),
+        permanentSource: true,
+        recipient: 'any',
+        factor: 2,
       },
     ]);
     // A duration ("until your next turn") or a named player is a different effect.
@@ -565,6 +575,50 @@ describe('damage replacements', () => {
         ),
       ).modeled,
     ).toBe(false);
+  });
+
+  it('casting-statics-creature-not-source — "a creature you control" is a permanent (CR 109.2)', () => {
+    // A creature card's channel ability deals its damage from P1's graveyard: the card is a
+    // creature source, but not a creature P1 controls, so Gratuitous Violence leaves it at 2.
+    const ctx = pod('casting-statics-creature-not-source');
+    spawn(ctx, 'P1', pinned('Gratuitous Violence'));
+    const channeler = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Channeler',
+        typeLine: 'Creature — Human Archer',
+        manaCost: '{2}{R}',
+        colors: ['R'],
+        oracleText: 'Channel — {R}, Discard Lab Channeler: It deals 2 damage to any target.',
+      }),
+      'hand',
+    );
+    addMana(playerById(ctx, 'P1'), mana('R'));
+    const channel = optionFor(ctx, 'P1', channeler.id);
+    expect(channel).toBeDefined();
+    take(ctx, 'P1', channel!.payload as PriorityActionPayload, new Map([[0, 'P2']]));
+    settle(ctx);
+    expect(playerById(ctx, 'P2').life).toBe(38);
+    // A creature permanent P1 controls still deals double.
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Archer',
+        typeLine: 'Creature — Human Archer',
+        manaCost: '{R}',
+        colors: ['R'],
+        oracleText: '{T}: Lab Archer deals 1 damage to any target.',
+      }),
+      { summoningSick: false },
+    );
+    const shot = computePriorityOptions(ctx, playerById(ctx, 'P1')).find(
+      (option) => option.type === 'activateAbility' && option.description.includes('Lab Archer'),
+    );
+    take(ctx, 'P1', shot!.payload as PriorityActionPayload, new Map([[0, 'P2']]));
+    settle(ctx);
+    expect(playerById(ctx, 'P2').life).toBe(36);
   });
 
   it('casting-statics-two-doublers — two doublers make four times the damage', () => {
