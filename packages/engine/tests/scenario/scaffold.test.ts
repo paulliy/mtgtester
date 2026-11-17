@@ -170,6 +170,14 @@ describe('scaffoldCard', () => {
     });
   });
 
+  it('expects a negative power when a shrink takes the target below zero', () => {
+    const { file, units } = scaffoldPool('Grasp of Darkness');
+    expect(units.map((unit) => unit.status)).toEqual(['scaffolded']);
+    expect(file.scenarios[0]!.expect).toContainEqual(
+      expect.objectContaining({ stats: expect.objectContaining({ power: -3 }) }),
+    );
+  });
+
   it('drafts each mode of a modal spell through the cast action that names it', () => {
     const { file, units } = scaffold('Rakdos Charm');
     expect(units.map((unit) => unit.status)).toEqual(['unsupported', 'scaffolded', 'unsupported']);
