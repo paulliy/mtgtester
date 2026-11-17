@@ -260,3 +260,4 @@ packages/engine/tests/cards/vapor-snag.test.ts
 packages/engine/tests/cards/evasion-blocking
 packages/engine/tests/evasion-blocking.test.ts
 packages/engine/tests/graveyard-hand.test.ts
+packages/engine/tests/cards/graveyard-hand

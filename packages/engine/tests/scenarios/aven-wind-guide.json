@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "card": "Aven Wind Guide",
+  "scenarios": [
+    {
+      "id": "aven-wind-guide-embalm",
+      "title": "Aven Wind Guide: embalm makes a white Zombie token copy",
+      "clauses": [3],
+      "instructions": ["Activate embalm from your graveyard."],
+      "expectedOutcome": "Aven Wind Guide is exiled and a 2/3 white Zombie token copy of it enters with no mana cost.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Aven Wind Guide"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Aven Wind Guide \\(graveyard\\): Embalm/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Aven Wind Guide"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Aven Wind Guide"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Aven Wind Guide"]
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "count": 1
+          }
+        },
+        {
+          "keywords": {
+            "card": "Aven Wind Guide",
+            "has": ["flying", "vigilance"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "aven-wind-guide-embalm-sorcery-speed",
+      "title": "Aven Wind Guide: embalm only as a sorcery",
+      "clauses": [3],
+      "turn": {
+        "player": "P2"
+      },
+      "instructions": ["On P2's turn, embalm is not offered."],
+      "expectedOutcome": "Aven Wind Guide stays in your graveyard.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Aven Wind Guide"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains", "Island"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Aven Wind Guide"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Aven Wind Guide"]
+          }
+        }
+      ]
+    }
+  ]
+}

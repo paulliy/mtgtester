@@ -84,6 +84,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'adorned-pouncer.json',
+    file: scenarioFile(
+      'adorned-pouncer.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/adorned-pouncer.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'adventurous-impulse.json',
     file: scenarioFile(
       'adventurous-impulse.json',
@@ -146,6 +159,32 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'angel-of-sanctions.json',
+    file: scenarioFile(
+      'angel-of-sanctions.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/angel-of-sanctions.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'anointer-priest.json',
+    file: scenarioFile(
+      'anointer-priest.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/anointer-priest.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'ant-man.json',
     file: scenarioFile(
       'ant-man.json',
@@ -172,6 +211,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       readFileSync(
         new URL(
           '../../../../packages/engine/tests/scenarios/arcbound-worker.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'aven-wind-guide.json',
+    file: scenarioFile(
+      'aven-wind-guide.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/aven-wind-guide.json',
           import.meta.url,
         ),
         'utf8',
@@ -210,6 +262,45 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'blaze.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/blaze.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'blightsteel-colossus.json',
+    file: scenarioFile(
+      'blightsteel-colossus.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/blightsteel-colossus.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'bloodsoaked-champion.json',
+    file: scenarioFile(
+      'bloodsoaked-champion.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/bloodsoaked-champion.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'bonders-enclave.json',
+    file: scenarioFile(
+      'bonders-enclave.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/bonders-enclave.json',
+          import.meta.url,
+        ),
         'utf8',
       ),
     ),
@@ -343,6 +434,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'darksteel-colossus.json',
+    file: scenarioFile(
+      'darksteel-colossus.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/darksteel-colossus.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'dauthi-embrace.json',
     file: scenarioFile(
       'dauthi-embrace.json',
@@ -358,6 +462,29 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'deaths-shadow.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/deaths-shadow.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'dimir-infiltrator.json',
+    file: scenarioFile(
+      'dimir-infiltrator.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/dimir-infiltrator.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'dizzy-spell.json',
+    file: scenarioFile(
+      'dizzy-spell.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/dizzy-spell.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -381,6 +508,32 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'doom-blade.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/doom-blade.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'drift-of-phantasms.json',
+    file: scenarioFile(
+      'drift-of-phantasms.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/drift-of-phantasms.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'drownyard-temple.json',
+    file: scenarioFile(
+      'drownyard-temple.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/drownyard-temple.json',
+          import.meta.url,
+        ),
         'utf8',
       ),
     ),
@@ -432,6 +585,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'elvish-spirit-guide.json',
+    file: scenarioFile(
+      'elvish-spirit-guide.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/elvish-spirit-guide.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'ettercap.json',
     file: scenarioFile(
       'ettercap.json',
@@ -461,6 +627,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       readFileSync(
         new URL(
           '../../../../packages/engine/tests/scenarios/faerie-mastermind.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'fanatic-of-rhonas.json',
+    file: scenarioFile(
+      'fanatic-of-rhonas.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/fanatic-of-rhonas.json',
           import.meta.url,
         ),
         'utf8',
@@ -660,6 +839,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'gudul-lurker.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/gudul-lurker.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'haunt-of-the-dead-marshes.json',
+    file: scenarioFile(
+      'haunt-of-the-dead-marshes.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/haunt-of-the-dead-marshes.json',
+          import.meta.url,
+        ),
         'utf8',
       ),
     ),
@@ -915,6 +1107,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'muddle-the-mixture.json',
+    file: scenarioFile(
+      'muddle-the-mixture.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/muddle-the-mixture.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'muscle-sliver.json',
     file: scenarioFile(
       'muscle-sliver.json',
@@ -953,6 +1158,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'natures-claim.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/natures-claim.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'nexus-of-fate.json',
+    file: scenarioFile(
+      'nexus-of-fate.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/nexus-of-fate.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -1019,6 +1234,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'path-to-exile.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/path-to-exile.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'persistent-specimen.json',
+    file: scenarioFile(
+      'persistent-specimen.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/persistent-specimen.json',
+          import.meta.url,
+        ),
         'utf8',
       ),
     ),
@@ -1152,6 +1380,32 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'reassembling-skeleton.json',
+    file: scenarioFile(
+      'reassembling-skeleton.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/reassembling-skeleton.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'retrofitted-transmogrant.json',
+    file: scenarioFile(
+      'retrofitted-transmogrant.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/retrofitted-transmogrant.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'riders-of-rohan.json',
     file: scenarioFile(
       'riders-of-rohan.json',
@@ -1180,6 +1434,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'ruby-medallion.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/ruby-medallion.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'sacred-cat.json',
+    file: scenarioFile(
+      'sacred-cat.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/sacred-cat.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -1323,6 +1587,19 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'simian-spirit-guide.json',
+    file: scenarioFile(
+      'simian-spirit-guide.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/simian-spirit-guide.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'simic-growth-chamber.json',
     file: scenarioFile(
       'simic-growth-chamber.json',
@@ -1341,6 +1618,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
       'skeleton-key.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/skeleton-key.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'sliver-hive.json',
+    file: scenarioFile(
+      'sliver-hive.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/sliver-hive.json', import.meta.url),
         'utf8',
       ),
     ),
@@ -1454,6 +1741,16 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'teachers-pest.json',
+    file: scenarioFile(
+      'teachers-pest.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/teachers-pest.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'termagant-swarm.json',
     file: scenarioFile(
       'termagant-swarm.json',
@@ -1513,11 +1810,47 @@ export const RUNNER_SCENARIO_FILES: ReadonlyArray<{ name: string; file: CardScen
     ),
   },
   {
+    name: 'timeless-dragon.json',
+    file: scenarioFile(
+      'timeless-dragon.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/timeless-dragon.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'timeless-witness.json',
+    file: scenarioFile(
+      'timeless-witness.json',
+      readFileSync(
+        new URL(
+          '../../../../packages/engine/tests/scenarios/timeless-witness.json',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    ),
+  },
+  {
     name: 'tithe-drinker.json',
     file: scenarioFile(
       'tithe-drinker.json',
       readFileSync(
         new URL('../../../../packages/engine/tests/scenarios/tithe-drinker.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  },
+  {
+    name: 'tolaria-west.json',
+    file: scenarioFile(
+      'tolaria-west.json',
+      readFileSync(
+        new URL('../../../../packages/engine/tests/scenarios/tolaria-west.json', import.meta.url),
         'utf8',
       ),
     ),

@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "card": "Anointer Priest",
+  "scenarios": [
+    {
+      "id": "anointer-priest-embalm",
+      "title": "Anointer Priest: embalm makes a white Zombie token copy",
+      "clauses": [2],
+      "instructions": [
+        "Activate embalm from your graveyard.",
+        "The token sees itself enter and you gain 1 life."
+      ],
+      "expectedOutcome": "Anointer Priest is exiled and a 1/3 white Zombie token copy of it enters with no mana cost.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Anointer Priest"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Anointer Priest \\(graveyard\\): Embalm/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Anointer Priest"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Anointer Priest"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Anointer Priest"]
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "count": 1
+          }
+        },
+        {
+          "life": {
+            "player": "P1",
+            "equals": 41
+          }
+        }
+      ]
+    },
+    {
+      "id": "anointer-priest-embalm-sorcery-speed",
+      "title": "Anointer Priest: embalm only as a sorcery",
+      "clauses": [2],
+      "turn": {
+        "player": "P2"
+      },
+      "instructions": ["On P2's turn, embalm is not offered."],
+      "expectedOutcome": "Anointer Priest stays in your graveyard.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Anointer Priest"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Anointer Priest"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Anointer Priest"]
+          }
+        }
+      ]
+    }
+  ]
+}

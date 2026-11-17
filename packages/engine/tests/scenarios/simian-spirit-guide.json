@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "card": "Simian Spirit Guide",
+  "supportCards": [
+    {
+      "name": "Scenario Spark",
+      "typeLine": "Instant",
+      "manaCost": "{R}",
+      "oracleText": "Scenario Spark deals 2 damage to target player."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "simian-spirit-guide-pays-from-hand",
+      "title": "Simian Spirit Guide: exile it from your hand to add {R}",
+      "clauses": [1],
+      "instructions": [
+        "With no lands, cast Scenario Spark; Simian Spirit Guide pays for it from your hand."
+      ],
+      "expectedOutcome": "Simian Spirit Guide is exiled from your hand and Scenario Spark resolves.",
+      "seats": {
+        "P1": {
+          "hand": ["Simian Spirit Guide", "Scenario Spark"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Spark/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Simian Spirit Guide"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Simian Spirit Guide"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "simian-spirit-guide-board-first",
+      "title": "Simian Spirit Guide: an untapped Mountain pays before the hand card is spent",
+      "clauses": [1],
+      "instructions": ["With a Mountain, cast Scenario Spark."],
+      "expectedOutcome": "The Mountain pays; Simian Spirit Guide stays in your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Simian Spirit Guide", "Scenario Spark"],
+          "battlefield": ["Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Spark/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Simian Spirit Guide"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Mountain",
+            "equals": true
+          }
+        }
+      ]
+    }
+  ]
+}

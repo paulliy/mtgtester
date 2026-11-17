@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "card": "Timeless Dragon",
+  "scenarios": [
+    {
+      "id": "timeless-dragon-eternalize",
+      "title": "Timeless Dragon: eternalize makes a black Zombie token copy",
+      "clauses": [3],
+      "instructions": ["Activate eternalize from your graveyard."],
+      "expectedOutcome": "Timeless Dragon is exiled and a 4/4 black Zombie token copy of it enters with no mana cost.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Timeless Dragon"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Timeless Dragon \\(graveyard\\): Eternalize/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Timeless Dragon"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Timeless Dragon"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Timeless Dragon"]
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "timeless-dragon-eternalize-sorcery-speed",
+      "title": "Timeless Dragon: eternalize only as a sorcery",
+      "clauses": [3],
+      "turn": {
+        "player": "P2"
+      },
+      "instructions": ["On P2's turn, eternalize is not offered."],
+      "expectedOutcome": "Timeless Dragon stays in your graveyard.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Timeless Dragon"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Timeless Dragon"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Timeless Dragon"]
+          }
+        }
+      ]
+    }
+  ]
+}

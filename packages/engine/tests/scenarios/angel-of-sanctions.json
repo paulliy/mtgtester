@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "card": "Angel of Sanctions",
+  "supportCards": [
+    {
+      "name": "Scenario Rock",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": ""
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "angel-of-sanctions-embalm",
+      "title": "Angel of Sanctions: embalm makes a white Zombie token copy",
+      "clauses": [3],
+      "instructions": [
+        "Activate embalm from your graveyard.",
+        "The token's enters trigger exiles Scenario Rock."
+      ],
+      "expectedOutcome": "Angel of Sanctions is exiled and a 3/4 white Zombie token copy of it enters with no mana cost.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Angel of Sanctions"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains", "Plains"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Rock"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Angel of Sanctions \\(graveyard\\): Embalm/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Yes$/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Angel of Sanctions"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Angel of Sanctions"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Angel of Sanctions"]
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "count": 1
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "exile",
+            "has": ["Scenario Rock"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "angel-of-sanctions-embalm-sorcery-speed",
+      "title": "Angel of Sanctions: embalm only as a sorcery",
+      "clauses": [3],
+      "turn": {
+        "player": "P2"
+      },
+      "instructions": ["On P2's turn, embalm is not offered."],
+      "expectedOutcome": "Angel of Sanctions stays in your graveyard.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Angel of Sanctions"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains", "Plains"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Angel of Sanctions"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Angel of Sanctions"]
+          }
+        }
+      ]
+    }
+  ]
+}

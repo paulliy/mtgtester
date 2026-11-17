@@ -6,6 +6,7 @@
     "Academy Manufactor": "16dc5dc9fb1e0b295a8de67ee15d44b85a304a9bb87e2cb96679a4329c7a0dea",
     "Acrobatic Leap": "fcfacb70bc721c6162126f36d5c5e017cf01518bcfbede8a3c901ae0b55252d1",
     "Adaptive Omnitool": "23f49352f91de30d07f418f38b2658e0e346bf1088ec63c1210be8b44f438b12",
+    "Adorned Pouncer": "2badd5ea3c919f1680c7b72ad4941e6e688425fe7ad9dc72f99512ecee8097c5",
     "Adventurous Impulse": "5b999e41d3fbb51e1c018f12db59220b912608f690f4414be5fc244fb369300a",
     "Aether Channeler": "340f9c527f82807166ad11f5929dc8ddc727045317a5039a8bdaa6848d967ec1",
     "Aether Hub": "a6641d8a589b60feec25b6da189a097707da60158d6196778bc6365bcccf88ec",
@@ -24,11 +25,13 @@
     "Amethyst Dragon // Explosive Crystal": "f1e4440c61a9f4d5942c2589cda75f6a7ce50a02bf2cc4bb1e93c99481355a1b",
     "An Unexpected Party // At the Door": "185a996cf70329dfb715d86b95f8236ea44428f7633ff11979461e0019b679db",
     "Anathemancer": "a604568f3e0a07b568182481d569107549e6b1071631584e8f661e4eb616081f",
+    "Angel of Sanctions": "79dba78f990f57bf72066aab47b7d501977f5f234602d716c2d6692844985416",
     "Angel's Grace": "41ae997aee2cf777ae28b7228f8e7b666384f67a98e6f7f2675c98231f07fab3",
     "Angelic Destiny": "3673b01c86f2953d46be78a773f7905753470278bcea100a46bec827bba77496",
     "Animate Dead": "236b4dd096186ecbd0e421e9ae7ac0bc91fa81347974d77bcc3dad4d4a6bbfcd",
     "Animating Faerie // Bring to Life": "0e082f2ccac593bc7e6d19f66b24c116a69406f52a6f3fff7dd3139837c2f1a6",
     "Annie Joins Up": "00f134c33bd4b141e8fa9b4bbbca4985f91d4b1e41f52cf47192d2db63075d26",
+    "Anointer Priest": "edcb32be1141c100f1794da50b0b1ae82a28ce332cd15e199fc8964c01cbdd5e",
     "Anrakyr the Traveller": "1f11aa229db25bcdc8cb4b657fc98252b59975ad92a97811bae330033a79dcf9",
     "Ant-Man, Elusive Avenger": "37798e8aae0207bee8fdf6e9ecd0409f8df29eed9fc0456af506374c13b8aef3",
     "Aquatic Alchemist // Bubble Up": "17dfd03dc045add0607b785bf3fb8bb340aae8c7765419083a736697bcbef928",
@@ -48,6 +51,7 @@
     "Aurora Phoenix": "4149988023167dc979f17457a84b42f8b357c111b9df094f8239783b568823db",
     "Authority of the Consuls": "bd953a06e68d037b63a96351f987c6d1f253d650cff640bb04d7dec46506dd89",
     "Aven Interrupter": "861efb2a0c89250b158e9f1b6ba71dbd3744cd4d72591457b2739ae8251c4000",
+    "Aven Wind Guide": "4ae76a0aa33071f4573ca5c23ad7cfab6a3590c9a4a6cd19babf5e4acfcc0545",
     "Backlash": "116b1ea7f57a9a829f03d7c0a6ffeafd34ece8beb23320dcd9b13668659a9ae5",
     "Bandit's Talent": "f806d0ae13bbfb7b4d6b8168dc45fad6a8ad31691ebe1701b48b8d5955dd69e3",
     "Basri's Lieutenant": "11ada25f5aa01a06f88e6c5d6c3e2eb043773ee92fcc34a2439cc3f9ef2965a3",
@@ -69,12 +73,15 @@
     "Black Bolt, Inhuman King": "db53d857faae9d00e9f233eae5e77aaefaf2798661c14cc011220e1f7e5a5c23",
     "Blasphemous Edict": "6994bb591cb20faee9759d2070892083e2cea7b20e36ece110b5cc740790b4d3",
     "Blaze": "d2ffd25175a082515bc6cb373663c4566c8982099637b5090063646b3097c0bb",
+    "Blightsteel Colossus": "6a043a363bbd8cea3edc186fe51228adba47bc18785899af04a2f2f5d344104b",
+    "Bloodsoaked Champion": "9b720f574ba6b7753945f01e9fe8e62c874f663fe930c5433edc34b0747039b7",
     "Bloomvine Regent // Claim Territory": "923a1d4e57487e65b17e92d1cfa6fdbf5afbd6b3d0f858826bd94ced7b8b6372",
     "Blur of Blades": "ea522ddfaffffbcb02069421f8a25bba4867265aa0281ac0b9b4bfcb76e80dc7",
     "Body Launderer": "f44de0fbad37339ec628a08e13433d825b21fd8bf9721e5cccd3725082d7a92e",
     "Bofur, Reliable Guardian // Concerted Care": "2ac080c4876bc2f35e96353ef6b83f20e9f7f9cb8b4a5d89fd8ffa7507eb2417",
     "Bolas's Citadel": "074ac83c600b370254587cec0977f0f9c8be1819fa6b72067e18ffabcdc45fdb",
     "Bolt Bend": "e34731fbc50dbe1140b6c7d27cdd63b5d046c6fddf99c7f3e9e5c03981fd62bc",
+    "Bonders' Enclave": "99a43cae0ad52170dac191b8ff2663160ea1de10543727ea177fc7fe67557e7b",
     "Boseiju, Who Endures": "e13a9c4ab62181dc08a0dc0efb251f9bfb97aa8fce2c5545561f0b78e868970f",
     "Bottomless Pit": "3e70a3db7bc2437db19f3e7479ebb4eb3a3de4e96aed439d799fc53b2a858d93",
     "Braids, Arisen Nightmare": "dabca9c4b2522112d857cb7103573005d1735aabf628bcbaadc0858f2e7ef2b5",
@@ -137,6 +144,7 @@
     "Cytoplast Manipulator": "faac653c0a227cf33a3c44758770b9fed072d8d1fab969d7def6eb9d8c19f642",
     "Damn": "3ce31ea519774646789dc1b1d4327135f344b35248ec34024a4c7d3c594f1d6d",
     "Dark Confidant": "5c863d76ea0fab57e7161cd133318e755931aeab32971b0985d9149b35b2346e",
+    "Darksteel Colossus": "2f77fc8d5cf38b9fbc31d322725389e4e4c0f8490d8b62335175062c08c90111",
     "Dauthi Embrace": "6bcd1990759fcb30c0eebf66fca9b88852e9687b5f974bee414ba706b93e173f",
     "Dawn's Truce": "9b94a7f24557052e39ba56e4a491a924a83f664f8eea7d2f37ff14dcd488877b",
     "Deafening Silence": "6a34ae14eb2e264035ad80521b0eca32dbe9b933dbc30b35a6cfd219e0f47bea",
@@ -146,10 +154,12 @@
     "Deflecting Palm": "3993eb90435f19d48756dd73a5c98c1f311389efee795e82a5f8aa58277b936a",
     "Deflecting Swat": "86d8f5d8bf34253fc713b8bf935e1c6e32f8ea805d57df0a112f54344f26f9fe",
     "Delirium": "7f67096386be6374ad6079171689a2ceec128353a3e0e2abe544784ad5181573",
+    "Dimir Infiltrator": "f66e78902b8f081d584a8d5de077af1eca69fb7aab0482ef69caef3d1d959f18",
     "Dingus Staff": "fa26a662e0d1a4e2bdabcbb0164f9e7d8df110cd13333ee0af014c9e00c5a825",
     "Dirgur Island Dragon // Skimming Strike": "9e682154b339327c917e7c35f867307e9bd92a9ca55394fadce81e2479b87ad6",
     "Disciple of Bolas": "92ab227dd89d69ae9d3d94f70245c3c2db6cee90216cb6a39c10fdda47324338",
     "Display of Power": "04e7139139882df20b82d5db6199236f5ea8cbae1917249f20ad24269127625c",
+    "Dizzy Spell": "367867c5978ac2139dbd115ad62fe60e3685f2fa0db6f198fe0ec3f3d183e816",
     "Dollmaker's Shop // Porcelain Gallery": "1c35524e7fddd802fb1b0914bd1b6b10a1548ca20a8eaae70c839e1401173412",
     "Donatello's Technique": "fad541d300988d906cae005a838af21506ed3c487af35298b7ad7fe9543e7591",
     "Doom Blade": "8e330b184c842bf2eee624c22a034712dca95eab5bdbbe7e076806bd79e1eb10",
@@ -163,6 +173,8 @@
     "Dread Return": "bda6e9277a015c56401c6b4f23fca3e7258d3aaeb53a6f234f3610f44b650553",
     "Dream Devourer": "daf65f95778453b46ca292c449635ae2451bb6a70b5133f712dc759774a74fc0",
     "Dream Pillager": "dff902aff42d2906942f8d0e620183b454ed6bc6de9e731c0863e76ac7c2895e",
+    "Drift of Phantasms": "823923ec429220ae0af120ca7d5ef3e1601b5ec2e3f11248c7e3c547af21504d",
+    "Drownyard Temple": "04f29f1380d0adff0063a31415d8de7f9d7d267acd4a1a0edfbf4c503684712a",
     "Druid of Purification": "ad0aec5a820bd47f7731dc2f6350d35f77a1277ebb5a26936dd47d863df62633",
     "Duelist's Heritage": "908b2f6e15d136d51dd920e704ec04d5f396d1af17eada7bb6afe7f346439f6d",
     "Duplicant": "474d15b714b420fdb9b04aaaf5e89557a8dfeb1f4f0e8b7f930a8ed4d0d1f034",
@@ -175,6 +187,7 @@
     "Electrickery": "ea68376ab3f57c56cfc902f12a38c8a3c0cf553648d70a22cf98d679391c41df",
     "Elite Scaleguard": "f6c49e6ad315acd29a654a4090c9a9344d977650d14a6b943eebf671015e5b96",
     "Elvish Champion": "c54405eb5239c1f1e0a2d244840aa7e3556a77fd337fc66c43625478c53a6dff",
+    "Elvish Spirit Guide": "b668e8a237348ab729d4f78ec49d9ca99780edf1f122adbec6c5235afc5c099c",
     "Embereth Shieldbreaker // Battle Display": "b8baefc955e29763b993cc5c44d90dc5baab93aeadf18d720331478d7a7b517b",
     "Emerald Dragon // Dissonant Wave": "75c34bf29133acdd938f8f9bf5b683a7013670d2f1ec328fdf9f8d31a9c590ed",
     "Endless Atlas": "e1d31dc2c8118f97fe833d58fce9caf77240ad6f11bae0a80cb066638303a610",
@@ -193,6 +206,7 @@
     "Faerie Guidemother // Gift of the Fae": "188852577f595a0fb00608e655d0f57d4d1054ebe6daed2513fae011a534d2b6",
     "Faerie Mastermind": "c0630be4eec3d7b471c761910e452d409e166fe42d5e49ee682c312df2ccd1dd",
     "Fallen Ideal": "3ba13764d452400831541e37c2b7a16dca91265614e3b979c6d5f27f229e0950",
+    "Fanatic of Rhonas": "a11c77a61f7af87b3ca96a6e3eb496f73212242dd43d8e05490ad5687d262213",
     "Fang Dragon // Forktail Sweep": "c659b8da42cc11db41431201cc87d9ba1b080fc31749f032b8d7008e5572e58e",
     "Ferocious Werefox // Guard Change": "8ae13a55d7a76704207c7cb4f9b4e671599232e33e7124604003d2d6e32a5a96",
     "Fervent Charge": "2b795360d43fd14f1955f9c4e046f78b2279c708f399f2c920f8071189cc9ff1",
@@ -263,6 +277,7 @@
     "Harmonic Prodigy": "fe545e2745d11e9dc0bad5601cbd80e3c45b4ad87f0f7ab982ed13eaba7e9b75",
     "Harvest Season": "3f013020bdf1351d15c88eff85e1030be7f07537aff30256a911ba95125b7c9f",
     "Hateful Eidolon": "e7a12e590277e4c921c0476669518070e7a0b69b7d0050cdac1b521499b42c72",
+    "Haunt of the Dead Marshes": "b0e0bfecb2883ae735f246fe918d959e9ca565b41e720f9e92b01c8c377bb01c",
     "Herald of Amity": "9c80cb04a907304cc5a4b3bb7c43d286f4c23345ad1abb1d5cbc149a666bbeb9",
     "Herald of Secret Streams": "6b4d444a6d00b905def277af0d239e2d03b82ed76db22978a02e438eee9d2e0b",
     "Hexmark Destroyer": "f588c035d61896dcd748e00c9f6ce673da4d8356f8230ec0a7e42394223a4470",
@@ -378,6 +393,7 @@
     "Mordant Dragon": "5f4a39ae0545bf5d50bac488bb58ac3101bb6ac10eeb19f289e2159a39d40552",
     "Mother of Runes": "9a9f376d70f688a3c9319ffc71697a0a397d659b9e681f89327d93112211dbe1",
     "Mox Diamond": "d992ed712f925955e57609fb1112798f56a60155c3020de23df503a080759465",
+    "Muddle the Mixture": "2656872149eeefa48ba24c6d484750799d70fd05fc69634da01ad73e816d5025",
     "Muscle Sliver": "83856a582698aa922406210fd10a2c03f44265ab6967267d8fc32dab12e73d1e",
     "Myr Convert": "8d4318c68dc4f76179e6dd3ad10826cfa299c8ea9c702c2adc9b180d34a1a837",
     "Myriad Landscape": "696f038611a9d1540a151ab63ccc13e36fd4aa355a54806e741eb6a44f77442b",
@@ -392,6 +408,7 @@
     "Negate": "95d0b259f772498940d17e63d82acb30a3774388579245c6b672d6c38572fc6e",
     "Negative Zone Portal": "d015ea8e449d67e43f8df5cb1aed6c4f87a53890174921279ea2c2aed8d0f5d3",
     "New Generation's Technique": "32d98b4752c502f2ee74f386e387f64891b5776fdf80e3a924b17fc19a2dacde",
+    "Nexus of Fate": "2c9116544de1212b24c3adbe818b9330ef5f83c1b3191573e2f8a41a1766dc9c",
     "Nighthawk Scavenger": "af4df6fbccce06bf9da975bca1e3521d9e6ddf3ebdd8fe8dbd2d1d9698d90704",
     "Nightscape Familiar": "202bcffac838bc123f746413b6a484065753264e624d49a53aba2f51b3b80639",
     "Nils, Discipline Enforcer": "4b08785cec3c0e9c1c5e4aea30160faebdf81b037e7f82fb75675151bb8a002e",
@@ -414,6 +431,7 @@
     "Peema Trailblazer": "ac39b4f00910602a5d4f2038f9ed5a9c13f09de367d4c89bc66eaa8efc823f51",
     "Pensive Professor": "d1bbff061cf9949664fef0a0f27c26aae1413e512e17fc6b85db90ca429500e8",
     "Perch Protection": "e9adf2313e4738116e684727c9ebc9efc4d3a1e85ee65f91f9040d618252c80d",
+    "Persistent Specimen": "15b86a2ebc05f3da0938006160d54345e16f50bc1ec0a0b2e8ccfbd0d773146f",
     "Phyrexian Metamorph": "db37c1301b7b7e3a6f2e48e3ac6f446b39e2aafaae415fb01d5e63f82b129a12",
     "Phyrexian Tower": "a7c3b5164f1d8387cf0508abed41b57dedd73a2e831e98327d32155adb566321",
     "Picklock Prankster // Free the Fae": "8978c741c951dc259bb2025586aa8bff8167e754b21d92f04a5ef62dbd001951",
@@ -444,6 +462,7 @@
     "Razortrap Gorge": "a111896d59d8e1afe2c7624816da0f5c4ad3c9f9fd7fcca95f938c4bb65bed65",
     "Reality Shift": "bf2b48653701608f7cd081357bccad6a95ae8127597042346b72439a9ca9600a",
     "Realm-Cloaked Giant // Cast Off": "a24caaea63b65839b17e8182c2a9fcbb7f2649e98e1ef2bfebe8d7066394dbdc",
+    "Reassembling Skeleton": "edd9602c1ce6d7ea533de8c08c9feb60f99b43a607d2df9e5b674d9946b61630",
     "Rebuff the Wicked": "e071417dfbbacce2cd007719b51c66433b5cb3fbf85cd829a9f3cc366e9a237e",
     "Redemption Arc": "c7576127ac9961bc64db1cf2b1cb4072c6d6e9944b6fa4c88f77c01e96d67638",
     "Reins of Power": "d83ab9041af563dfad9ec6940c985c7a25de35b0ecfc955793da7577e2c591c2",
@@ -452,6 +471,7 @@
     "Rest in Peace": "9519ed723522e91ca26f35969166d20f2c1e764dc274282a377c52851a63d2a4",
     "Restoration Magic": "fe14aacd1b134c4f90f994409eb6d0a6852d23b46a9f486af258de9093058d22",
     "Resurrection Orb": "ef8c39d782702899614fb8e31035302042c3f3f55ddf16c655dce339079c2734",
+    "Retrofitted Transmogrant": "260d8a7ca0cb76d8a76d17cbffca938a98039adb2fa4c25c2dc73714e9cbf89e",
     "Retrofitter Foundry": "39cf3707dcf66c91dc222d73e8ee28cb898c9969c597ae3c12a916d1b7537bc3",
     "Return to Nature": "fabfad3d3c71353543dc51eba22fda33136e020c811fd4d553b2dcace2fa28a0",
     "Reverberate": "b903fa4ae25834153fa2ff7cdaba58d24f34ac7a64a8df85ef05972e0742fdba",
@@ -467,6 +487,7 @@
     "Ruby Medallion": "9de2af87febd426c1c1dff25c63ed3a46ec3f34df43de5c2d76148a320e9e0d2",
     "Rule of Law": "91cc78622dd7a33386e448320654ea40d3c61eeac6a26d7183e521fb1898dbe3",
     "Rumor Gatherer": "d5b18ba7956be7118501bc486db3177a7bc8ebca881b24c031834ada00e7a19c",
+    "Sacred Cat": "c408a9d01850fad41df272877408ca66bf463e95485053e33948493937cdd2c1",
     "Sage of Fables": "1423e05e7e7fc5bf74c33c20c1f368ebd1f4224c9c5112df484d654181aeb382",
     "Sagu Wildling // Roost Seek": "f997e2d8f7092364903b38c042797174867921f3f62d277c3d8976be2282394b",
     "Saheeli, Radiant Creator": "5fcdbdb1b0038c993dbfaa0905e47e68330a156d06911f6f550ed0be28799102",
@@ -509,11 +530,13 @@
     "Silhana Ledgewalker": "0c2639efe9ebeec8bb85e84ac3c612e7abd83b646ee48e8222e0f71444946379",
     "Silver Surfer, Galactus's Herald": "76cfc351217a248650d6247412f17b37a4286ee0df779aacb1d91bcdb8ac3efb",
     "Silverflame Squire // On Alert": "3f14e028196c80fd66eb72f20601363ab48397a85ca2842f5e5f6aac3ba3c3bf",
+    "Simian Spirit Guide": "db578fbb9f139562de9c9d336dccbd8878635592c7ee548c3414d08c9b9d63f0",
     "Simic Growth Chamber": "7e5d25c3efd3238ae420531ebef357c7e0629b6e9d387a69afffcce9638314ea",
     "Siren Stormtamer": "9dc28d7eaa27c68a9f2ffde7ccae5f28f74f2b27baff511fe5b11e2d822cfc2d",
     "Siren's Call": "71bf9bf7017f371060a98c8ac43be0cf459f3029cb115c1a86bce0f4a09a467f",
     "Sivitri, Dragon Master": "f3e1cc6f16f788685d23f89ea4ee1c95a0122e8053265fb69cc371ac01490b64",
     "Skeleton Key": "690c78eec43f05f428b0bdba584fe0516d6f087ef9326586ab009342a59c1c27",
+    "Sliver Hive": "c5483126aac0e7b80a9938ced20fc298d4b7ba06186b1d88d6e4079cd9b3c484",
     "Smaug, the Great Calamity // Spew Flame": "e6130c94687539e1de2ca04aea4494e16c57f6d3efa612838be03a3b6f3e6484",
     "Smitten Swordmaster // Curry Favor": "95c85cc00ff930a70266794bc2730818ca201c8039a2a2ffbc84459b519f2160",
     "Smokestack": "91aabae6b80a8744b6cd0ed2cb400bb224b003ed6907b5c9bebfcdbad5394cb8",
@@ -545,6 +568,7 @@
     "Szarekh, the Silent King": "e4fff6dac7991e615f0b4bf6b98bb646ba85908af5dd83192cd29634bb3d26c1",
     "Takenuma, Abandoned Mire": "f550555d41ef39a6664e6bf29761e39a263be4639bd32f70275e3369b574fb80",
     "Taunt from the Rampart": "977b3aeef45a09f28bb03f55282808c78b410affaf2e864422d6d5ba1f877e73",
+    "Teacher's Pest": "e09a34b00efa113547bbfc571fb39fb3d4d5ef1e8c86f0cb22d8ff3db0e19bca",
     "Technomancer": "19cbe3b23619d09af13644931417b1c3ab40deb1d3663febc590fcae248dd0f7",
     "Teferi's Protection": "05b8e0aa5425764cf5d2555212a9334a2a84bc250e19882b18b5d210afbe338a",
     "Tempest Hart // Scan the Clouds": "cfd60af08656def49aaf5e3cb2c6587d40c591abb89e8e7c086b8406c39aae8a",
@@ -576,10 +600,13 @@
     "Thunderfoot Baloth": "ad245d778eb6fdf24778c3037b47c0b0bb89e80346f64557ce250b39123fb23f",
     "Thundermaw Hellkite": "6e4aa521c27b28fb2861e03abdda06a0e8b850bce340e5e4950ad313afe845f4",
     "Tibalt's Trickery": "e94f2ce5ff465845835e1127d3c99406773e2454e2054b5162cec2c00c13176b",
+    "Timeless Dragon": "4410a1ddc1ddbf3bb730c42bba515a459c779bb2730e728ce48943bed711db61",
+    "Timeless Witness": "79e7e22eb6e4750dd43fb0ad0d2a140e315e940a088fc5fd3f020703cab878fb",
     "Tinybones Joins Up": "e0975b6f80bbae0706c845c15bae881e181f8dda64878d0f101c568224c2d71a",
     "Tinybones, Trinket Thief": "fa942a88eac3190440d190334f15b964ae56dfb0fb5bcc87d876b8df28cf4651",
     "Tithe Drinker": "31d53d9d67f7b86d8bf3e6272052f18151af7f8e6d45584b9cd4e76a57f987ab",
     "Toby, Beastie Befriender": "ab14f8f89747265e1dc7c2837a49999e1ab57539f9ff54794f332d4f8da17ab0",
+    "Tolaria West": "c2910eae78a6507e2279b724bfb14e7fe756457fd14c9af34b72946de4d156c5",
     "Tomb Blade": "ff9a089b1474562a1dc75e86a4175fb3eaf92fffb089e5e1207ed1b2a90089cf",
     "Tomb Fortress": "65ac436976204aa19616a5462be74a04d8081dd30adaddfeedfe8b3fcaef5329",
     "Tomik, Wielder of Law": "aa74d762952c526ea0bbb4b56566782832d8946544c2c236d52f6dfc069548dc",
@@ -1307,6 +1334,30 @@
       ],
       "subtypes": [],
       "oracleText": "This spell can't be copied.\nCopy any number of target instant and/or sorcery spells. You may choose new targets for the copies.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "04f29f1380d0adff0063a31415d8de7f9d7d267acd4a1a0edfbf4c503684712a": {
+      "oracleId": "c30f9be4-c274-4ad0-b5d7-7d3421aa4277",
+      "scryfallId": "dbc8512a-9f6c-40d4-8049-14505e260746",
+      "name": "Drownyard Temple",
+      "manaCost": null,
+      "cmc": 0,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Land",
+      "supertypes": [],
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "oracleText": "{T}: Add {C}.\n{3}: Return this card from your graveyard to the battlefield tapped.",
       "power": null,
       "toughness": null,
       "loyalty": null,
@@ -2672,6 +2723,36 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "15b86a2ebc05f3da0938006160d54345e16f50bc1ec0a0b2e8ccfbd0d773146f": {
+      "oracleId": "5f4ad578-f2c4-47f6-8080-8fbc17383f6f",
+      "scryfallId": "f7baf973-3202-4fea-8861-a4a5ec228640",
+      "name": "Persistent Specimen",
+      "manaCost": "{B}",
+      "cmc": 1,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Creature — Skeleton",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Skeleton"
+      ],
+      "oracleText": "{2}{B}: Return this card from your graveyard to the battlefield tapped.",
+      "power": "1",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "15d6215e12ca850403cb20ada4e915e7ce7b12a76abdaa352ec07566bc45d192": {
       "oracleId": "6d9af084-cd5d-4242-b0f0-24a36d0a75d4",
       "scryfallId": "fdfc2453-5a2b-4104-bf82-84f935de7b99",
@@ -3889,6 +3970,37 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "260d8a7ca0cb76d8a76d17cbffca938a98039adb2fa4c25c2dc73714e9cbf89e": {
+      "oracleId": "058dae67-807e-4542-ae51-f2b1216ffaed",
+      "scryfallId": "12c1b83d-710b-4680-855a-02ba1f72abf0",
+      "name": "Retrofitted Transmogrant",
+      "manaCost": "{B}",
+      "cmc": 1,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Artifact Creature — Zombie",
+      "supertypes": [],
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "oracleText": "{3}{B}: Return this card from your graveyard to the battlefield tapped with two +1/+1 counters on it.",
+      "power": "1",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "26200c4a65d30424df9804b69f8cf3a90c022877f6673268ffbe1be82d917615": {
       "oracleId": "303d4533-0c6b-4f93-80e8-b1f5926f4cd4",
       "scryfallId": "97413ae3-037e-4786-85a3-e92604acd771",
@@ -3913,6 +4025,36 @@
       "loyalty": null,
       "defense": null,
       "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "2656872149eeefa48ba24c6d484750799d70fd05fc69634da01ad73e816d5025": {
+      "oracleId": "0826cf7d-7ccc-459b-a92f-29dc169628f8",
+      "scryfallId": "e69d760c-48fb-4e7f-8611-547b0c22928c",
+      "name": "Muddle the Mixture",
+      "manaCost": "{U}{U}",
+      "cmc": 2,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Counter target instant or sorcery spell.\nTransmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Transmute"
+      ],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -4362,6 +4504,39 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "2badd5ea3c919f1680c7b72ad4941e6e688425fe7ad9dc72f99512ecee8097c5": {
+      "oracleId": "80b8ee3d-4174-4f47-a533-a3db1e703382",
+      "scryfallId": "865e267d-450c-4eeb-b61d-bd0ec5d8534a",
+      "name": "Adorned Pouncer",
+      "manaCost": "{1}{W}",
+      "cmc": 2,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Creature — Cat",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Cat"
+      ],
+      "oracleText": "Double strike\nEternalize {3}{W}{W} ({3}{W}{W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Cat with no mana cost. Eternalize only as a sorcery.)",
+      "power": "1",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Double strike",
+        "Eternalize"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "2be9fa04105a999387ae3509ade1fc209111dbc8b9bdb0a6986e68c8ea77e1d4": {
       "oracleId": "dba1d231-6b03-44ad-ab8c-be0c8fe1b6db",
       "scryfallId": "4202a678-a5f4-47f9-9c18-e88ab9ad20a4",
@@ -4607,6 +4782,34 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "2c9116544de1212b24c3adbe818b9330ef5f83c1b3191573e2f8a41a1766dc9c": {
+      "oracleId": "6c1d22d4-f28e-4041-a9b6-1575e8929b61",
+      "scryfallId": "f0aacf61-be23-400e-8e3c-5584b44df449",
+      "name": "Nexus of Fate",
+      "manaCost": "{5}{U}{U}",
+      "cmc": 7,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Take an extra turn after this one.\nIf Nexus of Fate would be put into a graveyard from anywhere, reveal Nexus of Fate and shuffle it into its owner's library instead.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "2cf37143ed93f90312075d4043c5beabad860b0dd61f50e0514ba38b4065c46c": {
       "oracleId": "fa85f9e6-69ff-4669-b70a-440aa7b16c97",
       "scryfallId": "6a109b3e-9f5b-4625-abb7-6b992c10530b",
@@ -4770,6 +4973,36 @@
       "defense": null,
       "keywords": [
         "Landfall"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "2f77fc8d5cf38b9fbc31d322725389e4e4c0f8490d8b62335175062c08c90111": {
+      "oracleId": "1b09d0cf-403c-4a15-aeee-602a1bdaf0c1",
+      "scryfallId": "70197723-c61b-4600-b61d-41380c8f3067",
+      "name": "Darksteel Colossus",
+      "manaCost": "{11}",
+      "cmc": 11,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Artifact Creature — Golem",
+      "supertypes": [],
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Golem"
+      ],
+      "oracleText": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)\nIndestructible (Damage and effects that say \"destroy\" don't destroy this creature.)\nIf Darksteel Colossus would be put into a graveyard from anywhere, reveal Darksteel Colossus and shuffle it into its owner's library instead.",
+      "power": "11",
+      "toughness": "11",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Indestructible",
+        "Trample"
       ],
       "layout": "normal",
       "commanderLegality": "legal",
@@ -5262,6 +5495,36 @@
       "defense": null,
       "keywords": [
         "Enchant"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "367867c5978ac2139dbd115ad62fe60e3685f2fa0db6f198fe0ec3f3d183e816": {
+      "oracleId": "7de04284-dcaa-4b63-a734-fcfe2698f83c",
+      "scryfallId": "6e0db10d-fb6d-44df-9ff2-6f1e0e8f8209",
+      "name": "Dizzy Spell",
+      "manaCost": "{U}",
+      "cmc": 1,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Instant",
+      "supertypes": [],
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "oracleText": "Target creature gets -3/-0 until end of turn.\nTransmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Transmute"
       ],
       "layout": "normal",
       "commanderLegality": "legal",
@@ -6528,6 +6791,43 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "4410a1ddc1ddbf3bb730c42bba515a459c779bb2730e728ce48943bed711db61": {
+      "oracleId": "a5ae93e9-0385-47fd-9d8f-306e9a6b7fe6",
+      "scryfallId": "96fe8889-0ec8-421a-83a4-5d00ab4804db",
+      "name": "Timeless Dragon",
+      "manaCost": "{3}{W}{W}",
+      "cmc": 5,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Creature — Dragon",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "oracleText": "Flying\nPlainscycling {2} ({2}, Discard this card: Search your library for a Plains card, reveal it, put it into your hand, then shuffle.)\nEternalize {2}{W}{W} ({2}{W}{W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Dragon with no mana cost. Eternalize only as a sorcery.)",
+      "power": "5",
+      "toughness": "5",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Flying",
+        "Plainscycling",
+        "Landcycling",
+        "Typecycling",
+        "Cycling",
+        "Eternalize"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "44352787996dea003a98385b5d1be63c2be3915a0495ff7de8a606115a9e5bf0": {
       "oracleId": "68b51d58-7566-4a26-8c31-8da32799bea7",
       "scryfallId": "94946d6c-1edb-46e9-a5ae-0ca2a016a7cd",
@@ -7026,6 +7326,43 @@
       "loyalty": null,
       "defense": null,
       "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "4ae76a0aa33071f4573ca5c23ad7cfab6a3590c9a4a6cd19babf5e4acfcc0545": {
+      "oracleId": "bb813ffa-2615-4177-a7fb-6e0dfb819fc2",
+      "scryfallId": "414bc716-2b1b-4731-bd0c-f4a5caf26e40",
+      "name": "Aven Wind Guide",
+      "manaCost": "{2}{W}{U}",
+      "cmc": 4,
+      "colors": [
+        "U",
+        "W"
+      ],
+      "colorIdentity": [
+        "U",
+        "W"
+      ],
+      "typeLine": "Creature — Bird Warrior",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bird",
+        "Warrior"
+      ],
+      "oracleText": "Flying, vigilance\nCreature tokens you control have flying and vigilance.\nEmbalm {4}{W}{U} ({4}{W}{U}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a white Zombie Bird Warrior with no mana cost. Embalm only as a sorcery.)",
+      "power": "2",
+      "toughness": "3",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Flying",
+        "Vigilance",
+        "Embalm"
+      ],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -9137,6 +9474,38 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "6a043a363bbd8cea3edc186fe51228adba47bc18785899af04a2f2f5d344104b": {
+      "oracleId": "e80772e2-8623-4094-81a2-70828b2b151c",
+      "scryfallId": "18adbda4-8d36-47cd-afbc-c785aaa8ed80",
+      "name": "Blightsteel Colossus",
+      "manaCost": "{12}",
+      "cmc": 12,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Artifact Creature — Phyrexian Golem",
+      "supertypes": [],
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Phyrexian",
+        "Golem"
+      ],
+      "oracleText": "Trample, infect, indestructible\nIf Blightsteel Colossus would be put into a graveyard from anywhere, reveal Blightsteel Colossus and shuffle it into its owner's library instead.",
+      "power": "11",
+      "toughness": "11",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Indestructible",
+        "Trample",
+        "Infect"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "6a34ae14eb2e264035ad80521b0eca32dbe9b933dbc30b35a6cfd219e0f47bea": {
       "oracleId": "6284ef01-d17d-4584-aecb-1b841ae638e5",
       "scryfallId": "6072d9b0-d3c7-46f4-bd24-095bb13c4dea",
@@ -10168,6 +10537,72 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "79dba78f990f57bf72066aab47b7d501977f5f234602d716c2d6692844985416": {
+      "oracleId": "3c49e98d-d33b-47fa-8b07-b38b367de2c7",
+      "scryfallId": "f3f7f258-7ac0-4149-9d8c-712b5ea7f0a8",
+      "name": "Angel of Sanctions",
+      "manaCost": "{3}{W}{W}",
+      "cmc": 5,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Creature — Angel",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Angel"
+      ],
+      "oracleText": "Flying\nWhen this creature enters, you may exile target nonland permanent an opponent controls until this creature leaves the battlefield.\nEmbalm {5}{W} ({5}{W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a white Zombie Angel with no mana cost. Embalm only as a sorcery.)",
+      "power": "3",
+      "toughness": "4",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Flying",
+        "Embalm"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "79e7e22eb6e4750dd43fb0ad0d2a140e315e940a088fc5fd3f020703cab878fb": {
+      "oracleId": "a52a06aa-56fc-4845-bbcd-a54f16369b34",
+      "scryfallId": "8b63ec86-670b-4acd-b14c-3d90acbde087",
+      "name": "Timeless Witness",
+      "manaCost": "{2}{G}{G}",
+      "cmc": 4,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Creature — Human Shaman",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Shaman"
+      ],
+      "oracleText": "When this creature enters, return target card from your graveyard to your hand.\nEternalize {5}{G}{G} ({5}{G}{G}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Human Shaman with no mana cost. Eternalize only as a sorcery.)",
+      "power": "2",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Eternalize"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "7a940d7903bdd75ee579e196b382f71ccc373ba1bd9467ee1dbbbf0d4e2160cc": {
       "oracleId": "1946ded1-5f53-409f-b0a6-5433bb0357d2",
       "scryfallId": "9341ed06-53db-4604-b60a-3ea9129afbc2",
@@ -10908,6 +11343,40 @@
         "loyalty": null,
         "defense": null
       }
+    },
+    "823923ec429220ae0af120ca7d5ef3e1601b5ec2e3f11248c7e3c547af21504d": {
+      "oracleId": "6ee51134-c4ad-4101-8ce2-23dde9359cd4",
+      "scryfallId": "d722c22d-3cab-48b5-96cd-0874060ac9a4",
+      "name": "Drift of Phantasms",
+      "manaCost": "{2}{U}",
+      "cmc": 3,
+      "colors": [
+        "U"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Creature — Spirit",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Spirit"
+      ],
+      "oracleText": "Defender (This creature can't attack.)\nFlying\nTransmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+      "power": "0",
+      "toughness": "5",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Flying",
+        "Defender",
+        "Transmute"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
     },
     "82969627cdaf339822e30d2030d0b69f02faf3a18b19fd398d9282b40ede6c58": {
       "oracleId": "78cb1f05-edad-4430-9095-f3eabd80bf41",
@@ -12956,6 +13425,30 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "99a43cae0ad52170dac191b8ff2663160ea1de10543727ea177fc7fe67557e7b": {
+      "oracleId": "f33ce38a-34ec-4b65-a0fc-160484a02007",
+      "scryfallId": "d174f42c-dcf2-4da9-812b-7e1d0991d466",
+      "name": "Bonders' Enclave",
+      "manaCost": null,
+      "cmc": 0,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Land",
+      "supertypes": [],
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "oracleText": "{T}: Add {C}.\n{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater.",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "99ac8436b415aba82ddb34f89b2f6f3422cca4c1db4005d6726481dc91af5eb2": {
       "oracleId": "6c370299-9803-4cb5-97ba-c17831797b54",
       "scryfallId": "ca1cedd8-98d3-408f-8de8-fa682ab0227c",
@@ -13096,6 +13589,39 @@
       "loyalty": null,
       "defense": null,
       "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "9b720f574ba6b7753945f01e9fe8e62c874f663fe930c5433edc34b0747039b7": {
+      "oracleId": "cad09970-14c8-4d80-82fe-6c855efb0191",
+      "scryfallId": "275d6137-5eff-4e82-8232-64e8679bc11c",
+      "name": "Bloodsoaked Champion",
+      "manaCost": "{B}",
+      "cmc": 1,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Creature — Human Warrior",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Warrior"
+      ],
+      "oracleText": "This creature can't block.\nRaid — {1}{B}: Return this card from your graveyard to the battlefield. Activate only if you attacked this turn.",
+      "power": "2",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Raid"
+      ],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -13596,6 +14122,40 @@
       "loyalty": null,
       "defense": null,
       "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "a11c77a61f7af87b3ca96a6e3eb496f73212242dd43d8e05490ad5687d262213": {
+      "oracleId": "7973820b-fdaf-46ec-9e3e-d4c0e77b5067",
+      "scryfallId": "1f9fb33a-3b39-4aff-93b8-aedafe0ea694",
+      "name": "Fanatic of Rhonas",
+      "manaCost": "{1}{G}",
+      "cmc": 2,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Creature — Snake Druid",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Snake",
+        "Druid"
+      ],
+      "oracleText": "{T}: Add {G}.\nFerocious — {T}: Add {G}{G}{G}{G}. Activate only if you control a creature with power 4 or greater.\nEternalize {2}{G}{G} ({2}{G}{G}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Snake Druid with no mana cost. Eternalize only as a sorcery.)",
+      "power": "1",
+      "toughness": "4",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Ferocious",
+        "Eternalize"
+      ],
       "layout": "normal",
       "commanderLegality": "legal",
       "isBasicLand": false
@@ -15075,6 +15635,39 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "b0e0bfecb2883ae735f246fe918d959e9ca565b41e720f9e92b01c8c377bb01c": {
+      "oracleId": "0b683611-e46f-4105-b336-014d1556c8de",
+      "scryfallId": "37a12935-c927-4d25-a7e5-17a0b6229c60",
+      "name": "Haunt of the Dead Marshes",
+      "manaCost": "{B}",
+      "cmc": 1,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Creature — Nightmare Elf",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Nightmare",
+        "Elf"
+      ],
+      "oracleText": "When this creature enters, scry 1.\n{2}{B}: Return this card from your graveyard to the battlefield tapped. Activate only if you control a legendary creature.",
+      "power": "1",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Scry"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "b23d048f04885d184c1634cb78310f62474c642fee6fd87be43a96c9990a7d77": {
       "oracleId": "cdb84830-faf2-4beb-8d57-ad696d75876b",
       "scryfallId": "26ece013-f3ef-4c12-9dea-b2789f61f8a0",
@@ -15509,6 +16102,37 @@
       "oracleText": "Whenever a creature you control with a +1/+1 counter on it leaves the battlefield, create a Mutagen token for each +1/+1 counter on it. (A Mutagen token is an artifact with \"{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.\")\n{T}: Exile target card from a graveyard. Create a Mutagen token.",
       "power": null,
       "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "b668e8a237348ab729d4f78ec49d9ca99780edf1f122adbec6c5235afc5c099c": {
+      "oracleId": "6b0e23cf-7d68-4329-86db-7adc26abd86b",
+      "scryfallId": "50aded92-f934-441f-8e48-d68d471e70d8",
+      "name": "Elvish Spirit Guide",
+      "manaCost": "{2}{G}",
+      "cmc": 3,
+      "colors": [
+        "G"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "typeLine": "Creature — Elf Spirit",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Spirit"
+      ],
+      "oracleText": "Exile this card from your hand: Add {G}.",
+      "power": "2",
+      "toughness": "2",
       "loyalty": null,
       "defense": null,
       "keywords": [],
@@ -16420,6 +17044,34 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "c2910eae78a6507e2279b724bfb14e7fe756457fd14c9af34b72946de4d156c5": {
+      "oracleId": "46eefc72-2d9e-4389-8ae1-26d9ee472b5c",
+      "scryfallId": "b005eef6-75f3-454f-a42b-d851bc84ac4e",
+      "name": "Tolaria West",
+      "manaCost": null,
+      "cmc": 0,
+      "colors": [],
+      "colorIdentity": [
+        "U"
+      ],
+      "typeLine": "Land",
+      "supertypes": [],
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "oracleText": "This land enters tapped.\n{T}: Add {U}.\nTransmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with mana value 0, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+      "power": null,
+      "toughness": null,
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Transmute"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "c4087982a8080ccc5e5214a58683928378c732ba9e32679700dd7e87a7299579": {
       "oracleId": "81dad7c5-5950-4c45-adb0-cf1a15a74250",
       "scryfallId": "b55e624b-6f6a-42ae-89aa-0cc62ee55a31",
@@ -16453,6 +17105,39 @@
         "Flying",
         "Goad",
         "Haste"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "c408a9d01850fad41df272877408ca66bf463e95485053e33948493937cdd2c1": {
+      "oracleId": "d85ea576-a794-44bf-b405-1f1c49477409",
+      "scryfallId": "08891c78-13c1-4d84-aa9c-78346b3b7d18",
+      "name": "Sacred Cat",
+      "manaCost": "{W}",
+      "cmc": 1,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Creature — Cat",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Cat"
+      ],
+      "oracleText": "Lifelink\nEmbalm {W} ({W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a white Zombie Cat with no mana cost. Embalm only as a sorcery.)",
+      "power": "1",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Lifelink",
+        "Embalm"
       ],
       "layout": "normal",
       "commanderLegality": "legal",
@@ -16570,6 +17255,30 @@
       "oracleText": "Other Elf creatures get +1/+1 and have forestwalk. (They can't be blocked as long as defending player controls a Forest.)",
       "power": "2",
       "toughness": "2",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "c5483126aac0e7b80a9938ced20fc298d4b7ba06186b1d88d6e4079cd9b3c484": {
+      "oracleId": "e7286688-ffbe-4d25-ad55-27990f005368",
+      "scryfallId": "91cef7ce-aa9f-4659-ac24-394c5ab9f77c",
+      "name": "Sliver Hive",
+      "manaCost": null,
+      "cmc": 0,
+      "colors": [],
+      "colorIdentity": [],
+      "typeLine": "Land",
+      "supertypes": [],
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "oracleText": "{T}: Add {C}.\n{T}: Add one mana of any color. Spend this mana only to cast a Sliver spell.\n{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver.",
+      "power": null,
+      "toughness": null,
       "loyalty": null,
       "defense": null,
       "keywords": [],
@@ -18492,6 +19201,37 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "db578fbb9f139562de9c9d336dccbd8878635592c7ee548c3414d08c9b9d63f0": {
+      "oracleId": "44e0ffa3-8915-4c1f-8f1a-4aeea1365f07",
+      "scryfallId": "0e57335d-4066-4d73-83cd-67a215e01a4e",
+      "name": "Simian Spirit Guide",
+      "manaCost": "{2}{R}",
+      "cmc": 3,
+      "colors": [
+        "R"
+      ],
+      "colorIdentity": [
+        "R"
+      ],
+      "typeLine": "Creature — Ape Spirit",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ape",
+        "Spirit"
+      ],
+      "oracleText": "Exile this card from your hand: Add {R}.",
+      "power": "2",
+      "toughness": "2",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "dc5a598c8b1bda5db8590ef9abe9f717f4d02dd5b97c0900aeec62a96e21e1e2": {
       "oracleId": "e233cb5b-7237-4271-8157-9179cc897b6c",
       "scryfallId": "9f51c115-dc9b-40a4-849d-3fc0c26e5a39",
@@ -19101,6 +19841,41 @@
       "defense": null,
       "keywords": [
         "Mill"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "e09a34b00efa113547bbfc571fb39fb3d4d5ef1e8c86f0cb22d8ff3db0e19bca": {
+      "oracleId": "12397dbf-99a9-40c3-aa7c-76d09baad008",
+      "scryfallId": "eaa358ac-761d-4507-aa15-3d4684027207",
+      "name": "Teacher's Pest",
+      "manaCost": "{B}{G}",
+      "cmc": 2,
+      "colors": [
+        "B",
+        "G"
+      ],
+      "colorIdentity": [
+        "B",
+        "G"
+      ],
+      "typeLine": "Creature — Skeleton Pest",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Skeleton",
+        "Pest"
+      ],
+      "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)\nWhenever this creature attacks, you gain 1 life.\n{B}{G}: Return this card from your graveyard to the battlefield tapped.",
+      "power": "1",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Menace"
       ],
       "layout": "normal",
       "commanderLegality": "legal",
@@ -20266,6 +21041,70 @@
       "commanderLegality": "legal",
       "isBasicLand": false
     },
+    "edcb32be1141c100f1794da50b0b1ae82a28ce332cd15e199fc8964c01cbdd5e": {
+      "oracleId": "4e0b9273-6614-41a8-9738-959349c0717b",
+      "scryfallId": "4f922231-bf41-47d3-8fa3-13b9baf4a0f3",
+      "name": "Anointer Priest",
+      "manaCost": "{1}{W}",
+      "cmc": 2,
+      "colors": [
+        "W"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "typeLine": "Creature — Human Cleric",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Cleric"
+      ],
+      "oracleText": "Whenever a creature token you control enters, you gain 1 life.\nEmbalm {3}{W} ({3}{W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a white Zombie Human Cleric with no mana cost. Embalm only as a sorcery.)",
+      "power": "1",
+      "toughness": "3",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Embalm"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
+    "edd9602c1ce6d7ea533de8c08c9feb60f99b43a607d2df9e5b674d9946b61630": {
+      "oracleId": "9dbc3530-b278-4c8d-b2cc-a09dfac9d5e5",
+      "scryfallId": "4d431445-d7db-4ce1-b422-41494d9be1b4",
+      "name": "Reassembling Skeleton",
+      "manaCost": "{1}{B}",
+      "cmc": 2,
+      "colors": [
+        "B"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "typeLine": "Creature — Skeleton Warrior",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Skeleton",
+        "Warrior"
+      ],
+      "oracleText": "{1}{B}: Return this card from your graveyard to the battlefield tapped.",
+      "power": "1",
+      "toughness": "1",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
+    },
     "ee78ac8b837ae0db0dd0a3b940baa65a9bfb9ca289850a43a0d8e72463b4d6b5": {
       "oracleId": "f88a096e-7497-4297-ab65-f18769b1cc47",
       "scryfallId": "0b4399b6-e67f-40d8-8676-f5db7e04a6c9",
@@ -21093,6 +21932,40 @@
         "loyalty": null,
         "defense": null
       }
+    },
+    "f66e78902b8f081d584a8d5de077af1eca69fb7aab0482ef69caef3d1d959f18": {
+      "oracleId": "d215127b-5f1d-4d3c-935b-c228c9c7f874",
+      "scryfallId": "b94cc636-de31-41b2-9c35-0bdfcdd0c1c1",
+      "name": "Dimir Infiltrator",
+      "manaCost": "{U}{B}",
+      "cmc": 2,
+      "colors": [
+        "B",
+        "U"
+      ],
+      "colorIdentity": [
+        "B",
+        "U"
+      ],
+      "typeLine": "Creature — Spirit",
+      "supertypes": [],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Spirit"
+      ],
+      "oracleText": "This creature can't be blocked.\nTransmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+      "power": "1",
+      "toughness": "3",
+      "loyalty": null,
+      "defense": null,
+      "keywords": [
+        "Transmute"
+      ],
+      "layout": "normal",
+      "commanderLegality": "legal",
+      "isBasicLand": false
     },
     "f6c49e6ad315acd29a654a4090c9a9344d977650d14a6b943eebf671015e5b96": {
       "oracleId": "b90af42d-edb6-4654-b7dc-10f0f272c883",
