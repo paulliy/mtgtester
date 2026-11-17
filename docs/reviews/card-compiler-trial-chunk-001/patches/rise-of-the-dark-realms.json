@@ -1,0 +1,26 @@
+{
+  "name": "Rise of the Dark Realms",
+  "oracleId": "e5223a09-f732-4747-8914-e6546ab0ef4c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put all creature cards from all graveyards onto the battlefield under your control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "graveyardToBattlefieldEach",
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "scope": "all"
+        }
+      ],
+      "description": "Put all creature cards from all graveyards onto the battlefield under your control."
+    }
+  }
+}

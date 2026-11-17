@@ -1,0 +1,2 @@
+Whenever enchanted player is attacked, create a Gold artifact token. Then create a Gold artifact token for the event player, but only if that player is an opponent of you.
+Each Gold token has "Sacrifice this artifact: Add one mana of any color."

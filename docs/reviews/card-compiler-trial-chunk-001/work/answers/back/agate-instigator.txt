@@ -1,0 +1,2 @@
+Offspring {1}{R}
+When this creature enters, create a number of tokens that are copies of this creature equal to the number of times the offspring cost was paid. Each of those tokens has base power and toughness 1/1.

@@ -1,0 +1,31 @@
+{
+  "name": "Grim Affliction",
+  "oracleId": "411ba1a2-30bb-4618-b874-6be0d996f07d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put a -1/-1 counter on target creature, then proliferate."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "putCounters",
+          "target": 0,
+          "counter": "-1/-1",
+          "count": 1
+        },
+        {
+          "op": "proliferate"
+        }
+      ],
+      "description": "Put a -1/-1 counter on target creature, then proliferate."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+Search a library for a card that is either an Aura enchantment or an Equipment artifact. Reveal that card and put it into a hand. Then shuffle. The data does not state whose library is searched, and no count is given.

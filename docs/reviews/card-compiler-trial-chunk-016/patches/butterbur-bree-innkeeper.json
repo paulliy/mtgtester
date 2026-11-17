@@ -1,0 +1,99 @@
+{
+  "name": "Butterbur, Bree Innkeeper",
+  "oracleId": "ec136f6f-015b-4200-97b6-a2c1bf39e135",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your end step, if you don't control a Food, create a Food token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "you",
+          "condition": {
+            "kind": "not",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "subtype",
+                "value": "Food"
+              },
+              "scope": "you",
+              "cmp": ">=",
+              "n": 1
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Food",
+              "typeLine": "Artifact — Food",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Food"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "activatedAbilities": [
+                {
+                  "costs": [
+                    {
+                      "kind": "mana",
+                      "cost": {
+                        "generic": 2,
+                        "colored": {
+                          "W": 0,
+                          "U": 0,
+                          "B": 0,
+                          "R": 0,
+                          "G": 0
+                        },
+                        "colorless": 0
+                      }
+                    },
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ],
+                  "timing": "any",
+                  "ability": {
+                    "kind": "activated",
+                    "targets": [],
+                    "effects": [
+                      {
+                        "op": "gainLife",
+                        "amount": {
+                          "kind": "const",
+                          "n": 3
+                        }
+                      }
+                    ],
+                    "description": "{2}, {T}, Sacrifice this token: You gain 3 life."
+                  }
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "At the beginning of your end step, if you don't control a Food, create a Food token."
+      }
+    ]
+  }
+}

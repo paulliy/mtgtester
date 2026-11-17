@@ -1,0 +1,17 @@
+{
+  "name": "Troll of Khazad-dûm",
+  "oracleId": "222fd9fc-7af4-4269-bbb9-cd7b8ac029bd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ can't be blocked except by three or more creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "minBlockers",
+        "minimum": 3
+      }
+    ]
+  }
+}

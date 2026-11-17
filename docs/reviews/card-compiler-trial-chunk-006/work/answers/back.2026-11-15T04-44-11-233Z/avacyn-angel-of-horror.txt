@@ -1,0 +1,1 @@
+Whenever a nontoken creature you control dies, register a delayed trigger that expires at the end step. The delayed trigger is controlled by this permanent's controller. When it triggers at the beginning of the end step, put that card from its graveyard onto the battlefield.

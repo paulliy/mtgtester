@@ -1,0 +1,25 @@
+{
+  "name": "Vanquish the Horde",
+  "oracleId": "a332e80a-dc51-4dc6-bc85-e114a1c6fdb8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast for each creature on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "scope": "all"
+        },
+        "selfOnly": true
+      }
+    ]
+  }
+}

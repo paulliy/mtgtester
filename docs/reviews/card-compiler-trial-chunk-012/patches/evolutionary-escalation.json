@@ -1,0 +1,52 @@
+{
+  "name": "Evolutionary Escalation",
+  "oracleId": "f9837988-a097-4f00-a94f-4856d5d9894e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, put three +1/+1 counters on target creature you control and three +1/+1 counters on target creature an opponent controls."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you"
+          },
+          {
+            "kind": "creature",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": 0,
+            "counter": "+1/+1",
+            "count": {
+              "kind": "const",
+              "n": 3
+            }
+          },
+          {
+            "op": "putCounters",
+            "target": 1,
+            "counter": "+1/+1",
+            "count": {
+              "kind": "const",
+              "n": 3
+            }
+          }
+        ],
+        "description": "At the beginning of your upkeep, put three +1/+1 counters on target creature you control and three +1/+1 counters on target creature an opponent controls."
+      }
+    ]
+  }
+}

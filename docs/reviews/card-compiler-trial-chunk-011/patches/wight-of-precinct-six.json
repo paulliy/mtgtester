@@ -1,0 +1,48 @@
+{
+  "name": "Wight of Precinct Six",
+  "oracleId": "6397c046-4c59-4f0b-9b44-2a804eb95edf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ gets +1/+1 for each creature card in your opponents' graveyards."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": {
+            "kind": "times",
+            "of": {
+              "kind": "countCardsInZone",
+              "zone": "graveyard",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              },
+              "owner": "opponents"
+            },
+            "n": 1
+          },
+          "toughness": {
+            "kind": "times",
+            "of": {
+              "kind": "countCardsInZone",
+              "zone": "graveyard",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              },
+              "owner": "opponents"
+            },
+            "n": 1
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "name": "Raised by Giants",
+  "oracleId": "1682cf24-17a3-49ad-8b6f-9b7f13ebf53c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Commander creatures you own have base power and toughness 10/10 and are Giants in addition to their other types."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "isCommander"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "owner",
+              "who": "you"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "const",
+            "n": 10
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 10
+          }
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "isCommander"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "owner",
+              "who": "you"
+            }
+          ]
+        },
+        "op": {
+          "layer": 4,
+          "addSubtypes": [
+            "Giant"
+          ]
+        }
+      }
+    ]
+  }
+}

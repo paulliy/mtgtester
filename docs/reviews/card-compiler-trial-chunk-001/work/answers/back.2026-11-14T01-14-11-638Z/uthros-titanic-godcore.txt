@@ -1,0 +1,1 @@
+{U}, {T}: Add {U} for each artifact you control. The mana ability costs {U} plus {T} (the data lists a mana payment of {U} as a cost). Activate only if this land has a number of charge counters compared to 12 by a comparison operator that is hidden in the data (the operator is not shown).

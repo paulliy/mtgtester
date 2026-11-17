@@ -1,0 +1,72 @@
+{
+  "name": "Itzquinth, Firstborn of Gishath",
+  "oracleId": "f976a244-1240-4430-9182-bb8d6d932ea0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ enters, you may pay {2}. When you do, target Dinosaur you control deals damage equal to its power to another target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "mayPayManaThenReflexive",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            },
+            "then": {
+              "kind": "triggered",
+              "targets": [
+                {
+                  "kind": "creature",
+                  "controller": "you",
+                  "filter": {
+                    "kind": "subtype",
+                    "value": "Dinosaur"
+                  }
+                },
+                {
+                  "kind": "creature",
+                  "differentFromSlots": [
+                    0
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "op": "dealDamage",
+                  "target": 1,
+                  "amount": {
+                    "kind": "powerOfTarget",
+                    "target": 0
+                  },
+                  "source": 0
+                }
+              ],
+              "description": "When you do, target Dinosaur you control deals damage equal to its power to another target creature."
+            }
+          }
+        ],
+        "description": "When Itzquinth enters, you may pay {2}. When you do, target Dinosaur you control deals damage equal to its power to another target creature."
+      }
+    ]
+  }
+}

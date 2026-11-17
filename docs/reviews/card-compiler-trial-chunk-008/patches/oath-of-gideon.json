@@ -1,0 +1,33 @@
+{
+  "name": "Oath of Gideon",
+  "oracleId": "ea168acc-22a1-4ba5-affd-fb813b93535a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each planeswalker you control enters with an additional loyalty counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "additionalCountersOnEntry": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Planeswalker"
+            }
+          ]
+        },
+        "counter": "loyalty",
+        "count": {
+          "kind": "const",
+          "n": 1
+        }
+      }
+    ]
+  }
+}

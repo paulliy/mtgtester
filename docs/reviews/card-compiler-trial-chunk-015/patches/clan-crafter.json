@@ -1,0 +1,92 @@
+{
+  "name": "Clan Crafter",
+  "oracleId": "6ebd4b3f-246e-475f-8cec-838eaaf597e2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Commander creatures you own have \"{2}, Sacrifice an artifact: Put a +1/+1 counter on this creature and draw a card.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "isCommander"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "owner",
+              "who": "you"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 2,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 0
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "sacrificeOther",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    }
+                  ]
+                },
+                "allowSelf": true
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "putCountersEach",
+                  "selector": {
+                    "kind": "self"
+                  },
+                  "counter": "+1/+1",
+                  "count": 1
+                },
+                {
+                  "op": "draw",
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "description": "{2}, Sacrifice an artifact: Put a +1/+1 counter on this creature and draw a card."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

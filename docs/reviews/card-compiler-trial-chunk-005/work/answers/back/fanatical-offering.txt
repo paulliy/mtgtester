@@ -1,0 +1,2 @@
+Draw two cards.
+Create a Map artifact token with "{1}, {T}, Sacrifice this artifact: Target creature you control explores. Activate only as a sorcery."

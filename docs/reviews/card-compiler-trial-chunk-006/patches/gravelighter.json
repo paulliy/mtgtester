@@ -1,0 +1,57 @@
+{
+  "name": "Gravelighter",
+  "oracleId": "45ef5ea9-70a6-4999-8778-6a11cb97d28e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, draw a card if a creature died this turn. Otherwise, each player sacrifices a creature of their choice."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "compareValues",
+              "left": {
+                "kind": "creaturesDiedThisTurn"
+              },
+              "cmp": ">=",
+              "right": {
+                "kind": "const",
+                "n": 1
+              }
+            },
+            "then": [
+              {
+                "op": "draw",
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "else": [
+              {
+                "op": "sacrificeEachPlayer",
+                "count": 1,
+                "filter": "creature"
+              }
+            ]
+          }
+        ],
+        "description": "When this creature enters, draw a card if a creature died this turn. Otherwise, each player sacrifices a creature of their choice."
+      }
+    ]
+  }
+}

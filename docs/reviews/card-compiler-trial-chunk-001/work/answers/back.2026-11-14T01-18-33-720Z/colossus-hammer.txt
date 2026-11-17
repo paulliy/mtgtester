@@ -1,0 +1,2 @@
+Equipped creature gets +10/+10 and loses flying.
+This Equipment has no equip ability.

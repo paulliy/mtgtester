@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"enters","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"eachOpponentDamage","amount":{"kind":"devotionTo","color":"R"}}],"description":"When this creature enters, it deals damage to each opponent equal to your devotion to red."}]}}

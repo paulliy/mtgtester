@@ -1,0 +1,67 @@
+{
+  "name": "Angelic Ascension",
+  "oracleId": "5a898412-5b1e-4217-ac78-5b4099ed8e16",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Exile target creature or planeswalker. Its controller creates a 4/4 white Angel creature token with flying."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Planeswalker"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "createTokenForPlayer",
+          "target": {
+            "controllerOf": 0
+          },
+          "spec": {
+            "name": "Angel",
+            "typeLine": "Token Creature — Angel",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Angel"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 4,
+            "toughness": 4,
+            "keywords": [
+              "flying"
+            ]
+          },
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        },
+        {
+          "op": "exile",
+          "target": 0
+        }
+      ],
+      "description": "Exile target creature or planeswalker. Its controller creates a 4/4 white Angel creature token with flying."
+    }
+  }
+}

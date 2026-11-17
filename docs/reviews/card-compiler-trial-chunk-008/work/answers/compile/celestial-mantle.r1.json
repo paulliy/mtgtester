@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Double its controller's life total' needs the life total of the enchanted creature's controller, but lifeTotal scope offers only you or the event player, and no target-free effect names the attached creature's controller."}

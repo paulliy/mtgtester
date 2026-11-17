@@ -1,0 +1,29 @@
+{
+  "name": "Ball Lightning",
+  "oracleId": "7485cf25-eb41-4397-be13-7f0b8c10c70a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of the end step, sacrifice this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "each"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrifice",
+            "target": "source"
+          }
+        ],
+        "description": "At the beginning of the end step, sacrifice this creature."
+      }
+    ]
+  }
+}

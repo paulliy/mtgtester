@@ -1,0 +1,106 @@
+{
+  "name": "Vampires' Vengeance",
+  "oracleId": "3a82e724-28f6-430f-a474-ab4276197963",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals 2 damage to each non-Vampire creature. Create a Blood token."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "description": "Vampires' Vengeance deals 2 damage to each non-Vampire creature. Create a Blood token.",
+      "targets": [],
+      "effects": [
+        {
+          "op": "damageEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "subtype",
+                  "value": "Vampire"
+                }
+              }
+            ]
+          },
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Blood",
+            "typeLine": "Artifact — Blood",
+            "types": [
+              "Artifact"
+            ],
+            "subtypes": [
+              "Blood"
+            ],
+            "colors": [],
+            "power": null,
+            "toughness": null,
+            "activatedAbilities": [
+              {
+                "costs": [
+                  {
+                    "kind": "mana",
+                    "cost": {
+                      "generic": 1,
+                      "colored": {
+                        "W": 0,
+                        "U": 0,
+                        "B": 0,
+                        "R": 0,
+                        "G": 0
+                      },
+                      "colorless": 0
+                    }
+                  },
+                  {
+                    "kind": "tap"
+                  },
+                  {
+                    "kind": "discardCard",
+                    "count": 1
+                  },
+                  {
+                    "kind": "sacrificeSelf"
+                  }
+                ],
+                "timing": "any",
+                "ability": {
+                  "kind": "activated",
+                  "targets": [],
+                  "effects": [
+                    {
+                      "op": "draw",
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      }
+                    }
+                  ],
+                  "description": "{1}, {T}, Discard a card, Sacrifice this token: Draw a card."
+                }
+              }
+            ]
+          },
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ]
+    }
+  }
+}

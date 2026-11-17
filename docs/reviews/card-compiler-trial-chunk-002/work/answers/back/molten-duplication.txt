@@ -1,0 +1,1 @@
+Target artifact or creature you control. Create a token that's a copy of that permanent, except it's an artifact in addition to its other types and it has haste. Sacrifice that token at the beginning of the end step.

@@ -1,0 +1,44 @@
+{
+  "name": "Ajani, Adversary of Tyrants",
+  "oracleId": "b25bea73-7444-4ee2-8022-611461506117",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "+1: Put a +1/+1 counter on each of up to two target creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "loyalty",
+            "delta": 1
+          }
+        ],
+        "timing": "sorcery",
+        "oncePerTurn": true,
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "count": {
+                "min": 0,
+                "max": 2
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "putCountersEachChosen",
+              "targetSlot": 0,
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ],
+          "description": "+1: Put a +1/+1 counter on each of up to two target creatures."
+        }
+      }
+    ]
+  }
+}

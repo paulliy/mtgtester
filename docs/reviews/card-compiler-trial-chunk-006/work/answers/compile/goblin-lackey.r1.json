@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The object damage trigger dealsDamageToOpponent covers only damage to an opponent, while the printed 'deals damage to a player' also includes its own controller."}

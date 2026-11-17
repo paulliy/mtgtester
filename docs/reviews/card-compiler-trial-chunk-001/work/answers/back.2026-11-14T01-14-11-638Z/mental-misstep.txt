@@ -1,0 +1,1 @@
+Counter target spell with mana value 1. The target must be a spell whose mana value is at least 1 and at most 1, that is, exactly 1.

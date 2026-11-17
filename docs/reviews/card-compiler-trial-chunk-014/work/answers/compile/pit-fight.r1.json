@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","controller":"you"},{"kind":"creature","differentFromSlots":[0]}],"effects":[{"op":"fight","first":0,"second":1}],"description":"Target creature you control fights another target creature."}}}

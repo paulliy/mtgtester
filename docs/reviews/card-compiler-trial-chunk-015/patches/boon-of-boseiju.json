@@ -1,0 +1,46 @@
+{
+  "name": "Boon of Boseiju",
+  "oracleId": "44e1946d-01b5-45db-abdc-2f6d6480cf60",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature gets +X/+X until end of turn, where X is the greatest mana value among permanents you control. Untap it."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": {
+            "kind": "greatestManaValueAmong",
+            "selector": {
+              "kind": "controller",
+              "who": "you"
+            },
+            "scope": "you"
+          },
+          "toughness": {
+            "kind": "greatestManaValueAmong",
+            "selector": {
+              "kind": "controller",
+              "who": "you"
+            },
+            "scope": "you"
+          }
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        }
+      ],
+      "description": "Target creature gets +X/+X until end of turn, where X is the greatest mana value among permanents you control. Untap it."
+    }
+  }
+}

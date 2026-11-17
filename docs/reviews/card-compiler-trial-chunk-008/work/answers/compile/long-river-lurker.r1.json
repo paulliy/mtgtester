@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The delayed 'whenever that creature deals combat damage this turn' trigger cannot be expressed exactly, because the only matching event (dealsCombatDamageToPlayer) misses combat damage dealt to a planeswalker."}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The granted 'When this creature deals combat damage, sacrifice it' needs a trigger for combat damage to any object, but the schema only has combat-damage triggers for damage to a player."}

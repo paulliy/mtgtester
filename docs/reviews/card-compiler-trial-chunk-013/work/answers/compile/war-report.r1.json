@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The life gained is the creature count plus the artifact count, and countPermanents over an anyOf selector counts an artifact creature once where the text counts it twice, while plus only takes a fixed number."}

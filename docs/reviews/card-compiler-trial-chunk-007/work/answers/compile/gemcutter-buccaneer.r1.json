@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Granting \"Equipped creature gets +2/+0\" to Treasures needs a granted static ability on the Treasure, and the layer 6 grant ops cannot grant a static effect (only triggers, activated and mana abilities)."}

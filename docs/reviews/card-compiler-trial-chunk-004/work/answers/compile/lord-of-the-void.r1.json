@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Exiling the top seven cards of the damaged player's library and then putting a creature card from among them onto the battlefield under your control has no schema op: lookAtTopN cannot exile the cards it looks at or read the event player's library."}

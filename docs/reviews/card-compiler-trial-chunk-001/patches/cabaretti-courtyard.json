@@ -1,0 +1,82 @@
+{
+  "name": "Cabaretti Courtyard",
+  "oracleId": "65424bea-fd53-4f85-9757-0b91a6d40ba4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this land enters, sacrifice it. When you do, search your library for a basic Mountain, Forest, or Plains card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeSourceThenReflexive",
+            "then": {
+              "kind": "triggered",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "searchLibrary",
+                  "filter": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "supertype",
+                        "value": "Basic"
+                      },
+                      {
+                        "kind": "anyOf",
+                        "of": [
+                          {
+                            "kind": "subtype",
+                            "value": "Mountain"
+                          },
+                          {
+                            "kind": "subtype",
+                            "value": "Forest"
+                          },
+                          {
+                            "kind": "subtype",
+                            "value": "Plains"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "destinations": [
+                    {
+                      "zone": "battlefield",
+                      "tapped": true
+                    }
+                  ],
+                  "allowFailToFind": true
+                },
+                {
+                  "op": "shuffle"
+                },
+                {
+                  "op": "gainLife",
+                  "amount": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "description": "Search for a basic Mountain, Forest, or Plains card, put it onto the battlefield tapped, then shuffle and you gain 1 life"
+            }
+          }
+        ],
+        "description": "When this land enters, sacrifice it. When you do, search your library for a basic Mountain, Forest, or Plains card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+      }
+    ]
+  }
+}

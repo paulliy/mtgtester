@@ -1,0 +1,1 @@
+When this creature enters, exile up to two target artifacts and/or enchantments. The trigger is mandatory (not optional); the choice of up to two targets (zero allowed) is made when it goes on the stack. The data places no controller restriction on the targets. The data grants no keywords.

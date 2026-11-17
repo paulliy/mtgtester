@@ -1,0 +1,43 @@
+{
+  "name": "Skeletal Changeling",
+  "oracleId": "b9d388ca-1a63-4a11-bf33-9f7b87305a52",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{B}: Regenerate this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "regenerate",
+              "target": "source"
+            }
+          ],
+          "description": "{1}{B}: Regenerate this creature."
+        }
+      }
+    ]
+  }
+}

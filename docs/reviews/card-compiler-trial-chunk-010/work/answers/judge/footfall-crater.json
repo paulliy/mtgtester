@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A gives the enchanted LAND the ability; Text B gives the enchanted CREATURE the ability.","Text B grants trample and haste as two separate until-end-of-turn effects; the grant itself matches, but the enchanted object is different, so the granted ability is attached to a different permanent."]}

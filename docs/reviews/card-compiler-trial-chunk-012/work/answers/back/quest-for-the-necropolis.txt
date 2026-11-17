@@ -1,0 +1,2 @@
+This permanent's activated abilities cost {1} less to activate for each quest counter on this permanent.
+{5}{B}, Sacrifice this permanent: Put target creature card from a graveyard onto the battlefield. Activate only as a sorcery.

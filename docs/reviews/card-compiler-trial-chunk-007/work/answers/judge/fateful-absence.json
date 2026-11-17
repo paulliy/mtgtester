@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Order of steps differs: Text A destroys the target first and then its controller investigates; Text B has its controller create the Clue token first and then destroys the target."]}

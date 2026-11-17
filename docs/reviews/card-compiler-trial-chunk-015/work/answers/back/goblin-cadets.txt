@@ -1,0 +1,2 @@
+Whenever this creature blocks, target opponent gains control of this creature.
+Whenever this creature becomes blocked, target opponent gains control of this creature.

@@ -1,0 +1,2 @@
+Remove eight loyalty counters from this: Target opponent. Create an emblem named "Ob Nixilis Reignited" for player 0 with the following ability: Whenever each player draws a card, lose 2 life.
+Activate only as a sorcery and only once each turn.

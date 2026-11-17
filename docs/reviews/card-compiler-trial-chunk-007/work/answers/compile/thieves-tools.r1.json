@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No static condition can read the equipped creature's power; powerAtMost is event-only and no condition reads the attached creature's power."}

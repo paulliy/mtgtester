@@ -1,0 +1,1 @@
+Whenever this creature attacks, if the attacking player has more life than the defending player, put a +1/+1 counter on this creature.

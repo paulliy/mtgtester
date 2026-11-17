@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The once-per-turn limit on casting Aura or Equipment spells from the graveyard cannot be expressed, since permanentTypeBudget counts uses per permanent type so an Aura and an Equipment would each get a use."}

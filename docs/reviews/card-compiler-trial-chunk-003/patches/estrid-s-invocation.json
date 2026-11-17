@@ -1,0 +1,45 @@
+{
+  "name": "Estrid's Invocation",
+  "oracleId": "7f5f10ee-6428-4053-8824-3bc70420ec2c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may have this enchantment enter as a copy of an enchantment you control, except it has \"At the beginning of your upkeep, you may exile this enchantment. If you do, return it to the battlefield under its owner's control.\""
+  ],
+  "compose": "append",
+  "def": {
+    "entersAsCopy": {
+      "selector": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "controller",
+            "who": "you"
+          },
+          {
+            "kind": "type",
+            "value": "Enchantment"
+          }
+        ]
+      },
+      "addTriggers": [
+        {
+          "kind": "triggered",
+          "trigger": {
+            "when": "upkeep",
+            "player": "you"
+          },
+          "optional": true,
+          "targets": [],
+          "effects": [
+            {
+              "op": "blinkTarget",
+              "target": "source",
+              "returnUnder": "owner"
+            }
+          ],
+          "description": "At the beginning of your upkeep, you may exile this enchantment. If you do, return it to the battlefield under its owner's control."
+        }
+      ]
+    }
+  }
+}

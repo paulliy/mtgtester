@@ -1,0 +1,50 @@
+{
+  "name": "Agate Instigator",
+  "oracleId": "e1a2bd31-b800-47cd-8866-1b849a601b09",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Offspring {1}{R}"
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": "source",
+            "count": {
+              "kind": "optionalCostCount",
+              "mechanic": "offspring"
+            },
+            "powerOverride": 1,
+            "toughnessOverride": 1
+          }
+        ],
+        "description": "Offspring {1}{R}: when this creature enters, create a 1/1 token copy of it."
+      }
+    ],
+    "optionalAdditionalCost": {
+      "mechanic": "offspring",
+      "cost": {
+        "generic": 1,
+        "colored": {
+          "W": 0,
+          "U": 0,
+          "B": 0,
+          "R": 1,
+          "G": 0
+        },
+        "colorless": 0
+      }
+    }
+  }
+}

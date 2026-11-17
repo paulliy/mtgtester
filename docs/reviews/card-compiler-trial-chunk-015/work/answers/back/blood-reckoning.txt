@@ -1,0 +1,1 @@
+Whenever a creature attacks, if you are the defending player, the event player loses 1 life.

@@ -1,0 +1,53 @@
+{
+  "name": "Stonehoof Chieftain",
+  "oracleId": "241d00bf-3301-4385-b559-d50565603dcc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another creature you control attacks, it gains trample and indestructible until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "grantKeywordUntilEot",
+            "target": "triggerObject",
+            "keyword": "trample"
+          },
+          {
+            "op": "grantKeywordUntilEot",
+            "target": "triggerObject",
+            "keyword": "indestructible"
+          }
+        ],
+        "description": "Whenever another creature you control attacks, it gains trample and indestructible until end of turn."
+      }
+    ]
+  }
+}

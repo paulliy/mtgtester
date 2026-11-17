@@ -1,0 +1,1 @@
+Exile target creature you control, then return it to the battlefield under its owner's control. If the target creature is a Pirate, draw a card. Otherwise, nothing happens.

@@ -1,0 +1,46 @@
+{
+  "name": "Donatello's Technique",
+  "oracleId": "194284f7-cf92-4d9f-a8ce-e4dc3505ab7a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sneak {U}"
+  ],
+  "compose": "append",
+  "def": {
+    "alternativeCasts": [
+      {
+        "kind": "nonMana",
+        "manaCost": {
+          "generic": 0,
+          "colored": {
+            "W": 0,
+            "U": 1,
+            "B": 0,
+            "R": 0,
+            "G": 0
+          },
+          "colorless": 0
+        },
+        "costs": [
+          {
+            "kind": "returnUnblockedAttacker"
+          }
+        ],
+        "instantTiming": true,
+        "condition": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "yourTurn"
+            },
+            {
+              "kind": "duringStep",
+              "step": "declareBlockers"
+            }
+          ]
+        },
+        "description": "Sneak {U} — return an unblocked attacker you control"
+      }
+    ]
+  }
+}

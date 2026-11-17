@@ -1,0 +1,1 @@
+At the beginning of your upkeep, if you control at least one creature and the greatest power among creatures you control is greater than or equal to the greatest power among all creatures, draw a card. Otherwise, put a +1/+1 counter on a creature of your choice.

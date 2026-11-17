@@ -1,0 +1,17 @@
+{
+  "name": "Meteor Crater",
+  "oracleId": "ebddf68c-1b22-4313-83e1-13a5c1aec19e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Choose a color of a permanent you control. Add one mana of that color."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [],
+        "dynamic": "oneColorAmongPermanents"
+      }
+    ]
+  }
+}

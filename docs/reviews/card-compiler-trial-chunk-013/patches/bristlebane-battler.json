@@ -1,0 +1,58 @@
+{
+  "name": "Bristlebane Battler",
+  "oracleId": "592689f2-f17c-40d6-b880-431f4b6a6b0c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another creature you control enters while this creature has a -1/-1 counter on it, remove a -1/-1 counter from this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "condition": {
+            "kind": "sourceHasCounters",
+            "counter": "-1/-1",
+            "cmp": ">=",
+            "n": 1
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "removeCounters",
+            "target": "source",
+            "counter": "-1/-1",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever another creature you control enters while this creature has a -1/-1 counter on it, remove a -1/-1 counter from this creature."
+      }
+    ]
+  }
+}

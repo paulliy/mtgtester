@@ -1,0 +1,6 @@
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/compile/pain-distributor.r2.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/compile/pain-distributor.r2.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/compile/magma-opus.r2.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/compile/magma-opus.r2.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/compile/battle-cry-goblin.r2.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/compile/battle-cry-goblin.r2.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/compile/filigree-vector.r2.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/compile/filigree-vector.r2.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/compile/reef-worm.r2.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/compile/reef-worm.r2.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/compile/szarel-genesis-shepherd.r2.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/compile/szarel-genesis-shepherd.r2.json

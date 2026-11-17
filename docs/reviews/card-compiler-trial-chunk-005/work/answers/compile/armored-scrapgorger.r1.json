@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"self"},"op":{"layer":7,"sublayer":"d","power":3,"toughness":0},"condition":{"kind":"sourceHasCounters","counter":"oil","cmp":">=","n":3}}]}}

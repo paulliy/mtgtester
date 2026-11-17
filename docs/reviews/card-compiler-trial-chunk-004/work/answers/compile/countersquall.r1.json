@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"noncreatureSpell"}],"effects":[{"op":"counter","target":0},{"op":"loseLifeTarget","target":{"controllerOf":0},"amount":{"kind":"const","n":2}}],"description":"Counter target noncreature spell. Its controller loses 2 life."}}}

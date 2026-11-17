@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no static effect that stops the enchanted permanent from attacking; cantBlock and cantBeBlocked describe only the card that prints them, and no layer or rule-static op removes an attached permanent's attack right."}

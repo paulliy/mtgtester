@@ -1,0 +1,1 @@
+When this creature dies, you gain life equal to its power, then draw cards equal to its power.

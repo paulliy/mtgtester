@@ -201,6 +201,8 @@ const SOURCE_FILES = [
   'packages/engine/src/cards/overrides/coverage-pr06.ts',
   'packages/engine/src/cards/overrides/coverage-pr07.ts',
   'packages/engine/src/cards/overrides/draconic-destruction.ts',
+  'packages/engine/src/cards/overrides/compiled/index.ts',
+  'packages/engine/src/cards/overrides/compiled/register.ts',
   'packages/engine/src/cards/overrides/edhrec-staples.ts',
   'packages/engine/src/cards/overrides/index.ts',
   'packages/engine/src/cards/overrides/marchesa-the-black-rose.ts',

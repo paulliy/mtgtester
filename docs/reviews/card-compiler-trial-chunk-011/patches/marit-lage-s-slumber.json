@@ -1,0 +1,55 @@
+{
+  "name": "Marit Lage's Slumber",
+  "oracleId": "a11d890e-38d4-467c-bc04-948979c142e0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ or another snow permanent you control enters, scry 1."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "supertype",
+                      "value": "Snow"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "scry",
+            "count": 1
+          }
+        ],
+        "description": "Whenever Marit Lage's Slumber or another snow permanent you control enters, scry 1."
+      }
+    ]
+  }
+}

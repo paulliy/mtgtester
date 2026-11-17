@@ -1,0 +1,28 @@
+{
+  "name": "Gauntlet of Might",
+  "oracleId": "d38ad188-515e-4865-a0ed-5d0fd4c7b453",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a Mountain is tapped for mana, its controller adds an additional {R}."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "manaActivationRider",
+        "source": {
+          "kind": "subtype",
+          "value": "Mountain"
+        },
+        "add": {
+          "kind": "fixed",
+          "units": [
+            [
+              "R"
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}

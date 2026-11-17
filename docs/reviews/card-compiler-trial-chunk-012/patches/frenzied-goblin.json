@@ -1,0 +1,59 @@
+{
+  "name": "Frenzied Goblin",
+  "oracleId": "6ac470a1-c2be-4971-a5ca-10bb189ebe4d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, you may pay {R}. If you do, target creature can't block this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "count": {
+              "min": 1,
+              "max": 1
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "mayPayMana",
+              "cost": {
+                "generic": 0,
+                "colored": {
+                  "W": 0,
+                  "U": 0,
+                  "B": 0,
+                  "R": 1,
+                  "G": 0
+                },
+                "colorless": 0
+              }
+            },
+            "then": [
+              {
+                "op": "cantBlockEachChosenThisTurn",
+                "targetSlot": 0
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Whenever this creature attacks, you may pay {R}. If you do, target creature can't block this turn."
+      }
+    ]
+  }
+}

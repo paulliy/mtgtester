@@ -1,0 +1,71 @@
+{
+  "name": "RMS Titanic",
+  "oracleId": "6754753d-790e-4a95-a150-76741c4a02d4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ deals combat damage to a player, sacrifice it and create that many Treasure tokens."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrifice",
+            "target": "source"
+          },
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Treasure",
+              "typeLine": "Artifact — Treasure",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Treasure"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "manaAbilities": [
+                {
+                  "units": [
+                    [
+                      "W",
+                      "U",
+                      "B",
+                      "R",
+                      "G"
+                    ]
+                  ],
+                  "costs": [
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": {
+              "kind": "damageDealt"
+            }
+          }
+        ],
+        "description": "When RMS Titanic deals combat damage to a player, sacrifice it and create that many Treasure tokens."
+      }
+    ]
+  }
+}

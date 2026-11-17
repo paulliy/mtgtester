@@ -1,0 +1,57 @@
+{
+  "name": "Cryogen Relic",
+  "oracleId": "106e9c0d-67a2-4db7-97d9-03e1ea1b40b5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{U}, Sacrifice this artifact: Put a stun counter on up to one target tapped creature."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "count": {
+                "min": 0,
+                "max": 1
+              },
+              "tapState": "tapped"
+            }
+          ],
+          "effects": [
+            {
+              "op": "putCountersEachChosen",
+              "targetSlot": 0,
+              "counter": "stun",
+              "count": 1
+            }
+          ],
+          "description": "{1}{U}, Sacrifice this artifact: Put a stun counter on up to one target tapped creature."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "Yip Yip!",
+  "oracleId": "5453550f-9136-4568-baf8-c3d20e33fbb6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control gets +2/+2 until end of turn. If that creature is an Ally, it also gains flying until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": 2,
+          "toughness": 2
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "subtype",
+              "value": "Ally"
+            }
+          },
+          "then": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": 0,
+              "keyword": "flying"
+            }
+          ],
+          "else": [],
+          "checkTarget": 0
+        }
+      ],
+      "description": "Target creature you control gets +2/+2 until end of turn. If that creature is an Ally, it also gains flying until end of turn."
+    }
+  }
+}

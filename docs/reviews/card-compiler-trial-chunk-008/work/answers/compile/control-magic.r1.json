@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Control of the enchanted creature is a continuing static effect, and the schema has no control-changing static (ContinuousOp has no control layer), so it can only be written as an enters trigger that a response could stop."}

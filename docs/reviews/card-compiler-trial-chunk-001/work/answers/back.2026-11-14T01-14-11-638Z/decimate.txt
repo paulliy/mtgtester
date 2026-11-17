@@ -1,0 +1,2 @@
+This spell has four targets, each required and with no controller restriction: target artifact, target creature, target enchantment, and target land.
+Destroy the target artifact. Destroy the target creature. Destroy the target enchantment. Destroy the target land.

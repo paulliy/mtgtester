@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"damageEach","selector":{"kind":"anyOf","of":[{"kind":"type","value":"Creature"},{"kind":"type","value":"Planeswalker"}]},"amount":{"kind":"const","n":4}}],"description":"Storm's Wrath deals 4 damage to each creature and each planeswalker."}}}

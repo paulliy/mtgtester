@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The free cast is limited to noncreature spells, but castOneFromHandFreeUpTo only takes a mana value ceiling and castAnyFromHandFree has no type filter; the waterbend helper-tap is also unmodeled."}

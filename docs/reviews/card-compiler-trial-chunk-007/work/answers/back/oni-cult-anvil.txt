@@ -1,0 +1,1 @@
+Once each turn, when one or more artifacts you control leave the battlefield during your turn, create a 1/1 colorless Construct artifact creature token.

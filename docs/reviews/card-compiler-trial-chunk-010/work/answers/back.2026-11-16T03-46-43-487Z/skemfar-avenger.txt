@@ -1,0 +1,1 @@
+Whenever another nontoken creature you control that is an Elf or a Berserker dies, draw a card and lose 1 life.

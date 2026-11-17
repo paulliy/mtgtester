@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"flipCoin","onWin":[{"op":"takeExtraTurn"}],"onLose":[]}],"description":"Flip a coin. If you win the flip, take an extra turn after this one."}}}

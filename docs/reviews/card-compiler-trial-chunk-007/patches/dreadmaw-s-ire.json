@@ -1,0 +1,64 @@
+{
+  "name": "Dreadmaw's Ire",
+  "oracleId": "781d6981-d389-4677-9eaf-9c46c9192ed6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Until end of turn, target attacking creature gets +2/+2 and gains trample and \"Whenever this creature deals combat damage to a player, destroy target artifact that player controls.\""
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "filter": {
+            "kind": "combatRole",
+            "role": "attacking"
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": 2,
+          "toughness": 2
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "trample"
+        },
+        {
+          "op": "grantAbilityUntilEot",
+          "target": 0,
+          "ability": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealsCombatDamageToPlayer",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [
+              {
+                "kind": "artifact",
+                "controller": "eventPlayer"
+              }
+            ],
+            "effects": [
+              {
+                "op": "destroy",
+                "target": 0
+              }
+            ],
+            "description": "Whenever this creature deals combat damage to a player, destroy target artifact that player controls."
+          }
+        }
+      ],
+      "description": "Until end of turn, target attacking creature gets +2/+2 and gains trample and \"Whenever this creature deals combat damage to a player, destroy target artifact that player controls.\""
+    }
+  }
+}

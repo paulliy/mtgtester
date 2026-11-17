@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A's enchant restriction is a creature with another Aura attached to it; Text B's is a creature that is enchanted, which is a different set of legal targets.","Text B adds that the Aura has no effect, which is not in Text A's lines under test and contradicts the whole card's +3/+3 and keyword grants."]}

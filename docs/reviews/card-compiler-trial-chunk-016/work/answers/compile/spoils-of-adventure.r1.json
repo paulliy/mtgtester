@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The cost reduction is per distinct party class (Cleric, Rogue, Warrior, Wizard, up to one each), and countPermanents counts creatures rather than distinct subtypes, so the schema cannot express the one-each count."}

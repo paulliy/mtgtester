@@ -1,0 +1,52 @@
+{
+  "name": "Overabundance",
+  "oracleId": "b1ee0503-be92-4a06-89cd-5dfa937930d3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a player taps a land for mana, that player adds one mana of any type that land produced, and this enchantment deals 1 damage to the player."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "becomesTapped",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Land"
+            }
+          },
+          "forMana": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a player taps a land for mana, that player adds one mana of any type that land produced, and this enchantment deals 1 damage to the player."
+      }
+    ],
+    "ruleStatics": [
+      {
+        "kind": "manaActivationRider",
+        "source": {
+          "kind": "type",
+          "value": "Land"
+        },
+        "add": {
+          "kind": "oneOfProducedTypes"
+        }
+      }
+    ]
+  }
+}

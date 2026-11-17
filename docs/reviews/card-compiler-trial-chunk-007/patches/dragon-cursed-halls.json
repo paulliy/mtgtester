@@ -1,0 +1,105 @@
+{
+  "name": "Dragon-Cursed Halls",
+  "oracleId": "5be7a4d5-33b7-464b-8851-d4ad35302e62",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}, {T}: Until end of turn, target creature gains \"Whenever this creature deals combat damage to a player, create a Treasure token.\""
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [
+            {
+              "op": "grantAbilityUntilEot",
+              "target": 0,
+              "ability": {
+                "kind": "triggered",
+                "trigger": {
+                  "when": "dealsCombatDamageToPlayer",
+                  "subject": {
+                    "kind": "self"
+                  }
+                },
+                "optional": false,
+                "targets": [],
+                "effects": [
+                  {
+                    "op": "createToken",
+                    "spec": {
+                      "name": "Treasure",
+                      "typeLine": "Artifact — Treasure",
+                      "types": [
+                        "Artifact"
+                      ],
+                      "subtypes": [
+                        "Treasure"
+                      ],
+                      "colors": [],
+                      "power": null,
+                      "toughness": null,
+                      "manaAbilities": [
+                        {
+                          "units": [
+                            [
+                              "W",
+                              "U",
+                              "B",
+                              "R",
+                              "G"
+                            ]
+                          ],
+                          "costs": [
+                            {
+                              "kind": "tap"
+                            },
+                            {
+                              "kind": "sacrificeSelf"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    }
+                  }
+                ],
+                "description": "Whenever this creature deals combat damage to a player, create a Treasure token."
+              }
+            }
+          ],
+          "description": "{1}, {T}: Until end of turn, target creature gains \"Whenever this creature deals combat damage to a player, create a Treasure token.\""
+        }
+      }
+    ]
+  }
+}

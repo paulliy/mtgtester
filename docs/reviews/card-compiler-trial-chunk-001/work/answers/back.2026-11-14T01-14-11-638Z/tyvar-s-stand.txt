@@ -1,0 +1,1 @@
+Target creature you control gets +X/+X until end of turn, where X is the value chosen for this spell. The target creature gains hexproof until end of turn. The target creature gains indestructible until end of turn. The data does not show the mana cost, so how X is chosen is not specified.

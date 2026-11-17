@@ -1,0 +1,33 @@
+{
+  "name": "Jaya's Immolating Inferno",
+  "oracleId": "f5f0deb0-070a-45b6-9b81-0bc8143f3040",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals X damage to each of up to three targets."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "anyTarget",
+          "count": {
+            "min": 0,
+            "max": 3
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamageEachChosen",
+          "targetSlot": 0,
+          "amount": {
+            "kind": "xValue"
+          }
+        }
+      ],
+      "description": "Jaya's Immolating Inferno deals X damage to each of up to three targets."
+    }
+  }
+}

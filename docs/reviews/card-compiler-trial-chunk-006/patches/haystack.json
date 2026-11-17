@@ -1,0 +1,55 @@
+{
+  "name": "Haystack",
+  "oracleId": "d64d69bd-1815-4647-90bc-767fad5c7da7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}, {T}: Target creature you control phases out."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you",
+              "count": {
+                "min": 1,
+                "max": 1
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "phaseOutEachChosen",
+              "targetSlot": 0
+            }
+          ],
+          "description": "{2}, {T}: Target creature you control phases out."
+        }
+      }
+    ]
+  }
+}

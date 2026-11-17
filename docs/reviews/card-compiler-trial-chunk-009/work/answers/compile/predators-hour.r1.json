@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"grantAbilityUntilEot grants a triggered ability to one target, not to every creature you control, so the until-end-of-turn granted combat-damage trigger cannot be expressed."}

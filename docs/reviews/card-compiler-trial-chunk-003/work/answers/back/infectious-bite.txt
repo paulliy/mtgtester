@@ -1,0 +1,1 @@
+Choose a target creature you control and a target creature an opponent controls. The creature you control deals damage equal to its power to the creature an opponent controls. Each opponent gets a poison counter.

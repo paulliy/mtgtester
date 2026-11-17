@@ -1,0 +1,60 @@
+{
+  "name": "Hollowhead Sliver",
+  "oracleId": "739ad367-a4ff-4779-8888-3c27f0f60253",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sliver creatures you control have \"{T}, Discard a card: Draw a card.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Sliver"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "tap"
+              },
+              {
+                "kind": "discardCard"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "description": "{T}, Discard a card: Draw a card."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

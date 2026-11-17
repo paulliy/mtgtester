@@ -1,0 +1,1 @@
+Whenever a creature or planeswalker an opponent controls that has a bounty counter on it is dealt damage, destroy that permanent.

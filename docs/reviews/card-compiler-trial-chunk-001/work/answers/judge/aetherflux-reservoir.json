@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A counts only spells you have cast this turn (\"spell you've cast this turn\"), but Text B counts all spells cast this turn by any player (\"the number of spells cast this turn\"), so B gains life for opponents' spells too."]}

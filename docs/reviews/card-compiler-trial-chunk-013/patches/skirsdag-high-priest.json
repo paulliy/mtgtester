@@ -1,0 +1,81 @@
+{
+  "name": "Skirsdag High Priest",
+  "oracleId": "c6064c08-e4e0-49f4-9f0b-55cdecf443af",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Tap two untapped creatures you control: Create a 5/5 black Demon creature token with flying. Activate only if a creature died this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "tapOthers",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "count": 2
+          }
+        ],
+        "timing": "any",
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "creaturesDiedThisTurn"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 1
+          }
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Demon",
+                "typeLine": "Token Creature — Demon",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Demon"
+                ],
+                "colors": [
+                  "B"
+                ],
+                "power": 5,
+                "toughness": 5,
+                "keywords": [
+                  "flying"
+                ]
+              },
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "Morbid — {T}, Tap two untapped creatures you control: Create a 5/5 black Demon creature token with flying. Activate only if a creature died this turn."
+        }
+      }
+    ]
+  }
+}

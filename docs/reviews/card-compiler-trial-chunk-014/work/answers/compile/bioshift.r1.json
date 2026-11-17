@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"moveCounters takes a fixed count rather than 'any number', and no target restriction can require the second creature to share the first target's controller."}

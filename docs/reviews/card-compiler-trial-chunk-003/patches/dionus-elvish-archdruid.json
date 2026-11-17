@@ -1,0 +1,59 @@
+{
+  "name": "Dionus, Elvish Archdruid",
+  "oracleId": "d5e5cf55-eb9e-4f01-9056-791215411b27",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Elves you control have \"Whenever this creature becomes tapped during your turn, untap it and put a +1/+1 counter on it. This ability triggers only once each turn.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Elf"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "becomesTapped",
+              "subject": {
+                "kind": "self"
+              },
+              "oncePerTurn": true,
+              "condition": {
+                "kind": "yourTurn"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "untapTarget",
+                "target": "source"
+              },
+              {
+                "op": "putCounters",
+                "target": "source",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            ],
+            "description": "Whenever this creature becomes tapped during your turn, untap it and put a +1/+1 counter on it. This ability triggers only once each turn."
+          }
+        }
+      }
+    ]
+  }
+}

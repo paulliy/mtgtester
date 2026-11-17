@@ -1,0 +1,55 @@
+{
+  "name": "Kataki, War's Wage",
+  "oracleId": "27ffa6e9-c161-4f53-8b41-7fae5f199f41",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "All artifacts have \"At the beginning of your upkeep, sacrifice this artifact unless you pay {1}.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "type",
+          "value": "Artifact"
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "upkeep",
+              "player": "you"
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "unlessPays",
+                "payer": "controller",
+                "cost": {
+                  "generic": 1,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 0
+                  },
+                  "colorless": 0
+                },
+                "then": [
+                  {
+                    "op": "sacrifice",
+                    "target": "source"
+                  }
+                ]
+              }
+            ],
+            "description": "At the beginning of your upkeep, sacrifice this artifact unless you pay {1}."
+          }
+        }
+      }
+    ]
+  }
+}

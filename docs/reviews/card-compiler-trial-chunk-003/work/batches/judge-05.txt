@@ -1,0 +1,2 @@
+docs/reviews/card-compiler-trial-chunk-003/work/prompts/judge/blade-of-the-bloodchief.md	docs/reviews/card-compiler-trial-chunk-003/work/answers/judge/blade-of-the-bloodchief.json
+docs/reviews/card-compiler-trial-chunk-003/work/prompts/judge/cackling-counterpart.md	docs/reviews/card-compiler-trial-chunk-003/work/answers/judge/cackling-counterpart.json

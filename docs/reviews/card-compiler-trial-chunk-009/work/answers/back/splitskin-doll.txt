@@ -1,0 +1,1 @@
+When this creature enters, draw a card. Then if you control no other creature with power 2 or less, discard a card.

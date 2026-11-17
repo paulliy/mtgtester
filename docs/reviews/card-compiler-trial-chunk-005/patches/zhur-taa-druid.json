@@ -1,0 +1,32 @@
+{
+  "name": "Zhur-Taa Druid",
+  "oracleId": "5979310e-38c8-489f-ab9e-2723af98a3a5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you tap this creature for mana, it deals 1 damage to each opponent."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "becomesTapped",
+          "subject": {
+            "kind": "self"
+          },
+          "forMana": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "eachOpponentDamage",
+            "amount": 1
+          }
+        ],
+        "description": "Whenever you tap this creature for mana, it deals 1 damage to each opponent."
+      }
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "name": "Long-Lost Lances",
+  "oracleId": "0eaec4ec-0f50-4470-a7bf-acd8c6c52dc2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "During your turn, creatures you control that are equipped have first strike and vigilance."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "isEquipped"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "first strike"
+        },
+        "condition": {
+          "kind": "yourTurn"
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "isEquipped"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "vigilance"
+        },
+        "condition": {
+          "kind": "yourTurn"
+        }
+      }
+    ]
+  }
+}

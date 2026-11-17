@@ -1,0 +1,22 @@
+{
+  "name": "Hardlight Containment",
+  "oracleId": "8054092a-1940-4f4b-991d-81f4d384cdb1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchant artifact you control"
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "artifact",
+          "controller": "you"
+        }
+      ],
+      "effects": [],
+      "description": "Enchant artifact you control"
+    }
+  }
+}

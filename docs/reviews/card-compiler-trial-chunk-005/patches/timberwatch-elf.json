@@ -1,0 +1,52 @@
+{
+  "name": "Timberwatch Elf",
+  "oracleId": "50cee3ac-cba0-4abb-babf-de1928b1590e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Target creature gets +X/+X until end of turn, where X is the number of Elves on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "target": 0,
+              "power": {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Elf"
+                },
+                "scope": "all"
+              },
+              "toughness": {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Elf"
+                },
+                "scope": "all"
+              }
+            }
+          ],
+          "description": "{T}: Target creature gets +X/+X until end of turn, where X is the number of Elves on the battlefield."
+        }
+      }
+    ]
+  }
+}

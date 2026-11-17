@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"counterPlacementReplacement","filter":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"anyOf","of":[{"kind":"subtype","value":"Army"},{"kind":"subtype","value":"Goblin"},{"kind":"subtype","value":"Orc"}]}]},"counter":"+1/+1","multiplier":1,"addition":1}]}}

@@ -1,0 +1,1 @@
+Each permanent you control that has the Vehicle creature type has flying.

@@ -1,0 +1,36 @@
+{
+  "name": "Faithful Mending",
+  "oracleId": "b997a982-09e1-4ae1-a972-3c2e5f101e8c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You gain 2 life, draw two cards, then discard two cards."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "discard",
+          "count": 2
+        }
+      ],
+      "description": "You gain 2 life, draw two cards, then discard two cards."
+    }
+  }
+}

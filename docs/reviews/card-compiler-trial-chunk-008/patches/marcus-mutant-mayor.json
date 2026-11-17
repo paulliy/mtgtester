@@ -1,0 +1,67 @@
+{
+  "name": "Marcus, Mutant Mayor",
+  "oracleId": "c9db8f36-2c72-403e-b2b7-7cdfba5feaa4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature you control deals combat damage to a player, draw a card if that creature has a +1/+1 counter on it. If it doesn't, put a +1/+1 counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "kind": "hasCounter",
+                "counter": "+1/+1"
+              }
+            },
+            "then": [
+              {
+                "op": "draw",
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "else": [
+              {
+                "op": "putCounters",
+                "target": "triggerObject",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            ]
+          }
+        ],
+        "description": "Whenever a creature you control deals combat damage to a player, draw a card if that creature has a +1/+1 counter on it. If it doesn't, put a +1/+1 counter on it."
+      }
+    ]
+  }
+}

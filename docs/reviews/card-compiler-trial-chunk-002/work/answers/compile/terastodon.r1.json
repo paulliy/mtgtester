@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Destroying up to three chosen noncreature permanents and having each destroyed permanent's own controller create a 3/3 Elephant has no single effect: destroyAndCreateTokenForController handles one target only, and destroyEachChosen does not create tokens for controllers."}

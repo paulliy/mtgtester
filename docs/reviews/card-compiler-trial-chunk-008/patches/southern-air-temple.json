@@ -1,0 +1,61 @@
+{
+  "name": "Southern Air Temple",
+  "oracleId": "987c1144-69f6-4441-b0a4-d23f931df81f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ enters, put X +1/+1 counters on each creature you control, where X is the number of Shrines you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "counter": "+1/+1",
+            "count": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Shrine"
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "When ~ enters, put X +1/+1 counters on each creature you control, where X is the number of Shrines you control."
+      }
+    ]
+  }
+}

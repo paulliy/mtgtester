@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The Mutavault token's {1} ability makes it a 2/2 with all creature types until end of turn, and becomeCreatureUntilEot takes only an explicit subtype list, so 'all creature types' cannot be stated."}

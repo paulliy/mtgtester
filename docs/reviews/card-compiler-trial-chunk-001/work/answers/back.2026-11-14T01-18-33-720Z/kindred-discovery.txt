@@ -1,0 +1,2 @@
+Whenever a creature you control of the chosen creature type enters, draw a card. This trigger is mandatory and targets nothing.
+Whenever a creature you control of the chosen creature type attacks, draw a card. This trigger is mandatory and targets nothing.

@@ -1,0 +1,34 @@
+{
+  "name": "Steelshaper's Gift",
+  "oracleId": "d9abda7e-6ca2-42ea-ab24-c542e57014f1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Search your library for an Equipment card, reveal that card, put it into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "subtype",
+            "value": "Equipment"
+          },
+          "destinations": [
+            {
+              "zone": "hand"
+            }
+          ],
+          "reveal": true
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "description": "Search your library for an Equipment card, reveal that card, put it into your hand, then shuffle."
+    }
+  }
+}

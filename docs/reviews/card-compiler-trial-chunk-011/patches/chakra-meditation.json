@@ -1,0 +1,72 @@
+{
+  "name": "Chakra Meditation",
+  "oracleId": "12c57ebe-35a7-4cb3-936b-99c148a3cfed",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast an instant or sorcery spell, draw a card. Then discard a card unless there are three or more Lesson cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "compareValues",
+              "left": {
+                "kind": "countCardsInZone",
+                "zone": "graveyard",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Lesson"
+                },
+                "owner": "you"
+              },
+              "cmp": ">=",
+              "right": {
+                "kind": "const",
+                "n": 3
+              }
+            },
+            "then": [],
+            "else": [
+              {
+                "op": "discard",
+                "count": 1
+              }
+            ]
+          }
+        ],
+        "description": "Whenever you cast an instant or sorcery spell, draw a card. Then discard a card unless there are three or more Lesson cards in your graveyard."
+      }
+    ]
+  }
+}

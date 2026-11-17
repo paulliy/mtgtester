@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The granted cast trigger needs 'a spell that shares a creature type with this creature', and the schema has no selector or filter that compares a spell's creature types to the source's."}

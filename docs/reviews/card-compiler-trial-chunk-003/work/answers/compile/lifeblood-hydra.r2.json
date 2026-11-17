@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"dies","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"gainLife","amount":{"kind":"powerOfSource"}},{"op":"draw","count":{"kind":"powerOfSource"}}],"description":"When this creature dies, you gain life and draw cards equal to its power."}]}}

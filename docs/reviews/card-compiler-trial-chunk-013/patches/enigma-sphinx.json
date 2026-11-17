@@ -1,0 +1,34 @@
+{
+  "name": "Enigma Sphinx",
+  "oracleId": "6fb84ecd-ab60-4c2c-987d-8a0749db5777",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature is put into your graveyard from the battlefield, put it into your library third from the top."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "leavesBattlefield",
+          "subject": {
+            "kind": "self"
+          },
+          "leavesTo": [
+            "graveyard"
+          ]
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putDepartedSourceIntoLibrary",
+            "fromTop": 3
+          }
+        ],
+        "description": "When this creature is put into your graveyard from the battlefield, put it into your library third from the top."
+      }
+    ]
+  }
+}

@@ -1,0 +1,2 @@
+If there are three or more Lesson cards in your graveyard, look at the top three cards of your library. Put three of them into your hand. Put the rest on the bottom of your library in any order.
+Otherwise, look at the top three cards of your library. Put any of them into your hand, as required. Put the rest on the bottom of your library in any order.

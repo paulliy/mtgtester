@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"anyOf","of":[{"kind":"type","value":"Land"},{"kind":"subtype","value":"Ally"}]}]},"op":{"layer":6,"addManaAbility":{"units":[["W","U","B","R","G"]]}}}]}}

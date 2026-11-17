@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A is a trigger on the event of the fourth plan counter being put on the enchantment, so it happens once when that counter is added. Text B is a state condition that applies whenever there are four plan counters on it, which is a different timing and can behave differently when counters are removed or added beyond four."]}

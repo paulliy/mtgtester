@@ -1,0 +1,62 @@
+{
+  "name": "Ancestral Mask",
+  "oracleId": "db5380ed-ba28-4ea2-abc3-4998e2022903",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature gets +2/+2 for each other enchantment on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": {
+            "kind": "times",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  }
+                ]
+              },
+              "scope": "all"
+            },
+            "n": 2
+          },
+          "toughness": {
+            "kind": "times",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  }
+                ]
+              },
+              "scope": "all"
+            },
+            "n": 2
+          }
+        }
+      }
+    ]
+  }
+}

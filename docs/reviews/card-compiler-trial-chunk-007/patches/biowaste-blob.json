@@ -1,0 +1,36 @@
+{
+  "name": "Biowaste Blob",
+  "oracleId": "7fa8647a-7668-4db9-a77d-87e004b160e1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, if you control a commander, create a token that's a copy of this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you",
+          "condition": {
+            "kind": "controlsACommander"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": "source",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "At the beginning of your upkeep, if you control a commander, create a token that's a copy of this creature."
+      }
+    ]
+  }
+}
