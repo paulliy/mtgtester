@@ -298,13 +298,15 @@ describe('discard effects with player references', () => {
   });
 
   it('rejects a creature target for discardTarget during structural reference validation', () => {
-    const definition = interpretCard(
-      oracle({
-        name: 'Malformed Discard Spell',
-        typeLine: 'Sorcery',
-        power: null,
-        toughness: null,
-      }),
+    const definition = structuredClone(
+      interpretCard(
+        oracle({
+          name: 'Malformed Discard Spell',
+          typeLine: 'Sorcery',
+          power: null,
+          toughness: null,
+        }),
+      ),
     );
     definition.spellAbility = {
       kind: 'spell',

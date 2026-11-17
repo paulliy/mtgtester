@@ -357,7 +357,7 @@ describe('Dark Confidant upkeep reveal', () => {
 
 describe('hand-effect structural contracts', () => {
   const definitionWith = (effect: unknown, targetKind: 'player' | 'creature' = 'player') => {
-    const definition = interpretCard(duress);
+    const definition = structuredClone(interpretCard(duress));
     definition.spellAbility = {
       kind: 'spell',
       targets: [{ kind: targetKind }],
