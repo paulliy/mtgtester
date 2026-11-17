@@ -19967,6 +19967,1190 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "666af637-9282-4121-962a-048e528f9221": {
+      "name": "Steel Leaf Champion",
+      "oracleSha256": "fbaade31376c33abb7ff3acfd66a1fac799fa1db5d7fb25b92b035008179ee90",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked by creatures with power 2 or less.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, notBy creatures with power 2 or less; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/steel-leaf-champion.test.ts::steel-leaf-champion-blocked-by-power-three",
+            "cards/evasion-blocking/steel-leaf-champion.test.ts::steel-leaf-champion-unblockable-by-power-two"
+          ],
+          "viewerScenarioIds": [
+            "steel-leaf-champion-blocked-by-power-three",
+            "steel-leaf-champion-unblockable-by-power-two"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "008f2698-1721-45a3-8353-10f2f400dc8f": {
+      "name": "Shizo, Death's Storehouse",
+      "oracleSha256": "a6f8768e853f777cf675bfb89242acc8423dd0c15b3433ed8e9abf17c8793acb",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{B}, {T}: Target legendary creature gains fear until end of turn.",
+          "implementation": [
+            "Activated ability costing {B} and {T}: target legendary creature gains the fear keyword until end of turn; fear is a blockRestriction (only artifact and/or black creatures may block) (CR 702.36)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/shizo-deaths-storehouse.test.ts::shizo-deaths-storehouse-fear-green-creature-cannot-block",
+            "cards/evasion-blocking/shizo-deaths-storehouse.test.ts::shizo-deaths-storehouse-fear-black-creature-may-block",
+            "cards/evasion-blocking/shizo-deaths-storehouse.test.ts::shizo-deaths-storehouse-fear-only-legendary-target",
+            "cards/evasion-blocking/shizo-deaths-storehouse.test.ts::clause 2, negative: only the legendary creature is a legal target, not a nonlegendary one"
+          ],
+          "viewerScenarioIds": [
+            "shizo-deaths-storehouse-fear-green-creature-cannot-block",
+            "shizo-deaths-storehouse-fear-black-creature-may-block",
+            "shizo-deaths-storehouse-fear-only-legendary-target"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "634d5009-cbf3-44cb-8c15-7057f501a210": {
+      "name": "Trailblazer's Boots",
+      "oracleSha256": "5266977472c192c4d990b5eeb77858feabc7a2e236f9272491760c88350a7ad2",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature has nonbasic landwalk.",
+          "implementation": [
+            "landwalk rule static (nonbasic) granted to the equipped creature by the Equipment; defending player's nonbasic land makes it unblockable (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/trailblazers-boots.test.ts::trailblazers-boots-unblockable",
+            "cards/evasion-blocking/trailblazers-boots.test.ts::trailblazers-boots-blockable"
+          ],
+          "viewerScenarioIds": ["trailblazers-boots-unblockable", "trailblazers-boots-blockable"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "69facbc7-3859-4716-b627-5199571fb3cf": {
+      "name": "Chasm Skulker",
+      "oracleSha256": "398a28b3d5cefd7ceeeaec476f923868be91dcbcdc82ca9f1b229f02ff6edb95",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, create X 1/1 blue Squid creature tokens with islandwalk, where X is the number of +1/+1 counters on this creature.",
+          "implementation": [
+            "Dies trigger creating X Squid tokens with islandwalk, X counted from the +1/+1 counters on it as it last existed on the battlefield; islandwalk is a blockRestriction (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/chasm-skulker.test.ts::chasm-skulker-dies-with-counters-makes-squids",
+            "cards/evasion-blocking/chasm-skulker.test.ts::chasm-skulker-squid-has-islandwalk",
+            "cards/evasion-blocking/chasm-skulker.test.ts::chasm-skulker-dies-without-counters-makes-none"
+          ],
+          "viewerScenarioIds": [
+            "chasm-skulker-dies-with-counters-makes-squids",
+            "chasm-skulker-squid-has-islandwalk",
+            "chasm-skulker-dies-without-counters-makes-none"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "88bb91b5-2ccd-4ce9-8cd4-e54d63c12abf": {
+      "name": "Coruscation Mage",
+      "oracleSha256": "e2ff60cbea5e62cfb5d1b04e119acb743e436e98567dd44420f3e0d4158a2c27",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Offspring {2}",
+          "implementation": [
+            "offspring keyword cost parse rule: optionalAdditionalCost (offspring) plus an enters trigger creating a 1/1 token copy when the extra cost was paid"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/coruscation-mage.test.ts::coruscation-mage-offspring-paid",
+            "cards/evasion-blocking/coruscation-mage.test.ts::coruscation-mage-offspring-declined",
+            "cards/evasion-blocking/coruscation-mage.test.ts::offspring paid: the second copy is a 1/1 token, the first a card",
+            "cards/evasion-blocking/coruscation-mage.test.ts::offspring declined: exactly one permanent, not a token",
+            "cards/evasion-blocking/coruscation-mage.test.ts::offspring is only offered when its extra cost can be paid"
+          ],
+          "viewerScenarioIds": [
+            "coruscation-mage-offspring-paid",
+            "coruscation-mage-offspring-declined"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e1a2bd31-b800-47cd-8866-1b849a601b09": {
+      "name": "Agate Instigator",
+      "oracleSha256": "4d54fef84943f52147f72f699d0c2d22172b2498792ffa20be8799621ecc4d77",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Offspring {1}{R}",
+          "implementation": [
+            "offspring keyword cost parse rule: optionalAdditionalCost (offspring) plus an enters trigger creating a 1/1 token copy when the extra cost was paid"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/agate-instigator.test.ts::agate-instigator-offspring-paid",
+            "cards/evasion-blocking/agate-instigator.test.ts::agate-instigator-offspring-declined",
+            "cards/evasion-blocking/agate-instigator.test.ts::offspring paid: the second copy is a 1/1 token, the first a card",
+            "cards/evasion-blocking/agate-instigator.test.ts::offspring declined: exactly one permanent, not a token",
+            "cards/evasion-blocking/agate-instigator.test.ts::offspring is only offered when its extra cost can be paid"
+          ],
+          "viewerScenarioIds": [
+            "agate-instigator-offspring-paid",
+            "agate-instigator-offspring-declined"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d78654fc-7d90-40ce-9c36-a211424d1a88": {
+      "name": "Cover of Darkness",
+      "oracleSha256": "ab138afd5d973b674ed4e8e5e39eadc2c12f7f0eb0904303743e25104282e29c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures of the chosen type have fear.",
+          "implementation": [
+            "chosen creature type stored as the permanent enters; layer-6 static grants fear to creatures of that type (CR 702.36)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/cover-of-darkness.test.ts::cover-of-darkness-chosen-type-unblockable",
+            "cards/evasion-blocking/cover-of-darkness.test.ts::cover-of-darkness-other-type-blockable"
+          ],
+          "viewerScenarioIds": [
+            "cover-of-darkness-chosen-type-unblockable",
+            "cover-of-darkness-other-type-blockable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f33cd975-ab70-4209-a6d8-e0d727772bf2": {
+      "name": "Cold-Eyed Selkie",
+      "oracleSha256": "ab119a762e40d00c0539b10f8f46c8eca81592b4bff5e4c80eae4c48f9c50aa2",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Islandwalk",
+          "implementation": [
+            "Islandwalk keyword: can't be blocked as long as defending player controls a Island (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/cold-eyed-selkie.test.ts::cold-eyed-selkie-unblockable-with-island",
+            "cards/evasion-blocking/cold-eyed-selkie.test.ts::cold-eyed-selkie-blockable-without-island"
+          ],
+          "viewerScenarioIds": [
+            "cold-eyed-selkie-unblockable-with-island",
+            "cold-eyed-selkie-blockable-without-island"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "222fd9fc-7af4-4269-bbb9-cd7b8ac029bd": {
+      "name": "Troll of Khazad-dûm",
+      "oracleSha256": "cc03f7c3d3e5a1aa4c01dcffe6d22dd48d8ab27350e8e6a00b37cb10f7415919",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked except by three or more creatures.",
+          "implementation": [
+            "blockRestriction/minBlockers rule static: attackers self, minBlockers 3; blocker groups smaller than three are not offered (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/troll-of-khazad-dum.test.ts::troll-of-khazad-dum-two-blockers-not-enough",
+            "cards/evasion-blocking/troll-of-khazad-dum.test.ts::troll-of-khazad-dum-three-blockers-may-block"
+          ],
+          "viewerScenarioIds": [
+            "troll-of-khazad-dum-two-blockers-not-enough",
+            "troll-of-khazad-dum-three-blockers-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "66810ef7-ea3a-4afa-92f0-b21ec52cc8d0": {
+      "name": "Shadow Rift",
+      "oracleSha256": "de4f17badb925d38ca51f865367b9e38de2c9c2d4b47303e9a211d905b293729",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gains shadow until end of turn.",
+          "implementation": [
+            "Instant: target creature gains the shadow keyword until end of turn, then its controller draws a card; shadow is a blockRestriction in both directions (CR 702.28)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/shadow-rift.test.ts::shadow-rift-shadow-attacker-unblockable",
+            "cards/evasion-blocking/shadow-rift.test.ts::shadow-rift-shadow-blocker-may-block"
+          ],
+          "viewerScenarioIds": [
+            "shadow-rift-shadow-attacker-unblockable",
+            "shadow-rift-shadow-blocker-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7e40f37c-9a0c-40e0-b195-7ea94b12f798": {
+      "name": "Elvish Champion",
+      "oracleSha256": "c54405eb5239c1f1e0a2d244840aa7e3556a77fd337fc66c43625478c53a6dff",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Other Elf creatures get +1/+1 and have forestwalk.",
+          "implementation": [
+            "landwalk rule static (forestwalk) granted to other Elfs by the lord; the defending player's Forest makes the creature unblockable (CR 702.14)",
+            "+1/+1 layer-7 static on other Elfs"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/elvish-champion.test.ts::elvish-champion-walker-unblockable",
+            "cards/evasion-blocking/elvish-champion.test.ts::elvish-champion-no-matching-land",
+            "cards/evasion-blocking/elvish-champion.test.ts::elvish-champion-lord-itself-blockable"
+          ],
+          "viewerScenarioIds": [
+            "elvish-champion-walker-unblockable",
+            "elvish-champion-no-matching-land",
+            "elvish-champion-lord-itself-blockable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "538fa2e0-d225-4232-b243-38868b695e26": {
+      "name": "Alpha Authority",
+      "oracleSha256": "26d7a90e5b3321b0ec183941309a571ba9b5291e547ac398b5407fdaf0c848a4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Enchanted creature has hexproof and can't be blocked by more than one creature.",
+          "implementation": [
+            "blockRestriction rule static (maxBlockers 1) on the enchanted creature; a multi-blocker declaration is rejected and repaired (CR 509.1b)",
+            "hexproof keyword granted to the enchanted creature"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/alpha-authority.test.ts::alpha-authority-two-blockers-repaired",
+            "cards/evasion-blocking/alpha-authority.test.ts::alpha-authority-one-blocker-allowed"
+          ],
+          "viewerScenarioIds": [
+            "alpha-authority-two-blockers-repaired",
+            "alpha-authority-one-blocker-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d236b3fc-0d3f-4d99-875d-e32a33fe5767": {
+      "name": "Goblin King",
+      "oracleSha256": "cec4c99c4de3f949c2c446fac10628a851b5be21ff580f54f93654ebcf83a206",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Other Goblins get +1/+1 and have mountainwalk.",
+          "implementation": [
+            "landwalk rule static (mountainwalk) granted to other Goblins by the lord; the defending player's Mountain makes the creature unblockable (CR 702.14)",
+            "+1/+1 layer-7 static on other Goblins"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/goblin-king.test.ts::goblin-king-walker-unblockable",
+            "cards/evasion-blocking/goblin-king.test.ts::goblin-king-no-matching-land",
+            "cards/evasion-blocking/goblin-king.test.ts::goblin-king-lord-itself-blockable"
+          ],
+          "viewerScenarioIds": [
+            "goblin-king-walker-unblockable",
+            "goblin-king-no-matching-land",
+            "goblin-king-lord-itself-blockable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9f6ea9fe-eee5-4dca-a34e-c66d3e218716": {
+      "name": "Master of the Pearl Trident",
+      "oracleSha256": "bb9de66a2c82d0538cab56c7ab4042f44bbf9fd9e4c720d9da9a594d9c1e2b19",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Other Merfolk creatures you control get +1/+1 and have islandwalk.",
+          "implementation": [
+            "landwalk rule static (islandwalk) granted to other Merfolks by the lord; the defending player's Island makes the creature unblockable (CR 702.14)",
+            "+1/+1 layer-7 static on other Merfolks"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/master-of-the-pearl-trident.test.ts::master-of-the-pearl-trident-walker-unblockable",
+            "cards/evasion-blocking/master-of-the-pearl-trident.test.ts::master-of-the-pearl-trident-no-matching-land",
+            "cards/evasion-blocking/master-of-the-pearl-trident.test.ts::master-of-the-pearl-trident-lord-itself-blockable"
+          ],
+          "viewerScenarioIds": [
+            "master-of-the-pearl-trident-walker-unblockable",
+            "master-of-the-pearl-trident-no-matching-land",
+            "master-of-the-pearl-trident-lord-itself-blockable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "603ef53f-6191-4229-b85f-adad6f4503ce": {
+      "name": "Prowler's Helm",
+      "oracleSha256": "f0a86d016cd6a35bc8d29ec699b91342fb31c5077126601f62873fc9eca8ec9e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature can't be blocked except by Walls.",
+          "implementation": [
+            "blockRestriction rule static: equipped creature can be blocked only by Walls (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/prowlers-helm.test.ts::prowlers-helm-unblockable",
+            "cards/evasion-blocking/prowlers-helm.test.ts::prowlers-helm-blockable"
+          ],
+          "viewerScenarioIds": ["prowlers-helm-unblockable", "prowlers-helm-blockable"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6a262f53-2eea-45d0-8189-9222d66f1b52": {
+      "name": "Shifting Sliver",
+      "oracleSha256": "895a2798289adc25e704e8e2988832695e5ed40469c1e788943eb0cf27954fb1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Slivers can't be blocked except by Slivers.",
+          "implementation": [
+            "blockRestriction rule static: Slivers can be blocked only by Slivers (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/shifting-sliver.test.ts::shifting-sliver-non-sliver-cant-block",
+            "cards/evasion-blocking/shifting-sliver.test.ts::shifting-sliver-sliver-may-block"
+          ],
+          "viewerScenarioIds": [
+            "shifting-sliver-non-sliver-cant-block",
+            "shifting-sliver-sliver-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d31c6043-e005-4efe-9aa7-d82cb122eebe": {
+      "name": "Serpent of Yawning Depths",
+      "oracleSha256": "c53a4cc580769a034531583273a971e58d50b389805f1864f1469d91e51e4855",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Krakens, Leviathans, Octopuses, and Serpents you control can't be blocked except by Krakens, Leviathans, Octopuses, and Serpents.",
+          "implementation": [
+            "notBy/onlyBy blockRestriction rule static on your Krakens, Leviathans, Octopuses and Serpents: only creatures of those subtypes may block them (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/serpent-of-yawning-depths.test.ts::serpent-of-yawning-depths-kraken-may-block",
+            "cards/evasion-blocking/serpent-of-yawning-depths.test.ts::serpent-of-yawning-depths-bear-cannot-block",
+            "cards/evasion-blocking/serpent-of-yawning-depths.test.ts::serpent-of-yawning-depths-other-creature-unaffected"
+          ],
+          "viewerScenarioIds": [
+            "serpent-of-yawning-depths-kraken-may-block",
+            "serpent-of-yawning-depths-bear-cannot-block",
+            "serpent-of-yawning-depths-other-creature-unaffected"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e84837bd-4f94-43e1-876e-d82cae6ee247": {
+      "name": "Behind the Scenes",
+      "oracleSha256": "ad721a5ae15aa71170e41a498ce9786e7e52b631bf79b17bca22cf44c2ed44ab",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures you control have skulk.",
+          "implementation": [
+            "skulk keyword granted to every creature you control by a static ability (CR 702.118)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/behind-the-scenes.test.ts::behind-the-scenes-greater-power-cant-block",
+            "cards/evasion-blocking/behind-the-scenes.test.ts::behind-the-scenes-equal-power-may-block"
+          ],
+          "viewerScenarioIds": [
+            "behind-the-scenes-greater-power-cant-block",
+            "behind-the-scenes-equal-power-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cc7f290f-ca00-4285-9bdb-4b4402444f30": {
+      "name": "Lord of Atlantis",
+      "oracleSha256": "39a73e70444e28956a450df9024910eccaac550133d9545182a6ebedaae0a19c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Other Merfolk get +1/+1 and have islandwalk.",
+          "implementation": [
+            "landwalk rule static (islandwalk) granted to other Merfolks by the lord; the defending player's Island makes the creature unblockable (CR 702.14)",
+            "+1/+1 layer-7 static on other Merfolks"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/lord-of-atlantis.test.ts::lord-of-atlantis-walker-unblockable",
+            "cards/evasion-blocking/lord-of-atlantis.test.ts::lord-of-atlantis-no-matching-land",
+            "cards/evasion-blocking/lord-of-atlantis.test.ts::lord-of-atlantis-lord-itself-blockable"
+          ],
+          "viewerScenarioIds": [
+            "lord-of-atlantis-walker-unblockable",
+            "lord-of-atlantis-no-matching-land",
+            "lord-of-atlantis-lord-itself-blockable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "532ee9c3-391c-44db-8ed5-a1d28fd7f876": {
+      "name": "Splinter's Technique",
+      "oracleSha256": "b2fee5793dc43be746bd70fab85bd960c1b054fd8fff8ad18415a15daeede07e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Sneak {1}{B}",
+          "implementation": [
+            "sneak keyword cost parse rule on instants and sorceries: alternative cost castable only in the active player's declare blockers step by returning an unblocked attacker"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/splinters-technique.test.ts::splinters-technique-sneak",
+            "cards/evasion-blocking/splinters-technique.test.ts::splinters-technique-sneak-blocked",
+            "cards/evasion-blocking/splinters-technique.test.ts::splinters-technique-sneak-main-phase",
+            "cards/evasion-blocking/splinters-technique.test.ts::sneak is offered in the declare blockers step with an unblocked attacker",
+            "cards/evasion-blocking/splinters-technique.test.ts::sneak is not offered once the attacker is blocked",
+            "cards/evasion-blocking/splinters-technique.test.ts::sneak is not offered in the precombat main phase"
+          ],
+          "viewerScenarioIds": [
+            "splinters-technique-sneak",
+            "splinters-technique-sneak-blocked",
+            "splinters-technique-sneak-main-phase"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "dbdd0963-b395-4cb8-ad9a-ed85a3e9f2e5": {
+      "name": "Inkwell Leviathan",
+      "oracleSha256": "792b86d26e4d318d7e33d3b939958d1623c525a6f1210fc96820e50306572e8e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Islandwalk",
+          "implementation": [
+            "Islandwalk keyword: can't be blocked as long as defending player controls a Island (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/inkwell-leviathan.test.ts::inkwell-leviathan-unblockable-with-island",
+            "cards/evasion-blocking/inkwell-leviathan.test.ts::inkwell-leviathan-blockable-without-island"
+          ],
+          "viewerScenarioIds": [
+            "inkwell-leviathan-unblockable-with-island",
+            "inkwell-leviathan-blockable-without-island"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2a14670b-2ab6-4e1d-9b33-610a87bdb7ce": {
+      "name": "Prosperous Bandit",
+      "oracleSha256": "e41dc99570a842fff595446fa83f09178c9e2a9e098f24c65870af19d98d11bd",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Offspring {1}",
+          "implementation": [
+            "offspring keyword cost parse rule: optionalAdditionalCost (offspring) plus an enters trigger creating a 1/1 token copy when the extra cost was paid"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/prosperous-bandit.test.ts::prosperous-bandit-offspring-paid",
+            "cards/evasion-blocking/prosperous-bandit.test.ts::prosperous-bandit-offspring-declined",
+            "cards/evasion-blocking/prosperous-bandit.test.ts::offspring paid: the second copy is a 1/1 token, the first a card",
+            "cards/evasion-blocking/prosperous-bandit.test.ts::offspring declined: exactly one permanent, not a token",
+            "cards/evasion-blocking/prosperous-bandit.test.ts::offspring is only offered when its extra cost can be paid"
+          ],
+          "viewerScenarioIds": [
+            "prosperous-bandit-offspring-paid",
+            "prosperous-bandit-offspring-declined"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3a6f886b-2043-47e9-9c0f-f7913a6fa67d": {
+      "name": "Shadowmage Infiltrator",
+      "oracleSha256": "b445c981ffd178750599e6946504455d41381cd879cfadeef6e0c85eeb031f5a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Fear",
+          "implementation": [
+            "fear keyword: can't be blocked except by artifact creatures and/or black creatures (CR 702.36)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/shadowmage-infiltrator.test.ts::shadowmage-infiltrator-unblockable-by-nonblack",
+            "cards/evasion-blocking/shadowmage-infiltrator.test.ts::shadowmage-infiltrator-blockable-by-black"
+          ],
+          "viewerScenarioIds": [
+            "shadowmage-infiltrator-unblockable-by-nonblack",
+            "shadowmage-infiltrator-blockable-by-black"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "46b5f12e-9fe5-44f6-b895-ee8c33205521": {
+      "name": "Aberrant",
+      "oracleSha256": "9585bd9575e0f3f9929ec5775c6734b3038ba3d334e1a290d3b4a86cac55d18a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Ravenous",
+          "implementation": [
+            "ravenous keyword parse rule: X in the mana cost, enters with X +1/+1 counters, and a draw trigger when X is 5 or more"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/aberrant.test.ts::aberrant-x5",
+            "cards/evasion-blocking/aberrant.test.ts::aberrant-x4",
+            "cards/evasion-blocking/aberrant.test.ts::ravenous: the X choice is offered, and X=5 and X=4 differ only by the draw"
+          ],
+          "viewerScenarioIds": ["aberrant-x5", "aberrant-x4"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a82842b8-cc2e-44fa-b869-7bccc16ca74f": {
+      "name": "Tervigon",
+      "oracleSha256": "84704e8fdf7cbca46a9efa7980ee3ec4632fd5b792fccf6b7a43571df373b64f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Ravenous",
+          "implementation": [
+            "ravenous keyword parse rule: X in the mana cost, enters with X +1/+1 counters, and a draw trigger when X is 5 or more"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/tervigon.test.ts::tervigon-x5",
+            "cards/evasion-blocking/tervigon.test.ts::tervigon-x4",
+            "cards/evasion-blocking/tervigon.test.ts::ravenous: the X choice is offered, and X=5 and X=4 differ only by the draw"
+          ],
+          "viewerScenarioIds": ["tervigon-x5", "tervigon-x4"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "89750d72-d1c0-4c8a-aa72-fdd48570aa92": {
+      "name": "Vorrac Battlehorns",
+      "oracleSha256": "aa7bfbeb25e859b3bdfe71567a7955537625af015e43dabd938419fcaed8d7ff",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature has trample and can't be blocked by more than one creature.",
+          "implementation": [
+            "blockRestriction rule static (maxBlockers 1) on the equipped creature; a multi-blocker declaration is rejected and repaired (CR 509.1b)",
+            "trample keyword granted by the Equipment"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/vorrac-battlehorns.test.ts::vorrac-battlehorns-two-blockers-repaired",
+            "cards/evasion-blocking/vorrac-battlehorns.test.ts::vorrac-battlehorns-one-blocker-allowed"
+          ],
+          "viewerScenarioIds": [
+            "vorrac-battlehorns-two-blockers-repaired",
+            "vorrac-battlehorns-one-blocker-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a8966245-501c-47e4-8ce0-849dcb532eb2": {
+      "name": "Flopsie, Bumi's Buddy",
+      "oracleSha256": "9311cca5852592d504fa83b65cee27438a1e39d18243c83376effefe7aa1f101",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Each creature you control with power 4 or greater can't be blocked by more than one creature.",
+          "implementation": [
+            "blockRestriction rule static: matching attackers get maxBlockers 1; a declaration putting more than one blocker on such an attacker is rejected and repaired (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/flopsie.test.ts::flopsie-single-block-only",
+            "cards/evasion-blocking/flopsie.test.ts::flopsie-double-block-allowed"
+          ],
+          "viewerScenarioIds": ["flopsie-single-block-only", "flopsie-double-block-allowed"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2e163679-7303-4e05-9d20-86b76dfa1407": {
+      "name": "Vampire Cutthroat",
+      "oracleSha256": "45aa4c537d62ec06a1aa9d2d68a554c6e8a11c1e2833833979f691e23777770a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Skulk",
+          "implementation": [
+            "skulk keyword: can't be blocked by creatures with greater power (CR 702.118)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/vampire-cutthroat.test.ts::vampire-cutthroat-unblockable-by-greater-power",
+            "cards/evasion-blocking/vampire-cutthroat.test.ts::vampire-cutthroat-blockable-by-equal-power"
+          ],
+          "viewerScenarioIds": [
+            "vampire-cutthroat-unblockable-by-greater-power",
+            "vampire-cutthroat-blockable-by-equal-power"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e7d8b8ea-07d7-4b6c-aa49-6a2ad185a304": {
+      "name": "Termagant Swarm",
+      "oracleSha256": "2829e911d3cca5c61f052c91a5c54dd735966def532f610e3ae9744289c9364f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Ravenous",
+          "implementation": [
+            "ravenous keyword parse rule: X in the mana cost, enters with X +1/+1 counters, and a draw trigger when X is 5 or more"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/termagant-swarm.test.ts::termagant-swarm-x5",
+            "cards/evasion-blocking/termagant-swarm.test.ts::termagant-swarm-x4",
+            "cards/evasion-blocking/termagant-swarm.test.ts::ravenous: the X choice is offered, and X=5 and X=4 differ only by the draw"
+          ],
+          "viewerScenarioIds": ["termagant-swarm-x5", "termagant-swarm-x4"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "688a559d-249f-4d03-98e6-581843e7ddc3": {
+      "name": "Riders of Rohan",
+      "oracleSha256": "489e62a52cba90982b8c94c997028ab4330ac7711a03eb90d01ac55dd84362af",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Dash {4}{R}{W}",
+          "implementation": [
+            "dash keyword cost parse rule: alternative cost, haste, and return to hand at the beginning of the next end step"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/riders-of-rohan.test.ts::riders-of-rohan-dash",
+            "cards/evasion-blocking/riders-of-rohan.test.ts::riders-of-rohan-cast-normally"
+          ],
+          "viewerScenarioIds": ["riders-of-rohan-dash", "riders-of-rohan-cast-normally"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d1f3d5ca-cb17-400f-8ed9-3b9a4f151b62": {
+      "name": "Steelburr Champion",
+      "oracleSha256": "230f7938638108bd0724e3eedc44dc33d5e33cc951fe81a548ef0636e4925091",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Offspring {1}{W}",
+          "implementation": [
+            "offspring keyword cost parse rule: optionalAdditionalCost (offspring) plus an enters trigger creating a 1/1 token copy when the extra cost was paid"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/steelburr-champion.test.ts::steelburr-champion-offspring-paid",
+            "cards/evasion-blocking/steelburr-champion.test.ts::steelburr-champion-offspring-declined",
+            "cards/evasion-blocking/steelburr-champion.test.ts::offspring paid: the second copy is a 1/1 token, the first a card",
+            "cards/evasion-blocking/steelburr-champion.test.ts::offspring declined: exactly one permanent, not a token",
+            "cards/evasion-blocking/steelburr-champion.test.ts::offspring is only offered when its extra cost can be paid"
+          ],
+          "viewerScenarioIds": [
+            "steelburr-champion-offspring-paid",
+            "steelburr-champion-offspring-declined"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f6e160c1-b29f-4f3d-ab55-43ffe3ab4acf": {
+      "name": "Kolaghan, the Storm's Fury",
+      "oracleSha256": "bb67484b1c635c08119bad3d72b27e36e22d05f70054a26f5adfcb28911a533a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Dash {3}{B}{R}",
+          "implementation": [
+            "dash keyword cost parse rule: alternative cost, haste, and return to hand at the beginning of the next end step"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/kolaghan-the-storms-fury.test.ts::kolaghan-the-storms-fury-dash",
+            "cards/evasion-blocking/kolaghan-the-storms-fury.test.ts::kolaghan-the-storms-fury-cast-normally"
+          ],
+          "viewerScenarioIds": [
+            "kolaghan-the-storms-fury-dash",
+            "kolaghan-the-storms-fury-cast-normally"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a50c55a7-4e7e-40f6-b76c-1e32598dc9b6": {
+      "name": "Mask of Riddles",
+      "oracleSha256": "a7a5c650e7c46aadd19ee9f1a5d7b423bdb9f6702233f4c7fc8a987317e59a7f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature has fear.",
+          "implementation": [
+            "fear keyword granted to the equipped creature: can't be blocked except by artifact creatures and/or black creatures (CR 702.36)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/mask-of-riddles.test.ts::mask-of-riddles-unblockable",
+            "cards/evasion-blocking/mask-of-riddles.test.ts::mask-of-riddles-blockable"
+          ],
+          "viewerScenarioIds": ["mask-of-riddles-unblockable", "mask-of-riddles-blockable"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "acba24c1-168c-473b-96bb-1ba836c69f22": {
+      "name": "Ratcatcher",
+      "oracleSha256": "1be77fe8e05823922800ffbef4edeaaefabffdf9241b49b5cc4f5b6165998855",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Fear",
+          "implementation": [
+            "fear keyword: can't be blocked except by artifact creatures and/or black creatures (CR 702.36)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/ratcatcher.test.ts::ratcatcher-unblockable-by-nonblack",
+            "cards/evasion-blocking/ratcatcher.test.ts::ratcatcher-blockable-by-black"
+          ],
+          "viewerScenarioIds": [
+            "ratcatcher-unblockable-by-nonblack",
+            "ratcatcher-blockable-by-black"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6da00e2d-4287-48eb-8abe-d153318381fd": {
+      "name": "Dwarven Grunt",
+      "oracleSha256": "2c4edb5af3638bd584f9826c32238825b7d3305966851d189a1cb5de110284fc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Mountainwalk",
+          "implementation": [
+            "Mountainwalk keyword: can't be blocked as long as defending player controls a Mountain (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/dwarven-grunt.test.ts::dwarven-grunt-unblockable-with-mountain",
+            "cards/evasion-blocking/dwarven-grunt.test.ts::dwarven-grunt-blockable-without-mountain"
+          ],
+          "viewerScenarioIds": [
+            "dwarven-grunt-unblockable-with-mountain",
+            "dwarven-grunt-blockable-without-mountain"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "328834f6-1f49-417a-a2d6-d430b8dca177": {
+      "name": "Skeleton Key",
+      "oracleSha256": "690c78eec43f05f428b0bdba584fe0516d6f087ef9326586ab009342a59c1c27",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature has skulk.",
+          "implementation": [
+            "skulk keyword granted to the equipped creature: can't be blocked by creatures with greater power (CR 702.118)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/skeleton-key.test.ts::skeleton-key-unblockable",
+            "cards/evasion-blocking/skeleton-key.test.ts::skeleton-key-blockable"
+          ],
+          "viewerScenarioIds": ["skeleton-key-unblockable", "skeleton-key-blockable"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fe1eb8b3-c605-4711-a057-ed3565bfe75c": {
+      "name": "Michelangelo, Mutant BFF",
+      "oracleSha256": "0418633d293728d93d10480206f14f8228b73987887f92b07db5df260282a6d7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Each creature you control with a counter on it can't be blocked by more than one creature.",
+          "implementation": [
+            "blockRestriction rule static: matching attackers get maxBlockers 1; a declaration putting more than one blocker on such an attacker is rejected and repaired (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/michelangelo.test.ts::michelangelo-single-block-only",
+            "cards/evasion-blocking/michelangelo.test.ts::michelangelo-double-block-allowed"
+          ],
+          "viewerScenarioIds": [
+            "michelangelo-single-block-only",
+            "michelangelo-double-block-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b19a7ae7-3af5-4aa6-80e1-8888054427de": {
+      "name": "Dauthi Embrace",
+      "oracleSha256": "6bcd1990759fcb30c0eebf66fca9b88852e9687b5f974bee414ba706b93e173f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{B}{B}: Target creature gains shadow until end of turn.",
+          "implementation": [
+            "Activated ability costing {B}{B}: target creature gains the shadow keyword until end of turn; shadow is a blockRestriction in both directions (CR 702.28)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/dauthi-embrace.test.ts::dauthi-embrace-shadow-attacker-unblockable",
+            "cards/evasion-blocking/dauthi-embrace.test.ts::dauthi-embrace-shadow-blocker-may-block"
+          ],
+          "viewerScenarioIds": [
+            "dauthi-embrace-shadow-attacker-unblockable",
+            "dauthi-embrace-shadow-blocker-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e3552730-fe09-443f-b432-9640b69c7bbb": {
+      "name": "Rancid Rats",
+      "oracleSha256": "c66e5e679fb4ff1719bff8d20260e6c6cca4d5af3378de4ccbad15bd82b8061a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Skulk",
+          "implementation": [
+            "skulk keyword: can't be blocked by creatures with greater power (CR 702.118)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/rancid-rats.test.ts::rancid-rats-unblockable-by-greater-power",
+            "cards/evasion-blocking/rancid-rats.test.ts::rancid-rats-blockable-by-equal-power"
+          ],
+          "viewerScenarioIds": [
+            "rancid-rats-unblockable-by-greater-power",
+            "rancid-rats-blockable-by-equal-power"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "dcbb6b0e-2219-4ba4-9720-3e58b59b4328": {
+      "name": "Eladamri, Lord of Leaves",
+      "oracleSha256": "8c7e05e1d2fb58de86954621641efae6526f42b7e7c3144ea22148fc03d50afe",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Other Elf creatures have forestwalk.",
+          "implementation": [
+            "landwalk rule static (forestwalk) granted to other Elfs by the lord; the defending player's Forest makes the creature unblockable (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/eladamri-lord-of-leaves.test.ts::eladamri-lord-of-leaves-walker-unblockable",
+            "cards/evasion-blocking/eladamri-lord-of-leaves.test.ts::eladamri-lord-of-leaves-no-matching-land",
+            "cards/evasion-blocking/eladamri-lord-of-leaves.test.ts::eladamri-lord-of-leaves-lord-itself-blockable"
+          ],
+          "viewerScenarioIds": [
+            "eladamri-lord-of-leaves-walker-unblockable",
+            "eladamri-lord-of-leaves-no-matching-land",
+            "eladamri-lord-of-leaves-lord-itself-blockable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "035ee753-232f-4ba2-afbf-8d1eb162e6f8": {
+      "name": "Merrow Harbinger",
+      "oracleSha256": "d877bde7c67944e31a57d6657921e7734ce19c8ef9387d20becbef8f6b69b38a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Islandwalk",
+          "implementation": [
+            "Islandwalk keyword: can't be blocked as long as defending player controls a Island (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/merrow-harbinger.test.ts::merrow-harbinger-unblockable-with-island",
+            "cards/evasion-blocking/merrow-harbinger.test.ts::merrow-harbinger-blockable-without-island"
+          ],
+          "viewerScenarioIds": [
+            "merrow-harbinger-unblockable-with-island",
+            "merrow-harbinger-blockable-without-island"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5b15dcac-38dc-4957-bc01-40153ea07559": {
+      "name": "Silhana Ledgewalker",
+      "oracleSha256": "0c2639efe9ebeec8bb85e84ac3c612e7abd83b646ee48e8222e0f71444946379",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked except by creatures with flying.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, onlyBy creatures with flying; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/silhana-ledgewalker.test.ts::silhana-ledgewalker-unblockable-by-nonflyer",
+            "cards/evasion-blocking/silhana-ledgewalker.test.ts::silhana-ledgewalker-blockable-by-flyer"
+          ],
+          "viewerScenarioIds": [
+            "silhana-ledgewalker-unblockable-by-nonflyer",
+            "silhana-ledgewalker-blockable-by-flyer"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "78cb1f05-edad-4430-9095-f3eabd80bf41": {
+      "name": "Challenger Troll",
+      "oracleSha256": "82969627cdaf339822e30d2030d0b69f02faf3a18b19fd398d9282b40ede6c58",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Each creature you control with power 4 or greater can't be blocked by more than one creature.",
+          "implementation": [
+            "blockRestriction rule static: matching attackers get maxBlockers 1; a declaration putting more than one blocker on such an attacker is rejected and repaired (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/challenger-troll.test.ts::challenger-troll-single-block-only",
+            "cards/evasion-blocking/challenger-troll.test.ts::challenger-troll-double-block-allowed"
+          ],
+          "viewerScenarioIds": [
+            "challenger-troll-single-block-only",
+            "challenger-troll-double-block-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "46ddc2e1-386f-4aaf-b37b-37b1708e0d9c": {
+      "name": "Shadow Sliver",
+      "oracleSha256": "b089605770167631ddddc441176158543ae7639128537a708fdfa931ee4189a5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "All Sliver creatures have shadow.",
+          "implementation": [
+            "static grant: all Sliver creatures have shadow; shadow keyword restricts blocking both ways (CR 702.28)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/shadow-sliver.test.ts::shadow-sliver-unblockable-by-nonshadow",
+            "cards/evasion-blocking/shadow-sliver.test.ts::shadow-sliver-blockable-by-other-sliver"
+          ],
+          "viewerScenarioIds": [
+            "shadow-sliver-unblockable-by-nonshadow",
+            "shadow-sliver-blockable-by-other-sliver"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d1dfed64-6e88-44c2-b479-9a2d072e4be7": {
+      "name": "Greater Sandwurm",
+      "oracleSha256": "31be19872de43b2a58d83e029849eb4d854a2a98fe33cc1b64cbd57a95e4bc4c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked by creatures with power 2 or less.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, notBy creatures with power 2 or less; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/greater-sandwurm.test.ts::greater-sandwurm-unblockable-by-power-two",
+            "cards/evasion-blocking/greater-sandwurm.test.ts::greater-sandwurm-blocked-by-power-three"
+          ],
+          "viewerScenarioIds": [
+            "greater-sandwurm-unblockable-by-power-two",
+            "greater-sandwurm-blocked-by-power-three"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "194284f7-cf92-4d9f-a8ce-e4dc3505ab7a": {
+      "name": "Donatello's Technique",
+      "oracleSha256": "fad541d300988d906cae005a838af21506ed3c487af35298b7ad7fe9543e7591",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Sneak {U}",
+          "implementation": [
+            "sneak keyword cost parse rule on instants and sorceries: alternative cost castable only in the active player's declare blockers step by returning an unblocked attacker"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/donatellos-technique.test.ts::donatellos-technique-sneak",
+            "cards/evasion-blocking/donatellos-technique.test.ts::donatellos-technique-sneak-blocked",
+            "cards/evasion-blocking/donatellos-technique.test.ts::donatellos-technique-sneak-main-phase",
+            "cards/evasion-blocking/donatellos-technique.test.ts::sneak is offered in the declare blockers step with an unblocked attacker",
+            "cards/evasion-blocking/donatellos-technique.test.ts::sneak is not offered once the attacker is blocked",
+            "cards/evasion-blocking/donatellos-technique.test.ts::sneak is not offered in the precombat main phase"
+          ],
+          "viewerScenarioIds": [
+            "donatellos-technique-sneak",
+            "donatellos-technique-sneak-blocked",
+            "donatellos-technique-sneak-main-phase"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "70f26726-0373-4e50-a1de-37392ca94890": {
+      "name": "Ox Drover",
+      "oracleSha256": "5a22bced12da68a508b9bb21f1d41c40f79f2d1e76919f62b301cb7deda4bf2d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked by Oxen.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, notBy creatures with subtype Ox; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/ox-drover.test.ts::ox-drover-unblockable-by-ox",
+            "cards/evasion-blocking/ox-drover.test.ts::ox-drover-blockable-by-non-ox"
+          ],
+          "viewerScenarioIds": ["ox-drover-unblockable-by-ox", "ox-drover-blockable-by-non-ox"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "682cbf2a-2723-4590-ae52-7c5d8b2573cf": {
+      "name": "Beloved Princess",
+      "oracleSha256": "0c9da806871c5e385617bf78098890e7d71588765dd97c37d68b0ebdc4f8889f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked by creatures with power 3 or greater.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, notBy creatures with power 3 or greater; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/beloved-princess.test.ts::beloved-princess-unblockable-by-power-three",
+            "cards/evasion-blocking/beloved-princess.test.ts::beloved-princess-blocked-by-power-two"
+          ],
+          "viewerScenarioIds": [
+            "beloved-princess-unblockable-by-power-three",
+            "beloved-princess-blocked-by-power-two"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "47dd7ef4-7645-4878-ab91-261aa8fcf834": {
+      "name": "Zodiac Monkey",
+      "oracleSha256": "0908ac70cfca320931f000ebcae12d36c9789408e3e48d8627479f254a11557d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Forestwalk",
+          "implementation": [
+            "Forestwalk keyword: can't be blocked as long as defending player controls a Forest (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/zodiac-monkey.test.ts::zodiac-monkey-unblockable-with-forest",
+            "cards/evasion-blocking/zodiac-monkey.test.ts::zodiac-monkey-blockable-without-forest"
+          ],
+          "viewerScenarioIds": [
+            "zodiac-monkey-unblockable-with-forest",
+            "zodiac-monkey-blockable-without-forest"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "91d01119-9b3e-4629-8cf0-bbca2c19a7cc": {
+      "name": "Rampaging Ceratops",
+      "oracleSha256": "62ba6582474ce1b8123a551afdb84d8bffdc5ed7f305ede09e36d857f4a36f08",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked except by three or more creatures.",
+          "implementation": [
+            "blockRestriction/minBlockers rule static: attackers self, minBlockers 3; blocker groups smaller than three are not offered (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/rampaging-ceratops.test.ts::rampaging-ceratops-two-blockers-not-enough",
+            "cards/evasion-blocking/rampaging-ceratops.test.ts::rampaging-ceratops-three-blockers-may-block"
+          ],
+          "viewerScenarioIds": [
+            "rampaging-ceratops-two-blockers-not-enough",
+            "rampaging-ceratops-three-blockers-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f334087a-deda-4e9e-ab58-68f7e226d7ce": {
+      "name": "Ant-Man, Elusive Avenger",
+      "oracleSha256": "37798e8aae0207bee8fdf6e9ecd0409f8df29eed9fc0456af506374c13b8aef3",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Ant-Man can't be blocked by creatures with greater power.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, notByGreaterPower; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/ant-man.test.ts::ant-man-greater-power-cannot-block",
+            "cards/evasion-blocking/ant-man.test.ts::ant-man-equal-power-may-block"
+          ],
+          "viewerScenarioIds": [
+            "ant-man-greater-power-cannot-block",
+            "ant-man-equal-power-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "38b23fe1-0e76-494a-ad9b-bc22c7d21a5e": {
+      "name": "Sunder Shaman",
+      "oracleSha256": "94181568f5dc13d3c906bb40b70df5e05b2de6f9462c8a4d0838abecbe69b3b6",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked by more than one creature.",
+          "implementation": [
+            "blockRestriction rule static: matching attackers get maxBlockers 1; a declaration putting more than one blocker on such an attacker is rejected and repaired (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/sunder-shaman.test.ts::sunder-shaman-single-block-only",
+            "cards/evasion-blocking/sunder-shaman.test.ts::sunder-shaman-double-block-allowed"
+          ],
+          "viewerScenarioIds": [
+            "sunder-shaman-single-block-only",
+            "sunder-shaman-double-block-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8a31c49f-5b3f-4f84-a08e-58b30a6bff7c": {
+      "name": "Stormkeld Vanguard // Bear Down",
+      "oracleSha256": "0a26d28d22a0131b126009223386bd782c8febb7185aeaac520954c9cc3db801",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked by creatures with power 2 or less.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, notBy creatures with power 2 or less; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/stormkeld-vanguard.test.ts::stormkeld-vanguard-unblockable-by-power-two",
+            "cards/evasion-blocking/stormkeld-vanguard.test.ts::stormkeld-vanguard-blocked-by-power-three"
+          ],
+          "viewerScenarioIds": [
+            "stormkeld-vanguard-unblockable-by-power-two",
+            "stormkeld-vanguard-blocked-by-power-three"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

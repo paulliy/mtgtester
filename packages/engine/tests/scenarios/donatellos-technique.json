@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "card": "Donatello's Technique",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Wall",
+      "typeLine": "Creature — Wall",
+      "manaCost": "{1}",
+      "power": "0",
+      "toughness": "4"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "donatellos-technique-sneak",
+      "title": "Donatello's Technique: sneak-cast for its sneak cost, returning the unblocked attacker",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with Scenario Bear; P2 has no blockers.",
+        "In the declare blockers step, cast Donatello's Technique for its sneak cost, returning Scenario Bear to hand."
+      ],
+      "expectedOutcome": "The unblocked Scenario Bear returns to P1's hand, P1 pays only {U}, draws two cards, and P2 takes no combat damage.",
+      "seats": {
+        "P1": {
+          "hand": ["Donatello's Technique"],
+          "battlefield": ["Scenario Bear", "Island"],
+          "libraryTop": ["Scenario Bear", "Island", "Island"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Donatello's Technique .*\\(alternate cost\\)$/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Bear", "Scenario Bear", "Island"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Scenario Bear"]
+          }
+        },
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      }
+    },
+    {
+      "id": "donatellos-technique-sneak-blocked",
+      "title": "Donatello's Technique: no sneak cast once the attacker is blocked",
+      "clauses": [1],
+      "instructions": ["Attack P2 with Scenario Bear; P2 blocks it with Scenario Wall."],
+      "expectedOutcome": "Sneak is not offered, since no unblocked attacker exists; Donatello's Technique stays in hand and P1 draws or searches nothing.",
+      "seats": {
+        "P1": {
+          "hand": ["Donatello's Technique"],
+          "battlefield": ["Scenario Bear", "Island"],
+          "libraryTop": ["Island", "Island"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Wall"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Scenario Bear"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Donatello's Technique"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      }
+    },
+    {
+      "id": "donatellos-technique-sneak-main-phase",
+      "title": "Donatello's Technique: sneak is not offered in the main phase",
+      "clauses": [1],
+      "instructions": [
+        "Look at P1's options in the precombat main phase with Scenario Bear on the battlefield."
+      ],
+      "expectedOutcome": "Only the printed cost is offered; no (alternate cost) action appears, because sneak is castable only in the declare blockers step.",
+      "seats": {
+        "P1": {
+          "hand": ["Donatello's Technique"],
+          "battlefield": ["Scenario Bear", "Island"]
+        },
+        "P2": {}
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Donatello's Technique"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    }
+  ]
+}

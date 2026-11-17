@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "card": "Trailblazer's Boots",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature — Ogre",
+      "manaCost": "{2}{R}",
+      "power": "3",
+      "toughness": "3"
+    },
+    {
+      "name": "Scenario Cave",
+      "typeLine": "Land"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "trailblazers-boots-unblockable",
+      "title": "Trailblazer's Boots: unblockable when the defender controls a nonbasic land",
+      "clauses": [1],
+      "instructions": [
+        "Scenario Bear carries Trailblazer's Boots; attack P2, who controls Scenario Cave (a nonbasic land) and Scenario Ogre."
+      ],
+      "expectedOutcome": "P2 is never asked to block; Scenario Bear deals 2 damage to P2.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Scenario Bear",
+            {
+              "card": "Trailblazer's Boots",
+              "attachedTo": {
+                "player": "P1",
+                "card": "Scenario Bear"
+              }
+            }
+          ]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre", "Scenario Cave"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Ogre"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "trailblazers-boots-blockable",
+      "title": "Trailblazer's Boots: blockable when the defender controls only basic lands",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with the equipped Scenario Bear while P2 controls only a Forest and Scenario Ogre.",
+        "P2 blocks with Scenario Ogre."
+      ],
+      "expectedOutcome": "Nonbasic landwalk does nothing: the block is legal, Scenario Bear dies and P2 takes no damage.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Scenario Bear",
+            {
+              "card": "Trailblazer's Boots",
+              "attachedTo": {
+                "player": "P1",
+                "card": "Scenario Bear"
+              }
+            }
+          ]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Scenario Bear"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    }
+  ]
+}

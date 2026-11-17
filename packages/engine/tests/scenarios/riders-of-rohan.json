@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "card": "Riders of Rohan",
+  "scenarios": [
+    {
+      "id": "riders-of-rohan-dash",
+      "title": "Riders of Rohan: dashed, it has haste and returns to hand at the end step",
+      "clauses": [2],
+      "instructions": [
+        "Cast Riders of Rohan for its dash cost {4}{R}{W}.",
+        "Attack P2 with Riders of Rohan only; the two haste Knight tokens stay home."
+      ],
+      "expectedOutcome": "Riders of Rohan has haste and hits P2 for 4; at the beginning of the end step it returns to P1's hand. The two Knight tokens stay.",
+      "seats": {
+        "P1": {
+          "hand": ["Riders of Rohan"],
+          "battlefield": ["Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Plains"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Riders of Rohan .*\\(dash\\)$/"
+        },
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2", "__no_attack__", "__no_attack__"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 36
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Riders of Rohan"]
+          }
+        }
+      ],
+      "continue": {
+        "throughCombat": true,
+        "toEndStep": true
+      }
+    },
+    {
+      "id": "riders-of-rohan-cast-normally",
+      "title": "Riders of Rohan: cast for its normal cost, it has no haste and stays",
+      "clauses": [2],
+      "instructions": [
+        "Cast Riders of Rohan for its normal cost.",
+        "Attack with whatever can attack, then pass to the end step."
+      ],
+      "expectedOutcome": "Riders of Rohan is not offered as an attacker (no haste) and is still on the battlefield after the end step; P2 takes no damage.",
+      "seats": {
+        "P1": {
+          "hand": ["Riders of Rohan"],
+          "battlefield": ["Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Plains"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Riders of Rohan \\(\\{3\\}\\{W\\}\\{R\\}\\)$/"
+        },
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["__no_attack__", "__no_attack__"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Riders of Rohan"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Riders of Rohan"]
+          }
+        }
+      ],
+      "continue": {
+        "throughCombat": true,
+        "toEndStep": true
+      }
+    }
+  ]
+}
