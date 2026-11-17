@@ -29,12 +29,14 @@ import {
   conjure,
   copies,
   declareAttacks,
+  declareBlocks,
   declareNoBlocks,
   forest,
   gameConfig,
   oracle,
   pump,
   spawn,
+  splitDamage,
 } from './fixtures';
 
 interface PinnedFixture {
@@ -847,6 +849,37 @@ describe('life-gain replacements', () => {
       { strict: true },
     );
     expect(playerById(ctx, 'P1').life).toBe(44);
+  });
+
+  it('casting-statics-lifelink-one-event — one source hitting two recipients gains once', () => {
+    // A 4/4 lifelink trampler deals 1 to its blocker and 3 to P2 at once: one life-gain event of
+    // 4 (CR 120.3f), which Knight of Dawn's Light makes 5, not 2 + 4.
+    const ctx = pod('casting-statics-lifelink-one-event');
+    spawn(ctx, 'P1', pinned("Knight of Dawn's Light"));
+    const attacker = spawn(
+      ctx,
+      'P1',
+      oracle({ name: 'Lab Trampler', oracleText: 'Trample, lifelink', power: '4', toughness: '4' }),
+    );
+    attacker.summoningSick = false;
+    const blocker = spawn(ctx, 'P2', oracle({ name: 'Lab Chump', power: '1', toughness: '1' }));
+    ctx.state.phase = 'combat';
+    pump(
+      runCombatPhase(ctx),
+      (decision) => {
+        if (decision.decisionType === 'declareAttackers')
+          return declareAttacks(decision, (id) => (id === attacker.id ? 'P2' : null));
+        if (decision.decisionType === 'declareBlockers')
+          return declareBlocks(decision, (id) => (id === blocker.id ? attacker.id : null));
+        if (decision.decisionType === 'assignCombatDamage')
+          return splitDamage({ [blocker.id]: 1, P2: 3 });
+        return undefined;
+      },
+      { strict: true },
+    );
+    expect(playerById(ctx, 'P2').life).toBe(37);
+    expect(ctx.state.battlefield.some((perm) => perm.id === blocker.id)).toBe(false);
+    expect(playerById(ctx, 'P1').life).toBe(45);
   });
 
   it('casting-statics-life-order — "plus 1" and "twice": the gaining player orders them', () => {
