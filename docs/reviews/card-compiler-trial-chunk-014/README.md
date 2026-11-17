@@ -1,7 +1,8 @@
 # Campaign chunk 014 (2026-11-17)
 
 Chunk 014 of the [batch card compile campaign](../../plans/batch-card-compile-campaign.md): the
-next 300 pinned EDHREC cards by rank that no trial had seen. Every valid patch was audited by the
+next 300 pinned EDHREC cards by rank that no trial had seen (ranks 10,744 to
+11,491). Every valid patch was audited by the
 main thread, and every flagged one reviewed by a Sonnet reviewer. It is the first chunk run under
 the promotion safeguards added after the 2026-11-16 review: `promote` refuses retired patch hashes
 and any trial whose calibration is unfinished or missed a case.
