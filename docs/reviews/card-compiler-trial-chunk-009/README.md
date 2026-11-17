@@ -4,7 +4,7 @@ Chunk 009 of the [batch card compile campaign](../../plans/batch-card-compile-ca
 next 300 pinned EDHREC cards by rank that no trial had seen (ranks 7,004 to 7,784). Every valid
 patch was audited by the main thread, and every flagged one reviewed by a Sonnet reviewer.
 
-**85 cards were promoted, and one of them (Spyglass Siren) was retired after fuzzing.** Vow of Duty was retired later, in chunk 013, when that chunk's review showed its "can't attack you" restriction never applies ([chunk 013](../card-compiler-trial-chunk-013/README.md)). Ring of Evos Isle was retired later, in chunk 011, when that chunk's review showed its "if it's blue" check can never pass ([chunk 011](../card-compiler-trial-chunk-011/README.md)). The pinned pool now models 4,431 of 8,972 cards (3,718 before the
+**85 cards were promoted, and one of them (Spyglass Siren) was retired after fuzzing.** Abzan Beastmaster was retired later, after a review on the pull request found it wrong; `docs/reviews/compiled-card-retired.json` gives the reason. Vow of Duty was retired later, in chunk 013, when that chunk's review showed its "can't attack you" restriction never applies ([chunk 013](../card-compiler-trial-chunk-013/README.md)). Ring of Evos Isle was retired later, in chunk 011, when that chunk's review showed its "if it's blue" check can never pass ([chunk 011](../card-compiler-trial-chunk-011/README.md)). The pinned pool now models 4,431 of 8,972 cards (3,718 before the
 campaign). They are `implemented-unreviewed`
 ([ADR 0047](../../decisions/0047-compiled-cards-as-unreviewed-overrides.md)).
 

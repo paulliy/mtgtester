@@ -4,7 +4,7 @@ Chunk 012 of the [batch card compile campaign](../../plans/batch-card-compile-ca
 next 300 pinned EDHREC cards by rank that no trial had seen (ranks 9,299 to 10,008). Every valid
 patch was audited by the main thread, and every flagged one reviewed by a Sonnet reviewer.
 
-**78 cards were promoted, and one card promoted in an earlier chunk was retired** (Plate Armor from
+**78 cards were promoted, and one card promoted in an earlier chunk was retired** Giott, King of the Dwarves was retired later, after a review on the pull request found it wrong; `docs/reviews/compiled-card-retired.json` gives the reason. (Plate Armor from
 chunk 010; see below). The pinned pool now models 4,663 of 8,972 cards (3,718 before the
 campaign). They are `implemented-unreviewed`
 ([ADR 0047](../../decisions/0047-compiled-cards-as-unreviewed-overrides.md)).

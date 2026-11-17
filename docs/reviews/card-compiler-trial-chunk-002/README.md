@@ -7,7 +7,7 @@ Haiku workers answered every compile, back-translation and judge prompt, a Sonne
 validator retry round and reviewed the flagged patches, and the main thread audited every valid
 patch against Oracle text and the engine.
 
-**78 cards were promoted.** The pinned pool now models 3,874 of 8,972 cards (was 3,796 after chunk
+**78 cards were promoted.** Electroduplicate was retired later, after a review on the pull request found it wrong; `docs/reviews/compiled-card-retired.json` gives the reason. The pinned pool now models 3,874 of 8,972 cards (was 3,796 after chunk
 001, 3,718 before the campaign). They are `implemented-unreviewed`
 ([ADR 0047](../../decisions/0047-compiled-cards-as-unreviewed-overrides.md)).
 

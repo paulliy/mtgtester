@@ -5267,43 +5267,6 @@ const BATCH_CHUNK_002: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '112f2b3f-32e7-40b1-b80e-0b99184a840c',
-    name: 'Electroduplicate',
-    handledLines: [
-      'Create a token that\'s a copy of target creature you control, except it has haste and "At the beginning of the end step, sacrifice this token."',
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [
-          {
-            kind: 'creature',
-            controller: 'you',
-          },
-        ],
-        effects: [
-          {
-            op: 'createTokenCopyOf',
-            ref: 0,
-            count: {
-              kind: 'const',
-              n: 1,
-            },
-            addKeywords: ['haste'],
-            sacrificeAt: 'endStep',
-          },
-        ],
-        description:
-          'Create a token that\'s a copy of target creature you control, except it has haste and "At the beginning of the end step, sacrifice this token."',
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-002',
-    patchSha256: 'd4c3e4f6e4eeee16c56915250a704e567e141b6de439119e5e747a757f80fb50',
-    behaviorSha256: '271f3df32309f416af5282f8bdb4ec8c9d94f757fd5beacf773fd3d47817eb3d',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '09618da4-6e2d-4047-96d7-0576c0754e7d',
     name: 'End the Festivities',
     handledLines: [
@@ -17671,77 +17634,6 @@ const BATCH_CHUNK_005: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-005',
     patchSha256: '02b1caf3156b00fd4c2af6ec2a7729ac6c6561fc98dc14c3b8e91f29aa6eedcc',
     behaviorSha256: '77307145b3b6418767194755cfaef2e1bc29af0feac1330e530d0cc041c966e7',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'd81fc181-ecb0-43a5-88e8-c61aca3428d8',
-    name: 'High Score',
-    handledLines: [
-      'At the beginning of your end step, draw a card if you control a creature with the greatest power among creatures on the battlefield.',
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'endStep',
-            player: 'you',
-            condition: {
-              kind: 'allOf',
-              of: [
-                {
-                  kind: 'countPermanents',
-                  selector: {
-                    kind: 'type',
-                    value: 'Creature',
-                  },
-                  scope: 'you',
-                  cmp: '>=',
-                  n: 1,
-                },
-                {
-                  kind: 'compareValues',
-                  left: {
-                    kind: 'greatestPowerAmong',
-                    selector: {
-                      kind: 'type',
-                      value: 'Creature',
-                    },
-                    scope: 'you',
-                  },
-                  cmp: '>=',
-                  right: {
-                    kind: 'greatestPowerAmong',
-                    selector: {
-                      kind: 'type',
-                      value: 'Creature',
-                    },
-                    scope: 'all',
-                  },
-                },
-              ],
-            },
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'draw',
-              count: {
-                kind: 'const',
-                n: 1,
-              },
-            },
-          ],
-          description:
-            'At the beginning of your end step, draw a card if you control a creature with the greatest power among creatures on the battlefield.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-005',
-    patchSha256: '649e3d5afbc43caca6800f24a89b1606b9537effc8c0caea6ddfd5577d335714',
-    behaviorSha256: 'c0ce159e41435191c44bf694920e9c38b7856068780eeaa4999e10d806cb82ab',
     acceptedBy: 'main-thread',
   },
   {
@@ -30873,68 +30765,6 @@ const BATCH_CHUNK_008: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '15afdd88-05fc-4335-8a55-c6ee702f3bef',
-    name: 'Genesis',
-    handledLines: [
-      'At the beginning of your upkeep, if this creature is in your graveyard, you may pay {2}{G}. If you do, return target creature card from your graveyard to your hand.',
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'upkeep',
-            player: 'you',
-          },
-          optional: false,
-          targets: [
-            {
-              kind: 'cardInGraveyard',
-              filter: {
-                kind: 'type',
-                value: 'Creature',
-              },
-            },
-          ],
-          effects: [
-            {
-              op: 'conditionalEffect',
-              condition: {
-                kind: 'mayPayMana',
-                cost: {
-                  generic: 2,
-                  colored: {
-                    W: 0,
-                    U: 0,
-                    B: 0,
-                    R: 0,
-                    G: 1,
-                  },
-                  colorless: 0,
-                },
-              },
-              then: [
-                {
-                  op: 'graveyardToHand',
-                  target: 0,
-                },
-              ],
-              else: [],
-            },
-          ],
-          functionsInGraveyard: true,
-          description:
-            'At the beginning of your upkeep, if this creature is in your graveyard, you may pay {2}{G}. If you do, return target creature card from your graveyard to your hand.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-008',
-    patchSha256: '2e7e1f34038c4d13614c0580338ad063d0777ced0505b8a56c0a9a5a945a016d',
-    behaviorSha256: '5f8b60d65e22d30e32d60c3609ef68b092c312aa92b57f07357f31215c2b48ad',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'f2c861d3-b302-4e84-b647-099551007269',
     name: 'Ghost Town',
     handledLines: [
@@ -34121,77 +33951,6 @@ const BATCH_CHUNK_009: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-009',
     patchSha256: '1f41fd3835fc476d1c0243a4b2e7e24a9b612eba1711bae80f7ec46fc19f2134',
     behaviorSha256: 'aa082529535f061941e64ce766f47c62aa11ecb7b3fc50a823ec41ea68d26849',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'aab463bb-e790-403b-a88d-06ef81c7302b',
-    name: 'Abzan Beastmaster',
-    handledLines: [
-      'At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness.',
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'upkeep',
-            player: 'you',
-            condition: {
-              kind: 'allOf',
-              of: [
-                {
-                  kind: 'countPermanents',
-                  selector: {
-                    kind: 'type',
-                    value: 'Creature',
-                  },
-                  scope: 'you',
-                  cmp: '>=',
-                  n: 1,
-                },
-                {
-                  kind: 'compareValues',
-                  left: {
-                    kind: 'greatestToughnessAmong',
-                    selector: {
-                      kind: 'type',
-                      value: 'Creature',
-                    },
-                    scope: 'you',
-                  },
-                  cmp: '>=',
-                  right: {
-                    kind: 'greatestToughnessAmong',
-                    selector: {
-                      kind: 'type',
-                      value: 'Creature',
-                    },
-                    scope: 'all',
-                  },
-                },
-              ],
-            },
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'draw',
-              count: {
-                kind: 'const',
-                n: 1,
-              },
-            },
-          ],
-          description:
-            'At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-009',
-    patchSha256: 'fee627d93d40d37d8d31e0a5b4eb2a87b6aba01d33a55e582bcbc0a61c46bc1f',
-    behaviorSha256: '026f60320bad3e7b7793308c6641c59ccf6ceb63cd3cea8ec5462319f343d0b1',
     acceptedBy: 'main-thread',
   },
   {
@@ -48712,72 +48471,6 @@ const BATCH_CHUNK_012: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-012',
     patchSha256: '2a09af47cc2a237067bb524c9143a20c364c32a12c2f9b5f7a769f2a7567d91b',
     behaviorSha256: 'be259289617f3dd93386867017ed6bd4beb0929a3824269b97d866e4819553f0',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'c629fa91-e13c-494b-a95f-a91b7c52035a',
-    name: 'Giott, King of the Dwarves',
-    handledLines: [
-      'Whenever ~ or another Dwarf you control enters and whenever an Equipment you control enters, you may discard a card. If you do, draw a card.',
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'enters',
-            subject: {
-              kind: 'permanent',
-              selector: {
-                kind: 'anyOf',
-                of: [
-                  {
-                    kind: 'allOf',
-                    of: [
-                      {
-                        kind: 'subtype',
-                        value: 'Dwarf',
-                      },
-                      {
-                        kind: 'controller',
-                        who: 'you',
-                      },
-                    ],
-                  },
-                  {
-                    kind: 'allOf',
-                    of: [
-                      {
-                        kind: 'subtype',
-                        value: 'Equipment',
-                      },
-                      {
-                        kind: 'controller',
-                        who: 'you',
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'mayDiscardThenDraw',
-              count: 1,
-            },
-          ],
-          description:
-            'Whenever Giott or another Dwarf you control enters and whenever an Equipment you control enters, you may discard a card. If you do, draw a card.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-012',
-    patchSha256: '89b28301247675689460d279f2ee594352d68454b41a08ffa0c4d5af2c75c0eb',
-    behaviorSha256: '7a0b57df1f599bcc80cbc00eab977b6b46374b0ded087e2b958cbbf37cdbc3f5',
     acceptedBy: 'main-thread',
   },
   {

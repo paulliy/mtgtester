@@ -5000,40 +5000,6 @@
     }
   },
   {
-    "oracleId": "112f2b3f-32e7-40b1-b80e-0b99184a840c",
-    "name": "Electroduplicate",
-    "handledLines": [
-      "Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\""
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\"",
-        "effects": [
-          {
-            "addKeywords": [
-              "haste"
-            ],
-            "count": {
-              "kind": "const",
-              "n": 1
-            },
-            "op": "createTokenCopyOf",
-            "ref": 0,
-            "sacrificeAt": "endStep"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "119d9671-61ba-4629-89b1-f94bdec5cb74",
     "name": "Chimil, the Inner Sun",
     "handledLines": [
@@ -6593,63 +6559,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "15afdd88-05fc-4335-8a55-c6ee702f3bef",
-    "name": "Genesis",
-    "handledLines": [
-      "At the beginning of your upkeep, if this creature is in your graveyard, you may pay {2}{G}. If you do, return target creature card from your graveyard to your hand."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "At the beginning of your upkeep, if this creature is in your graveyard, you may pay {2}{G}. If you do, return target creature card from your graveyard to your hand.",
-          "effects": [
-            {
-              "condition": {
-                "cost": {
-                  "colored": {
-                    "B": 0,
-                    "G": 1,
-                    "R": 0,
-                    "U": 0,
-                    "W": 0
-                  },
-                  "colorless": 0,
-                  "generic": 2
-                },
-                "kind": "mayPayMana"
-              },
-              "else": [],
-              "op": "conditionalEffect",
-              "then": [
-                {
-                  "op": "graveyardToHand",
-                  "target": 0
-                }
-              ]
-            }
-          ],
-          "functionsInGraveyard": true,
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "filter": {
-                "kind": "type",
-                "value": "Creature"
-              },
-              "kind": "cardInGraveyard"
-            }
-          ],
-          "trigger": {
-            "player": "you",
-            "when": "upkeep"
-          }
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "15c63f9b-d071-4522-b9f0-a1f441a61b81",
@@ -48833,72 +48742,6 @@
     }
   },
   {
-    "oracleId": "aab463bb-e790-403b-a88d-06ef81c7302b",
-    "name": "Abzan Beastmaster",
-    "handledLines": [
-      "At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "draw"
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "condition": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "cmp": ">=",
-                  "kind": "countPermanents",
-                  "n": 1,
-                  "scope": "you",
-                  "selector": {
-                    "kind": "type",
-                    "value": "Creature"
-                  }
-                },
-                {
-                  "cmp": ">=",
-                  "kind": "compareValues",
-                  "left": {
-                    "kind": "greatestToughnessAmong",
-                    "scope": "you",
-                    "selector": {
-                      "kind": "type",
-                      "value": "Creature"
-                    }
-                  },
-                  "right": {
-                    "kind": "greatestToughnessAmong",
-                    "scope": "all",
-                    "selector": {
-                      "kind": "type",
-                      "value": "Creature"
-                    }
-                  }
-                }
-              ]
-            },
-            "player": "you",
-            "when": "upkeep"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "ab1cc360-b9de-48d9-9983-4dfe4a7d2a37",
     "name": "Arcane Denial",
     "handledLines": [
@@ -57959,67 +57802,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "c629fa91-e13c-494b-a95f-a91b7c52035a",
-    "name": "Giott, King of the Dwarves",
-    "handledLines": [
-      "Whenever ~ or another Dwarf you control enters and whenever an Equipment you control enters, you may discard a card. If you do, draw a card."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever Giott or another Dwarf you control enters and whenever an Equipment you control enters, you may discard a card. If you do, draw a card.",
-          "effects": [
-            {
-              "count": 1,
-              "op": "mayDiscardThenDraw"
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "permanent",
-              "selector": {
-                "kind": "anyOf",
-                "of": [
-                  {
-                    "kind": "allOf",
-                    "of": [
-                      {
-                        "kind": "subtype",
-                        "value": "Dwarf"
-                      },
-                      {
-                        "kind": "controller",
-                        "who": "you"
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "allOf",
-                    "of": [
-                      {
-                        "kind": "subtype",
-                        "value": "Equipment"
-                      },
-                      {
-                        "kind": "controller",
-                        "who": "you"
-                      }
-                    ]
-                  }
-                ]
-              }
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "c6331ce3-21f7-4784-80fe-df1f541a4c46",
     "name": "Sword of Forge and Frontier",
     "handledLines": [
@@ -63250,72 +63032,6 @@
           "trigger": {
             "player": "you",
             "when": "upkeep"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "d81fc181-ecb0-43a5-88e8-c61aca3428d8",
-    "name": "High Score",
-    "handledLines": [
-      "At the beginning of your end step, draw a card if you control a creature with the greatest power among creatures on the battlefield."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "At the beginning of your end step, draw a card if you control a creature with the greatest power among creatures on the battlefield.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "draw"
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "condition": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "cmp": ">=",
-                  "kind": "countPermanents",
-                  "n": 1,
-                  "scope": "you",
-                  "selector": {
-                    "kind": "type",
-                    "value": "Creature"
-                  }
-                },
-                {
-                  "cmp": ">=",
-                  "kind": "compareValues",
-                  "left": {
-                    "kind": "greatestPowerAmong",
-                    "scope": "you",
-                    "selector": {
-                      "kind": "type",
-                      "value": "Creature"
-                    }
-                  },
-                  "right": {
-                    "kind": "greatestPowerAmong",
-                    "scope": "all",
-                    "selector": {
-                      "kind": "type",
-                      "value": "Creature"
-                    }
-                  }
-                }
-              ]
-            },
-            "player": "you",
-            "when": "endStep"
           }
         }
       ]
@@ -76999,72 +76715,6 @@
               ]
             },
             "layer": 6
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-abzan-beastmaster",
-    "name": "Abzan Beastmaster",
-    "handledLines": [
-      "At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "draw"
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "condition": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "cmp": ">=",
-                  "kind": "countPermanents",
-                  "n": 1,
-                  "scope": "you",
-                  "selector": {
-                    "kind": "type",
-                    "value": "Creature"
-                  }
-                },
-                {
-                  "cmp": ">=",
-                  "kind": "compareValues",
-                  "left": {
-                    "kind": "greatestToughnessAmong",
-                    "scope": "you",
-                    "selector": {
-                      "kind": "type",
-                      "value": "Creature"
-                    }
-                  },
-                  "right": {
-                    "kind": "greatestToughnessAmong",
-                    "scope": "all",
-                    "selector": {
-                      "kind": "type",
-                      "value": "Creature"
-                    }
-                  }
-                }
-              ]
-            },
-            "player": "you",
-            "when": "upkeep"
           }
         }
       ]
@@ -96281,40 +95931,6 @@
     }
   },
   {
-    "oracleId": "oracle-electroduplicate",
-    "name": "Electroduplicate",
-    "handledLines": [
-      "Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\""
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\"",
-        "effects": [
-          {
-            "addKeywords": [
-              "haste"
-            ],
-            "count": {
-              "kind": "const",
-              "n": 1
-            },
-            "op": "createTokenCopyOf",
-            "ref": 0,
-            "sacrificeAt": "endStep"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-electrolyze",
     "name": "Electrolyze",
     "handledLines": [
@@ -102310,63 +101926,6 @@
     }
   },
   {
-    "oracleId": "oracle-genesis",
-    "name": "Genesis",
-    "handledLines": [
-      "At the beginning of your upkeep, if this creature is in your graveyard, you may pay {2}{G}. If you do, return target creature card from your graveyard to your hand."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "At the beginning of your upkeep, if this creature is in your graveyard, you may pay {2}{G}. If you do, return target creature card from your graveyard to your hand.",
-          "effects": [
-            {
-              "condition": {
-                "cost": {
-                  "colored": {
-                    "B": 0,
-                    "G": 1,
-                    "R": 0,
-                    "U": 0,
-                    "W": 0
-                  },
-                  "colorless": 0,
-                  "generic": 2
-                },
-                "kind": "mayPayMana"
-              },
-              "else": [],
-              "op": "conditionalEffect",
-              "then": [
-                {
-                  "op": "graveyardToHand",
-                  "target": 0
-                }
-              ]
-            }
-          ],
-          "functionsInGraveyard": true,
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "filter": {
-                "kind": "type",
-                "value": "Creature"
-              },
-              "kind": "cardInGraveyard"
-            }
-          ],
-          "trigger": {
-            "player": "you",
-            "when": "upkeep"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-genesis-ultimatum",
     "name": "Genesis Ultimatum",
     "handledLines": [
@@ -103158,67 +102717,6 @@
               "scope": "you"
             },
             "when": "attackDeclared"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-giott-king-of-the-dwarves",
-    "name": "Giott, King of the Dwarves",
-    "handledLines": [
-      "Whenever ~ or another Dwarf you control enters and whenever an Equipment you control enters, you may discard a card. If you do, draw a card."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever Giott or another Dwarf you control enters and whenever an Equipment you control enters, you may discard a card. If you do, draw a card.",
-          "effects": [
-            {
-              "count": 1,
-              "op": "mayDiscardThenDraw"
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "permanent",
-              "selector": {
-                "kind": "anyOf",
-                "of": [
-                  {
-                    "kind": "allOf",
-                    "of": [
-                      {
-                        "kind": "subtype",
-                        "value": "Dwarf"
-                      },
-                      {
-                        "kind": "controller",
-                        "who": "you"
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "allOf",
-                    "of": [
-                      {
-                        "kind": "subtype",
-                        "value": "Equipment"
-                      },
-                      {
-                        "kind": "controller",
-                        "who": "you"
-                      }
-                    ]
-                  }
-                ]
-              }
-            },
-            "when": "enters"
           }
         }
       ]
@@ -107415,72 +106913,6 @@
             }
           ],
           "timing": "sorcery"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-high-score",
-    "name": "High Score",
-    "handledLines": [
-      "At the beginning of your end step, draw a card if you control a creature with the greatest power among creatures on the battlefield."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "At the beginning of your end step, draw a card if you control a creature with the greatest power among creatures on the battlefield.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "draw"
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "condition": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "cmp": ">=",
-                  "kind": "countPermanents",
-                  "n": 1,
-                  "scope": "you",
-                  "selector": {
-                    "kind": "type",
-                    "value": "Creature"
-                  }
-                },
-                {
-                  "cmp": ">=",
-                  "kind": "compareValues",
-                  "left": {
-                    "kind": "greatestPowerAmong",
-                    "scope": "you",
-                    "selector": {
-                      "kind": "type",
-                      "value": "Creature"
-                    }
-                  },
-                  "right": {
-                    "kind": "greatestPowerAmong",
-                    "scope": "all",
-                    "selector": {
-                      "kind": "type",
-                      "value": "Creature"
-                    }
-                  }
-                }
-              ]
-            },
-            "player": "you",
-            "when": "endStep"
-          }
         }
       ]
     },

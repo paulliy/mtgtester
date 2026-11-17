@@ -4,7 +4,7 @@ Chunk 005 of the [batch card compile campaign](../../plans/batch-card-compile-ca
 next 300 pinned EDHREC cards by rank that no trial had seen (ranks 3,905 to 4,705). Every valid
 patch was audited by the main thread, and every flagged one reviewed by a Sonnet reviewer.
 
-**72 cards were promoted.** The pinned pool now models 4,096 of 8,972 cards (3,718 before the
+**72 cards were promoted.** High Score was retired later, after a review on the pull request found it wrong; `docs/reviews/compiled-card-retired.json` gives the reason. The pinned pool now models 4,096 of 8,972 cards (3,718 before the
 campaign). They are `implemented-unreviewed`
 ([ADR 0047](../../decisions/0047-compiled-cards-as-unreviewed-overrides.md)).
 
