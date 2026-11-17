@@ -16,6 +16,13 @@
       "reason": "Creates the tokens before the destroy (PR review)."
     },
     {
+      "name": "Benefactor's Draught",
+      "oracleId": "85113e73-26f7-4938-b7a7-607e704af0ca",
+      "patchSha256": "9d4b4798fde8fdd43707a7311b86c2e55e8b1e423e6e983e034212525017ee13",
+      "batch": "chunk-009",
+      "reason": "An untargeted delayed blocks trigger ignores its inner subject selector and fires once for the first blocker, so it draws when your own creatures block and only once for several blockers"
+    },
+    {
       "name": "Blade of the Bloodchief",
       "oracleId": "8985e545-07c3-45f9-9058-fe3c1f50de04",
       "patchSha256": "a212953d3b36687fa32f6ef9c34db4c57d1bc611d467fed1052908e26482fde1",
@@ -91,6 +98,13 @@
       "patchSha256": "63d9136afbad6f437135c4ba62ebb7931cc63fa57b20df372c7db37b3568fde8",
       "batch": "chunk-011",
       "reason": "createTokenAttacking taps the token; the card makes an untapped attacker (chunk 013)."
+    },
+    {
+      "name": "Smoke Shroud",
+      "oracleId": "a621c5f6-c1c6-4bc9-88b1-f459efa07a39",
+      "patchSha256": "006b2757e467adb92f6a1cdd1708b53a03374df07b546b200666282708aef6f6",
+      "batch": "chunk-009",
+      "reason": "returnDepartedSourceToBattlefield from a graveyard-functioning trigger looks for leftBattlefieldObjectId equal to the graveyard card's own id, which never matches, so the card never returns"
     },
     {
       "name": "Spyglass Siren",

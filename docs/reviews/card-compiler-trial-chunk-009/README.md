@@ -79,3 +79,15 @@ which hides the defect, and it is not promoted.
 6. The `explore` op throws in an activated ability (Map tokens); the validator accepts it.
 7. `optional` on an activated ability is ignored (`stack/stack.ts`); harmless where the effect
    offers a choice anyway.
+
+## Retired after the campaign's last chunk (2026-11-17)
+
+Chunk 016's review found two engine gaps that reach this chunk's promotions, and both cards were
+retired:
+
+- **Smoke Shroud:** `returnDepartedSourceToBattlefield` finds the card by `leftBattlefieldObjectId`
+  equal to the source's object id. From a graveyard-functioning trigger the source is the graveyard
+  card itself, whose id is new (`reincarnate`), so nothing matches and the card never returns.
+- **Benefactor's Draught:** a delayed trigger with no target fires for the first subject of any
+  matching event (`queueObjectEventTriggers`) and ignores its inner trigger's subject selector. So it
+  drew when its controller's own creatures blocked, and drew once for several blockers.

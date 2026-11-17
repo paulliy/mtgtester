@@ -42817,76 +42817,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "85113e73-26f7-4938-b7a7-607e704af0ca",
-    "name": "Benefactor's Draught",
-    "handledLines": [
-      "Untap all creatures. Until end of turn, whenever a creature an opponent controls blocks, draw a card."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Untap all creatures. Until end of turn, whenever a creature an opponent controls blocks, draw a card. Draw a card.",
-        "effects": [
-          {
-            "op": "untapEach",
-            "selector": {
-              "kind": "type",
-              "value": "Creature"
-            }
-          },
-          {
-            "ability": {
-              "description": "Until end of turn, whenever a creature an opponent controls blocks, draw a card.",
-              "effects": [
-                {
-                  "count": {
-                    "kind": "const",
-                    "n": 1
-                  },
-                  "op": "draw"
-                }
-              ],
-              "kind": "triggered",
-              "optional": false,
-              "targets": [],
-              "trigger": {
-                "subject": {
-                  "kind": "permanent",
-                  "selector": {
-                    "kind": "allOf",
-                    "of": [
-                      {
-                        "kind": "controller",
-                        "who": "opponents"
-                      },
-                      {
-                        "kind": "type",
-                        "value": "Creature"
-                      }
-                    ]
-                  }
-                },
-                "when": "blocks"
-              }
-            },
-            "expiry": "cleanup",
-            "op": "registerDelayedTrigger",
-            "when": "blocks"
-          },
-          {
-            "count": {
-              "kind": "const",
-              "n": 1
-            },
-            "op": "draw"
-          }
-        ],
-        "kind": "spell",
-        "targets": []
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "853c6cc0-ed2b-4d65-add1-2449ade8cf68",
     "name": "Planar Bridge",
     "handledLines": [
@@ -53744,51 +53674,6 @@
           "op": {
             "layer": 6,
             "setCantBeBlocked": true
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "a621c5f6-c1c6-4bc9-88b1-f459efa07a39",
-    "name": "Smoke Shroud",
-    "handledLines": [
-      "When a Ninja you control enters, you may return this card from your graveyard to the battlefield attached to that creature."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When a Ninja you control enters, you may return this card from your graveyard to the battlefield attached to that creature.",
-          "effects": [
-            {
-              "attachTo": "triggerObject",
-              "fromYourGraveyard": true,
-              "op": "returnDepartedSourceToBattlefield"
-            }
-          ],
-          "functionsInGraveyard": true,
-          "kind": "triggered",
-          "optional": true,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "permanent",
-              "selector": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "subtype",
-                    "value": "Ninja"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "you"
-                  }
-                ]
-              }
-            },
-            "when": "enters"
           }
         }
       ]
@@ -91998,76 +91883,6 @@
           "kind": "cantBlockMatching"
         }
       ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-benefactor-s-draught",
-    "name": "Benefactor's Draught",
-    "handledLines": [
-      "Untap all creatures. Until end of turn, whenever a creature an opponent controls blocks, draw a card."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Untap all creatures. Until end of turn, whenever a creature an opponent controls blocks, draw a card. Draw a card.",
-        "effects": [
-          {
-            "op": "untapEach",
-            "selector": {
-              "kind": "type",
-              "value": "Creature"
-            }
-          },
-          {
-            "ability": {
-              "description": "Until end of turn, whenever a creature an opponent controls blocks, draw a card.",
-              "effects": [
-                {
-                  "count": {
-                    "kind": "const",
-                    "n": 1
-                  },
-                  "op": "draw"
-                }
-              ],
-              "kind": "triggered",
-              "optional": false,
-              "targets": [],
-              "trigger": {
-                "subject": {
-                  "kind": "permanent",
-                  "selector": {
-                    "kind": "allOf",
-                    "of": [
-                      {
-                        "kind": "controller",
-                        "who": "opponents"
-                      },
-                      {
-                        "kind": "type",
-                        "value": "Creature"
-                      }
-                    ]
-                  }
-                },
-                "when": "blocks"
-              }
-            },
-            "expiry": "cleanup",
-            "op": "registerDelayedTrigger",
-            "when": "blocks"
-          },
-          {
-            "count": {
-              "kind": "const",
-              "n": 1
-            },
-            "op": "draw"
-          }
-        ],
-        "kind": "spell",
-        "targets": []
-      }
     },
     "compose": "append"
   },
@@ -151293,51 +151108,6 @@
               "kind": "self"
             },
             "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-smoke-shroud",
-    "name": "Smoke Shroud",
-    "handledLines": [
-      "When a Ninja you control enters, you may return this card from your graveyard to the battlefield attached to that creature."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When a Ninja you control enters, you may return this card from your graveyard to the battlefield attached to that creature.",
-          "effects": [
-            {
-              "attachTo": "triggerObject",
-              "fromYourGraveyard": true,
-              "op": "returnDepartedSourceToBattlefield"
-            }
-          ],
-          "functionsInGraveyard": true,
-          "kind": "triggered",
-          "optional": true,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "permanent",
-              "selector": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "subtype",
-                    "value": "Ninja"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "you"
-                  }
-                ]
-              }
-            },
-            "when": "enters"
           }
         }
       ]

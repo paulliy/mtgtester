@@ -34196,82 +34196,6 @@ const BATCH_CHUNK_009: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '85113e73-26f7-4938-b7a7-607e704af0ca',
-    name: "Benefactor's Draught",
-    handledLines: [
-      'Untap all creatures. Until end of turn, whenever a creature an opponent controls blocks, draw a card.',
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [],
-        effects: [
-          {
-            op: 'untapEach',
-            selector: {
-              kind: 'type',
-              value: 'Creature',
-            },
-          },
-          {
-            op: 'registerDelayedTrigger',
-            when: 'blocks',
-            ability: {
-              kind: 'triggered',
-              trigger: {
-                when: 'blocks',
-                subject: {
-                  kind: 'permanent',
-                  selector: {
-                    kind: 'allOf',
-                    of: [
-                      {
-                        kind: 'controller',
-                        who: 'opponents',
-                      },
-                      {
-                        kind: 'type',
-                        value: 'Creature',
-                      },
-                    ],
-                  },
-                },
-              },
-              optional: false,
-              targets: [],
-              effects: [
-                {
-                  op: 'draw',
-                  count: {
-                    kind: 'const',
-                    n: 1,
-                  },
-                },
-              ],
-              description:
-                'Until end of turn, whenever a creature an opponent controls blocks, draw a card.',
-            },
-            expiry: 'cleanup',
-          },
-          {
-            op: 'draw',
-            count: {
-              kind: 'const',
-              n: 1,
-            },
-          },
-        ],
-        description:
-          'Untap all creatures. Until end of turn, whenever a creature an opponent controls blocks, draw a card. Draw a card.',
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-009',
-    patchSha256: '9d4b4798fde8fdd43707a7311b86c2e55e8b1e423e6e983e034212525017ee13',
-    behaviorSha256: 'a84d47903af88f3be7592013c51fe2ff24b9f9fea3378af7f15892b2fcaa0388',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'fc7439ec-32e3-47db-9ff4-6eb84cb33d89',
     name: 'Blood for Bones',
     handledLines: [
@@ -37509,56 +37433,6 @@ const BATCH_CHUNK_009: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-009',
     patchSha256: '296f83337b09108d0766fd1b1df01fc54898bf261ff27e6abb66352706d8f54c',
     behaviorSha256: '2a4e364c7ce7431f762911635e6b3e299ad07aa702daa4ca9661e36a1f2e77ab',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'a621c5f6-c1c6-4bc9-88b1-f459efa07a39',
-    name: 'Smoke Shroud',
-    handledLines: [
-      'When a Ninja you control enters, you may return this card from your graveyard to the battlefield attached to that creature.',
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'enters',
-            subject: {
-              kind: 'permanent',
-              selector: {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'subtype',
-                    value: 'Ninja',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'you',
-                  },
-                ],
-              },
-            },
-          },
-          optional: true,
-          targets: [],
-          effects: [
-            {
-              op: 'returnDepartedSourceToBattlefield',
-              fromYourGraveyard: true,
-              attachTo: 'triggerObject',
-            },
-          ],
-          functionsInGraveyard: true,
-          description:
-            'When a Ninja you control enters, you may return this card from your graveyard to the battlefield attached to that creature.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-009',
-    patchSha256: '006b2757e467adb92f6a1cdd1708b53a03374df07b546b200666282708aef6f6',
-    behaviorSha256: '386094f78c257ebe3409c84d4294e5654e95e6a341c553364ca83eaccdb2824c',
     acceptedBy: 'main-thread',
   },
   {

@@ -2,9 +2,7 @@
   {
     "name": "Sanguine Sacrament",
     "rank": 12228,
-    "lines": [
-      "You gain twice X life. Put ~ on the bottom of its owner's library."
-    ]
+    "lines": ["You gain twice X life. Put ~ on the bottom of its owner's library."]
   },
   {
     "name": "Glamer Gifter",
@@ -16,9 +14,7 @@
   {
     "name": "Procrastinate",
     "rank": 12236,
-    "lines": [
-      "Tap target creature. Put twice X stun counters on it."
-    ]
+    "lines": ["Tap target creature. Put twice X stun counters on it."]
   },
   {
     "name": "Curse of Stalked Prey",
@@ -65,9 +61,7 @@
   {
     "name": "Bandage",
     "rank": 12249,
-    "lines": [
-      "Prevent the next 1 damage that would be dealt to any target this turn."
-    ]
+    "lines": ["Prevent the next 1 damage that would be dealt to any target this turn."]
   },
   {
     "name": "Intet, the Dreamer",
@@ -93,9 +87,7 @@
   {
     "name": "Imposing Sovereign",
     "rank": 12256,
-    "lines": [
-      "Creatures your opponents control enter tapped."
-    ]
+    "lines": ["Creatures your opponents control enter tapped."]
   },
   {
     "name": "Curse-Marred Demon",
@@ -107,23 +99,17 @@
   {
     "name": "Zodiac Monkey",
     "rank": 12270,
-    "lines": [
-      "Forestwalk"
-    ]
+    "lines": ["Forestwalk"]
   },
   {
     "name": "Rampaging Ceratops",
     "rank": 12271,
-    "lines": [
-      "~ can't be blocked except by three or more creatures."
-    ]
+    "lines": ["~ can't be blocked except by three or more creatures."]
   },
   {
     "name": "Last-Ditch Effort",
     "rank": 12273,
-    "lines": [
-      "Sacrifice any number of creatures. ~ deals that much damage to any target."
-    ]
+    "lines": ["Sacrifice any number of creatures. ~ deals that much damage to any target."]
   },
   {
     "name": "Peerless Samurai",
@@ -170,9 +156,7 @@
   {
     "name": "Ant-Man, Elusive Avenger",
     "rank": 12284,
-    "lines": [
-      "~ can't be blocked by creatures with greater power."
-    ]
+    "lines": ["~ can't be blocked by creatures with greater power."]
   },
   {
     "name": "Satya, Aetherflux Genius",
@@ -233,9 +217,7 @@
   {
     "name": "Springjack Pasture",
     "rank": 12311,
-    "lines": [
-      "{T}, Sacrifice X Goats: Add X mana of any one color. You gain X life."
-    ]
+    "lines": ["{T}, Sacrifice X Goats: Add X mana of any one color. You gain X life."]
   },
   {
     "name": "Leonin Vanguard",
@@ -247,30 +229,22 @@
   {
     "name": "Abolish",
     "rank": 12315,
-    "lines": [
-      "You may discard a Plains card rather than pay this spell's mana cost."
-    ]
+    "lines": ["You may discard a Plains card rather than pay this spell's mana cost."]
   },
   {
     "name": "Breath Weapon",
     "rank": 12316,
-    "lines": [
-      "~ deals 2 damage to each non-Dragon creature."
-    ]
+    "lines": ["~ deals 2 damage to each non-Dragon creature."]
   },
   {
     "name": "Gatebreaker Ram",
     "rank": 12317,
-    "lines": [
-      "As long as you control two or more Gates, this creature has vigilance and trample."
-    ]
+    "lines": ["As long as you control two or more Gates, this creature has vigilance and trample."]
   },
   {
     "name": "Hookblade Veteran",
     "rank": 12323,
-    "lines": [
-      "During your turn, this creature has flying."
-    ]
+    "lines": ["During your turn, this creature has flying."]
   },
   {
     "name": "Malakir Blood-Priest",
@@ -352,9 +326,7 @@
   {
     "name": "Sage of the Skies",
     "rank": 12352,
-    "lines": [
-      "When you cast this spell, if you've cast another spell this turn, copy this spell."
-    ]
+    "lines": ["When you cast this spell, if you've cast another spell this turn, copy this spell."]
   },
   {
     "name": "Rescue from the Underworld",
@@ -415,16 +387,12 @@
   {
     "name": "Bloodmad Vampire",
     "rank": 12381,
-    "lines": [
-      "Madness {1}{R}"
-    ]
+    "lines": ["Madness {1}{R}"]
   },
   {
     "name": "Wanderer's Strike",
     "rank": 12382,
-    "lines": [
-      "Exile target creature, then proliferate."
-    ]
+    "lines": ["Exile target creature, then proliferate."]
   },
   {
     "name": "Helm of Kaldra",
@@ -457,9 +425,7 @@
   {
     "name": "Sadistic Glee",
     "rank": 12398,
-    "lines": [
-      "Whenever a creature dies, put a +1/+1 counter on enchanted creature."
-    ]
+    "lines": ["Whenever a creature dies, put a +1/+1 counter on enchanted creature."]
   },
   {
     "name": "Magus of the Order",
@@ -478,16 +444,12 @@
   {
     "name": "Unwelcome Sprite",
     "rank": 12408,
-    "lines": [
-      "Whenever you cast a spell during an opponent's turn, surveil 2."
-    ]
+    "lines": ["Whenever you cast a spell during an opponent's turn, surveil 2."]
   },
   {
     "name": "Atmospheric Greenhouse",
     "rank": 12409,
-    "lines": [
-      "When this Spacecraft enters, put a +1/+1 counter on each creature you control."
-    ]
+    "lines": ["When this Spacecraft enters, put a +1/+1 counter on each creature you control."]
   },
   {
     "name": "Catastrophe",
@@ -534,23 +496,17 @@
   {
     "name": "Fire of Orthanc",
     "rank": 12420,
-    "lines": [
-      "Destroy target artifact or land. Creatures without flying can't block this turn."
-    ]
+    "lines": ["Destroy target artifact or land. Creatures without flying can't block this turn."]
   },
   {
     "name": "Alchemist's Greeting",
     "rank": 12423,
-    "lines": [
-      "Madness {1}{R}"
-    ]
+    "lines": ["Madness {1}{R}"]
   },
   {
     "name": "Into the Night",
     "rank": 12424,
-    "lines": [
-      "It becomes night. Discard any number of cards, then draw that many cards plus one."
-    ]
+    "lines": ["It becomes night. Discard any number of cards, then draw that many cards plus one."]
   },
   {
     "name": "Virtus's Maneuver",
@@ -569,16 +525,12 @@
   {
     "name": "Distorting Wake",
     "rank": 12434,
-    "lines": [
-      "Return X target nonland permanents to their owners' hands."
-    ]
+    "lines": ["Return X target nonland permanents to their owners' hands."]
   },
   {
     "name": "Burning Anger",
     "rank": 12437,
-    "lines": [
-      "Enchanted creature has \"{T}: ~ deals damage equal to its power to any target.\""
-    ]
+    "lines": ["Enchanted creature has \"{T}: ~ deals damage equal to its power to any target.\""]
   },
   {
     "name": "Oath of Lieges",
@@ -611,23 +563,17 @@
   {
     "name": "Electro's Bolt",
     "rank": 12445,
-    "lines": [
-      "Mayhem {1}{R}"
-    ]
+    "lines": ["Mayhem {1}{R}"]
   },
   {
     "name": "Fresh Start",
     "rank": 12446,
-    "lines": [
-      "Enchanted creature gets -5/-0 and loses all abilities."
-    ]
+    "lines": ["Enchanted creature gets -5/-0 and loses all abilities."]
   },
   {
     "name": "Twin Bolt",
     "rank": 12450,
-    "lines": [
-      "~ deals 2 damage divided as you choose among one or two targets."
-    ]
+    "lines": ["~ deals 2 damage divided as you choose among one or two targets."]
   },
   {
     "name": "Blinding Angel",
@@ -674,9 +620,7 @@
   {
     "name": "Gaea's Herald",
     "rank": 12469,
-    "lines": [
-      "Creature spells can't be countered."
-    ]
+    "lines": ["Creature spells can't be countered."]
   },
   {
     "name": "New Perspectives",
@@ -702,9 +646,7 @@
   {
     "name": "Spoils of Adventure",
     "rank": 12479,
-    "lines": [
-      "This spell costs {1} less to cast for each creature in your party."
-    ]
+    "lines": ["This spell costs {1} less to cast for each creature in your party."]
   },
   {
     "name": "Gahiji, Honored One",
@@ -716,9 +658,7 @@
   {
     "name": "Vital Splicer",
     "rank": 12482,
-    "lines": [
-      "{1}: Regenerate target Golem you control."
-    ]
+    "lines": ["{1}: Regenerate target Golem you control."]
   },
   {
     "name": "Verdant Haven",
@@ -730,9 +670,7 @@
   {
     "name": "Rage into the Valley",
     "rank": 12487,
-    "lines": [
-      "Amass Goblins 2."
-    ]
+    "lines": ["Amass Goblins 2."]
   },
   {
     "name": "Firemind's Foresight",
@@ -751,16 +689,12 @@
   {
     "name": "Flame Jab",
     "rank": 12495,
-    "lines": [
-      "Retrace"
-    ]
+    "lines": ["Retrace"]
   },
   {
     "name": "Jade Avenger",
     "rank": 12498,
-    "lines": [
-      "Bushido 2"
-    ]
+    "lines": ["Bushido 2"]
   },
   {
     "name": "Nin, the Pain Artist",
@@ -793,9 +727,7 @@
   {
     "name": "Flourishing Fox",
     "rank": 12504,
-    "lines": [
-      "Whenever you cycle another card, put a +1/+1 counter on this creature."
-    ]
+    "lines": ["Whenever you cycle another card, put a +1/+1 counter on this creature."]
   },
   {
     "name": "Heroic Sacrifice",
@@ -835,16 +767,12 @@
   {
     "name": "Extruder",
     "rank": 12514,
-    "lines": [
-      "Echo {4}"
-    ]
+    "lines": ["Echo {4}"]
   },
   {
     "name": "Hardlight Containment",
     "rank": 12515,
-    "lines": [
-      "Enchant artifact you control"
-    ]
+    "lines": ["Enchant artifact you control"]
   },
   {
     "name": "Scholarship Sponsor",
@@ -863,16 +791,12 @@
   {
     "name": "Dragonback Lancer",
     "rank": 12528,
-    "lines": [
-      "Mobilize 1"
-    ]
+    "lines": ["Mobilize 1"]
   },
   {
     "name": "Drannith Stinger",
     "rank": 12529,
-    "lines": [
-      "Whenever you cycle another card, this creature deals 1 damage to each opponent."
-    ]
+    "lines": ["Whenever you cycle another card, this creature deals 1 damage to each opponent."]
   },
   {
     "name": "Infested Thrinax",
@@ -905,16 +829,12 @@
   {
     "name": "Oroku Saki, Shredder Rising",
     "rank": 12539,
-    "lines": [
-      "Sneak {1}{B}"
-    ]
+    "lines": ["Sneak {1}{B}"]
   },
   {
     "name": "Belligerent Guest",
     "rank": 12540,
-    "lines": [
-      "Whenever this creature deals combat damage to a player, create a Blood token."
-    ]
+    "lines": ["Whenever this creature deals combat damage to a player, create a Blood token."]
   },
   {
     "name": "Alania's Pathmaker",
@@ -933,16 +853,12 @@
   {
     "name": "Edgewall Innkeeper",
     "rank": 12544,
-    "lines": [
-      "Whenever you cast a creature spell that has an Adventure, draw a card."
-    ]
+    "lines": ["Whenever you cast a creature spell that has an Adventure, draw a card."]
   },
   {
     "name": "Bile-Vial Boggart",
     "rank": 12545,
-    "lines": [
-      "When this creature dies, put a -1/-1 counter on up to one target creature."
-    ]
+    "lines": ["When this creature dies, put a -1/-1 counter on up to one target creature."]
   },
   {
     "name": "Aether Membrane",
@@ -954,9 +870,7 @@
   {
     "name": "Tel-Jilad Stylus",
     "rank": 12550,
-    "lines": [
-      "{T}: Put target permanent you own on the bottom of your library."
-    ]
+    "lines": ["{T}: Put target permanent you own on the bottom of your library."]
   },
   {
     "name": "Water Wings",
@@ -968,9 +882,7 @@
   {
     "name": "Revolutionist",
     "rank": 12555,
-    "lines": [
-      "Madness {3}{R}"
-    ]
+    "lines": ["Madness {3}{R}"]
   },
   {
     "name": "Skyfire Phoenix",
@@ -989,16 +901,12 @@
   {
     "name": "Smash to Smithereens",
     "rank": 12565,
-    "lines": [
-      "Destroy target artifact. ~ deals 3 damage to that artifact's controller."
-    ]
+    "lines": ["Destroy target artifact. ~ deals 3 damage to that artifact's controller."]
   },
   {
     "name": "Merciless Harlequin",
     "rank": 12567,
-    "lines": [
-      "Freerunning {1}{B}"
-    ]
+    "lines": ["Freerunning {1}{B}"]
   },
   {
     "name": "Cataclysm",
@@ -1045,9 +953,7 @@
   {
     "name": "Myr Custodian",
     "rank": 12581,
-    "lines": [
-      "When this creature enters, scry 2. Then each opponent may scry 1."
-    ]
+    "lines": ["When this creature enters, scry 2. Then each opponent may scry 1."]
   },
   {
     "name": "Spreading Insurrection",
@@ -1059,9 +965,7 @@
   {
     "name": "Bontu's Last Reckoning",
     "rank": 12584,
-    "lines": [
-      "Destroy all creatures. Lands you control don't untap during your next untap step."
-    ]
+    "lines": ["Destroy all creatures. Lands you control don't untap during your next untap step."]
   },
   {
     "name": "Icefeather Aven",
@@ -1115,9 +1019,7 @@
   {
     "name": "Deadbeat Attendant",
     "rank": 12609,
-    "lines": [
-      "When this creature enters, open an Attraction."
-    ]
+    "lines": ["When this creature enters, open an Attraction."]
   },
   {
     "name": "Head of the Hunt",
@@ -1164,9 +1066,7 @@
   {
     "name": "Deluge",
     "rank": 12620,
-    "lines": [
-      "Tap all creatures without flying."
-    ]
+    "lines": ["Tap all creatures without flying."]
   },
   {
     "name": "Now for Wrath, Now for Ruin!",
@@ -1178,23 +1078,17 @@
   {
     "name": "Fight to the Death",
     "rank": 12626,
-    "lines": [
-      "Destroy all blocking creatures and all blocked creatures."
-    ]
+    "lines": ["Destroy all blocking creatures and all blocked creatures."]
   },
   {
     "name": "Logic Knot",
     "rank": 12627,
-    "lines": [
-      "Delve"
-    ]
+    "lines": ["Delve"]
   },
   {
     "name": "Contagion",
     "rank": 12628,
-    "lines": [
-      "Distribute two -2/-1 counters among one or two target creatures."
-    ]
+    "lines": ["Distribute two -2/-1 counters among one or two target creatures."]
   },
   {
     "name": "Bounty of the Luxa",
@@ -1227,9 +1121,7 @@
   {
     "name": "Elvish Dreadlord",
     "rank": 12645,
-    "lines": [
-      "Encore {5}{B}{B}"
-    ]
+    "lines": ["Encore {5}{B}{B}"]
   },
   {
     "name": "Blunt the Assault",
@@ -1241,16 +1133,12 @@
   {
     "name": "Skola Grovedancer",
     "rank": 12648,
-    "lines": [
-      "Whenever a land card is put into your graveyard from anywhere, you gain 1 life."
-    ]
+    "lines": ["Whenever a land card is put into your graveyard from anywhere, you gain 1 life."]
   },
   {
     "name": "Soul Conduit",
     "rank": 12649,
-    "lines": [
-      "{6}, {T}: Two target players exchange life totals."
-    ]
+    "lines": ["{6}, {T}: Two target players exchange life totals."]
   },
   {
     "name": "Thorin, Company's Leader",
@@ -1283,9 +1171,7 @@
   {
     "name": "Coastal Breach",
     "rank": 12658,
-    "lines": [
-      "Undaunted"
-    ]
+    "lines": ["Undaunted"]
   },
   {
     "name": "Geomancer's Gambit",
@@ -1325,16 +1211,12 @@
   {
     "name": "Street Riot",
     "rank": 12669,
-    "lines": [
-      "During your turn, creatures you control get +1/+0 and have trample."
-    ]
+    "lines": ["During your turn, creatures you control get +1/+0 and have trample."]
   },
   {
     "name": "Invincible Hymn",
     "rank": 12670,
-    "lines": [
-      "Count the number of cards in your library. Your life total becomes that number."
-    ]
+    "lines": ["Count the number of cards in your library. Your life total becomes that number."]
   },
   {
     "name": "Showstopping Surprise",
@@ -1353,9 +1235,7 @@
   {
     "name": "Displacer Beast",
     "rank": 12676,
-    "lines": [
-      "When this creature enters, venture into the dungeon."
-    ]
+    "lines": ["When this creature enters, venture into the dungeon."]
   },
   {
     "name": "Priest of the Blessed Graf",
@@ -1423,9 +1303,7 @@
   {
     "name": "Riders of Gavony",
     "rank": 12704,
-    "lines": [
-      "Human creatures you control have protection from creatures of the chosen type."
-    ]
+    "lines": ["Human creatures you control have protection from creatures of the chosen type."]
   },
   {
     "name": "Monstrous Onslaught",
@@ -1472,9 +1350,7 @@
   {
     "name": "Deadly Alliance",
     "rank": 12720,
-    "lines": [
-      "This spell costs {1} less to cast for each creature in your party."
-    ]
+    "lines": ["This spell costs {1} less to cast for each creature in your party."]
   },
   {
     "name": "Political Triumph",
@@ -1570,9 +1446,7 @@
   {
     "name": "Mammoth Umbra",
     "rank": 12745,
-    "lines": [
-      "Umbra armor"
-    ]
+    "lines": ["Umbra armor"]
   },
   {
     "name": "Mouse Trapper",
@@ -1591,9 +1465,7 @@
   {
     "name": "Mind Control",
     "rank": 12752,
-    "lines": [
-      "You control enchanted creature."
-    ]
+    "lines": ["You control enchanted creature."]
   },
   {
     "name": "Run for Your Life",
@@ -1654,9 +1526,7 @@
   {
     "name": "Sunder Shaman",
     "rank": 12777,
-    "lines": [
-      "~ can't be blocked by more than one creature."
-    ]
+    "lines": ["~ can't be blocked by more than one creature."]
   },
   {
     "name": "Memorial to Unity",
@@ -1689,16 +1559,12 @@
   {
     "name": "Twisted Abomination",
     "rank": 12786,
-    "lines": [
-      "{B}: Regenerate this creature."
-    ]
+    "lines": ["{B}: Regenerate this creature."]
   },
   {
     "name": "Pore Over the Pages",
     "rank": 12793,
-    "lines": [
-      "Draw three cards, untap up to two lands, then discard a card."
-    ]
+    "lines": ["Draw three cards, untap up to two lands, then discard a card."]
   },
   {
     "name": "Spark of Creativity",
@@ -1745,16 +1611,12 @@
   {
     "name": "Reap the Past",
     "rank": 12807,
-    "lines": [
-      "Return X cards at random from your graveyard to your hand. Exile ~."
-    ]
+    "lines": ["Return X cards at random from your graveyard to your hand. Exile ~."]
   },
   {
     "name": "Seize the Secrets",
     "rank": 12810,
-    "lines": [
-      "This spell costs {1} less to cast if you've committed a crime this turn."
-    ]
+    "lines": ["This spell costs {1} less to cast if you've committed a crime this turn."]
   },
   {
     "name": "Band Together",
