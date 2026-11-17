@@ -14,6 +14,8 @@
  * Hill-climb S7: `--opponents bot-v1` seats the same bot-led setup in P2 and P4 but waking the
  * strategist under `table-v1`, while P1 and P3 use `table-v2`, so the wake rule is the only
  * difference. The strategist calls per mode are the saving; the winner is the strength check.
+ * With no model tactician to pace the game, each decision waits for its seat's pending strategist
+ * call, so knobs land before the seat acts.
  *
  * Spend caps: once the provider-reported cost reaches `--max-usd` (default 2) or the call count
  * reaches `--max-calls` (default 1500), no further model call is made and every seat plays the
@@ -351,7 +353,11 @@ async function main(): Promise<void> {
       others,
     );
   }
-  const providers = new Map<PlayerId, OpenAiDecisionProvider>();
+  // All four seats bot-led (`bot-v1`): nothing else waits for the strategist, so a game would end
+  // in seconds before any knobs land. Each decision waits for its coordinator's pending call
+  // instead, so the wake rule is what decides how many calls a game makes.
+  const awaitStrategist = opponents === 'bot-v1';
+  const providers = new Map<PlayerId, { decide: OpenAiDecisionProvider['decide'] }>();
   const started = performance.now();
   const result = await runToCompletionAsync(
     engine,
@@ -359,7 +365,7 @@ async function main(): Promise<void> {
       let provider = providers.get(seat);
       if (provider === undefined) {
         const mode = modeOf(seat);
-        provider = new OpenAiDecisionProvider(
+        const inner = new OpenAiDecisionProvider(
           tacticianClient,
           queue,
           engine,
@@ -368,6 +374,16 @@ async function main(): Promise<void> {
           undefined,
           coordinators[mode],
         );
+        const coordinator = coordinators[mode];
+        provider = awaitStrategist
+          ? {
+              async decide(request) {
+                coordinator.prepare(request);
+                await coordinator.settled();
+                return inner.decide(request);
+              },
+            }
+          : inner;
         providers.set(seat, provider);
       }
       return provider;
