@@ -1,7 +1,7 @@
 # ADR 0050: Provisional cards, an opt-in trust tier for machine-checked patches
 
-Status: Proposed (2026-11-14)
-Status note: waiting on Paul's answer to "may provisional cards be played?" (question 1 of the 2026-11-14 architecture review). Until it is accepted the tier stays off everywhere unless a person passes `--provisional`. Numbered 0050 because open PR #72 takes 0047 and PR #74 renumbers two older ADRs to 0048 and 0049.
+Status: Accepted (2026-11-17)
+Status note: Paul answered question 1 of the 2026-11-14 architecture review on 2026-11-16: provisional cards may play, marked for review. The tier stays opt-in through `--provisional`; turning it on by default is a separate change. Numbered 0050 because open PR #72 takes 0047 and PR #74 renumbers two older ADRs to 0048 and 0049.
 
 Date: 2026-11-14
 
