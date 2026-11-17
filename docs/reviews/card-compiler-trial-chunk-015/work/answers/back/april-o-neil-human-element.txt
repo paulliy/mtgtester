@@ -1,0 +1,1 @@
+Whenever a player casts an artifact, instant, or sorcery spell, create a colorless Mutagen artifact token. It has "{1}, {T}, Sacrifice this artifact: Activate this ability only as a sorcery. Put a +1/+1 counter on target creature."
