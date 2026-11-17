@@ -15,6 +15,12 @@
       "manaCost": "{1}{G}",
       "power": "2",
       "toughness": "2"
+    },
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
     }
   ],
   "scenarios": [
@@ -58,21 +64,36 @@
       "id": "bonders-enclave-no-power-4",
       "title": "Bonders' Enclave: activate only if you control a creature with power 4 or greater",
       "clauses": [2],
-      "instructions": ["With only Scenario Bear, the draw ability is not offered."],
-      "expectedOutcome": "Nothing is drawn.",
+      "instructions": [
+        "With only Scenario Bear, the draw ability is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
+      "expectedOutcome": "Only Scenario Glimpse draws a card.",
       "seats": {
         "P1": {
+          "hand": ["Scenario Glimpse"],
           "battlefield": ["Bonders' Enclave", "Scenario Bear", "Island", "Island", "Island"],
           "libraryTop": ["Scenario Ogre"]
         }
       },
-      "script": [],
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
       "expect": [
         {
           "zone": {
             "player": "P1",
-            "zone": "library",
+            "zone": "hand",
             "has": ["Scenario Ogre"]
+          }
+        },
+        {
+          "event": {
+            "type": "draw",
+            "count": 1
           }
         }
       ]

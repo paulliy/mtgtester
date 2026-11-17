@@ -8,6 +8,12 @@
       "manaCost": "{1}{G}",
       "power": "2",
       "toughness": "2"
+    },
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
     }
   ],
   "scenarios": [
@@ -74,17 +80,23 @@
       "title": "Bloodsoaked Champion: activate only if you attacked this turn",
       "clauses": [2],
       "instructions": [
-        "Do not attack.",
-        "Bloodsoaked Champion stays in your graveyard: the ability is not offered."
+        "Do not attack: the ability is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
       ],
       "expectedOutcome": "Bloodsoaked Champion stays in your graveyard.",
       "seats": {
         "P1": {
+          "hand": ["Scenario Glimpse"],
           "graveyard": ["Bloodsoaked Champion"],
-          "battlefield": ["Scenario Bear", "Swamp", "Swamp"]
+          "battlefield": ["Scenario Bear", "Swamp", "Swamp", "Swamp"]
         }
       },
-      "script": [],
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
       "expect": [
         {
           "zone": {

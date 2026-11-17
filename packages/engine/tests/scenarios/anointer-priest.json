@@ -1,6 +1,14 @@
 {
   "schemaVersion": 1,
   "card": "Anointer Priest",
+  "supportCards": [
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
+    }
+  ],
   "scenarios": [
     {
       "id": "anointer-priest-embalm",
@@ -66,15 +74,24 @@
       "turn": {
         "player": "P2"
       },
-      "instructions": ["On P2's turn, embalm is not offered."],
+      "instructions": [
+        "On P2's turn, embalm is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
       "expectedOutcome": "Anointer Priest stays in your graveyard.",
       "seats": {
         "P1": {
+          "hand": ["Scenario Glimpse"],
           "graveyard": ["Anointer Priest"],
           "battlefield": ["Plains", "Plains", "Plains", "Plains"]
         }
       },
-      "script": [],
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
       "expect": [
         {
           "zone": {

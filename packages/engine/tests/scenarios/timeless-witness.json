@@ -8,6 +8,12 @@
       "manaCost": "{1}{G}",
       "power": "2",
       "toughness": "2"
+    },
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
     }
   ],
   "scenarios": [
@@ -76,15 +82,24 @@
       "turn": {
         "player": "P2"
       },
-      "instructions": ["On P2's turn, eternalize is not offered."],
+      "instructions": [
+        "On P2's turn, eternalize is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
       "expectedOutcome": "Timeless Witness stays in your graveyard.",
       "seats": {
         "P1": {
+          "hand": ["Scenario Glimpse"],
           "graveyard": ["Timeless Witness"],
           "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest"]
         }
       },
-      "script": [],
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
       "expect": [
         {
           "zone": {

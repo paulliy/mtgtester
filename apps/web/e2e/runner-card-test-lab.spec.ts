@@ -13,6 +13,7 @@ import { g1Flows } from './runner-flows-g1';
 import { g2Flows } from './runner-flows-g2';
 import { g3Flows } from './runner-flows-g3';
 import { g4Flows } from './runner-flows-g4';
+import { g5Flows } from './runner-flows-g5';
 import { RUNNER_ALL_SCENARIOS } from '../../../packages/server/src/cards/runner-scenario-catalog';
 
 /**
@@ -477,6 +478,8 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
   ...g2Flows({ passUntil, passStackUntil }),
   ...g3Flows({ passUntil, passStackUntil }),
   ...g4Flows({ passUntil, passStackUntil }),
+  // PR #96's graveyard and hand batch.
+  ...g5Flows({ passUntil, passStackUntil }),
   'mizzium-mortars-target': async (page) => {
     await castWith(page, hand(page, 'Mizzium Mortars'), {
       targets: [['P2', 'Scenario Ox']],

@@ -1,6 +1,14 @@
 {
   "schemaVersion": 1,
   "card": "Adorned Pouncer",
+  "supportCards": [
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
+    }
+  ],
   "scenarios": [
     {
       "id": "adorned-pouncer-eternalize",
@@ -57,15 +65,24 @@
       "turn": {
         "player": "P2"
       },
-      "instructions": ["On P2's turn, eternalize is not offered."],
+      "instructions": [
+        "On P2's turn, eternalize is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
       "expectedOutcome": "Adorned Pouncer stays in your graveyard.",
       "seats": {
         "P1": {
+          "hand": ["Scenario Glimpse"],
           "graveyard": ["Adorned Pouncer"],
           "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains"]
         }
       },
-      "script": [],
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
       "expect": [
         {
           "zone": {

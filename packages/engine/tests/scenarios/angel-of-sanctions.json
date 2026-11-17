@@ -7,6 +7,12 @@
       "typeLine": "Artifact",
       "manaCost": "{1}",
       "oracleText": ""
+    },
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
     }
   ],
   "scenarios": [
@@ -82,15 +88,24 @@
       "turn": {
         "player": "P2"
       },
-      "instructions": ["On P2's turn, embalm is not offered."],
+      "instructions": [
+        "On P2's turn, embalm is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
       "expectedOutcome": "Angel of Sanctions stays in your graveyard.",
       "seats": {
         "P1": {
+          "hand": ["Scenario Glimpse"],
           "graveyard": ["Angel of Sanctions"],
           "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains", "Plains"]
         }
       },
-      "script": [],
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
       "expect": [
         {
           "zone": {

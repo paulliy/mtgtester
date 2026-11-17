@@ -1,6 +1,14 @@
 {
   "schemaVersion": 1,
   "card": "Aven Wind Guide",
+  "supportCards": [
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
+    }
+  ],
   "scenarios": [
     {
       "id": "aven-wind-guide-embalm",
@@ -63,15 +71,24 @@
       "turn": {
         "player": "P2"
       },
-      "instructions": ["On P2's turn, embalm is not offered."],
+      "instructions": [
+        "On P2's turn, embalm is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
       "expectedOutcome": "Aven Wind Guide stays in your graveyard.",
       "seats": {
         "P1": {
+          "hand": ["Scenario Glimpse"],
           "graveyard": ["Aven Wind Guide"],
           "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains", "Island"]
         }
       },
-      "script": [],
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
       "expect": [
         {
           "zone": {

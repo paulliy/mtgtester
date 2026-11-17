@@ -1,6 +1,14 @@
 {
   "schemaVersion": 1,
   "card": "Timeless Dragon",
+  "supportCards": [
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
+    }
+  ],
   "scenarios": [
     {
       "id": "timeless-dragon-eternalize",
@@ -57,15 +65,24 @@
       "turn": {
         "player": "P2"
       },
-      "instructions": ["On P2's turn, eternalize is not offered."],
+      "instructions": [
+        "On P2's turn, eternalize is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
       "expectedOutcome": "Timeless Dragon stays in your graveyard.",
       "seats": {
         "P1": {
+          "hand": ["Scenario Glimpse"],
           "graveyard": ["Timeless Dragon"],
           "battlefield": ["Plains", "Plains", "Plains", "Plains"]
         }
       },
-      "script": [],
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
       "expect": [
         {
           "zone": {

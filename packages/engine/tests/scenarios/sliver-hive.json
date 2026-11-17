@@ -15,6 +15,12 @@
       "manaCost": "{1}{G}",
       "power": "2",
       "toughness": "2"
+    },
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
     }
   ],
   "scenarios": [
@@ -64,10 +70,14 @@
       "id": "sliver-hive-no-sliver",
       "title": "Sliver Hive: activate only if you control a Sliver",
       "clauses": [3],
-      "instructions": ["Without a Sliver, the token ability is not offered."],
+      "instructions": [
+        "Without a Sliver, the token ability is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
       "expectedOutcome": "No token is created.",
       "seats": {
         "P1": {
+          "hand": ["Scenario Glimpse"],
           "battlefield": [
             "Sliver Hive",
             "Scenario Bear",
@@ -79,12 +89,23 @@
           ]
         }
       },
-      "script": [],
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
       "expect": [
         {
           "tapped": {
             "card": "Sliver Hive",
             "equals": false
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "count": 0
           }
         }
       ]
