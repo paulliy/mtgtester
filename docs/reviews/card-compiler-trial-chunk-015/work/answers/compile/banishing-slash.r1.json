@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target 'artifact, enchantment, or tapped creature' needs a per-branch tapped restriction, but tapState applies to the whole target slot, so it would also wrongly require artifacts and enchantments to be tapped."}

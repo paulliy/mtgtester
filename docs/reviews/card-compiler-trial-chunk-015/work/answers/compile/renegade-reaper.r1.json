@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no condition that checks whether a card of a given type (an Angel) was milled by the immediately preceding mill, so 'if at least one Angel card is milled this way, you gain 4 life' cannot be expressed."}
