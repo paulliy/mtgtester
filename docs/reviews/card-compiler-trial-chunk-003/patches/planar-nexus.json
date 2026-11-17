@@ -1,0 +1,33 @@
+{
+  "name": "Planar Nexus",
+  "oracleId": "26005003-afcb-4c32-a760-be950246ff0f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ is every nonbasic land type."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 4,
+          "addSubtypes": [
+            "Cave",
+            "Desert",
+            "Gate",
+            "Lair",
+            "Locus",
+            "Mine",
+            "Power-Plant",
+            "Sphere",
+            "Tower",
+            "Urza's"
+          ]
+        }
+      }
+    ]
+  }
+}

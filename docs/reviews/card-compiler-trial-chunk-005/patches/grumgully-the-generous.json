@@ -1,0 +1,43 @@
+{
+  "name": "Grumgully, the Generous",
+  "oracleId": "fa4afcf7-9cf7-4f67-95b9-1f7fe66bf332",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each other non-Human creature you control enters with an additional +1/+1 counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "additionalCountersOnEntry": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "not",
+              "of": {
+                "kind": "subtype",
+                "value": "Human"
+              }
+            }
+          ]
+        },
+        "counter": "+1/+1",
+        "count": {
+          "kind": "const",
+          "n": 1
+        }
+      }
+    ]
+  }
+}

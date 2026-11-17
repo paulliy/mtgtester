@@ -1,0 +1,1 @@
+{U}{R}, {T}: Create a token that's a copy of target artifact or creature you control other than this creature. It's an artifact in addition to its other types and it gains haste. Sacrifice the token at the beginning of the end step.

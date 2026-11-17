@@ -1,0 +1,1 @@
+{1}{W}: Until end of turn, this land becomes a white Soldier creature with power 1 and toughness 5.

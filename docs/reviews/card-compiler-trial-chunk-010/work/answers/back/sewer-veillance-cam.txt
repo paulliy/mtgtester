@@ -1,0 +1,2 @@
+When this enters, you may choose one: tap target creature, or untap target creature.
+When this leaves the battlefield, you may choose one: tap target creature, or untap target creature.

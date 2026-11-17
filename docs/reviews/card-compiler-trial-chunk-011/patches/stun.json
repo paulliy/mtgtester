@@ -1,0 +1,37 @@
+{
+  "name": "Stun",
+  "oracleId": "d3491972-44c5-4962-a680-42b79357a189",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature can't block this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "count": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "cantBlockEachChosenThisTurn",
+          "targetSlot": 0
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Target creature can't block this turn."
+    }
+  }
+}

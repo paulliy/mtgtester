@@ -1,0 +1,1 @@
+Whenever equipped creature deals combat damage to a player, that player discards a card. Then untap each land you control. This trigger is mandatory and targets nothing. This Equipment has no other abilities.

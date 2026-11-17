@@ -1,0 +1,30 @@
+{
+  "name": "Aettir and Priwen",
+  "oracleId": "19d8937e-23fb-4758-a306-0e7af9bb44c4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equipped creature has base power and toughness X/X, where X is your life total."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "lifeTotal",
+            "scope": "you"
+          },
+          "toughness": {
+            "kind": "lifeTotal",
+            "scope": "you"
+          }
+        }
+      }
+    ]
+  }
+}

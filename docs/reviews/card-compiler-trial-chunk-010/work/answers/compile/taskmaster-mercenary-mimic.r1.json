@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The copy target is a creature on the battlefield or a creature card in a graveyard, which no single target slot kind expresses, and becomeCopyOf's untilEot flag cannot express 'until your next turn'."}

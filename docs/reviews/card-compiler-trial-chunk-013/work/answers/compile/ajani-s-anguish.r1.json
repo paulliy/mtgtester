@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"enters","subject":{"kind":"self"}},"optional":false,"targets":[{"kind":"anyTarget"}],"effects":[{"op":"dealDamage","target":0,"amount":{"kind":"xValue"}}],"description":"When this enchantment enters, it deals X damage to any target."}]}}

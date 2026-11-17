@@ -1,0 +1,34 @@
+{
+  "name": "Harmless Offering",
+  "oracleId": "f5d32e5f-066b-42cf-8dd1-072a96275313",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target opponent gains control of target permanent you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player",
+          "controller": "opponent"
+        },
+        {
+          "kind": "permanent",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 1,
+          "recipient": {
+            "targetPlayer": 0
+          }
+        }
+      ],
+      "description": "Target opponent gains control of target permanent you control."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+Each Sliver has "{T}: Regenerate target permanent that is a Sliver."

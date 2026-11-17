@@ -1,0 +1,1 @@
+Target creature you control deals 1 damage to itself. Target creature you control gains trample until end of turn.

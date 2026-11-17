@@ -1,0 +1,1 @@
+Abilities that trigger when a creature enters the battlefield don't trigger.

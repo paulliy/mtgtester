@@ -1,0 +1,32 @@
+{
+  "name": "Shimmer Dragon",
+  "oracleId": "de1316f2-1cca-4ac4-aead-0fd8b4036d88",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as you control four or more artifacts, this creature has hexproof."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "hexproof"
+        },
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "type",
+            "value": "Artifact"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 4
+        }
+      }
+    ]
+  }
+}

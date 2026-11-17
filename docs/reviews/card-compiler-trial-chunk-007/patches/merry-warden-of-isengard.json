@@ -1,0 +1,36 @@
+{
+  "name": "Merry, Warden of Isengard",
+  "oracleId": "1b600345-2b89-45bc-98c8-609fdd08a5fd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Partner with Pippin, Warden of Isengard"
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "player"
+          }
+        ],
+        "effects": [
+          {
+            "op": "targetPlayerMaySearchNamed",
+            "target": 0,
+            "name": "Pippin, Warden of Isengard"
+          }
+        ],
+        "description": "Partner with Pippin, Warden of Isengard"
+      }
+    ]
+  }
+}

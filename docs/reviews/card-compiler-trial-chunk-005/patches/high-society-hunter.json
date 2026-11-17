@@ -1,0 +1,56 @@
+{
+  "name": "High-Society Hunter",
+  "oracleId": "0dc158ba-7ec8-4558-91f5-0a87ef8380d4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, you may sacrifice another creature. If you do, put a +1/+1 counter on this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "then": [
+              {
+                "op": "putCountersEach",
+                "selector": {
+                  "kind": "self"
+                },
+                "counter": "+1/+1",
+                "count": 1
+              }
+            ]
+          }
+        ],
+        "description": "Whenever this creature attacks, you may sacrifice another creature. If you do, put a +1/+1 counter on this creature."
+      }
+    ]
+  }
+}

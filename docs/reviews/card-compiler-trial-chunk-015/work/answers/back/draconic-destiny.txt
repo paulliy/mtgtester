@@ -1,0 +1,2 @@
+Enchanted creature gets +1/+1, has flying and haste, and is a Dragon in addition to its other creature types.
+Enchanted creature has "{1}: This creature gets +1/+0 until end of turn."

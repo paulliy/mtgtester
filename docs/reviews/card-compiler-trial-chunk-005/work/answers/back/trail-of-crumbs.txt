@@ -1,0 +1,1 @@
+Whenever a Food you control is sacrificed, you may pay {1}. If you do, look at the top two cards of your library. You may put an artifact, creature, enchantment, land, planeswalker, or battle card from among them into your hand, revealing it. Put the rest on the bottom of your library in any order.

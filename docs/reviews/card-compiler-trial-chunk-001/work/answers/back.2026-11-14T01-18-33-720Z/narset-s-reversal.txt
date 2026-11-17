@@ -1,0 +1,1 @@
+Choose target spell that is an instant or sorcery spell. Copy that spell. The copy gets new targets. Then return the target spell to its owner's hand.

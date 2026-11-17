@@ -1,0 +1,1 @@
+When this enters, create a 1/1 blue Wizard creature token. That token has "{1}, Sacrifice this token: Counter target noncreature spell unless its controller pays {1}."

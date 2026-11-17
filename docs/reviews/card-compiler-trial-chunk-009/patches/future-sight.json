@@ -1,0 +1,25 @@
+{
+  "name": "Future Sight",
+  "oracleId": "93a0e938-b916-47ec-9803-369e885e253c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may play lands and cast spells from the top of your library."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "playFromZone",
+        "zone": "libraryTop",
+        "filter": {
+          "kind": "type",
+          "value": "Land"
+        }
+      },
+      {
+        "kind": "castFromZone",
+        "zone": "libraryTop"
+      }
+    ]
+  }
+}

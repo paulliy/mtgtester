@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema does not define damageDealt for an aggregate (byEventPlayer) combat-damage trigger as the total damage those trample creatures dealt to that player, so the token's X cannot be stated exactly."}

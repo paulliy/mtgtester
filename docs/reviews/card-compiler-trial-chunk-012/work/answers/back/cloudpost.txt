@@ -1,0 +1,1 @@
+{T}: Add {C} for each Locus on the battlefield.

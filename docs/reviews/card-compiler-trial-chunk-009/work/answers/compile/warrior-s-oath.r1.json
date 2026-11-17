@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no effect that makes you lose the game, and a delayed trigger for 'that turn's end step' would fire at the current turn's end step, which comes first."}

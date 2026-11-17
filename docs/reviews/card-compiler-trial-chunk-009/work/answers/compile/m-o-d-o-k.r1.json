@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"payLife","amount":3}],"timing":"yourTurn","ability":{"kind":"activated","targets":[],"effects":[{"op":"connive"}],"description":"Mental Organism — Pay 3 life: M.O.D.O.K. connives. Activate only during your turn."}}]}}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"otherPermanentsEnterTapped","filter":{"kind":"allOf","of":[{"kind":"type","value":"Artifact"},{"kind":"controller","who":"opponents"}]}}]}}

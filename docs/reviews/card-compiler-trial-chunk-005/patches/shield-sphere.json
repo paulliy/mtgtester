@@ -1,0 +1,33 @@
+{
+  "name": "Shield Sphere",
+  "oracleId": "df9ec9b0-be22-4136-923b-11a71ca4b6c2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature blocks, put a -0/-1 counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "blocks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "-0/-1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever this creature blocks, put a -0/-1 counter on it."
+      }
+    ]
+  }
+}

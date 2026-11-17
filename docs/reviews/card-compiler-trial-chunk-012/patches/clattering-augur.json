@@ -1,0 +1,43 @@
+{
+  "name": "Clattering Augur",
+  "oracleId": "d88f249f-5bf1-448a-91d1-f81538dfd475",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{B}{B}: Return this card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 2,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "zone": "graveyard",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "returnSelfFromGraveyardToHand"
+            }
+          ],
+          "description": "{2}{B}{B}: Return this card from your graveyard to your hand."
+        }
+      }
+    ]
+  }
+}

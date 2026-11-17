@@ -1,0 +1,1 @@
+At the beginning of combat on each player's turn, double the power and toughness of each creature you control until end of turn.

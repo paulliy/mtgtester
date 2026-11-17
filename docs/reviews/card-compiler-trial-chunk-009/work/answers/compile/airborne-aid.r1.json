@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"draw","count":{"kind":"countPermanents","selector":{"kind":"subtype","value":"Bird"},"scope":"all"}}],"description":"Draw a card for each Bird on the battlefield."}}}

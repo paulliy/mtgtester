@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A applies to the enchanted permanent (Enchant permanent); Text B says 'enchanted creature', so the trigger covers only creatures and the enchant restriction differs. A non-creature permanent that is historic leaving the battlefield triggers A but not B."]}

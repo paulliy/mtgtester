@@ -1,0 +1,36 @@
+{
+  "name": "Keiga, the Tide Star",
+  "oracleId": "521b1598-58c6-47a0-a7b3-021d70bf2b05",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ dies, gain control of target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ],
+        "effects": [
+          {
+            "op": "gainControlTarget",
+            "target": 0,
+            "duration": "permanent"
+          }
+        ],
+        "description": "When ~ dies, gain control of target creature."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+Choose target creature. This spell deals damage to that creature. If the creature has flying, the damage equals twice its power. Otherwise, the damage equals its power.

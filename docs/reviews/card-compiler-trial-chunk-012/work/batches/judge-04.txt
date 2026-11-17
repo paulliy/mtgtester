@@ -1,0 +1,10 @@
+docs/reviews/card-compiler-trial-chunk-012/work/prompts/judge/evolutionary-escalation.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/judge/evolutionary-escalation.json
+docs/reviews/card-compiler-trial-chunk-012/work/prompts/judge/mandibular-kite.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/judge/mandibular-kite.json
+docs/reviews/card-compiler-trial-chunk-012/work/prompts/judge/thunderdrum-soloist.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/judge/thunderdrum-soloist.json
+docs/reviews/card-compiler-trial-chunk-012/work/prompts/judge/perilous-research.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/judge/perilous-research.json
+docs/reviews/card-compiler-trial-chunk-012/work/prompts/judge/thundering-raiju.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/judge/thundering-raiju.json
+docs/reviews/card-compiler-trial-chunk-012/work/prompts/judge/taunting-sliver.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/judge/taunting-sliver.json
+docs/reviews/card-compiler-trial-chunk-012/work/prompts/judge/giott-king-of-the-dwarves.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/judge/giott-king-of-the-dwarves.json
+docs/reviews/card-compiler-trial-chunk-012/work/prompts/judge/goblin-archaeologist.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/judge/goblin-archaeologist.json
+docs/reviews/card-compiler-trial-chunk-012/work/prompts/judge/travel-the-overworld.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/judge/travel-the-overworld.json
+docs/reviews/card-compiler-trial-chunk-012/work/prompts/judge/portable-hole.md	docs/reviews/card-compiler-trial-chunk-012/work/answers/judge/portable-hole.json

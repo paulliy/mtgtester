@@ -1,0 +1,1 @@
+{1}, {T}, Sacrifice this creature: Return target instant or sorcery card from your graveyard to your hand. Activate only during your turn.

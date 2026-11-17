@@ -1,0 +1,51 @@
+{
+  "name": "Gleaming Bastion",
+  "oracleId": "7785ffd4-f169-475d-9558-ce4877b3378a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Add {W} or {U}. Activate only if this land entered this turn or if you control a basic land."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "W",
+            "U"
+          ]
+        ],
+        "condition": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "sourceMatches",
+              "selector": {
+                "kind": "enteredThisTurn"
+              }
+            },
+            {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  }
+                ]
+              },
+              "scope": "you",
+              "cmp": ">=",
+              "n": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

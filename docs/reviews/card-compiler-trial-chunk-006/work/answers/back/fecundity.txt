@@ -1,0 +1,1 @@
+Whenever a creature dies, its controller may draw a card.

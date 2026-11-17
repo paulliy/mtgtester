@@ -1,0 +1,131 @@
+{
+  "name": "Icingdeath, Frost Tyrant",
+  "oracleId": "1dc2c213-72f6-4112-96a8-bf6ad553c707",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ dies, create ~, Frost Tongue, a legendary white Equipment artifact token with \"Equipped creature gets +2/+0,\" \"Whenever equipped creature attacks, tap target creature defending player controls,\" and equip {2}."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Icingdeath, Frost Tongue",
+              "typeLine": "Legendary Artifact — Equipment",
+              "supertypes": [
+                "Legendary"
+              ],
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Equipment"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": null,
+              "toughness": null,
+              "triggers": [
+                {
+                  "kind": "triggered",
+                  "trigger": {
+                    "when": "attacks",
+                    "subject": {
+                      "kind": "permanent",
+                      "selector": {
+                        "kind": "attachedToSource"
+                      }
+                    },
+                    "defendingPlayerIsEventPlayer": true
+                  },
+                  "optional": false,
+                  "targets": [
+                    {
+                      "kind": "creature",
+                      "controller": "eventPlayer"
+                    }
+                  ],
+                  "effects": [
+                    {
+                      "op": "tapTarget",
+                      "target": 0
+                    }
+                  ],
+                  "description": "Whenever equipped creature attacks, tap target creature defending player controls."
+                }
+              ],
+              "staticEffects": [
+                {
+                  "affects": {
+                    "kind": "attachedToSource"
+                  },
+                  "op": {
+                    "layer": 7,
+                    "sublayer": "d",
+                    "power": 2,
+                    "toughness": 0
+                  }
+                }
+              ],
+              "activatedAbilities": [
+                {
+                  "costs": [
+                    {
+                      "kind": "mana",
+                      "cost": {
+                        "generic": 2,
+                        "colored": {
+                          "W": 0,
+                          "U": 0,
+                          "B": 0,
+                          "R": 0,
+                          "G": 0
+                        },
+                        "colorless": 0
+                      }
+                    }
+                  ],
+                  "timing": "sorcery",
+                  "ability": {
+                    "kind": "activated",
+                    "targets": [
+                      {
+                        "kind": "creature",
+                        "controller": "you"
+                      }
+                    ],
+                    "effects": [
+                      {
+                        "op": "attachSelfTo",
+                        "target": 0
+                      }
+                    ],
+                    "description": "Equip {2}"
+                  }
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "When Icingdeath, Frost Tyrant dies, create Icingdeath, Frost Tongue, a legendary white Equipment artifact token with \"Equipped creature gets +2/+0,\" \"Whenever equipped creature attacks, tap target creature defending player controls,\" and equip {2}."
+      }
+    ]
+  }
+}

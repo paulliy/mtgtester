@@ -1,0 +1,2 @@
+You may pay {R} rather than pay this spell's mana cost if an opponent has lost life this turn.
+This spell has no other effects.

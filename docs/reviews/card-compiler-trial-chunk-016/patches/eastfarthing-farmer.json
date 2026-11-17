@@ -1,0 +1,141 @@
+{
+  "name": "Eastfarthing Farmer",
+  "oracleId": "4b1603f3-a246-449b-a109-99adb49e5ea4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, create a Food token. When you do, target creature you control gets +1/+1 until end of turn for each Food you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Food",
+              "typeLine": "Artifact — Food",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Food"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "activatedAbilities": [
+                {
+                  "costs": [
+                    {
+                      "kind": "mana",
+                      "cost": {
+                        "generic": 2,
+                        "colored": {
+                          "W": 0,
+                          "U": 0,
+                          "B": 0,
+                          "R": 0,
+                          "G": 0
+                        },
+                        "colorless": 0
+                      }
+                    },
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ],
+                  "timing": "any",
+                  "ability": {
+                    "kind": "activated",
+                    "targets": [],
+                    "effects": [
+                      {
+                        "op": "gainLife",
+                        "amount": {
+                          "kind": "const",
+                          "n": 3
+                        }
+                      }
+                    ],
+                    "description": "{2}, {T}, Sacrifice this token: You gain 3 life."
+                  }
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "reflexiveOnCreatedToken",
+            "then": {
+              "kind": "triggered",
+              "targets": [
+                {
+                  "kind": "creature",
+                  "controller": "you"
+                }
+              ],
+              "effects": [
+                {
+                  "op": "pumpUntilEot",
+                  "target": 0,
+                  "power": {
+                    "kind": "countPermanents",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "controller",
+                          "who": "you"
+                        },
+                        {
+                          "kind": "subtype",
+                          "value": "Food"
+                        }
+                      ]
+                    },
+                    "scope": "you"
+                  },
+                  "toughness": {
+                    "kind": "countPermanents",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "controller",
+                          "who": "you"
+                        },
+                        {
+                          "kind": "subtype",
+                          "value": "Food"
+                        }
+                      ]
+                    },
+                    "scope": "you"
+                  }
+                }
+              ],
+              "description": "When you do, target creature you control gets +1/+1 until end of turn for each Food you control."
+            }
+          }
+        ],
+        "description": "When this creature enters, create a Food token. When you do, target creature you control gets +1/+1 until end of turn for each Food you control."
+      }
+    ]
+  }
+}

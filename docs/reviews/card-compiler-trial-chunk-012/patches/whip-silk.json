@@ -1,0 +1,43 @@
+{
+  "name": "Whip Silk",
+  "oracleId": "ce2c420b-e569-4715-b65b-4a097700799d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{G}: Return this Aura to its owner's hand."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "returnToHand",
+              "target": "source"
+            }
+          ],
+          "description": "{G}: Return this Aura to its owner's hand."
+        }
+      }
+    ]
+  }
+}

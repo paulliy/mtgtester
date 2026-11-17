@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No trigger watches an attached creature dealing damage to any object; dealsDamageToOpponent and dealsCombatDamageToPlayer are narrower, and dealtDamage is the reverse event."}

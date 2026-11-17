@@ -26,7 +26,7 @@ import {
 } from './effect-reference-contracts';
 import type { ReferenceContract, TargetDomain } from './effect-reference-contracts';
 import { assertNever } from '../utils/assert-never';
-import { layerEvaluable } from './value';
+import { layerEvaluable, manaAmountEvaluable } from './value';
 import type { Value } from './value';
 import { TOKEN_OPS_ACTING_FIRST, tokenCharacteristicFixed } from './tokens';
 import { TRIGGER_SCOPE_FIELDS, VALUE_SCOPE_NEEDS } from './scope-contracts';
@@ -1103,8 +1103,16 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         });
     }
   }
-  if (typeof record['units'] !== 'undefined' && record['amount'] !== undefined)
+  if (typeof record['units'] !== 'undefined' && record['amount'] !== undefined) {
+    // Only a mana ability has `units`. Its amount is read with no resolving ability's scope.
+    const before = issues.length;
     validateExpression('value', record['amount'], `${path}.amount`, issues);
+    if (issues.length === before && !manaAmountEvaluable(record['amount'] as Value))
+      issues.push({
+        path: `${path}.amount`,
+        message: 'mana amount a mana ability cannot evaluate',
+      });
+  }
   if (
     record['op'] !== undefined &&
     typeof record['op'] === 'object' &&

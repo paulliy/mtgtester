@@ -1,0 +1,1 @@
+Whenever you declare attackers, if you attack with two or more creatures attacking an opponent (not a planeswalker), look at the top five cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.

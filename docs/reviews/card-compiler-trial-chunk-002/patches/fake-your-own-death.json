@@ -1,0 +1,90 @@
+{
+  "name": "Fake Your Own Death",
+  "oracleId": "ad01df89-29fe-44c7-a133-91425f8ff09c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Until end of turn, target creature gets +2/+0 and gains \"When this creature dies, return it to the battlefield tapped under its owner's control and you create a Treasure token.\""
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": 2,
+          "toughness": 0
+        },
+        {
+          "op": "grantAbilityUntilEot",
+          "target": 0,
+          "ability": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dies",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "targets": [],
+            "effects": [
+              {
+                "op": "returnDiedSourceToBattlefield",
+                "tapped": true
+              },
+              {
+                "op": "createToken",
+                "spec": {
+                  "name": "Treasure",
+                  "typeLine": "Artifact — Treasure",
+                  "types": [
+                    "Artifact"
+                  ],
+                  "subtypes": [
+                    "Treasure"
+                  ],
+                  "colors": [],
+                  "power": null,
+                  "toughness": null,
+                  "manaAbilities": [
+                    {
+                      "units": [
+                        [
+                          "W",
+                          "U",
+                          "B",
+                          "R",
+                          "G"
+                        ]
+                      ],
+                      "costs": [
+                        {
+                          "kind": "tap"
+                        },
+                        {
+                          "kind": "sacrificeSelf"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "When this creature dies, return it to the battlefield tapped under its owner's control and you create a Treasure token."
+          }
+        }
+      ],
+      "description": "Until end of turn, target creature gets +2/+0 and gains \"When this creature dies, return it to the battlefield tapped under its owner's control and you create a Treasure token.\""
+    }
+  }
+}

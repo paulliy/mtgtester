@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Creating X Thopters where X is the countered spell's mana value, for you, needs a token count read from the spell after it is countered; counterAndCreateTokenForController gives the tokens to the spell's controller, and no schema form is confirmed to read that mana value after the counter."}

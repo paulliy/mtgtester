@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The up-to-one target creature gets +2/+2 per Treasure, and no pump op acts on an optional chosen target slot (only putCountersEachChosen and grantKeywordEachChosenUntilEot take a target slot), so the zero-target case cannot be written."}

@@ -1,0 +1,22 @@
+{
+  "name": "Metallic Mimic",
+  "oracleId": "1f91297a-ec2b-4ea8-9198-aa1daac20ff8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ is the chosen type in addition to its other types."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 4,
+          "addChosenSubtype": true
+        }
+      }
+    ]
+  }
+}

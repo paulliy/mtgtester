@@ -1,0 +1,51 @@
+{
+  "name": "Gathering Place",
+  "oracleId": "36b58705-c5a5-4547-8d8b-a7c35e1f69ae",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Add {G} or {W}. Activate only if this land entered this turn or if you control a basic land."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G",
+            "W"
+          ]
+        ],
+        "condition": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "sourceMatches",
+              "selector": {
+                "kind": "enteredThisTurn"
+              }
+            },
+            {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  }
+                ]
+              },
+              "scope": "you",
+              "cmp": ">=",
+              "n": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

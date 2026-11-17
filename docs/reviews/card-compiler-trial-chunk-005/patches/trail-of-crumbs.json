@@ -1,0 +1,100 @@
+{
+  "name": "Trail of Crumbs",
+  "oracleId": "185d6356-8f8d-4b32-8259-b4eb0a95866c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you sacrifice a Food, you may pay {1}. If you do, look at the top two cards of your library. You may reveal a permanent card from among them and put it into your hand. Put the rest on the bottom of your library in any order."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "sacrificed",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Food"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "mayPayMana",
+              "cost": {
+                "generic": 1,
+                "colored": {
+                  "W": 0,
+                  "U": 0,
+                  "B": 0,
+                  "R": 0,
+                  "G": 0
+                },
+                "colorless": 0
+              }
+            },
+            "then": [
+              {
+                "op": "lookAtTopN",
+                "count": 2,
+                "mayPut": {
+                  "filter": {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Artifact"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Enchantment"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Land"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Planeswalker"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Battle"
+                      }
+                    ]
+                  },
+                  "destination": {
+                    "zone": "hand"
+                  },
+                  "reveal": true
+                },
+                "rest": "bottomAnyOrder"
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Whenever you sacrifice a Food, you may pay {1}. If you do, look at the top two cards of your library. You may reveal a permanent card from among them and put it into your hand. Put the rest on the bottom of your library in any order."
+      }
+    ]
+  }
+}

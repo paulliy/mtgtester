@@ -1,0 +1,1 @@
+{2}, {T}: Target triggered ability on the stack that you control. Copy that ability. The copy is created once and has new targets chosen for it (newTargets is true in the data). The activation timing is any time you could activate an ability.

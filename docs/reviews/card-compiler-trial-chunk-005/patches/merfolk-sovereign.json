@@ -1,0 +1,40 @@
+{
+  "name": "Merfolk Sovereign",
+  "oracleId": "16aba9af-7a12-4c3d-87eb-06278921cb7c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Target Merfolk creature can't be blocked this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "filter": {
+                "kind": "subtype",
+                "value": "Merfolk"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "cantBeBlockedUntilEot",
+              "target": 0
+            }
+          ],
+          "description": "{T}: Target Merfolk creature can't be blocked this turn."
+        }
+      }
+    ]
+  }
+}

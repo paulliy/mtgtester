@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The grace mode returns each player's own creature cards from their own graveyard under their owner's control, and graveyardToBattlefieldEach has no owner-control option (it would put opponents' cards under the controller of the ability)."}

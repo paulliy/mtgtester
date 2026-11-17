@@ -1,0 +1,87 @@
+{
+  "name": "Diamond Pick-Axe",
+  "oracleId": "542e7d60-3fc8-46e2-8786-f7c8b3d4c979",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equipped creature gets +1/+1 and has \"Whenever this creature attacks, create a Treasure token.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "attacks",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "createToken",
+                "spec": {
+                  "name": "Treasure",
+                  "typeLine": "Artifact — Treasure",
+                  "types": [
+                    "Artifact"
+                  ],
+                  "subtypes": [
+                    "Treasure"
+                  ],
+                  "colors": [],
+                  "power": null,
+                  "toughness": null,
+                  "manaAbilities": [
+                    {
+                      "units": [
+                        [
+                          "W",
+                          "U",
+                          "B",
+                          "R",
+                          "G"
+                        ]
+                      ],
+                      "costs": [
+                        {
+                          "kind": "tap"
+                        },
+                        {
+                          "kind": "sacrificeSelf"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "Whenever this creature attacks, create a Treasure token."
+          }
+        }
+      }
+    ]
+  }
+}

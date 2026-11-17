@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The gainsLife trigger has no 'first time each turn' qualifier (only losesLife has firstTimeEachTurn), so 'the first time you gain life each turn' cannot be modeled."}

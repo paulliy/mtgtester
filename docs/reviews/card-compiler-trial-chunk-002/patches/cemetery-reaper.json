@@ -1,0 +1,77 @@
+{
+  "name": "Cemetery Reaper",
+  "oracleId": "70fa209f-5e79-44de-81ce-1d8d0d8c1006",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{B}, {T}: Exile target creature card from a graveyard. Create a 2/2 black Zombie creature token."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "graveyardOwnerScope": "any",
+              "filter": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "exileCard",
+              "target": 0
+            },
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Zombie",
+                "typeLine": "Creature — Zombie",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Zombie"
+                ],
+                "colors": [
+                  "B"
+                ],
+                "power": 2,
+                "toughness": 2
+              },
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "{2}{B}, {T}: Exile target creature card from a graveyard. Create a 2/2 black Zombie creature token."
+        }
+      }
+    ]
+  }
+}

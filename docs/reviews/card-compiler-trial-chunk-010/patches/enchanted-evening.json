@@ -1,0 +1,50 @@
+{
+  "name": "Enchanted Evening",
+  "oracleId": "c56ea5ce-c8de-46c2-a8dd-bdd41467a28c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "All permanents are enchantments in addition to their other types."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Artifact"
+            },
+            {
+              "kind": "type",
+              "value": "Battle"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "type",
+              "value": "Enchantment"
+            },
+            {
+              "kind": "type",
+              "value": "Land"
+            },
+            {
+              "kind": "type",
+              "value": "Planeswalker"
+            }
+          ]
+        },
+        "op": {
+          "layer": 4,
+          "addTypes": [
+            "Enchantment"
+          ]
+        }
+      }
+    ]
+  }
+}

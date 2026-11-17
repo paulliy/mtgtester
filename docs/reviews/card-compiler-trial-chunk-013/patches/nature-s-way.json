@@ -1,0 +1,46 @@
+{
+  "name": "Nature's Way",
+  "oracleId": "8c04663a-1023-49a5-a0b9-78f24a72fb1e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control gains vigilance and trample until end of turn. It deals damage equal to its power to target creature you don't control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "creature",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "vigilance"
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "trample"
+        },
+        {
+          "op": "dealDamage",
+          "target": 1,
+          "amount": {
+            "kind": "powerOfTarget",
+            "target": 0
+          },
+          "source": 0
+        }
+      ],
+      "description": "Target creature you control gains vigilance and trample until end of turn. It deals damage equal to its power to target creature you don't control."
+    }
+  }
+}

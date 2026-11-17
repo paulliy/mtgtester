@@ -1,0 +1,38 @@
+{
+  "name": "Nightmare Lash",
+  "oracleId": "414f1c42-6b0e-49ce-8b44-17a75b996b68",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equip—Pay 3 life."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "payLife",
+            "amount": 3
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you"
+            }
+          ],
+          "effects": [
+            {
+              "op": "attachSelfTo",
+              "target": 0
+            }
+          ],
+          "description": "Equip—Pay 3 life. (Pay 3 life: Attach to target creature you control. Equip only as a sorcery.)"
+        }
+      }
+    ]
+  }
+}

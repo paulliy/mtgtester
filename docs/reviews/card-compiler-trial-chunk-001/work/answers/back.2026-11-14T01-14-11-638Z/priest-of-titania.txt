@@ -1,0 +1,1 @@
+{T}: Add {G} for each Elf on the battlefield. The count includes permanents of every controller (the scope is "all"), not only those you control. A creature type is meant by "Elf".

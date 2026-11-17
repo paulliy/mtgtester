@@ -1,0 +1,2 @@
+Each creature you control gets +N/+N until end of turn, where N is the greatest power among creatures you control.
+Each creature you control gains trample until end of turn.

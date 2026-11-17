@@ -1,0 +1,4 @@
+Enchanted creature is a Noggle creature (its card types are set to Creature and its creature subtypes are set to Noggle).
+Enchanted creature is colorless.
+Enchanted creature loses all abilities.
+Enchanted creature has base power and toughness 1/1.

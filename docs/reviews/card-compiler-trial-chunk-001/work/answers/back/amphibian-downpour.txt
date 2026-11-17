@@ -1,0 +1,1 @@
+Enchanted creature is a blue Frog, its card type is Creature, it loses all abilities, and its base power and toughness are 1/1.

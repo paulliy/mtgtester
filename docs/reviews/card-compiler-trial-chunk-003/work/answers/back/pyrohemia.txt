@@ -1,0 +1,1 @@
+At the beginning of each player's end step, if the number of creatures on the battlefield is less than or equal to 0, sacrifice this.

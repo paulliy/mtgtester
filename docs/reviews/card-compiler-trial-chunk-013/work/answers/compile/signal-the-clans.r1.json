@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The conditional random choice among revealed cards (only if three different names were revealed) and shuffling the rest back into the library have no op; searchLibrary destinations cannot send cards to the library."}

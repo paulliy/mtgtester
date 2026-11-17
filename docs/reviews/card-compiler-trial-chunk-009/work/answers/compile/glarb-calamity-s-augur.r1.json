@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"playFromZone","zone":"libraryTop","filter":{"kind":"type","value":"Land"}},{"kind":"castFromZone","zone":"libraryTop","filter":{"kind":"manaValueAtLeast","n":4}}]}}

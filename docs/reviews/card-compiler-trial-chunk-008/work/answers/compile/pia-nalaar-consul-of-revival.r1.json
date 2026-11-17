@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"There is no trigger for playing a land from exile, and castsSpell can narrow the cast source to 'notHand' or 'graveyard' but not exactly 'from exile'."}

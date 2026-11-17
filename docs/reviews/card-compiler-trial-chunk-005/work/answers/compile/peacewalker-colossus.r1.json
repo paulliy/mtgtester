@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Becoming an artifact creature on another target Vehicle needs fixed power and toughness in becomeCreatureUntilEot, which the card does not give, and becomeArtifactCreature acts only on the source."}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The \"If you played a land this turn, add {B} instead\" branch needs a condition on whether the controller played a land this turn, and the Condition schema has no such leaf."}

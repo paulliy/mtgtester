@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The playerDealtDamage trigger does not document that its trigger object is the damaging permanent, and it is not restricted to permanents, so 'return it to its owner's hand' cannot be stated exactly."}

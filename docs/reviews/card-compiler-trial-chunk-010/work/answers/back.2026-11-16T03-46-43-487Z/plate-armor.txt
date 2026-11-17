@@ -1,0 +1,2 @@
+This ability costs {1} less to activate for each other Equipment you control.
+{3}: Attach this to target creature you control. Activate only as a sorcery.

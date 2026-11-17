@@ -1,0 +1,1 @@
+Whenever an opponent casts a spell, choose any target. Deal damage equal to that spell's mana value to that target.

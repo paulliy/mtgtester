@@ -1,0 +1,2 @@
+This card has no spell ability, so casting it does nothing on resolution. Its type line is Instant.
+{1}{U}{U}, Discard this card: Search your library for a card with mana value exactly 2, reveal it, put it into your hand, then shuffle. Activate this ability only as a sorcery and only from your hand.

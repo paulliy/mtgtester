@@ -1,0 +1,2 @@
+Each creature you own that is a commander enters with one additional +1/+1 counter on it.
+Each other creature you control enters with one additional +1/+1 counter on it.

@@ -1,0 +1,79 @@
+{
+  "name": "Angelic Exaltation",
+  "oracleId": "507d2f27-08a9-4938-b191-5734cda42ef2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature you control attacks alone, it gets +X/+X until end of turn, where X is the number of creatures you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "alone": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "pumpUntilEot",
+            "target": "triggerObject",
+            "power": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              },
+              "scope": "you"
+            },
+            "toughness": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "Whenever a creature you control attacks alone, it gets +X/+X until end of turn, where X is the number of creatures you control."
+      }
+    ]
+  }
+}

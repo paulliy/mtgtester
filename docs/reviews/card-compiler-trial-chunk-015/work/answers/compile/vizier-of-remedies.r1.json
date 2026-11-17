@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"counterPlacementReplacement","filter":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"controller","who":"you"}]},"counter":"-1/-1","multiplier":1,"addition":-1}]}}

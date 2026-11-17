@@ -1,0 +1,49 @@
+{
+  "name": "Fynn, the Fangbearer",
+  "oracleId": "c0b1fba1-4338-4671-934b-098689ad2085",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature you control with deathtouch deals combat damage to a player, that player gets two poison counters."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "hasKeyword",
+                  "keyword": "deathtouch"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "giveTargetPoisonCounters",
+            "target": "eventPlayer",
+            "count": 2
+          }
+        ],
+        "description": "Whenever a creature you control with deathtouch deals combat damage to a player, that player gets two poison counters."
+      }
+    ]
+  }
+}

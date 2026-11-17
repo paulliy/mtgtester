@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"lookAtTopN takes a fixed pick count rather than 'any number of' matching cards, and no spell-time choice of a creature type exists (entersChoosingOption applies only to permanents as they enter)."}

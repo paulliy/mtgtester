@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"artifactOrEnchantment"}],"effects":[{"op":"destroy","target":0},{"op":"populate"}],"description":"Destroy target artifact or enchantment, then populate."}}}

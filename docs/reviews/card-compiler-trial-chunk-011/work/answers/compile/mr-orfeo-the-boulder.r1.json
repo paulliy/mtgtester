@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"attackDeclared","attacker":"you"},"optional":false,"targets":[{"kind":"creature"}],"effects":[{"op":"doublePowerTarget","target":0}],"description":"Whenever you attack, double target creature's power until end of turn."}]}}

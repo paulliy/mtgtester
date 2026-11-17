@@ -1,0 +1,20 @@
+{
+  "name": "Bedlam",
+  "oracleId": "c28d4caf-9b7c-40b1-9cbe-275ca9dae06a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures can't block."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "cantBlockMatching",
+        "filter": {
+          "kind": "type",
+          "value": "Creature"
+        }
+      }
+    ]
+  }
+}

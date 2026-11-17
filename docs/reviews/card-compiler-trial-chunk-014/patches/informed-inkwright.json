@@ -1,0 +1,68 @@
+{
+  "name": "Informed Inkwright",
+  "oracleId": "d2a372d8-3eb2-4ba4-a75f-7951654de383",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, create a 1/1 white and black Inkling creature token with flying."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              }
+            ]
+          },
+          "targetFilter": {
+            "kind": "type",
+            "value": "Creature"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Inkling",
+              "typeLine": "Token Creature — Inkling",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Inkling"
+              ],
+              "colors": [
+                "W",
+                "B"
+              ],
+              "power": 1,
+              "toughness": 1,
+              "keywords": [
+                "flying"
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, create a 1/1 white and black Inkling creature token with flying."
+      }
+    ]
+  }
+}

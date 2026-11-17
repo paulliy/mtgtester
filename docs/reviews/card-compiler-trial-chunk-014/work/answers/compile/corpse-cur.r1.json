@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target filter \"creature card with infect\" needs a keyword selector, and hasKeyword is event-only in the schema, so it cannot filter a graveyard card."}

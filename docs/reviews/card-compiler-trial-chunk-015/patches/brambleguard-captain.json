@@ -1,0 +1,41 @@
+{
+  "name": "Brambleguard Captain",
+  "oracleId": "104baa4e-a3f3-45dc-979d-4c58b659ba1a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of combat on your turn, target creature you control gets +X/+0 until end of turn, where X is this creature's power."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "beginningOfCombat",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "op": "pumpUntilEot",
+            "target": 0,
+            "power": {
+              "kind": "powerOfSource"
+            },
+            "toughness": {
+              "kind": "const",
+              "n": 0
+            }
+          }
+        ],
+        "description": "At the beginning of combat on your turn, target creature you control gets +X/+0 until end of turn, where X is this creature's power."
+      }
+    ]
+  }
+}

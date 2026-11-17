@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The restriction compares each creature's power with the number of cards in your hand, and selectors can only compare power with a constant or with the source's power, not with hand size."}

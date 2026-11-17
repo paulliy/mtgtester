@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Each keyword clause needs the condition \"a creature you control has that keyword\", but the keyword-presence selector (hasKeyword) is event-only in the schema, so the condition cannot be read at the beginning of combat."}

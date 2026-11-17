@@ -2,14 +2,27 @@
  * The batch card compiler's pipeline (see README.md in this folder).
  *
  *   bun run scripts/card-compiler/run.ts prepare <trial-dir>       # first-round compile prompts
+ *       [--calibration 10]                                         # and that many calibration cases
+ *   bun run scripts/card-compiler/run.ts calibrate <trial-dir>     # calibration cases for a trial
+ *       that was not prepared here (imported patches)
  *   bun run scripts/card-compiler/run.ts exec <trial-dir> <stage>  # answer pending prompts via the API
  *       [--executor api|claude|codex|antigravity]                 # ...or via a coding-agent CLI
+ *   bun run scripts/card-compiler/run.ts batches <trial-dir> <stage> [--size 25]  # worker batch lists
  *   bun run scripts/card-compiler/run.ts check <trial-dir>         # validate, smoke, next prompts
  *   bun run scripts/card-compiler/run.ts report <trial-dir>        # results.json and summary.md
  *
  *   bun run scripts/card-compiler/run.ts recheck <trial-dir>       # redo back-translation and judge
+ *   bun run scripts/card-compiler/run.ts resmoke <trial-dir>       # validate again, replay smoke
  *   bun run scripts/card-compiler/run.ts import <trial-dir> <dir>  # check patches made elsewhere
  *   bun run scripts/card-compiler/run.ts queue <trial-dir>...      # rebuild the review queue
+ *
+ *   bun run scripts/card-compiler/run.ts ledger [<trial-dir>...]   # every card any trial has taken
+ *
+ *   bun run scripts/card-compiler/run.ts review <name> --verdict accepted|rejected --by <who>
+ *   bun run scripts/card-compiler/run.ts promote <batch-id>        # accepted patches into the engine
+ *   bun run scripts/card-compiler/run.ts retire <name> --reason <text>  # take a promoted card back out
+ *   bun run scripts/card-compiler/run.ts verify [--base <sha>]     # a promotion only added cards
+ *       (see promote.ts)
  *
  * Stages are `compile`, `back` and `judge`. Every prompt is a file under <trial-dir>/work/prompts
  * and every answer a file under <trial-dir>/work/answers, so any executor can answer them: the
@@ -23,16 +36,28 @@ import {
   readFileSync,
   readdirSync,
   renameSync,
+  rmSync,
   writeFileSync,
 } from 'node:fs';
 import type { CardDefinition } from '../../packages/engine/src/cards/definition';
+import { runPrettier } from '../cards/prettier';
+import {
+  loadCalibrationSet,
+  pickCases,
+  scoreCalibration,
+  type CalibrationCase,
+} from './calibration';
 import { textCheck } from './render';
 import {
+  LEDGER_PATH,
+  QUEUE_PATH,
+  REVIEWS_DIR,
   applyPatch,
-  behaviorOf,
+  canonicalBehavior,
   compileTarget,
   parseAnswer,
   pinnedPool,
+  smokeExercised,
   smokeTest,
   type CompileTarget,
   type SmokeResult,
@@ -97,6 +122,12 @@ export interface CardState {
   validatorIssues: string[][];
   inexpressibleReason?: string;
   smoke?: SmokeResult[];
+  /**
+   * A calibration case (calibration.ts): a patch with a known answer, mixed into the meaning
+   * check to test it. It is not one of the trial's cards: it has no compile round, no patch file
+   * and no smoke run, and it is never queued or reported as a result.
+   */
+  calibration?: { id: string; expected: 'same' | 'different' };
   /** The merged definition passed validation. */
   valid?: boolean;
   backTranslation?: string;
@@ -133,12 +164,75 @@ function loadTargets(trial: string): Map<string, CompileTarget> {
   const rows = JSON.parse(readFileSync(`${trial}/targets.json`, 'utf8')) as TargetRow[];
   const byName = new Map(pinnedPool().map((row) => [row.card.name, row]));
   const out = new Map<string, CompileTarget>();
-  for (const row of rows) {
+  // A calibration case travels under its card's name, and that card is not in targets.json.
+  const calibration = [...loadState(trial).values()].filter(
+    (state) => state.calibration !== undefined,
+  );
+  for (const row of [...rows, ...calibration]) {
     const pinned = byName.get(row.name);
     const target = pinned === undefined ? null : compileTarget(pinned);
     if (target !== null) out.set(row.name, target);
   }
   return out;
+}
+
+const DEFAULT_CALIBRATION_CASES = 10;
+
+/**
+ * Mix calibration cases into the trial's meaning check: each enters at the back-translation
+ * stage under its card's name, with a prompt file like any other. The cases are chosen by the
+ * trial's name, so running this again adds nothing.
+ */
+function calibrate(trial: string, count: number): void {
+  const p = paths(trial);
+  const states = loadState(trial);
+  if ([...states.values()].some((state) => state.calibration !== undefined)) {
+    console.log('calibration cases are already in this trial');
+    return;
+  }
+  const targetNames = new Set(
+    existsSync(`${trial}/targets.json`)
+      ? (JSON.parse(readFileSync(`${trial}/targets.json`, 'utf8')) as TargetRow[]).map(
+          (row) => row.name,
+        )
+      : [],
+  );
+  for (const name of states.keys()) targetNames.add(name);
+  const byName = new Map(pinnedPool().map((row) => [row.card.name, row]));
+  const cases = pickCases(
+    loadCalibrationSet().filter((item) => {
+      const row = byName.get(item.name);
+      return row !== undefined && compileTarget(row) !== null;
+    }),
+    trial.replace(/\/+$/, '').split('/').at(-1)!,
+    count,
+    targetNames,
+  );
+  write(p.prefix('back'), BACK_PREFIX);
+  write(p.prefix('judge'), JUDGE_PREFIX);
+  for (const item of cases) {
+    const target = compileTarget(byName.get(item.name)!)!;
+    states.set(item.name, {
+      name: item.name,
+      rank: target.rank,
+      lines: target.lines,
+      rounds: 0,
+      stage: 'back',
+      validatorIssues: [],
+      calibration: { id: item.id, expected: item.expected },
+    });
+    write(p.prompt('back', item.name), backSuffix(target, item.def));
+  }
+  saveState(trial, states);
+  console.log(`added ${cases.length} calibration cases to the meaning check`);
+}
+
+/** The calibration case a state carries, with its patch. */
+function calibrationCase(state: CardState): CalibrationCase {
+  const found = loadCalibrationSet().find((item) => item.id === state.calibration?.id);
+  if (found === undefined)
+    throw new Error(`calibration case ${state.calibration?.id} is not in the calibration set`);
+  return found;
 }
 
 function loadState(trial: string): Map<string, CardState> {
@@ -152,11 +246,29 @@ function saveState(trial: string, states: Map<string, CardState>): void {
   write(paths(trial).state, `${JSON.stringify([...states.values()], null, 2)}\n`);
 }
 
-function prepare(trial: string): void {
+/**
+ * A trial keys its cards by name, so a calibration case and a real card of the same name cannot
+ * both live in it. Refuse rather than let either silently replace or hide the other: a real
+ * card would never be compiled or imported, or a calibration case would vanish from the check.
+ */
+function refuseCalibrationCollision(
+  states: Map<string, CardState>,
+  name: string,
+  trial: string,
+): void {
+  if (states.get(name)?.calibration === undefined) return;
+  throw new Error(
+    `${name} is already a calibration case in ${trial}; a real card of the same name cannot join this trial. Put it in a new trial.`,
+  );
+}
+
+function prepare(trial: string, calibrationCount: number): void {
   const p = paths(trial);
   const rows = JSON.parse(readFileSync(`${trial}/targets.json`, 'utf8')) as TargetRow[];
   const targets = loadTargets(trial);
   const states = loadState(trial);
+  // Checked before anything is written, so a refusal leaves the trial as it was.
+  for (const row of rows) refuseCalibrationCollision(states, row.name, trial);
   write(p.prefix('compile'), compilePrefix());
   write(p.prefix('back'), BACK_PREFIX);
   write(p.prefix('judge'), JUDGE_PREFIX);
@@ -178,6 +290,7 @@ function prepare(trial: string): void {
   }
   saveState(trial, states);
   console.log(`prepared ${states.size} cards`);
+  calibrate(trial, calibrationCount);
 }
 
 function check(trial: string): void {
@@ -328,10 +441,14 @@ function recheck(trial: string): void {
   write(p.prefix('judge'), JUDGE_PREFIX);
   for (const state of states.values()) {
     const target = targets.get(state.name);
-    if (target === undefined || state.valid !== true) continue;
-    const patch = JSON.parse(readFileSync(p.patch(state.name), 'utf8')) as {
-      def: Partial<CardDefinition>;
-    };
+    if (target === undefined) continue;
+    if (state.calibration === undefined && state.valid !== true) continue;
+    const patch =
+      state.calibration !== undefined
+        ? calibrationCase(state)
+        : (JSON.parse(readFileSync(p.patch(state.name), 'utf8')) as {
+            def: Partial<CardDefinition>;
+          });
     delete state.backTranslation;
     delete state.verdict;
     delete state.differences;
@@ -340,6 +457,42 @@ function recheck(trial: string): void {
   }
   saveState(trial, states);
   console.log('meaning check reset for every valid patch');
+}
+
+/**
+ * Validate every valid patch again and replay its smoke games, after a change to the validator,
+ * the smoke harness or the engine. A patch the validator now rejects becomes `invalid`, with no
+ * retry. The meaning check's verdicts are kept: neither step reads them.
+ */
+function resmoke(trial: string): void {
+  const p = paths(trial);
+  const targets = loadTargets(trial);
+  const states = loadState(trial);
+  const all: CardState[] = [];
+  let rejected = 0;
+  for (const state of states.values()) {
+    const target = targets.get(state.name);
+    if (target === undefined || state.valid !== true || !existsSync(p.patch(state.name))) continue;
+    const patch = JSON.parse(readFileSync(p.patch(state.name), 'utf8')) as PatchFile;
+    const result = applyPatch(target, patch.def);
+    if (!result.ok) {
+      state.valid = false;
+      state.stage = 'invalid';
+      state.validatorIssues.push(result.issues);
+      delete state.smoke;
+      rejected++;
+      continue;
+    }
+    state.smoke = smokeTest(target, patch.def);
+    all.push(state);
+  }
+  saveState(trial, states);
+  runPrettier([p.state]);
+  console.log(
+    `replayed smoke for ${all.length} patches: ${all.filter((state) => smokeOk(state)).length} pass, ` +
+      `${all.filter((state) => smokeExercised(state.smoke!)).length} exercised; ` +
+      `${rejected} no longer validate`,
+  );
 }
 
 /**
@@ -356,10 +509,18 @@ function importPatches(trial: string, patchDir: string): void {
     ? (JSON.parse(readFileSync(targetsPath, 'utf8')) as TargetRow[])
     : [];
   const states = loadState(trial);
+  const files = readdirSync(patchDir).filter((name) => name.endsWith('.json'));
+  // Checked before anything is written, so a refusal leaves the trial as it was.
+  for (const file of files)
+    refuseCalibrationCollision(
+      states,
+      (JSON.parse(readFileSync(`${patchDir}/${file}`, 'utf8')) as PatchFile).name,
+      trial,
+    );
   write(p.prefix('back'), BACK_PREFIX);
   write(p.prefix('judge'), JUDGE_PREFIX);
   let imported = 0;
-  for (const file of readdirSync(patchDir).filter((name) => name.endsWith('.json'))) {
+  for (const file of files) {
     const patch = JSON.parse(readFileSync(`${patchDir}/${file}`, 'utf8')) as PatchFile;
     if (typeof patch.source !== 'string' || patch.source.length === 0)
       throw new Error(`${file}: a patch needs a "source" tag`);
@@ -432,10 +593,20 @@ export interface QueueEntry {
   textCheck?: 'renderer' | 'model';
   differences?: string[];
   validatorIssues?: string[];
-  smoke?: { scenario: string; ok: boolean; abilityResolved: boolean; detail: string }[];
+  smoke?: {
+    scenario: string;
+    ok: boolean;
+    /** The card resolved as a spell, or one of its abilities did. Absent in older queue entries. */
+    exercised?: boolean;
+    abilityResolved: boolean;
+    /** The game differed from the same game without the patched lines (see `SmokeResult`). */
+    changedGame?: boolean;
+    detail: string;
+  }[];
   /**
-   * Whether any smoke game resolved one of the card's own abilities or the spell. When false the
-   * smoke run only shows the card does not crash the engine; it says nothing about the behavior.
+   * Whether any smoke game differed from the same game played without the patched lines (or,
+   * for a spell with no such baseline, resolved). When false the smoke run only shows the card
+   * does not crash the engine; it says nothing about the behavior.
    */
   smokeExercised?: boolean;
   /**
@@ -448,34 +619,11 @@ export interface QueueEntry {
   review: { verdict: 'accepted' | 'rejected'; by: string; note?: string } | null;
 }
 
-const QUEUE_PATH = 'docs/reviews/compiled-card-queue.json';
-
 /**
  * Rebuild the review queue from every trial directory given. Reviews already recorded in the
  * queue are kept for cards whose patch is unchanged. Cards the compiler declined are not queued;
  * they are a primitive backlog, listed in each trial's results.json.
  */
-/** Behavior of a definition as canonical JSON: descriptions dropped, keys sorted. */
-function canonicalBehavior(definition: CardDefinition): string {
-  const sortKeys = (value: unknown): unknown => {
-    if (Array.isArray(value)) return value.map(sortKeys);
-    if (value === null || typeof value !== 'object') return value;
-    const node = Object.fromEntries(
-      Object.entries(value as Record<string, unknown>)
-        .filter(([key]) => key !== 'description' && key !== 'prompt' && key !== 'label')
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, entry]) => [key, sortKeys(entry)]),
-    );
-    // allOf and anyOf are unordered: "another Elf" and "an Elf that is another" are the same.
-    if ((node['kind'] === 'allOf' || node['kind'] === 'anyOf') && Array.isArray(node['of']))
-      node['of'] = [...(node['of'] as unknown[])].sort((a, b) =>
-        JSON.stringify(a).localeCompare(JSON.stringify(b)),
-      );
-    return node;
-  };
-  return JSON.stringify(sortKeys(behaviorOf(definition)));
-}
-
 /**
  * Compare a queued patch with an independent patch for the same card from `crossDir` (one JSON
  * per card, named by slug, in the shared patch format).
@@ -500,7 +648,10 @@ function crossCheck(
   };
 }
 
-function queue(args: string[]): void {
+function queue(allArgs: string[]): void {
+  // Only for looking at a trial whose check failed calibration; never before a promotion.
+  const allowMissed = allArgs.includes('--allow-calibration-miss');
+  const args = allArgs.filter((arg) => arg !== '--allow-calibration-miss');
   const crossIndex = args.indexOf('--cross');
   const crossDir = crossIndex < 0 ? undefined : args[crossIndex + 1];
   const trials =
@@ -515,7 +666,21 @@ function queue(args: string[]): void {
   for (const trial of trials) {
     const p = paths(trial);
     const targets = loadTargets(trial);
+    const calibration = scoreCalibration(loadState(trial).values());
+    if (calibration.pending.length > 0 && !allowMissed)
+      throw new Error(
+        `${trial}: ${calibration.pending.length} calibration case(s) have no verdict yet ` +
+          `(${calibration.pending.join(', ')}). Finish the meaning check before queueing; ` +
+          '`promote` refuses a trial whose calibration is incomplete either way.',
+      );
+    if (calibration.missed.length > 0 && !allowMissed)
+      throw new Error(
+        `${trial}: the meaning check called ${calibration.missed.length} known-wrong calibration ` +
+          `patch(es) "same" (${calibration.missed.join(', ')}). Its verdicts cannot be trusted: ` +
+          'run `recheck`, have fresh workers answer, and `check` again.',
+      );
     for (const state of loadState(trial).values()) {
+      if (state.calibration !== undefined) continue;
       const target = targets.get(state.name);
       if (target === undefined) continue;
       let status: QueueStatus | null = null;
@@ -561,11 +726,13 @@ function queue(args: string[]): void {
             ),
           }),
         ...(state.smoke !== undefined && {
-          smokeExercised: state.smoke.some((run) => run.abilityResolved),
+          smokeExercised: smokeExercised(state.smoke),
           smoke: state.smoke.map((run) => ({
             scenario: run.scenario,
             ok: run.ok,
+            exercised: run.exercised,
             abilityResolved: run.abilityResolved,
+            ...(run.changedGame !== undefined && { changedGame: run.changedGame }),
             detail: run.detail,
           })),
         }),
@@ -575,6 +742,8 @@ function queue(args: string[]): void {
   }
   entries.sort((a, b) => a.name.localeCompare(b.name) || a.source.localeCompare(b.source));
   write(QUEUE_PATH, `${JSON.stringify({ schemaVersion: 1, cards: entries }, null, 2)}\n`);
+  // Committed, so it has to pass `format:check` as written.
+  runPrettier([QUEUE_PATH]);
   const counts = new Map<string, number>();
   for (const entry of entries) counts.set(entry.status, (counts.get(entry.status) ?? 0) + 1);
   console.log(`${entries.length} cards queued for review:`, Object.fromEntries(counts));
@@ -592,6 +761,37 @@ export function pendingPrompts(trial: string, stage: string): { prompt: string; 
       answer: `${p.work}/answers/${stage}/${file.replace(/\.md$/, stage === 'back' ? '.txt' : '.json')}`,
     }))
     .filter((entry) => !existsSync(entry.answer));
+}
+
+/**
+ * Split a stage's unanswered prompts into worker batches: `<trial>/work/batches/<stage>-NN.txt`,
+ * one `prompt<TAB>answer` pair per line. A worker is given one batch file and the stage's prefix
+ * file, and writes each answer to the path beside its prompt. Batches are rebuilt from what is
+ * still unanswered, so running this again after a worker stops early loses nothing.
+ */
+function batches(trial: string, stage: string, size: number): void {
+  if (!['compile', 'back', 'judge'].includes(stage))
+    throw new Error('usage: run.ts batches <trial-dir> <compile|back|judge> [--size 25]');
+  if (size < 1) throw new Error('--size must be at least 1');
+  const p = paths(trial);
+  const pending = pendingPrompts(trial, stage);
+  const dir = `${p.work}/batches`;
+  if (existsSync(dir))
+    for (const file of readdirSync(dir)) if (file.startsWith(`${stage}-`)) rmSync(`${dir}/${file}`);
+  for (let start = 0; start < pending.length; start += size) {
+    const number = String(start / size).padStart(2, '0');
+    write(
+      `${dir}/${stage}-${number}.txt`,
+      `${pending
+        .slice(start, start + size)
+        .map((entry) => `${entry.prompt}\t${entry.answer}`)
+        .join('\n')}\n`,
+    );
+  }
+  console.log(
+    `${pending.length} ${stage} prompts in ${Math.ceil(pending.length / size)} batches under ${dir}; ` +
+      `the stage's instructions are in ${p.prefix(stage)}`,
+  );
 }
 
 async function exec(trial: string, stage: string, executor: string): Promise<void> {
@@ -662,8 +862,62 @@ function smokeOk(state: CardState): boolean {
   return (state.smoke ?? []).every((run) => run.ok);
 }
 
+/** Where a card ended up in its trial. */
+function outcomeOf(state: CardState): string {
+  if (state.stage === 'stale' || state.stage === 'inexpressible' || state.stage === 'invalid')
+    return state.stage;
+  if (state.valid !== true) return 'pending';
+  if (!smokeOk(state)) return 'smoke-failed';
+  if (state.verdict === 'same') return 'compiled-checked';
+  return state.verdict === 'different' ? 'meaning-differs' : 'pending';
+}
+
+/**
+ * The campaign ledger: one row for every card any trial has taken, with where it ended up. It is
+ * derived from the trial directories, never written by hand, so it cannot disagree with them.
+ * One card per line (the file is in `.prettierignore`), so a chunk's diff is its own rows.
+ * `select.ts --exclude-ledger` reads it to pick cards no trial has seen, and a new session reads
+ * it to find the chunk to resume.
+ */
+function ledger(trials: string[]): void {
+  const dirs =
+    trials.length > 0
+      ? trials
+      : readdirSync(REVIEWS_DIR)
+          .map((name) => `${REVIEWS_DIR}/${name}`)
+          .filter((dir) => existsSync(`${dir}/work/state.json`))
+          .sort();
+  const rows: { name: string; rank: number; trial: string; source: string; outcome: string }[] = [];
+  const tally = new Map<string, number>();
+  for (const trial of dirs) {
+    for (const state of loadState(trial).values()) {
+      if (state.calibration !== undefined) continue;
+      const outcome = outcomeOf(state);
+      rows.push({
+        name: state.name,
+        rank: state.rank,
+        trial,
+        source: state.source ?? 'compiler',
+        outcome,
+      });
+      tally.set(outcome, (tally.get(outcome) ?? 0) + 1);
+    }
+  }
+  rows.sort((a, b) => a.rank - b.rank || a.trial.localeCompare(b.trial));
+  write(
+    LEDGER_PATH,
+    `{\n"schemaVersion": 1,\n"cards": [\n${rows.map((row) => JSON.stringify(row)).join(',\n')}\n]\n}\n`,
+  );
+  console.log(
+    `${rows.length} rows for ${new Set(rows.map((row) => row.name)).size} cards from ${dirs.length} trials:`,
+    Object.fromEntries(tally),
+  );
+}
+
 function report(trial: string): void {
-  const states = [...loadState(trial).values()];
+  const everyState = [...loadState(trial).values()];
+  const calibration = scoreCalibration(everyState);
+  const states = everyState.filter((state) => state.calibration === undefined);
   const p = paths(trial);
   const usage = existsSync(`${p.work}/usage.jsonl`)
     ? readFileSync(`${p.work}/usage.jsonl`, 'utf8')
@@ -693,22 +947,7 @@ function report(trial: string): void {
     rank: state.rank,
     xmageBucket: state.xmageBucket,
     lines: state.lines,
-    outcome:
-      state.stage === 'stale'
-        ? 'stale'
-        : state.stage === 'inexpressible'
-          ? 'inexpressible'
-          : state.stage === 'invalid'
-            ? 'invalid'
-            : state.valid !== true
-              ? 'pending'
-              : !smokeOk(state)
-                ? 'smoke-failed'
-                : state.verdict === 'same'
-                  ? 'compiled-checked'
-                  : state.verdict === 'different'
-                    ? 'meaning-differs'
-                    : 'pending',
+    outcome: outcomeOf(state),
     compileRounds: state.rounds,
     validatorIssues: state.validatorIssues,
     inexpressibleReason: state.inexpressibleReason,
@@ -724,12 +963,23 @@ function report(trial: string): void {
   }));
   write(
     `${trial}/results.json`,
-    `${JSON.stringify({ measuredCostUsd: totalCost, estimatedCost: estimate, cards: results }, null, 2)}\n`,
+    `${JSON.stringify({ measuredCostUsd: totalCost, estimatedCost: estimate, calibration, cards: results }, null, 2)}\n`,
   );
   const tally = new Map<string, number>();
   for (const row of results) tally.set(row.outcome, (tally.get(row.outcome) ?? 0) + 1);
   console.log(Object.fromEntries(tally));
   console.log('by XMage bucket:', Object.fromEntries(byBucket));
+  if (calibration.cases > 0) {
+    console.log(
+      `calibration: ${calibration.cases} cases, ${calibration.pending.length} pending, ` +
+        `${calibration.falseAlarms.length} false alarms, ${calibration.missed.length} missed`,
+    );
+    if (calibration.missed.length > 0)
+      console.error(
+        `CALIBRATION FAILED: the meaning check called these known-wrong patches "same": ` +
+          `${calibration.missed.join(', ')}. This trial's verdicts cannot be trusted.`,
+      );
+  }
   console.log(`API cost recorded: $${totalCost.toFixed(4)} over ${usage.length} calls`);
   console.log('estimate from prompt and answer sizes:', estimate);
 }
@@ -744,18 +994,47 @@ if (executorFlag >= 0) {
   executor = value;
   argv.splice(executorFlag, 2);
 }
+/** Take `--name <n>` out of the arguments and return its number, or the default. */
+function numberFlag(name: string, fallback: number): number {
+  const index = argv.indexOf(`--${name}`);
+  if (index < 0) return fallback;
+  const value = Number(argv[index + 1]);
+  if (!Number.isSafeInteger(value) || value < 0) throw new Error(`--${name} needs a whole number`);
+  argv.splice(index, 2);
+  return value;
+}
+const calibrationCases = numberFlag('calibration', DEFAULT_CALIBRATION_CASES);
+const batchSize = numberFlag('size', 25);
 const [command, trial, stage] = argv;
+if (command === 'ledger') {
+  ledger(argv.slice(1));
+  process.exit(0);
+}
+if (command === 'promote' || command === 'retire' || command === 'review' || command === 'verify') {
+  // Loaded on demand: these read the engine's compiled-card registry, which the pipeline
+  // commands never need.
+  const promotion = await import('./promote');
+  const rest = argv.slice(1);
+  if (command === 'promote') promotion.promoteCommand(rest);
+  else if (command === 'retire') promotion.retireCommand(rest);
+  else if (command === 'review') promotion.reviewCommand(rest);
+  else promotion.verifyCommand(rest);
+  process.exit(0);
+}
 if (trial === undefined)
   throw new Error(
-    'usage: run.ts <prepare|exec|check|report|recheck|import|queue> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity]',
+    'usage: run.ts <prepare|calibrate|batches|exec|check|report|recheck|resmoke|import|queue|review|promote|retire|verify> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity]',
   );
 if (command === 'queue') queue(process.argv.slice(3));
 else if (command === 'import') {
   if (stage === undefined) throw new Error('usage: run.ts import <trial-dir> <patch-dir>');
   importPatches(trial, stage);
-} else if (command === 'prepare') prepare(trial);
+} else if (command === 'prepare') prepare(trial, calibrationCases);
+else if (command === 'calibrate') calibrate(trial, calibrationCases);
+else if (command === 'batches') batches(trial, stage ?? 'compile', batchSize);
 else if (command === 'check') check(trial);
 else if (command === 'report') report(trial);
 else if (command === 'recheck') recheck(trial);
+else if (command === 'resmoke') resmoke(trial);
 else if (command === 'exec') await exec(trial, stage ?? 'compile', executor);
 else throw new Error(`unknown command ${command}`);

@@ -1,0 +1,1 @@
+At the beginning of your precombat main phase, you may do the following. If you control a creature, create a token that is an Artifact Treasure with "{T}, Sacrifice this artifact: Add one mana of any color." Otherwise, do nothing. Then put a -1/-1 counter on a creature of your choice.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The condition compares the defending player's land count, but opponentControlsMore checks each opponent separately, so it cannot name the attacked player specifically."}

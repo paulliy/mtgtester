@@ -1,0 +1,2 @@
+Create X 2/2 red Human Knight creature tokens with trample and haste.
+Register a delayed trigger that lasts until the cleanup step: whenever one or more creatures you control deal combat damage to a player (batched by the player dealt damage), you become the monarch.

@@ -1,0 +1,41 @@
+{
+  "name": "Ideas Unbound",
+  "oracleId": "6b4d34bc-fa64-4c42-90e0-190671a5b988",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Draw three cards. Discard three cards at the beginning of the next end step."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "description": "Draw three cards.",
+      "targets": [],
+      "effects": [
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 3
+          }
+        },
+        {
+          "op": "registerDelayedTrigger",
+          "when": "endStep",
+          "ability": {
+            "kind": "triggered",
+            "targets": [],
+            "effects": [
+              {
+                "op": "discard",
+                "count": 3
+              }
+            ],
+            "description": "Discard three cards at the beginning of the next end step."
+          },
+          "expiry": "onFire"
+        }
+      ]
+    }
+  }
+}

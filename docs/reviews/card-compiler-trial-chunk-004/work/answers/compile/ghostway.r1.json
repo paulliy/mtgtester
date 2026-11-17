@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Exiling each creature you control and returning those same cards at the next end step has no schema form: exileEach has no delayed return for a set of cards, and returnExiledTriggerObject acts on one card."}

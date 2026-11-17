@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no rule static that raises the cost of all spells for every player; the only cost-increase static (opponentNonHandSpellCostIncrease) covers only opponents' spells cast from outside hand."}

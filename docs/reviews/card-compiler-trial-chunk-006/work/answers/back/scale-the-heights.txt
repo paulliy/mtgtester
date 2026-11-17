@@ -1,0 +1,5 @@
+Up to one target creature.
+Put a +1/+1 counter on each target chosen for this spell.
+You gain 1 life.
+You may play one additional land this turn.
+Draw a card.

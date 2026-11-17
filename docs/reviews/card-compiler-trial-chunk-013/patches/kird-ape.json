@@ -1,0 +1,34 @@
+{
+  "name": "Kird Ape",
+  "oracleId": "fbbc3acb-c917-44ff-ac6f-9dd6ebe3f4ad",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ gets +1/+2 as long as you control a Forest."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 2
+        },
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "subtype",
+            "value": "Forest"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 1
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+Whenever a Forest is tapped for mana, add {G}.

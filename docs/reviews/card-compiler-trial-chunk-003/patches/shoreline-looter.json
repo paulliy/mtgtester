@@ -1,0 +1,49 @@
+{
+  "name": "Shoreline Looter",
+  "oracleId": "c15cad77-e70f-42cc-a9f5-50e1fd8c9c96",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature deals combat damage to a player, draw a card. Then discard a card unless there are seven or more cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "cardsInYourGraveyard",
+              "cmp": ">=",
+              "n": 7
+            },
+            "then": [],
+            "else": [
+              {
+                "op": "discard",
+                "count": 1
+              }
+            ]
+          }
+        ],
+        "description": "Threshold — Whenever this creature deals combat damage to a player, draw a card. Then discard a card unless there are seven or more cards in your graveyard."
+      }
+    ]
+  }
+}

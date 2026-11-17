@@ -1,0 +1,59 @@
+{
+  "name": "Master Chef",
+  "oracleId": "9eab87ff-82a0-4655-b6ea-00b27e882449",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Commander creatures you own have \"~ enters with an additional +1/+1 counter on it\" and \"Other creatures you control enter with an additional +1/+1 counter on them.\""
+  ],
+  "compose": "append",
+  "def": {
+    "additionalCountersOnEntry": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "isCommander"
+            },
+            {
+              "kind": "owner",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "counter": "+1/+1",
+        "count": {
+          "kind": "const",
+          "n": 1
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "counter": "+1/+1",
+        "count": {
+          "kind": "const",
+          "n": 1
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{R}{G}, {T}: Target creature you control that is a Beast fights target creature an opponent controls.

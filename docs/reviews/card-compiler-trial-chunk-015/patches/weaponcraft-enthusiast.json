@@ -1,0 +1,69 @@
+{
+  "name": "Weaponcraft Enthusiast",
+  "oracleId": "7c27136a-bf9d-4f42-9c37-abe347fad1bb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Fabricate 2"
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "chooseOne",
+            "options": [
+              {
+                "effects": [
+                  {
+                    "op": "putCounters",
+                    "target": "source",
+                    "counter": "+1/+1",
+                    "count": 2
+                  }
+                ],
+                "description": "Put two +1/+1 counters on it"
+              },
+              {
+                "effects": [
+                  {
+                    "op": "createToken",
+                    "spec": {
+                      "name": "Servo",
+                      "typeLine": "Artifact Creature — Servo",
+                      "types": [
+                        "Artifact",
+                        "Creature"
+                      ],
+                      "subtypes": [
+                        "Servo"
+                      ],
+                      "colors": [],
+                      "power": 1,
+                      "toughness": 1
+                    },
+                    "count": {
+                      "kind": "const",
+                      "n": 2
+                    }
+                  }
+                ],
+                "description": "Create two 1/1 colorless Servo artifact creature tokens"
+              }
+            ]
+          }
+        ],
+        "description": "Fabricate 2 (When this creature enters, put two +1/+1 counters on it or create two 1/1 colorless Servo artifact creature tokens.)"
+      }
+    ]
+  }
+}

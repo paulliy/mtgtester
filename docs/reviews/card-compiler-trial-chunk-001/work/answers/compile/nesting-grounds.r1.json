@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"moveCounters needs one named counter kind, and the schema has no way to move a counter of any kind chosen by the controller (moveAllCounters moves every kind)."}

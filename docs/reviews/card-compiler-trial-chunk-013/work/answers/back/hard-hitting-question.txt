@@ -1,0 +1,2 @@
+Target creature and target permanent an opponent controls that is a creature or planeswalker.
+That first target creature deals damage equal to its power to the second target.

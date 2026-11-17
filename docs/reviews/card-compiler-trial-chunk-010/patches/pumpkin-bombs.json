@@ -1,0 +1,66 @@
+{
+  "name": "Pumpkin Bombs",
+  "oracleId": "b0695221-a61a-41e4-8195-3eeaaab2d969",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Discard two cards: Draw three cards, then put a fuse counter on this artifact. It deals damage equal to the number of fuse counters on it to target opponent. They gain control of this artifact."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "discardCard",
+            "count": 2
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "player",
+              "controller": "opponent"
+            }
+          ],
+          "effects": [
+            {
+              "op": "draw",
+              "count": {
+                "kind": "const",
+                "n": 3
+              }
+            },
+            {
+              "op": "putCounters",
+              "target": "source",
+              "counter": "fuse",
+              "count": 1
+            },
+            {
+              "op": "dealDamage",
+              "target": 0,
+              "amount": {
+                "kind": "countersOnSelf",
+                "counter": "fuse"
+              },
+              "source": "source"
+            },
+            {
+              "op": "gainControlTarget",
+              "target": "source",
+              "recipient": {
+                "targetPlayer": 0
+              }
+            }
+          ],
+          "description": "{T}, Discard two cards: Draw three cards, then put a fuse counter on this artifact. It deals damage equal to the number of fuse counters on it to target opponent. They gain control of this artifact."
+        }
+      }
+    ]
+  }
+}

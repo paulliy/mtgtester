@@ -1,0 +1,49 @@
+{
+  "name": "Yahenni, Undying Partisan",
+  "oracleId": "fdba89eb-1cf5-46e6-9d09-1adb9bc40fcd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice another creature: ~ gains indestructible until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": "source",
+              "keyword": "indestructible"
+            }
+          ],
+          "description": "Sacrifice another creature: Yahenni gains indestructible until end of turn."
+        }
+      }
+    ]
+  }
+}

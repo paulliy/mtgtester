@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"entersChoosingOption":{"prompt":"choose a creature type","domain":"creatureType"},"entersWithCounters":{"fellowship":{"kind":"countPermanents","selector":{"kind":"allOf","of":[{"kind":"chosenSubtype"},{"kind":"controller","who":"you"},{"kind":"type","value":"Creature"}]},"scope":"you"}}}}

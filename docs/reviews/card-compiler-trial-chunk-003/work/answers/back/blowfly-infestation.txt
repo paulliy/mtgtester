@@ -1,0 +1,1 @@
+Whenever a creature that has a -1/-1 counter on it dies, put a -1/-1 counter on target creature.

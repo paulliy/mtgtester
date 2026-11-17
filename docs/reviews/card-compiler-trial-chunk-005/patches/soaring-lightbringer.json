@@ -1,0 +1,54 @@
+{
+  "name": "Soaring Lightbringer",
+  "oracleId": "65ea7eb1-751b-4ecd-83cb-e9b6015ec194",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you attack a player, create a 1/1 white Glimmer enchantment creature token that's tapped and attacking that player."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attackDeclared",
+          "attacker": "you",
+          "attacking": {
+            "who": "opponent",
+            "planeswalkers": false
+          },
+          "perDefender": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenAttacking",
+            "spec": {
+              "name": "Glimmer",
+              "typeLine": "Token Enchantment Creature — Glimmer",
+              "types": [
+                "Enchantment",
+                "Creature"
+              ],
+              "subtypes": [
+                "Glimmer"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "defender": "attackedPlayer"
+          }
+        ],
+        "description": "Whenever you attack a player, create a 1/1 white Glimmer enchantment creature token that's tapped and attacking that player."
+      }
+    ]
+  }
+}

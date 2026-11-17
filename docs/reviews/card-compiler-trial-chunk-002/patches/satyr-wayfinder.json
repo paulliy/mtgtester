@@ -1,0 +1,42 @@
+{
+  "name": "Satyr Wayfinder",
+  "oracleId": "ead4c01a-e2ae-49c9-95d9-651d81005907",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, reveal the top four cards of your library. You may put a land card from among them into your hand. Put the rest into your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "lookAtTopN",
+            "count": 4,
+            "mayPut": {
+              "filter": {
+                "kind": "type",
+                "value": "Land"
+              },
+              "destination": {
+                "zone": "hand"
+              },
+              "reveal": true
+            },
+            "rest": "graveyard"
+          }
+        ],
+        "description": "When this creature enters, reveal the top four cards of your library. You may put a land card from among them into your hand. Put the rest into your graveyard."
+      }
+    ]
+  }
+}

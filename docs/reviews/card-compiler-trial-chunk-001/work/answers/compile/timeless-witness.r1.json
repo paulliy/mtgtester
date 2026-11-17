@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Eternalize's token copy is a 4/4 black Zombie with no mana cost, and createTokenCopyOf has no field to set the copy's color or add a subtype, so the black color and Zombie subtype cannot be stated."}

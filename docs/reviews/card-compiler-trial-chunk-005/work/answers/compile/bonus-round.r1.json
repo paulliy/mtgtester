@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"registerDelayedTrigger's 'when' is a bare event name with no caster or spell filter, so 'whenever a player casts an instant or sorcery spell this turn' cannot be expressed."}

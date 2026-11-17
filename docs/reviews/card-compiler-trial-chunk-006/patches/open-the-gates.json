@@ -1,0 +1,61 @@
+{
+  "name": "Open the Gates",
+  "oracleId": "f38e43b6-9a8c-4f6a-bd1c-d5c4913a28a1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Search your library for a basic land card or Gate card, reveal it, put it into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Gate"
+                  }
+                ]
+              }
+            ]
+          },
+          "destinations": [
+            {
+              "zone": "hand"
+            }
+          ],
+          "reveal": true
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "description": "Search your library for a basic land card or Gate card, reveal it, put it into your hand, then shuffle."
+    }
+  }
+}

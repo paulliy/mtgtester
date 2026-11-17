@@ -1,0 +1,56 @@
+{
+  "name": "Merrow Reejerey",
+  "oracleId": "6b7e6ae4-2ee1-44bf-ac93-79fc87494515",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a Merfolk spell, you may tap or untap target permanent."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "subtype",
+            "value": "Merfolk"
+          }
+        },
+        "optional": true,
+        "targets": [
+          {
+            "kind": "permanent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "chooseOne",
+            "options": [
+              {
+                "effects": [
+                  {
+                    "op": "tapTarget",
+                    "target": 0
+                  }
+                ],
+                "description": "Tap target permanent"
+              },
+              {
+                "effects": [
+                  {
+                    "op": "untapTarget",
+                    "target": 0
+                  }
+                ],
+                "description": "Untap target permanent"
+              }
+            ]
+          }
+        ],
+        "description": "Whenever you cast a Merfolk spell, you may tap or untap target permanent."
+      }
+    ]
+  }
+}
