@@ -1,4 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-016/work/prompts/compile/flare-of-faith.r2.md	docs/reviews/card-compiler-trial-chunk-016/work/answers/compile/flare-of-faith.r2.json
-docs/reviews/card-compiler-trial-chunk-016/work/prompts/compile/felonious-rage.r2.md	docs/reviews/card-compiler-trial-chunk-016/work/answers/compile/felonious-rage.r2.json
-docs/reviews/card-compiler-trial-chunk-016/work/prompts/compile/fortified-beachhead.r2.md	docs/reviews/card-compiler-trial-chunk-016/work/answers/compile/fortified-beachhead.r2.json
-docs/reviews/card-compiler-trial-chunk-016/work/prompts/compile/walk-with-the-ancestors.r2.md	docs/reviews/card-compiler-trial-chunk-016/work/answers/compile/walk-with-the-ancestors.r2.json
