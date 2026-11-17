@@ -27,6 +27,7 @@ import {
   island,
   oracle,
   pump,
+  registerCustomDef,
   spawn,
 } from './fixtures';
 
@@ -414,6 +415,22 @@ describe('block restrictions in combat', () => {
     });
     expect(new Set(run.rejections)).toEqual(new Set(['maxBlockers']));
     expect(run.applied.sort()).toEqual(['Required Bear', 'Third Bear']);
+  });
+
+  it('more than one — a required blocker that cannot block alone never recruits a partner past the limit', () => {
+    const ctx = pod('sunder-block-alone');
+    const shaman = spawn(ctx, 'P1', pinned('Sunder Shaman'));
+    const lonely = body('Lonely Bear', { power: 1 });
+    registerCustomDef(ctx, { ...interpretCard(lonely), ruleStatics: [{ kind: 'cantBlockAlone' }] });
+    const required = spawn(ctx, 'P2', lonely);
+    required.mustBlockThisTurn = true;
+    const other = spawn(ctx, 'P2', body('Other Bear', { power: 2 }));
+    const run = combat(ctx, [shaman], { [required.id]: shaman.id, [other.id]: shaman.id });
+    expect(run.rejections).toContain('maxBlockers');
+    // Two blockers break the limit and one alone breaks "can't block alone", so the only legal
+    // declaration with this attacker leaves the lonely creature out (CR 509.1c).
+    expect(run.applied).not.toContain('Lonely Bear');
+    expect(run.applied.length).toBeLessThanOrEqual(1);
   });
 
   it('more than one — one blocker is accepted', () => {

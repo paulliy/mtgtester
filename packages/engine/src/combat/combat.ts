@@ -1689,6 +1689,14 @@ function repairBlockDeclaration(
       )[0];
     if (pick === undefined) break; // unreachable: every violation names a candidate
     const currentAttackerId = repaired.get(pick.blocker.id);
+    // A redirect or a recruited partner never lands on an attacker already at its blocker limit.
+    const hasRoom = (attacker: EnginePermanent): boolean => {
+      const most = maxBlockersOf(ctx, attacker);
+      return (
+        most === null ||
+        candidates.filter((c) => repaired.get(c.blocker.id) === attacker.id).length < most
+      );
+    };
     // A lone blocker that can't block alone stands down; no other attacker fixes that.
     const alone = violations.some(
       (v) => v.subjectId === pick.blocker.id && v.kind === 'blockAlone',
@@ -1700,14 +1708,18 @@ function repairBlockDeclaration(
       const idle = candidates.filter(
         (c) => c.blocker.id !== pick.blocker.id && (repaired.get(c.blocker.id) ?? null) === null,
       );
-      const beside = idle.find((c) => c.blockable.some((a) => a.id === currentAttackerId));
+      const current = pick.blockable.find((a) => a.id === currentAttackerId);
+      const beside =
+        current !== undefined && hasRoom(current)
+          ? idle.find((c) => c.blockable.some((a) => a.id === currentAttackerId))
+          : undefined;
       const elsewhere =
         beside === undefined
           ? idle
               .map((c) => ({
                 c,
                 attacker: c.blockable.find(
-                  (a) => !hasKeyword(ctx, a, 'menace') && minBlockersOf(ctx, a) === 0,
+                  (a) => !hasKeyword(ctx, a, 'menace') && minBlockersOf(ctx, a) === 0 && hasRoom(a),
                 ),
               }))
               .find((entry) => entry.attacker !== undefined)
@@ -1738,14 +1750,6 @@ function repairBlockDeclaration(
         continue;
       }
     }
-    // A redirect never lands on an attacker already at its blocker limit.
-    const hasRoom = (attacker: EnginePermanent): boolean => {
-      const most = maxBlockersOf(ctx, attacker);
-      return (
-        most === null ||
-        candidates.filter((c) => repaired.get(c.blocker.id) === attacker.id).length < most
-      );
-    };
     const alternative =
       pick.blocker.mustBlockThisTurn === true && !alone
         ? pick.blockable.find(
@@ -1757,6 +1761,17 @@ function repairBlockDeclaration(
           )
         : undefined;
     repaired.set(pick.blocker.id, alternative?.id ?? null);
+    violations = validateBlockDeclaration(ctx, candidates, repaired);
+  }
+  // Out of guard with violations left: stand down every flagged blocker until the declaration is
+  // legal. Each pass removes at least one block, so this ends (no blocks is always reachable).
+  while (violations.length > 0) {
+    const flagged = new Set(violations.map((v) => v.subjectId));
+    const standDown = candidates.filter(
+      (c) => flagged.has(c.blocker.id) && (repaired.get(c.blocker.id) ?? null) !== null,
+    );
+    if (standDown.length === 0) break;
+    for (const c of standDown) repaired.set(c.blocker.id, null);
     violations = validateBlockDeclaration(ctx, candidates, repaired);
   }
   return repaired;
