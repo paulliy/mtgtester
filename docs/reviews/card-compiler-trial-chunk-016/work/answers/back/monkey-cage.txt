@@ -1,1 +1,1 @@
-Whenever a creature enters, sacrifice this. Then create a number of 2/2 green Monkey creature tokens equal to the mana value of that creature. (The token's name and type line are hidden in the data and are written around here as "a token".)
+Whenever a creature enters, sacrifice this. Then create a number of 2/2 green Monkey creature tokens equal to the mana value of that creature.

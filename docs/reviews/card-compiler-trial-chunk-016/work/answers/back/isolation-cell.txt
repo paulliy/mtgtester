@@ -1,0 +1,1 @@
+Whenever an opponent casts a creature spell, unless that player pays {2}, that player loses 2 life.
