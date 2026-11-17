@@ -94,9 +94,7 @@
     {
       "name": "Hunted Troll",
       "rank": 10752,
-      "lines": [
-        "{G}: Regenerate this creature."
-      ],
+      "lines": ["{G}: Regenerate this creature."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -550,9 +548,7 @@
     {
       "name": "Root Maze",
       "rank": 10790,
-      "lines": [
-        "Artifacts and lands enter tapped."
-      ],
+      "lines": ["Artifacts and lands enter tapped."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -592,9 +588,7 @@
     {
       "name": "Pestermite",
       "rank": 10791,
-      "lines": [
-        "When this creature enters, you may tap or untap target permanent."
-      ],
+      "lines": ["When this creature enters, you may tap or untap target permanent."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -634,9 +628,7 @@
     {
       "name": "Grow Extra Arms",
       "rank": 10794,
-      "lines": [
-        "This spell costs {1} less to cast if it targets a Spider."
-      ],
+      "lines": ["This spell costs {1} less to cast if it targets a Spider."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -884,9 +876,7 @@
     {
       "name": "Serra Avenger",
       "rank": 10819,
-      "lines": [
-        "You can't cast ~ during your first, second, or third turns of the game."
-      ],
+      "lines": ["You can't cast ~ during your first, second, or third turns of the game."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -906,9 +896,7 @@
     {
       "name": "Ghoultree",
       "rank": 10824,
-      "lines": [
-        "This spell costs {1} less to cast for each creature card in your graveyard."
-      ],
+      "lines": ["This spell costs {1} less to cast for each creature card in your graveyard."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -981,9 +969,7 @@
     {
       "name": "Fiery Cannonade",
       "rank": 10829,
-      "lines": [
-        "~ deals 2 damage to each non-Pirate creature."
-      ],
+      "lines": ["~ deals 2 damage to each non-Pirate creature."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1093,9 +1079,7 @@
     {
       "name": "Catapult Master",
       "rank": 10845,
-      "lines": [
-        "Tap five untapped Soldiers you control: Exile target creature."
-      ],
+      "lines": ["Tap five untapped Soldiers you control: Exile target creature."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1221,9 +1205,7 @@
     {
       "name": "Hurkyl's Recall",
       "rank": 10851,
-      "lines": [
-        "Return all artifacts target player owns to their hand."
-      ],
+      "lines": ["Return all artifacts target player owns to their hand."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1243,9 +1225,7 @@
     {
       "name": "Skeletal Changeling",
       "rank": 10855,
-      "lines": [
-        "{1}{B}: Regenerate this creature."
-      ],
+      "lines": ["{1}{B}: Regenerate this creature."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1351,9 +1331,7 @@
     {
       "name": "Nightmare Lash",
       "rank": 10861,
-      "lines": [
-        "Equip—Pay 3 life."
-      ],
+      "lines": ["Equip—Pay 3 life."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1404,9 +1382,7 @@
     {
       "name": "Lazotep Reaver",
       "rank": 10870,
-      "lines": [
-        "When this creature enters, amass Zombies 1."
-      ],
+      "lines": ["When this creature enters, amass Zombies 1."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1499,9 +1475,7 @@
     {
       "name": "Public Enemy",
       "rank": 10878,
-      "lines": [
-        "All creatures attack enchanted creature's controller each combat if able."
-      ],
+      "lines": ["All creatures attack enchanted creature's controller each combat if able."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1609,9 +1583,7 @@
     {
       "name": "Sanitarium Skeleton",
       "rank": 10891,
-      "lines": [
-        "{2}{B}: Return this card from your graveyard to your hand."
-      ],
+      "lines": ["{2}{B}: Return this card from your graveyard to your hand."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1653,9 +1625,7 @@
     {
       "name": "Ephara's Dispersal",
       "rank": 10895,
-      "lines": [
-        "This spell costs {2} less to cast if it targets an attacking creature."
-      ],
+      "lines": ["This spell costs {2} less to cast if it targets an attacking creature."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1862,9 +1832,7 @@
     {
       "name": "Leeching Sliver",
       "rank": 10921,
-      "lines": [
-        "Whenever a Sliver you control attacks, defending player loses 1 life."
-      ],
+      "lines": ["Whenever a Sliver you control attacks, defending player loses 1 life."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -1979,9 +1947,7 @@
     {
       "name": "Sheltering Ancient",
       "rank": 10934,
-      "lines": [
-        "Cumulative upkeep—Put a +1/+1 counter on a creature an opponent controls."
-      ],
+      "lines": ["Cumulative upkeep—Put a +1/+1 counter on a creature an opponent controls."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2032,9 +1998,7 @@
     {
       "name": "Entrancing Melody",
       "rank": 10944,
-      "lines": [
-        "Gain control of target creature with mana value X."
-      ],
+      "lines": ["Gain control of target creature with mana value X."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2043,9 +2007,7 @@
     {
       "name": "Krosan Warchief",
       "rank": 10945,
-      "lines": [
-        "{1}{G}: Regenerate target Beast."
-      ],
+      "lines": ["{1}{G}: Regenerate target Beast."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2318,9 +2280,7 @@
     {
       "name": "Stern Scolding",
       "rank": 10975,
-      "lines": [
-        "Counter target creature spell with power or toughness 2 or less."
-      ],
+      "lines": ["Counter target creature spell with power or toughness 2 or less."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2329,9 +2289,7 @@
     {
       "name": "Vengeful Reaper",
       "rank": 10976,
-      "lines": [
-        "Foretell {1}{B}"
-      ],
+      "lines": ["Foretell {1}{B}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2397,9 +2355,7 @@
     {
       "name": "Diabolic Edict",
       "rank": 10984,
-      "lines": [
-        "Target player sacrifices a creature of their choice."
-      ],
+      "lines": ["Target player sacrifices a creature of their choice."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2498,9 +2454,7 @@
     {
       "name": "Dark Impostor",
       "rank": 10989,
-      "lines": [
-        "~ has all activated abilities of all creature cards exiled with it."
-      ],
+      "lines": ["~ has all activated abilities of all creature cards exiled with it."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2531,9 +2485,7 @@
     {
       "name": "Attuma, Atlantean Warlord",
       "rank": 10996,
-      "lines": [
-        "Whenever one or more Merfolk you control attack a player, draw a card."
-      ],
+      "lines": ["Whenever one or more Merfolk you control attack a player, draw a card."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2692,9 +2644,7 @@
     {
       "name": "Aura Thief",
       "rank": 11012,
-      "lines": [
-        "When this creature dies, you gain control of all enchantments."
-      ],
+      "lines": ["When this creature dies, you gain control of all enchantments."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2803,9 +2753,7 @@
     {
       "name": "Jace, Arcane Strategist",
       "rank": 11033,
-      "lines": [
-        "−7: Creatures you control can't be blocked this turn."
-      ],
+      "lines": ["−7: Creatures you control can't be blocked this turn."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2913,9 +2861,7 @@
     {
       "name": "Shield of Kaldra",
       "rank": 11042,
-      "lines": [
-        "Equipment named Sword of Kaldra, ~, and Helm of Kaldra have indestructible."
-      ],
+      "lines": ["Equipment named Sword of Kaldra, ~, and Helm of Kaldra have indestructible."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2955,9 +2901,7 @@
     {
       "name": "Daring Saboteur",
       "rank": 11049,
-      "lines": [
-        "{2}{U}: ~ can't be blocked this turn."
-      ],
+      "lines": ["{2}{U}: ~ can't be blocked this turn."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -2997,9 +2941,7 @@
     {
       "name": "Ground Seal",
       "rank": 11050,
-      "lines": [
-        "Cards in graveyards can't be the targets of spells or abilities."
-      ],
+      "lines": ["Cards in graveyards can't be the targets of spells or abilities."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3125,9 +3067,7 @@
     {
       "name": "Guildsworn Prowler",
       "rank": 11073,
-      "lines": [
-        "When this creature dies, if it wasn't blocking, draw a card."
-      ],
+      "lines": ["When this creature dies, if it wasn't blocking, draw a card."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3167,9 +3107,7 @@
     {
       "name": "Early Harvest",
       "rank": 11076,
-      "lines": [
-        "Target player untaps all basic lands they control."
-      ],
+      "lines": ["Target player untaps all basic lands they control."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3231,9 +3169,7 @@
     {
       "name": "Caress of Phyrexia",
       "rank": 11084,
-      "lines": [
-        "Target player draws three cards, loses 3 life, and gets three poison counters."
-      ],
+      "lines": ["Target player draws three cards, loses 3 life, and gets three poison counters."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3524,9 +3460,7 @@
     {
       "name": "Transmogrant's Crown",
       "rank": 11105,
-      "lines": [
-        "Equip {2} or {B}"
-      ],
+      "lines": ["Equip {2} or {B}"],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3622,9 +3556,7 @@
     {
       "name": "Wayfaring Temple",
       "rank": 11109,
-      "lines": [
-        "Whenever this creature deals combat damage to a player, populate."
-      ],
+      "lines": ["Whenever this creature deals combat damage to a player, populate."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3765,9 +3697,7 @@
     {
       "name": "Ferocious Tigorilla",
       "rank": 11128,
-      "lines": [
-        "~ enters with your choice of a trample counter or a menace counter on it."
-      ],
+      "lines": ["~ enters with your choice of a trample counter or a menace counter on it."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -3875,9 +3805,7 @@
     {
       "name": "Searing Touch",
       "rank": 11144,
-      "lines": [
-        "Buyback {4}"
-      ],
+      "lines": ["Buyback {4}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4045,9 +3973,7 @@
     {
       "name": "Miner's Guidewing",
       "rank": 11163,
-      "lines": [
-        "When this creature dies, target creature you control explores."
-      ],
+      "lines": ["When this creature dies, target creature you control explores."],
       "outcome": "smoke-failed",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4087,9 +4013,7 @@
     {
       "name": "Anointer Priest",
       "rank": 11164,
-      "lines": [
-        "Embalm {3}{W}"
-      ],
+      "lines": ["Embalm {3}{W}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4098,9 +4022,7 @@
     {
       "name": "Pit Fight",
       "rank": 11167,
-      "lines": [
-        "Target creature you control fights another target creature."
-      ],
+      "lines": ["Target creature you control fights another target creature."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4133,9 +4055,7 @@
     {
       "name": "Savage Thallid",
       "rank": 11169,
-      "lines": [
-        "Sacrifice a Saproling: Regenerate target Fungus."
-      ],
+      "lines": ["Sacrifice a Saproling: Regenerate target Fungus."],
       "outcome": "meaning-differs",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4232,9 +4152,7 @@
     {
       "name": "Wingspan Stride",
       "rank": 11175,
-      "lines": [
-        "{2}{U}: Return this Aura to its owner's hand."
-      ],
+      "lines": ["{2}{U}: Return this Aura to its owner's hand."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4285,9 +4203,7 @@
     {
       "name": "Eland Umbra",
       "rank": 11178,
-      "lines": [
-        "Umbra armor"
-      ],
+      "lines": ["Umbra armor"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4307,9 +4223,7 @@
     {
       "name": "Valor Made Real",
       "rank": 11180,
-      "lines": [
-        "Target creature can block any number of creatures this turn."
-      ],
+      "lines": ["Target creature can block any number of creatures this turn."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4360,15 +4274,11 @@
     {
       "name": "Invoke the Winds",
       "rank": 11186,
-      "lines": [
-        "Gain control of target artifact or creature. Untap it."
-      ],
+      "lines": ["Gain control of target artifact or creature. Untap it."],
       "outcome": "compiled-checked",
       "compileRounds": 2,
       "validatorIssues": [
-        [
-          "answer is not valid JSON in the required shape: Error: answer has no \"def\" object"
-        ]
+        ["answer is not valid JSON in the required shape: Error: answer has no \"def\" object"]
       ],
       "smoke": [
         {
@@ -4496,9 +4406,7 @@
     {
       "name": "Vampire's Kiss",
       "rank": 11212,
-      "lines": [
-        "Target player loses 2 life and you gain 2 life. Create two Blood tokens."
-      ],
+      "lines": ["Target player loses 2 life and you gain 2 life. Create two Blood tokens."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4637,9 +4545,7 @@
     {
       "name": "Icebind Pillar",
       "rank": 11223,
-      "lines": [
-        "{S}, {T}: Tap target artifact or creature."
-      ],
+      "lines": ["{S}, {T}: Tap target artifact or creature."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4648,9 +4554,7 @@
     {
       "name": "Shadow Sliver",
       "rank": 11224,
-      "lines": [
-        "All Sliver creatures have shadow."
-      ],
+      "lines": ["All Sliver creatures have shadow."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4670,9 +4574,7 @@
     {
       "name": "Shivan Meteor",
       "rank": 11230,
-      "lines": [
-        "Suspend 2—{1}{R}{R}"
-      ],
+      "lines": ["Suspend 2—{1}{R}{R}"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4725,9 +4627,7 @@
     {
       "name": "Fully Grown",
       "rank": 11239,
-      "lines": [
-        "Target creature gets +3/+3 until end of turn. Put a trample counter on it."
-      ],
+      "lines": ["Target creature gets +3/+3 until end of turn. Put a trample counter on it."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -4847,9 +4747,7 @@
     {
       "name": "Yarok's Fenlurker",
       "rank": 11249,
-      "lines": [
-        "When this creature enters, each opponent exiles a card from their hand."
-      ],
+      "lines": ["When this creature enters, each opponent exiles a card from their hand."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5166,9 +5064,7 @@
     {
       "name": "Vindictive Warden",
       "rank": 11304,
-      "lines": [
-        "Firebending 1"
-      ],
+      "lines": ["Firebending 1"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5188,9 +5084,7 @@
     {
       "name": "Angrath, Captain of Chaos",
       "rank": 11311,
-      "lines": [
-        "−2: Amass Zombies 2."
-      ],
+      "lines": ["−2: Amass Zombies 2."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5230,9 +5124,7 @@
     {
       "name": "Experiment Kraj",
       "rank": 11312,
-      "lines": [
-        "~ has all activated abilities of each other creature with a +1/+1 counter on it."
-      ],
+      "lines": ["~ has all activated abilities of each other creature with a +1/+1 counter on it."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5241,9 +5133,7 @@
     {
       "name": "Illusory Ambusher",
       "rank": 11315,
-      "lines": [
-        "Whenever this creature is dealt damage, draw that many cards."
-      ],
+      "lines": ["Whenever this creature is dealt damage, draw that many cards."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5305,9 +5195,7 @@
     {
       "name": "Mysterious Egg",
       "rank": 11324,
-      "lines": [
-        "Whenever this creature mutates, put a +1/+1 counter on it."
-      ],
+      "lines": ["Whenever this creature mutates, put a +1/+1 counter on it."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5369,9 +5257,7 @@
     {
       "name": "Teferi's Veil",
       "rank": 11334,
-      "lines": [
-        "Whenever a creature you control attacks, it phases out at end of combat."
-      ],
+      "lines": ["Whenever a creature you control attacks, it phases out at end of combat."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5414,9 +5300,7 @@
     {
       "name": "Birchlore Rangers",
       "rank": 11336,
-      "lines": [
-        "Tap two untapped Elves you control: Add one mana of any color."
-      ],
+      "lines": ["Tap two untapped Elves you control: Add one mana of any color."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5524,9 +5408,7 @@
     {
       "name": "Venom's Hunger",
       "rank": 11344,
-      "lines": [
-        "This spell costs {2} less to cast if you control a Villain."
-      ],
+      "lines": ["This spell costs {2} less to cast if you control a Villain."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5775,9 +5657,7 @@
     {
       "name": "Hushwing Gryff",
       "rank": 11367,
-      "lines": [
-        "Creatures entering don't cause abilities to trigger."
-      ],
+      "lines": ["Creatures entering don't cause abilities to trigger."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5828,9 +5708,7 @@
     {
       "name": "Obeka, Brute Chronologist",
       "rank": 11372,
-      "lines": [
-        "{T}: The player whose turn it is may end the turn."
-      ],
+      "lines": ["{T}: The player whose turn it is may end the turn."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5839,9 +5717,7 @@
     {
       "name": "Sleeper Agent",
       "rank": 11373,
-      "lines": [
-        "When this creature enters, target opponent gains control of it."
-      ],
+      "lines": ["When this creature enters, target opponent gains control of it."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -5925,9 +5801,7 @@
     {
       "name": "Anje Falkenrath",
       "rank": 11389,
-      "lines": [
-        "Whenever you discard a card, if it has madness, untap ~."
-      ],
+      "lines": ["Whenever you discard a card, if it has madness, untap ~."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6000,9 +5874,7 @@
     {
       "name": "Death Denied",
       "rank": 11406,
-      "lines": [
-        "Return X target creature cards from your graveyard to your hand."
-      ],
+      "lines": ["Return X target creature cards from your graveyard to your hand."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6033,9 +5905,7 @@
     {
       "name": "Justice Strike",
       "rank": 11411,
-      "lines": [
-        "Target creature deals damage to itself equal to its power."
-      ],
+      "lines": ["Target creature deals damage to itself equal to its power."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6174,9 +6044,7 @@
     {
       "name": "Caller of the Pack",
       "rank": 11425,
-      "lines": [
-        "Myriad"
-      ],
+      "lines": ["Myriad"],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6344,9 +6212,7 @@
     {
       "name": "Aspect of Hydra",
       "rank": 11448,
-      "lines": [
-        "Target creature gets +X/+X until end of turn, where X is your devotion to green."
-      ],
+      "lines": ["Target creature gets +X/+X until end of turn, where X is your devotion to green."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6379,9 +6245,7 @@
     {
       "name": "Embrace Oblivion",
       "rank": 11449,
-      "lines": [
-        "Destroy target creature or Spacecraft."
-      ],
+      "lines": ["Destroy target creature or Spacecraft."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6480,9 +6344,7 @@
     {
       "name": "Barrier Breach",
       "rank": 11461,
-      "lines": [
-        "Exile up to three target enchantments."
-      ],
+      "lines": ["Exile up to three target enchantments."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6526,9 +6388,7 @@
     {
       "name": "Dark Privilege",
       "rank": 11470,
-      "lines": [
-        "Sacrifice a creature: Regenerate enchanted creature."
-      ],
+      "lines": ["Sacrifice a creature: Regenerate enchanted creature."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6568,9 +6428,7 @@
     {
       "name": "Humility",
       "rank": 11473,
-      "lines": [
-        "All creatures lose all abilities and have base power and toughness 1/1."
-      ],
+      "lines": ["All creatures lose all abilities and have base power and toughness 1/1."],
       "outcome": "compiled-checked",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6632,9 +6490,7 @@
     {
       "name": "Aether Snap",
       "rank": 11477,
-      "lines": [
-        "Remove all counters from all permanents and exile all tokens."
-      ],
+      "lines": ["Remove all counters from all permanents and exile all tokens."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
@@ -6643,9 +6499,7 @@
     {
       "name": "Evra, Halcyon Witness",
       "rank": 11481,
-      "lines": [
-        "{4}: Exchange your life total with ~'s power."
-      ],
+      "lines": ["{4}: Exchange your life total with ~'s power."],
       "outcome": "inexpressible",
       "compileRounds": 1,
       "validatorIssues": [],
