@@ -75,12 +75,20 @@ const isBackground = (card: OracleCard): boolean =>
   card.types.includes('Enchantment') &&
   card.subtypes.includes('Background');
 
-/** A Time Lord Doctor creature with no other creature types (CR 702.124m). */
-const isPureTimeLordDoctor = (card: OracleCard): boolean =>
-  isLegendaryCreature(card) &&
-  card.subtypes.includes('Doctor') &&
-  card.subtypes.includes('Time Lord') &&
-  card.subtypes.every((t) => t === 'Doctor' || t === 'Time Lord');
+/**
+ * A Time Lord Doctor creature with no other creature types (CR 702.124m). The importer splits
+ * subtypes on whitespace, so "Time Lord" arrives as "Time" and "Lord"; both spellings count.
+ */
+const isPureTimeLordDoctor = (card: OracleCard): boolean => {
+  const subtypes = new Set(card.subtypes);
+  const timeLord = subtypes.has('Time Lord') || (subtypes.has('Time') && subtypes.has('Lord'));
+  return (
+    isLegendaryCreature(card) &&
+    subtypes.has('Doctor') &&
+    timeLord &&
+    [...subtypes].every((t) => ['Doctor', 'Time Lord', 'Time', 'Lord'].includes(t))
+  );
+};
 
 function partnersWith(a: OracleCard, b: OracleCard): boolean {
   return pairAbilities(a).some(

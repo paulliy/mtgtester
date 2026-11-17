@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
-import type { ValidationCode } from '@mtg/shared';
+import type { OracleCard, ValidationCode } from '@mtg/shared';
 import { validateDeck } from './validate';
 import { parseBannedList } from './banned';
 import { makeOracleCard, makeResolvedDeck, fillerCreatures } from '../test-factory';
@@ -246,6 +248,20 @@ describe('validateDeck — commander pairings', () => {
     expect(pairIssues(a, partnerB)).toHaveLength(1);
   });
 
+  it("pairs Doctor's companion with an imported Time Lord Doctor (CR 702.124m)", () => {
+    const companion = legend('Clara Oswald', "Doctor's companion");
+    const doctor = (subtypes: string[]) =>
+      legend('The Eleventh Doctor', 'Vigilance', {
+        typeLine: 'Legendary Creature — Time Lord Doctor',
+        subtypes,
+      });
+    // The importer's parseTypeLine splits "Time Lord" on whitespace.
+    expect(pairIssues(companion, doctor(['Time', 'Lord', 'Doctor']))).toEqual([]);
+    expect(pairIssues(companion, doctor(['Time Lord', 'Doctor']))).toEqual([]);
+    expect(pairIssues(companion, doctor(['Human', 'Doctor']))).toHaveLength(1);
+    expect(pairIssues(companion, doctor(['Time', 'Lord', 'Doctor', 'Human']))).toHaveLength(1);
+  });
+
   const background = makeOracleCard({
     name: 'Raised by Giants',
     typeLine: 'Legendary Enchantment — Background',
@@ -309,6 +325,50 @@ describe('validateDeck — commander pairings', () => {
     const issues = validateDeck(deck, NO_BANS).issues;
     expect(codes(issues)).not.toContain('colorIdentity');
     expect(codes(issues)).not.toContain('cardCount');
+  });
+});
+
+describe('validateDeck — pinned pair cards', () => {
+  const pins = JSON.parse(
+    readFileSync(
+      join(import.meta.dirname, '../../../engine/tests/fixtures/pairs-and-hand-look-oracle.json'),
+      'utf8',
+    ),
+  ) as { cards: { card: OracleCard }[] };
+  const real = (name: string): OracleCard => pins.cards.find((e) => e.card.name === name)!.card;
+  const pairIssues = (a: OracleCard, b: OracleCard) =>
+    validateDeck(
+      makeResolvedDeck({ commanders: [a, b], cards: fillerCreatures(98, ['W']) }),
+      NO_BANS,
+    ).issues.filter((i) => i.code === 'partnerPairing');
+
+  it('pairs two real plain partners and rejects the other kinds beside them', () => {
+    expect(
+      pairIssues(real('Rograkh, Son of Rohgahh'), real('Ishai, Ojutai Dragonspeaker')),
+    ).toEqual([]);
+    expect(pairIssues(real('Rograkh, Son of Rohgahh'), real('Alphinaud Leveilleur'))).toHaveLength(
+      1,
+    );
+    expect(pairIssues(real('Rograkh, Son of Rohgahh'), real('Splinter, the Mentor'))).toHaveLength(
+      1,
+    );
+    expect(
+      pairIssues(real('Rograkh, Son of Rohgahh'), real('Jaheira, Friend of the Forest')),
+    ).toHaveLength(1);
+  });
+
+  it('pairs a real Choose a Background creature with a Background', () => {
+    const background = makeOracleCard({
+      name: 'Raised by Giants',
+      typeLine: 'Legendary Enchantment — Background',
+      supertypes: ['Legendary'],
+      types: ['Enchantment'],
+      subtypes: ['Background'],
+    });
+    expect(pairIssues(real('Jaheira, Friend of the Forest'), background)).toEqual([]);
+    expect(pairIssues(real('Ganax, Astral Hunter'), real('Wilson, Refined Grizzly'))).toHaveLength(
+      1,
+    );
   });
 });
 
