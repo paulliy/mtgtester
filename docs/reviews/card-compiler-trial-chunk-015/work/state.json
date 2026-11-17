@@ -17,7 +17,7 @@
       "Enchanted creature has \"Whenever this creature deals combat damage to a player, add that much {G}. Until end of turn, you don't lose this mana as steps and phases end.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -164,7 +164,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Enchanted creature has \"Whenever this creature deals combat damage to a player, add {G} equal to the damage dealt. This mana is persistent.\""
   },
   {
     "name": "Vizier of Remedies",
@@ -173,7 +174,7 @@
       "If one or more -1/-1 counters would be put on a creature you control, that many -1/-1 counters minus one are put on it instead."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -315,7 +316,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "If a -1/-1 counter would be put on a creature you control, put one fewer -1/-1 counter on it instead."
   },
   {
     "name": "Razorlash Transmogrant",
@@ -379,7 +381,7 @@
       "Commander creatures you own have \"{2}, Sacrifice an artifact: Put a +1/+1 counter on this creature and draw a card.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -522,7 +524,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Each creature you own that is a commander has \"{2}, Sacrifice an artifact you control (this creature can be sacrificed to pay this cost): Put a +1/+1 counter on this creature. Draw a card.\""
   },
   {
     "name": "Pair o' Dice Lost",
@@ -542,7 +545,7 @@
       "This spell costs {1}{U} less to cast if it targets an instant or sorcery spell."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -655,7 +658,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Instant and sorcery spells you cast cost {1} less to cast, and the blue portion of their cost is reduced by {U}. This applies only to spells its controller casts."
   },
   {
     "name": "Tide Skimmer",
@@ -664,7 +668,7 @@
       "Whenever you attack with two or more creatures with flying, draw a card."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -806,7 +810,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever you declare attackers, if you attack with at least two creatures with flying, draw a card."
   },
   {
     "name": "Tainted Adversary",
@@ -848,7 +853,7 @@
       "Enchanted creature gets +1/+1 and has flying, haste, and \"{1}: ~ gets +1/+0 until end of turn.\" It's a Dragon in addition to its other types."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -994,7 +999,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Enchanted creature gets +1/+1, has flying and haste, and is a Dragon in addition to its other creature types.\nEnchanted creature has \"{1}: This creature gets +1/+0 until end of turn.\""
   },
   {
     "name": "Battle at the Bridge",
@@ -1003,7 +1009,7 @@
       "Target creature gets -X/-X until end of turn. You gain X life."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -1121,7 +1127,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target creature gets -X/-X until end of turn. You gain X life."
   },
   {
     "name": "Chaotic Transformation",
@@ -1174,7 +1181,7 @@
       "Whenever you put one or more +1/+1 counters on one or more other Heroes you control, you may create a 0/4 colorless Wall creature token with defender."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -1316,7 +1323,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever one or more +1/+1 counters that you put on one or more other Hero creatures you control, you may create a 0/4 colorless Wall creature token with defender."
   },
   {
     "name": "Cenote Scout",
@@ -1325,7 +1333,7 @@
       "When this creature enters, it explores."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -1456,7 +1464,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this creature enters, this creature explores."
   },
   {
     "name": "Council's Deliberation",
@@ -1476,7 +1485,7 @@
       "When this creature dies, create a 2/2 red Dragon creature token with flying and \"{R}: ~ gets +1/+0 until end of turn.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -1619,7 +1628,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this creature dies, create a token that is a 2/2 red Dragon creature with flying. That token has \"{R}: This creature gets +1/+0 until end of turn.\""
   },
   {
     "name": "Spread the Sickness",
@@ -1887,7 +1897,7 @@
       "If you have 5 or less life, create five of those tokens instead."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -2006,7 +2016,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Create two 1/1 white Human creature tokens.\nIf your life total is 5 or less, create three 1/1 white Human creature tokens."
   },
   {
     "name": "Quiet Speculation",
@@ -2070,7 +2081,7 @@
       "Sacrifice another artifact or creature: Put a +1/+1 counter on this Vehicle. It becomes a Spirit artifact creature in addition to its other types until end of turn."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -2238,7 +2249,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Sacrifice another artifact or creature you control: Put a +1/+1 counter on this permanent. It becomes a 4/4 Spirit creature until end of turn. It gains no keywords."
   },
   {
     "name": "The Seventh Doctor",
@@ -2258,7 +2270,7 @@
       "Sliver creatures you control have \"{T}, Discard a card: Draw a card.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -2414,7 +2426,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Each Sliver creature you control has \"{T}, Discard a card: Draw a card.\""
   },
   {
     "name": "Riftstone Portal",
@@ -2434,7 +2447,7 @@
       "Target creature deals damage to itself equal to its power. If that creature has flying, it deals twice that much damage to itself instead."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -2547,7 +2560,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Choose target creature. This spell deals damage to that creature. If the creature has flying, the damage equals twice its power. Otherwise, the damage equals its power."
   },
   {
     "name": "Lumbering Megasloth",
@@ -2611,7 +2625,7 @@
       "Enchanted creature gets +2/+2, has flying, and can't attack you or planeswalkers you control."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -2758,7 +2772,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Enchant creature.\nEnchanted creature gets +2/+2 and has flying.\nEnchanted creature has an attack restriction that includes planeswalkers."
   },
   {
     "name": "Blanchwood Prowler",
@@ -2877,7 +2892,7 @@
       "At the beginning of combat on your turn, target creature you control gets +X/+0 until end of turn, where X is this creature's power."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -3035,7 +3050,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "At the beginning of combat on your turn, target creature you control gets +X/+0 until end of turn, where X is this creature's power."
   },
   {
     "name": "Judgment of Alexander",
@@ -3055,7 +3071,7 @@
       "~ deals 4 damage to target creature you don't control and 2 damage to target creature you control."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -3169,7 +3185,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target creature an opponent controls gets 4 damage. Target creature you control gets 2 damage."
   },
   {
     "name": "Ingenious Mastery",
@@ -3200,7 +3217,7 @@
       "Whenever you cast a noncreature spell, you may draw X cards, where X is the amount of mana spent to cast that spell. If you do, discard two cards."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -3355,7 +3372,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever you cast a spell that isn't a creature spell, you may have this ability: draw cards equal to the mana spent to cast that spell, then discard two cards."
   },
   {
     "name": "Thwip!",
@@ -3364,7 +3382,7 @@
       "Target creature gets +2/+2 and gains flying until end of turn. If it's a Spider, you gain 2 life."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -3485,7 +3503,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target creature gets +2/+2 and gains flying until end of turn.\nIf the target creature is a Spider, you gain 2 life."
   },
   {
     "name": "Worship",
@@ -3527,7 +3546,7 @@
       "Whenever a creature enters, this enchantment deals 2 damage to it."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -3685,7 +3704,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever a creature enters the battlefield, this enchantment deals 2 damage to that creature."
   },
   {
     "name": "Scrounge for Eternity",
@@ -3694,7 +3714,7 @@
       "Return target creature or Spacecraft card with mana value 5 or less from your graveyard to the battlefield. Then create a Lander token."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -3824,7 +3844,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Choose target creature or Spacecraft card with mana value 5 or less in your graveyard. Put that card onto the battlefield. Create a colorless Lander artifact token named Lander with \"{2}, {T}, Sacrifice this token: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.\""
   },
   {
     "name": "Match the Odds",
@@ -3855,7 +3876,7 @@
       "{3}{W}{W}: Return this card from your graveyard to your hand. Activate only during your upkeep."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -3998,7 +4019,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{3}{W}{W}: Return this card from your graveyard to your hand. Activate only during your upkeep and only while this card is in a graveyard."
   },
   {
     "name": "Hypnotic Siren",
@@ -4018,7 +4040,7 @@
       "Equipped creature gets +3/+3 and has vigilance and \"{T}, Sacrifice this creature: Add three mana of any one color.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -4174,7 +4196,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Equipped creature gets +3/+3 and has vigilance.\nEquipped creature has \"{T}, Sacrifice this creature: Add three mana of one color chosen from white, blue, black, red, or green.\""
   },
   {
     "name": "Reckless Crew",
@@ -4194,7 +4217,7 @@
       "You gain 2 life. Create a Lander token."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -4322,7 +4345,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "You gain 2 life.\nCreate a colorless Lander artifact token. It has \"{2}, {T}, Sacrifice this artifact: Search for a basic land card, put it onto the battlefield tapped, then shuffle.\""
   },
   {
     "name": "Eater of Days",
@@ -4353,7 +4377,7 @@
       "Each creature your opponents control is an Illusion in addition to its other types and has \"When this creature becomes the target of a spell or ability, sacrifice it.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -4498,7 +4522,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Each creature your opponents control is an Illusion in addition to its other creature types.\nEach creature your opponents control has \"Whenever this creature becomes the target of a spell or ability, sacrifice this creature.\""
   },
   {
     "name": "Jhoira, Ageless Innovator",
@@ -4507,7 +4532,7 @@
       "{T}: Put two ingenuity counters on ~, then you may put an artifact card with mana value X or less from your hand onto the battlefield, where X is the number of ingenuity counters on ~."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -4667,7 +4692,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{T}: Put two ingenuity counters on this creature. Then put an artifact card with mana value less than or equal to the number of ingenuity counters on this creature from your hand onto the battlefield."
   },
   {
     "name": "Flayer Husk",
@@ -4676,7 +4702,7 @@
       "Living weapon"
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -4832,7 +4858,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this enters, create a 0/0 black Phyrexian Germ creature token, then attach this to it."
   },
   {
     "name": "Leori, Sparktouched Hunter",
@@ -4852,7 +4879,7 @@
       "When this creature enters, create a 0/1 colorless Eldrazi Spawn creature token. It has \"Sacrifice this token: Add {C}.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -4999,7 +5026,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this enters, create a 0/1 colorless Eldrazi Spawn creature token with \"Sacrifice this token: Add {C}.\""
   },
   {
     "name": "Stinging Cave Crawler",
@@ -5008,7 +5036,7 @@
       "Descend 4 — Whenever this creature attacks, if there are four or more permanent cards in your graveyard, you draw a card and you lose 1 life."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -5155,7 +5183,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever this creature attacks, if there are four or more cards in your graveyard that are artifact, battle, creature, enchantment, land, or planeswalker cards, you draw a card and you lose 1 life."
   },
   {
     "name": "Knight of Dawn's Light",
@@ -5197,7 +5226,7 @@
       "When this creature dies, create a 0/1 red Elemental creature token with \"At the beginning of your upkeep, sacrifice this token and return target card named ~ from your graveyard to the battlefield. It gains haste until end of turn.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -5341,7 +5370,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this creature dies, create a 0/1 red Elemental creature token with \"At the beginning of your upkeep, sacrifice this creature, then return target card named Rekindling Phoenix from your graveyard to the battlefield. It gains haste.\""
   },
   {
     "name": "Hinder",
@@ -5372,7 +5402,7 @@
       "Discard a card: ~ gains indestructible until end of turn. Tap it."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -5533,7 +5563,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Discard a card: This creature gains indestructible until end of turn. Tap this creature."
   },
   {
     "name": "Donatello's Technique",
@@ -5542,7 +5573,7 @@
       "Sneak {U}"
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -5660,7 +5691,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "You may cast this spell by paying {U} and returning an unblocked attacker to its owner's hand rather than paying its mana cost. You may cast it only during your turn, during the declare blockers step, and it has instant timing. It has no other effect."
   },
   {
     "name": "Koth, the Geomancer",
@@ -5669,7 +5701,7 @@
       "Whenever a land you control enters, ~ deals 1 damage to each opponent. If that land is a Mountain, add {R}."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -5811,7 +5843,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever a land you control enters, each opponent takes 1 damage. If that land is a Mountain, add {R}."
   },
   {
     "name": "Immolating Gyre",
@@ -5820,7 +5853,7 @@
       "~ deals X damage to each creature and planeswalker you don't control, where X is the number of instant and sorcery cards in your graveyard."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -5933,7 +5966,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Immolating Gyre deals X damage to each creature and each planeswalker on the battlefield that opponents control, where X is the number of instant and sorcery cards you own in your graveyard."
   },
   {
     "name": "Magma Sliver",
@@ -5942,7 +5976,7 @@
       "All Slivers have \"{T}: Target Sliver creature gets +X/+0 until end of turn, where X is the number of Slivers on the battlefield.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -6101,7 +6135,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Each Sliver has \"{T}: Target Sliver creature gets +N/+0 until end of turn, where N is the number of Slivers on the battlefield.\""
   },
   {
     "name": "Grisly Spectacle",
@@ -6143,7 +6178,7 @@
       "Enchanted land has \"{1}, {T}: Target creature gets +1/+1 until end of turn for each creature you control. Activate only as a sorcery.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -6296,7 +6331,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Enchanted creature has \"{1}, {T}: Target creature gets +X/+X until end of turn, where X is the number of creatures you control. Activate only as a sorcery.\""
   },
   {
     "name": "Tyrant of Discord",
@@ -6349,7 +6385,7 @@
       "Enchanted land is an Island."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -6498,7 +6534,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Enchanted land is an Island and loses all abilities."
   },
   {
     "name": "Cartel Aristocrat",
@@ -6507,7 +6544,7 @@
       "Sacrifice another creature: ~ gains protection from the color of your choice until end of turn."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -6667,7 +6704,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Sacrifice another creature you control: Choose a color. This creature gains protection from the chosen color until end of turn."
   },
   {
     "name": "Frost Augur",
@@ -6742,7 +6780,7 @@
       "Target player discards X cards at random."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -6857,7 +6895,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target player discards X cards at random."
   },
   {
     "name": "Slumbering Keepguard",
@@ -6866,7 +6905,7 @@
       "{2}{W}: ~ gets +1/+1 until end of turn for each enchantment you control."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -7025,7 +7064,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{2}{W}: This creature gets +X/+X until end of turn, where X is the number of enchantments you control."
   },
   {
     "name": "Desperate Gambit",
@@ -7056,7 +7096,7 @@
       "{G}, {T}, Sacrifice this land: Target creature gets +3/+3 until end of turn. Activate only if there are seven or more cards in your graveyard."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -7207,7 +7247,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{G}, {T}, Sacrifice this land: Activate only if there are seven or more cards in your graveyard. Target creature gets +3/+3 until end of turn."
   },
   {
     "name": "Terrifying Presence",
@@ -7227,7 +7268,7 @@
       "Whenever another creature dies, put a +1/+1 counter on ~. If that creature was a Villain, draw a card."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -7398,7 +7439,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever another creature dies, put a +1/+1 counter on this creature. If the creature that died was a Villain, draw a card."
   },
   {
     "name": "Orchard Warden",
@@ -7440,7 +7482,7 @@
       "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on target creature you control."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -7592,7 +7634,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on target creature you control."
   },
   {
     "name": "Thieving Otter",
@@ -7601,7 +7644,7 @@
       "Whenever this creature deals damage to an opponent, draw a card."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -7743,7 +7786,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever this creature deals damage to an opponent, draw a card."
   },
   {
     "name": "Windrider Wizard",
@@ -7752,7 +7796,7 @@
       "Whenever you cast an instant, sorcery, or Wizard spell, you may draw a card. If you do, discard a card."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -7907,7 +7951,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever you cast an instant, sorcery, or Wizard spell, you may draw a card and then discard a card."
   },
   {
     "name": "Gran Pulse Ochu",
@@ -7916,7 +7961,7 @@
       "{8}: Until end of turn, this creature gets +1/+1 for each permanent card in your graveyard."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -8071,7 +8116,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{8}: This creature gets +X/+X until end of turn, where X is the number of artifact, battle, creature, enchantment, land, and planeswalker cards you own in your graveyard."
   },
   {
     "name": "Kismet",
@@ -8080,7 +8126,7 @@
       "Artifacts, creatures, and lands your opponents control enter tapped."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -8223,7 +8269,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Artifacts, creatures, and lands your opponents control enter the battlefield tapped."
   },
   {
     "name": "Fire Nation Cadets",
@@ -8243,7 +8290,7 @@
       "Whenever a player casts an artifact, instant, or sorcery spell, you create a Mutagen token."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -8414,7 +8461,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever a player casts an artifact, instant, or sorcery spell, create a colorless Mutagen artifact token. It has \"{1}, {T}, Sacrifice this artifact: Activate this ability only as a sorcery. Put a +1/+1 counter on target creature.\""
   },
   {
     "name": "Wild Defiance",
@@ -8456,7 +8504,7 @@
       "Whenever this creature blocks or becomes blocked, target opponent gains control of it."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -8606,7 +8654,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever this creature blocks, target opponent gains control of this creature.\nWhenever this creature becomes blocked, target opponent gains control of this creature."
   },
   {
     "name": "Flamehold Grappler",
@@ -8615,7 +8664,7 @@
       "When this creature enters, copy the next spell you cast this turn when you cast it. You may choose new targets for the copy."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -8760,7 +8809,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this creature enters, the next spell you cast this turn (any spell) has \"When you cast this spell, copy that spell.\""
   },
   {
     "name": "Artificial Evolution",
@@ -8791,7 +8841,7 @@
       "When a creature you control dies, sacrifice this enchantment. If you do, create four 1/1 colorless Spirit creature tokens."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -8952,7 +9002,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever a creature you control dies, sacrifice this enchantment. When you do, create four 1/1 colorless Spirit creature tokens."
   },
   {
     "name": "Ravos, Soultender",
@@ -8993,14 +9044,15 @@
     "lines": [
       "Whenever this creature enters or attacks, you may exile target card from a graveyard. If a creature card is exiled this way, you gain 2 life. If a noncreature card is exiled this way, this creature gets +1/+1 until end of turn."
     ],
-    "rounds": 1,
-    "stage": "compile",
+    "rounds": 2,
+    "stage": "inexpressible",
     "validatorIssues": [
       [
         "override.def.triggers[0].effects[1].condition: event object information requires an owning permanent event scope",
         "override.def.triggers[1].effects[1].condition: event object information requires an owning permanent event scope"
       ]
-    ]
+    ],
+    "inexpressibleReason": "Whether the exiled card was a creature cannot be checked in a trigger (no event-object scope for the graveyard card), and the only graveyard op adds a counter and 1 life instead."
   },
   {
     "name": "Overwhelmed Apprentice",
@@ -9009,7 +9061,7 @@
       "When this creature enters, each opponent mills two cards. Then you scry 2."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -9157,7 +9209,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this creature enters, each opponent mills two cards. Scry 2."
   },
   {
     "name": "Masako the Humorless",
@@ -9177,7 +9230,7 @@
       "Target player draws two cards and loses 2 life. Put a +1/+1 counter on up to one target creature."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -9295,7 +9348,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target player draws two cards and loses 2 life. Put a +1/+1 counter on up to one target creature."
   },
   {
     "name": "Gilt-Leaf Archdruid",
@@ -9347,14 +9401,15 @@
     "lines": [
       "When this creature enters, tap up to one target creature. You gain life equal to that creature's power."
     ],
-    "rounds": 1,
-    "stage": "compile",
+    "rounds": 2,
+    "stage": "inexpressible",
     "validatorIssues": [
       [
         "override.def.triggers[0].effects[0].target: effect target 0 does not reference an ordinary target slot",
         "override.def.triggers[0].effects[1].amount.target: effect target 0 does not reference an ordinary target slot"
       ]
-    ]
+    ],
+    "inexpressibleReason": "Up to one target needs a variable-count slot, which has no tap-each-chosen op and no power-of-chosen-target value for the life gain."
   },
   {
     "name": "Elemental Spectacle",
@@ -9363,7 +9418,7 @@
       "Vivid — Create a number of 5/5 red and green Elemental creature tokens equal to the number of colors among permanents you control. Then you gain life equal to the number of creatures you control."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -9479,7 +9534,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Create a number of 5/5 red and green Elemental creature tokens equal to the number of colors among permanents.\nYou gain life equal to the number of creatures you control."
   },
   {
     "name": "Lantern of the Lost",
@@ -9488,7 +9544,7 @@
       "{1}, {T}, Exile this artifact: Exile all cards from all graveyards, then draw a card."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -9654,7 +9710,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{1}, {T}, Exile this artifact: Exile all graveyards. Draw a card."
   },
   {
     "name": "Start Your Engines",
@@ -9740,7 +9797,7 @@
       "{T}: Put target card from a graveyard on the bottom of its owner's library."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -9898,7 +9955,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{T}: Put target card from a graveyard on the bottom of its owner's library."
   },
   {
     "name": "Reckless Blaze",
@@ -9929,7 +9987,7 @@
       "{T}: Create a Treasure token. Activate only if a creature died this turn."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -10079,7 +10137,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{T}: Create a Treasure token. Activate only if a creature died this turn.\nA Treasure token is a colorless Treasure artifact with \"{T}, Sacrifice this artifact: Add one mana of any color.\""
   },
   {
     "name": "G'raha Tia",
@@ -10088,7 +10147,7 @@
       "The Allagan Eye — Whenever one or more other creatures and/or artifacts you control die, draw a card. This ability triggers only once each turn."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -10245,7 +10304,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever one or more other creatures you control or other artifacts you control die, draw a card. This ability triggers only once each turn."
   },
   {
     "name": "Malanthrope",
@@ -10265,7 +10325,7 @@
       "Put a +1/+1 counter on target creature you control if its power is 4 or greater. Then that creature gets +1/+1 until end of turn and fights target creature you don't control."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -10386,7 +10446,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target creature you control and target creature an opponent controls are chosen. If the power of the creature you control is 4 or greater, put a +1/+1 counter on it. Then the creature you control gets +1/+1 until end of turn. Then the creature you control fights the creature an opponent controls."
   },
   {
     "name": "Jace, Ingenious Mind-Mage",
@@ -10406,7 +10467,7 @@
       "During your turn, ~ has flying."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -10550,7 +10611,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "As long as it's your turn, this creature has flying."
   },
   {
     "name": "Treetop Sentries",
@@ -10581,7 +10643,7 @@
       "{1}{B}, {T}, Sacrifice a creature: Search your library for a Zombie card and a Swamp card, reveal them, put them into your hand, then shuffle."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -10747,7 +10809,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{1}{B}, {T}, Sacrifice another creature you control (this creature may be sacrificed): Search your library for a Zombie card, reveal it, and put it into your hand. Then search your library for a Swamp card, reveal it, and put it into your hand. Then shuffle."
   },
   {
     "name": "Boiling Earth",
@@ -10778,7 +10841,7 @@
       "Whenever you cast a multicolored spell, untap this creature."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -10937,7 +11000,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever you cast a spell that is white and blue, white and black, white and red, white and green, blue and black, blue and red, blue and green, black and red, black and green, or red and green, untap this creature."
   },
   {
     "name": "Dark Apostle",
@@ -10968,7 +11032,7 @@
       "{2}{G}: Exile target creature card from a graveyard, then populate."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -11125,7 +11189,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{2}{G}: Exile target creature card from a graveyard. Populate."
   },
   {
     "name": "Dovescape",
@@ -11145,7 +11210,7 @@
       "Subterranean Assault — Whenever this creature attacks, put a +1/+1 counter on it and a +1/+1 counter on up to one other target attacking creature. That creature can't be blocked this turn."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -11298,7 +11363,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever this creature attacks, put a +1/+1 counter on this creature. Up to one target attacking creature other than this creature gets a +1/+1 counter and can't be blocked."
   },
   {
     "name": "Whirlpool Rider",
@@ -11340,7 +11406,7 @@
       "Flesh Hooks — Creatures you control that entered this turn have double strike."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -11483,7 +11549,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Creatures you control that entered the battlefield this turn have double strike."
   },
   {
     "name": "Haruspex",
@@ -11580,7 +11647,7 @@
       "Whenever this creature enters or attacks, create a Map token."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -11739,7 +11806,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this creature enters, create a Map token.\nWhenever this creature attacks, create a Map token.\nA Map token is a colorless Map artifact with \"{1}, {T}, Sacrifice this artifact: Target creature you control explores. Activate only as a sorcery.\""
   },
   {
     "name": "Reverse the Sands",
@@ -11759,7 +11827,7 @@
       "{2}{G}: Adapt 2."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -11918,7 +11986,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{2}{G}: If this creature has no +1/+1 counters on it, put two +1/+1 counters on it."
   },
   {
     "name": "Sarinth Greatwurm",
@@ -11949,7 +12018,7 @@
       "{T}, Pay 3 life: Flip a coin. If you win the flip, you gain 6 life."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -12111,7 +12180,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{T}, Pay 3 life: Flip a coin. If you win the flip, you gain 6 life. If you lose the flip, nothing happens."
   },
   {
     "name": "Scrapheap",
@@ -12120,7 +12190,7 @@
       "Whenever an artifact or enchantment is put into your graveyard from the battlefield, you gain 1 life."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -12263,7 +12333,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever an artifact or enchantment you own leaves the battlefield and is put into a graveyard, you gain 1 life."
   },
   {
     "name": "Repeal",
@@ -12283,7 +12354,7 @@
       "{1}{R}: ~ becomes a 2/1 red Warrior creature with first strike until end of turn. It's still a land."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -12445,7 +12516,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{1}{R}: Until end of turn, this becomes a 2/1 red Warrior creature with first strike."
   },
   {
     "name": "Peer Pressure",
@@ -12476,7 +12548,7 @@
       "Transfigure {1}{B}{B}"
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -12630,7 +12702,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{1}{B}, Sacrifice this creature: Activate this ability only as a sorcery. Search for a creature card with mana value 4, put it onto the battlefield, then shuffle."
   },
   {
     "name": "Silverquill, the Disputant",
@@ -12650,7 +12723,7 @@
       "Sacrifice a Food: Put a +1/+1 counter on this creature. It gains vigilance until end of turn. Activate only as a sorcery."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -12793,7 +12866,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Sacrifice a Food you control (other than this creature): Put a +1/+1 counter on this creature and it gains vigilance until end of turn. Activate only as a sorcery."
   },
   {
     "name": "Scuttletide",
@@ -12802,7 +12876,7 @@
       "Crabs you control get +1/+1 as long as there are four or more card types among cards in your graveyard."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -12965,7 +13039,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "As long as there are four or more card types among cards in your graveyard, each creature you control that is a Crab gets +1/+1."
   },
   {
     "name": "The Lion-Turtle",
@@ -12985,7 +13060,7 @@
       "Whenever equipped creature attacks, draw a card if you control three or more attacking creatures."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -13149,7 +13224,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever equipped creature attacks, if you control three or more attacking creatures, draw a card."
   },
   {
     "name": "Of One Mind",
@@ -13158,7 +13234,7 @@
       "This spell costs {2} less to cast if you control a Human creature and a non-Human creature."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -13274,7 +13350,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "This spell costs {2} less to cast as long as you control at least one Human creature and at least one creature that isn't a Human."
   },
   {
     "name": "Diligent Farmhand",
@@ -13305,7 +13382,7 @@
       "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -13414,7 +13491,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard."
   },
   {
     "name": "Grey Host Reinforcements",
@@ -13478,7 +13556,7 @@
       "{4}: ~ becomes a 4/2 Golem artifact creature until end of turn. It's still a land."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -13635,7 +13713,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{4}: Until end of turn, this becomes a 4/2 Golem creature."
   },
   {
     "name": "Sinister Waltz",
@@ -13688,7 +13767,7 @@
       "Target creature deals damage equal to its power to itself. If that creature is attacking, ~ deals 2 damage to that creature's controller."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -13802,7 +13881,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target creature deals damage equal to its power to itself.\nIf that creature is attacking, deal 2 damage to that creature's controller."
   },
   {
     "name": "Omnibian",
@@ -13811,7 +13891,7 @@
       "{T}: Target creature becomes a Frog with base power and toughness 3/3 until end of turn."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -13971,7 +14051,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{T}: Target creature becomes a Frog creature with base power and toughness 3/3 until end of turn. It has no keywords."
   },
   {
     "name": "Spitemare",
@@ -13980,7 +14061,7 @@
       "Whenever this creature is dealt damage, it deals that much damage to any target."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -14130,7 +14211,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever this creature is dealt damage, it deals that much damage to any target."
   },
   {
     "name": "Zaffai and the Tempests",
@@ -14150,7 +14232,7 @@
       "When this Equipment enters, attach it to target Dwarf you control."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -14309,7 +14391,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this enters, attach this to target Dwarf creature you control."
   },
   {
     "name": "Red Sun's Zenith",
@@ -14384,7 +14467,7 @@
       "When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -14530,7 +14613,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this creature enters, each opponent takes 1 damage. This creature deals 1 damage to each creature your opponents control."
   },
   {
     "name": "Precursor Golem",
@@ -14649,7 +14733,7 @@
       "Whenever this creature enters or attacks, you lose 1 life and create a Junk token."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -14810,7 +14894,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this creature enters, you lose 1 life and create a Junk token.\nWhenever this creature attacks, you lose 1 life and create a Junk token.\nThe Junk token is an artifact with the following ability: \"{T}, Sacrifice this artifact: Exile the top card of your library. Until end of turn, you may play that card. Activate only as a sorcery.\""
   },
   {
     "name": "Bitterheart Witch",
@@ -14852,7 +14937,7 @@
       "Each creature you control that's a Wolf or a Werewolf enters with an additional +1/+1 counter on it."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -15012,7 +15097,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Each creature you control that is a Wolf or a Werewolf enters with an additional +1/+1 counter on it."
   },
   {
     "name": "Saiba Cryptomancer",
@@ -15021,7 +15107,7 @@
       "Backup 1"
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -15168,7 +15254,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this creature enters, put a +1/+1 counter on target creature and that creature gains hexproof until end of turn."
   },
   {
     "name": "Dream Halls",
@@ -15188,7 +15275,7 @@
       "{T}: Target creature with power 2 or less can't be blocked this turn."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -15344,7 +15431,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{T}: Target creature with power 2 or less can't be blocked until end of turn."
   },
   {
     "name": "Candlestick",
@@ -15353,7 +15441,7 @@
       "Equipped creature gets +1/+1 and has \"Whenever this creature attacks, surveil 2.\""
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -15513,7 +15601,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Equipped creature gets +1/+1.\nEquipped creature has \"Whenever this creature attacks, surveil 2.\""
   },
   {
     "name": "Gauntlet of Might",
@@ -15522,7 +15611,7 @@
       "Whenever a Mountain is tapped for mana, its controller adds an additional {R}."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -15665,7 +15754,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever a Mountain is tapped for mana, it produces an additional {R}."
   },
   {
     "name": "Kitchen Imp",
@@ -15685,7 +15775,7 @@
       "When this Equipment enters, create a 1/1 white Ally creature token, then attach this Equipment to it."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -15842,7 +15932,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this enters, create a 1/1 white Ally creature token, then attach this to it."
   },
   {
     "name": "Courier Bat",
@@ -15862,7 +15953,7 @@
       "Target creature you control gets +1/+1 until end of turn. It deals damage equal to its power to target creature you don't control."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -15978,7 +16069,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target creature you control gets +1/+1 until end of turn. Then target creature an opponent controls is dealt damage equal to the power of the first target creature, with the first target creature as the source of that damage."
   },
   {
     "name": "Forked Bolt",
@@ -15987,7 +16079,7 @@
       "~ deals 2 damage divided as you choose among one or two targets."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -16101,7 +16193,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Choose one or two targets. This spell deals 2 damage divided as you choose among them."
   },
   {
     "name": "Primal Adversary",
@@ -16143,7 +16236,7 @@
       "{2}{W}: Choose a color. Creatures you control gain protection from the chosen color until end of turn. Activate only if this card is in your graveyard."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -16285,7 +16378,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{2}{W}, Activate this ability only from a graveyard: Choose one —\n• Creatures you control gain protection from white until end of turn.\n• Creatures you control gain protection from blue until end of turn.\n• Creatures you control gain protection from black until end of turn.\n• Creatures you control gain protection from red until end of turn.\n• Creatures you control gain protection from green until end of turn."
   },
   {
     "name": "Overwrite the Multiverse",
@@ -16305,7 +16399,7 @@
       "Target creature gets +X/+X until end of turn, where X is the greatest mana value among permanents you control. Untap it."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -16422,7 +16516,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target creature gets +X/+X until end of turn, where X is the greatest mana value among permanents you control. Untap that creature."
   },
   {
     "name": "Noble Benefactor",
@@ -16485,13 +16580,157 @@
     "lines": [
       "Enchanted creature gets +1/+1 and has \"Whenever this creature deals combat damage to a player, investigate.\""
     ],
-    "rounds": 1,
-    "stage": "compile",
+    "rounds": 2,
+    "stage": "back",
     "validatorIssues": [
       [
         "answer is not valid JSON in the required shape: SyntaxError: JSON Parse error: Expected ']'"
       ]
-    ]
+    ],
+    "valid": true,
+    "smoke": [
+      {
+        "ok": true,
+        "scenario": "from-hand",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Curious Inquiry"
+        ],
+        "detail": "game ended",
+        "decisions": 26,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "damage",
+          "decision",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "phaseBegin",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
+      },
+      {
+        "ok": true,
+        "scenario": "on-battlefield",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 22,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "combatDamageStep",
+          "damage",
+          "decision",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "phaseBegin",
+          "sbaAuraDies",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 22,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaAuraDies",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 21,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaAuraDies",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      }
+    ],
+    "textCheck": "model"
   },
   {
     "name": "Exquisite Archangel",
@@ -16522,7 +16761,7 @@
       "{1}, {T}: Target creature you control with power 2 or less can't be blocked this turn."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -16681,7 +16920,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{1}, {T}: Target creature you control with power 2 or less can't be blocked this turn."
   },
   {
     "name": "Epiphany at the Drownyard",
@@ -16701,7 +16941,7 @@
       "Target creature gets +2/+2 until end of turn. If you control three or more creatures, it gets +4/+4 until end of turn instead."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -16819,7 +17059,8 @@
         ]
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Target creature gets +4/+4 until end of turn if you control three or more creatures. Otherwise, that creature gets +2/+2 until end of turn."
   },
   {
     "name": "Hope Estheim",
@@ -16850,7 +17091,7 @@
       "Fabricate 2"
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -16996,7 +17237,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "When this creature enters, choose one.\n• Put two +1/+1 counters on this creature.\n• Create two 1/1 colorless Servo artifact creature tokens."
   },
   {
     "name": "Cerebral Vortex",
@@ -17049,7 +17291,7 @@
       "{T}: Destroy target permanent you own. It can't be regenerated."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -17211,7 +17453,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "{T}: Destroy target permanent you own. It can't be regenerated."
   },
   {
     "name": "Loxodon Gatekeeper",
@@ -17220,7 +17463,7 @@
       "Artifacts, creatures, and lands your opponents control enter tapped."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -17362,7 +17605,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Artifacts, creatures, and lands your opponents control enter the battlefield tapped."
   },
   {
     "name": "Choice of Damnations",
@@ -17393,7 +17637,7 @@
       "Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -17541,7 +17785,8 @@
         "changedGame": false
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever a creature attacks, if you are the defending player, the event player loses 1 life."
   },
   {
     "name": "Djeru, With Eyes Open",
@@ -17572,7 +17817,7 @@
       "Whenever you attack, target creature gets +X/+X until end of turn, where X is the number of attacking creatures."
     ],
     "rounds": 1,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "valid": true,
     "smoke": [
@@ -17731,7 +17976,8 @@
         "changedGame": true
       }
     ],
-    "textCheck": "model"
+    "textCheck": "model",
+    "backTranslation": "Whenever you attack, target creature gets +X/+X until end of turn, where X is the number of attacking creatures."
   },
   {
     "name": "Crackdown",
@@ -17773,12 +18019,13 @@
       "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy."
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "dualcaster-mage~widen-target-n-to-its-kind-drop-filter-",
       "expected": "different"
-    }
+    },
+    "backTranslation": "When this enters, copy target spell. The copy has new targets chosen for it."
   },
   {
     "name": "Goblin Chainwhirler",
@@ -17787,12 +18034,13 @@
       "When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "goblin-chainwhirler",
       "expected": "same"
-    }
+    },
+    "backTranslation": "When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature and planeswalker your opponents control."
   },
   {
     "name": "Horobi, Death's Wail",
@@ -17801,12 +18049,13 @@
       "Whenever a creature becomes the target of a spell or ability, destroy that creature."
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "horobi-death-s-wail",
       "expected": "same"
-    }
+    },
+    "backTranslation": "Whenever a creature becomes targeted, destroy that creature."
   },
   {
     "name": "Horrific Assault",
@@ -17815,12 +18064,13 @@
       "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. If you control an Eldrazi, you gain 3 life."
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "horrific-assault",
       "expected": "same"
-    }
+    },
+    "backTranslation": "Target creature you control deals damage equal to its power to target creature or planeswalker an opponent controls.\nIf you control one or more permanents with subtype Eldrazi, you gain 3 life."
   },
   {
     "name": "Lotus Field",
@@ -17829,12 +18079,13 @@
       "When this land enters, sacrifice two lands."
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "lotus-field",
       "expected": "different"
-    }
+    },
+    "backTranslation": "When this land enters, sacrifice a land. Then sacrifice a land."
   },
   {
     "name": "Minas Morgul, Dark Fortress",
@@ -17843,12 +18094,13 @@
       "{3}{B}, {T}: Put a shadow counter on target creature. For as long as that creature has a shadow counter on it, it's a Wraith in addition to its other types."
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "minas-morgul-dark-fortress",
       "expected": "different"
-    }
+    },
+    "backTranslation": "{3}{B}, {T}: Put a shadow counter on target creature.\nEach creature that has a shadow counter on it is a Wraith in addition to its other creature types."
   },
   {
     "name": "On Thin Ice",
@@ -17857,12 +18109,13 @@
       "Enchant snow land you control"
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "on-thin-ice~widen-target-n-to-its-kind-drop-filter-controller-",
       "expected": "different"
-    }
+    },
+    "backTranslation": "Enchant land.\nThis Aura does nothing."
   },
   {
     "name": "Planar Engineering",
@@ -17871,12 +18124,13 @@
       "Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle."
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "planar-engineering",
       "expected": "different"
-    }
+    },
+    "backTranslation": "Sacrifice a land you control. Sacrifice a land you control. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle."
   },
   {
     "name": "Samut, Vizier of Naktamun",
@@ -17885,12 +18139,13 @@
       "Whenever a creature you control deals combat damage to a player, if that creature entered this turn, draw a card."
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "samut-vizier-of-naktamun~widen-trigger-subject-drop-condition-n-",
       "expected": "different"
-    }
+    },
+    "backTranslation": "Whenever a creature that entered the battlefield this turn deals combat damage to a player, draw a card."
   },
   {
     "name": "The Fifth Doctor",
@@ -17899,11 +18154,12 @@
       "Peaceful Coexistence — At the beginning of your end step, put a +1/+1 counter on each creature you control that didn't attack or enter this turn. Untap those creatures."
     ],
     "rounds": 0,
-    "stage": "back",
+    "stage": "judge",
     "validatorIssues": [],
     "calibration": {
       "id": "the-fifth-doctor",
       "expected": "same"
-    }
+    },
+    "backTranslation": "At the beginning of your end step, put a +1/+1 counter on each creature you control that didn't attack this turn and didn't enter the battlefield this turn. Then untap each of those creatures."
   }
 ]

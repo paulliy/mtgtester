@@ -1,3 +1,1 @@
-Whenever a land you control enters, each opponent loses...
-
 Whenever a land you control enters, each opponent takes 1 damage. If that land is a Mountain, add {R}.

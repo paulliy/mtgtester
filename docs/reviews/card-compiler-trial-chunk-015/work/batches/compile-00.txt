@@ -1,3 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-015/work/prompts/compile/brightmare.r2.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/compile/brightmare.r2.json
-docs/reviews/card-compiler-trial-chunk-015/work/prompts/compile/deathgorge-scavenger.r2.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/compile/deathgorge-scavenger.r2.json
-docs/reviews/card-compiler-trial-chunk-015/work/prompts/compile/curious-inquiry.r2.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/compile/curious-inquiry.r2.json
