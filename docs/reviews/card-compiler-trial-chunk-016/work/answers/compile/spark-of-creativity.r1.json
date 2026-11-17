@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The damage amount is the mana value of the card just exiled, and no Value reads the mana value of a card exiled during resolution, so the optional damage-or-play choice cannot be written."}
