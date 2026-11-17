@@ -1,0 +1,54 @@
+{
+  "name": "Dagger Caster",
+  "oracleId": "f1352a81-6fd5-4c4d-ada4-b81d3a9f74c0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "eachOpponentDamage",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "damageEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control."
+      }
+    ]
+  }
+}

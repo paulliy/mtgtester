@@ -1,0 +1,83 @@
+{
+  "name": "Stinging Cave Crawler",
+  "oracleId": "a9a35c77-637f-4d56-afa2-6c8a4ded4838",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Descend 4 — Whenever this creature attacks, if there are four or more permanent cards in your graveyard, you draw a card and you lose 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "countCardsInZone",
+              "zone": "graveyard",
+              "selector": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Battle"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              },
+              "owner": "you"
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 4
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "loseLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Descend 4 — Whenever this creature attacks, if there are four or more permanent cards in your graveyard, you draw a card and you lose 1 life."
+      }
+    ]
+  }
+}

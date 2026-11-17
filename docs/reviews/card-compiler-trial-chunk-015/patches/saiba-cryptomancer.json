@@ -1,0 +1,42 @@
+{
+  "name": "Saiba Cryptomancer",
+  "oracleId": "15f89b06-5025-4c9f-bf51-e25bc5c2dd6b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Backup 1"
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": 0,
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "grantKeywordUntilEot",
+            "target": 0,
+            "keyword": "hexproof"
+          }
+        ],
+        "description": "Backup 1 (When this creature enters, put a +1/+1 counter on target creature. If that's another creature, it gains the following ability until end of turn.)"
+      }
+    ]
+  }
+}

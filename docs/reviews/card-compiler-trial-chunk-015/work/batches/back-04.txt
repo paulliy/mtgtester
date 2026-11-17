@@ -1,0 +1,10 @@
+docs/reviews/card-compiler-trial-chunk-015/work/prompts/back/dualcaster-mage.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/back/dualcaster-mage.txt
+docs/reviews/card-compiler-trial-chunk-015/work/prompts/back/tide-skimmer.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/back/tide-skimmer.txt
+docs/reviews/card-compiler-trial-chunk-015/work/prompts/back/cut-propulsion.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/back/cut-propulsion.txt
+docs/reviews/card-compiler-trial-chunk-015/work/prompts/back/g-raha-tia.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/back/g-raha-tia.txt
+docs/reviews/card-compiler-trial-chunk-015/work/prompts/back/arlinn-voice-of-the-pack.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/back/arlinn-voice-of-the-pack.txt
+docs/reviews/card-compiler-trial-chunk-015/work/prompts/back/despotic-scepter.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/back/despotic-scepter.txt
+docs/reviews/card-compiler-trial-chunk-015/work/prompts/back/eternal-dragon.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/back/eternal-dragon.txt
+docs/reviews/card-compiler-trial-chunk-015/work/prompts/back/nest-invader.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/back/nest-invader.txt
+docs/reviews/card-compiler-trial-chunk-015/work/prompts/back/horobi-death-s-wail.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/back/horobi-death-s-wail.txt
+docs/reviews/card-compiler-trial-chunk-015/work/prompts/back/scrounge-for-eternity.md	docs/reviews/card-compiler-trial-chunk-015/work/answers/back/scrounge-for-eternity.txt
