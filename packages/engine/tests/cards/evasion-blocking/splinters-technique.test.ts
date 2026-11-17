@@ -1,7 +1,6 @@
 /** Splinter's Technique (evasion-and-blocking batch): scenarios in ../../scenarios/splinters-technique.json. */
 import { describe, expect, it } from 'vitest';
 import {
-  firstDecisionOf,
   loadScenarioFile,
   runScenario,
   scenarioFailures,

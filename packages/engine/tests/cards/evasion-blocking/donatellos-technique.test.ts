@@ -1,7 +1,6 @@
 /** Donatello's Technique (evasion-and-blocking batch): scenarios in ../../scenarios/donatellos-technique.json. */
 import { describe, expect, it } from 'vitest';
 import {
-  firstDecisionOf,
   loadScenarioFile,
   runScenario,
   scenarioFailures,
