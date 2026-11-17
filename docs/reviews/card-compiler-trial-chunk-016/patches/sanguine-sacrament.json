@@ -1,0 +1,31 @@
+{
+  "name": "Sanguine Sacrament",
+  "oracleId": "851be993-35d7-4566-96a0-3fe84d17979e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You gain twice X life. Put ~ on the bottom of its owner's library."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "times",
+            "of": {
+              "kind": "xValue"
+            },
+            "n": 2
+          }
+        },
+        {
+          "op": "resolvingSpellToLibraryBottom"
+        }
+      ],
+      "description": "You gain twice X life. Put Sanguine Sacrament on the bottom of its owner's library."
+    }
+  }
+}

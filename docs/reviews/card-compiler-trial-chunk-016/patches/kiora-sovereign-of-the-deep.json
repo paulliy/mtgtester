@@ -1,0 +1,59 @@
+{
+  "name": "Kiora, Sovereign of the Deep",
+  "oracleId": "95df54e2-0196-4e54-8144-de5982ce07f5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a Kraken, Leviathan, Octopus, or Serpent spell from your hand, look at the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value less than X from among them without paying its mana cost. Put the rest on the bottom of your library in a random order."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "castFrom": "hand",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Kraken"
+              },
+              {
+                "kind": "subtype",
+                "value": "Leviathan"
+              },
+              {
+                "kind": "subtype",
+                "value": "Octopus"
+              },
+              {
+                "kind": "subtype",
+                "value": "Serpent"
+              }
+            ]
+          }
+        },
+        "targets": [],
+        "effects": [
+          {
+            "op": "lookAtTopNCastOneFree",
+            "count": {
+              "kind": "spellManaValue"
+            },
+            "maxManaValue": {
+              "kind": "plus",
+              "of": {
+                "kind": "spellManaValue"
+              },
+              "n": -1
+            }
+          }
+        ],
+        "description": "Whenever you cast a Kraken, Leviathan, Octopus, or Serpent spell from your hand, look at the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value less than X from among them without paying its mana cost. Put the rest on the bottom of your library in a random order."
+      }
+    ]
+  }
+}

@@ -1,8 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-016/work/prompts/compile/sunpearl-kirin.r1.md	docs/reviews/card-compiler-trial-chunk-016/work/answers/compile/sunpearl-kirin.r1.json
-docs/reviews/card-compiler-trial-chunk-016/work/prompts/compile/reap-the-past.r1.md	docs/reviews/card-compiler-trial-chunk-016/work/answers/compile/reap-the-past.r1.json
-docs/reviews/card-compiler-trial-chunk-016/work/prompts/compile/faith-s-fetters.r1.md	docs/reviews/card-compiler-trial-chunk-016/work/answers/compile/faith-s-fetters.r1.json
-docs/reviews/card-compiler-trial-chunk-016/work/prompts/compile/displacer-beast.r1.md	docs/reviews/card-compiler-trial-chunk-016/work/answers/compile/displacer-beast.r1.json
-docs/reviews/card-compiler-trial-chunk-016/work/prompts/compile/tempting-wurm.r1.md	docs/reviews/card-compiler-trial-chunk-016/work/answers/compile/tempting-wurm.r1.json
-docs/reviews/card-compiler-trial-chunk-016/work/prompts/compile/political-triumph.r1.md	docs/reviews/card-compiler-trial-chunk-016/work/answers/compile/political-triumph.r1.json
-docs/reviews/card-compiler-trial-chunk-016/work/prompts/compile/popular-egotist.r1.md	docs/reviews/card-compiler-trial-chunk-016/work/answers/compile/popular-egotist.r1.json
-docs/reviews/card-compiler-trial-chunk-016/work/prompts/compile/pippin-s-bravery.r1.md	docs/reviews/card-compiler-trial-chunk-016/work/answers/compile/pippin-s-bravery.r1.json

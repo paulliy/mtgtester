@@ -1,0 +1,49 @@
+{
+  "name": "Dragon-Scarred Bear",
+  "oracleId": "2f6f49a4-f2ea-4147-a6d3-69cf875c302e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{G}: Regenerate this creature. Activate only if creatures you control have total power 8 or greater."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "condition": {
+          "kind": "totalCreaturePower",
+          "scope": "you",
+          "cmp": ">=",
+          "n": 8
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "regenerate",
+              "target": "source"
+            }
+          ],
+          "description": "{1}{G}: Regenerate this creature. Activate only if creatures you control have total power 8 or greater."
+        }
+      }
+    ]
+  }
+}
