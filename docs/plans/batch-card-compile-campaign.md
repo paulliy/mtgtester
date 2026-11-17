@@ -14,9 +14,11 @@ measured (see [Stage 0 status](#stage-0-status)). Thirteen chunks are done:
 [010](../reviews/card-compiler-trial-chunk-010/README.md),
 [011](../reviews/card-compiler-trial-chunk-011/README.md),
 [012](../reviews/card-compiler-trial-chunk-012/README.md) and
-[013](../reviews/card-compiler-trial-chunk-013/README.md). With twelve cards retired after review
-or fuzzing, 1,016 are promoted and the pool models 4,734 of 8,972. The audits found 33 wrong
-patches among the 977 that every automatic check passed (about 3.4%), so the audit stays at every card (decided
+[013](../reviews/card-compiler-trial-chunk-013/README.md). With seventeen cards retired after review
+or fuzzing (listed in `docs/reviews/compiled-card-retired.json`, which `promote` refuses), 1,011 are
+promoted and the pool models 4,729 of 8,972. The audits found 33 wrong patches among the 977 that
+every automatic check passed (about 3.4%), and a PR review on 2026-11-16 found five more
+(Electroduplicate, High Score, Abzan Beastmaster, Genesis and Giott), so the audit stays at every card (decided
 2026-11-14): the ADR 0047 rule that lets audits drop to a sample is suspended until validator
 rules close the engine gaps behind those escapes. Chunk 004 tripped the calibration stop rule
 twice on one case, Urza's Power Plant; the owner decided to drop that case, since it tests Magic
