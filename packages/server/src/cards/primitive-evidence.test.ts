@@ -460,7 +460,7 @@ describe('primitive evidence and eligibility', { timeout: 60_000 }, () => {
       manaCost: '{0}',
       oracleText: 'You gain 3 life.',
     });
-    const definition = interpretCard(card);
+    const definition = structuredClone(interpretCard(card));
     if (variant === 'experimental')
       definition.spellAbility!.effects = [{ op: 'mill', count: { kind: 'const', n: 1 } }];
     if (variant === 'outsideScope')

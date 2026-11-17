@@ -155,6 +155,18 @@ export const APPENDABLE_LISTS = [
  */
 const OVERRIDES = new Map<OracleId, CardOverride>();
 
+/**
+ * Bumped on every change to `OVERRIDES`. The per-process definition cache (`definition-cache.ts`)
+ * drops what it holds when this moves, so a test that registers or unregisters an override at
+ * runtime never reads a definition interpreted before the change.
+ */
+let registryGeneration = 0;
+
+/** The override registry's generation: it changes whenever a registration is added or removed. */
+export function overrideRegistryGeneration(): number {
+  return registryGeneration;
+}
+
 /** Differing duplicate registrations that would otherwise be silently resolved last-write-wins. */
 export const conflictingRegistrations: {
   oracleId: OracleId;
@@ -293,6 +305,7 @@ export function registerOverride(override: CardOverride): void {
     });
   }
   OVERRIDES.set(override.oracleId, override);
+  registryGeneration++;
 }
 
 /** Exact duplicate data is harmless; any differing second definition needs explicit resolution. */
@@ -404,6 +417,7 @@ export function replaceCard(
     if (OVERRIDES.has(id)) {
       explicitReplacements.push({ oracleId: id, name, reason });
       OVERRIDES.set(id, override);
+      registryGeneration++;
     } else {
       registerOverride(override);
     }
@@ -456,7 +470,7 @@ export function listOverrides(): CardOverride[] {
 
 /** Test seam: drop a registration so a fixture override cannot leak between tests. */
 export function unregisterOverride(oracleId: OracleId): void {
-  OVERRIDES.delete(oracleId);
+  if (OVERRIDES.delete(oracleId)) registryGeneration++;
 }
 
 /** The quoted body of a reason like `unrecognized rules text: "…"`, or null. */

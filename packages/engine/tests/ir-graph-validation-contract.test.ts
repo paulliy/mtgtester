@@ -24,7 +24,7 @@ describe('bounded authoring IR graph contracts', () => {
   );
 
   it('rejects cycles in a merged definition and contains its executable claim', () => {
-    const definition = interpretCard(bear());
+    const definition = structuredClone(interpretCard(bear()));
     const cycle: unknown[] = [];
     cycle.push(cycle);
     Object.assign(definition, { triggers: cycle });

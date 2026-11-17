@@ -510,7 +510,7 @@ describe('white-black-control discard-choice cards — pinned Oracle', () => {
   });
 
   it('structurally rejects player-reference and discard-scope mismatches', () => {
-    const malformedTarget = interpretCard(card('Vicious Rumors'));
+    const malformedTarget = structuredClone(interpretCard(card('Vicious Rumors')));
     malformedTarget.spellAbility = {
       kind: 'spell',
       targets: [{ kind: 'creature' }],
@@ -522,7 +522,7 @@ describe('white-black-control discard-choice cards — pinned Oracle', () => {
       ]),
     );
 
-    const malformedScope = interpretCard(card('Vicious Rumors'));
+    const malformedScope = structuredClone(interpretCard(card('Vicious Rumors')));
     malformedScope.spellAbility = {
       kind: 'spell',
       targets: [],
@@ -538,7 +538,7 @@ describe('white-black-control discard-choice cards — pinned Oracle', () => {
       'discard requires all players or opponents',
     );
 
-    const misplacedEventPlayer = interpretCard(card('Vicious Rumors'));
+    const misplacedEventPlayer = structuredClone(interpretCard(card('Vicious Rumors')));
     misplacedEventPlayer.spellAbility = {
       kind: 'spell',
       targets: [],
