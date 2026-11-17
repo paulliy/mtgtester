@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Escapes with two +1/+1 counters on it' needs counters conditional on the escape cast; entersWithCounters is unconditional, and a trigger on escape would put the counters on after entering rather than as it enters."}

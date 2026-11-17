@@ -1,0 +1,1 @@
+{1}: Regenerate target creature you control with subtype Golem.

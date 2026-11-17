@@ -1,0 +1,31 @@
+{
+  "name": "Linvala, Keeper of Silence",
+  "oracleId": "88dadc31-dfac-41b3-bf2a-65fa89e3c16d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Activated abilities of creatures your opponents control can't be activated."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "cantActivateAbilities",
+        "who": "opponents",
+        "yourTurnOnly": false,
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "opponents"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

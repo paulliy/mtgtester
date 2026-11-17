@@ -1,0 +1,1 @@
+Whenever this creature deals combat damage to a player, create a colorless Junk artifact token with "{T}, Sacrifice this artifact: Exile the top card of your library. Until end of turn, you may play that card. Activate only as a sorcery."

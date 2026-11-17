@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect grants the exiled card a cast permission lasting until the end of the controller's next turn with any-color mana spending; the closest ops (exileAndCastNextUpkeep, exileLibraryTop grantCastUntilEot) use different durations."}

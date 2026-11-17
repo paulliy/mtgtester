@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No rule static says this creature can't be blocked except by creatures with flying: setCantBeBlocked removes all blocking and cantBlockCreatures only compares power."}

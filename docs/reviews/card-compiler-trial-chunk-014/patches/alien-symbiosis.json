@@ -1,0 +1,18 @@
+{
+  "name": "Alien Symbiosis",
+  "oracleId": "19504e19-2886-4d28-a813-b798a9a446a2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may cast this card from your graveyard by discarding a card in addition to paying its other costs."
+  ],
+  "compose": "append",
+  "def": {
+    "castFromGraveyard": true,
+    "castFromGraveyardCosts": [
+      {
+        "kind": "discardCard",
+        "count": 1
+      }
+    ]
+  }
+}

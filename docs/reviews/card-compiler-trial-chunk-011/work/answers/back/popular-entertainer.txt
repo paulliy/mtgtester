@@ -1,0 +1,1 @@
+Each creature you own that is a commander has "Whenever one or more creatures you control deal combat damage to a player, goad target creature that player controls."

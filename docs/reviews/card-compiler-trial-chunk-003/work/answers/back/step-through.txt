@@ -1,0 +1,1 @@
+Choose two target creatures, the second different from the first. Return each of them to its owner's hand.

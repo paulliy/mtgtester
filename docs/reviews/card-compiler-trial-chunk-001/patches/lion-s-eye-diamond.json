@@ -1,0 +1,47 @@
+{
+  "name": "Lion's Eye Diamond",
+  "oracleId": "ee6099b0-fb1f-42f1-b862-7708c6e36d05",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Discard your hand, Sacrifice this artifact: Add three mana of any one color. Activate only as an instant."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ],
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ],
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ],
+        "linked": true,
+        "costs": [
+          {
+            "kind": "discardHand"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ]
+      }
+    ]
+  }
+}

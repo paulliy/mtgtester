@@ -1,0 +1,56 @@
+{
+  "name": "Ranger of Eos",
+  "oracleId": "b9c8b929-f3ee-457f-9cbc-9de18eb69dc5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, you may search your library for up to two creature cards with mana value 1 or less, reveal them, put them into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "manaValueAtMost",
+                  "n": 1
+                }
+              ]
+            },
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "count": {
+              "kind": "const",
+              "n": 2
+            },
+            "reveal": true
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "When this creature enters, you may search your library for up to two creature cards with mana value 1 or less, reveal them, put them into your hand, then shuffle."
+      }
+    ]
+  }
+}

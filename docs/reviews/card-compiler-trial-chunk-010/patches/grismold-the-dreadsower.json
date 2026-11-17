@@ -1,0 +1,69 @@
+{
+  "name": "Grismold, the Dreadsower",
+  "oracleId": "d0d28e2c-416e-432c-b4bf-07f6302c52ea",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your end step, each player creates a 1/1 green Plant creature token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Plant",
+              "typeLine": "Creature — Plant",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Plant"
+              ],
+              "colors": [
+                "G"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "eachOpponentCreatesTokens",
+            "spec": {
+              "name": "Plant",
+              "typeLine": "Creature — Plant",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Plant"
+              ],
+              "colors": [
+                "G"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "At the beginning of your end step, each player creates a 1/1 green Plant creature token."
+      }
+    ]
+  }
+}

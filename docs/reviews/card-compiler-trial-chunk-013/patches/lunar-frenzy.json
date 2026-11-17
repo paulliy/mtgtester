@@ -1,0 +1,41 @@
+{
+  "name": "Lunar Frenzy",
+  "oracleId": "d95fc2cb-5e49-4a22-a93e-d21cf64dcd84",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control gets +X/+0 and gains first strike and trample until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": {
+            "kind": "xValue"
+          },
+          "toughness": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "first strike"
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "trample"
+        }
+      ],
+      "description": "Target creature you control gets +X/+0 and gains first strike and trample until end of turn."
+    }
+  }
+}

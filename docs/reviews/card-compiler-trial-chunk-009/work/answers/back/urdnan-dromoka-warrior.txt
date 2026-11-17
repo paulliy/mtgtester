@@ -1,0 +1,1 @@
+Whenever you attack, target attacking creature you control with a +1/+1 counter on it gets double strike until end of turn if it has two or more +1/+1 counters on it. Otherwise, that creature gains first strike until end of turn.

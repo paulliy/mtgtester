@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A sacrifices the token at the beginning of the next end step. Text B sacrifices it at the beginning of 'the end step', which is the current end step if one has not begun yet. If the ability is activated during an end step, the timing differs."]}

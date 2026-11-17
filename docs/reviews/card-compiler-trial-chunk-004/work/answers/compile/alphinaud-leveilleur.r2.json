@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The Partner-with trigger is expressible, but once any non-empty patch is registered the interpreter stops stripping the generic label from the sibling line \"Eukrasia — Whenever you cast your second spell each turn, draw a card.\", so that already-modeled line is reported as unrecognized and no patch field can claim it."}

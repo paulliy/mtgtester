@@ -1,0 +1,33 @@
+{
+  "name": "Chivalric Alliance",
+  "oracleId": "9b8d9236-0452-4509-aca4-a53a399fff85",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you attack with two or more creatures, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attackDeclared",
+          "attacker": "you",
+          "minAttackers": 2
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you attack with two or more creatures, draw a card."
+      }
+    ]
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "name": "Pyromancer's Goggles",
+  "oracleId": "f76bcbfe-483f-4e63-8425-76feca1abf3e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Add {R}. When that mana is spent to cast a red instant or sorcery spell, copy that spell and you may choose new targets for the copy."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "R"
+          ]
+        ],
+        "spendTrigger": {
+          "when": {
+            "purposes": [
+              "castSpell"
+            ],
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "color",
+                  "value": "R"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Instant"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Sorcery"
+                    }
+                  ]
+                }
+              ]
+            },
+            "description": "a red instant or sorcery spell"
+          },
+          "ability": {
+            "kind": "triggered",
+            "targets": [],
+            "effects": [
+              {
+                "op": "copyCastSpell"
+              }
+            ],
+            "description": "When that mana is spent to cast a red instant or sorcery spell, copy that spell and you may choose new targets for the copy."
+          }
+        }
+      }
+    ]
+  }
+}

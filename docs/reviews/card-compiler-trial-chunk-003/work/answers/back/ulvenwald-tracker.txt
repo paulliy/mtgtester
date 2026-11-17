@@ -1,0 +1,1 @@
+{1}{G}, {T}: Target creature you control fights target creature other than the first target.

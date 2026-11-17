@@ -1,0 +1,50 @@
+{
+  "name": "Fateful Handoff",
+  "oracleId": "1ecde43f-e418-437b-8b8f-efe120f96cb3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Draw cards equal to the mana value of target artifact or creature you control. An opponent gains control of that permanent."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "controller": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "draw",
+          "count": {
+            "kind": "manaValueOfTarget",
+            "target": 0
+          }
+        },
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "recipient": {
+            "chooseOpponent": true
+          }
+        }
+      ],
+      "description": "Draw cards equal to the mana value of target artifact or creature you control. An opponent gains control of that permanent."
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "name": "Snarling Gorehound",
+  "oracleId": "d2b1c5eb-06f0-4ec4-9446-791faac099a7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another creature you control with power 2 or less enters, surveil 1."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "powerAtMost",
+                  "n": 2
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "surveil",
+            "count": 1
+          }
+        ],
+        "description": "Whenever another creature you control with power 2 or less enters, surveil 1."
+      }
+    ]
+  }
+}

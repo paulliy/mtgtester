@@ -1,0 +1,80 @@
+{
+  "name": "Gather the Townsfolk",
+  "oracleId": "ff45677d-977e-4ef5-859c-52393ed71a6c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If you have 5 or less life, create five of those tokens instead."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Human",
+            "typeLine": "Creature — Human",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Human"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          },
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "lifeTotal",
+              "scope": "you"
+            },
+            "cmp": "<=",
+            "right": {
+              "kind": "const",
+              "n": 5
+            }
+          },
+          "then": [
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Human",
+                "typeLine": "Creature — Human",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Human"
+                ],
+                "colors": [
+                  "W"
+                ],
+                "power": 1,
+                "toughness": 1
+              },
+              "count": {
+                "kind": "const",
+                "n": 3
+              }
+            }
+          ],
+          "else": []
+        }
+      ],
+      "description": "Fateful hour — If you have 5 or less life, create five of those tokens instead."
+    }
+  }
+}

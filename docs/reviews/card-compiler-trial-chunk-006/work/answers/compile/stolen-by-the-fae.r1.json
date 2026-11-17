@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target filter 'creature with mana value X' needs a Selector equal to the announced X, but manaValueAtMost and manaValueAtLeast take only fixed numbers."}

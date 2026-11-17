@@ -1,0 +1,1 @@
+You may cast this spell by paying {U} and returning an unblocked attacker to its owner's hand rather than paying its mana cost. You may cast it only during your turn, during the declare blockers step, and it has instant timing. It has no other effect.

@@ -1,0 +1,59 @@
+{
+  "name": "Vampire Gourmand",
+  "oracleId": "3386414c-32fa-40ae-9b30-dab976a158c1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, you may sacrifice another creature. If you do, draw a card and this creature can't be blocked this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "then": [
+              {
+                "op": "draw",
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              },
+              {
+                "op": "cantBeBlockedUntilEot",
+                "target": "source"
+              }
+            ]
+          }
+        ],
+        "description": "Whenever this creature attacks, you may sacrifice another creature. If you do, draw a card and this creature can't be blocked this turn."
+      }
+    ]
+  }
+}

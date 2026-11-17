@@ -1,0 +1,84 @@
+{
+  "name": "Finale of Glory",
+  "oracleId": "68273453-1059-4eab-8c27-5d96f998f3b1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Create X 2/2 white Soldier creature tokens with vigilance. If X is 10 or more, also create X 4/4 white Angel creature tokens with flying and vigilance."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Soldier",
+            "typeLine": "Token Creature — Soldier",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Soldier"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "keywords": [
+              "vigilance"
+            ]
+          },
+          "count": {
+            "kind": "xValue"
+          }
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "xValue"
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Angel",
+                "typeLine": "Token Creature — Angel",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Angel"
+                ],
+                "colors": [
+                  "W"
+                ],
+                "power": 4,
+                "toughness": 4,
+                "keywords": [
+                  "flying",
+                  "vigilance"
+                ]
+              },
+              "count": {
+                "kind": "xValue"
+              }
+            }
+          ],
+          "else": []
+        }
+      ],
+      "description": "Create X 2/2 white Soldier creature tokens with vigilance. If X is 10 or more, also create X 4/4 white Angel creature tokens with flying and vigilance."
+    }
+  }
+}

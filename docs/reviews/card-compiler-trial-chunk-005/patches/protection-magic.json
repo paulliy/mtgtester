@@ -1,0 +1,32 @@
+{
+  "name": "Protection Magic",
+  "oracleId": "1380f0cc-e875-46ec-a802-c6684bf3965c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put a shield counter on each of up to three target creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "count": {
+            "min": 0,
+            "max": 3
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "putCountersEachChosen",
+          "targetSlot": 0,
+          "counter": "shield",
+          "count": 1
+        }
+      ],
+      "description": "Put a shield counter on each of up to three target creatures."
+    }
+  }
+}

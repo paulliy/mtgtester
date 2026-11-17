@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The controller must choose a creature type as this spell resolves, and the schema's chosen-type option (entersChoosingOption) exists only for permanents as they enter, not for a resolving spell."}

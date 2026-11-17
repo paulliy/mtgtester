@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"artifactOrEnchantment"}],"effects":[{"op":"destroy","target":0},{"op":"dealDamage","target":{"controllerOf":0},"amount":{"kind":"const","n":2}}],"description":"Destroy target artifact or enchantment. Destructive Revelry deals 2 damage to that permanent's controller."}}}

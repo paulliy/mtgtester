@@ -1,0 +1,100 @@
+{
+  "name": "Fateful Absence",
+  "oracleId": "35bba442-1aec-4d33-b502-4c580d61644b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target creature or planeswalker. Its controller investigates."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Planeswalker"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "createTokenForPlayer",
+          "target": {
+            "controllerOf": 0
+          },
+          "spec": {
+            "name": "Clue",
+            "typeLine": "Artifact — Clue",
+            "types": [
+              "Artifact"
+            ],
+            "subtypes": [
+              "Clue"
+            ],
+            "colors": [],
+            "power": null,
+            "toughness": null,
+            "activatedAbilities": [
+              {
+                "costs": [
+                  {
+                    "kind": "mana",
+                    "cost": {
+                      "generic": 2,
+                      "colored": {
+                        "W": 0,
+                        "U": 0,
+                        "B": 0,
+                        "R": 0,
+                        "G": 0
+                      },
+                      "colorless": 0
+                    }
+                  },
+                  {
+                    "kind": "sacrificeSelf"
+                  }
+                ],
+                "timing": "any",
+                "ability": {
+                  "kind": "activated",
+                  "targets": [],
+                  "effects": [
+                    {
+                      "op": "draw",
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      }
+                    }
+                  ],
+                  "description": "{2}, Sacrifice this token: Draw a card."
+                }
+              }
+            ]
+          },
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        },
+        {
+          "op": "destroy",
+          "target": 0
+        }
+      ],
+      "description": "Destroy target creature or planeswalker. Its controller investigates."
+    }
+  }
+}

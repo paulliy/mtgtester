@@ -1,0 +1,56 @@
+{
+  "name": "Sylvan Advocate",
+  "oracleId": "beaf7a85-426a-4a33-80c8-33ad01614ad3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as you control six or more lands, this creature and land creatures you control get +2/+2."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "self"
+            },
+            {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 2
+        },
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "type",
+            "value": "Land"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 6
+        }
+      }
+    ]
+  }
+}

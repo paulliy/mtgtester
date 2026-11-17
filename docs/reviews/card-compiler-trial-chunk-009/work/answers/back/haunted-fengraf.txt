@@ -1,0 +1,1 @@
+{3}, {T}, Sacrifice this land: Target creature card in your graveyard, chosen at random as this ability is put onto the stack, is put into your hand.

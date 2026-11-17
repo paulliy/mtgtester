@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The discard count is the damaged player's poison counter total, and no Value reads a player's poison counters (countersOnTarget reads permanents)."}

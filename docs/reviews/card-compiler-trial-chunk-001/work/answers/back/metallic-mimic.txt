@@ -1,0 +1,1 @@
+This creature is the chosen creature type in addition to its other types.

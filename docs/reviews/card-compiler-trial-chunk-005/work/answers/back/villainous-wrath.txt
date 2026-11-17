@@ -1,0 +1,2 @@
+Target opponent loses life equal to the number of creatures that player controls.
+Destroy each creature.

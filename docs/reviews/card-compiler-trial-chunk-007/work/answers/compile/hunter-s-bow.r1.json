@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The only variable-count damage op (dealDamageEachChosen) has no source field, so the damage would come from the Equipment rather than the equipped creature that deals it."}

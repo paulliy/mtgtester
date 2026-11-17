@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"const","n":1},"coloredAmount":{"generic":0,"colored":{"W":0,"U":1,"B":0,"R":0,"G":0},"colorless":0},"targetFilter":{"kind":"anyOf","of":[{"kind":"type","value":"Instant"},{"kind":"type","value":"Sorcery"}]},"selfOnly":true}]}}

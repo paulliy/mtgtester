@@ -1,0 +1,1 @@
+{T}: Add {G} for each permanent with the Elf subtype on the battlefield, regardless of controller.

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":2}},{"op":"loseLife","amount":{"kind":"const","n":2}},{"op":"mill","count":{"kind":"const","n":2}}],"description":"You draw two cards, lose 2 life, then mill two cards."}}}

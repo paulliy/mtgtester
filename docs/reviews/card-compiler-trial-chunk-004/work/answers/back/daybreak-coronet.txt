@@ -1,0 +1,2 @@
+Enchant creature that is enchanted.
+This Aura has one target, a creature that is enchanted. It has no effects and does nothing.

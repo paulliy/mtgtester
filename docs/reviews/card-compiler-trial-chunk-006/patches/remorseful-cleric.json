@@ -1,0 +1,36 @@
+{
+  "name": "Remorseful Cleric",
+  "oracleId": "c40bc9f6-2b72-4ae1-b912-50075af59628",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice this creature: Exile target player's graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "player"
+            }
+          ],
+          "effects": [
+            {
+              "op": "exileTargetPlayerGraveyard",
+              "target": 0
+            }
+          ],
+          "description": "Sacrifice this creature: Exile target player's graveyard."
+        }
+      }
+    ]
+  }
+}

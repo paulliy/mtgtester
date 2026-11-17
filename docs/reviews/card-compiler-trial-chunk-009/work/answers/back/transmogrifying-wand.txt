@@ -1,0 +1,1 @@
+{1}, {T}, Remove a charge counter from this: Destroy target creature. Its controller creates a white Ox creature token with power 2 and toughness 4. Activate only as a sorcery.

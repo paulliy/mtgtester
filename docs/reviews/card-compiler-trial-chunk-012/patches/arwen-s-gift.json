@@ -1,0 +1,40 @@
+{
+  "name": "Arwen's Gift",
+  "oracleId": "13ac12db-d04b-4211-90df-886e1c597e8f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast if you control two or more legendary creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "selfOnly": true,
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "supertype",
+                "value": "Legendary"
+              }
+            ]
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 2
+        }
+      }
+    ]
+  }
+}

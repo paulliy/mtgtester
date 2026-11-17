@@ -1,0 +1,29 @@
+{
+  "name": "Squee, Goblin Nabob",
+  "oracleId": "0ef760f4-bbec-4735-8d60-fc24d973452a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, you may return this card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "returnSelfFromGraveyardToHand"
+          }
+        ],
+        "functionsInGraveyard": true,
+        "description": "At the beginning of your upkeep, you may return this card from your graveyard to your hand."
+      }
+    ]
+  }
+}

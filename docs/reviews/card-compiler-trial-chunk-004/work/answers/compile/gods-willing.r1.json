@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","controller":"you"}],"effects":[{"op":"grantChosenColorProtectionUntilEot","target":0},{"op":"scry","count":1}],"description":"Target creature you control gains protection from the color of your choice until end of turn."}}}

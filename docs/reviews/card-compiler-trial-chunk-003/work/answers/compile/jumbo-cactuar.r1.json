@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"attacks","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"pumpUntilEot","target":"source","power":9999,"toughness":0}],"description":"10,000 Needles — Whenever this creature attacks, it gets +9999/+0 until end of turn."}]}}

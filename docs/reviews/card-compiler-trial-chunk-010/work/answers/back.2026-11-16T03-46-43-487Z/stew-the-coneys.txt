@@ -1,0 +1,2 @@
+Target creature you control deals damage equal to its power to target creature an opponent controls.
+Create a Food token. Food tokens are Artifact — Food artifacts with "{2}, {T}, Sacrifice this artifact: You gain 3 life."

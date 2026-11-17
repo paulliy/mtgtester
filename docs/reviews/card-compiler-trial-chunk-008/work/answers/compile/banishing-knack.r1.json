@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The granted ability needs a {T} cost, but grantAbilityUntilEot carries a bare Ability with no cost field, and no effect grants an activated ability with a cost until end of turn."}

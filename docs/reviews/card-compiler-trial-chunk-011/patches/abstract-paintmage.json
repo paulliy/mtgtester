@@ -1,0 +1,56 @@
+{
+  "name": "Abstract Paintmage",
+  "oracleId": "bc899d5c-0a91-4f19-a3e4-3078ae966110",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your first main phase, add {U}{R}. Spend this mana only to cast instant and sorcery spells."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "precombatMain",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "addMana",
+            "amount": {
+              "kind": "const",
+              "n": 2
+            },
+            "colors": [],
+            "fixedSymbols": [
+              "U",
+              "R"
+            ],
+            "restriction": {
+              "purposes": [
+                "castSpell"
+              ],
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Instant"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Sorcery"
+                  }
+                ]
+              },
+              "description": "cast instant and sorcery spells"
+            }
+          }
+        ],
+        "description": "At the beginning of your first main phase, add {U}{R}. Spend this mana only to cast instant and sorcery spells."
+      }
+    ]
+  }
+}

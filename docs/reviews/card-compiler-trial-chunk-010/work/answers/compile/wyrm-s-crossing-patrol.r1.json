@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Myriad needs a per-opponent token copy that enters tapped and attacking that opponent (or their planeswalker) and is exiled at end of combat; createTokenCopyOf has no attacking form and its sacrifice timing is only the end step."}

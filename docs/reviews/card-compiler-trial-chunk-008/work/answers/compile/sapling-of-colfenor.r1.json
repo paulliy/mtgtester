@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The attack trigger needs to reveal the top card and branch on its type, then gain life equal to that card's toughness and lose life equal to its power, and no schema value reads the revealed card's toughness or power."}

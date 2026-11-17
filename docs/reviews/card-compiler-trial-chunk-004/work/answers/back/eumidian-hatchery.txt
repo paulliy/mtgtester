@@ -1,0 +1,1 @@
+When this land leaves the battlefield and is put into a graveyard, create a number of tokens equal to the number of hatchling counters on this land. Each token is a 1/1 black Insect creature with flying.

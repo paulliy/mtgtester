@@ -1,0 +1,39 @@
+{
+  "name": "Mortuary Mire",
+  "oracleId": "1b3fb20a-e090-4286-9c03-6b71c27c45be",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this land enters, you may put target creature card from your graveyard on top of your library."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [
+          {
+            "kind": "cardInGraveyard",
+            "filter": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "graveyardToLibraryTop",
+            "target": 0
+          }
+        ],
+        "description": "When this land enters, you may put target creature card from your graveyard on top of your library."
+      }
+    ]
+  }
+}

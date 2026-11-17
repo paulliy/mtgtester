@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The trigger fires on combat damage dealt to a player or to a battle, and no trigger head in the schema fires on combat damage dealt to a battle, so the battle half cannot be written."}

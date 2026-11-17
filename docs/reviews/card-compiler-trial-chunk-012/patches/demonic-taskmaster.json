@@ -1,0 +1,45 @@
+{
+  "name": "Demonic Taskmaster",
+  "oracleId": "162e45f5-edb8-4a13-acdc-8980ce5ba8ac",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, sacrifice a creature other than this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "other"
+                }
+              ]
+            },
+            "then": []
+          }
+        ],
+        "description": "At the beginning of your upkeep, sacrifice a creature other than this creature."
+      }
+    ]
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "name": "Inquisitorial Rosette",
+  "oracleId": "4a3a25ae-61f5-4bcd-ae3d-4b31feaa83d8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Inquisition Agents — Whenever equipped creature attacks, create a 2/2 white Astartes Warrior creature token with vigilance that's attacking. Then attacking creatures gain menace until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenAttacking",
+            "spec": {
+              "name": "Astartes Warrior",
+              "typeLine": "Token Creature — Astartes Warrior",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Astartes",
+                "Warrior"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 2,
+              "toughness": 2,
+              "keywords": [
+                "vigilance"
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "combatRole",
+                  "role": "attacking"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "keyword": "menace"
+          }
+        ],
+        "description": "Inquisition Agents — Whenever equipped creature attacks, create a 2/2 white Astartes Warrior creature token with vigilance that's attacking. Then attacking creatures gain menace until end of turn."
+      }
+    ]
+  }
+}

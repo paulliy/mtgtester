@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","controller":"you","count":{"min":0,"max":2}}],"effects":[{"op":"blinkEachChosen","targetSlot":0,"returnUnder":"owner"}],"description":"Exile up to two target creatures you control, then return those cards to the battlefield under their owner's control."}}}

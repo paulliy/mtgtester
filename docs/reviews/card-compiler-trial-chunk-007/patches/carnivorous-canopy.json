@@ -1,0 +1,73 @@
+{
+  "name": "Carnivorous Canopy",
+  "oracleId": "b3360259-19df-43c6-95a9-e76770f2fb77",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target artifact, enchantment, or creature with flying. If that permanent's mana value was 3 or less, proliferate."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Enchantment"
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "hasKeyword",
+                    "keyword": "flying"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroy",
+          "target": 0
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "manaValueOfTarget",
+              "target": 0
+            },
+            "cmp": "<=",
+            "right": {
+              "kind": "const",
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "proliferate"
+            }
+          ],
+          "else": []
+        }
+      ],
+      "description": "Destroy target artifact, enchantment, or creature with flying. If that permanent's mana value was 3 or less, proliferate."
+    }
+  }
+}

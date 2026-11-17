@@ -1,0 +1,2 @@
+At the beginning of your upkeep, put a night counter on this.
+If this has eight or more night counters on it, remove all night counters from it and create eight tokens. Each token is a snow artifact named Replicated Ring with "{T}: Add one mana of any color among white, blue, black, red, and green."

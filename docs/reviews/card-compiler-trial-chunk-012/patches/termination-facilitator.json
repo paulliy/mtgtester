@@ -1,0 +1,57 @@
+{
+  "name": "Termination Facilitator",
+  "oracleId": "56edd306-8676-49c4-b3c3-5ff840536c3a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature or planeswalker an opponent controls with a bounty counter on it is dealt damage, destroy it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealtDamage",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Planeswalker"
+                    }
+                  ]
+                },
+                {
+                  "kind": "hasCounter",
+                  "counter": "bounty"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "destroy",
+            "target": "triggerObject"
+          }
+        ],
+        "description": "Whenever a creature or planeswalker an opponent controls with a bounty counter on it is dealt damage, destroy it."
+      }
+    ]
+  }
+}

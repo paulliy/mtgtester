@@ -1,0 +1,5 @@
+Put a +1/+1 counter on target creature you control.
+Target creature you control gains reach until end of turn.
+Target creature you control gains trample until end of turn.
+Target creature you control gains indestructible until end of turn.
+Untap target creature you control.

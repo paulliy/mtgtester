@@ -1,0 +1,1 @@
+Whenever this creature attacks, if you control an artifact that entered this turn, you draw a card.

@@ -1,0 +1,65 @@
+{
+  "name": "Munitions Expert",
+  "oracleId": "a0b16b11-69d9-4e94-aae3-298aa44ce3d4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, you may have it deal damage to target creature or planeswalker equal to the number of Goblins you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [
+          {
+            "kind": "permanent",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Goblin"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "When this creature enters, you may have it deal damage to target creature or planeswalker equal to the number of Goblins you control."
+      }
+    ]
+  }
+}

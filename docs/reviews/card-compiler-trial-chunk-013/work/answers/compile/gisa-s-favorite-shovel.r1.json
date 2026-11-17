@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Defending player sacrifices a creature; if they do, you create a Walker token' has no op: sacrificeOneThen sacrifices the controller's own permanent, and eventPlayerSacrificesPermanents has no 'if they do' link."}

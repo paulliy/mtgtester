@@ -1,0 +1,40 @@
+{
+  "name": "Dwarven Mattock",
+  "oracleId": "f75bb13b-41fc-4614-b35e-f456069ce9c6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Equipment enters, attach it to target Dwarf you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you",
+            "filter": {
+              "kind": "subtype",
+              "value": "Dwarf"
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "attachSelfTo",
+            "target": 0
+          }
+        ],
+        "description": "When this Equipment enters, attach it to target Dwarf you control."
+      }
+    ]
+  }
+}

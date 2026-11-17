@@ -1,0 +1,2 @@
+{2}, {T}: Flip a coin. If you win the flip, create two Treasure tokens. If you lose the flip, this ability does nothing.
+Each Treasure token is named Treasure, is an Artifact with the subtype Treasure, is colorless, and has no power or toughness. (Its type line text is hidden in the data.) Each has the ability: {T}, Sacrifice this token: Add one mana of any color.

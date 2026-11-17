@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect turns a face-down permanent face up (turnedFaceUp is a trigger event, not an effect), and damageEach has no way to exclude the chosen creature from 'each other creature'."}

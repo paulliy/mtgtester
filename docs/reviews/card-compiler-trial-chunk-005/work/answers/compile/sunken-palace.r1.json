@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The mana's spend trigger must copy either a spell or an activated ability depending on what it pays for, and no single spendTrigger ability can express both (copyCastSpell covers only spells)."}

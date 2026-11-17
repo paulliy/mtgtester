@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The extra +1/+1 counter applies only if the returned card enters as a creature, and the delayed return (exileTargetReturnAtNextEndStep) has no way to add a counter conditioned on the returned object being a creature."}

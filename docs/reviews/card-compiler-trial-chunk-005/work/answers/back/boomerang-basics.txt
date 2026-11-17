@@ -1,0 +1,3 @@
+Target nonland permanent.
+If the target permanent is controlled by you, draw a card.
+Return the target permanent to its owner's hand.

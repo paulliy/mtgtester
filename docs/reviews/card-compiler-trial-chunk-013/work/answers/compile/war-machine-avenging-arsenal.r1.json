@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Modified' (equipped by an Equipment you control, or enchanted by an Aura you control, or has counters) needs a selector that requires the equipment's controller, and isEquipped does not check whose Equipment it is."}

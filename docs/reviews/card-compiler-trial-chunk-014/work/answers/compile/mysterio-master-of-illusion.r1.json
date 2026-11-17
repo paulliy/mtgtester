@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The clause 'Exile those tokens when ~ leaves the battlefield' cannot be expressed: the schema has no way to remember the specific tokens created by the enters trigger and exile exactly those when Mysterio leaves."}

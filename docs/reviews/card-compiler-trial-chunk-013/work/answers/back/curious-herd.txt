@@ -1,0 +1,2 @@
+Target opponent.
+Create X 3/3 green Beast creature tokens, where X is the number of artifacts target opponent controls.

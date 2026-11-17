@@ -1,0 +1,46 @@
+{
+  "name": "Su-Chi Cave Guard",
+  "oracleId": "28264920-9d14-4661-83b8-56f950fbff39",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature dies, add eight {C}. Until end of turn, you don't lose this mana as steps and phases end."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "addMana",
+            "amount": {
+              "kind": "const",
+              "n": 8
+            },
+            "colors": [],
+            "fixedSymbols": [
+              "C",
+              "C",
+              "C",
+              "C",
+              "C",
+              "C",
+              "C",
+              "C"
+            ],
+            "persistent": true
+          }
+        ],
+        "description": "When this creature dies, add eight {C}. Until end of turn, you don't lose this mana as steps and phases end."
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "Barrier Breach",
+  "oracleId": "581425e6-3128-4f83-9efc-17028fc65078",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Exile up to three target enchantments."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "enchantment",
+          "count": {
+            "min": 0,
+            "max": 3
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "exileEachChosen",
+          "targetSlot": 0
+        }
+      ],
+      "description": "Exile up to three target enchantments."
+    }
+  }
+}

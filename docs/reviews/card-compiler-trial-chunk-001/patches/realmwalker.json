@@ -1,0 +1,29 @@
+{
+  "name": "Realmwalker",
+  "oracleId": "b81eaa2f-0554-41c6-bdf6-d1cb73b8f56f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may cast creature spells of the chosen type from the top of your library."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "castFromZone",
+        "zone": "libraryTop",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "chosenSubtype"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

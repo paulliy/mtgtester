@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"\"You gain life equal to the damage dealt this way\" has no reference to the damage an untargeted each-opponent damage effect dealt, and gainLifeEqualToLifeLostThisWay reads life loss rather than damage."}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"gainControl","selector":{"kind":"owner","who":"you"},"duration":"permanent"}],"description":"Gain control of all permanents you own."}}}

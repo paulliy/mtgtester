@@ -1,0 +1,39 @@
+{
+  "name": "Quick-Draw Katana",
+  "oracleId": "604ef241-df8f-48f8-8680-f9ed77ff30ae",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "During your turn, equipped creature gets +2/+0 and has first strike."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 0
+        },
+        "condition": {
+          "kind": "yourTurn"
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "first strike"
+        },
+        "condition": {
+          "kind": "yourTurn"
+        }
+      }
+    ]
+  }
+}

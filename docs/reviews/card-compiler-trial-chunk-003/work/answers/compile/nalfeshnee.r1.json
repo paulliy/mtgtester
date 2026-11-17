@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The castsSpell trigger's castFrom field can name graveyard, hand or 'notHand' but not exile, and 'notHand' would also match library and command-zone casts."}

@@ -1,0 +1,38 @@
+{
+  "name": "Spectral Denial",
+  "oracleId": "f8536726-993b-4100-918c-e3c7177d4c65",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast for each creature you control with power 4 or greater."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "powerAtLeast",
+                "n": 4
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "scope": "all"
+        },
+        "selfOnly": true
+      }
+    ]
+  }
+}

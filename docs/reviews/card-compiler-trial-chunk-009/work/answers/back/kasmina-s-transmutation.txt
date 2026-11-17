@@ -1,0 +1,2 @@
+Enchanted creature loses all abilities.
+Enchanted creature has base power and toughness 1/1.

@@ -1,0 +1,3 @@
+Enchanted creature's card type becomes Creature and its creature type becomes Coward.
+Enchanted creature loses all abilities.
+Enchanted creature has base power and toughness 0/1.

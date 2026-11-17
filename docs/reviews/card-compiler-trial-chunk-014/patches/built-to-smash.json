@@ -1,0 +1,60 @@
+{
+  "name": "Built to Smash",
+  "oracleId": "c363f338-0777-45e6-b13c-f15ba026b63a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target attacking creature gets +3/+3 until end of turn. If it's an artifact creature, it gains trample until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "description": "Target attacking creature gets +3/+3 until end of turn. If it's an artifact creature, it gains trample until end of turn.",
+      "targets": [
+        {
+          "kind": "creature",
+          "filter": {
+            "kind": "combatRole",
+            "role": "attacking"
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": 3,
+          "toughness": 3
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "then": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": 0,
+              "keyword": "trample"
+            }
+          ],
+          "else": [],
+          "checkTarget": 0
+        }
+      ]
+    }
+  }
+}

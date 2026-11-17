@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no conditional can't-attack or can't-block restriction on the source itself: attackRestriction and cantBlockMatching take a selector of attackers or blockers, not an 'unless you control another creature with power 4 or greater' condition on this creature."}

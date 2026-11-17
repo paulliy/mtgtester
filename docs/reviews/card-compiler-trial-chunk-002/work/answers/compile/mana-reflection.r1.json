@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A manaActivationRider adds one mana of a produced type or fixed units, not a second copy of whatever the permanent produced, so it would undercount multi-unit permanents."}

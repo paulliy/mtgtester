@@ -1,0 +1,31 @@
+{
+  "name": "Lookout's Dispersal",
+  "oracleId": "e2e44d46-9df4-46f8-acf7-5581b2257620",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast if you control a Pirate."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "selfOnly": true,
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "subtype",
+            "value": "Pirate"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 1
+        }
+      }
+    ]
+  }
+}

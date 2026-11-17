@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target may be a player or a planeswalker, and the creature damage must hit the creatures of that player or of the planeswalker's controller; damageEach's controlledBy reads only a player target slot, so the planeswalker-controller case cannot be stated exactly."}

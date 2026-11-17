@@ -1,0 +1,42 @@
+{
+  "name": "Blood Reckoning",
+  "oracleId": "bd5310df-2e6c-4584-9a5a-03d6d06b3c20",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          },
+          "condition": {
+            "kind": "eventObjectDefendingPlayerIsYou"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "loseLifeTarget",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life."
+      }
+    ]
+  }
+}

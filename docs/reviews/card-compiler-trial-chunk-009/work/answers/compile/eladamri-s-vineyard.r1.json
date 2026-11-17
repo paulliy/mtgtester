@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"addMana has no player routing, so a trigger for each player's first main phase would add the mana to the Vineyard's controller rather than to that player (the active player)."}

@@ -1,0 +1,29 @@
+{
+  "name": "Glarb, Calamity's Augur",
+  "oracleId": "df9409e6-bd6d-4b5b-b807-fcf347ee940a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may play lands and cast spells with mana value 4 or greater from the top of your library."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "playFromZone",
+        "zone": "libraryTop",
+        "filter": {
+          "kind": "type",
+          "value": "Land"
+        }
+      },
+      {
+        "kind": "castFromZone",
+        "zone": "libraryTop",
+        "filter": {
+          "kind": "manaValueAtLeast",
+          "n": 4
+        }
+      }
+    ]
+  }
+}

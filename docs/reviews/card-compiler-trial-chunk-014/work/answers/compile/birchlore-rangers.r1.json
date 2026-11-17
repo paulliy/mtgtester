@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"manaAbilities":[{"units":[["W","U","B","R","G"]],"costs":[{"kind":"tapOthers","selector":{"kind":"allOf","of":[{"kind":"subtype","value":"Elf"},{"kind":"controller","who":"you"}]},"count":2,"allowSelf":true}]}]}}

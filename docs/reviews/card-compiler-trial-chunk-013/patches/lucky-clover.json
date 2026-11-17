@@ -1,0 +1,50 @@
+{
+  "name": "Lucky Clover",
+  "oracleId": "370d67f6-8d43-46ca-ae6c-00799bb0bd0c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast an Adventure instant or sorcery spell, copy it. You may choose new targets for the copy."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Instant"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Sorcery"
+                  }
+                ]
+              },
+              {
+                "kind": "subtype",
+                "value": "Adventure"
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "copyCastSpell"
+          }
+        ],
+        "description": "Whenever you cast an Adventure instant or sorcery spell, copy it. You may choose new targets for the copy."
+      }
+    ]
+  }
+}

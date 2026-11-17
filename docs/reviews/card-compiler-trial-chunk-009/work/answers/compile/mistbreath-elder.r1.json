@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot branch on whether 'return another creature you control' was actually done ('If you do, put a +1/+1 counter on this creature. Otherwise, you may return this creature'), since no effect reports success of a returnOneToHand for a conditional."}

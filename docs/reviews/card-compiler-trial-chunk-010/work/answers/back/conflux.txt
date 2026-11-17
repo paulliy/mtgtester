@@ -1,0 +1,6 @@
+Search your library for a white card, reveal it, and put it into your hand.
+Search your library for a blue card, reveal it, and put it into your hand.
+Search your library for a black card, reveal it, and put it into your hand.
+Search your library for a red card, reveal it, and put it into your hand.
+Search your library for a green card, reveal it, and put it into your hand.
+Shuffle your library.

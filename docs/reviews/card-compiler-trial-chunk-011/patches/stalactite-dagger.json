@@ -1,0 +1,33 @@
+{
+  "name": "Stalactite Dagger",
+  "oracleId": "064c3269-c012-4fc7-84c3-5f147a82a03c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equipped creature gets +1/+1 and is all creature types."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 4,
+          "addAllCreatureTypes": true
+        }
+      }
+    ]
+  }
+}

@@ -195,6 +195,9 @@ packages/engine/tests/cards/witch-enchanter.test.ts
 packages/engine/tests/move-all-counters.test.ts
 packages/engine/tests/cards/plea-for-power.test.ts
 packages/server/src/cards/edhrec-pins.test.ts
+packages/server/src/cards/compiled-promotion.test.ts
+packages/server/src/cards/compiled-smoke.test.ts
+packages/server/src/cards/compiled-calibration.test.ts
 packages/engine/tests/cards/nantuko-vigilante.test.ts
 packages/engine/tests/cards/gudul-lurker.test.ts
 packages/engine/tests/cards/hunted-bonebrute.test.ts

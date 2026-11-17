@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A sacrifices the token at the beginning of the next end step; Text B says the beginning of the end step, which can fire at a different end step (or none) when activated during an end step or after the relevant step has begun."]}

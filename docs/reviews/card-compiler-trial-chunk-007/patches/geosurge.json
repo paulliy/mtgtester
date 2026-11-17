@@ -1,0 +1,56 @@
+{
+  "name": "Geosurge",
+  "oracleId": "6ec2794f-db1a-4448-a75e-ed7aff565378",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Add {R}{R}{R}{R}{R}{R}{R}. Spend this mana only to cast artifact or creature spells."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "addMana",
+          "amount": {
+            "kind": "const",
+            "n": 7
+          },
+          "colors": [
+            "R"
+          ],
+          "fixedSymbols": [
+            "R",
+            "R",
+            "R",
+            "R",
+            "R",
+            "R",
+            "R"
+          ],
+          "restriction": {
+            "purposes": [
+              "castSpell"
+            ],
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "description": "Spend this mana only to cast artifact or creature spells."
+          }
+        }
+      ],
+      "description": "Add {R}{R}{R}{R}{R}{R}{R}. Spend this mana only to cast artifact or creature spells."
+    }
+  }
+}

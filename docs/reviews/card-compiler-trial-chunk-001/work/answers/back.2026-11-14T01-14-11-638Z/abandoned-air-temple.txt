@@ -1,0 +1,1 @@
+This land enters tapped unless the number of basic land cards you control is compared to 1 by a comparison operator that is hidden in this data.

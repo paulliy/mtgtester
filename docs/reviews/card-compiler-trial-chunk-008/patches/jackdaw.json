@@ -1,0 +1,50 @@
+{
+  "name": "Jackdaw",
+  "oracleId": "ac161100-46b7-4f0f-a72b-84aaa45980ad",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ deals combat damage to a player, you may discard your hand. If you do, draw a card for each artifact you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "discardHand"
+          },
+          {
+            "op": "draw",
+            "count": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "Whenever ~ deals combat damage to a player, you may discard your hand. If you do, draw a card for each artifact you control."
+      }
+    ]
+  }
+}

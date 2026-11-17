@@ -1,0 +1,29 @@
+{
+  "name": "Urabrask the Hidden",
+  "oracleId": "5b2ffb53-86b7-4665-a5c7-b85b035b6c81",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures your opponents control enter tapped."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "otherPermanentsEnterTapped",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "opponents"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

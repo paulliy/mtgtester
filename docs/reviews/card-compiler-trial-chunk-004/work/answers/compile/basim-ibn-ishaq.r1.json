@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The castsSpell trigger has no once-each-turn limit (only object, step and activation triggers carry oncePerTurn), so 'This ability triggers only once each turn' cannot be written."}

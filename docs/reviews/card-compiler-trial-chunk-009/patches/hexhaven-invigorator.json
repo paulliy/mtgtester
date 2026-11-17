@@ -1,0 +1,47 @@
+{
+  "name": "Hexhaven Invigorator",
+  "oracleId": "12d617b1-c95b-4b1c-a586-ccfdf5898b03",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature is dealt damage, you may search your library for up to that many land cards, put them onto the battlefield tapped, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealtDamage",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "type",
+              "value": "Land"
+            },
+            "destinations": [
+              {
+                "zone": "battlefield",
+                "tapped": true
+              }
+            ],
+            "count": {
+              "kind": "damageDealt"
+            },
+            "allowFailToFind": true
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "Whenever this creature is dealt damage, you may search your library for up to that many land cards, put them onto the battlefield tapped, then shuffle."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The clause 'If it was a token, draw a card' tests whether the permanent returned to hand was a token, but a token ceases to exist once it leaves the battlefield and the schema has no way to read its pre-bounce token status after returnToHandEachChosen (checkTarget and triggerObjectMatches read the live object)."}

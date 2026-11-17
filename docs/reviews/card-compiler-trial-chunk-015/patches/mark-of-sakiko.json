@@ -1,0 +1,45 @@
+{
+  "name": "Mark of Sakiko",
+  "oracleId": "18a98d44-54ee-4d6d-ab32-27e294ac8995",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature has \"Whenever this creature deals combat damage to a player, add that much {G}. Until end of turn, you don't lose this mana as steps and phases end.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealsCombatDamageToPlayer",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "addMana",
+                "amount": {
+                  "kind": "damageDealt"
+                },
+                "colors": [
+                  "G"
+                ],
+                "persistent": true
+              }
+            ],
+            "description": "Whenever this creature deals combat damage to a player, add that much {G}. Until end of turn, you don't lose this mana as steps and phases end."
+          }
+        }
+      }
+    ]
+  }
+}

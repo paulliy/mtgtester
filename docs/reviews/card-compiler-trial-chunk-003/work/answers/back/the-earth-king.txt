@@ -1,0 +1,1 @@
+Whenever you declare attackers, if one or more creatures you control with power 4 or greater are attacking, search your library for a number of basic land cards equal to the trigger's count, put them onto the battlefield tapped, then shuffle. The search may find fewer cards than that number.

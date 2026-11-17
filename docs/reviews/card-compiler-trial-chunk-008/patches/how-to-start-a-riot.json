@@ -1,0 +1,36 @@
+{
+  "name": "How to Start a Riot",
+  "oracleId": "268d0056-0d3e-438a-ab17-625a6f5ec68a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures target player controls get +2/+0 until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        },
+        {
+          "kind": "player"
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "menace"
+        },
+        {
+          "op": "pumpTargetPlayerCreaturesUntilEot",
+          "targetSlot": 1,
+          "power": 2,
+          "toughness": 0
+        }
+      ],
+      "description": "Target creature gains menace until end of turn. Creatures target player controls get +2/+0 until end of turn."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+When this creature enters, you may search your library for a card that is both a basic land card and a land card, or a land card with the subtype Gate, reveal it, put it into your hand, then shuffle.

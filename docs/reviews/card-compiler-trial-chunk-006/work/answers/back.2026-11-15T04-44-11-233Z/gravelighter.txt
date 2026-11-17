@@ -1,0 +1,1 @@
+When this creature enters, if a creature died this turn, draw a card. Otherwise, each player sacrifices a creature.

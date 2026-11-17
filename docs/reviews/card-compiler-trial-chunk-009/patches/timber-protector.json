@@ -1,0 +1,44 @@
+{
+  "name": "Timber Protector",
+  "oracleId": "9bc8a69b-6065-4ef7-a580-adb1e7c72ef4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Other Treefolk and Forests you control have indestructible."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Treefolk"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Forest"
+                }
+              ]
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "indestructible"
+        }
+      }
+    ]
+  }
+}

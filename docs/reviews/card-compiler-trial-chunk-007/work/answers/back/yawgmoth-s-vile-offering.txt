@@ -1,0 +1,3 @@
+Up to one target creature or planeswalker card in a graveyard, and up to one target creature or planeswalker on the battlefield.
+Return each chosen creature or planeswalker card to the battlefield. Destroy each chosen creature or planeswalker on the battlefield.
+Exile this spell as it resolves.

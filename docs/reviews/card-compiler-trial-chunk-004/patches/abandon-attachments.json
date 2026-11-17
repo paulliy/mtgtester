@@ -1,0 +1,22 @@
+{
+  "name": "Abandon Attachments",
+  "oracleId": "82333385-631f-4abf-b159-bb367f1c6fd9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may discard a card. If you do, draw two cards."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "mayDiscardThenDraw",
+          "count": 2
+        }
+      ],
+      "description": "You may discard a card. If you do, draw two cards."
+    }
+  }
+}

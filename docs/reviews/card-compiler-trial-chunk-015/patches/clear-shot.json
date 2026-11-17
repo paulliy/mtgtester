@@ -1,0 +1,42 @@
+{
+  "name": "Clear Shot",
+  "oracleId": "0b8defd2-8530-47d7-a0c6-27aa5162dff6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control gets +1/+1 until end of turn. It deals damage equal to its power to target creature you don't control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "creature",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": 1,
+          "toughness": 1
+        },
+        {
+          "op": "dealDamage",
+          "target": 1,
+          "amount": {
+            "kind": "powerOfTarget",
+            "target": 0
+          },
+          "source": 0
+        }
+      ],
+      "description": "Target creature you control gets +1/+1 until end of turn. It deals damage equal to its power to target creature you don't control."
+    }
+  }
+}

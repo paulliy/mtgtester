@@ -1,0 +1,1 @@
+Whenever this creature becomes tapped for mana, each opponent is dealt 1 damage.
