@@ -125,6 +125,28 @@ export function playerById(ctx: GameContext, id: PlayerId): EnginePlayerState {
   return p;
 }
 
+/** The card behind a "look at target player's hand" entry, if it is still in that hand. */
+export function liveKnownHandCard(
+  ctx: GameContext,
+  entry: { owner: PlayerId; objectId: ObjectId },
+): EngineCardObject | undefined {
+  const owner = ctx.state.players.find((player) => player.id === entry.owner);
+  if (owner === undefined || owner.hasLost) return undefined;
+  return owner.hand.find((card) => card.id === entry.objectId);
+}
+
+/** The cards `viewer` still knows in `owner`'s hand, in that hand's order. */
+export function knownHandOf(
+  ctx: GameContext,
+  viewer: EnginePlayerState,
+  owner: EnginePlayerState,
+): EngineCardObject[] {
+  const entries = viewer.knownHandCards;
+  if (entries === undefined || viewer.hasLost || owner.id === viewer.id) return [];
+  const ids = new Set(entries.filter((entry) => entry.owner === owner.id).map((e) => e.objectId));
+  return owner.hand.filter((card) => ids.has(card.id));
+}
+
 /** Where a moved object should land. */
 export interface MoveDestination {
   zone: Zone;
