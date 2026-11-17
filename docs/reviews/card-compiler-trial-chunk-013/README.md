@@ -92,3 +92,9 @@ automatic check, about 3.4%.
    until the report is rerun.
 6. The validator accepts all of the above. The judge flags `persistent` mana as having no duration;
    its prompt should say `persistent` means until end of turn.
+
+## Retired after the Codex review on PR #72 (2026-11-17)
+
+The automated review that ran when the pull request was marked ready found a wrong patch among this chunk's promotions, and it was retired (`docs/reviews/compiled-card-retired.json`):
+
+- **Tempestra, Dame of Games:** "That token gains haste" was modelled as `createTokenCopyOf` with `addKeywords`, which writes haste into the token's copiable values, so a copy of the token wrongly has haste. The card grants haste to the token after it is created, and no op can do that. Kiki-Jiki, Mirror Breaker ("except it has haste") is correct as modelled and stays.

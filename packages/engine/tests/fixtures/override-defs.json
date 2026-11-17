@@ -6271,76 +6271,6 @@
     }
   },
   {
-    "oracleId": "12401ad1-b5c9-43dc-9389-04aaf5db8b26",
-    "name": "Tempestra, Dame of Games",
-    "handledLines": [
-      "{2}{R}, {T}, Sacrifice an artifact: Create a token that's a copy of another target creature you control, except it isn't legendary. It gains haste. Sacrifice it at the beginning of the next end step."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{2}{R}, {T}, Sacrifice an artifact: Create a token that's a copy of another target creature you control, except it isn't legendary. It gains haste. Sacrifice it at the beginning of the next end step.",
-            "effects": [
-              {
-                "addKeywords": [
-                  "haste"
-                ],
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "exceptNonLegendary": true,
-                "op": "createTokenCopyOf",
-                "ref": 0,
-                "sacrificeAt": "endStep"
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "controller": "you",
-                "filter": {
-                  "kind": "other"
-                },
-                "kind": "creature"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 1,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 2
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            },
-            {
-              "count": 1,
-              "kind": "sacrificeOther",
-              "selector": {
-                "kind": "type",
-                "value": "Artifact"
-              }
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "127bc05b-2945-434c-bc6a-283a267cc72a",
     "name": "Smellerbee, Rebel Fighter",
     "handledLines": [
@@ -11516,40 +11446,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "20490b29-4f08-48a2-bf54-2ba118e746ac",
-    "name": "Lightmine Field",
-    "handledLines": [
-      "Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures.",
-          "effects": [
-            {
-              "amount": {
-                "kind": "attackingCreatures"
-              },
-              "op": "damageEach",
-              "selector": {
-                "kind": "combatRole",
-                "role": "attacking"
-              }
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "attacker": "any",
-            "when": "attackDeclared"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "2068185c-1b50-47d0-aa3f-bf505d199428",
     "name": "Dark Confidant",
     "handledLines": [
@@ -12308,55 +12204,6 @@
           "optional": false,
           "targets": [],
           "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "236ce592-1321-4a7c-b695-fd84496f8924",
-    "name": "Fear of Missing Out",
-    "handledLines": [
-      "Whenever this creature attacks for the first time each turn, if there are four or more card types among cards in your graveyard, untap target creature. After this phase, there is an additional combat phase."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Delirium — Whenever this creature attacks for the first time each turn, if there are four or more card types among cards in your graveyard, untap target creature. After this phase, there is an additional combat phase.",
-          "effects": [
-            {
-              "op": "untapTarget",
-              "target": 0
-            },
-            {
-              "op": "extraCombatPhase"
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "kind": "creature"
-            }
-          ],
-          "trigger": {
-            "condition": {
-              "cmp": ">=",
-              "kind": "compareValues",
-              "left": {
-                "kind": "cardTypesInYourGraveyard"
-              },
-              "right": {
-                "kind": "const",
-                "n": 4
-              }
-            },
-            "oncePerTurn": true,
             "subject": {
               "kind": "self"
             },
@@ -15473,52 +15320,6 @@
           "timing": "any"
         }
       ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "2e17cd4c-ebf0-40d0-b52d-b4d84bbcf7b3",
-    "name": "Devastating Onslaught",
-    "handledLines": [
-      "Create X tokens that are copies of target artifact or creature you control. Those tokens gain haste until end of turn. Sacrifice them at the beginning of the next end step."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Create X tokens that are copies of target artifact or creature you control. Those tokens gain haste until end of turn. Sacrifice them at the beginning of the next end step.",
-        "effects": [
-          {
-            "addKeywords": [
-              "haste"
-            ],
-            "count": {
-              "kind": "xValue"
-            },
-            "op": "createTokenCopyOf",
-            "ref": 0,
-            "sacrificeAt": "endStep"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "filter": {
-              "kind": "anyOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Artifact"
-                },
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                }
-              ]
-            },
-            "kind": "permanent"
-          }
-        ]
-      }
     },
     "compose": "append"
   },
@@ -18892,84 +18693,6 @@
     }
   },
   {
-    "oracleId": "35807c14-4647-482f-9ba1-6d640fd5e8d8",
-    "name": "Forth Eorlingas!",
-    "handledLines": [
-      "Whenever one or more creatures you control deal combat damage to one or more players this turn, you become the monarch."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Create X 2/2 red Human Knight creature tokens with trample and haste. Whenever one or more creatures you control deal combat damage to one or more players this turn, you become the monarch.",
-        "effects": [
-          {
-            "count": {
-              "kind": "xValue"
-            },
-            "op": "createToken",
-            "spec": {
-              "colors": [
-                "R"
-              ],
-              "keywords": [
-                "trample",
-                "haste"
-              ],
-              "name": "Human Knight",
-              "power": 2,
-              "subtypes": [
-                "Human",
-                "Knight"
-              ],
-              "toughness": 2,
-              "typeLine": "Token Creature — Human Knight",
-              "types": [
-                "Creature"
-              ]
-            }
-          },
-          {
-            "ability": {
-              "description": "Whenever one or more creatures you control deal combat damage to one or more players this turn, you become the monarch.",
-              "effects": [
-                {
-                  "op": "becomeMonarch"
-                }
-              ],
-              "kind": "triggered",
-              "targets": [],
-              "trigger": {
-                "aggregate": "byEventPlayer",
-                "subject": {
-                  "kind": "permanent",
-                  "selector": {
-                    "kind": "allOf",
-                    "of": [
-                      {
-                        "kind": "controller",
-                        "who": "you"
-                      },
-                      {
-                        "kind": "type",
-                        "value": "Creature"
-                      }
-                    ]
-                  }
-                },
-                "when": "dealsCombatDamageToPlayer"
-              }
-            },
-            "expiry": "cleanup",
-            "op": "registerDelayedTrigger",
-            "when": "dealsCombatDamageToPlayer"
-          }
-        ],
-        "kind": "spell",
-        "targets": []
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "35e2f82e-7ca3-4a92-9134-b7999eef5337",
     "name": "Mana Sculpt",
     "handledLines": [
@@ -21509,73 +21232,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "3dc71e16-b935-4ad7-b3f7-945ac2c179a7",
-    "name": "Chrome Dome",
-    "handledLines": [
-      "{5}: Create a token that's a copy of another target artifact you control. That token gains haste. Sacrifice it at the beginning of the next end step."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{5}: Create a token that's a copy of another target artifact you control. That token gains haste. Sacrifice it at the beginning of the next end step.",
-            "effects": [
-              {
-                "addKeywords": [
-                  "haste"
-                ],
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "createTokenCopyOf",
-                "ref": 0,
-                "sacrificeAt": "endStep"
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "controller": "you",
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "other"
-                    },
-                    {
-                      "kind": "type",
-                      "value": "Artifact"
-                    }
-                  ]
-                },
-                "kind": "permanent"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 5
-              },
-              "kind": "mana"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "3ded0c0c-40ce-4d14-a9a6-b023bc19ee0e",
@@ -31167,88 +30823,6 @@
             },
             "when": "enters"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "5aa76c5d-8046-42ce-b61d-cc9b4806c11a",
-    "name": "Saheeli, the Sun's Brilliance",
-    "handledLines": [
-      "{U}{R}, {T}: Create a token that's a copy of another target creature or artifact you control, except it's an artifact in addition to its other types. It gains haste. Sacrifice it at the beginning of the next end step."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{U}{R}, {T}: Create a token that's a copy of another target creature or artifact you control, except it's an artifact in addition to its other types. It gains haste. Sacrifice it at the beginning of the next end step.",
-            "effects": [
-              {
-                "addKeywords": [
-                  "haste"
-                ],
-                "addTypes": [
-                  "Artifact"
-                ],
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "createTokenCopyOf",
-                "ref": 0,
-                "sacrificeAt": "endStep"
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "controller": "you",
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "other"
-                    },
-                    {
-                      "kind": "anyOf",
-                      "of": [
-                        {
-                          "kind": "type",
-                          "value": "Creature"
-                        },
-                        {
-                          "kind": "type",
-                          "value": "Artifact"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "kind": "permanent"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 1,
-                  "U": 1,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 0
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
         }
       ]
     },
@@ -43791,42 +43365,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "83b43aba-bf9c-4da2-967d-9daa632e97d2",
-    "name": "Helm of the Host",
-    "handledLines": [
-      "At the beginning of combat on your turn, create a token that's a copy of equipped creature, except the token isn't legendary. That token gains haste."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "At the beginning of combat on your turn, create a token that's a copy of equipped creature, except the token isn't legendary. That token gains haste.",
-          "effects": [
-            {
-              "addKeywords": [
-                "haste"
-              ],
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "exceptNonLegendary": true,
-              "op": "createTokenCopyOf",
-              "ref": "attachedToSource"
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "player": "you",
-            "when": "beginningOfCombat"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "83b9a734-ee92-44c8-bf47-ca69b6d6405e",
     "name": "Jhoira, Ageless Innovator",
     "handledLines": [
@@ -48840,56 +48378,6 @@
           }
         }
       ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "92b91910-9b65-4421-8eef-a33793161089",
-    "name": "Molten Duplication",
-    "handledLines": [
-      "Create a token that's a copy of target artifact or creature you control, except it's an artifact in addition to its other types. It gains haste until end of turn. Sacrifice it at the beginning of the next end step."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Create a token that's a copy of target artifact or creature you control, except it's an artifact in addition to its other types. It gains haste until end of turn. Sacrifice it at the beginning of the next end step.",
-        "effects": [
-          {
-            "addKeywords": [
-              "haste"
-            ],
-            "addTypes": [
-              "Artifact"
-            ],
-            "count": {
-              "kind": "const",
-              "n": 1
-            },
-            "op": "createTokenCopyOf",
-            "ref": 0,
-            "sacrificeAt": "endStep"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "filter": {
-              "kind": "anyOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Artifact"
-                },
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                }
-              ]
-            },
-            "kind": "permanent"
-          }
-        ]
-      }
     },
     "compose": "append"
   },
@@ -101480,73 +100968,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-chrome-dome",
-    "name": "Chrome Dome",
-    "handledLines": [
-      "{5}: Create a token that's a copy of another target artifact you control. That token gains haste. Sacrifice it at the beginning of the next end step."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{5}: Create a token that's a copy of another target artifact you control. That token gains haste. Sacrifice it at the beginning of the next end step.",
-            "effects": [
-              {
-                "addKeywords": [
-                  "haste"
-                ],
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "createTokenCopyOf",
-                "ref": 0,
-                "sacrificeAt": "endStep"
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "controller": "you",
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "other"
-                    },
-                    {
-                      "kind": "type",
-                      "value": "Artifact"
-                    }
-                  ]
-                },
-                "kind": "permanent"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 5
-              },
-              "kind": "mana"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-chrome-mox",
     "name": "Chrome Mox",
     "handledLines": [
@@ -107756,52 +107177,6 @@
         ],
         "kind": "spell",
         "targets": []
-      }
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-devastating-onslaught",
-    "name": "Devastating Onslaught",
-    "handledLines": [
-      "Create X tokens that are copies of target artifact or creature you control. Those tokens gain haste until end of turn. Sacrifice them at the beginning of the next end step."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Create X tokens that are copies of target artifact or creature you control. Those tokens gain haste until end of turn. Sacrifice them at the beginning of the next end step.",
-        "effects": [
-          {
-            "addKeywords": [
-              "haste"
-            ],
-            "count": {
-              "kind": "xValue"
-            },
-            "op": "createTokenCopyOf",
-            "ref": 0,
-            "sacrificeAt": "endStep"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "filter": {
-              "kind": "anyOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Artifact"
-                },
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                }
-              ]
-            },
-            "kind": "permanent"
-          }
-        ]
       }
     },
     "compose": "append"
@@ -114348,55 +113723,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-fear-of-missing-out",
-    "name": "Fear of Missing Out",
-    "handledLines": [
-      "Whenever this creature attacks for the first time each turn, if there are four or more card types among cards in your graveyard, untap target creature. After this phase, there is an additional combat phase."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Delirium — Whenever this creature attacks for the first time each turn, if there are four or more card types among cards in your graveyard, untap target creature. After this phase, there is an additional combat phase.",
-          "effects": [
-            {
-              "op": "untapTarget",
-              "target": 0
-            },
-            {
-              "op": "extraCombatPhase"
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "kind": "creature"
-            }
-          ],
-          "trigger": {
-            "condition": {
-              "cmp": ">=",
-              "kind": "compareValues",
-              "left": {
-                "kind": "cardTypesInYourGraveyard"
-              },
-              "right": {
-                "kind": "const",
-                "n": 4
-              }
-            },
-            "oncePerTurn": true,
-            "subject": {
-              "kind": "self"
-            },
-            "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-feat-of-resistance",
     "name": "Feat of Resistance",
     "handledLines": [
@@ -116761,84 +116087,6 @@
             "kind": "anyTarget"
           }
         ]
-      }
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-forth-eorlingas",
-    "name": "Forth Eorlingas!",
-    "handledLines": [
-      "Whenever one or more creatures you control deal combat damage to one or more players this turn, you become the monarch."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Create X 2/2 red Human Knight creature tokens with trample and haste. Whenever one or more creatures you control deal combat damage to one or more players this turn, you become the monarch.",
-        "effects": [
-          {
-            "count": {
-              "kind": "xValue"
-            },
-            "op": "createToken",
-            "spec": {
-              "colors": [
-                "R"
-              ],
-              "keywords": [
-                "trample",
-                "haste"
-              ],
-              "name": "Human Knight",
-              "power": 2,
-              "subtypes": [
-                "Human",
-                "Knight"
-              ],
-              "toughness": 2,
-              "typeLine": "Token Creature — Human Knight",
-              "types": [
-                "Creature"
-              ]
-            }
-          },
-          {
-            "ability": {
-              "description": "Whenever one or more creatures you control deal combat damage to one or more players this turn, you become the monarch.",
-              "effects": [
-                {
-                  "op": "becomeMonarch"
-                }
-              ],
-              "kind": "triggered",
-              "targets": [],
-              "trigger": {
-                "aggregate": "byEventPlayer",
-                "subject": {
-                  "kind": "permanent",
-                  "selector": {
-                    "kind": "allOf",
-                    "of": [
-                      {
-                        "kind": "controller",
-                        "who": "you"
-                      },
-                      {
-                        "kind": "type",
-                        "value": "Creature"
-                      }
-                    ]
-                  }
-                },
-                "when": "dealsCombatDamageToPlayer"
-              }
-            },
-            "expiry": "cleanup",
-            "op": "registerDelayedTrigger",
-            "when": "dealsCombatDamageToPlayer"
-          }
-        ],
-        "kind": "spell",
-        "targets": []
       }
     },
     "compose": "append"
@@ -123349,42 +122597,6 @@
             }
           ],
           "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-helm-of-the-host",
-    "name": "Helm of the Host",
-    "handledLines": [
-      "At the beginning of combat on your turn, create a token that's a copy of equipped creature, except the token isn't legendary. That token gains haste."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "At the beginning of combat on your turn, create a token that's a copy of equipped creature, except the token isn't legendary. That token gains haste.",
-          "effects": [
-            {
-              "addKeywords": [
-                "haste"
-              ],
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "exceptNonLegendary": true,
-              "op": "createTokenCopyOf",
-              "ref": "attachedToSource"
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "player": "you",
-            "when": "beginningOfCombat"
-          }
         }
       ]
     },
@@ -132659,40 +131871,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-lightmine-field",
-    "name": "Lightmine Field",
-    "handledLines": [
-      "Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures.",
-          "effects": [
-            {
-              "amount": {
-                "kind": "attackingCreatures"
-              },
-              "op": "damageEach",
-              "selector": {
-                "kind": "combatRole",
-                "role": "attacking"
-              }
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "attacker": "any",
-            "when": "attackDeclared"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-lightning-runner",
     "name": "Lightning Runner",
     "handledLines": [
@@ -138170,56 +137348,6 @@
           }
         }
       ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-molten-duplication",
-    "name": "Molten Duplication",
-    "handledLines": [
-      "Create a token that's a copy of target artifact or creature you control, except it's an artifact in addition to its other types. It gains haste until end of turn. Sacrifice it at the beginning of the next end step."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Create a token that's a copy of target artifact or creature you control, except it's an artifact in addition to its other types. It gains haste until end of turn. Sacrifice it at the beginning of the next end step.",
-        "effects": [
-          {
-            "addKeywords": [
-              "haste"
-            ],
-            "addTypes": [
-              "Artifact"
-            ],
-            "count": {
-              "kind": "const",
-              "n": 1
-            },
-            "op": "createTokenCopyOf",
-            "ref": 0,
-            "sacrificeAt": "endStep"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "filter": {
-              "kind": "anyOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Artifact"
-                },
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                }
-              ]
-            },
-            "kind": "permanent"
-          }
-        ]
-      }
     },
     "compose": "append"
   },
@@ -151758,88 +150886,6 @@
     }
   },
   {
-    "oracleId": "oracle-saheeli-the-sun-s-brilliance",
-    "name": "Saheeli, the Sun's Brilliance",
-    "handledLines": [
-      "{U}{R}, {T}: Create a token that's a copy of another target creature or artifact you control, except it's an artifact in addition to its other types. It gains haste. Sacrifice it at the beginning of the next end step."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{U}{R}, {T}: Create a token that's a copy of another target creature or artifact you control, except it's an artifact in addition to its other types. It gains haste. Sacrifice it at the beginning of the next end step.",
-            "effects": [
-              {
-                "addKeywords": [
-                  "haste"
-                ],
-                "addTypes": [
-                  "Artifact"
-                ],
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "createTokenCopyOf",
-                "ref": 0,
-                "sacrificeAt": "endStep"
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "controller": "you",
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "other"
-                    },
-                    {
-                      "kind": "anyOf",
-                      "of": [
-                        {
-                          "kind": "type",
-                          "value": "Creature"
-                        },
-                        {
-                          "kind": "type",
-                          "value": "Artifact"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                "kind": "permanent"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 1,
-                  "U": 1,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 0
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-sai-master-thopterist",
     "name": "Sai, Master Thopterist",
     "handledLines": [
@@ -163524,76 +162570,6 @@
             },
             "when": "attacks"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-tempestra-dame-of-games",
-    "name": "Tempestra, Dame of Games",
-    "handledLines": [
-      "{2}{R}, {T}, Sacrifice an artifact: Create a token that's a copy of another target creature you control, except it isn't legendary. It gains haste. Sacrifice it at the beginning of the next end step."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{2}{R}, {T}, Sacrifice an artifact: Create a token that's a copy of another target creature you control, except it isn't legendary. It gains haste. Sacrifice it at the beginning of the next end step.",
-            "effects": [
-              {
-                "addKeywords": [
-                  "haste"
-                ],
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "exceptNonLegendary": true,
-                "op": "createTokenCopyOf",
-                "ref": 0,
-                "sacrificeAt": "endStep"
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "controller": "you",
-                "filter": {
-                  "kind": "other"
-                },
-                "kind": "creature"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 1,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 2
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            },
-            {
-              "count": 1,
-              "kind": "sacrificeOther",
-              "selector": {
-                "kind": "type",
-                "value": "Artifact"
-              }
-            }
-          ],
-          "timing": "any"
         }
       ]
     },

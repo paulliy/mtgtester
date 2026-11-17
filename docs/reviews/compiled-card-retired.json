@@ -30,11 +30,39 @@
       "reason": "Its Vampire condition selects attachedToSource, which never matches in a condition (chunk 011)."
     },
     {
+      "name": "Chrome Dome",
+      "oracleId": "3dc71e16-b935-4ad7-b3f7-945ac2c179a7",
+      "patchSha256": "5aa3f47bed6ca8f5f527fec5677fa2eb7ffbad7fbaf51e3d193df64283c48044",
+      "batch": "chunk-008",
+      "reason": "Codex review on PR #72, 2026-11-17: 'That token gains haste' is modelled as createTokenCopyOf addKeywords, which puts haste in the token's copiable values; a copy of the token wrongly gets haste. No op grants a keyword to the token just created."
+    },
+    {
+      "name": "Devastating Onslaught",
+      "oracleId": "2e17cd4c-ebf0-40d0-b52d-b4d84bbcf7b3",
+      "patchSha256": "9130c00e72c379f1b6ef6be05d8861a5737e578f801f8dfa390c6caca2c6e92a",
+      "batch": "chunk-004",
+      "reason": "Codex review on PR #72, 2026-11-17: 'That token gains haste' is modelled as createTokenCopyOf addKeywords, which puts haste in the token's copiable values; a copy of the token wrongly gets haste. No op grants a keyword to the token just created."
+    },
+    {
       "name": "Electroduplicate",
       "oracleId": "112f2b3f-32e7-40b1-b80e-0b99184a840c",
       "patchSha256": "d4c3e4f6e4eeee16c56915250a704e567e141b6de439119e5e747a757f80fb50",
       "batch": "chunk-002",
       "reason": "Its end-step sacrifice is a delayed trigger on this creation (sacrificeAt), not an ability of the copied token, so later copies keep the token (PR review)."
+    },
+    {
+      "name": "Fear of Missing Out",
+      "oracleId": "236ce592-1321-4a7c-b695-fd84496f8924",
+      "patchSha256": "b2671f7fb7b7a495edeae8f42aebe807c5b0b8bb80cc81961279f734b9b3fefb",
+      "batch": "chunk-003",
+      "reason": "Codex review on PR #72, 2026-11-17: the engine checks the trigger condition before recording oncePerTurn, so a first attack without delirium leaves the trigger free to fire on a later attack that turn; the card triggers only on the first attack."
+    },
+    {
+      "name": "Forth Eorlingas!",
+      "oracleId": "35807c14-4647-482f-9ba1-6d640fd5e8d8",
+      "patchSha256": "74955335ecac13503a9621d48772df609cecbd394daa6ebefae8850b7f62bb03",
+      "batch": "chunk-004",
+      "reason": "Codex review on PR #72, 2026-11-17: the untargeted delayed trigger ignores its 'creatures you control' subject selector; cast on an opponent's turn (e.g. through Mosswort Bridge), an opponent's combat damage makes the caster the monarch."
     },
     {
       "name": "Genesis",
@@ -51,6 +79,13 @@
       "reason": "Two independent 'whenever' triggers merged into one anyOf trigger, so an entrant matching both triggers once (PR review)."
     },
     {
+      "name": "Helm of the Host",
+      "oracleId": "83b43aba-bf9c-4da2-967d-9daa632e97d2",
+      "patchSha256": "2685fbf9022eb22b0363cd31a636f4efbd58b3569e4a70c6aa8c8fe7427da4e3",
+      "batch": "chunk-001",
+      "reason": "Codex review on PR #72, 2026-11-17: 'That token gains haste' is modelled as createTokenCopyOf addKeywords, which puts haste in the token's copiable values; a copy of the token wrongly gets haste. No op grants a keyword to the token just created."
+    },
+    {
       "name": "High Score",
       "oracleId": "d81fc181-ecb0-43a5-88e8-c61aca3428d8",
       "patchSha256": "649e3d5afbc43caca6800f24a89b1606b9537effc8c0caea6ddfd5577d335714",
@@ -65,11 +100,25 @@
       "reason": "createTokenAttacking taps the token; the card makes an untapped attacker (chunk 013)."
     },
     {
+      "name": "Lightmine Field",
+      "oracleId": "20490b29-4f08-48a2-bf54-2ba118e746ac",
+      "patchSha256": "192bbf38bde15131eaa9c2964be6dd19afa760251616e6bbb1b8c1c5245ed69b",
+      "batch": "chunk-014",
+      "reason": "Codex review on PR #72, 2026-11-17: damageEach over attacking creatures also hits creatures put onto the battlefield attacking after the trigger; the card damages only the creatures whose attack triggered it, and no selector reads the attack group."
+    },
+    {
       "name": "Lotus Field",
       "oracleId": "134d5b82-7940-4b33-a922-7f9d1f403e50",
       "patchSha256": "4bebc35edd7d66ca288d949a0b6fbecc5d3459d88be5189372f23d1cea019ebd",
       "batch": "chunk-001",
       "reason": "Sacrifices two lands one after the other instead of at once (PR review)."
+    },
+    {
+      "name": "Molten Duplication",
+      "oracleId": "92b91910-9b65-4421-8eef-a33793161089",
+      "patchSha256": "a9f242f31af05b82887a98cf013a05ea4f6d6363290ad12741d6bf6b16f20204",
+      "batch": "chunk-002",
+      "reason": "Codex review on PR #72, 2026-11-17: 'That token gains haste' is modelled as createTokenCopyOf addKeywords, which puts haste in the token's copiable values; a copy of the token wrongly gets haste. No op grants a keyword to the token just created."
     },
     {
       "name": "Planar Engineering",
@@ -93,6 +142,13 @@
       "reason": "Its condition selects attachedToSource, which never matches in a condition (chunk 011)."
     },
     {
+      "name": "Saheeli, the Sun's Brilliance",
+      "oracleId": "5aa76c5d-8046-42ce-b61d-cc9b4806c11a",
+      "patchSha256": "80fbddcb65d8256834c7c9d121fad51ea0812d2f4a39b2a13a116b049ac7463f",
+      "batch": "chunk-006",
+      "reason": "Codex review on PR #72, 2026-11-17: 'That token gains haste' is modelled as createTokenCopyOf addKeywords, which puts haste in the token's copiable values; a copy of the token wrongly gets haste. No op grants a keyword to the token just created."
+    },
+    {
       "name": "Sigiled Sword of Valeron",
       "oracleId": "f1c4269a-1d99-4f3b-8107-a005df3468d5",
       "patchSha256": "63d9136afbad6f437135c4ba62ebb7931cc63fa57b20df372c7db37b3568fde8",
@@ -112,6 +168,13 @@
       "patchSha256": "0c076ccd072b3aaed4e593f98d2d5b198ac6d94845febad5782b021e0687e616",
       "batch": "chunk-009",
       "reason": "Its Map token's explore threw in an activated ability (chunk 009 fuzz)."
+    },
+    {
+      "name": "Tempestra, Dame of Games",
+      "oracleId": "12401ad1-b5c9-43dc-9389-04aaf5db8b26",
+      "patchSha256": "159af98a5d4b6aeaa9a87fd2343ec6a5488f76f25fad9234aaa32bde8f0db7a2",
+      "batch": "chunk-013",
+      "reason": "Codex review on PR #72, 2026-11-17: 'That token gains haste' is modelled as createTokenCopyOf addKeywords, which puts haste in the token's copiable values; a copy of the token wrongly gets haste. No op grants a keyword to the token just created."
     },
     {
       "name": "Vow of Duty",

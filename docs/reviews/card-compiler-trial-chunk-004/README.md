@@ -75,3 +75,10 @@ about 3%. Both are wrong in how the engine runs the data, which no back-translat
 4. Once a card has any registered patch, the interpreter stops stripping generic ability labels
    ("Summary Execution —", "Eukrasia —"), so a line it parsed before becomes unrecognized
    (Commissar Severina Raine, Alphinaud Leveilleur).
+
+## Retired after the Codex review on PR #72 (2026-11-17)
+
+The automated review that ran when the pull request was marked ready found two wrong patches among this chunk's promotions, and both were retired (`docs/reviews/compiled-card-retired.json`):
+
+- **Forth Eorlingas!:** its delayed trigger has no target, so `queueObjectEventTriggers` ignores the inner trigger's "creatures you control" selector. Cast on an opponent's turn without paying its mana cost (Mosswort Bridge, for example), an opponent's combat damage made the caster the monarch. Chunk 016 kept it as sorcery-only; that missed free casts during another player's turn.
+- **Devastating Onslaught:** "That token gains haste" was modelled as `createTokenCopyOf` with `addKeywords`, which writes haste into the token's copiable values, so a copy of the token wrongly has haste. The card grants haste to the token after it is created, and no op can do that. Kiki-Jiki, Mirror Breaker ("except it has haste") is correct as modelled and stays.

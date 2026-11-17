@@ -88,3 +88,9 @@ spell effects the patch drops found only Rile.
 3. Delayed triggers with `expiry: 'endStep'` are swept at the end of the current end step, so one
    created during an end step never fires (Avacyn's return, Saheeli's sacrifice; reviewer finding).
 4. Repeats: stun counters are unimplemented (chunk 004).
+
+## Retired after the Codex review on PR #72 (2026-11-17)
+
+The automated review that ran when the pull request was marked ready found a wrong patch among this chunk's promotions, and it was retired (`docs/reviews/compiled-card-retired.json`):
+
+- **Saheeli, the Sun's Brilliance:** "That token gains haste" was modelled as `createTokenCopyOf` with `addKeywords`, which writes haste into the token's copiable values, so a copy of the token wrongly has haste. The card grants haste to the token after it is created, and no op can do that. Kiki-Jiki, Mirror Breaker ("except it has haste") is correct as modelled and stays.

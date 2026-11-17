@@ -78,3 +78,9 @@ passed every automatic check, about 3.6%.
 2. The validator still accepts a battlefield `selfOnly` activation cost reduction and a spell's
    `targetFilter` cost reduction, neither of which is priced (repeat; three of this chunk's seven
    rejections).
+
+## Retired after the Codex review on PR #72 (2026-11-17)
+
+The automated review that ran when the pull request was marked ready found a wrong patch among this chunk's promotions, and it was retired (`docs/reviews/compiled-card-retired.json`):
+
+- **Lightmine Field:** `damageEach` over attacking creatures also hits creatures put onto the battlefield attacking after the trigger (Anim Pakal's tokens, for example). The card damages only the creatures whose attack triggered it, and no selector reads the attack group.

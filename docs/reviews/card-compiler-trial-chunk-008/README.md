@@ -71,3 +71,9 @@ the engine runs them differently. Root Sliver's scope rule was already known fro
 4. `grantHasteToResolvingSpell` finds the bottom-most spell on the stack, not the one the mana paid
    for (Generator Servant; minor, existing grammar behaviour).
 5. Repeat: `cantBeCountered` is scoped to its controller's spells.
+
+## Retired after the Codex review on PR #72 (2026-11-17)
+
+The automated review that ran when the pull request was marked ready found a wrong patch among this chunk's promotions, and it was retired (`docs/reviews/compiled-card-retired.json`):
+
+- **Chrome Dome:** "That token gains haste" was modelled as `createTokenCopyOf` with `addKeywords`, which writes haste into the token's copiable values, so a copy of the token wrongly has haste. The card grants haste to the token after it is created, and no op can do that. Kiki-Jiki, Mirror Breaker ("except it has haste") is correct as modelled and stays.

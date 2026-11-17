@@ -1830,45 +1830,6 @@ const BATCH_CHUNK_001: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '83b43aba-bf9c-4da2-967d-9daa632e97d2',
-    name: 'Helm of the Host',
-    handledLines: [
-      "At the beginning of combat on your turn, create a token that's a copy of equipped creature, except the token isn't legendary. That token gains haste.",
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'beginningOfCombat',
-            player: 'you',
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'createTokenCopyOf',
-              ref: 'attachedToSource',
-              count: {
-                kind: 'const',
-                n: 1,
-              },
-              exceptNonLegendary: true,
-              addKeywords: ['haste'],
-            },
-          ],
-          description:
-            "At the beginning of combat on your turn, create a token that's a copy of equipped creature, except the token isn't legendary. That token gains haste.",
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-001',
-    patchSha256: '2685fbf9022eb22b0363cd31a636f4efbd58b3569e4a70c6aa8c8fe7427da4e3',
-    behaviorSha256: '64bc33e34f8b05115ace892e53c8d6ab8892b63b1e6e5d11c1baadb418386656',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'cb8ec2e4-8223-4172-8f2c-37c918a573fa',
     name: 'Homeward Path',
     handledLines: ['{T}: Each player gains control of all creatures they own.'],
@@ -6531,57 +6492,6 @@ const BATCH_CHUNK_002: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '92b91910-9b65-4421-8eef-a33793161089',
-    name: 'Molten Duplication',
-    handledLines: [
-      "Create a token that's a copy of target artifact or creature you control, except it's an artifact in addition to its other types. It gains haste until end of turn. Sacrifice it at the beginning of the next end step.",
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [
-          {
-            kind: 'permanent',
-            controller: 'you',
-            filter: {
-              kind: 'anyOf',
-              of: [
-                {
-                  kind: 'type',
-                  value: 'Artifact',
-                },
-                {
-                  kind: 'type',
-                  value: 'Creature',
-                },
-              ],
-            },
-          },
-        ],
-        effects: [
-          {
-            op: 'createTokenCopyOf',
-            ref: 0,
-            count: {
-              kind: 'const',
-              n: 1,
-            },
-            addTypes: ['Artifact'],
-            addKeywords: ['haste'],
-            sacrificeAt: 'endStep',
-          },
-        ],
-        description:
-          "Create a token that's a copy of target artifact or creature you control, except it's an artifact in addition to its other types. It gains haste until end of turn. Sacrifice it at the beginning of the next end step.",
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-002',
-    patchSha256: 'a9f242f31af05b82887a98cf013a05ea4f6d6363290ad12741d6bf6b16f20204',
-    behaviorSha256: '9f1ed1c1286e4c6b71ede8422cfda7586cefdb10f96a01d9aed6175224cc63d3',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'c48df45c-3513-4d56-aed6-30c2f3a759cd',
     name: 'Monumental Henge',
     handledLines: [
@@ -9442,60 +9352,6 @@ const BATCH_CHUNK_003: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-003',
     patchSha256: '74db033946b9d7c207cf81908d9432c156d16b1a85fd7c25c934932fd6752c73',
     behaviorSha256: '16aa65cce8fb5f824381270eb0c9e85b758171110439cadbc8130352b6e183f0',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '236ce592-1321-4a7c-b695-fd84496f8924',
-    name: 'Fear of Missing Out',
-    handledLines: [
-      'Whenever this creature attacks for the first time each turn, if there are four or more card types among cards in your graveyard, untap target creature. After this phase, there is an additional combat phase.',
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'attacks',
-            subject: {
-              kind: 'self',
-            },
-            oncePerTurn: true,
-            condition: {
-              kind: 'compareValues',
-              left: {
-                kind: 'cardTypesInYourGraveyard',
-              },
-              cmp: '>=',
-              right: {
-                kind: 'const',
-                n: 4,
-              },
-            },
-          },
-          optional: false,
-          targets: [
-            {
-              kind: 'creature',
-            },
-          ],
-          effects: [
-            {
-              op: 'untapTarget',
-              target: 0,
-            },
-            {
-              op: 'extraCombatPhase',
-            },
-          ],
-          description:
-            'Delirium — Whenever this creature attacks for the first time each turn, if there are four or more card types among cards in your graveyard, untap target creature. After this phase, there is an additional combat phase.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-003',
-    patchSha256: 'b2671f7fb7b7a495edeae8f42aebe807c5b0b8bb80cc81961279f734b9b3fefb',
-    behaviorSha256: '24315d64a050d8bdbe758d8a53d4d7258c5ba8887f99bd75acd9accd3c50fe93',
     acceptedBy: 'main-thread',
   },
   {
@@ -13287,55 +13143,6 @@ const BATCH_CHUNK_004: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '2e17cd4c-ebf0-40d0-b52d-b4d84bbcf7b3',
-    name: 'Devastating Onslaught',
-    handledLines: [
-      'Create X tokens that are copies of target artifact or creature you control. Those tokens gain haste until end of turn. Sacrifice them at the beginning of the next end step.',
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [
-          {
-            kind: 'permanent',
-            controller: 'you',
-            filter: {
-              kind: 'anyOf',
-              of: [
-                {
-                  kind: 'type',
-                  value: 'Artifact',
-                },
-                {
-                  kind: 'type',
-                  value: 'Creature',
-                },
-              ],
-            },
-          },
-        ],
-        effects: [
-          {
-            op: 'createTokenCopyOf',
-            ref: 0,
-            count: {
-              kind: 'xValue',
-            },
-            addKeywords: ['haste'],
-            sacrificeAt: 'endStep',
-          },
-        ],
-        description:
-          'Create X tokens that are copies of target artifact or creature you control. Those tokens gain haste until end of turn. Sacrifice them at the beginning of the next end step.',
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-004',
-    patchSha256: '9130c00e72c379f1b6ef6be05d8861a5737e578f801f8dfa390c6caca2c6e92a',
-    behaviorSha256: '91c9f381511691a7b3a362b588435ac3dc7c7d0e7fea6a920a4686202a8e4018',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'e1e0dc37-20c9-4236-ae01-e0891ce83afb',
     name: 'Devilish Valet',
     handledLines: [
@@ -13629,80 +13436,6 @@ const BATCH_CHUNK_004: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-004',
     patchSha256: '09b865edd9d5141679f97652949ca3a1b733ffb2fcf3f6b56743e6c5ce1150ea',
     behaviorSha256: '82b2ca79307a1c6dda87620766664ccd250f91426efd2f057c1106fff0101ae4',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '35807c14-4647-482f-9ba1-6d640fd5e8d8',
-    name: 'Forth Eorlingas!',
-    handledLines: [
-      'Whenever one or more creatures you control deal combat damage to one or more players this turn, you become the monarch.',
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [],
-        effects: [
-          {
-            op: 'createToken',
-            spec: {
-              name: 'Human Knight',
-              typeLine: 'Token Creature — Human Knight',
-              types: ['Creature'],
-              subtypes: ['Human', 'Knight'],
-              colors: ['R'],
-              power: 2,
-              toughness: 2,
-              keywords: ['trample', 'haste'],
-            },
-            count: {
-              kind: 'xValue',
-            },
-          },
-          {
-            op: 'registerDelayedTrigger',
-            when: 'dealsCombatDamageToPlayer',
-            ability: {
-              kind: 'triggered',
-              targets: [],
-              effects: [
-                {
-                  op: 'becomeMonarch',
-                },
-              ],
-              trigger: {
-                when: 'dealsCombatDamageToPlayer',
-                subject: {
-                  kind: 'permanent',
-                  selector: {
-                    kind: 'allOf',
-                    of: [
-                      {
-                        kind: 'controller',
-                        who: 'you',
-                      },
-                      {
-                        kind: 'type',
-                        value: 'Creature',
-                      },
-                    ],
-                  },
-                },
-                aggregate: 'byEventPlayer',
-              },
-              description:
-                'Whenever one or more creatures you control deal combat damage to one or more players this turn, you become the monarch.',
-            },
-            expiry: 'cleanup',
-          },
-        ],
-        description:
-          'Create X 2/2 red Human Knight creature tokens with trample and haste. Whenever one or more creatures you control deal combat damage to one or more players this turn, you become the monarch.',
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-004',
-    patchSha256: '74955335ecac13503a9621d48772df609cecbd394daa6ebefae8850b7f62bb03',
-    behaviorSha256: '8c06a27c2a62c444a6899346ee2dfc214a19dc943dbdce3de814d207138b73c7',
     acceptedBy: 'main-thread',
   },
   {
@@ -23316,89 +23049,6 @@ const BATCH_CHUNK_006: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '5aa76c5d-8046-42ce-b61d-cc9b4806c11a',
-    name: "Saheeli, the Sun's Brilliance",
-    handledLines: [
-      "{U}{R}, {T}: Create a token that's a copy of another target creature or artifact you control, except it's an artifact in addition to its other types. It gains haste. Sacrifice it at the beginning of the next end step.",
-    ],
-    def: {
-      activatedAbilities: [
-        {
-          costs: [
-            {
-              kind: 'mana',
-              cost: {
-                generic: 0,
-                colored: {
-                  W: 0,
-                  U: 1,
-                  B: 0,
-                  R: 1,
-                  G: 0,
-                },
-                colorless: 0,
-              },
-            },
-            {
-              kind: 'tap',
-            },
-          ],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [
-              {
-                kind: 'permanent',
-                controller: 'you',
-                filter: {
-                  kind: 'allOf',
-                  of: [
-                    {
-                      kind: 'other',
-                    },
-                    {
-                      kind: 'anyOf',
-                      of: [
-                        {
-                          kind: 'type',
-                          value: 'Creature',
-                        },
-                        {
-                          kind: 'type',
-                          value: 'Artifact',
-                        },
-                      ],
-                    },
-                  ],
-                },
-              },
-            ],
-            effects: [
-              {
-                op: 'createTokenCopyOf',
-                ref: 0,
-                count: {
-                  kind: 'const',
-                  n: 1,
-                },
-                addTypes: ['Artifact'],
-                addKeywords: ['haste'],
-                sacrificeAt: 'endStep',
-              },
-            ],
-            description:
-              "{U}{R}, {T}: Create a token that's a copy of another target creature or artifact you control, except it's an artifact in addition to its other types. It gains haste. Sacrifice it at the beginning of the next end step.",
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-006',
-    patchSha256: '80fbddcb65d8256834c7c9d121fad51ea0812d2f4a39b2a13a116b049ac7463f',
-    behaviorSha256: '32a77f262e7355c00ca407d146c1bd8fcaa37ec2833a18f4445aea4af0807de3',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'c4175a34-70bb-47e5-8406-efdc4d2cd079',
     name: 'Sami, Wildcat Captain',
     handledLines: ['Spells you cast have affinity for artifacts.'],
@@ -30199,76 +29849,6 @@ const BATCH_CHUNK_008: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-008',
     patchSha256: '22b1bced04f61fe97e64a89207e50045e9e2da47bb02ecdd7e587a780f01bc9d',
     behaviorSha256: '4a70a879ec3eee8ae812cf56273d979e260183a10c002b92c10f72fcc58ecbef',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '3dc71e16-b935-4ad7-b3f7-945ac2c179a7',
-    name: 'Chrome Dome',
-    handledLines: [
-      "{5}: Create a token that's a copy of another target artifact you control. That token gains haste. Sacrifice it at the beginning of the next end step.",
-    ],
-    def: {
-      activatedAbilities: [
-        {
-          costs: [
-            {
-              kind: 'mana',
-              cost: {
-                generic: 5,
-                colored: {
-                  W: 0,
-                  U: 0,
-                  B: 0,
-                  R: 0,
-                  G: 0,
-                },
-                colorless: 0,
-              },
-            },
-          ],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [
-              {
-                kind: 'permanent',
-                controller: 'you',
-                filter: {
-                  kind: 'allOf',
-                  of: [
-                    {
-                      kind: 'other',
-                    },
-                    {
-                      kind: 'type',
-                      value: 'Artifact',
-                    },
-                  ],
-                },
-              },
-            ],
-            effects: [
-              {
-                op: 'createTokenCopyOf',
-                ref: 0,
-                count: {
-                  kind: 'const',
-                  n: 1,
-                },
-                addKeywords: ['haste'],
-                sacrificeAt: 'endStep',
-              },
-            ],
-            description:
-              "{5}: Create a token that's a copy of another target artifact you control. That token gains haste. Sacrifice it at the beginning of the next end step.",
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-008',
-    patchSha256: '5aa3f47bed6ca8f5f527fec5677fa2eb7ffbad7fbaf51e3d193df64283c48044',
-    behaviorSha256: '982dc786f086f5181c4b0a76e62bb7e7a55509b530bde0b54cef46c6d1ab51de',
     acceptedBy: 'main-thread',
   },
   {
@@ -55061,79 +54641,6 @@ const BATCH_CHUNK_013: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '12401ad1-b5c9-43dc-9389-04aaf5db8b26',
-    name: 'Tempestra, Dame of Games',
-    handledLines: [
-      "{2}{R}, {T}, Sacrifice an artifact: Create a token that's a copy of another target creature you control, except it isn't legendary. It gains haste. Sacrifice it at the beginning of the next end step.",
-    ],
-    def: {
-      activatedAbilities: [
-        {
-          costs: [
-            {
-              kind: 'mana',
-              cost: {
-                generic: 2,
-                colored: {
-                  W: 0,
-                  U: 0,
-                  B: 0,
-                  R: 1,
-                  G: 0,
-                },
-                colorless: 0,
-              },
-            },
-            {
-              kind: 'tap',
-            },
-            {
-              kind: 'sacrificeOther',
-              selector: {
-                kind: 'type',
-                value: 'Artifact',
-              },
-              count: 1,
-            },
-          ],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [
-              {
-                kind: 'creature',
-                controller: 'you',
-                filter: {
-                  kind: 'other',
-                },
-              },
-            ],
-            effects: [
-              {
-                op: 'createTokenCopyOf',
-                ref: 0,
-                count: {
-                  kind: 'const',
-                  n: 1,
-                },
-                exceptNonLegendary: true,
-                addKeywords: ['haste'],
-                sacrificeAt: 'endStep',
-              },
-            ],
-            description:
-              "{2}{R}, {T}, Sacrifice an artifact: Create a token that's a copy of another target creature you control, except it isn't legendary. It gains haste. Sacrifice it at the beginning of the next end step.",
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-013',
-    patchSha256: '159af98a5d4b6aeaa9a87fd2343ec6a5488f76f25fad9234aaa32bde8f0db7a2',
-    behaviorSha256: '619f0da7ab031fa3f3bad0abab9c21f85e7a613dcde7b1bb4f472c1f1abe98b6',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '91363d71-eef0-48e8-9a68-8f363ff2790e',
     name: 'Tend the Sprigs',
     handledLines: [
@@ -58192,45 +57699,6 @@ const BATCH_CHUNK_014: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-014',
     patchSha256: '56dcfd40092e54d6c50777a87881ea157401a3da353830b1039d40f06550cb88',
     behaviorSha256: '03db36cc47e74f8d89cfa9250e12adaf4c8b92126cbc3c5b95e4cb852a74f8db',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '20490b29-4f08-48a2-bf54-2ba118e746ac',
-    name: 'Lightmine Field',
-    handledLines: [
-      'Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures.',
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'attackDeclared',
-            attacker: 'any',
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'damageEach',
-              selector: {
-                kind: 'combatRole',
-                role: 'attacking',
-              },
-              amount: {
-                kind: 'attackingCreatures',
-              },
-            },
-          ],
-          description:
-            'Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-014',
-    patchSha256: '192bbf38bde15131eaa9c2964be6dd19afa760251616e6bbb1b8c1c5245ed69b',
-    behaviorSha256: 'be04c5cd38565bee76a5e24be82debd075d2f2cf1f239555016c781383fbb691',
     acceptedBy: 'main-thread',
   },
   {

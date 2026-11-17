@@ -113,3 +113,9 @@ ADR 0047 lets audits drop to a sample after two fully audited chunks: every card
 and a random 20 of the rest. At a 4% escape rate, a sampled chunk of about 80 promoted cards would
 let through two or three wrong cards at ranks past 2,000. Either the validator has to catch this
 class first (findings 1 to 3 are each a validator rule), or the audit stays at every card.
+
+## Retired after the Codex review on PR #72 (2026-11-17)
+
+The automated review that ran when the pull request was marked ready found a wrong patch among this chunk's promotions, and it was retired (`docs/reviews/compiled-card-retired.json`):
+
+- **Helm of the Host:** "That token gains haste" was modelled as `createTokenCopyOf` with `addKeywords`, which writes haste into the token's copiable values, so a copy of the token wrongly has haste. The card grants haste to the token after it is created, and no op can do that. Kiki-Jiki, Mirror Breaker ("except it has haste") is correct as modelled and stays.

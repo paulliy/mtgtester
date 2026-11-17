@@ -105,3 +105,9 @@ New in this chunk; none is fixed here, because a promotion may not change engine
    without its ability.
 5. `differentFromSlots` on a second target throws in play (Ulvenwald Tracker; also Gleaming
    Splendor in chunk 002).
+
+## Retired after the Codex review on PR #72 (2026-11-17)
+
+The automated review that ran when the pull request was marked ready found a wrong patch among this chunk's promotions, and it was retired (`docs/reviews/compiled-card-retired.json`):
+
+- **Fear of Missing Out:** `queueObjectEventTriggers` checks the trigger's condition before it records `oncePerTurn`. A first attack without delirium leaves the trigger free to fire on a later attack that turn; the card triggers only on the creature's first attack.
