@@ -79,3 +79,10 @@ The owner's review of every promoted card found 5 wrong patches among this chunk
 - **Inspirit, Flagship Vessel:** The station threshold is rechecked on resolution as an intervening-if; removing counters after the trigger cancels it.
 - **Siphon Insight:** Any-color permission becomes any-type, dropping colorless requirements.
 - **Wand of Orcus:** GrantKeywordEachUntilEot with attachedToSource never matches (affectedBy passes no attachment), so a non-Zombie equipped creature never gains deathtouch.
+
+## Retired after the Codex review of ddc89f4 (2026-11-17)
+
+- **Reject Imperfection:** the counter removes the spell from the stack before the condition reads
+  its mana value, so `manaValueOfTarget` reads 0 and the card always proliferates. This is the same
+  gap the owner's review found in Electrosiphon. A scan of every remaining patch found no other
+  value read after a counter.

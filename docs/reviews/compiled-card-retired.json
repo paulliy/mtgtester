@@ -471,6 +471,13 @@
       "reason": "Owner review on PR #72, 2026-11-17: offspring has no intervening-if, so the trigger goes on the stack when offspring was not paid."
     },
     {
+      "name": "Reject Imperfection",
+      "oracleId": "25781dc5-d6ea-4273-9fe3-06a8808b3718",
+      "patchSha256": "9225620ce13e5fef9bd317a55684f35cb7022b0907b3faab563066db41042a8f",
+      "batch": "chunk-005",
+      "reason": "Codex review on PR #72, 2026-11-17: the counter removes the spell from the stack first, so manaValueOfTarget then reads 0 and it always proliferates (the Electrosiphon gap); a scan found no other patch that reads a value after a counter."
+    },
+    {
       "name": "Relic Vial",
       "oracleId": "7e86d4a6-e4cd-418a-8bbc-72cdad753e3a",
       "patchSha256": "caff2946a4c9c8921734fef9f82f8529fad7b74f12c6e140882a486436bcaa53",

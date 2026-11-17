@@ -12393,52 +12393,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "25781dc5-d6ea-4273-9fe3-06a8808b3718",
-    "name": "Reject Imperfection",
-    "handledLines": [
-      "Counter target spell. If that spell's mana value was 3 or less, proliferate."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Counter target spell. If that spell's mana value was 3 or less, proliferate.",
-        "effects": [
-          {
-            "op": "counter",
-            "target": 0
-          },
-          {
-            "condition": {
-              "cmp": "<=",
-              "kind": "compareValues",
-              "left": {
-                "kind": "manaValueOfTarget",
-                "target": 0
-              },
-              "right": {
-                "kind": "const",
-                "n": 3
-              }
-            },
-            "else": [],
-            "op": "conditionalEffect",
-            "then": [
-              {
-                "op": "proliferate"
-              }
-            ]
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "spell"
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "2598294c-a9a7-4bef-a562-23f297a80536",
     "name": "Songbirds' Blessing",
     "handledLines": [
@@ -142294,52 +142248,6 @@
         ]
       }
     }
-  },
-  {
-    "oracleId": "oracle-reject-imperfection",
-    "name": "Reject Imperfection",
-    "handledLines": [
-      "Counter target spell. If that spell's mana value was 3 or less, proliferate."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Counter target spell. If that spell's mana value was 3 or less, proliferate.",
-        "effects": [
-          {
-            "op": "counter",
-            "target": 0
-          },
-          {
-            "condition": {
-              "cmp": "<=",
-              "kind": "compareValues",
-              "left": {
-                "kind": "manaValueOfTarget",
-                "target": 0
-              },
-              "right": {
-                "kind": "const",
-                "n": 3
-              }
-            },
-            "else": [],
-            "op": "conditionalEffect",
-            "then": [
-              {
-                "op": "proliferate"
-              }
-            ]
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "spell"
-          }
-        ]
-      }
-    },
-    "compose": "append"
   },
   {
     "oracleId": "oracle-reliquary-tower",

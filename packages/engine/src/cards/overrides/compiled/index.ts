@@ -17282,54 +17282,6 @@ const BATCH_CHUNK_005: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '25781dc5-d6ea-4273-9fe3-06a8808b3718',
-    name: 'Reject Imperfection',
-    handledLines: ["Counter target spell. If that spell's mana value was 3 or less, proliferate."],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [
-          {
-            kind: 'spell',
-          },
-        ],
-        effects: [
-          {
-            op: 'counter',
-            target: 0,
-          },
-          {
-            op: 'conditionalEffect',
-            condition: {
-              kind: 'compareValues',
-              left: {
-                kind: 'manaValueOfTarget',
-                target: 0,
-              },
-              cmp: '<=',
-              right: {
-                kind: 'const',
-                n: 3,
-              },
-            },
-            then: [
-              {
-                op: 'proliferate',
-              },
-            ],
-            else: [],
-          },
-        ],
-        description: "Counter target spell. If that spell's mana value was 3 or less, proliferate.",
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-005',
-    patchSha256: '9225620ce13e5fef9bd317a55684f35cb7022b0907b3faab563066db41042a8f',
-    behaviorSha256: '3f7cb4da9fcb922e0f543708943ee75d9cef85a2a2d160934ebdabc08875a951',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'ba5055ce-6809-47a4-bee6-fb97a5b60f8a',
     name: 'Research Thief',
     handledLines: [
