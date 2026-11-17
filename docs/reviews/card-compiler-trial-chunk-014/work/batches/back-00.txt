@@ -1,3 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-014/work/prompts/back/hunting-grounds.md	docs/reviews/card-compiler-trial-chunk-014/work/answers/back/hunting-grounds.txt
-docs/reviews/card-compiler-trial-chunk-014/work/prompts/back/invoke-the-winds.md	docs/reviews/card-compiler-trial-chunk-014/work/answers/back/invoke-the-winds.txt
-docs/reviews/card-compiler-trial-chunk-014/work/prompts/back/brotherhood-spy.md	docs/reviews/card-compiler-trial-chunk-014/work/answers/back/brotherhood-spy.txt
