@@ -1,0 +1,54 @@
+{
+  "name": "Ghitu Encampment",
+  "oracleId": "9cc02c16-8cf9-4ac7-9475-231c27121968",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{R}: ~ becomes a 2/1 red Warrior creature with first strike until end of turn. It's still a land."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 1,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "becomeCreatureUntilEot",
+              "target": "source",
+              "subtypes": [
+                "Warrior"
+              ],
+              "power": 2,
+              "toughness": 1,
+              "keywords": [
+                "first strike"
+              ],
+              "colors": [
+                "R"
+              ]
+            }
+          ],
+          "description": "{1}{R}: This land becomes a 2/1 red Warrior creature with first strike until end of turn. It's still a land."
+        }
+      }
+    ]
+  }
+}

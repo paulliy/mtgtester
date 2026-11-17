@@ -1,0 +1,1 @@
+Whenever you cast a creature spell, put a number of +1/+1 counters equal to that spell's mana value on target creature you control.

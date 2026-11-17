@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A searches for a card with the same mana value as this card; Text B searches for a card with mana value at most 2 and at least 2, i.e. exactly 2, regardless of this card's mana value.","Text B adds 'Activate only from hand' as a separate restriction, and frames the search as a library search rather than a search of your library."]}

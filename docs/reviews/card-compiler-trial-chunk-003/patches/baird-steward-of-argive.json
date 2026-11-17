@@ -1,0 +1,18 @@
+{
+  "name": "Baird, Steward of Argive",
+  "oracleId": "69aa6809-5468-413a-94c9-562e6de93957",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "attackTax",
+        "amount": 1,
+        "includePlaneswalkers": true
+      }
+    ]
+  }
+}

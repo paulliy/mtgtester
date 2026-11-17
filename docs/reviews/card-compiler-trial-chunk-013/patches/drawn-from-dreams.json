@@ -1,0 +1,34 @@
+{
+  "name": "Drawn from Dreams",
+  "oracleId": "77acdc13-e1b5-4a6c-9be1-b987e8256f10",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Look at the top seven cards of your library. Put two of them into your hand and the rest on the bottom of your library in a random order."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "lookAtTopN",
+          "count": 7,
+          "mayPut": {
+            "filter": {
+              "kind": "allOf",
+              "of": []
+            },
+            "destination": {
+              "zone": "hand"
+            },
+            "required": true,
+            "count": 2
+          },
+          "rest": "bottomRandom"
+        }
+      ],
+      "description": "Look at the top seven cards of your library. Put two of them into your hand and the rest on the bottom of your library in a random order."
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "name": "Extinguisher Battleship",
+  "oracleId": "cce3dcc3-57bb-4b95-8b70-337c67bb3c4e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Spacecraft enters, destroy target noncreature permanent. Then this Spacecraft deals 4 damage to each creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "permanent",
+            "filter": {
+              "kind": "not",
+              "of": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "destroy",
+            "target": 0
+          },
+          {
+            "op": "damageEach",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "amount": {
+              "kind": "const",
+              "n": 4
+            }
+          }
+        ],
+        "description": "When this Spacecraft enters, destroy target noncreature permanent. Then this Spacecraft deals 4 damage to each creature."
+      }
+    ]
+  }
+}

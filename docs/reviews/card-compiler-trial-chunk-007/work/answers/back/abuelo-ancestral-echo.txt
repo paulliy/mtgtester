@@ -1,0 +1,1 @@
+{1}{W}{U}: Exile target other creature or artifact you control. Return that card to the battlefield under its owner's control at the beginning of the next end step.

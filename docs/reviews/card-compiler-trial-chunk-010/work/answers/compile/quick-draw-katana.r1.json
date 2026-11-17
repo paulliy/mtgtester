@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"attachedToSource"},"op":{"layer":7,"sublayer":"d","power":2,"toughness":0},"condition":{"kind":"yourTurn"}},{"affects":{"kind":"attachedToSource"},"op":{"layer":6,"addKeyword":"first strike"},"condition":{"kind":"yourTurn"}}]}}

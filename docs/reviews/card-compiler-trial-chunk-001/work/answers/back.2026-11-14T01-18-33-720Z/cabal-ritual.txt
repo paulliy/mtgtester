@@ -1,0 +1,1 @@
+If there are seven or more cards in your graveyard, add {B}{B}{B}{B}{B}. Otherwise, add {B}{B}{B}.

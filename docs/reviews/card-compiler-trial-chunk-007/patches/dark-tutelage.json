@@ -1,0 +1,28 @@
+{
+  "name": "Dark Tutelage",
+  "oracleId": "0c6ce7c9-316b-4171-a8fa-ca26af1eecb7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "drawRevealTopLoseManaValue"
+          }
+        ],
+        "description": "At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value."
+      }
+    ]
+  }
+}

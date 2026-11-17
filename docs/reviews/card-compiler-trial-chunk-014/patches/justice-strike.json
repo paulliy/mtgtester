@@ -1,0 +1,31 @@
+{
+  "name": "Justice Strike",
+  "oracleId": "bc63e7ca-e62a-4026-803d-eecdbbedf3c6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature deals damage to itself equal to its power."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamage",
+          "target": 0,
+          "amount": {
+            "kind": "powerOfTarget",
+            "target": 0
+          },
+          "source": 0
+        }
+      ],
+      "description": "Target creature deals damage to itself equal to its power."
+    }
+  }
+}

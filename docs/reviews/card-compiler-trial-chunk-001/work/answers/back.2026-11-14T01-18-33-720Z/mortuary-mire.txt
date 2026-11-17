@@ -1,0 +1,1 @@
+When this land enters, you may target a creature card in your graveyard. If you do, put that card on top of its owner's library. This trigger is optional.

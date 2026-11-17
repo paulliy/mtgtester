@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A's upkeep trigger has no target and picks a card at random from the graveyard; Text B says 'choose target' instruction, which adds a targeting element not on the card.","Text B's card choice is made as the ability is put on the stack, which is timing text not in Text A."]}

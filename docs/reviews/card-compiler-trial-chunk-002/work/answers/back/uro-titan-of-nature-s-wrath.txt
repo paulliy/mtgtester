@@ -1,0 +1,1 @@
+When this creature enters, if it escaped, nothing happens. Otherwise, sacrifice it.

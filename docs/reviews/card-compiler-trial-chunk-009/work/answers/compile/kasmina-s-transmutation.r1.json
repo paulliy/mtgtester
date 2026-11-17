@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"attachedToSource"},"op":{"layer":6,"loseAllAbilities":true}},{"affects":{"kind":"attachedToSource"},"op":{"layer":7,"sublayer":"b","power":{"kind":"const","n":1},"toughness":{"kind":"const","n":1}}}]}}

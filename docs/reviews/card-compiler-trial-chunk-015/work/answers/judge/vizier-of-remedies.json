@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A replaces a single event that puts N -1/-1 counters with N-1 counters; Text B replaces each individual -1/-1 counter with one fewer, so when several -1/-1 counters are put on a creature you control at once, Text B puts zero where Text A puts N-1."]}

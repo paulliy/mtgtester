@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"cardInGraveyard","graveyardOwnerScope":"any"}],"effects":[{"op":"graveyardToLibraryTop","target":0}],"description":"Put target card from a graveyard on top of its owner's library."}}}

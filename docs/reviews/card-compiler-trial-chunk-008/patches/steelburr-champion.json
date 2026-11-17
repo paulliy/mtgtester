@@ -1,0 +1,51 @@
+{
+  "name": "Steelburr Champion",
+  "oracleId": "d1f3d5ca-cb17-400f-8ed9-3b9a4f151b62",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Offspring {1}{W}"
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": "source",
+            "count": {
+              "kind": "optionalCostCount",
+              "mechanic": "offspring"
+            },
+            "powerOverride": 1,
+            "toughnessOverride": 1
+          }
+        ],
+        "description": "Offspring {1}{W}"
+      }
+    ],
+    "optionalAdditionalCost": {
+      "mechanic": "offspring",
+      "cost": {
+        "generic": 1,
+        "colored": {
+          "W": 1,
+          "U": 0,
+          "B": 0,
+          "R": 0,
+          "G": 0
+        },
+        "colorless": 0
+      }
+    }
+  }
+}

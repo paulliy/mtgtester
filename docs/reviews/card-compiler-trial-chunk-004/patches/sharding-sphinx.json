@@ -1,0 +1,70 @@
+{
+  "name": "Sharding Sphinx",
+  "oracleId": "9ebc0144-fc45-4de7-b3d8-ef8cf2e211ae",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an artifact creature you control deals combat damage to a player, you may create a 1/1 blue Thopter artifact creature token with flying."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Thopter",
+              "typeLine": "Artifact Creature — Thopter",
+              "types": [
+                "Artifact",
+                "Creature"
+              ],
+              "subtypes": [
+                "Thopter"
+              ],
+              "colors": [
+                "U"
+              ],
+              "power": 1,
+              "toughness": 1,
+              "keywords": [
+                "flying"
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever an artifact creature you control deals combat damage to a player, you may create a 1/1 blue Thopter artifact creature token with flying."
+      }
+    ]
+  }
+}

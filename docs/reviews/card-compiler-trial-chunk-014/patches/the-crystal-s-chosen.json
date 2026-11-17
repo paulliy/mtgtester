@@ -1,0 +1,56 @@
+{
+  "name": "The Crystal's Chosen",
+  "oracleId": "df4ef2f8-2591-4be3-b905-4f9ff9c538ea",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Create four 1/1 colorless Hero creature tokens. Then put a +1/+1 counter on each creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "description": "Create four 1/1 colorless Hero creature tokens. Then put a +1/+1 counter on each creature you control.",
+      "targets": [],
+      "effects": [
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Hero",
+            "typeLine": "Token Creature — Hero",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Hero"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1
+          },
+          "count": {
+            "kind": "const",
+            "n": 4
+          }
+        },
+        {
+          "op": "putCountersEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  }
+}

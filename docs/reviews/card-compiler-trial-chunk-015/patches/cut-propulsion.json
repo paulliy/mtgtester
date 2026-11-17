@@ -1,0 +1,59 @@
+{
+  "name": "Cut Propulsion",
+  "oracleId": "cf3234f2-09d7-4d8b-b871-3bf0fcb75b6d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature deals damage to itself equal to its power. If that creature has flying, it deals twice that much damage to itself instead."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "hasKeyword",
+              "keyword": "flying"
+            }
+          },
+          "checkTarget": 0,
+          "then": [
+            {
+              "op": "dealDamage",
+              "target": 0,
+              "source": 0,
+              "amount": {
+                "kind": "times",
+                "of": {
+                  "kind": "powerOfTarget",
+                  "target": 0
+                },
+                "n": 2
+              }
+            }
+          ],
+          "else": [
+            {
+              "op": "dealDamage",
+              "target": 0,
+              "source": 0,
+              "amount": {
+                "kind": "powerOfTarget",
+                "target": 0
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Target creature deals damage to itself equal to its power. If that creature has flying, it deals twice that much damage to itself instead."
+    }
+  }
+}

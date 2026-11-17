@@ -1,0 +1,2 @@
+This creature is also the chosen creature type in addition to its other types.
+Nothing in this data chooses that creature type.

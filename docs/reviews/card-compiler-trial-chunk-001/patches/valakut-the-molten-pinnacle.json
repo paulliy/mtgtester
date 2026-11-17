@@ -1,0 +1,62 @@
+{
+  "name": "Valakut, the Molten Pinnacle",
+  "oracleId": "1bc44216-4e06-4f66-89b7-5c327004604e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a Mountain you control enters, if you control at least five other Mountains, you may have this land deal 3 damage to any target."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Mountain"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "subtype",
+              "value": "Mountain"
+            },
+            "scope": "you",
+            "cmp": ">=",
+            "n": 5
+          }
+        },
+        "optional": true,
+        "targets": [
+          {
+            "kind": "anyTarget"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "const",
+              "n": 3
+            }
+          }
+        ],
+        "description": "Whenever a Mountain you control enters, if you control at least five other Mountains, you may have this land deal 3 damage to any target."
+      }
+    ]
+  }
+}

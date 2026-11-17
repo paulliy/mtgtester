@@ -1,0 +1,42 @@
+{
+  "name": "Sunblast Angel",
+  "oracleId": "8b34d1df-4024-497d-bd28-a7caa8c3fa24",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, destroy all tapped creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "destroyEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "tapped"
+                }
+              ]
+            }
+          }
+        ],
+        "description": "When this creature enters, destroy all tapped creatures."
+      }
+    ]
+  }
+}

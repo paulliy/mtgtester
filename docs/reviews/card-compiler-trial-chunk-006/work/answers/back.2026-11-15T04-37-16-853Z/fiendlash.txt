@@ -1,0 +1,1 @@
+Whenever equipped creature is dealt damage, equipped creature deals damage equal to its power to target player or planeswalker.

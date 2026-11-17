@@ -1,0 +1,32 @@
+{
+  "name": "Aeronaut Admiral",
+  "oracleId": "dcde1a62-33a5-4454-a389-9bf7a3521a4c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Vehicles you control have flying."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Vehicle"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "flying"
+        }
+      }
+    ]
+  }
+}

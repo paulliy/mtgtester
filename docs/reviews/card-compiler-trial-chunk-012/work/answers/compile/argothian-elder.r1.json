@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"tap"}],"timing":"any","ability":{"kind":"activated","targets":[{"kind":"land"},{"kind":"land","differentFromSlots":[0]}],"effects":[{"op":"untapTarget","target":0},{"op":"untapTarget","target":1}],"description":"{T}: Untap two target lands."}}]}}

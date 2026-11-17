@@ -1,0 +1,1 @@
+Target creature gains double strike until end of turn. If you control a creature with power 4 or greater, that creature also gains trample until end of turn.

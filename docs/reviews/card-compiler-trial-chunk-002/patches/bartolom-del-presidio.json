@@ -1,0 +1,58 @@
+{
+  "name": "Bartolomé del Presidio",
+  "oracleId": "f47e4c56-0a0b-422d-bf3d-7a20ee289f15",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice another creature or artifact: Put a +1/+1 counter on ~."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "self"
+              },
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ],
+          "description": "Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del Presidio."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "name": "Heritage Druid",
+  "oracleId": "0b7f9c71-6f3c-4056-9bed-04b9f2296f3b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap three untapped Elves you control: Add {G}{G}{G}."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G"
+          ],
+          [
+            "G"
+          ],
+          [
+            "G"
+          ]
+        ],
+        "costs": [
+          {
+            "kind": "tapOthers",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Elf"
+                }
+              ]
+            },
+            "count": 3,
+            "allowSelf": true
+          }
+        ]
+      }
+    ]
+  }
+}

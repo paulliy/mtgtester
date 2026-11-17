@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"entersTappedUnless":{"kind":"anyOf","of":[{"kind":"countPermanents","selector":{"kind":"subtype","value":"Soldier"},"scope":"you","cmp":">=","n":1},{"kind":"mayRevealCardFromHand","subtypes":["Soldier"]}]}}}

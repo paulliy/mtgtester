@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The cost exiles an artifact card from the graveyard chosen by a variable mana value X, and the schema's graveyard-exile cost (exileOtherCardsFromGraveyard) takes only a fixed count, while the copy effect has no way to reference the exiled card."}

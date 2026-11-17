@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'It deals 1 damage to each opponent' is dealt by the equipped creature, but eachOpponentDamage has no source field and would make the Equipment the damage source."}

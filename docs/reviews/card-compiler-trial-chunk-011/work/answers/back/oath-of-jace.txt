@@ -1,0 +1,1 @@
+At the beginning of your upkeep, scry X, where X is the number of planeswalkers you control.

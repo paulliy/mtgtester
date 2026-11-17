@@ -1,0 +1,47 @@
+{
+  "name": "Mothdust Changeling",
+  "oracleId": "52237e6b-19f6-405c-a668-545c4ccb1b6d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap an untapped creature you control: ~ gains flying until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tapOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": "source",
+              "keyword": "flying"
+            }
+          ],
+          "description": "Tap an untapped creature you control: This creature gains flying until end of turn."
+        }
+      }
+    ]
+  }
+}

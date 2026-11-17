@@ -1,0 +1,2 @@
+You gain life equal to the number of creatures your opponents control.
+Create a damage shield for you.

@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A triggers only during an opponent's turn; Text B triggers on any turn that isn't your turn, which in a game with a non-opponent player (such as a teammate) includes turns that are not an opponent's turn."]}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature"}],"effects":[{"op":"pumpUntilEot","target":0,"power":{"kind":"xValue"},"toughness":0}],"description":"Target creature gets +X/+0 until end of turn."}}}

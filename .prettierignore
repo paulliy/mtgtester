@@ -20,6 +20,8 @@ packages/engine/tests/fixtures
 # compared byte-for-byte by its --check (part of snapshots:check).
 packages/server/fixtures/edhrec-triage.json
 docs/plans/edhrec-triage.md
+# The card compiler's ledger, one card per line, written by `run.ts ledger`.
+docs/reviews/compiled-card-ledger.json
 
 # Generated browser and graph analysis artifacts
 graphify-out
@@ -36,3 +38,5 @@ packages/server/fixtures/edhrec-pinned-oracle.json
 
 # Card compiler trial working files: raw model answers kept exactly as returned
 docs/reviews/card-compiler-trial-*/work
+# Patches are hashed byte for byte by the review queue and the promoted module
+docs/reviews/card-compiler-trial-chunk-*/patches

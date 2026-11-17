@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"const","n":2},"selfOnly":true,"targetFilter":{"kind":"color","value":"U"}}]}}

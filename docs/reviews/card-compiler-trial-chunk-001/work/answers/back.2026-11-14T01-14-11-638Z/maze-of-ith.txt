@@ -1,0 +1,1 @@
+{T}: Untap target attacking creature. That creature gets a damage shield that applies to combat damage dealt to it and combat damage dealt by it. The data does not state a duration or the exact effect of the shield beyond these flags.

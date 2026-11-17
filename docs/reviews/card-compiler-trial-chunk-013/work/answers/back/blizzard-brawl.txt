@@ -1,0 +1,2 @@
+If you control three or more snow permanents, target creature you control gets +1/+0 until end of turn and gains indestructible until end of turn.
+Then target creature you control fights target creature an opponent controls.

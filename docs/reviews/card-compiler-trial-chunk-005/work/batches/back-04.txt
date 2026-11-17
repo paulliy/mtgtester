@@ -1,0 +1,12 @@
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/back/siphon-insight.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/back/siphon-insight.txt
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/back/boomerang-basics.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/back/boomerang-basics.txt
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/back/deeproot-pilgrimage.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/back/deeproot-pilgrimage.txt
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/back/dualcaster-mage.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/back/dualcaster-mage.txt
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/back/keiga-the-tide-star.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/back/keiga-the-tide-star.txt
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/back/heartbeat-of-spring.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/back/heartbeat-of-spring.txt
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/back/zhur-taa-druid.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/back/zhur-taa-druid.txt
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/back/thundering-raiju.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/back/thundering-raiju.txt
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/back/scale-the-heights.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/back/scale-the-heights.txt
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/back/sword-of-sinew-and-steel.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/back/sword-of-sinew-and-steel.txt
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/back/angel-of-invention.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/back/angel-of-invention.txt
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/back/hunted-horror.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/back/hunted-horror.txt

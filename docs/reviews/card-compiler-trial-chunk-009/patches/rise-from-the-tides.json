@@ -1,0 +1,55 @@
+{
+  "name": "Rise from the Tides",
+  "oracleId": "390b862a-2a85-44bd-832c-f5bbd3eb4ea0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Create a tapped 2/2 black Zombie creature token for each instant and sorcery card in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Zombie",
+            "typeLine": "Creature — Zombie",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Zombie"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 2,
+            "toughness": 2
+          },
+          "count": {
+            "kind": "countCardsInZone",
+            "zone": "graveyard",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "owner": "you"
+          },
+          "tapped": true
+        }
+      ],
+      "description": "Create a tapped 2/2 black Zombie creature token for each instant and sorcery card in your graveyard."
+    }
+  }
+}

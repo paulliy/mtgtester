@@ -1,0 +1,3 @@
+Sorcery. No targets.
+Sacrifice a land you control (mandatory; no optional choice; no follow-up effects).
+Then, if a comparison hidden in the data (operator hidden, value 4) between the greatest power among creatures you control and 4 holds, search your library for three basic land cards and put them onto the battlefield tapped; then shuffle. Otherwise, search your library for two basic land cards and put them onto the battlefield tapped; then shuffle. No fail-to-find flag is set in the data.

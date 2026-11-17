@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"enters","subject":{"kind":"self"}},"optional":false,"targets":[{"kind":"creature","count":{"min":0,"max":3}}],"effects":[{"op":"destroyEachChosen","targetSlot":0}],"description":"When Armaggon enters, destroy up to three target creatures."}]}}

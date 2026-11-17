@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot cast up to two instant or sorcery spells from graveyard and hand under a shared total mana value of 6 with exile replacement, since castOneFromHandFreeUpTo handles one card from hand only."}

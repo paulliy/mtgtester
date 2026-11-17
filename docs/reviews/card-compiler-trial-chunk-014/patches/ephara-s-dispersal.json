@@ -1,0 +1,25 @@
+{
+  "name": "Ephara's Dispersal",
+  "oracleId": "1e0bb57a-f5c7-45e9-b5b9-5bb3ec930108",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {2} less to cast if it targets an attacking creature."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 2
+        },
+        "selfOnly": true,
+        "targetFilter": {
+          "kind": "combatRole",
+          "role": "attacking"
+        }
+      }
+    ]
+  }
+}

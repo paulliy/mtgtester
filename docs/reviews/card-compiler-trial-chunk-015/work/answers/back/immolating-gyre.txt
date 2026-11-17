@@ -1,0 +1,1 @@
+Immolating Gyre deals X damage to each creature and each planeswalker on the battlefield that opponents control, where X is the number of instant and sorcery cards you own in your graveyard.

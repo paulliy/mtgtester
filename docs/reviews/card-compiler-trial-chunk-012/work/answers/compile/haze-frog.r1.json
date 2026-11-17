@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Prevent all combat damage that other creatures would deal this turn' excludes Haze Frog itself, but preventCombatDamageAll covers every creature and the schema has no op that prevents combat damage from all creatures except the source."}

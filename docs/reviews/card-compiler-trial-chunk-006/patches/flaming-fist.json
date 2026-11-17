@@ -1,0 +1,53 @@
+{
+  "name": "Flaming Fist",
+  "oracleId": "cdaefc96-4560-43bb-9514-bf87657bd481",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Commander creatures you own have \"Whenever this creature attacks, it gains double strike until end of turn.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "isCommander"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "owner",
+              "who": "you"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "attacks",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "grantKeywordUntilEot",
+                "target": "source",
+                "keyword": "double strike"
+              }
+            ],
+            "description": "Whenever this creature attacks, it gains double strike until end of turn."
+          }
+        }
+      }
+    ]
+  }
+}

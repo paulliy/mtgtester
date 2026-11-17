@@ -1,0 +1,2 @@
+This spell targets two things: target creature (any controller) and target creature or planeswalker an opponent controls.
+This spell deals damage equal to the power of the first target creature to the second target. The first target creature is the source of the damage.

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"dealsDamageToOpponent","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":1}}],"description":"Whenever this creature deals damage to an opponent, draw a card."}]}}

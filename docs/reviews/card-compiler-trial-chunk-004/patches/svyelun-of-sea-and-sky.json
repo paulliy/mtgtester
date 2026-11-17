@@ -1,0 +1,44 @@
+{
+  "name": "Svyelun of Sea and Sky",
+  "oracleId": "872bebff-720d-459b-8f86-fb9129a8d1fb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ has indestructible as long as you control at least two other Merfolk."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "indestructible"
+        },
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "other"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "subtype",
+                "value": "Merfolk"
+              }
+            ]
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 2
+        }
+      }
+    ]
+  }
+}

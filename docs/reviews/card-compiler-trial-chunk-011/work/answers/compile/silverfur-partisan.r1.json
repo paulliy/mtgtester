@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The becomesTargeted trigger has no filter for the targeting object being an instant or sorcery spell, so it would also fire when the creature is targeted by an ability."}

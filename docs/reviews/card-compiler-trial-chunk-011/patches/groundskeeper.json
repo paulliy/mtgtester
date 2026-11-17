@@ -1,0 +1,60 @@
+{
+  "name": "Groundskeeper",
+  "oracleId": "f2c19fba-9b06-461f-bb5e-e827ba41204d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{G}: Return target basic land card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToHand",
+              "target": 0
+            }
+          ],
+          "description": "{1}{G}: Return target basic land card from your graveyard to your hand."
+        }
+      }
+    ]
+  }
+}

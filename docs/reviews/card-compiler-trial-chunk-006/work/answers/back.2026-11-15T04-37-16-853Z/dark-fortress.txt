@@ -1,0 +1,1 @@
+{T}: Add {B}{R}. This mana ability can be activated only if this land entered this turn or you control at least one basic land.

@@ -1,0 +1,2 @@
+Target creature gains vigilance until end of turn. It can't be blocked this turn.
+Draw a card.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Enters with a +1/+1 counter if you control a permanent with mana value 4 or greater' needs a conditional as-enters counter (zero or one counter); entersWithCounters is unconditional and a counted Value would give one counter per matching permanent."}

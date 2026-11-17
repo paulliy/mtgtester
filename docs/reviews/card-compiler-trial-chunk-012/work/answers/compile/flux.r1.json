@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Each player discarding any number of chosen cards and then drawing that many has no schema form (discardEachPlayer takes a fixed count, and eachPlayerDiscardHandThenDraw discards the whole hand)."}

@@ -1,0 +1,2 @@
+Create a damage shield for you. It applies only to combat damage.
+Populate.

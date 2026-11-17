@@ -1,0 +1,80 @@
+{
+  "name": "Sigil of Valor",
+  "oracleId": "b9447f25-f285-4b62-8976-4a49363dfdd7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature attacks alone, it gets +1/+1 until end of turn for each other creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "attacks",
+              "subject": {
+                "kind": "self"
+              },
+              "alone": true
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "pumpUntilEot",
+                "target": "source",
+                "power": {
+                  "kind": "countPermanents",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "other"
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    ]
+                  },
+                  "scope": "you"
+                },
+                "toughness": {
+                  "kind": "countPermanents",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "other"
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    ]
+                  },
+                  "scope": "you"
+                }
+              }
+            ],
+            "description": "Whenever equipped creature attacks alone, it gets +1/+1 until end of turn for each other creature you control."
+          }
+        }
+      }
+    ]
+  }
+}

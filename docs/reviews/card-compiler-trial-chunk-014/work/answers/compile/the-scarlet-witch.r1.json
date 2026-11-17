@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"powerOfSource"},"filter":{"kind":"allOf","of":[{"kind":"anyOf","of":[{"kind":"type","value":"Instant"},{"kind":"type","value":"Sorcery"}]},{"kind":"manaValueAtLeast","n":4}]}}]}}

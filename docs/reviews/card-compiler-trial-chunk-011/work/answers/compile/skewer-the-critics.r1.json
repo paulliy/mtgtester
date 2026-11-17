@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"alternativeCasts":[{"kind":"nonMana","manaCost":{"generic":0,"colored":{"W":0,"U":0,"B":0,"R":1,"G":0},"colorless":0},"condition":{"kind":"compareValues","left":{"kind":"opponentsLostLifeThisTurn"},"cmp":">=","right":{"kind":"const","n":1}},"description":"Spectacle {R}"}]}}

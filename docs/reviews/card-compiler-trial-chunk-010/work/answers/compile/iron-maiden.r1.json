@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Damage equal to the opponent's hand size minus 4 needs a value that never drops below zero, and the schema has no clamp, so a hand under 4 cards cannot be modeled exactly."}

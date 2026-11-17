@@ -1,0 +1,1 @@
+{3}, {T}, Sacrifice another artifact you control: Create a 3/3 colorless Robot Villain artifact creature token. Activate only as a sorcery.

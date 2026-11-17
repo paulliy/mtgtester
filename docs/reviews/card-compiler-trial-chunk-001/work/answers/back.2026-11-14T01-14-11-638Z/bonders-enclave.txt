@@ -1,0 +1,1 @@
+{3}, {T}: Draw a card. Activate only at any time you could activate an ability, and only if the number of creatures you control with power 4 or greater is compared to 1 by a comparison operator that is hidden in the data (the operator is not shown).

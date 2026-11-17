@@ -1,0 +1,1 @@
+Whenever a land you control enters, count how many times this ability has resolved this turn, including this time. If that number is 2, each opponent takes 1 damage and you draw a card. Otherwise, each opponent takes 1 damage.

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","description":"Put a +1/+1 counter on target creature you control. It gains protection from the color of your choice until end of turn.","targets":[{"kind":"creature","controller":"you"}],"effects":[{"op":"putCounters","target":0,"counter":"+1/+1","count":1},{"op":"grantChosenColorProtectionUntilEot","target":0}]}}}

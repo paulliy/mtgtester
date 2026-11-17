@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema can express an alternative cost only on the card's own casting (alternativeCasts) or on permanent spells (energyAlternativeCost), not a static letting you pay {W}{U}{B}{R}{G} for every spell you cast."}

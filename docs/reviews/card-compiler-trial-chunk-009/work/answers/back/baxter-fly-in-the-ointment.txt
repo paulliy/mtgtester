@@ -1,0 +1,2 @@
+When this enters, each creature you control that has a counter on it gains flying until end of turn.
+Whenever this creature attacks, each creature you control that has a counter on it gains flying until end of turn.

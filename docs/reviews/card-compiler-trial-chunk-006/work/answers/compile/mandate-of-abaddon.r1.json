@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"There is no selector for 'power less than the chosen creature's power'; powerAtMostSource compares against the ability's source, not a chosen target, and the other power selectors take fixed numbers."}

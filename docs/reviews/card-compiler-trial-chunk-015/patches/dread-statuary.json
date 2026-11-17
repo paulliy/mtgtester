@@ -1,0 +1,49 @@
+{
+  "name": "Dread Statuary",
+  "oracleId": "a9789ce4-69cf-435c-b99a-78a21609830c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{4}: ~ becomes a 4/2 Golem artifact creature until end of turn. It's still a land."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 4,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "becomeCreatureUntilEot",
+              "target": "source",
+              "subtypes": [
+                "Golem"
+              ],
+              "power": 4,
+              "toughness": 2,
+              "keywords": []
+            }
+          ],
+          "description": "{4}: This land becomes a 4/2 Golem artifact creature until end of turn. It's still a land."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "Throne of the High City",
+  "oracleId": "9684447a-5955-4bc7-8ad0-8bb8b316873b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{4}, {T}, Sacrifice this land: You become the monarch."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 4,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "becomeMonarch"
+            }
+          ],
+          "description": "{4}, {T}, Sacrifice this land: You become the monarch."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+Whenever a nontoken creature you control with power 4 or greater enters, populate.

@@ -1,0 +1,38 @@
+{
+  "name": "Iron-Shield Elf",
+  "oracleId": "1c77b4da-b580-4ce9-b127-76de674f5694",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Discard a card: ~ gains indestructible until end of turn. Tap it."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "discardCard",
+            "count": 1
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": "source",
+              "keyword": "indestructible"
+            },
+            {
+              "op": "tapTarget",
+              "target": "source"
+            }
+          ],
+          "description": "Discard a card: This creature gains indestructible until end of turn. Tap it."
+        }
+      }
+    ]
+  }
+}

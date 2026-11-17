@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The dies trigger's 'you may exile it; if you do, return a card' needs an exact exile of the dying card from the graveyard as a dies-trigger instruction, and the schema documents exileGraveyardEventCard only for card-zone triggers."}

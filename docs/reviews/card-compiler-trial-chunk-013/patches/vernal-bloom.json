@@ -1,0 +1,28 @@
+{
+  "name": "Vernal Bloom",
+  "oracleId": "238b270c-152a-48e5-a955-65f5cb80c174",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a Forest is tapped for mana, its controller adds an additional {G}."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "manaActivationRider",
+        "source": {
+          "kind": "subtype",
+          "value": "Forest"
+        },
+        "add": {
+          "kind": "fixed",
+          "units": [
+            [
+              "G"
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}

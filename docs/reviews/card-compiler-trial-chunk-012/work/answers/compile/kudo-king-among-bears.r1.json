@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"other"},{"kind":"type","value":"Creature"}]},"op":{"layer":4,"addSubtypes":["Bear"]}},{"affects":{"kind":"allOf","of":[{"kind":"other"},{"kind":"type","value":"Creature"}]},"op":{"layer":7,"sublayer":"b","power":{"kind":"const","n":2},"toughness":{"kind":"const","n":2}}}]}}

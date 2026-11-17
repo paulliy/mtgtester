@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A checks for a token you created this turn (you control the trigger condition); Text B checks for a token created by anyone this turn, so the draw can happen when an opponent created a token."]}

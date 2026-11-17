@@ -1,0 +1,1 @@
+When this creature enters, create an Axe token, an Artifact — Equipment with "{2}: Attach this to target creature you control. Activate only as a sorcery." and "Equipped creature gets +1/+0."

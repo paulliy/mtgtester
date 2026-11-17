@@ -1,0 +1,12 @@
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/judge/siphon-insight.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/judge/siphon-insight.json
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/judge/boomerang-basics.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/judge/boomerang-basics.json
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/judge/deeproot-pilgrimage.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/judge/deeproot-pilgrimage.json
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/judge/dualcaster-mage.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/judge/dualcaster-mage.json
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/judge/keiga-the-tide-star.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/judge/keiga-the-tide-star.json
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/judge/heartbeat-of-spring.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/judge/heartbeat-of-spring.json
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/judge/zhur-taa-druid.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/judge/zhur-taa-druid.json
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/judge/thundering-raiju.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/judge/thundering-raiju.json
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/judge/scale-the-heights.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/judge/scale-the-heights.json
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/judge/sword-of-sinew-and-steel.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/judge/sword-of-sinew-and-steel.json
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/judge/angel-of-invention.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/judge/angel-of-invention.json
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/judge/hunted-horror.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/judge/hunted-horror.json

@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A searches for a card with the same mana value as this card; Text B searches only for a card with mana value exactly 2 (\"at most 2 and at least 2\")."]}

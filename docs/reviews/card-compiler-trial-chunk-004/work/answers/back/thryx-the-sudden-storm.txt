@@ -1,0 +1,2 @@
+Spells you cast with mana value 5 or greater cost {1} less to cast.
+Spells with mana value 5 or greater can't be countered.

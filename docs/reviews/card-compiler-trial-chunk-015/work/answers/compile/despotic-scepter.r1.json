@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"tap"}],"timing":"any","ability":{"kind":"activated","targets":[{"kind":"permanent","filter":{"kind":"owner","who":"you"}}],"effects":[{"op":"destroy","target":0,"cantRegenerate":true}],"description":"{T}: Destroy target permanent you own. It can't be regenerated."}}]}}

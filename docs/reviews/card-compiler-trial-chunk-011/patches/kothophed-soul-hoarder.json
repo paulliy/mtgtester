@@ -1,0 +1,51 @@
+{
+  "name": "Kothophed, Soul Hoarder",
+  "oracleId": "85e1791f-f9a0-4e82-baf6-33cff2dcf60b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a permanent owned by another player is put into a graveyard from the battlefield, you draw a card and you lose 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "leavesBattlefield",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "not",
+              "of": {
+                "kind": "owner",
+                "who": "you"
+              }
+            }
+          },
+          "leavesTo": [
+            "graveyard"
+          ]
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "loseLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a permanent owned by another player is put into a graveyard from the battlefield, you draw a card and you lose 1 life."
+      }
+    ]
+  }
+}

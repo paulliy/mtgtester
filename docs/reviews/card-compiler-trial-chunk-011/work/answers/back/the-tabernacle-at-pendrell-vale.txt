@@ -1,0 +1,1 @@
+Each creature has "At the beginning of your upkeep, unless its controller pays {1}, destroy this creature."

@@ -1,0 +1,1 @@
+{5}: Create a token that is a copy of target other artifact you control, except it has haste. Sacrifice it at the beginning of the end step.

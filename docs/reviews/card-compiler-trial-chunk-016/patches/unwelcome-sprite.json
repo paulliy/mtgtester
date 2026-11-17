@@ -1,0 +1,32 @@
+{
+  "name": "Unwelcome Sprite",
+  "oracleId": "d0a38e8c-c42c-4c99-8a44-d390ff2511ff",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a spell during an opponent's turn, surveil 2."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "condition": {
+            "kind": "notYourTurn"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "surveil",
+            "count": 2
+          }
+        ],
+        "description": "Whenever you cast a spell during an opponent's turn, surveil 2."
+      }
+    ]
+  }
+}

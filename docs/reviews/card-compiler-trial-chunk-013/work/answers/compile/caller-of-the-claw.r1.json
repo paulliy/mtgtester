@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The token count 'each nontoken creature put into your graveyard from the battlefield this turn' needs a count of your nontoken creature deaths this turn, and the schema's creaturesDiedThisTurn has no controller or nontoken scope."}

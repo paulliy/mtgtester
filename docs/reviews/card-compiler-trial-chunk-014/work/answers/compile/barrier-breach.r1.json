@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"enchantment","count":{"min":0,"max":3}}],"effects":[{"op":"exileEachChosen","targetSlot":0}],"description":"Exile up to three target enchantments."}}}

@@ -1,0 +1,1 @@
+Whenever an artifact creature you control that isn't a token deals combat damage to a player, that player gets two poison counters.

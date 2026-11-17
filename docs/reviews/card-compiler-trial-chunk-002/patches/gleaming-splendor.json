@@ -1,0 +1,65 @@
+{
+  "name": "Gleaming Splendor",
+  "oracleId": "c01aeaa5-1d3b-4493-9575-30175dcd780d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{W}: Two target players each draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 1,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "player"
+            },
+            {
+              "kind": "player",
+              "differentFromSlots": [
+                0
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "op": "drawTarget",
+              "target": 0,
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            },
+            {
+              "op": "drawTarget",
+              "target": 1,
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "{2}{W}: Two target players each draw a card."
+        }
+      }
+    ]
+  }
+}

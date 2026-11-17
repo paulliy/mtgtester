@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no landwalk keyword or static, so \"equipped creature has nonbasic landwalk\" cannot be expressed (keywords lists only unparameterized keywords, and no ContinuousOp grants landwalk)."}

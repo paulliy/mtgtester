@@ -1,0 +1,2 @@
+When this creature enters, create a number of 1/1 colorless Gnome artifact creature tokens equal to this creature's power.
+Whenever this creature attacks, create a number of 1/1 colorless Gnome artifact creature tokens equal to this creature's power.

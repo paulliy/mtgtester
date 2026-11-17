@@ -1,0 +1,59 @@
+{
+  "name": "Little Bear",
+  "oracleId": "53c6c6bf-0256-424d-b937-1cc7d9e2d574",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, untap another target creature you control. If that creature is a Bear, put a +1/+1 counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you",
+            "filter": {
+              "kind": "other"
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "untapTarget",
+            "target": 0
+          },
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "kind": "subtype",
+                "value": "Bear"
+              }
+            },
+            "checkTarget": 0,
+            "then": [
+              {
+                "op": "putCounters",
+                "target": 0,
+                "counter": "+1/+1",
+                "count": 1
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "When this creature enters, untap another target creature you control. If that creature is a Bear, put a +1/+1 counter on it."
+      }
+    ]
+  }
+}

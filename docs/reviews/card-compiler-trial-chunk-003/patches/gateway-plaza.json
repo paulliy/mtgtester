@@ -1,0 +1,48 @@
+{
+  "name": "Gateway Plaza",
+  "oracleId": "a6543f71-0326-4e1f-b58f-9ce325d5d036",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this land enters, sacrifice it unless you pay {1}."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "unlessPays",
+            "payer": "controller",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            },
+            "then": [
+              {
+                "op": "sacrifice",
+                "target": "source"
+              }
+            ]
+          }
+        ],
+        "description": "When this land enters, sacrifice it unless you pay {1}."
+      }
+    ]
+  }
+}

@@ -1,0 +1,3 @@
+Enchant player.
+Whenever enchanted player is attacked, create a Gold artifact token. Then the event player (the player whose attack caused this trigger) creates a Gold artifact token, but only if that player is an opponent of this Aura's controller.
+Each Gold token is a colorless artifact with no power or toughness and has the ability: Sacrifice this artifact: Add one mana of any one color (white, blue, black, red, or green).

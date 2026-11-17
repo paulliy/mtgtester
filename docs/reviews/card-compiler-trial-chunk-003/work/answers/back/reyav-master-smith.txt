@@ -1,0 +1,1 @@
+Whenever a creature you control that is enchanted or equipped attacks, that creature gains double strike until end of turn.

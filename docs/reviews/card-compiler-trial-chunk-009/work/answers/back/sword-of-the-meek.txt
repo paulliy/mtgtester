@@ -1,0 +1,1 @@
+Whenever a creature you control with base power and toughness 1/1 enters, you may return this Equipment from your graveyard to the battlefield attached to that creature. This ability functions while this card is in a graveyard.

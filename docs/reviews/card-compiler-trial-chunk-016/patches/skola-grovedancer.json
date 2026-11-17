@@ -1,0 +1,48 @@
+{
+  "name": "Skola Grovedancer",
+  "oracleId": "0e3246ef-e0b4-49bc-a715-b69c4b6be461",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a land card is put into your graveyard from anywhere, you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "putIntoGraveyardFromAnywhere",
+          "fromAnyOrigin": true,
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "owner",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a land card is put into your graveyard from anywhere, you gain 1 life."
+      }
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "Vincent, Vengeful Atoner",
+  "oracleId": "b8961205-87fa-4cce-aba9-84fa2f91a67f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Chaos — Whenever ~ deals combat damage to an opponent, it deals that much damage to each other opponent if ~'s power is 7 or greater."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "powerOfSource"
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 7
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "damageEachOtherOpponent",
+            "amount": {
+              "kind": "damageDealt"
+            }
+          }
+        ],
+        "description": "Chaos — Whenever Vincent deals combat damage to an opponent, it deals that much damage to each other opponent if Vincent's power is 7 or greater."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+At the beginning of each opponent's upkeep, that opponent loses 1 life. Up to one target creature that opponent controls is chosen when this ability is put on the stack. Put a -1/-1 counter on each creature chosen this way.

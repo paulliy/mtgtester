@@ -1,0 +1,29 @@
+{
+  "name": "Katara, the Fearless",
+  "oracleId": "0972d46e-423b-454e-87c7-a2d40fb6fb6d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If a triggered ability of an Ally you control triggers, that ability triggers an additional time."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "triggerAdditionalTime",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Ally"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

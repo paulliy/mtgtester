@@ -1,0 +1,40 @@
+{
+  "name": "Unnatural Growth",
+  "oracleId": "7324abaa-48da-439d-9339-b0ea5eea612e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of each combat, double the power and toughness of each creature you control until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "beginningOfCombat",
+          "player": "each"
+        },
+        "targets": [],
+        "effects": [
+          {
+            "op": "doublePowerAndToughnessEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        ],
+        "description": "At the beginning of each combat, double the power and toughness of each creature you control until end of turn."
+      }
+    ]
+  }
+}

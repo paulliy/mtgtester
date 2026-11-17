@@ -1,0 +1,36 @@
+{
+  "name": "Brineborn Cutthroat",
+  "oracleId": "916cb70f-3b06-48ed-972d-75f805aa0892",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a spell during an opponent's turn, put a +1/+1 counter on this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "condition": {
+            "kind": "notYourTurn"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "self"
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever you cast a spell during an opponent's turn, put a +1/+1 counter on this creature."
+      }
+    ]
+  }
+}

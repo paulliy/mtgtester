@@ -1,0 +1,63 @@
+{
+  "name": "Thran Temporal Gateway",
+  "oracleId": "36282c29-a44b-4156-9441-03aa4bf386a8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{4}, {T}: You may put a historic permanent card from your hand onto the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 4,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "handToBattlefield",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "supertype",
+                    "value": "Legendary"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Saga"
+                  }
+                ]
+              },
+              "count": "one"
+            }
+          ],
+          "description": "{4}, {T}: You may put a historic permanent card from your hand onto the battlefield."
+        }
+      }
+    ]
+  }
+}

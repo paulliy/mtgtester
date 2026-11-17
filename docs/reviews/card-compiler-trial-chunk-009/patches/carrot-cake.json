@@ -1,0 +1,93 @@
+{
+  "name": "Carrot Cake",
+  "oracleId": "5fe3aabd-3271-41bf-ae50-f6efaba7c4ae",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this artifact enters and when you sacrifice it, create a 1/1 white Rabbit creature token and scry 1."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Rabbit",
+              "typeLine": "Creature — Rabbit",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Rabbit"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "scry",
+            "count": 1
+          }
+        ],
+        "description": "When this artifact enters and when you sacrifice it, create a 1/1 white Rabbit creature token and scry 1."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "sacrificed",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Rabbit",
+              "typeLine": "Creature — Rabbit",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Rabbit"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "scry",
+            "count": 1
+          }
+        ],
+        "description": "When this artifact enters and when you sacrifice it, create a 1/1 white Rabbit creature token and scry 1."
+      }
+    ]
+  }
+}

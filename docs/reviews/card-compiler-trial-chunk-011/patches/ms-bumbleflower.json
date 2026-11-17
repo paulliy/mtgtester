@@ -1,0 +1,74 @@
+{
+  "name": "Ms. Bumbleflower",
+  "oracleId": "25636214-c6ea-4655-a5e8-98e735da5b05",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a spell, target opponent draws a card. Put a +1/+1 counter on target creature. It gains flying until end of turn. If this is the second time this ability has resolved this turn, you draw two cards."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you"
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "player",
+            "controller": "opponent"
+          },
+          {
+            "kind": "creature"
+          }
+        ],
+        "effects": [
+          {
+            "op": "drawTarget",
+            "target": 0,
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "putCounters",
+            "target": 1,
+            "counter": "+1/+1",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "grantKeywordUntilEot",
+            "target": 1,
+            "keyword": "flying"
+          },
+          {
+            "op": "byResolutionCountThisTurn",
+            "key": "Whenever you cast a spell, target opponent draws a card. Put a +1/+1 counter on target creature. It gains flying until end of turn. If this is the second time this ability has resolved this turn, you draw two cards.",
+            "cases": [
+              {
+                "n": 2,
+                "effects": [
+                  {
+                    "op": "draw",
+                    "count": {
+                      "kind": "const",
+                      "n": 2
+                    }
+                  }
+                ]
+              }
+            ],
+            "otherwise": []
+          }
+        ],
+        "description": "Whenever you cast a spell, target opponent draws a card. Put a +1/+1 counter on target creature. It gains flying until end of turn. If this is the second time this ability has resolved this turn, you draw two cards."
+      }
+    ]
+  }
+}

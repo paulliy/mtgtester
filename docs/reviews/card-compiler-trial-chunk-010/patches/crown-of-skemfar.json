@@ -1,0 +1,43 @@
+{
+  "name": "Crown of Skemfar",
+  "oracleId": "db961314-fe78-4362-902f-aa0dbf6c487d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{G}: Return this card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "returnSelfFromGraveyardToHand"
+            }
+          ],
+          "description": "{2}{G}: Return this card from your graveyard to your hand."
+        },
+        "timing": "any",
+        "zone": "graveyard"
+      }
+    ]
+  }
+}

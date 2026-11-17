@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"entersAsCopy addTypes adds only card types, so it cannot make the copy a Dragon (a creature subtype) in addition to its other types."}

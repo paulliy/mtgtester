@@ -1,0 +1,1 @@
+This creature and the creature attached to it each get +X/+X, where X is the number of creature cards in all graveyards.

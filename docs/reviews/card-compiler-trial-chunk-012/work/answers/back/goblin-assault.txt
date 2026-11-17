@@ -1,0 +1,1 @@
+Each Goblin creature attacks each combat if able.

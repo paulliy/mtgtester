@@ -12,9 +12,10 @@ Subagents run on Sonnet or Haiku only. Never spawn one on Opus. The main thread 
 
 - **Haiku** (`explorer`): read-only search and triage. Locating where a card, mechanic, or coverage entry lives, tracing call paths, checking fixtures and snapshots, running tests and reading output, comparing card lists against coverage reports.
 - **Sonnet** (`implementer`): bounded implementation. Behavior tests from an existing clause-to-test manifest, mechanical refactors across several files, snapshot updates after an intentional change, and diff review against a written checklist (`reviewer`).
+- **Haiku** (`card-compile-worker`, `card-judge-worker`): answering the batch card compiler's prompt files, one stage per worker. The answers are data that the engine's validator and the compiler's checks gate ([ADR 0047](docs/decisions/0047-compiled-cards-as-unreviewed-overrides.md)); these workers read only their prompts and never edit the repository.
 - **Main thread (Opus)**: choosing an approach, resolving ambiguous Oracue text, anything deciding rules correctness in `packages/engine`, and final review of subagent output before reporting it done.
 
-Delegate when a task would read many files or produce output the main thread doesn't need. Do small lookups inline.
+The agents are defined in `.claude/agents/`. Delegate when a task would read many files or produce output the main thread doesn't need. Do small lookups inline.
 
 Limits (prompt rules):
 
@@ -28,6 +29,7 @@ Read these only when the task needs them:
 - **Before changing engine, bot, or provider code:** [rules-engine constraints](docs/guides/rules-engine-constraints.md)
 - **Package overview, audit residual risks:** [current state](docs/guides/current-state.md)
 - **Modeling or auditing cards, template layer, snapshots, coverage backlog:** [card coverage workflow](docs/guides/card-coverage-workflow.md)
+- **Batch-compiling cards with Haiku workers, promoting or retiring a compiled card:** [batch card compiler](scripts/card-compiler/README.md) and the [campaign plan](docs/plans/batch-card-compile-campaign.md)
 - **Test requirements and change discipline:** [testing discipline](docs/guides/testing-discipline.md)
 - **All `bun` and PowerShell commands:** [project commands](docs/guides/project-commands.md)
 - **Rules, banned list, and Scryfall data files:** [reference data](docs/guides/reference-data.md)

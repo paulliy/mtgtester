@@ -1,0 +1,1 @@
+Target creature gets +2/+0 until end of turn. That creature gains "When this creature dies, return it to the battlefield" until end of turn.

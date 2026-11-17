@@ -1,0 +1,79 @@
+{
+  "name": "Howlpack Resurgence",
+  "oracleId": "614c3f71-e231-4c12-9e6b-cb8ea1d100bf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each creature you control that's a Wolf or a Werewolf gets +1/+1 and has trample."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Wolf"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Werewolf"
+                }
+              ]
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Wolf"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Werewolf"
+                }
+              ]
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "trample"
+        }
+      }
+    ]
+  }
+}
