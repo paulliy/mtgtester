@@ -17,7 +17,7 @@ import { createGame } from '../src/state/game';
 import { createToken, tokenSpecCopying } from '../src/state/objects';
 import { provisionalUseOf, stampProvisional } from '../src/state/provisional-use';
 import { buildSpectatorState, formatSpectatorLog } from '../src/view/spectator';
-import { copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { copies, forest, gameConfig, oracle, pumpStrict, spawn } from './fixtures';
 
 /** A line the grammar cannot read, so the card is unmodeled without its patch. */
 const ODD_LINE = '{T}: Each opponent loses 1 life and you gain 1 life, then hum a tune.';
@@ -178,7 +178,7 @@ describe('the game opt-in', () => {
           o.type === 'activateAbility' && (o.payload as { objectId?: string }).objectId === perm.id,
       );
       expect(option, 'the provisional ability is offered').toBeDefined();
-      pump(
+      pumpStrict(
         applyPriorityAction(
           ctx,
           p1,
