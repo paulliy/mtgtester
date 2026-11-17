@@ -56,6 +56,9 @@ const NEGATIVES = [
   'Lightning, Army of One',
 ];
 
+/** Already-modeled pinned cards a regression test plays alongside. */
+const SUPPORT = ['Pristine Talisman', 'Mutagenic Growth'];
+
 function pinned(name: string): OracleCard {
   const entry = pinnedCards.find((candidate) => candidate.card.name === name);
   if (entry === undefined) throw new Error(`missing pinned Oracle fixture for ${name}`);
@@ -117,16 +120,21 @@ function take(
   return pump(
     applyPriorityAction(ctx, playerById(ctx, playerId), payload, { index: 0, targets }),
     answer,
+    { strict: true },
   );
 }
 
 /** Every player passes; pending triggers go on the stack and resolve. */
 function settle(ctx: GameContext, answer?: Answer) {
-  return pump(runPrioritySequence(ctx), (decision, count) => {
-    const pass = decision.options.findIndex((option) => option.type === 'pass');
-    if (pass >= 0) return { index: pass, targets: new Map() };
-    return answer?.(decision, count) ?? { index: 0, targets: new Map() };
-  });
+  return pump(
+    runPrioritySequence(ctx),
+    (decision, count) => {
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) return { index: pass, targets: new Map() };
+      return answer?.(decision, count) ?? { index: 0, targets: new Map() };
+    },
+    { strict: true },
+  );
 }
 
 const mana = (symbols: string) =>
@@ -170,7 +178,7 @@ function castBolt(
 
 describe('cards these statics unblock', () => {
   it('casting-statics-pinned — the fixture matches its pins, and only the near misses refuse', () => {
-    expect(pinnedCards.length).toBe(39 + NEGATIVES.length);
+    expect(pinnedCards.length).toBe(39 + NEGATIVES.length + SUPPORT.length);
     for (const { sha256, card } of pinnedCards) {
       expect(createHash('sha256').update(canonical(card)).digest('hex'), card.name).toBe(sha256);
       const negative = NEGATIVES.includes(card.name);
@@ -631,12 +639,16 @@ describe('damage replacements', () => {
     const attacker = spawn(ctx, 'P1', oracle({ name: 'Lab Brute', power: '3', toughness: '3' }));
     attacker.summoningSick = false;
     ctx.state.phase = 'combat';
-    pump(runCombatPhase(ctx), (decision) => {
-      if (decision.decisionType === 'declareAttackers')
-        return declareAttacks(decision, (id) => (id === attacker.id ? 'P2' : null));
-      if (decision.decisionType === 'declareBlockers') return declareNoBlocks(decision);
-      return undefined;
-    });
+    pump(
+      runCombatPhase(ctx),
+      (decision) => {
+        if (decision.decisionType === 'declareAttackers')
+          return declareAttacks(decision, (id) => (id === attacker.id ? 'P2' : null));
+        if (decision.decisionType === 'declareBlockers') return declareNoBlocks(decision);
+        return undefined;
+      },
+      { strict: true },
+    );
     expect(playerById(ctx, 'P2').life).toBe(31);
   });
 
@@ -709,12 +721,16 @@ describe('life-gain replacements', () => {
     );
     attacker.summoningSick = false;
     ctx.state.phase = 'combat';
-    pump(runCombatPhase(ctx), (decision) => {
-      if (decision.decisionType === 'declareAttackers')
-        return declareAttacks(decision, (id) => (id === attacker.id ? 'P2' : null));
-      if (decision.decisionType === 'declareBlockers') return declareNoBlocks(decision);
-      return undefined;
-    });
+    pump(
+      runCombatPhase(ctx),
+      (decision) => {
+        if (decision.decisionType === 'declareAttackers')
+          return declareAttacks(decision, (id) => (id === attacker.id ? 'P2' : null));
+        if (decision.decisionType === 'declareBlockers') return declareNoBlocks(decision);
+        return undefined;
+      },
+      { strict: true },
+    );
     expect(playerById(ctx, 'P1').life).toBe(44);
   });
 
@@ -741,5 +757,77 @@ describe('life-gain replacements', () => {
     expect(run(/twice/).life).toBe(47);
     // The same answer replays to the same game.
     expect(run(/plus 1/)).toEqual(plusFirst);
+  });
+  it("casting-statics-life-order-in-payment — a mana ability's replaced gain can pay life", () => {
+    // At 1 life, Pristine Talisman's gain becomes 3 or 4 life under Rhox Faithmender and Knight
+    // of Dawn's Light, whichever order P1 picks, so its {C} plus 2 life pays for Mutagenic Growth's
+    // {G/P}. The planner proves it from the smaller gain; the cast asks P1 for the order.
+    const ctx = pod('casting-statics-life-payment');
+    playerById(ctx, 'P1').life = 1;
+    spawn(ctx, 'P1', pinned('Pristine Talisman'));
+    spawn(ctx, 'P1', pinned('Rhox Faithmender'));
+    spawn(ctx, 'P1', pinned("Knight of Dawn's Light"));
+    const target = spawn(ctx, 'P1', oracle({ name: 'Lab Bear' }));
+    const growth = conjure(ctx, 'P1', pinned('Mutagenic Growth'), 'hand');
+    const options = computePriorityOptions(ctx, playerById(ctx, 'P1')).filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return 'objectId' in payload && payload.objectId === growth.id;
+    });
+    expect(options.length).toBeGreaterThan(0);
+    const asked: string[] = [];
+    take(
+      ctx,
+      'P1',
+      options[0]!.payload as PriorityActionPayload,
+      new Map([[0, target.id]]),
+      (decision) => {
+        if (decision.options.some((option) => option.type === 'lifeGainReplacement')) {
+          asked.push(decision.player);
+          return { index: 0, targets: new Map() };
+        }
+        return undefined;
+      },
+    );
+    expect(ctx.state.stack[0]?.card?.name).toBe('Mutagenic Growth');
+    expect(asked).toEqual(['P1']);
+    // 1 + (3 or 4) - 2.
+    expect([2, 3]).toContain(playerById(ctx, 'P1').life);
+  });
+  it('casting-statics-life-order-in-payment-witness — a payment needing the bigger gain keeps its order', () => {
+    // At 2 life, Pristine Talisman's gain is 4 if Knight of Dawn's Light's "plus 1" applies first
+    // and 3 if Rhox Faithmender's "twice" does. Only 6 life pays three {G/P} pips, so the cast is
+    // legal through the plus-first order alone, and paying it applies that order without asking.
+    const ctx = pod('casting-statics-life-payment-witness');
+    playerById(ctx, 'P1').life = 2;
+    spawn(ctx, 'P1', pinned('Pristine Talisman'));
+    spawn(ctx, 'P1', pinned('Rhox Faithmender'));
+    spawn(ctx, 'P1', pinned("Knight of Dawn's Light"));
+    const ritual = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Phyrexian Draw',
+        typeLine: 'Instant',
+        manaCost: '{G/P}{G/P}{G/P}',
+        cmc: 3,
+        oracleText: 'Draw a card.',
+      }),
+      'hand',
+    );
+    const options = computePriorityOptions(ctx, playerById(ctx, 'P1')).filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return 'objectId' in payload && payload.objectId === ritual.id;
+    });
+    expect(options.length).toBeGreaterThan(0);
+    const asked: string[] = [];
+    take(ctx, 'P1', options[0]!.payload as PriorityActionPayload, new Map(), (decision) => {
+      if (decision.options.some((option) => option.type === 'lifeGainReplacement'))
+        asked.push(decision.player);
+      return undefined;
+    });
+    expect(ctx.state.stack[0]?.card?.name).toBe('Lab Phyrexian Draw');
+    expect(asked).toEqual([]);
+    // 2 + (1 + 1) * 2 - 6.
+    expect(playerById(ctx, 'P1').life).toBe(0);
   });
 });

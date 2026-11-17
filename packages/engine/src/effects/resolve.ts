@@ -755,7 +755,12 @@ function* replaceLifeGain(
   player: EnginePlayerState,
   amount: number,
 ): GameGen<number> {
-  const replacements: { id: string; label: string; apply: (n: number) => number }[] = [];
+  const replacements: {
+    id: string;
+    label: string;
+    source: EnginePermanent | undefined;
+    apply: (n: number) => number;
+  }[] = [];
   const perCard = new Map<string, number>();
   for (const entry of gatherRuleStatics(ctx)) {
     if (entry.static.kind !== 'lifeGainReplacement' || entry.controllerId !== player.id) continue;
@@ -763,11 +768,11 @@ function* replaceLifeGain(
     perCard.set(entry.sourceCardId, n + 1);
     const factor = entry.static.factor ?? 1;
     const plus = entry.static.plus ?? 0;
-    const name =
-      ctx.state.battlefield.find((perm) => perm.cardId === entry.sourceCardId)?.name ??
-      entry.sourceCardId;
+    const source = ctx.state.battlefield.find((perm) => perm.cardId === entry.sourceCardId);
+    const name = source?.name ?? entry.sourceCardId;
     replacements.push({
       id: `${entry.sourceCardId}:${n}`,
+      source,
       label:
         plus > 0
           ? `${name}: gain that much life plus ${plus}`
@@ -792,12 +797,19 @@ function* replaceLifeGain(
           decisionType: 'general',
           player: player.id,
           prompt: `Choose which effect applies first to gaining ${amount} life`,
+          // The viewer shows each option under its source card, so the buttons can be told apart.
           options: pending.map((replacement) =>
-            plainOption({
-              type: 'lifeGainReplacement',
-              description: replacement.label,
-              verb: 'Apply first',
-            }),
+            replacement.source !== undefined
+              ? cardOption(ctx, replacement.source, {
+                  type: 'lifeGainReplacement',
+                  description: replacement.label,
+                  verb: 'Apply first',
+                })
+              : plainOption({
+                  type: 'lifeGainReplacement',
+                  description: replacement.label,
+                  verb: replacement.label,
+                }),
           ),
         };
         next = optionAt(pending, outcome, 'resolve.replaceLifeGain');
@@ -10948,6 +10960,25 @@ export function endUntilEotEffects(ctx: GameContext): void {
 }
 
 /**
+ * Run `gen`, answering its life-gain replacement order decisions (`replaceLifeGain`) from
+ * `answers` in turn; any other decision goes to the player as usual. The payment planner chose
+ * these orders because the plan is payable only under them.
+ */
+function* answerLifeGainOrders<T>(gen: GameGen<T>, answers: readonly number[]): GameGen<T> {
+  let used = 0;
+  let step = gen.next();
+  while (!step.done) {
+    const decision = step.value;
+    const answered =
+      used < answers.length &&
+      decision.options.length > 0 &&
+      decision.options.every((option) => option.type === 'lifeGainReplacement');
+    step = gen.next(answered ? { index: answers[used++]!, targets: new Map() } : yield decision);
+  }
+  return step.value;
+}
+
+/**
  * Activate sources per plan, add their production to the pool, then spend `cost` from it.
  *
  * `purpose` says what is being paid for, which is what decides whether restricted mana may be
@@ -11155,8 +11186,11 @@ export function* payManaCost(
     const traits = ctx.state.battlefield.includes(perm)
       ? combatDamageTraits(ctx, perm)
       : lastKnownTraits;
+    const orders = plan.lifeGainOrders?.[sourceIndex];
     for (const effect of source.onActivate ?? []) {
-      yield* applyManaRider(ctx, perm, player, effect, traits);
+      const rider = applyManaRider(ctx, perm, player, effect, traits);
+      if (orders === undefined) yield* rider;
+      else yield* answerLifeGainOrders(rider, orders);
     }
   }
 

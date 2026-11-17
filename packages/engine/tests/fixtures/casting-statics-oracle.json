@@ -1516,6 +1516,64 @@
         "commanderLegality": "legal",
         "isBasicLand": false
       }
+    },
+    {
+      "sha256": "083922419c0c9db18ee320994e3602861cfb6d7608c578ba4450edf816acf560",
+      "card": {
+        "oracleId": "1b3d7fce-e9fe-4176-9d9a-472415826cdd",
+        "scryfallId": "6b6307f3-bc63-463c-8ffc-a8b8b829e5d7",
+        "name": "Pristine Talisman",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}. You gain 1 life.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1d532ee3619b30315ce129618c83d50485764d111adcbee9c8adca7a5ccc0da5",
+      "card": {
+        "oracleId": "c17b9e5b-58b6-4ccf-8283-945ba77429e7",
+        "scryfallId": "2e0861a2-1858-47af-8154-20a977c2b298",
+        "name": "Mutagenic Growth",
+        "manaCost": "{G/P}",
+        "cmc": 1,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "({G/P} can be paid with either {G} or 2 life.)\nTarget creature gets +2/+2 until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
     }
   ]
 }

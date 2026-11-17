@@ -13,7 +13,7 @@ import { scaleByCount } from '../src/cards/grammar/amount-forms';
 import { executeAbility, gainLife } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { conjure, copies, forest, gameConfig, oracle, pump, pumpStrict, spawn } from './fixtures';
 
 function pod(seed: string): GameContext {
   const ctx = createGame(
@@ -267,10 +267,10 @@ describe('Phase 4 batch 4: life-change trigger events', () => {
     expect(def.triggers[0]!.trigger).toEqual({ when: 'gainsLife', player: 'you' });
     const ctx = pod('p4-gain-trigger');
     spawn(ctx, 'P1', card);
-    pump(gainLife(ctx, player(ctx, 'P1'), 3));
+    pumpStrict(gainLife(ctx, player(ctx, 'P1'), 3));
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     expect(ctx.state.pendingTriggers[0]!.scope).toMatchObject({ damageDealt: 3 });
-    pump(gainLife(ctx, player(ctx, 'P2'), 3));
+    pumpStrict(gainLife(ctx, player(ctx, 'P2'), 3));
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     // P2 gained 3 above (which did not trigger P1's Bond), so 43 before the loss.
     run(ctx, card, def.triggers[0]!, ['P2'], { damageDealt: 3 });
