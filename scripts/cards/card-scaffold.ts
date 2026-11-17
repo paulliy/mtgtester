@@ -48,15 +48,23 @@ export interface ScaffoldReport {
   survivors: string[];
 }
 
+/**
+ * Resolves the card itself by name before the pin store, so a card `card:new` pinned this run
+ * (after the pin store was loaded and cached) still drafts.
+ */
+export const resolverWith =
+  (card: OracleCard) =>
+  (name: string): OracleCard =>
+    name === card.name ? card : resolveScenarioCard(name);
+
 /** The card's drafts and the mutants they leave. */
 export function scaffoldReport(card: OracleCard): ScaffoldReport {
   const definition = interpretCard(card);
-  const result = scaffoldCard(card, resolveScenarioCard);
+  const resolve = resolverWith(card);
+  const result = scaffoldCard(card, resolve);
   const mutants = cardMutants(definition);
   const killed = new Set(
-    result.file.scenarios.length === 0
-      ? []
-      : mutantKills(definition, result.file, resolveScenarioCard),
+    result.file.scenarios.length === 0 ? [] : mutantKills(definition, result.file, resolve),
   );
   return {
     result,

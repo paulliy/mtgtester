@@ -15,6 +15,7 @@ import {
   mapDraftsIntoManifest,
   unreviewedDraftReferences,
 } from '../../../../scripts/contracts/generated-drafts';
+import { scaffoldReport } from '../../../../scripts/cards/card-scaffold';
 
 const card = pinStore.get('Thraben Inspector');
 const drafts = scaffoldCard(card, resolveScenarioCard).file.scenarios;
@@ -133,5 +134,18 @@ describe('mapDraftsIntoManifest', () => {
     const result = mapDraftsIntoManifest(json, card.name, card.oracleText, drafts);
     expect(result.manifestJson).toBe(json);
     expect(result.mapped).toEqual([]);
+  });
+});
+
+describe('scaffoldReport', () => {
+  // card:new pins a card after the pin store is cached, so the card itself must resolve without it.
+  it('drafts a card the cached pin store does not hold', () => {
+    const unpinned = { ...card, name: 'Unpinned Inspector' };
+    expect(pinStore.has(unpinned.name)).toBe(false);
+    const report = scaffoldReport(unpinned);
+    expect(report.result.file.scenarios.length).toBe(drafts.length);
+    expect(report.result.units.filter((unit) => unit.status === 'unsupported')).toEqual(
+      scaffoldCard(card, resolveScenarioCard).units.filter((unit) => unit.status === 'unsupported'),
+    );
   });
 });
