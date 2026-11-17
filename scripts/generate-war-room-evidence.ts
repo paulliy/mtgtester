@@ -363,6 +363,7 @@ const SOURCE_FILES = [
   'packages/engine/tests/fixtures/token-triumph-engine-batch2-oracle.json',
   'packages/engine/tests/fixtures/token-triumph-engine-batch3-oracle.json',
   'packages/engine/tests/fixtures/w2-remaining-engine-batch1-oracle.json',
+  'packages/engine/tests/fixtures/pairs-and-hand-look-oracle.json',
   'packages/server/src/ai/plan-lifecycle.ts',
   'packages/server/src/ai/turn-plan.ts',
   'packages/server/src/ai/versions.ts',
