@@ -101,6 +101,7 @@ import {
 import { PR02_FOLLOW_UP_SCENARIO_IDS, pr02FollowUpScenario } from './pr02-follow-up-scenarios';
 import { PILOT_CURRENT_SCENARIOS, pilotCurrentScenario } from './pilot-current-scenarios';
 import { PR13_SCENARIOS, pr13Scenario } from './pr13-scenarios';
+import { CASTING_STATICS_SCENARIOS, castingStaticsScenario } from './casting-statics-scenarios';
 import { RUNNER_SCENARIOS, runnerScenario } from './runner-scenarios';
 import { PR12_SCENARIOS, pr12Scenario } from './pr12-scenarios';
 import { PR11B_SCENARIOS, pr11bScenario } from './pr11b-scenarios';
@@ -15142,6 +15143,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   ...RUNNER_SCENARIOS.map((scenario) => scenario.id),
   ...PILOT_CURRENT_SCENARIOS.map((scenario) => scenario.id),
   ...PR13_SCENARIOS.map((scenario) => scenario.id),
+  ...CASTING_STATICS_SCENARIOS.map((scenario) => scenario.id),
   ...PR12_SCENARIOS.map((scenario) => scenario.id),
   ...PR11B_SCENARIOS.map((scenario) => scenario.id),
   ...PR11_SCENARIOS.map((scenario) => scenario.id),
@@ -15714,6 +15716,12 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   ),
   ...Object.fromEntries(
     PR13_SCENARIOS.map(({ id }) => [id, (gameId: GameId) => pr13Scenario(id, gameId)]),
+  ),
+  ...Object.fromEntries(
+    CASTING_STATICS_SCENARIOS.map(({ id }) => [
+      id,
+      (gameId: GameId) => castingStaticsScenario(id, gameId),
+    ]),
   ),
   ...Object.fromEntries(
     PR12_SCENARIOS.map(({ id }) => [id, (gameId: GameId) => pr12Scenario(id, gameId)]),

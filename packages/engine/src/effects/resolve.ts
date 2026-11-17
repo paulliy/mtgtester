@@ -755,7 +755,12 @@ function* replaceLifeGain(
   player: EnginePlayerState,
   amount: number,
 ): GameGen<number> {
-  const replacements: { id: string; label: string; apply: (n: number) => number }[] = [];
+  const replacements: {
+    id: string;
+    label: string;
+    source: EnginePermanent | undefined;
+    apply: (n: number) => number;
+  }[] = [];
   const perCard = new Map<string, number>();
   for (const entry of gatherRuleStatics(ctx)) {
     if (entry.static.kind !== 'lifeGainReplacement' || entry.controllerId !== player.id) continue;
@@ -763,11 +768,11 @@ function* replaceLifeGain(
     perCard.set(entry.sourceCardId, n + 1);
     const factor = entry.static.factor ?? 1;
     const plus = entry.static.plus ?? 0;
-    const name =
-      ctx.state.battlefield.find((perm) => perm.cardId === entry.sourceCardId)?.name ??
-      entry.sourceCardId;
+    const source = ctx.state.battlefield.find((perm) => perm.cardId === entry.sourceCardId);
+    const name = source?.name ?? entry.sourceCardId;
     replacements.push({
       id: `${entry.sourceCardId}:${n}`,
+      source,
       label:
         plus > 0
           ? `${name}: gain that much life plus ${plus}`
@@ -792,12 +797,19 @@ function* replaceLifeGain(
           decisionType: 'general',
           player: player.id,
           prompt: `Choose which effect applies first to gaining ${amount} life`,
+          // The viewer shows each option under its source card, so the buttons can be told apart.
           options: pending.map((replacement) =>
-            plainOption({
-              type: 'lifeGainReplacement',
-              description: replacement.label,
-              verb: 'Apply first',
-            }),
+            replacement.source !== undefined
+              ? cardOption(ctx, replacement.source, {
+                  type: 'lifeGainReplacement',
+                  description: replacement.label,
+                  verb: 'Apply first',
+                })
+              : plainOption({
+                  type: 'lifeGainReplacement',
+                  description: replacement.label,
+                  verb: replacement.label,
+                }),
           ),
         };
         next = optionAt(pending, outcome, 'resolve.replaceLifeGain');
