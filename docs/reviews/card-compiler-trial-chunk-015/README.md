@@ -82,3 +82,15 @@ passed every automatic check, about 3.5%.
    "artifact creature" text against it.
 3. `finishLayer4` with `setLandSubtype` and `loseAbilities` does not clear non-mana activated
    abilities (reviewer, Spreading Seas): an animated land enchanted by it keeps them.
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found 7 wrong patches among this chunk's promotions. They were retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Flamehold Grappler:** The copy path has no permanent-spell support; the copy trigger is consumed with no copy.
+- **Gauntlet of Might:** A land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification.
+- **Phantom Train:** Its animation overwrites base P/T and fails to add Artifact.
+- **Promise of Bunrei:** 'if you do' is modelled as a separate counterable trigger.
+- **Spreading Seas:** The enchanted land keeps printed nonmana abilities, and an animated land loses its creature subtypes.
+- **Uncover the Moon-Letters:** 'If you do, discard' still discards after drawing zero.
+- **Weaponcraft Enthusiast:** Fabricate still offers counters it cannot place, yielding no Servos.

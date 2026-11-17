@@ -90,3 +90,12 @@ casts from the command zone (Font of Magic).
 4. Sneak's alternative cast has no "enters tapped and attacking" for a permanent spell.
 5. There is no "control enchanted creature" static; a trigger-based steal does not follow the Aura.
 6. The validator accepts all of the above, and `lookAtTopN` for a "mill" line.
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found 4 wrong patches among this chunk's promotions. They were retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Felothar, Dawn of the Abzan:** Omits its reflexive trigger and applies the counters inline.
+- **Monkey Cage:** Token creation is gated on the self-sacrifice and counts entrants wrongly.
+- **Verdant Haven:** A land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification.
+- **Witch-king, Sky Scourge:** Uses current attackers instead of the triggering attack group and LKI.

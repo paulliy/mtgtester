@@ -73,3 +73,12 @@ self-targeted cost reduction only here and in Price of Fame (chunk 005, not prom
    reduction keyed to its own target is never applied.
 3. There is no permanent (no-duration) animation op for an activated ability.
 4. Repeats: stun and shield counters are unimplemented.
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found 4 wrong patches among this chunk's promotions. They were retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Groundchuck & Dirtbag:** A land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification.
+- **Primal Empathy:** Greatest power starts at zero, so negative powers compare wrongly.
+- **Rout:** 'flash if you pay {2} more' is modelled as an alternative cost, which is skipped outside the hand and cannot combine with other alternative costs.
+- **Zhur-Taa Ancient:** A land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification.

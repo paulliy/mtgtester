@@ -84,3 +84,9 @@ passed every automatic check, about 3.6%.
 The automated review that ran when the pull request was marked ready found a wrong patch among this chunk's promotions, and it was retired (`docs/reviews/compiled-card-retired.json`):
 
 - **Lightmine Field:** `damageEach` over attacking creatures also hits creatures put onto the battlefield attacking after the trigger (Anim Pakal's tokens, for example). The card damages only the creatures whose attack triggered it, and no selector reads the attack group.
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found a wrong patch among this chunk's promotions. It was retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Noosegraf Mob:** The reward follows even when the counter removal fails (source destroyed in response).

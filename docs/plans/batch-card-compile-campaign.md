@@ -17,17 +17,21 @@ measured (see [Stage 0 status](#stage-0-status)). Sixteen chunks are done, and e
 [013](../reviews/card-compiler-trial-chunk-013/README.md),
 [014](../reviews/card-compiler-trial-chunk-014/README.md),
 [015](../reviews/card-compiler-trial-chunk-015/README.md) and
-[016](../reviews/card-compiler-trial-chunk-016/README.md). With twenty-eight cards retired after review
-or fuzzing (listed in `docs/reviews/compiled-card-retired.json`, which `promote` refuses), 1,237 are
-promoted and the pool models 4,955 of 8,972 (3,718 before). Among the 1,225 patches that passed every automatic
-check, 52 were wrong (about 4.2%): the audits found 42, a PR review on 2026-11-16 found five
+[016](../reviews/card-compiler-trial-chunk-016/README.md). With ninety-six cards retired after review
+or fuzzing (listed in `docs/reviews/compiled-card-retired.json`, which `promote` refuses), 1,169 are
+promoted and the pool models 4,887 of 8,972 (3,718 before). Among the 1,225 patches that passed every automatic
+check, 98 were wrong (about 8.0%): the audits found 42, a PR review on 2026-11-16 found five
 more (Electroduplicate, High Score, Abzan Beastmaster, Genesis and Giott), and the Codex review when
 the pull request was marked ready found five (Helm of the Host, Molten Duplication, Fear of Missing
-Out, Forth Eorlingas! and Devastating Onslaught; see chunks 001 to 004), so the audit stays at every card (decided
+Out, Forth Eorlingas! and Devastating Onslaught; see chunks 001 to 004), and the owner's review of
+every promoted card on 2026-11-17 found 46 more (each chunk README lists its retirements), so the audit stays at every card (decided
 2026-11-14): the ADR 0047 rule that lets audits drop to a sample is suspended until validator
 rules close the engine gaps behind those escapes. Chunk 004 tripped the calibration stop rule
 twice on one case, Urza's Power Plant; the owner decided to drop that case, since it tests Magic
-knowledge the judge is not given (chunk 004's README). Chunk 006 tripped it again; the owner chose to fix the judge prompt (it now carries the reminder text of the lines under test), and the one case still missed after that, Voldaren Estate, was dropped (chunk 006's README). Still to do: a time limit for the smoke games (chunk 008's README), Stage 0
+knowledge the judge is not given (chunk 004's README). Chunk 006 tripped it again; the owner chose to fix the judge prompt (it now carries the reminder text of the lines under test), and the one case still missed after that, Voldaren Estate, was dropped (chunk 006's README). Still to do: the shared engine contracts that review named (tapped-for-mana riders on
+non-tap mana abilities, simultaneous multi-card blink, rewards gated on a cost actually paid,
+per-token defender choice for created attackers, last-known copiable values and attachment
+identity), then a time limit for the smoke games (chunk 008's README), Stage 0
 step 7 (optional), and the validator rules for the engine findings in the chunk READMEs.
 
 Scope: the 5,254 cards in the pinned EDHREC pool that do not model today. The plan runs them

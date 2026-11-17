@@ -69,3 +69,13 @@ show. Furnace of Rath repeats a chunk 003 finding; the other three are new engin
    set; compilers miss this flag.
 4. Repeats from earlier chunks: `damageDoubled` skips spells (chunk 003), `doubleCountersTarget`
    doubles every counter kind (chunk 004), enchant restrictions are checked only on cast (chunk 004).
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found 5 wrong patches among this chunk's promotions. They were retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Angel of Invention:** Fabricate still offers counters it cannot place, yielding no Servos.
+- **Horn of the Mark:** Combines attackers sent at different players into one trigger.
+- **Inspirit, Flagship Vessel:** The station threshold is rechecked on resolution as an intervening-if; removing counters after the trigger cancels it.
+- **Siphon Insight:** Any-color permission becomes any-type, dropping colorless requirements.
+- **Wand of Orcus:** GrantKeywordEachUntilEot with attachedToSource never matches (affectedBy passes no attachment), so a non-Zombie equipped creature never gains deathtouch.

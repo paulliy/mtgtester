@@ -80,3 +80,9 @@ for them.
 5. Mirage Mirror (hand-written) can end up attached to an object that is no longer a permanent:
    `bun run fuzz --from 1 --card "Sandstorm Salvager" --games 0 --card-games 1 --turn-cap 80 --decisions 20000`
    reproduces it at turn 58.
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found a wrong patch among this chunk's promotions. It was retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Four Knocks:** Vanishing is collapsed into the upkeep trigger; removing the last time counter another way never sacrifices it.

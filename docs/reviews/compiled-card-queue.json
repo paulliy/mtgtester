@@ -9931,9 +9931,9 @@
         }
       ],
       "review": {
-        "verdict": "accepted",
-        "by": "main-thread",
-        "note": "Full audit: read against Oracle text and the engine."
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: Owner review on PR #72, 2026-11-17: omits its reflexive trigger and applies the counters inline."
       }
     },
     {
@@ -18668,9 +18668,9 @@
         }
       ],
       "review": {
-        "verdict": "accepted",
-        "by": "main-thread",
-        "note": "Full audit: read against Oracle text and the engine."
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: Owner review on PR #72, 2026-11-17: token creation is gated on the self-sacrifice and counts entrants wrongly."
       }
     },
     {
@@ -31707,9 +31707,9 @@
         }
       ],
       "review": {
-        "verdict": "accepted",
-        "by": "main-thread",
-        "note": "Full audit: read against Oracle text and the engine."
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
       }
     },
     {
@@ -33047,9 +33047,9 @@
         }
       ],
       "review": {
-        "verdict": "accepted",
-        "by": "main-thread",
-        "note": "Full audit: read against Oracle text and the engine."
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: Owner review on PR #72, 2026-11-17: uses current attackers instead of the triggering attack group and LKI."
       }
     },
     {

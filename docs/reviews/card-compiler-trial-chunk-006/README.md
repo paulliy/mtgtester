@@ -94,3 +94,13 @@ spell effects the patch drops found only Rile.
 The automated review that ran when the pull request was marked ready found a wrong patch among this chunk's promotions, and it was retired (`docs/reviews/compiled-card-retired.json`):
 
 - **Saheeli, the Sun's Brilliance:** "That token gains haste" was modelled as `createTokenCopyOf` with `addKeywords`, which writes haste into the token's copiable values, so a copy of the token wrongly has haste. The card grants haste to the token after it is created, and no op can do that. Kiki-Jiki, Mirror Breaker ("except it has haste") is correct as modelled and stays.
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found 5 wrong patches among this chunk's promotions. They were retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Fecundity:** The optional draw belongs to Fecundity's controller instead of the dying creature's controller.
+- **Loyal Inventor:** Shuffles before searching; a search to hand or for nothing leaves the library unshuffled.
+- **Prosperous Bandit:** Offspring has no intervening-if, so the trigger goes on the stack when offspring was not paid.
+- **Sanctum of Calm Waters:** 'If you do, discard' still discards after drawing zero.
+- **Saproling Symbiosis:** 'flash if you pay {2} more' is modelled as an alternative cost, which is skipped outside the hand and cannot combine with other alternative costs.

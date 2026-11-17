@@ -246,11 +246,29 @@ function saveState(trial: string, states: Map<string, CardState>): void {
   write(paths(trial).state, `${JSON.stringify([...states.values()], null, 2)}\n`);
 }
 
+/**
+ * A trial keys its cards by name, so a calibration case and a real card of the same name cannot
+ * both live in it. Refuse rather than let either silently replace or hide the other: a real
+ * card would never be compiled or imported, or a calibration case would vanish from the check.
+ */
+function refuseCalibrationCollision(
+  states: Map<string, CardState>,
+  name: string,
+  trial: string,
+): void {
+  if (states.get(name)?.calibration === undefined) return;
+  throw new Error(
+    `${name} is already a calibration case in ${trial}; a real card of the same name cannot join this trial. Put it in a new trial.`,
+  );
+}
+
 function prepare(trial: string, calibrationCount: number): void {
   const p = paths(trial);
   const rows = JSON.parse(readFileSync(`${trial}/targets.json`, 'utf8')) as TargetRow[];
   const targets = loadTargets(trial);
   const states = loadState(trial);
+  // Checked before anything is written, so a refusal leaves the trial as it was.
+  for (const row of rows) refuseCalibrationCollision(states, row.name, trial);
   write(p.prefix('compile'), compilePrefix());
   write(p.prefix('back'), BACK_PREFIX);
   write(p.prefix('judge'), JUDGE_PREFIX);
@@ -491,10 +509,18 @@ function importPatches(trial: string, patchDir: string): void {
     ? (JSON.parse(readFileSync(targetsPath, 'utf8')) as TargetRow[])
     : [];
   const states = loadState(trial);
+  const files = readdirSync(patchDir).filter((name) => name.endsWith('.json'));
+  // Checked before anything is written, so a refusal leaves the trial as it was.
+  for (const file of files)
+    refuseCalibrationCollision(
+      states,
+      (JSON.parse(readFileSync(`${patchDir}/${file}`, 'utf8')) as PatchFile).name,
+      trial,
+    );
   write(p.prefix('back'), BACK_PREFIX);
   write(p.prefix('judge'), JUDGE_PREFIX);
   let imported = 0;
-  for (const file of readdirSync(patchDir).filter((name) => name.endsWith('.json'))) {
+  for (const file of files) {
     const patch = JSON.parse(readFileSync(`${patchDir}/${file}`, 'utf8')) as PatchFile;
     if (typeof patch.source !== 'string' || patch.source.length === 0)
       throw new Error(`${file}: a patch needs a "source" tag`);

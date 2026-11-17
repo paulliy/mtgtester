@@ -91,3 +91,11 @@ retired:
 - **Benefactor's Draught:** a delayed trigger with no target fires for the first subject of any
   matching event (`queueObjectEventTriggers`) and ignores its inner trigger's subject selector. So it
   drew when its controller's own creatures blocked, and drew once for several blockers.
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found 3 wrong patches among this chunk's promotions. They were retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Ayara's Oathsworn:** The intervening-if is missing from the trigger, so it triggers when the condition is false. With four counters it still tutors.
+- **Illusionist's Stratagem:** Multi-card blink is sequential, not simultaneous (exile together, return together).
+- **Lily Bowen, Raging Grandma:** The reward follows even when the counter removal fails (source destroyed in response).

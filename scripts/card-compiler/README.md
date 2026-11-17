@@ -59,7 +59,9 @@ the patches the trial 01 audit found wrong, and twenty-five are broken variants 
 made with the IR mutation operators. `report` scores them, and `queue` refuses a trial whose check
 called a known-wrong case "same": run `recheck`, have fresh workers answer, and `check` again.
 `run.ts calibrate <trial>` adds the cases to a trial that was not prepared here. The first run is in
-`docs/reviews/card-compiler-trial-calibration-01`.
+`docs/reviews/card-compiler-trial-calibration-01`. A trial keys its cards by name, so `prepare` and
+`import` refuse a real card that is already one of the trial's calibration cases, before writing
+anything; put that card in a new trial.
 
 **`compiled-checked` means "ready for review", not "in the game".** Every checked card goes to the
 review queue (`docs/reviews/compiled-card-queue.json`). It enters the card pool only through

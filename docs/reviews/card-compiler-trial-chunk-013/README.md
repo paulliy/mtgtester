@@ -98,3 +98,16 @@ automatic check, about 3.4%.
 The automated review that ran when the pull request was marked ready found a wrong patch among this chunk's promotions, and it was retired (`docs/reviews/compiled-card-retired.json`):
 
 - **Tempestra, Dame of Games:** "That token gains haste" was modelled as `createTokenCopyOf` with `addKeywords`, which writes haste into the token's copiable values, so a copy of the token wrongly has haste. The card grants haste to the token after it is created, and no op can do that. Kiki-Jiki, Mirror Breaker ("except it has haste") is correct as modelled and stays.
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found 8 wrong patches among this chunk's promotions. They were retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Captain's Claws:** Created attacking tokens share one defender choice, limited to players already attacked; each token may attack any legal defender.
+- **Cartouche of Strength:** Removing the Cartouche before its trigger resolves cancels the former host's fight.
+- **Gutterbones:** The graveyard activation's condition (your turn, an opponent lost life) is never evaluated by the graveyard loop in legal.ts.
+- **Kessig Cagebreakers:** Created attacking tokens share one defender choice, limited to players already attacked; each token may attack any legal defender.
+- **Krang, Master Mind:** The intervening-if is missing from the trigger, so it triggers when the condition is false. drawUpTo draws after the hand is emptied in response.
+- **Market Festival:** A land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification.
+- **Relic Vial:** The single-object destroy path loses its death trigger.
+- **Vernal Bloom:** A land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification.

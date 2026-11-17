@@ -65,3 +65,14 @@ validator does not say so.
    throws, but the validator accepts the patch (Molt Tender).
 2. `searchLibrary` with two fixed destinations cannot put a lone found card into the second one
    (Jarad's Orders when only one creature is found; minor).
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found 6 wrong patches among this chunk's promotions. They were retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Dictate of Karametra:** A land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification.
+- **Electrosiphon:** The countered spell's mana value is read after it left the stack, so it gives 0 energy.
+- **Mercurial Spelldancer:** The reward follows even when the counter removal fails (source destroyed in response).
+- **Sarkhan, Fireblood:** Its retained +1 acts as a mana ability, usable at any time and outside loyalty limits.
+- **Siren's Ruse:** Checks the returning incarnation's characteristics, not the exiled object's.
+- **Tale of Katara and Toph:** 'first time each turn' counts successful firings, not events; a later tap can count as the first.

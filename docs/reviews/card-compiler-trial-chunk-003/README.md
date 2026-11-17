@@ -111,3 +111,13 @@ New in this chunk; none is fixed here, because a promotion may not change engine
 The automated review that ran when the pull request was marked ready found a wrong patch among this chunk's promotions, and it was retired (`docs/reviews/compiled-card-retired.json`):
 
 - **Fear of Missing Out:** `queueObjectEventTriggers` checks the trigger's condition before it records `oncePerTurn`. A first attack without delirium leaves the trigger free to fire on a later attack that turn; the card triggers only on the creature's first attack.
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found 5 wrong patches among this chunk's promotions. They were retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Gogo, Mysterious Mime:** Its rider applies even when it fails to become a copy.
+- **Impostor Syndrome:** The copy reads the event object after it left, so a departed creature yields no copy.
+- **Mirrorworks:** The copy reads the event object after it left, so a departed artifact yields no copy.
+- **Necroduality:** The copy reads the event object after it left; a bounced Zombie yields no copy.
+- **Sword of War and Peace:** CardsInTargetHand does not handle eventPlayer, so the damage is always 0.

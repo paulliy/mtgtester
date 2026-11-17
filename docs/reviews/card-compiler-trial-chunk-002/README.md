@@ -95,3 +95,11 @@ New in this chunk. None is fixed here, because a promotion may not change engine
 The automated review that ran when the pull request was marked ready found a wrong patch among this chunk's promotions, and it was retired (`docs/reviews/compiled-card-retired.json`):
 
 - **Molten Duplication:** "That token gains haste" was modelled as `createTokenCopyOf` with `addKeywords`, which writes haste into the token's copiable values, so a copy of the token wrongly has haste. The card grants haste to the token after it is created, and no op can do that. Kiki-Jiki, Mirror Breaker ("except it has haste") is correct as modelled and stays.
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found 3 wrong patches among this chunk's promotions. They were retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Awakening Zone:** Its Eldrazi Spawn token has no Spawn subtype.
+- **Displace:** Multi-card blink is sequential, not simultaneous (exile together, return together).
+- **Ouroboroid:** PutCountersEach re-evaluates X per creature, so later creatures get extra counters.

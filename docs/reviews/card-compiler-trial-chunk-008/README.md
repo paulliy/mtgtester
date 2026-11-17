@@ -77,3 +77,13 @@ the engine runs them differently. Root Sliver's scope rule was already known fro
 The automated review that ran when the pull request was marked ready found a wrong patch among this chunk's promotions, and it was retired (`docs/reviews/compiled-card-retired.json`):
 
 - **Chrome Dome:** "That token gains haste" was modelled as `createTokenCopyOf` with `addKeywords`, which writes haste into the token's copiable values, so a copy of the token wrongly has haste. The card grants haste to the token after it is created, and no op can do that. Kiki-Jiki, Mirror Breaker ("except it has haste") is correct as modelled and stays.
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found 5 wrong patches among this chunk's promotions. They were retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Generator Servant:** The haste marker attaches to the first spell found, not the spell its mana paid for.
+- **Norin the Wary:** Queues one trigger for several attackers.
+- **Self-Destruct:** Its damage is dealt in two events, not simultaneously.
+- **Steelburr Champion:** Offspring has no intervening-if, so the trigger goes on the stack when offspring was not paid.
+- **Trace of Abundance:** A land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification.

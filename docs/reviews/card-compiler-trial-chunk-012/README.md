@@ -89,3 +89,10 @@ Planar Atlas. The main thread found the other nine, Ring of Thune among them by 
 6. A non-empty patch turns off the interpreter's generic-label stripping
    (`genericLabelStripAllowed` in `cards/interpret.ts`), so a labelled line the patch does not
    handle shows as unrecognized (Sierra, Nuka's Biggest Fan).
+
+## Retired after the owner's review on PR #72 (2026-11-17)
+
+The owner's review of every promoted card found 2 wrong patches among this chunk's promotions. They were retired (`docs/reviews/compiled-card-retired.json`), because the engine cannot express the correct behavior or the patch got it wrong:
+
+- **Overabundance:** A land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification. Its damage also waits as an ordinary trigger instead of resolving with the mana.
+- **Stirring Hopesinger:** Cast-target matching ignores countTargets, so a six-target Hex gives no trigger.
