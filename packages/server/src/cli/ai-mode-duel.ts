@@ -14,6 +14,11 @@
  * `--delta` gives the `bot` seats strategist delta prompts (hill-climb S6) and keeps them off for
  * the others. With `--opponents bot-never` the two sides then differ only in the strategist prompt.
  *
+ * `--await-strategist` makes every decision wait for the seat's in-flight strategist call first.
+ * It is on by default with `--opponents bot-never`: four bot-led seats finish a game in seconds,
+ * long before a strategist answers, so every call would be cancelled at game end and the game
+ * would measure nothing (2026-11-16: 46 turns, 0 answered calls).
+ *
  * Spend caps: once the provider-reported cost reaches `--max-usd` (default 2) or the call count
  * reaches `--max-calls` (default 1500), no further model call is made and every seat plays the
  * rest of the game on the bot fallback; the report says the cap was hit.
@@ -43,10 +48,28 @@ import {
 } from '../ai';
 import type { AiAttemptObserver, AiClient, CostSettlement } from '../ai/client';
 import type { AiPrompt } from '../ai/context';
+import type { AsyncDecisionProvider } from '@mtg/engine';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
 const SEATS: PlayerId[] = ['P1', 'P2', 'P3', 'P4'];
 export type ModeName = 'bot' | 'model';
+
+/**
+ * A provider that lets the seat's strategist call land before each decision. `prepare` starts the
+ * call if this turn has none yet (it is idempotent per turn), and `settled` waits for the newest.
+ */
+export function awaitingStrategist(
+  provider: AsyncDecisionProvider,
+  coordinator: Pick<StrategyCoordinator, 'prepare' | 'settled'>,
+): AsyncDecisionProvider {
+  return {
+    async decide(request) {
+      coordinator.prepare(request);
+      await coordinator.settled();
+      return provider.decide(request);
+    },
+  };
+}
 
 export interface Tally {
   tacticianCalls: number;
@@ -266,6 +289,7 @@ async function main(): Promise<void> {
   if (opponents !== 'model' && opponents !== 'bot-never')
     throw new Error('--opponents must be model or bot-never');
   const delta = argv.includes('--delta');
+  const awaitStrategist = argv.includes('--await-strategist') || opponents === 'bot-never';
   const configs: Record<ModeName, AiConfig> = {
     bot: {
       ...base,
@@ -351,7 +375,7 @@ async function main(): Promise<void> {
       others,
     );
   }
-  const providers = new Map<PlayerId, OpenAiDecisionProvider>();
+  const providers = new Map<PlayerId, AsyncDecisionProvider>();
   const started = performance.now();
   const result = await runToCompletionAsync(
     engine,
@@ -359,7 +383,7 @@ async function main(): Promise<void> {
       let provider = providers.get(seat);
       if (provider === undefined) {
         const mode = modeOf(seat);
-        provider = new OpenAiDecisionProvider(
+        const live = new OpenAiDecisionProvider(
           tacticianClient,
           queue,
           engine,
@@ -368,6 +392,7 @@ async function main(): Promise<void> {
           undefined,
           coordinators[mode],
         );
+        provider = awaitStrategist ? awaitingStrategist(live, coordinators[mode]) : live;
         providers.set(seat, provider);
       }
       return provider;
@@ -413,6 +438,8 @@ async function main(): Promise<void> {
     opponents,
     /** Whether the `bot` seats' strategist got delta prompts (S6). */
     delta,
+    /** Whether each decision waited for its seat's strategist call to land. */
+    awaitStrategist,
     escalation,
     shadow,
     perMode: Object.fromEntries(

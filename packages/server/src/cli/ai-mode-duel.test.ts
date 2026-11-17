@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import type { DecisionRequest } from '@mtg/shared';
 import type { AiAttemptObserver, AiNetworkAttempt, OpenAiCompatibleClient } from '../ai/client';
 import type { AiPrompt } from '../ai/context';
-import { budgetedFetch, counting, emptyTally, type Budget } from './ai-mode-duel';
+import {
+  awaitingStrategist,
+  budgetedFetch,
+  counting,
+  emptyTally,
+  type Budget,
+} from './ai-mode-duel';
 
 const request = { requestId: 'r1', decidingPlayer: 'P2' } as DecisionRequest;
 const prompt = { messages: [] } as unknown as AiPrompt;
@@ -170,5 +176,32 @@ describe('ai-mode-duel spend accounting', () => {
       'spend cap',
     );
     expect(sent).toBe(2);
+  });
+});
+
+describe('ai-mode-duel --await-strategist', () => {
+  it('starts the strategist and lets it land before the seat decides', async () => {
+    const order: string[] = [];
+    let release!: () => void;
+    const landed = new Promise<void>((r) => (release = r));
+    const coordinator = {
+      prepare: () => {
+        order.push('prepare');
+        setTimeout(() => {
+          order.push('strategist landed');
+          release();
+        }, 5);
+      },
+      settled: () => landed,
+    };
+    const provider = {
+      decide: async () => {
+        order.push('decide');
+        return { requestId: 'r', actionId: 0 };
+      },
+    };
+    const wrapped = awaitingStrategist(provider, coordinator);
+    await wrapped.decide({ requestId: 'r' } as unknown as DecisionRequest);
+    expect(order).toEqual(['prepare', 'strategist landed', 'decide']);
   });
 });
