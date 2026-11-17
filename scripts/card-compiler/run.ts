@@ -20,7 +20,7 @@
  *
  *   bun run scripts/card-compiler/run.ts review <name> --verdict accepted|rejected --by <who>
  *   bun run scripts/card-compiler/run.ts promote <batch-id>        # accepted patches into the engine
- *   bun run scripts/card-compiler/run.ts retire <name>             # take a promoted card back out
+ *   bun run scripts/card-compiler/run.ts retire <name> --reason <text>  # take a promoted card back out
  *   bun run scripts/card-compiler/run.ts verify [--base <sha>]     # a promotion only added cards
  *       (see promote.ts)
  *
@@ -641,6 +641,12 @@ function queue(allArgs: string[]): void {
     const p = paths(trial);
     const targets = loadTargets(trial);
     const calibration = scoreCalibration(loadState(trial).values());
+    if (calibration.pending.length > 0 && !allowMissed)
+      throw new Error(
+        `${trial}: ${calibration.pending.length} calibration case(s) have no verdict yet ` +
+          `(${calibration.pending.join(', ')}). Finish the meaning check before queueing; ` +
+          '`promote` refuses a trial whose calibration is incomplete either way.',
+      );
     if (calibration.missed.length > 0 && !allowMissed)
       throw new Error(
         `${trial}: the meaning check called ${calibration.missed.length} known-wrong calibration ` +

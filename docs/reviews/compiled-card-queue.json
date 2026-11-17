@@ -1882,8 +1882,8 @@
       ],
       "review": {
         "verdict": "rejected",
-        "by": "main-thread",
-        "note": "Retired after PR #72 review: creates the tokens before destroying the artifact."
+        "by": "retired",
+        "note": "Retired: Creates the tokens before the destroy (PR review)."
       }
     },
     {
@@ -3187,7 +3187,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: Its Vampire condition selects attachedToSource, which never matches in a condition (chunk 011)."
+      }
     },
     {
       "name": "Blightbeetle",
@@ -12979,7 +12983,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: createTokenAttacking taps the token; the card makes an untapped attacker (chunk 013)."
+      }
     },
     {
       "name": "Into the North",
@@ -15072,8 +15080,8 @@
       ],
       "review": {
         "verdict": "rejected",
-        "by": "main-thread",
-        "note": "Retired after PR #72 review: sacrifices one land, then another, where the card sacrifices two at once."
+        "by": "retired",
+        "note": "Retired: Sacrifices two lands one after the other instead of at once (PR review)."
       }
     },
     {
@@ -19276,8 +19284,8 @@
       ],
       "review": {
         "verdict": "rejected",
-        "by": "main-thread",
-        "note": "Retired after PR #72 review: sacrifices one land, then another, where the card sacrifices two at once."
+        "by": "retired",
+        "note": "Retired: Sacrifices two lands one after the other instead of at once (PR review)."
       }
     },
     {
@@ -19378,7 +19386,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: A battlefield selfOnly activation cost reduction is never applied (chunk 012)."
+      }
     },
     {
       "name": "Plaxcaster Frogling",
@@ -21277,7 +21289,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: Its condition selects attachedToSource, which never matches in a condition (chunk 011)."
+      }
     },
     {
       "name": "Ring of Kalonia",
@@ -23358,7 +23374,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: createTokenAttacking taps the token; the card makes an untapped attacker (chunk 013)."
+      }
     },
     {
       "name": "Silumgar, the Drifting Death",
@@ -24884,9 +24904,9 @@
         }
       ],
       "review": {
-        "verdict": "accepted",
-        "by": "main-thread",
-        "note": "Full audit: read against Oracle text and the engine."
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: Its Map token's explore threw in an activated ability (chunk 009 fuzz)."
       }
     },
     {
@@ -28866,7 +28886,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: attackRestriction never matches attachedToSource (chunk 013)."
+      }
     },
     {
       "name": "Vow of Lightning",
@@ -28919,7 +28943,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: attackRestriction never matches attachedToSource (chunk 013)."
+      }
     },
     {
       "name": "Vow of Torment",
@@ -28971,7 +28999,11 @@
           "detail": "game ended"
         }
       ],
-      "review": null
+      "review": {
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: attackRestriction never matches attachedToSource (chunk 013)."
+      }
     },
     {
       "name": "Vow of Wildness",

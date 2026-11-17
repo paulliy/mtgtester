@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "retired": [
+    {
+      "name": "Abzan Beastmaster",
+      "oracleId": "aab463bb-e790-403b-a88d-06ef81c7302b",
+      "patchSha256": "fee627d93d40d37d8d31e0a5b4eb2a87b6aba01d33a55e582bcbc0a61c46bc1f",
+      "batch": "chunk-009",
+      "reason": "Its draw condition is an intervening-if on the trigger; the card checks it on resolution (PR review)."
+    },
+    {
+      "name": "Artifact Mutation",
+      "oracleId": "e77e8768-3ea8-44f9-aba6-1e023e006946",
+      "patchSha256": "7ff9b5b06986797f14fea6153d9d513cf9cd9a31849c450990e95c9cd65a68a6",
+      "batch": "chunk-003",
+      "reason": "Creates the tokens before the destroy (PR review)."
+    },
+    {
+      "name": "Blade of the Bloodchief",
+      "oracleId": "8985e545-07c3-45f9-9058-fe3c1f50de04",
+      "patchSha256": "a212953d3b36687fa32f6ef9c34db4c57d1bc611d467fed1052908e26482fde1",
+      "batch": "chunk-003",
+      "reason": "Its Vampire condition selects attachedToSource, which never matches in a condition (chunk 011)."
+    },
+    {
+      "name": "Electroduplicate",
+      "oracleId": "112f2b3f-32e7-40b1-b80e-0b99184a840c",
+      "patchSha256": "d4c3e4f6e4eeee16c56915250a704e567e141b6de439119e5e747a757f80fb50",
+      "batch": "chunk-002",
+      "reason": "Its end-step sacrifice is a delayed trigger on this creation (sacrificeAt), not an ability of the copied token, so later copies keep the token (PR review)."
+    },
+    {
+      "name": "Genesis",
+      "oracleId": "15afdd88-05fc-4335-8a55-c6ee702f3bef",
+      "patchSha256": "2e7e1f34038c4d13614c0580338ad063d0777ced0505b8a56c0a9a5a945a016d",
+      "batch": "chunk-008",
+      "reason": "Its graveyard upkeep trigger never fires: step triggers scan only the battlefield, and it fires from the battlefield instead (PR review)."
+    },
+    {
+      "name": "Giott, King of the Dwarves",
+      "oracleId": "c629fa91-e13c-494b-a95f-a91b7c52035a",
+      "patchSha256": "89b28301247675689460d279f2ee594352d68454b41a08ffa0c4d5af2c75c0eb",
+      "batch": "chunk-012",
+      "reason": "Two independent 'whenever' triggers merged into one anyOf trigger, so an entrant matching both triggers once (PR review)."
+    },
+    {
+      "name": "High Score",
+      "oracleId": "d81fc181-ecb0-43a5-88e8-c61aca3428d8",
+      "patchSha256": "649e3d5afbc43caca6800f24a89b1606b9537effc8c0caea6ddfd5577d335714",
+      "batch": "chunk-005",
+      "reason": "Its draw condition is an intervening-if on the trigger; the card checks it on resolution (PR review)."
+    },
+    {
+      "name": "Inquisitorial Rosette",
+      "oracleId": "4a3a25ae-61f5-4bcd-ae3d-4b31feaa83d8",
+      "patchSha256": "f7f4128d88d386e529a7b4a4fa459abec4ff4eeb7a838d60885e65aac0a492a2",
+      "batch": "chunk-008",
+      "reason": "createTokenAttacking taps the token; the card makes an untapped attacker (chunk 013)."
+    },
+    {
+      "name": "Lotus Field",
+      "oracleId": "134d5b82-7940-4b33-a922-7f9d1f403e50",
+      "patchSha256": "4bebc35edd7d66ca288d949a0b6fbecc5d3459d88be5189372f23d1cea019ebd",
+      "batch": "chunk-001",
+      "reason": "Sacrifices two lands one after the other instead of at once (PR review)."
+    },
+    {
+      "name": "Planar Engineering",
+      "oracleId": "dc48079a-b1c4-4c43-a989-418c78a264ec",
+      "patchSha256": "f4c35966a185b0a465a10290b3be15d1cea8f8c149ad1210bdb520dab09123f1",
+      "batch": "chunk-003",
+      "reason": "Sacrifices two lands one after the other instead of at once (PR review)."
+    },
+    {
+      "name": "Plate Armor",
+      "oracleId": "36082b5e-760b-4245-af59-00d308470d1a",
+      "patchSha256": "efe226a033ada28591fd0d02fcd866843cfb79be54acefb76afc22c0bf1593b8",
+      "batch": "chunk-010",
+      "reason": "A battlefield selfOnly activation cost reduction is never applied (chunk 012)."
+    },
+    {
+      "name": "Ring of Evos Isle",
+      "oracleId": "4548f379-2647-4446-9e56-e7ef0662793a",
+      "patchSha256": "9e1f41897eb66f7d146767daa852d408f655abfa0e29aeca137f7157de402560",
+      "batch": "chunk-009",
+      "reason": "Its condition selects attachedToSource, which never matches in a condition (chunk 011)."
+    },
+    {
+      "name": "Sigiled Sword of Valeron",
+      "oracleId": "f1c4269a-1d99-4f3b-8107-a005df3468d5",
+      "patchSha256": "63d9136afbad6f437135c4ba62ebb7931cc63fa57b20df372c7db37b3568fde8",
+      "batch": "chunk-011",
+      "reason": "createTokenAttacking taps the token; the card makes an untapped attacker (chunk 013)."
+    },
+    {
+      "name": "Spyglass Siren",
+      "oracleId": "4ec9d9eb-14e2-47ea-88a2-d2394e363784",
+      "patchSha256": "0c076ccd072b3aaed4e593f98d2d5b198ac6d94845febad5782b021e0687e616",
+      "batch": "chunk-009",
+      "reason": "Its Map token's explore threw in an activated ability (chunk 009 fuzz)."
+    },
+    {
+      "name": "Vow of Duty",
+      "oracleId": "1e7bddbd-e448-4aea-9d18-b44bd45837c5",
+      "patchSha256": "685738b2f55d5560ba1c9368b3139c598e0fabcf308e0d28bd1e2fab5808bbc7",
+      "batch": "chunk-009",
+      "reason": "attackRestriction never matches attachedToSource (chunk 013)."
+    },
+    {
+      "name": "Vow of Lightning",
+      "oracleId": "bfed67f3-70d2-49c2-8f25-16e4d10fa5be",
+      "patchSha256": "4f5b1747bc48a5d7dbc5e844d8cefdbc112c0a475f480706048552f0e3e551f4",
+      "batch": "chunk-010",
+      "reason": "attackRestriction never matches attachedToSource (chunk 013)."
+    },
+    {
+      "name": "Vow of Torment",
+      "oracleId": "237b87f4-783b-40ac-9fcf-4ae76a33229d",
+      "patchSha256": "4a12ae4fbc75a9c3b15e8242fde73304dc3264406d55b79dd62293e67720d088",
+      "batch": "chunk-011",
+      "reason": "attackRestriction never matches attachedToSource (chunk 013)."
+    }
+  ]
+}

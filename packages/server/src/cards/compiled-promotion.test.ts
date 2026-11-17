@@ -10,6 +10,7 @@ import { interpretCard } from '@mtg/engine';
 import { pinnedPool, type PinnedRow } from '../../../../scripts/card-compiler/lib';
 import {
   additiveViolations,
+  calibrationRefusal,
   renderCompiledModule,
   selectForPromotion,
   strandedReading,
@@ -44,6 +45,8 @@ const context = (over: Partial<PromotionContext> = {}): PromotionContext => ({
   hasAuthoredOverride: () => false,
   pinned: (name) => pinned.get(name),
   readPatch: () => patchBytes,
+  retired: new Set(),
+  calibration: () => null,
   ...over,
 });
 
@@ -127,6 +130,27 @@ describe('promoting compiled cards', () => {
       'more than one accepted patch claims this card; reject all but one',
       'more than one accepted patch claims this card; reject all but one',
     ]);
+  });
+
+  it('refuses the exact bytes of a retired patch, whatever the queue says', () => {
+    expect(reasons([accepted()], { retired: new Set([accepted().patchSha256!]) })).toEqual([
+      'this exact patch was retired; a new patch has to be reviewed',
+    ]);
+  });
+
+  it('refuses a patch whose trial did not finish, or failed, its calibration', () => {
+    const score = { cases: 10, pending: [], missed: [], falseAlarms: ['b'] };
+    expect(calibrationRefusal(score)).toBeNull();
+    expect(calibrationRefusal({ ...score, pending: ['x', 'y'] })).toBe(
+      'its trial has 2 calibration case(s) without a verdict',
+    );
+    expect(calibrationRefusal({ ...score, missed: ['z'] })).toBe(
+      "its trial's meaning check missed calibration case(s): z",
+    );
+    expect(calibrationRefusal({ ...score, cases: 0 })).toBe('its trial ran no calibration cases');
+    expect(
+      reasons([accepted()], { calibration: (trial) => (trial === accepted().trial ? 'no' : null) }),
+    ).toEqual(['no']);
   });
 
   it('refuses a card the interpreter models without the patch', () => {

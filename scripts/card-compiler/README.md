@@ -160,22 +160,27 @@ bun run scripts/card-compiler/run.ts promote <batch-id> [--trial <dir>] [--dry-r
 bun run snapshots:write && bun run coverage:pin --ratchet && bun run modelled-cards
 bun run ai-bench refresh --suite core-fast --write
 bun run scripts/card-compiler/run.ts verify [--base <sha>]
-bun run scripts/card-compiler/run.ts retire "<name>"
+bun run scripts/card-compiler/run.ts retire "<name>" --reason "<why>"
 ```
 
 - `review` records a verdict against the exact patch bytes. `queue` drops it if the patch changes.
 - `promote` (`promote.ts`) writes the accepted entries as a batch of their own into the generated
   module `packages/engine/src/cards/overrides/compiled/index.ts`, which registers them as `'append'`
   overrides with their source, trial and patch hash. It says why it leaves a card out: its checks
-  failed, no smoke game exercised it, the patch changed after review, an authored override or a
-  second accepted patch claims the card, the interpreter already models it, or the patch no longer
-  validates. The generated module is never edited by hand.
+  failed, no smoke game exercised it, the patch changed after review, the exact patch was retired,
+  its trial's calibration is unfinished or missed a case, an authored override or a second accepted
+  patch claims the card, the interpreter already models it, or the patch no longer validates. The
+  generated module is never edited by hand.
+- `queue` refuses a trial whose calibration cases are not all answered, as it does one that missed
+  a case.
 - `verify` is the regression guard. It fails unless the working tree only adds the promoted cards
   to the base commit: no engine source outside the generated module, no changed entry in the
   override or interpretation snapshots, no changed definition fingerprint, and no newly modeled
   card that was not promoted. Engine, grammar and validator changes therefore go in their own
   pull requests.
-- `retire` takes one card back out, so the engine halts on it again. When a grammar change starts
+- `retire` takes one card back out, so the engine halts on it again. It records the patch hash and
+  the reason in `docs/reviews/compiled-card-retired.json` and turns the queue review to rejected,
+  so `promote` never puts those bytes back. When a grammar change starts
   parsing a line a compiled patch claims, the drift guard turns the card unmodeled and the modeled
   ratchet fails; `retire` then reports whether the interpreter's own reading has the same behavior
   as the patch. If it differs, one of the two is wrong.
