@@ -60330,6 +60330,4617 @@ const BATCH_CHUNK_014: readonly CompiledCard[] = [
   },
 ];
 
+const BATCH_CHUNK_015: readonly CompiledCard[] = [
+  {
+    oracleId: 'a3c35742-e306-49b6-b042-db4f685c6f86',
+    name: 'Aether Flash',
+    handledLines: ['Whenever a creature enters, this enchantment deals 2 damage to it.'],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'permanent',
+              selector: {
+                kind: 'type',
+                value: 'Creature',
+              },
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'dealDamage',
+              target: 'triggerObject',
+              amount: {
+                kind: 'const',
+                n: 2,
+              },
+            },
+          ],
+          description: 'Whenever a creature enters, this enchantment deals 2 damage to it.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '5c1ea6d7e123a5ac65c92fc193603ddaa6ad822d07abea8e5e9979344046f265',
+    behaviorSha256: '423d1e3c0b5410ce41d86cf72c8690edc5fb833ec02a75b1afc29fd5200ce54e',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '020963ef-24c0-48cc-8776-bc257df684bc',
+    name: "April O'Neil, Human Element",
+    handledLines: [
+      'Whenever a player casts an artifact, instant, or sorcery spell, you create a Mutagen token.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'castsSpell',
+            caster: 'each',
+            filter: {
+              kind: 'anyOf',
+              of: [
+                {
+                  kind: 'type',
+                  value: 'Artifact',
+                },
+                {
+                  kind: 'type',
+                  value: 'Instant',
+                },
+                {
+                  kind: 'type',
+                  value: 'Sorcery',
+                },
+              ],
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'createToken',
+              spec: {
+                name: 'Mutagen',
+                typeLine: 'Artifact — Mutagen',
+                types: ['Artifact'],
+                subtypes: ['Mutagen'],
+                colors: [],
+                power: null,
+                toughness: null,
+                activatedAbilities: [
+                  {
+                    costs: [
+                      {
+                        kind: 'mana',
+                        cost: {
+                          generic: 1,
+                          colored: {
+                            W: 0,
+                            U: 0,
+                            B: 0,
+                            R: 0,
+                            G: 0,
+                          },
+                          colorless: 0,
+                        },
+                      },
+                      {
+                        kind: 'tap',
+                      },
+                      {
+                        kind: 'sacrificeSelf',
+                      },
+                    ],
+                    timing: 'sorcery',
+                    ability: {
+                      kind: 'activated',
+                      targets: [
+                        {
+                          kind: 'creature',
+                        },
+                      ],
+                      effects: [
+                        {
+                          op: 'putCounters',
+                          target: 0,
+                          counter: '+1/+1',
+                          count: 1,
+                        },
+                      ],
+                      description:
+                        '{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.',
+                    },
+                  },
+                ],
+              },
+              count: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+          ],
+          description:
+            'Whenever a player casts an artifact, instant, or sorcery spell, you create a Mutagen token.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '0497ee46d12d26465f595e9e174bb14dec37bbad9bc799067e2831e796937b40',
+    behaviorSha256: 'af5015090367652e8ccbfe21272038078d40ff6dc2090c6db9e6974b2f1b9eda',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'a15b83df-91b7-49f0-9bec-5776a3dac8bd',
+    name: 'Arlinn, Voice of the Pack',
+    handledLines: [
+      "Each creature you control that's a Wolf or a Werewolf enters with an additional +1/+1 counter on it.",
+    ],
+    def: {
+      additionalCountersOnEntry: [
+        {
+          affects: {
+            kind: 'allOf',
+            of: [
+              {
+                kind: 'controller',
+                who: 'you',
+              },
+              {
+                kind: 'type',
+                value: 'Creature',
+              },
+              {
+                kind: 'anyOf',
+                of: [
+                  {
+                    kind: 'subtype',
+                    value: 'Wolf',
+                  },
+                  {
+                    kind: 'subtype',
+                    value: 'Werewolf',
+                  },
+                ],
+              },
+            ],
+          },
+          counter: '+1/+1',
+          count: {
+            kind: 'const',
+            n: 1,
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'ad4ee892181662048549686cfb853e132ed661f44c784f0abf4fac1b780748fe',
+    behaviorSha256: '2230973dd0afad440424bdb95fe1a4b1f8ea5401b81f0c8ac128eac524188a68',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '085bc7be-bd44-40af-8e8f-a1a8006fe22c',
+    name: 'Assert Authority',
+    handledLines: [
+      "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        description:
+          "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+        targets: [
+          {
+            kind: 'spell',
+          },
+        ],
+        effects: [
+          {
+            op: 'counter',
+            target: 0,
+            exileIfCountered: true,
+          },
+        ],
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '86a17510e6f8c6f9d240c3a4bc0107539e935cbfab7b8de9e46a4489f340fcaa',
+    behaviorSha256: '6fb0577404f984435b4b74687a949dc89d9077dfb56caa0124b0549b3ffdfd9b',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '3d63ad3a-4e9f-4968-a576-4be063f4ecbf',
+    name: 'Battle at the Bridge',
+    handledLines: ['Target creature gets -X/-X until end of turn. You gain X life.'],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        description: 'Target creature gets -X/-X until end of turn. You gain X life.',
+        targets: [
+          {
+            kind: 'creature',
+          },
+        ],
+        effects: [
+          {
+            op: 'pumpUntilEot',
+            target: 0,
+            power: {
+              kind: 'negate',
+              of: {
+                kind: 'xValue',
+              },
+            },
+            toughness: {
+              kind: 'negate',
+              of: {
+                kind: 'xValue',
+              },
+            },
+          },
+          {
+            op: 'gainLife',
+            amount: {
+              kind: 'xValue',
+            },
+          },
+        ],
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '0318afd234b5535a1c455ab198a82b92dd040f539412c046526ea70215d14a1f',
+    behaviorSha256: 'd9cece1121b4898a1e0e08c8d6106bf415d53c45f877fcf3befbe41554425f0c',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'bd5310df-2e6c-4584-9a5a-03d6d06b3c20',
+    name: 'Blood Reckoning',
+    handledLines: [
+      "Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life.",
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'attacks',
+            subject: {
+              kind: 'permanent',
+              selector: {
+                kind: 'type',
+                value: 'Creature',
+              },
+            },
+            condition: {
+              kind: 'eventObjectDefendingPlayerIsYou',
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'loseLifeTarget',
+              target: 'eventPlayer',
+              amount: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+          ],
+          description:
+            "Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life.",
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '732a1b877efec1e66a1326dd28470bbfd796998a6ca9a292a4ab31baa949b13e',
+    behaviorSha256: '2eb62ae52d7c44ed3d596439d36c18b1cfa97f5de94804153b530e99ee153fc5',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '3292d795-4fdc-4e42-959a-dd5e8591c5cc',
+    name: 'Boomer Scrapper',
+    handledLines: [
+      'Whenever this creature enters or attacks, you lose 1 life and create a Junk token.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'loseLife',
+              amount: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+            {
+              op: 'createToken',
+              spec: {
+                name: 'Junk',
+                typeLine: 'Artifact — Junk',
+                types: ['Artifact'],
+                subtypes: ['Junk'],
+                colors: [],
+                power: null,
+                toughness: null,
+                activatedAbilities: [
+                  {
+                    costs: [
+                      {
+                        kind: 'tap',
+                      },
+                      {
+                        kind: 'sacrificeSelf',
+                      },
+                    ],
+                    timing: 'sorcery',
+                    ability: {
+                      kind: 'activated',
+                      targets: [],
+                      effects: [
+                        {
+                          op: 'exileTopNPlayableUntilEot',
+                          count: {
+                            kind: 'const',
+                            n: 1,
+                          },
+                        },
+                      ],
+                      description:
+                        '{T}, Sacrifice this token: Exile the top card of your library. You may play that card this turn. Activate only as a sorcery.',
+                    },
+                  },
+                ],
+              },
+              count: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+          ],
+          description:
+            'Whenever this creature enters or attacks, you lose 1 life and create a Junk token.',
+        },
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'attacks',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'loseLife',
+              amount: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+            {
+              op: 'createToken',
+              spec: {
+                name: 'Junk',
+                typeLine: 'Artifact — Junk',
+                types: ['Artifact'],
+                subtypes: ['Junk'],
+                colors: [],
+                power: null,
+                toughness: null,
+                activatedAbilities: [
+                  {
+                    costs: [
+                      {
+                        kind: 'tap',
+                      },
+                      {
+                        kind: 'sacrificeSelf',
+                      },
+                    ],
+                    timing: 'sorcery',
+                    ability: {
+                      kind: 'activated',
+                      targets: [],
+                      effects: [
+                        {
+                          op: 'exileTopNPlayableUntilEot',
+                          count: {
+                            kind: 'const',
+                            n: 1,
+                          },
+                        },
+                      ],
+                      description:
+                        '{T}, Sacrifice this token: Exile the top card of your library. You may play that card this turn. Activate only as a sorcery.',
+                    },
+                  },
+                ],
+              },
+              count: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+          ],
+          description:
+            'Whenever this creature enters or attacks, you lose 1 life and create a Junk token.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '6ff336171f0bc355fc9b4822efb8aa742147a38720e1986d2f2e7a86f354b625',
+    behaviorSha256: '3c42140fb3ecc7fca206462e75eb34c0b8b5200956c7f0a473e6d7b851e0b0c1',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '44e1946d-01b5-45db-abdc-2f6d6480cf60',
+    name: 'Boon of Boseiju',
+    handledLines: [
+      'Target creature gets +X/+X until end of turn, where X is the greatest mana value among permanents you control. Untap it.',
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [
+          {
+            kind: 'creature',
+          },
+        ],
+        effects: [
+          {
+            op: 'pumpUntilEot',
+            target: 0,
+            power: {
+              kind: 'greatestManaValueAmong',
+              selector: {
+                kind: 'controller',
+                who: 'you',
+              },
+              scope: 'you',
+            },
+            toughness: {
+              kind: 'greatestManaValueAmong',
+              selector: {
+                kind: 'controller',
+                who: 'you',
+              },
+              scope: 'you',
+            },
+          },
+          {
+            op: 'untapTarget',
+            target: 0,
+          },
+        ],
+        description:
+          'Target creature gets +X/+X until end of turn, where X is the greatest mana value among permanents you control. Untap it.',
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '964915d558beca268013b8623c55ba6bd02645ee7ac4ae3507337ae9dc2e1773',
+    behaviorSha256: '7f4fc75bf582b00a2921bb9ebe4a5df9a3a778b6962fbd358c2d3a14afc8982e',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '104baa4e-a3f3-45dc-979d-4c58b659ba1a',
+    name: 'Brambleguard Captain',
+    handledLines: [
+      "At the beginning of combat on your turn, target creature you control gets +X/+0 until end of turn, where X is this creature's power.",
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'beginningOfCombat',
+            player: 'you',
+          },
+          optional: false,
+          targets: [
+            {
+              kind: 'creature',
+              controller: 'you',
+            },
+          ],
+          effects: [
+            {
+              op: 'pumpUntilEot',
+              target: 0,
+              power: {
+                kind: 'powerOfSource',
+              },
+              toughness: {
+                kind: 'const',
+                n: 0,
+              },
+            },
+          ],
+          description:
+            "At the beginning of combat on your turn, target creature you control gets +X/+0 until end of turn, where X is this creature's power.",
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'a40143b29ad0136a8d1b5bece063e8dd1100d9526f66ed6e13266b8b2a17a360',
+    behaviorSha256: 'a5277faee492c417b6afc8e8832dac366ee4ffe2adafbef7d885d9c47316b2ae',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '9603e553-f72d-40bf-94ab-596afb7d6db3',
+    name: 'Cartel Aristocrat',
+    handledLines: [
+      'Sacrifice another creature: ~ gains protection from the color of your choice until end of turn.',
+    ],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'sacrificeOther',
+              selector: {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'other',
+                  },
+                  {
+                    kind: 'controller',
+                    who: 'you',
+                  },
+                  {
+                    kind: 'type',
+                    value: 'Creature',
+                  },
+                ],
+              },
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'grantChosenColorProtectionUntilEot',
+                target: 'source',
+              },
+            ],
+            description:
+              'Sacrifice another creature: This creature gains protection from the color of your choice until end of turn.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '92e64e122996eb707c378fd453038074f0402093f4df3439da51cbe8185a5f96',
+    behaviorSha256: '2bb38ce10f286b002009dc29209949b4cde192265d121e3398ac68b713e36584',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '5cf92fd4-7c0b-4d8e-92f1-53dc2e0476fc',
+    name: 'Centaur Garden',
+    handledLines: [
+      '{G}, {T}, Sacrifice this land: Target creature gets +3/+3 until end of turn. Activate only if there are seven or more cards in your graveyard.',
+    ],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'mana',
+              cost: {
+                generic: 0,
+                colored: {
+                  W: 0,
+                  U: 0,
+                  B: 0,
+                  R: 0,
+                  G: 1,
+                },
+                colorless: 0,
+              },
+            },
+            {
+              kind: 'tap',
+            },
+            {
+              kind: 'sacrificeSelf',
+            },
+          ],
+          timing: 'any',
+          condition: {
+            kind: 'cardsInYourGraveyard',
+            cmp: '>=',
+            n: 7,
+          },
+          ability: {
+            kind: 'activated',
+            targets: [
+              {
+                kind: 'creature',
+              },
+            ],
+            effects: [
+              {
+                op: 'pumpUntilEot',
+                target: 0,
+                power: 3,
+                toughness: 3,
+              },
+            ],
+            description:
+              '{G}, {T}, Sacrifice this land: Target creature gets +3/+3 until end of turn. Activate only if there are seven or more cards in your graveyard.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'a1dce24c8bc44669c685fa6b3917a2b41d52b8bf3a4273ce650d7d45e50f1cc9',
+    behaviorSha256: '25dfd59c87b8d11be9a51e9abb235dadc2615e21eea776343ec76e4a98b3f1a4',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '0b8defd2-8530-47d7-a0c6-27aa5162dff6',
+    name: 'Clear Shot',
+    handledLines: [
+      "Target creature you control gets +1/+1 until end of turn. It deals damage equal to its power to target creature you don't control.",
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [
+          {
+            kind: 'creature',
+            controller: 'you',
+          },
+          {
+            kind: 'creature',
+            controller: 'opponent',
+          },
+        ],
+        effects: [
+          {
+            op: 'pumpUntilEot',
+            target: 0,
+            power: 1,
+            toughness: 1,
+          },
+          {
+            op: 'dealDamage',
+            target: 1,
+            amount: {
+              kind: 'powerOfTarget',
+              target: 0,
+            },
+            source: 0,
+          },
+        ],
+        description:
+          "Target creature you control gets +1/+1 until end of turn. It deals damage equal to its power to target creature you don't control.",
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '9132dba3be20167c0f9af2ef53c4fc2980e790e872c0efe53818ca2958559e00',
+    behaviorSha256: 'd414fbb2ac159f491fec4a63bf4f8a9a306cbb31c6a722ac6eb99cb3f68a648f',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'f02ad6fa-7a82-471a-979e-0bb9ba866ef6',
+    name: 'Corpse Harvester',
+    handledLines: [
+      '{1}{B}, {T}, Sacrifice a creature: Search your library for a Zombie card and a Swamp card, reveal them, put them into your hand, then shuffle.',
+    ],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'mana',
+              cost: {
+                generic: 1,
+                colored: {
+                  W: 0,
+                  U: 0,
+                  B: 1,
+                  R: 0,
+                  G: 0,
+                },
+                colorless: 0,
+              },
+            },
+            {
+              kind: 'tap',
+            },
+            {
+              kind: 'sacrificeOther',
+              selector: {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'controller',
+                    who: 'you',
+                  },
+                  {
+                    kind: 'type',
+                    value: 'Creature',
+                  },
+                ],
+              },
+              allowSelf: true,
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'searchLibrary',
+                filter: {
+                  kind: 'subtype',
+                  value: 'Zombie',
+                },
+                destinations: [
+                  {
+                    zone: 'hand',
+                  },
+                ],
+                reveal: true,
+              },
+              {
+                op: 'searchLibrary',
+                filter: {
+                  kind: 'subtype',
+                  value: 'Swamp',
+                },
+                destinations: [
+                  {
+                    zone: 'hand',
+                  },
+                ],
+                reveal: true,
+              },
+              {
+                op: 'shuffle',
+              },
+            ],
+            description:
+              '{1}{B}, {T}, Sacrifice a creature: Search your library for a Zombie card and a Swamp card, reveal them, put them into your hand, then shuffle.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '1fed19958d3a351d0c4e28fd618ae225b3ae364724f623862c7f1bcc75bd3f91',
+    behaviorSha256: 'fdbaf19cba6125f3881eac1dba569c3aa7d7f340304ca4f572e6c2973b854748',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'b45afde2-eaaf-4174-8082-d344efa54c44',
+    name: 'Cost of Brilliance',
+    handledLines: [
+      'Target player draws two cards and loses 2 life. Put a +1/+1 counter on up to one target creature.',
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [
+          {
+            kind: 'player',
+          },
+          {
+            kind: 'creature',
+            count: {
+              min: 0,
+              max: 1,
+            },
+          },
+        ],
+        effects: [
+          {
+            op: 'drawTarget',
+            target: 0,
+            count: {
+              kind: 'const',
+              n: 2,
+            },
+          },
+          {
+            op: 'loseLifeTarget',
+            target: 0,
+            amount: {
+              kind: 'const',
+              n: 2,
+            },
+          },
+          {
+            op: 'putCountersEachChosen',
+            targetSlot: 1,
+            counter: '+1/+1',
+            count: 1,
+          },
+        ],
+        description:
+          'Target player draws two cards and loses 2 life. Put a +1/+1 counter on up to one target creature.',
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '4f7aae59fe561b086c124278ee31de1c06b6f76523ad8b6acfe5386472462432',
+    behaviorSha256: '6eb0ef403102c65c2cb92f52b55b4e3aee53766b22df527b2f99e3f3cf2449c6',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '52fe8101-82af-4aed-a395-54e7b7639bd2',
+    name: 'Curious Inquiry',
+    handledLines: [
+      'Enchanted creature gets +1/+1 and has "Whenever this creature deals combat damage to a player, investigate."',
+    ],
+    def: {
+      staticEffects: [
+        {
+          affects: {
+            kind: 'attachedToSource',
+          },
+          op: {
+            layer: 7,
+            sublayer: 'd',
+            power: 1,
+            toughness: 1,
+          },
+        },
+        {
+          affects: {
+            kind: 'attachedToSource',
+          },
+          op: {
+            layer: 6,
+            addTrigger: {
+              kind: 'triggered',
+              trigger: {
+                when: 'dealsCombatDamageToPlayer',
+                subject: {
+                  kind: 'self',
+                },
+              },
+              optional: false,
+              targets: [],
+              effects: [
+                {
+                  op: 'createToken',
+                  spec: {
+                    name: 'Clue',
+                    typeLine: 'Artifact — Clue',
+                    types: ['Artifact'],
+                    subtypes: ['Clue'],
+                    colors: [],
+                    power: null,
+                    toughness: null,
+                    activatedAbilities: [
+                      {
+                        costs: [
+                          {
+                            kind: 'mana',
+                            cost: {
+                              generic: 2,
+                              colored: {
+                                W: 0,
+                                U: 0,
+                                B: 0,
+                                R: 0,
+                                G: 0,
+                              },
+                              colorless: 0,
+                            },
+                          },
+                          {
+                            kind: 'sacrificeSelf',
+                          },
+                        ],
+                        timing: 'any',
+                        ability: {
+                          kind: 'activated',
+                          targets: [],
+                          effects: [
+                            {
+                              op: 'draw',
+                              count: {
+                                kind: 'const',
+                                n: 1,
+                              },
+                            },
+                          ],
+                          description: '{2}, Sacrifice this token: Draw a card.',
+                        },
+                      },
+                    ],
+                  },
+                  count: {
+                    kind: 'const',
+                    n: 1,
+                  },
+                },
+              ],
+              description: 'Whenever this creature deals combat damage to a player, investigate.',
+            },
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'd38a76af40b737a75af6f2cf9c4548dac9805c58406c05132410002beda5a34b',
+    behaviorSha256: 'c2b7440a8078f209aff9ce687d06c196e43d798a5e0629c3a2f093dc78ed5ae2',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'cf3234f2-09d7-4d8b-b871-3bf0fcb75b6d',
+    name: 'Cut Propulsion',
+    handledLines: [
+      'Target creature deals damage to itself equal to its power. If that creature has flying, it deals twice that much damage to itself instead.',
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [
+          {
+            kind: 'creature',
+          },
+        ],
+        effects: [
+          {
+            op: 'conditionalEffect',
+            condition: {
+              kind: 'triggerObjectMatches',
+              selector: {
+                kind: 'hasKeyword',
+                keyword: 'flying',
+              },
+            },
+            checkTarget: 0,
+            then: [
+              {
+                op: 'dealDamage',
+                target: 0,
+                source: 0,
+                amount: {
+                  kind: 'times',
+                  of: {
+                    kind: 'powerOfTarget',
+                    target: 0,
+                  },
+                  n: 2,
+                },
+              },
+            ],
+            else: [
+              {
+                op: 'dealDamage',
+                target: 0,
+                source: 0,
+                amount: {
+                  kind: 'powerOfTarget',
+                  target: 0,
+                },
+              },
+            ],
+          },
+        ],
+        description:
+          'Target creature deals damage to itself equal to its power. If that creature has flying, it deals twice that much damage to itself instead.',
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '4988c62c09db973ec1d3d0c86f9bbb564fb47e0e75e9c1c7f238cb33e4273ffc',
+    behaviorSha256: 'fcee9682b891997ccac9f58af71be08fd8a216c13ac19467086a57326f93aa9f',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'f1352a81-6fd5-4c4d-ada4-b81d3a9f74c0',
+    name: 'Dagger Caster',
+    handledLines: [
+      'When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'eachOpponentDamage',
+              amount: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+            {
+              op: 'damageEach',
+              selector: {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'controller',
+                    who: 'opponents',
+                  },
+                  {
+                    kind: 'type',
+                    value: 'Creature',
+                  },
+                ],
+              },
+              amount: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+          ],
+          description:
+            'When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '856f71ca642dca4e9929fc073dc35849b214c597ba9ba48d8757808944d94fd0',
+    behaviorSha256: '7a8afe555c4718ab334ba9978b1d8c63cf163ff1c296d5b0362c5ece60a3d5fc',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '8e22495d-a921-4c91-ada3-79098851e5d4',
+    name: 'Deathleaper, Terror Weapon',
+    handledLines: [
+      'Flesh Hooks — Creatures you control that entered this turn have double strike.',
+    ],
+    def: {
+      staticEffects: [
+        {
+          affects: {
+            kind: 'allOf',
+            of: [
+              {
+                kind: 'controller',
+                who: 'you',
+              },
+              {
+                kind: 'type',
+                value: 'Creature',
+              },
+              {
+                kind: 'enteredThisTurn',
+              },
+            ],
+          },
+          op: {
+            layer: 6,
+            addKeyword: 'double strike',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '17f3167205f834e07d0014191869ad88297ee7733efd8875bb5e6f11e5749574',
+    behaviorSha256: '3788acc216d1cb2e62b28444b5129f0d272d0a8fc9e1892441b61329ef1dd5e3',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '34a85d7f-d4ea-4a0f-aa4c-bf0b0f4987bf',
+    name: 'Despotic Scepter',
+    handledLines: ["{T}: Destroy target permanent you own. It can't be regenerated."],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'tap',
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [
+              {
+                kind: 'permanent',
+                filter: {
+                  kind: 'owner',
+                  who: 'you',
+                },
+              },
+            ],
+            effects: [
+              {
+                op: 'destroy',
+                target: 0,
+                cantRegenerate: true,
+              },
+            ],
+            description: "{T}: Destroy target permanent you own. It can't be regenerated.",
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'cc0afc0e511502ceec6dc807514d05f2c0753791e3f61fc80aafae8e76cac559',
+    behaviorSha256: '1781fb9ab198e12c4f0de37ca68db549cacb0320f04117d146c8cb6e7740ef08',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'b76566a9-f998-4a20-b073-4b60862843c9',
+    name: 'Dismiss into Dream',
+    handledLines: [
+      'Each creature your opponents control is an Illusion in addition to its other types and has "When this creature becomes the target of a spell or ability, sacrifice it."',
+    ],
+    def: {
+      staticEffects: [
+        {
+          affects: {
+            kind: 'allOf',
+            of: [
+              {
+                kind: 'controller',
+                who: 'opponents',
+              },
+              {
+                kind: 'type',
+                value: 'Creature',
+              },
+            ],
+          },
+          op: {
+            layer: 4,
+            addSubtypes: ['Illusion'],
+          },
+        },
+        {
+          affects: {
+            kind: 'allOf',
+            of: [
+              {
+                kind: 'controller',
+                who: 'opponents',
+              },
+              {
+                kind: 'type',
+                value: 'Creature',
+              },
+            ],
+          },
+          op: {
+            layer: 6,
+            addTrigger: {
+              kind: 'triggered',
+              trigger: {
+                when: 'becomesTargeted',
+                subject: {
+                  kind: 'self',
+                },
+              },
+              optional: false,
+              targets: [],
+              effects: [
+                {
+                  op: 'sacrifice',
+                  target: 'source',
+                },
+              ],
+              description:
+                'When this creature becomes the target of a spell or ability, sacrifice it.',
+            },
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '3e6b830d71485a3ee88f4ee8b69ed5d56a66ba5a6c38cb0c883f2632328c2100',
+    behaviorSha256: '4a5c9aaf62c930abf98d5a5a2a1ddb9e018014958f0a285c48e18484ce701b8e',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'f034137e-c19f-48af-a2f2-f767bf87a275',
+    name: 'Draconic Destiny',
+    handledLines: [
+      'Enchanted creature gets +1/+1 and has flying, haste, and "{1}: ~ gets +1/+0 until end of turn." It\'s a Dragon in addition to its other types.',
+    ],
+    def: {
+      staticEffects: [
+        {
+          affects: {
+            kind: 'attachedToSource',
+          },
+          op: {
+            layer: 7,
+            sublayer: 'd',
+            power: 1,
+            toughness: 1,
+          },
+        },
+        {
+          affects: {
+            kind: 'attachedToSource',
+          },
+          op: {
+            layer: 6,
+            addKeyword: 'flying',
+          },
+        },
+        {
+          affects: {
+            kind: 'attachedToSource',
+          },
+          op: {
+            layer: 6,
+            addKeyword: 'haste',
+          },
+        },
+        {
+          affects: {
+            kind: 'attachedToSource',
+          },
+          op: {
+            layer: 4,
+            addSubtypes: ['Dragon'],
+          },
+        },
+        {
+          affects: {
+            kind: 'attachedToSource',
+          },
+          op: {
+            layer: 6,
+            addActivatedAbility: {
+              costs: [
+                {
+                  kind: 'mana',
+                  cost: {
+                    generic: 1,
+                    colored: {
+                      W: 0,
+                      U: 0,
+                      B: 0,
+                      R: 0,
+                      G: 0,
+                    },
+                    colorless: 0,
+                  },
+                },
+              ],
+              timing: 'any',
+              ability: {
+                kind: 'activated',
+                targets: [],
+                effects: [
+                  {
+                    op: 'pumpUntilEot',
+                    target: 'source',
+                    power: 1,
+                    toughness: 0,
+                  },
+                ],
+                description: '{1}: This creature gets +1/+0 until end of turn.',
+              },
+            },
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '21279393d777047ea869e1d0c9c67c1939df19c0f6d0b90039f44f2ffb45f6b0',
+    behaviorSha256: 'bbe50214715d0f4fa1fca9032f85aee16540e537a938213af9e293f2d3b13115',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'f75bb13b-41fc-4614-b35e-f456069ce9c6',
+    name: 'Dwarven Mattock',
+    handledLines: ['When this Equipment enters, attach it to target Dwarf you control.'],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [
+            {
+              kind: 'creature',
+              controller: 'you',
+              filter: {
+                kind: 'subtype',
+                value: 'Dwarf',
+              },
+            },
+          ],
+          effects: [
+            {
+              op: 'attachSelfTo',
+              target: 0,
+            },
+          ],
+          description: 'When this Equipment enters, attach it to target Dwarf you control.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '9317b2db6c93fd7ef10cee41c6685b64c2876c8cf5014861b0a376887ba45a08',
+    behaviorSha256: '78943048f862c4079a5548f516d37c776696420fe0862df7b25ccbd718ac4ba8',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'dd963396-3f81-49ad-a68e-87b9764d7ac5',
+    name: 'Elemental Spectacle',
+    handledLines: [
+      'Vivid — Create a number of 5/5 red and green Elemental creature tokens equal to the number of colors among permanents you control. Then you gain life equal to the number of creatures you control.',
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [],
+        effects: [
+          {
+            op: 'createToken',
+            spec: {
+              name: 'Elemental',
+              typeLine: 'Token Creature — Elemental',
+              types: ['Creature'],
+              subtypes: ['Elemental'],
+              colors: ['R', 'G'],
+              power: 5,
+              toughness: 5,
+            },
+            count: {
+              kind: 'colorsAmongPermanents',
+            },
+          },
+          {
+            op: 'gainLife',
+            amount: {
+              kind: 'countPermanents',
+              selector: {
+                kind: 'type',
+                value: 'Creature',
+              },
+              scope: 'you',
+            },
+          },
+        ],
+        description:
+          'Vivid — Create a number of 5/5 red and green Elemental creature tokens equal to the number of colors among permanents you control. Then you gain life equal to the number of creatures you control.',
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '49c39d42e6856cd7b1d032c15c7a4363c2f700eec9917b067c023ddc105f4855',
+    behaviorSha256: '14b25040252b4a29bc9081e5d20d9852d1303b74f4e98c8ddaae1fdab6795ad7',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '6bc3c7fd-e371-467f-973c-4c9f0d1ba0bc',
+    name: "Ent's Fury",
+    handledLines: [
+      "Put a +1/+1 counter on target creature you control if its power is 4 or greater. Then that creature gets +1/+1 until end of turn and fights target creature you don't control.",
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [
+          {
+            kind: 'creature',
+            controller: 'you',
+          },
+          {
+            kind: 'creature',
+            controller: 'opponent',
+          },
+        ],
+        effects: [
+          {
+            op: 'conditionalEffect',
+            condition: {
+              kind: 'compareValues',
+              left: {
+                kind: 'powerOfTarget',
+                target: 0,
+              },
+              cmp: '>=',
+              right: {
+                kind: 'const',
+                n: 4,
+              },
+            },
+            then: [
+              {
+                op: 'putCounters',
+                target: 0,
+                counter: '+1/+1',
+                count: 1,
+              },
+            ],
+            else: [],
+          },
+          {
+            op: 'pumpUntilEot',
+            target: 0,
+            power: 1,
+            toughness: 1,
+          },
+          {
+            op: 'fight',
+            first: 0,
+            second: 1,
+          },
+        ],
+        description:
+          "Put a +1/+1 counter on target creature you control if its power is 4 or greater. Then that creature gets +1/+1 until end of turn and fights target creature you don't control.",
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '1f923f7579d5caef85c647d1b94b1b347c444067205fc01640ae27f415c9fadc',
+    behaviorSha256: '6e62cf44cd87b3207af28883333481cea14eaf5b7194b2c12b6d1e869fdb6b28',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'e2d21635-182f-4ebf-a6f5-d4c1fd7f9705',
+    name: 'Flamehold Grappler',
+    handledLines: [
+      'When this creature enters, copy the next spell you cast this turn when you cast it. You may choose new targets for the copy.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'nextCastThisTurn',
+              filter: {
+                kind: 'allOf',
+                of: [],
+              },
+              ability: {
+                kind: 'triggered',
+                targets: [],
+                effects: [
+                  {
+                    op: 'copyCastSpell',
+                  },
+                ],
+                description: 'Copy that spell. You may choose new targets for the copy.',
+              },
+            },
+          ],
+          description:
+            'When this creature enters, copy the next spell you cast this turn when you cast it. You may choose new targets for the copy.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '1b747d244e4b6f4f4d14f386150a653501284db1b863c0e3ad3c2cacb76417df',
+    behaviorSha256: '1f349274de636c5f57a3dccffb9e7f300c4b5f2c8bcbdb98a203d41b1077b594',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '5cfdfcac-57fb-4507-a97a-cccbac2d1327',
+    name: 'Flayer Husk',
+    handledLines: ['Living weapon'],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'createToken',
+              spec: {
+                name: 'Phyrexian Germ',
+                typeLine: 'Token Creature — Phyrexian Germ',
+                types: ['Creature'],
+                subtypes: ['Phyrexian', 'Germ'],
+                colors: ['B'],
+                power: 0,
+                toughness: 0,
+              },
+              count: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+            {
+              op: 'attach',
+              what: 'source',
+              to: 'createdToken',
+            },
+          ],
+          description:
+            'Living weapon (When this Equipment enters, create a 0/0 black Phyrexian Germ creature token, then attach this to it.)',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '3416cd6d4f83efaa1233f8af03a0f2b03ba9c6b2abe346a198919b2cbae8d3b0',
+    behaviorSha256: 'e2c5d1b0c6f75bd4fef49dec7111911c9395967d41ef7655a590498768b0dceb',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '49815e6d-b9c5-4e45-949e-34d34b3543e8',
+    name: 'Fleshwrither',
+    handledLines: ['Transfigure {1}{B}{B}'],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'mana',
+              cost: {
+                generic: 1,
+                colored: {
+                  W: 0,
+                  U: 0,
+                  B: 2,
+                  R: 0,
+                  G: 0,
+                },
+                colorless: 0,
+              },
+            },
+            {
+              kind: 'sacrificeSelf',
+            },
+          ],
+          timing: 'sorcery',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'searchLibrary',
+                filter: {
+                  kind: 'allOf',
+                  of: [
+                    {
+                      kind: 'type',
+                      value: 'Creature',
+                    },
+                    {
+                      kind: 'manaValueAtLeast',
+                      n: 4,
+                    },
+                    {
+                      kind: 'manaValueAtMost',
+                      n: 4,
+                    },
+                  ],
+                },
+                destinations: [
+                  {
+                    zone: 'battlefield',
+                  },
+                ],
+              },
+              {
+                op: 'shuffle',
+              },
+            ],
+            description: 'Transfigure {1}{B}{B}',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '3ef01bf923796dc449cb1b8c2f768eb34181e2ced8c977a98c65763b39a751de',
+    behaviorSha256: 'b7ab678aafc37460a9cb64519be1be1ac5e63eb70b4c4efc7b4d65f36a89a0b7',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'e0548f0d-4aec-4c39-8c34-52bfa2bf7c60',
+    name: 'Forked Bolt',
+    handledLines: ['~ deals 2 damage divided as you choose among one or two targets.'],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [
+          {
+            kind: 'anyTarget',
+            count: {
+              min: 1,
+              max: 2,
+            },
+          },
+        ],
+        effects: [
+          {
+            op: 'dealDamageDivided',
+            targetSlot: 0,
+            total: {
+              kind: 'const',
+              n: 2,
+            },
+          },
+        ],
+        description: 'Forked Bolt deals 2 damage divided as you choose among one or two targets.',
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '0690a523e7c3cce9fbfc96b01a8b2401fdfb449b8432c5ebf3584fa3e585850a',
+    behaviorSha256: 'cf78b8ede34f0f5ee53ac6d632375a9cc984e25fa323b12fb9f8c98264c5124b',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '0c4603be-d71a-4d33-b62c-04ead1987dbe',
+    name: "G'raha Tia",
+    handledLines: [
+      'The Allagan Eye — Whenever one or more other creatures and/or artifacts you control die, draw a card. This ability triggers only once each turn.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'dies',
+            subject: {
+              kind: 'permanent',
+              selector: {
+                kind: 'anyOf',
+                of: [
+                  {
+                    kind: 'allOf',
+                    of: [
+                      {
+                        kind: 'other',
+                      },
+                      {
+                        kind: 'controller',
+                        who: 'you',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Creature',
+                      },
+                    ],
+                  },
+                  {
+                    kind: 'allOf',
+                    of: [
+                      {
+                        kind: 'other',
+                      },
+                      {
+                        kind: 'controller',
+                        who: 'you',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Artifact',
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+            aggregate: true,
+            oncePerTurn: true,
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'draw',
+              count: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+          ],
+          description:
+            'The Allagan Eye — Whenever one or more other creatures and/or artifacts you control die, draw a card. This ability triggers only once each turn.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'd21fe59bb43e1ef62dacafd737e0111ad227e05ff2749d853da43dce3781091a',
+    behaviorSha256: '370908789646560c05e3d6dc4ac7dab314f00c4526f521df8991fe5db4b5f3ce',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'd38ad188-515e-4865-a0ed-5d0fd4c7b453',
+    name: 'Gauntlet of Might',
+    handledLines: [
+      'Whenever a Mountain is tapped for mana, its controller adds an additional {R}.',
+    ],
+    def: {
+      ruleStatics: [
+        {
+          kind: 'manaActivationRider',
+          source: {
+            kind: 'subtype',
+            value: 'Mountain',
+          },
+          add: {
+            kind: 'fixed',
+            units: [['R']],
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'afbf05ed1977e2057188adb0239b1cf9ef44f84735f36b588ed8adf205995a8e',
+    behaviorSha256: '9ea9e8409b350da4db0717c2e5922c0195c0573a174a366baea5eb1340353232',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '9cc02c16-8cf9-4ac7-9475-231c27121968',
+    name: 'Ghitu Encampment',
+    handledLines: [
+      "{1}{R}: ~ becomes a 2/1 red Warrior creature with first strike until end of turn. It's still a land.",
+    ],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'mana',
+              cost: {
+                generic: 1,
+                colored: {
+                  W: 0,
+                  U: 0,
+                  B: 0,
+                  R: 1,
+                  G: 0,
+                },
+                colorless: 0,
+              },
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'becomeCreatureUntilEot',
+                target: 'source',
+                subtypes: ['Warrior'],
+                power: 2,
+                toughness: 1,
+                keywords: ['first strike'],
+                colors: ['R'],
+              },
+            ],
+            description:
+              "{1}{R}: This land becomes a 2/1 red Warrior creature with first strike until end of turn. It's still a land.",
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'ead00d33184ce7fb216be884133d3e1d8ee51219108f787669d53e2edb7af629',
+    behaviorSha256: '043fd9a43d38393fe5480a8c4c913230679645443e2758c3450c1a9515a8a250',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '32dc847a-d8e9-4bc5-aa73-dfe69ff330a2',
+    name: 'Goblin Cadets',
+    handledLines: [
+      'Whenever this creature blocks or becomes blocked, target opponent gains control of it.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'blocks',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [
+            {
+              kind: 'player',
+              controller: 'opponent',
+            },
+          ],
+          effects: [
+            {
+              op: 'gainControlTarget',
+              target: 'source',
+              recipient: {
+                targetPlayer: 0,
+              },
+            },
+          ],
+          description:
+            'Whenever this creature blocks or becomes blocked, target opponent gains control of it.',
+        },
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'becomesBlocked',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [
+            {
+              kind: 'player',
+              controller: 'opponent',
+            },
+          ],
+          effects: [
+            {
+              op: 'gainControlTarget',
+              target: 'source',
+              recipient: {
+                targetPlayer: 0,
+              },
+            },
+          ],
+          description:
+            'Whenever this creature blocks or becomes blocked, target opponent gains control of it.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '76f41718b6bd6f9b81c7668ccdf84814d98d5ece25ccb37364683bee1d92e673',
+    behaviorSha256: 'af0259efb9fae7a26ae6ae01678158c4c215d5e05711de2372abe3152d47e08d',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '1005bc16-8a6a-476a-a647-4ed40d2e96de',
+    name: 'Goblin Tunneler',
+    handledLines: ["{T}: Target creature with power 2 or less can't be blocked this turn."],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'tap',
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [
+              {
+                kind: 'creature',
+                filter: {
+                  kind: 'powerAtMost',
+                  n: 2,
+                },
+              },
+            ],
+            effects: [
+              {
+                op: 'cantBeBlockedUntilEot',
+                target: 0,
+              },
+            ],
+            description: "{T}: Target creature with power 2 or less can't be blocked this turn.",
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '005bb2dd1b9db431a3f7bf804ad983f11acb97e6e0446e8722c7cc5e6527023c',
+    behaviorSha256: 'e33bfefdaafc63ce1677aa0f7d8d35a36b57982e0c3ea7cbf9fe019bf70c3463',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '40e0665d-57b8-4c19-9fb8-b3155d7bbb94',
+    name: 'Graduation Day',
+    handledLines: [
+      'Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on target creature you control.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'castsSpell',
+            caster: 'you',
+            filter: {
+              kind: 'anyOf',
+              of: [
+                {
+                  kind: 'type',
+                  value: 'Instant',
+                },
+                {
+                  kind: 'type',
+                  value: 'Sorcery',
+                },
+              ],
+            },
+            targetFilter: {
+              kind: 'type',
+              value: 'Creature',
+            },
+          },
+          optional: false,
+          targets: [
+            {
+              kind: 'creature',
+              controller: 'you',
+            },
+          ],
+          effects: [
+            {
+              op: 'putCounters',
+              target: 0,
+              counter: '+1/+1',
+              count: 1,
+            },
+          ],
+          description:
+            'Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on target creature you control.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'fc8746b8988a22bd81c788244cff6e60589292e915b0ca5cb5c630489976d713',
+    behaviorSha256: '835fdd83017e6431ffb672629ef72c87f10eda95e3717b744f1c460bfa7a74dc',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '09b71c95-7b5d-4cee-a505-e0dda72715b7',
+    name: 'Gran Pulse Ochu',
+    handledLines: [
+      '{8}: Until end of turn, this creature gets +1/+1 for each permanent card in your graveyard.',
+    ],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'mana',
+              cost: {
+                generic: 8,
+                colored: {
+                  W: 0,
+                  U: 0,
+                  B: 0,
+                  R: 0,
+                  G: 0,
+                },
+                colorless: 0,
+              },
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'pumpUntilEot',
+                target: 'source',
+                power: {
+                  kind: 'countCardsInZone',
+                  zone: 'graveyard',
+                  selector: {
+                    kind: 'anyOf',
+                    of: [
+                      {
+                        kind: 'type',
+                        value: 'Artifact',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Battle',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Creature',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Enchantment',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Land',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Planeswalker',
+                      },
+                    ],
+                  },
+                  owner: 'you',
+                },
+                toughness: {
+                  kind: 'countCardsInZone',
+                  zone: 'graveyard',
+                  selector: {
+                    kind: 'anyOf',
+                    of: [
+                      {
+                        kind: 'type',
+                        value: 'Artifact',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Battle',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Creature',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Enchantment',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Land',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Planeswalker',
+                      },
+                    ],
+                  },
+                  owner: 'you',
+                },
+              },
+            ],
+            description:
+              '{8}: Until end of turn, this creature gets +1/+1 for each permanent card in your graveyard.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'cb90efff42122a06a106129559264fc45c0055a9b7cc4f754b6a2b357d6cba21',
+    behaviorSha256: '615ebb2715d2cf00b4d15bbaef266f89a66d4c3d2640910743baae20685a4f91',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '739ad367-a4ff-4779-8888-3c27f0f60253',
+    name: 'Hollowhead Sliver',
+    handledLines: ['Sliver creatures you control have "{T}, Discard a card: Draw a card."'],
+    def: {
+      staticEffects: [
+        {
+          affects: {
+            kind: 'allOf',
+            of: [
+              {
+                kind: 'controller',
+                who: 'you',
+              },
+              {
+                kind: 'subtype',
+                value: 'Sliver',
+              },
+              {
+                kind: 'type',
+                value: 'Creature',
+              },
+            ],
+          },
+          op: {
+            layer: 6,
+            addActivatedAbility: {
+              costs: [
+                {
+                  kind: 'tap',
+                },
+                {
+                  kind: 'discardCard',
+                },
+              ],
+              timing: 'any',
+              ability: {
+                kind: 'activated',
+                targets: [],
+                effects: [
+                  {
+                    op: 'draw',
+                    count: {
+                      kind: 'const',
+                      n: 1,
+                    },
+                  },
+                ],
+                description: '{T}, Discard a card: Draw a card.',
+              },
+            },
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '4c4bb95f11e7daf0dfb67eb5e0f9648ba78ffdf120808c0543ddd993c2b17ef2',
+    behaviorSha256: 'b6c159eebf3c237ae706ea2dccc92806061c924270f6b7cc1198c845a60e08d6',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '1888b473-e26a-4882-ae18-5a0a6caee410',
+    name: 'Immolating Gyre',
+    handledLines: [
+      "~ deals X damage to each creature and planeswalker you don't control, where X is the number of instant and sorcery cards in your graveyard.",
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [],
+        effects: [
+          {
+            op: 'damageEach',
+            selector: {
+              kind: 'allOf',
+              of: [
+                {
+                  kind: 'controller',
+                  who: 'opponents',
+                },
+                {
+                  kind: 'anyOf',
+                  of: [
+                    {
+                      kind: 'type',
+                      value: 'Creature',
+                    },
+                    {
+                      kind: 'type',
+                      value: 'Planeswalker',
+                    },
+                  ],
+                },
+              ],
+            },
+            amount: {
+              kind: 'countCardsInZone',
+              zone: 'graveyard',
+              selector: {
+                kind: 'anyOf',
+                of: [
+                  {
+                    kind: 'type',
+                    value: 'Instant',
+                  },
+                  {
+                    kind: 'type',
+                    value: 'Sorcery',
+                  },
+                ],
+              },
+              owner: 'you',
+            },
+          },
+        ],
+        description:
+          "Immolating Gyre deals X damage to each creature and planeswalker you don't control, where X is the number of instant and sorcery cards in your graveyard.",
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '331c60755bed7729a41b969e449c427bb68b1d1b245290416357c77b45242166',
+    behaviorSha256: 'aed2ad0e90d26a27fc404e9ee0216f2d93570cc0a5a08e1c7a8f354edaf8e061',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '1c77b4da-b580-4ce9-b127-76de674f5694',
+    name: 'Iron-Shield Elf',
+    handledLines: ['Discard a card: ~ gains indestructible until end of turn. Tap it.'],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'discardCard',
+              count: 1,
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'grantKeywordUntilEot',
+                target: 'source',
+                keyword: 'indestructible',
+              },
+              {
+                op: 'tapTarget',
+                target: 'source',
+              },
+            ],
+            description:
+              'Discard a card: This creature gains indestructible until end of turn. Tap it.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '927a8025eb0acaa76cbd882a3a6bcad79575915bfc2d5c0b3a3990d5f76ef86f',
+    behaviorSha256: '6b41f28179da97205609891f6656f09b0fc472a17ebff775d9541e9317aacc3f',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '83b9a734-ee92-44c8-bf47-ca69b6d6405e',
+    name: 'Jhoira, Ageless Innovator',
+    handledLines: [
+      '{T}: Put two ingenuity counters on ~, then you may put an artifact card with mana value X or less from your hand onto the battlefield, where X is the number of ingenuity counters on ~.',
+    ],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'tap',
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'putCounters',
+                target: 'source',
+                counter: 'ingenuity',
+                count: 2,
+              },
+              {
+                op: 'handToBattlefield',
+                filter: {
+                  kind: 'type',
+                  value: 'Artifact',
+                },
+                maxManaValue: {
+                  kind: 'countersOnSelf',
+                  counter: 'ingenuity',
+                },
+                count: 'one',
+              },
+            ],
+            description:
+              '{T}: Put two ingenuity counters on ~, then you may put an artifact card with mana value X or less from your hand onto the battlefield, where X is the number of ingenuity counters on ~.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'fa55daeffca68809d04cc35ca9b7a3c4ae45901facf4fe977833b739f5ff86cc',
+    behaviorSha256: '443d66bfa04fbb1d279df51186ebe9e35ce4a89e2743fb161be89db2f47d2342',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '6ef46fd7-82db-45d3-b02e-7312384577f3',
+    name: 'Junktroller',
+    handledLines: ["{T}: Put target card from a graveyard on the bottom of its owner's library."],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'tap',
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [
+              {
+                kind: 'cardInGraveyard',
+                graveyardOwnerScope: 'any',
+              },
+            ],
+            effects: [
+              {
+                op: 'graveyardToLibraryBottom',
+                target: 0,
+              },
+            ],
+            description:
+              "{T}: Put target card from a graveyard on the bottom of its owner's library.",
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'd1547a19e0c02d2077a0b10b0bb58d2b024facda14e83442f88c49c86e3c3677',
+    behaviorSha256: '6c81a97750f9a6402ebaa96ff2509cb38b0dfbee71fbe7f232d73e2555568f16',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '81fdd1c4-d43b-4f8b-8712-7c2bf45a3e0b',
+    name: 'Kismet',
+    handledLines: ['Artifacts, creatures, and lands your opponents control enter tapped.'],
+    def: {
+      ruleStatics: [
+        {
+          kind: 'otherPermanentsEnterTapped',
+          filter: {
+            kind: 'anyOf',
+            of: [
+              {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'type',
+                    value: 'Artifact',
+                  },
+                  {
+                    kind: 'controller',
+                    who: 'opponents',
+                  },
+                ],
+              },
+              {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'type',
+                    value: 'Creature',
+                  },
+                  {
+                    kind: 'controller',
+                    who: 'opponents',
+                  },
+                ],
+              },
+              {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'type',
+                    value: 'Land',
+                  },
+                  {
+                    kind: 'controller',
+                    who: 'opponents',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'e87dc9f614acefdb52cb5c3297a97c2d446ee24f7164d98ac2a8d9ef4f8fcedf',
+    behaviorSha256: '5a8640c631405b91c84476bfb09dbdce249264f38e990110604ad920ac30c716',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '849e54f9-7662-4186-859c-e4f52afbccac',
+    name: 'Kyoshi Battle Fan',
+    handledLines: [
+      'When this Equipment enters, create a 1/1 white Ally creature token, then attach this Equipment to it.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'createToken',
+              spec: {
+                name: 'Ally',
+                typeLine: 'Token Creature — Ally',
+                types: ['Creature'],
+                subtypes: ['Ally'],
+                colors: ['W'],
+                power: 1,
+                toughness: 1,
+              },
+              count: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+            {
+              op: 'attach',
+              what: 'source',
+              to: 'createdToken',
+            },
+          ],
+          description:
+            'When this Equipment enters, create a 1/1 white Ally creature token, then attach this Equipment to it.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'e7995d27608658edb98266d315f7f68bf0dbfa71b5bf3defc78fc9940d7a19d2',
+    behaviorSha256: '1c504ab78f2422bf65e15126cbca438467ba58c9e36a7023c4c98baf376edce1',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'f0c4414f-f153-40f6-a3b3-94bcbf1d3e29',
+    name: 'Lantern of the Lost',
+    handledLines: [
+      '{1}, {T}, Exile this artifact: Exile all cards from all graveyards, then draw a card.',
+    ],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'mana',
+              cost: {
+                generic: 1,
+                colored: {
+                  W: 0,
+                  U: 0,
+                  B: 0,
+                  R: 0,
+                  G: 0,
+                },
+                colorless: 0,
+              },
+            },
+            {
+              kind: 'tap',
+            },
+            {
+              kind: 'exileSelf',
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'exileAllGraveyards',
+              },
+              {
+                op: 'draw',
+                count: {
+                  kind: 'const',
+                  n: 1,
+                },
+              },
+            ],
+            description:
+              '{1}, {T}, Exile this artifact: Exile all cards from all graveyards, then draw a card.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '39e7c8cbb365865b03d41b92607c5380dcb663ffd673835d25cc9abd34bf6d84',
+    behaviorSha256: '9acb507d6cb8e84390f4baa6450f3d4b50ba37a971d587aec13a964a0b1e1d6f',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'ca4d3d27-ea3a-44ac-96e9-b52b563129f8',
+    name: 'Lotus Ring',
+    handledLines: [
+      'Equipped creature gets +3/+3 and has vigilance and "{T}, Sacrifice this creature: Add three mana of any one color."',
+    ],
+    def: {
+      staticEffects: [
+        {
+          affects: {
+            kind: 'attachedToSource',
+          },
+          op: {
+            layer: 7,
+            sublayer: 'd',
+            power: 3,
+            toughness: 3,
+          },
+        },
+        {
+          affects: {
+            kind: 'attachedToSource',
+          },
+          op: {
+            layer: 6,
+            addKeyword: 'vigilance',
+          },
+        },
+        {
+          affects: {
+            kind: 'attachedToSource',
+          },
+          op: {
+            layer: 6,
+            addManaAbility: {
+              units: [
+                ['W', 'U', 'B', 'R', 'G'],
+                ['W', 'U', 'B', 'R', 'G'],
+                ['W', 'U', 'B', 'R', 'G'],
+              ],
+              linked: true,
+              costs: [
+                {
+                  kind: 'tap',
+                },
+                {
+                  kind: 'sacrificeSelf',
+                },
+              ],
+            },
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '380135f1776b3c2169fcac3e2317ca12aa09256176d9e6a22e8d53ce867812da',
+    behaviorSha256: '952c13d24b9072f9923f7a0bec95658a2ee060e3a04c4d6c56101fedefc67c7a',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '861f0b1c-3b37-4d38-9232-e42565247076',
+    name: 'Loxodon Gatekeeper',
+    handledLines: ['Artifacts, creatures, and lands your opponents control enter tapped.'],
+    def: {
+      ruleStatics: [
+        {
+          kind: 'otherPermanentsEnterTapped',
+          filter: {
+            kind: 'anyOf',
+            of: [
+              {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'type',
+                    value: 'Artifact',
+                  },
+                  {
+                    kind: 'controller',
+                    who: 'opponents',
+                  },
+                ],
+              },
+              {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'type',
+                    value: 'Creature',
+                  },
+                  {
+                    kind: 'controller',
+                    who: 'opponents',
+                  },
+                ],
+              },
+              {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'type',
+                    value: 'Land',
+                  },
+                  {
+                    kind: 'controller',
+                    who: 'opponents',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '329e79106db0d04bc7fc8ce84d387786d18d54afb55dfd05d230e647191bc793',
+    behaviorSha256: '5a8640c631405b91c84476bfb09dbdce249264f38e990110604ad920ac30c716',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '008ac258-763c-4379-bfcd-b9cc4d7296dd',
+    name: 'Magma Sliver',
+    handledLines: [
+      'All Slivers have "{T}: Target Sliver creature gets +X/+0 until end of turn, where X is the number of Slivers on the battlefield."',
+    ],
+    def: {
+      staticEffects: [
+        {
+          affects: {
+            kind: 'subtype',
+            value: 'Sliver',
+          },
+          op: {
+            layer: 6,
+            addActivatedAbility: {
+              costs: [
+                {
+                  kind: 'tap',
+                },
+              ],
+              timing: 'any',
+              ability: {
+                kind: 'activated',
+                targets: [
+                  {
+                    kind: 'permanent',
+                    filter: {
+                      kind: 'allOf',
+                      of: [
+                        {
+                          kind: 'type',
+                          value: 'Creature',
+                        },
+                        {
+                          kind: 'subtype',
+                          value: 'Sliver',
+                        },
+                      ],
+                    },
+                  },
+                ],
+                effects: [
+                  {
+                    op: 'pumpUntilEot',
+                    target: 0,
+                    power: {
+                      kind: 'countPermanents',
+                      selector: {
+                        kind: 'subtype',
+                        value: 'Sliver',
+                      },
+                      scope: 'all',
+                    },
+                    toughness: {
+                      kind: 'const',
+                      n: 0,
+                    },
+                  },
+                ],
+                description:
+                  '{T}: Target Sliver creature gets +X/+0 until end of turn, where X is the number of Slivers on the battlefield.',
+              },
+            },
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '2da14fbd493f73e67f04d688058fba12da93033ba4eba7d3fe13e4b349b62d31',
+    behaviorSha256: '0383cac4bd7fe6cfd9c3822f5f153e3aa8e9ad48f1e9b6ee652ae436b1af7819',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'af762373-e159-4a36-83b5-a82b8b16fa41',
+    name: 'Marshal of the Lost',
+    handledLines: [
+      'Whenever you attack, target creature gets +X/+X until end of turn, where X is the number of attacking creatures.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'attackDeclared',
+            attacker: 'you',
+          },
+          optional: false,
+          targets: [
+            {
+              kind: 'creature',
+            },
+          ],
+          effects: [
+            {
+              op: 'pumpUntilEot',
+              target: 0,
+              power: {
+                kind: 'countPermanents',
+                selector: {
+                  kind: 'allOf',
+                  of: [
+                    {
+                      kind: 'combatRole',
+                      role: 'attacking',
+                    },
+                    {
+                      kind: 'type',
+                      value: 'Creature',
+                    },
+                  ],
+                },
+                scope: 'all',
+              },
+              toughness: {
+                kind: 'countPermanents',
+                selector: {
+                  kind: 'allOf',
+                  of: [
+                    {
+                      kind: 'combatRole',
+                      role: 'attacking',
+                    },
+                    {
+                      kind: 'type',
+                      value: 'Creature',
+                    },
+                  ],
+                },
+                scope: 'all',
+              },
+            },
+          ],
+          description:
+            'Whenever you attack, target creature gets +X/+X until end of turn, where X is the number of attacking creatures.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '5363691ed5831d15efc54e13815db9d69c9efb36a97ea2c33fe7175f2f759b17',
+    behaviorSha256: '97b3402f8c2921c6254dd3f10a9ea04d3663ddaed0097c1a98c9a30ca8dd6e0b',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '78f9c223-9982-4282-a496-a6f892f0a5bf',
+    name: 'Mind Twist',
+    handledLines: ['Target player discards X cards at random.'],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [
+          {
+            kind: 'player',
+          },
+        ],
+        effects: [
+          {
+            op: 'discardTarget',
+            target: 0,
+            count: {
+              kind: 'xValue',
+            },
+            atRandom: true,
+          },
+        ],
+        description: 'Target player discards X cards at random.',
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '1dac79a4f1e765b1b29385866a879b3223f0e72f779769395294179485dc5d42',
+    behaviorSha256: '19fddfd9e337f61d0eb10e5ea722a258b4c1e31b56b9bcced3cbd846d533ccfe',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '5a23c734-cbfb-419a-9bf1-126cb07fe427',
+    name: 'Of One Mind',
+    handledLines: [
+      'This spell costs {2} less to cast if you control a Human creature and a non-Human creature.',
+    ],
+    def: {
+      ruleStatics: [
+        {
+          kind: 'costReduction',
+          amount: {
+            kind: 'const',
+            n: 2,
+          },
+          selfOnly: true,
+          condition: {
+            kind: 'allOf',
+            of: [
+              {
+                kind: 'countPermanents',
+                selector: {
+                  kind: 'allOf',
+                  of: [
+                    {
+                      kind: 'type',
+                      value: 'Creature',
+                    },
+                    {
+                      kind: 'subtype',
+                      value: 'Human',
+                    },
+                  ],
+                },
+                scope: 'you',
+                cmp: '>=',
+                n: 1,
+              },
+              {
+                kind: 'countPermanents',
+                selector: {
+                  kind: 'allOf',
+                  of: [
+                    {
+                      kind: 'type',
+                      value: 'Creature',
+                    },
+                    {
+                      kind: 'not',
+                      of: {
+                        kind: 'subtype',
+                        value: 'Human',
+                      },
+                    },
+                  ],
+                },
+                scope: 'you',
+                cmp: '>=',
+                n: 1,
+              },
+            ],
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '77016448ada725185c6ea8532856f37782b3b5b25bb1052f63a67a8a71868b52',
+    behaviorSha256: '0f57eb719696dc724606930306640c7b7cd849086db7ae43cb4011fe43777a3a',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'e68d6459-2f32-4320-a062-6d33f85348f9',
+    name: 'Overwhelmed Apprentice',
+    handledLines: ['When this creature enters, each opponent mills two cards. Then you scry 2.'],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'millEachPlayer',
+              scope: 'opponents',
+              count: {
+                kind: 'const',
+                n: 2,
+              },
+            },
+            {
+              op: 'scry',
+              count: 2,
+            },
+          ],
+          description: 'When this creature enters, each opponent mills two cards. Then you scry 2.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '086e9ce1b646ad1eae8251005df2759af83669ecf6896269ad63bd86e0c75945',
+    behaviorSha256: '71603300679572400034a907f9431e8490213d482fd58f42466f31e505cdebff',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'a0c4eb78-bee0-42c6-ab1e-64bacde87960',
+    name: 'Phantom Train',
+    handledLines: [
+      'Sacrifice another artifact or creature: Put a +1/+1 counter on this Vehicle. It becomes a Spirit artifact creature in addition to its other types until end of turn.',
+    ],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'sacrificeOther',
+              selector: {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'controller',
+                    who: 'you',
+                  },
+                  {
+                    kind: 'anyOf',
+                    of: [
+                      {
+                        kind: 'type',
+                        value: 'Artifact',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Creature',
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'putCountersEach',
+                selector: {
+                  kind: 'self',
+                },
+                counter: '+1/+1',
+                count: 1,
+              },
+              {
+                op: 'becomeCreatureUntilEot',
+                target: 'source',
+                subtypes: ['Spirit'],
+                power: 4,
+                toughness: 4,
+                keywords: [],
+              },
+            ],
+            description:
+              'Sacrifice another artifact or creature: Put a +1/+1 counter on this Vehicle. It becomes a Spirit artifact creature in addition to its other types until end of turn.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'a19a8204a87db252714c576272be03c55d513f0b85cb3fa00fd93f3f398a7f92',
+    behaviorSha256: '6bca4e7d5a90fc54d98014bed82eb8c5715f5e557fb38c58f0bcd37fb2ea63c7',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '6158ab85-a929-472c-9618-8e76d2d4b228',
+    name: 'Promise of Bunrei',
+    handledLines: [
+      'When a creature you control dies, sacrifice this enchantment. If you do, create four 1/1 colorless Spirit creature tokens.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'dies',
+            subject: {
+              kind: 'permanent',
+              selector: {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'controller',
+                    who: 'you',
+                  },
+                  {
+                    kind: 'type',
+                    value: 'Creature',
+                  },
+                ],
+              },
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'sacrificeSourceThenReflexive',
+              then: {
+                kind: 'triggered',
+                targets: [],
+                effects: [
+                  {
+                    op: 'createToken',
+                    spec: {
+                      name: 'Spirit',
+                      typeLine: 'Token Creature — Spirit',
+                      types: ['Creature'],
+                      subtypes: ['Spirit'],
+                      colors: [],
+                      power: 1,
+                      toughness: 1,
+                    },
+                    count: {
+                      kind: 'const',
+                      n: 4,
+                    },
+                  },
+                ],
+                description: 'Create four 1/1 colorless Spirit creature tokens.',
+              },
+            },
+          ],
+          description:
+            'When a creature you control dies, sacrifice this enchantment. If you do, create four 1/1 colorless Spirit creature tokens.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '33a238a66a1cfd98c09541b39a19090837d601c1bf0017ddb2329bad9680252f',
+    behaviorSha256: '8343b88e059b9c552a5a5bde8c9c66ab57c30ebb82a0fce2db8d848e28d36952',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'd7e2b2ba-cb5e-41f1-ad33-baf56c0b72ed',
+    name: 'Reckless Rage',
+    handledLines: [
+      "~ deals 4 damage to target creature you don't control and 2 damage to target creature you control.",
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [
+          {
+            kind: 'creature',
+            controller: 'opponent',
+          },
+          {
+            kind: 'creature',
+            controller: 'you',
+          },
+        ],
+        effects: [
+          {
+            op: 'dealDamage',
+            target: 0,
+            amount: {
+              kind: 'const',
+              n: 4,
+            },
+          },
+          {
+            op: 'dealDamage',
+            target: 1,
+            amount: {
+              kind: 'const',
+              n: 2,
+            },
+          },
+        ],
+        description:
+          "Reckless Rage deals 4 damage to target creature you don't control and 2 damage to target creature you control.",
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '37c6b6e6684fa9eb87273af5cd9562f38e29bb1dea0e7a3dab39342551cecd48',
+    behaviorSha256: '3a6cdb0100bfb06f3aaa58fb185c03660c6ba17d148a0b9882a8be0ccc6c1ee4',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '15f89b06-5025-4c9f-bf51-e25bc5c2dd6b',
+    name: 'Saiba Cryptomancer',
+    handledLines: ['Backup 1'],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [
+            {
+              kind: 'creature',
+            },
+          ],
+          effects: [
+            {
+              op: 'putCounters',
+              target: 0,
+              counter: '+1/+1',
+              count: 1,
+            },
+            {
+              op: 'grantKeywordUntilEot',
+              target: 0,
+              keyword: 'hexproof',
+            },
+          ],
+          description:
+            "Backup 1 (When this creature enters, put a +1/+1 counter on target creature. If that's another creature, it gains the following ability until end of turn.)",
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'f3e9b16d63a631c2ba9a96e4772b4194be7802744bb7b533dcef5192aa09b6b7',
+    behaviorSha256: 'adae388b25d3ce4aa3fd215a66d7c60cae3c2cae4d1da727439e7799351c7744',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '5f532b7f-cb76-4be7-b361-0106c561dcb2',
+    name: "Sami's Curiosity",
+    handledLines: ['You gain 2 life. Create a Lander token.'],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [],
+        effects: [
+          {
+            op: 'gainLife',
+            amount: {
+              kind: 'const',
+              n: 2,
+            },
+          },
+          {
+            op: 'createToken',
+            spec: {
+              name: 'Lander',
+              typeLine: 'Artifact — Lander',
+              types: ['Artifact'],
+              subtypes: ['Lander'],
+              colors: [],
+              power: null,
+              toughness: null,
+              activatedAbilities: [
+                {
+                  costs: [
+                    {
+                      kind: 'mana',
+                      cost: {
+                        generic: 2,
+                        colored: {
+                          W: 0,
+                          U: 0,
+                          B: 0,
+                          R: 0,
+                          G: 0,
+                        },
+                        colorless: 0,
+                      },
+                    },
+                    {
+                      kind: 'tap',
+                    },
+                    {
+                      kind: 'sacrificeSelf',
+                    },
+                  ],
+                  timing: 'any',
+                  ability: {
+                    kind: 'activated',
+                    targets: [],
+                    effects: [
+                      {
+                        op: 'searchLibrary',
+                        filter: {
+                          kind: 'allOf',
+                          of: [
+                            {
+                              kind: 'supertype',
+                              value: 'Basic',
+                            },
+                            {
+                              kind: 'type',
+                              value: 'Land',
+                            },
+                          ],
+                        },
+                        destinations: [
+                          {
+                            zone: 'battlefield',
+                            tapped: true,
+                          },
+                        ],
+                      },
+                      {
+                        op: 'shuffle',
+                      },
+                    ],
+                    description:
+                      '{2}, {T}, Sacrifice this token: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.',
+                  },
+                },
+              ],
+            },
+            count: {
+              kind: 'const',
+              n: 1,
+            },
+          },
+        ],
+        description:
+          'You gain 2 life. Create a Lander token. (It\'s an artifact with "{2}, {T}, Sacrifice this token: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.")',
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '2399159d01cee229096ffb9ca01ca272193833287a6f7600608a32f5707f751f',
+    behaviorSha256: 'd789e9c811c8118e34ca2626237c9892b33a5ce5bd8db8cf8932cb8cc3e299f2',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '71982b17-1d9a-4f98-b8b5-d232e3a8cf1d',
+    name: 'Scrounge for Eternity',
+    handledLines: [
+      'Return target creature or Spacecraft card with mana value 5 or less from your graveyard to the battlefield. Then create a Lander token.',
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [
+          {
+            kind: 'cardInGraveyard',
+            filter: {
+              kind: 'allOf',
+              of: [
+                {
+                  kind: 'anyOf',
+                  of: [
+                    {
+                      kind: 'type',
+                      value: 'Creature',
+                    },
+                    {
+                      kind: 'subtype',
+                      value: 'Spacecraft',
+                    },
+                  ],
+                },
+                {
+                  kind: 'manaValueAtMost',
+                  n: 5,
+                },
+              ],
+            },
+          },
+        ],
+        effects: [
+          {
+            op: 'graveyardToBattlefield',
+            target: 0,
+          },
+          {
+            op: 'createToken',
+            spec: {
+              name: 'Lander',
+              typeLine: 'Artifact — Lander',
+              types: ['Artifact'],
+              subtypes: ['Lander'],
+              colors: [],
+              power: null,
+              toughness: null,
+              activatedAbilities: [
+                {
+                  costs: [
+                    {
+                      kind: 'mana',
+                      cost: {
+                        generic: 2,
+                        colored: {
+                          W: 0,
+                          U: 0,
+                          B: 0,
+                          R: 0,
+                          G: 0,
+                        },
+                        colorless: 0,
+                      },
+                    },
+                    {
+                      kind: 'tap',
+                    },
+                    {
+                      kind: 'sacrificeSelf',
+                    },
+                  ],
+                  timing: 'any',
+                  ability: {
+                    kind: 'activated',
+                    targets: [],
+                    effects: [
+                      {
+                        op: 'searchLibrary',
+                        filter: {
+                          kind: 'allOf',
+                          of: [
+                            {
+                              kind: 'supertype',
+                              value: 'Basic',
+                            },
+                            {
+                              kind: 'type',
+                              value: 'Land',
+                            },
+                          ],
+                        },
+                        destinations: [
+                          {
+                            zone: 'battlefield',
+                            tapped: true,
+                          },
+                        ],
+                      },
+                      {
+                        op: 'shuffle',
+                      },
+                    ],
+                    description:
+                      '{2}, {T}, Sacrifice this token: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.',
+                  },
+                },
+              ],
+            },
+            count: {
+              kind: 'const',
+              n: 1,
+            },
+          },
+        ],
+        description:
+          'Return target creature or Spacecraft card with mana value 5 or less from your graveyard to the battlefield. Then create a Lander token.',
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '937267cc4add9abe6d2d48b5573f542d94d82b926b246cbe21d5982f17fef2c5',
+    behaviorSha256: 'cef7c5895fe080576c7be35c1087a5edb9b14384a3fa626e8fd19e0b80407312',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '2be9c1e6-0226-497a-b548-21bf1cfbc286',
+    name: 'Scuttletide',
+    handledLines: [
+      'Crabs you control get +1/+1 as long as there are four or more card types among cards in your graveyard.',
+    ],
+    def: {
+      staticEffects: [
+        {
+          affects: {
+            kind: 'allOf',
+            of: [
+              {
+                kind: 'controller',
+                who: 'you',
+              },
+              {
+                kind: 'subtype',
+                value: 'Crab',
+              },
+            ],
+          },
+          op: {
+            layer: 7,
+            sublayer: 'd',
+            power: 1,
+            toughness: 1,
+          },
+          condition: {
+            kind: 'compareValues',
+            left: {
+              kind: 'cardTypesInYourGraveyard',
+            },
+            cmp: '>=',
+            right: {
+              kind: 'const',
+              n: 4,
+            },
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '8591891482aca4873529533bec51420d1a99d2e55529c003baab3437b6c7da63',
+    behaviorSha256: '835c81325b52dbadf76e2603d38d993016ffac8b97d895957a640b4992be3265',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'a0335224-9523-47d5-8944-486f2d4a6b8f',
+    name: 'Selesnya Eulogist',
+    handledLines: ['{2}{G}: Exile target creature card from a graveyard, then populate.'],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'mana',
+              cost: {
+                generic: 2,
+                colored: {
+                  W: 0,
+                  U: 0,
+                  B: 0,
+                  R: 0,
+                  G: 1,
+                },
+                colorless: 0,
+              },
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [
+              {
+                kind: 'cardInGraveyard',
+                graveyardOwnerScope: 'any',
+                filter: {
+                  kind: 'type',
+                  value: 'Creature',
+                },
+              },
+            ],
+            effects: [
+              {
+                op: 'exileCard',
+                target: 0,
+              },
+              {
+                op: 'populate',
+              },
+            ],
+            description: '{2}{G}: Exile target creature card from a graveyard, then populate.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'c80ee224810f757b3b1628039bb811c8b8b5686384bfe60b4123c9bef851eacd',
+    behaviorSha256: '3d06392b6d7f2be76fd0437fdd6d0045b1dc0df7e3ec4aa2169a231ebb2951d9',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '89078485-c438-4035-95dc-dbe37fb13e50',
+    name: 'Slumbering Keepguard',
+    handledLines: ['{2}{W}: ~ gets +1/+1 until end of turn for each enchantment you control.'],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'mana',
+              cost: {
+                generic: 2,
+                colored: {
+                  W: 1,
+                  U: 0,
+                  B: 0,
+                  R: 0,
+                  G: 0,
+                },
+                colorless: 0,
+              },
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'pumpUntilEot',
+                target: 'source',
+                power: {
+                  kind: 'countPermanents',
+                  selector: {
+                    kind: 'allOf',
+                    of: [
+                      {
+                        kind: 'controller',
+                        who: 'you',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Enchantment',
+                      },
+                    ],
+                  },
+                  scope: 'you',
+                },
+                toughness: {
+                  kind: 'countPermanents',
+                  selector: {
+                    kind: 'allOf',
+                    of: [
+                      {
+                        kind: 'controller',
+                        who: 'you',
+                      },
+                      {
+                        kind: 'type',
+                        value: 'Enchantment',
+                      },
+                    ],
+                  },
+                  scope: 'you',
+                },
+              },
+            ],
+            description:
+              '{2}{W}: This creature gets +1/+1 until end of turn for each enchantment you control.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'a5a001706f34a8b1f6960573b562475eda56ea1b1db8343c0fcef3e1e29a050e',
+    behaviorSha256: '9e79bd8ffdb88c442df4cc3e87e0e16220e109ed2a2e2429ada6e19eb8e90834',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'd459b3f5-a18c-4c17-a855-dc147f7c2161',
+    name: 'Spider-Girl, Legacy Hero',
+    handledLines: ['During your turn, ~ has flying.'],
+    def: {
+      staticEffects: [
+        {
+          affects: {
+            kind: 'self',
+          },
+          op: {
+            layer: 6,
+            addKeyword: 'flying',
+          },
+          condition: {
+            kind: 'yourTurn',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'b74b007c2282bd0259b500a2386d3642af5c361b77dd9e56b5a005708107ea53',
+    behaviorSha256: '11b8c053f3a1dccb20d8a9048994a4f47facb5bb29edac58edcf79527d145d4d',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'cf4d8b19-fd11-4200-9871-896772019f4c',
+    name: 'Spitemare',
+    handledLines: [
+      'Whenever this creature is dealt damage, it deals that much damage to any target.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'dealtDamage',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [
+            {
+              kind: 'anyTarget',
+            },
+          ],
+          effects: [
+            {
+              op: 'dealDamage',
+              target: 0,
+              amount: {
+                kind: 'damageDealt',
+              },
+            },
+          ],
+          description:
+            'Whenever this creature is dealt damage, it deals that much damage to any target.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'b82802aa16b945866c7bb8d091682a2c04891b00c49c6868776f0bc07a3577b1',
+    behaviorSha256: '5f7e6e6b5ddde44305d99e43aa3579af25ccd43f6152b6f65ac881b4222f29fa',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '142af8f1-6d6b-4043-8cc4-6632481972c1',
+    name: 'Spread the Sickness',
+    handledLines: ['Destroy target creature, then proliferate.'],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [
+          {
+            kind: 'creature',
+          },
+        ],
+        effects: [
+          {
+            op: 'destroy',
+            target: 0,
+          },
+          {
+            op: 'proliferate',
+          },
+        ],
+        description: 'Destroy target creature, then proliferate.',
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '0974dad0ea26abe7e972b17dd4d6488ed8955e1f7cbdb4db595049ee5bee5c8f',
+    behaviorSha256: '328bd32f09e86613e84c1aa5bbac104ab42c319af00760bbd2389521cc30195b',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'af32757c-9d3c-4f6c-a6fa-d5729a440382',
+    name: 'Spreading Seas',
+    handledLines: ['Enchanted land is an Island.'],
+    def: {
+      staticEffects: [
+        {
+          affects: {
+            kind: 'attachedToSource',
+          },
+          op: {
+            layer: 4,
+            setLandSubtype: 'Island',
+            loseAbilities: true,
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'bdc639690c1d06e626f8522446c45c096edca1b2d305105348f7bffb495d061b',
+    behaviorSha256: '664ff3169d542ac7461475ccd527e594b76a93ad306a4b45623bb945285d43bb',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'a9a35c77-637f-4d56-afa2-6c8a4ded4838',
+    name: 'Stinging Cave Crawler',
+    handledLines: [
+      'Descend 4 — Whenever this creature attacks, if there are four or more permanent cards in your graveyard, you draw a card and you lose 1 life.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'attacks',
+            subject: {
+              kind: 'self',
+            },
+            condition: {
+              kind: 'compareValues',
+              left: {
+                kind: 'countCardsInZone',
+                zone: 'graveyard',
+                selector: {
+                  kind: 'anyOf',
+                  of: [
+                    {
+                      kind: 'type',
+                      value: 'Artifact',
+                    },
+                    {
+                      kind: 'type',
+                      value: 'Battle',
+                    },
+                    {
+                      kind: 'type',
+                      value: 'Creature',
+                    },
+                    {
+                      kind: 'type',
+                      value: 'Enchantment',
+                    },
+                    {
+                      kind: 'type',
+                      value: 'Land',
+                    },
+                    {
+                      kind: 'type',
+                      value: 'Planeswalker',
+                    },
+                  ],
+                },
+                owner: 'you',
+              },
+              cmp: '>=',
+              right: {
+                kind: 'const',
+                n: 4,
+              },
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'draw',
+              count: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+            {
+              op: 'loseLife',
+              amount: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+          ],
+          description:
+            'Descend 4 — Whenever this creature attacks, if there are four or more permanent cards in your graveyard, you draw a card and you lose 1 life.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '5f9d452736eda968eba5c928a51901ac9bba238b74e06db1bf3dbdeb1d748186',
+    behaviorSha256: '8ca0c5ca6d1558645843555a62cb6c2255aa4c77b1b036be71394cc48a77d798',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'f4b3ee43-fc01-425f-8322-29bf6d16cb3f',
+    name: 'Stormbeacon Blade',
+    handledLines: [
+      'Whenever equipped creature attacks, draw a card if you control three or more attacking creatures.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'attacks',
+            subject: {
+              kind: 'permanent',
+              selector: {
+                kind: 'attachedToSource',
+              },
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'conditionalEffect',
+              condition: {
+                kind: 'countPermanents',
+                selector: {
+                  kind: 'allOf',
+                  of: [
+                    {
+                      kind: 'controller',
+                      who: 'you',
+                    },
+                    {
+                      kind: 'type',
+                      value: 'Creature',
+                    },
+                    {
+                      kind: 'combatRole',
+                      role: 'attacking',
+                    },
+                  ],
+                },
+                scope: 'you',
+                cmp: '>=',
+                n: 3,
+              },
+              then: [
+                {
+                  op: 'draw',
+                  count: {
+                    kind: 'const',
+                    n: 1,
+                  },
+                },
+              ],
+              else: [],
+            },
+          ],
+          description:
+            'Whenever equipped creature attacks, draw a card if you control three or more attacking creatures.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '9714961d4a656fd14de2822369c4aab3262d4694539271f2fbaa315b41fba2d8',
+    behaviorSha256: '7c1a9134e34998707c8469abafbf07816fbf16c62bcd580aa92e350a49ffdfaa',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '81674138-08d0-4126-9e6d-27f6e7dd2403',
+    name: 'Tavern Swindler',
+    handledLines: ['{T}, Pay 3 life: Flip a coin. If you win the flip, you gain 6 life.'],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'tap',
+            },
+            {
+              kind: 'payLife',
+              amount: 3,
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'flipCoin',
+                onWin: [
+                  {
+                    op: 'gainLife',
+                    amount: {
+                      kind: 'const',
+                      n: 6,
+                    },
+                  },
+                ],
+                onLose: [],
+              },
+            ],
+            description: '{T}, Pay 3 life: Flip a coin. If you win the flip, you gain 6 life.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'ca23418de0b835095c7fd000946b3c93d95988cbedcd7d45f4aa1663a84859b9',
+    behaviorSha256: '8293c9d2a506f5b475948db03267d44c1e80d34259fa0d3b79448e92f6154ecd',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'f7d11254-b48a-4016-a035-c0d6642fdfae',
+    name: 'Thwip!',
+    handledLines: [
+      "Target creature gets +2/+2 and gains flying until end of turn. If it's a Spider, you gain 2 life.",
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        targets: [
+          {
+            kind: 'creature',
+          },
+        ],
+        effects: [
+          {
+            op: 'pumpUntilEot',
+            target: 0,
+            power: 2,
+            toughness: 2,
+          },
+          {
+            op: 'grantKeywordUntilEot',
+            target: 0,
+            keyword: 'flying',
+          },
+          {
+            op: 'conditionalEffect',
+            condition: {
+              kind: 'triggerObjectMatches',
+              selector: {
+                kind: 'subtype',
+                value: 'Spider',
+              },
+            },
+            checkTarget: 0,
+            then: [
+              {
+                op: 'gainLife',
+                amount: {
+                  kind: 'const',
+                  n: 2,
+                },
+              },
+            ],
+            else: [],
+          },
+        ],
+        description:
+          "Target creature gets +2/+2 and gains flying until end of turn. If it's a Spider, you gain 2 life.",
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'a3d58806d9e6b8b2dee3eb09f242da0ab00162553c42bf1d2044e3f92490501b',
+    behaviorSha256: 'fc2f295c02e42fcf988488596de8dd0780ea4d094f6cae650528e0f40865504f',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'e9c756a5-f4d4-4b84-be60-ad4bc0d1acf9',
+    name: 'Trollbred Guardian',
+    handledLines: ['{2}{G}: Adapt 2.'],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'mana',
+              cost: {
+                generic: 2,
+                colored: {
+                  W: 0,
+                  U: 0,
+                  B: 0,
+                  R: 0,
+                  G: 1,
+                },
+                colorless: 0,
+              },
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'conditionalEffect',
+                condition: {
+                  kind: 'sourceHasCounters',
+                  counter: '+1/+1',
+                  cmp: '==',
+                  n: 0,
+                },
+                then: [
+                  {
+                    op: 'putCountersEach',
+                    selector: {
+                      kind: 'self',
+                    },
+                    counter: '+1/+1',
+                    count: 2,
+                  },
+                ],
+                else: [],
+              },
+            ],
+            description: '{2}{G}: Adapt 2.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '66656432f18243a8ed621d068eb6949ef39ea1474e947f54d1980ddda521a1e3',
+    behaviorSha256: '71328b3147ccf3052a465f5285f7f3382906edfbf16f9de206708bf72793863d',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '6b2d1d7b-a4b4-46c3-a50b-df7e60f39ee2',
+    name: 'Trygon Prime',
+    handledLines: [
+      "Subterranean Assault — Whenever this creature attacks, put a +1/+1 counter on it and a +1/+1 counter on up to one other target attacking creature. That creature can't be blocked this turn.",
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'attacks',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [
+            {
+              kind: 'creature',
+              count: {
+                min: 0,
+                max: 1,
+              },
+              filter: {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'other',
+                  },
+                  {
+                    kind: 'combatRole',
+                    role: 'attacking',
+                  },
+                ],
+              },
+            },
+          ],
+          effects: [
+            {
+              op: 'putCounters',
+              target: 'source',
+              counter: '+1/+1',
+              count: 1,
+            },
+            {
+              op: 'putCountersEachChosen',
+              targetSlot: 0,
+              counter: '+1/+1',
+              count: 1,
+            },
+            {
+              op: 'cantBeBlockedEachChosen',
+              targetSlot: 0,
+            },
+          ],
+          description:
+            "Subterranean Assault — Whenever this creature attacks, put a +1/+1 counter on it and a +1/+1 counter on up to one other target attacking creature. That creature can't be blocked this turn.",
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '5e92fc2183f6aa5e32ba8590bfb22adc1b575d6b2b44c19cb94c6c24d6c63c0a',
+    behaviorSha256: '29fb82c6d096239334ad17a7ee6789cd84c80b0e2186a2434d3d41881ed770d1',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '4c67359d-5590-4eb0-827e-b411967ee238',
+    name: 'Uncover the Moon-Letters',
+    handledLines: [
+      'Whenever you cast a noncreature spell, you may draw X cards, where X is the amount of mana spent to cast that spell. If you do, discard two cards.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'castsSpell',
+            caster: 'you',
+            filter: {
+              kind: 'not',
+              of: {
+                kind: 'type',
+                value: 'Creature',
+              },
+            },
+          },
+          optional: true,
+          targets: [],
+          effects: [
+            {
+              op: 'draw',
+              count: {
+                kind: 'manaSpent',
+              },
+            },
+            {
+              op: 'discard',
+              count: 2,
+            },
+          ],
+          description:
+            'Whenever you cast a noncreature spell, you may draw X cards, where X is the amount of mana spent to cast that spell. If you do, discard two cards.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '516f543eec9f58e8403d92d2f3b0e83b865bd3ccb6670eb710ebf52179b2ad5c',
+    behaviorSha256: '4560197f8073765a1a4023b2fd11f149ec1186bc4aa0b91cca1cf247be56c967',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '2750451f-348e-452f-88d0-bc921c46e8cc',
+    name: 'Undercity Scrounger',
+    handledLines: ['{T}: Create a Treasure token. Activate only if a creature died this turn.'],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'tap',
+            },
+          ],
+          timing: 'any',
+          condition: {
+            kind: 'compareValues',
+            left: {
+              kind: 'creaturesDiedThisTurn',
+            },
+            cmp: '>=',
+            right: {
+              kind: 'const',
+              n: 1,
+            },
+          },
+          ability: {
+            kind: 'activated',
+            targets: [],
+            effects: [
+              {
+                op: 'createToken',
+                spec: {
+                  name: 'Treasure',
+                  typeLine: 'Artifact — Treasure',
+                  types: ['Artifact'],
+                  subtypes: ['Treasure'],
+                  colors: [],
+                  power: null,
+                  toughness: null,
+                  manaAbilities: [
+                    {
+                      units: [['W', 'U', 'B', 'R', 'G']],
+                      costs: [
+                        {
+                          kind: 'tap',
+                        },
+                        {
+                          kind: 'sacrificeSelf',
+                        },
+                      ],
+                    },
+                  ],
+                },
+                count: {
+                  kind: 'const',
+                  n: 1,
+                },
+              },
+            ],
+            description:
+              '{T}: Create a Treasure token. Activate only if a creature died this turn.',
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '4cd7fc41c94932ec63e3aeac7e33329fcc42f14c06376e137a17a18585b18b74',
+    behaviorSha256: 'b1c85e4bcc8482a95a1f2d39fee1370d7c79b9fb2b33d12d652d534f9c480ccd',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '3740b86d-b0e6-4837-b408-e7f62b95c787',
+    name: 'Underfoot Underdogs',
+    handledLines: [
+      "{1}, {T}: Target creature you control with power 2 or less can't be blocked this turn.",
+    ],
+    def: {
+      activatedAbilities: [
+        {
+          costs: [
+            {
+              kind: 'mana',
+              cost: {
+                generic: 1,
+                colored: {
+                  W: 0,
+                  U: 0,
+                  B: 0,
+                  R: 0,
+                  G: 0,
+                },
+                colorless: 0,
+              },
+            },
+            {
+              kind: 'tap',
+            },
+          ],
+          timing: 'any',
+          ability: {
+            kind: 'activated',
+            targets: [
+              {
+                kind: 'creature',
+                controller: 'you',
+                filter: {
+                  kind: 'powerAtMost',
+                  n: 2,
+                },
+              },
+            ],
+            effects: [
+              {
+                op: 'cantBeBlockedUntilEot',
+                target: 0,
+              },
+            ],
+            description:
+              "{1}, {T}: Target creature you control with power 2 or less can't be blocked this turn.",
+          },
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '2fb8845738d0573ba93c50e40f5488e312dac244fbc87fb734283bcdb1dc63bf',
+    behaviorSha256: '4f00213f30985aec6d6deb67f58e62e2f0db3694b87b7b22f245ade949a43aab',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '9132d7e6-7190-45e1-9c57-8fe2e5d0f2f2',
+    name: 'Venom, Eddie Brock',
+    handledLines: [
+      'Whenever another creature dies, put a +1/+1 counter on ~. If that creature was a Villain, draw a card.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'dies',
+            subject: {
+              kind: 'permanent',
+              selector: {
+                kind: 'allOf',
+                of: [
+                  {
+                    kind: 'other',
+                  },
+                  {
+                    kind: 'type',
+                    value: 'Creature',
+                  },
+                ],
+              },
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'putCounters',
+              target: 'source',
+              counter: '+1/+1',
+              count: 1,
+            },
+            {
+              op: 'conditionalEffect',
+              condition: {
+                kind: 'triggerObjectMatches',
+                selector: {
+                  kind: 'subtype',
+                  value: 'Villain',
+                },
+              },
+              then: [
+                {
+                  op: 'draw',
+                  count: {
+                    kind: 'const',
+                    n: 1,
+                  },
+                },
+              ],
+              else: [],
+            },
+          ],
+          description:
+            'Whenever another creature dies, put a +1/+1 counter on Venom. If that creature was a Villain, draw a card.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '07701d48919dbe79f6b72c84f1b54c166da14bf428543ae7ee3eea64583a63c2',
+    behaviorSha256: '38c65b78cfc0f082600b04d677031f4dc6bb7837a034cc55c959452b636169e3',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '7c27136a-bf9d-4f42-9c37-abe347fad1bb',
+    name: 'Weaponcraft Enthusiast',
+    handledLines: ['Fabricate 2'],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'enters',
+            subject: {
+              kind: 'self',
+            },
+          },
+          optional: false,
+          targets: [],
+          effects: [
+            {
+              op: 'chooseOne',
+              options: [
+                {
+                  effects: [
+                    {
+                      op: 'putCounters',
+                      target: 'source',
+                      counter: '+1/+1',
+                      count: 2,
+                    },
+                  ],
+                  description: 'Put two +1/+1 counters on it',
+                },
+                {
+                  effects: [
+                    {
+                      op: 'createToken',
+                      spec: {
+                        name: 'Servo',
+                        typeLine: 'Artifact Creature — Servo',
+                        types: ['Artifact', 'Creature'],
+                        subtypes: ['Servo'],
+                        colors: [],
+                        power: 1,
+                        toughness: 1,
+                      },
+                      count: {
+                        kind: 'const',
+                        n: 2,
+                      },
+                    },
+                  ],
+                  description: 'Create two 1/1 colorless Servo artifact creature tokens',
+                },
+              ],
+            },
+          ],
+          description:
+            'Fabricate 2 (When this creature enters, put two +1/+1 counters on it or create two 1/1 colorless Servo artifact creature tokens.)',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: '5db6804524a752378473bd21b5a24cf49090b9edb0c570251b033ad4298fc188',
+    behaviorSha256: '47383a011d7d7378d27af53d64c9c4bc10b5c6a0acc6a430aa95babcce326843',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '78e65286-204d-43ab-8929-b8e2191b1fce',
+    name: 'Windrider Wizard',
+    handledLines: [
+      'Whenever you cast an instant, sorcery, or Wizard spell, you may draw a card. If you do, discard a card.',
+    ],
+    def: {
+      triggers: [
+        {
+          kind: 'triggered',
+          trigger: {
+            when: 'castsSpell',
+            caster: 'you',
+            filter: {
+              kind: 'anyOf',
+              of: [
+                {
+                  kind: 'type',
+                  value: 'Instant',
+                },
+                {
+                  kind: 'type',
+                  value: 'Sorcery',
+                },
+                {
+                  kind: 'subtype',
+                  value: 'Wizard',
+                },
+              ],
+            },
+          },
+          optional: true,
+          targets: [],
+          effects: [
+            {
+              op: 'draw',
+              count: {
+                kind: 'const',
+                n: 1,
+              },
+            },
+            {
+              op: 'discard',
+              count: 1,
+            },
+          ],
+          description:
+            'Whenever you cast an instant, sorcery, or Wizard spell, you may draw a card. If you do, discard a card.',
+        },
+      ],
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'f6ddc645d838c8b5e26106b050f131ecfabcbefd1273d69bae576c2a1214b25a',
+    behaviorSha256: '59a13190909529507fd278e76f9518d81268a47fbb0c55648086bb3bd70b27f5',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: 'e9c9a445-4386-4616-ad00-f08064d73dcd',
+    name: 'Wisecrack',
+    handledLines: [
+      "Target creature deals damage equal to its power to itself. If that creature is attacking, ~ deals 2 damage to that creature's controller.",
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        description:
+          "Target creature deals damage equal to its power to itself. If that creature is attacking, Wisecrack deals 2 damage to that creature's controller.",
+        targets: [
+          {
+            kind: 'creature',
+          },
+        ],
+        effects: [
+          {
+            op: 'dealDamage',
+            target: 0,
+            amount: {
+              kind: 'powerOfTarget',
+              target: 0,
+            },
+            source: 0,
+          },
+          {
+            op: 'conditionalEffect',
+            condition: {
+              kind: 'triggerObjectMatches',
+              selector: {
+                kind: 'combatRole',
+                role: 'attacking',
+              },
+            },
+            checkTarget: 0,
+            then: [
+              {
+                op: 'dealDamage',
+                target: {
+                  controllerOf: 0,
+                },
+                amount: {
+                  kind: 'const',
+                  n: 2,
+                },
+              },
+            ],
+            else: [],
+          },
+        ],
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'c249751002b0d8ac616fea628154f680f01e72c344ced2c8baceab9f0f749613',
+    behaviorSha256: '69b3bfb6a6bbffc31c6a62524f120158eba5f0a464a1314b3c2bee719de51ae8',
+    acceptedBy: 'main-thread',
+  },
+  {
+    oracleId: '9dbc2fc8-ed42-4534-9676-bf0695cd518c',
+    name: "You're Not Alone",
+    handledLines: [
+      'Target creature gets +2/+2 until end of turn. If you control three or more creatures, it gets +4/+4 until end of turn instead.',
+    ],
+    def: {
+      spellAbility: {
+        kind: 'spell',
+        description:
+          'Target creature gets +2/+2 until end of turn. If you control three or more creatures, it gets +4/+4 until end of turn instead.',
+        targets: [
+          {
+            kind: 'creature',
+          },
+        ],
+        effects: [
+          {
+            op: 'conditionalEffect',
+            condition: {
+              kind: 'countPermanents',
+              selector: {
+                kind: 'type',
+                value: 'Creature',
+              },
+              scope: 'you',
+              cmp: '>=',
+              n: 3,
+            },
+            then: [
+              {
+                op: 'pumpUntilEot',
+                target: 0,
+                power: 4,
+                toughness: 4,
+              },
+            ],
+            else: [
+              {
+                op: 'pumpUntilEot',
+                target: 0,
+                power: 2,
+                toughness: 2,
+              },
+            ],
+          },
+        ],
+      },
+    },
+    source: 'compiler@claude-haiku-5-5',
+    trial: 'docs/reviews/card-compiler-trial-chunk-015',
+    patchSha256: 'cad6ab3bba65e3e012b326d2186494071ffa641c22806d12b61414adba6a6bce',
+    behaviorSha256: '57d6d8d3a40dcf9d0b22dc69af0aab238238c50e69534d22f0aa3b09c4156ff8',
+    acceptedBy: 'main-thread',
+  },
+];
+
 /** Every promoted batch of compiled cards, in batch-id order. */
 export const COMPILED_BATCHES: readonly CompiledBatch[] = [
   { id: 'chunk-001', cards: BATCH_CHUNK_001 },
@@ -60346,4 +64957,5 @@ export const COMPILED_BATCHES: readonly CompiledBatch[] = [
   { id: 'chunk-012', cards: BATCH_CHUNK_012 },
   { id: 'chunk-013', cards: BATCH_CHUNK_013 },
   { id: 'chunk-014', cards: BATCH_CHUNK_014 },
+  { id: 'chunk-015', cards: BATCH_CHUNK_015 },
 ];
