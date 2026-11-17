@@ -1,0 +1,1230 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/edhrec-pinned-oracle.json",
+  "retrievedAt": "2026-11-17",
+  "cards": [
+    {
+      "sha256": "75efd6b29cbe0ebfd00c5c6b43cca21c5f3881bde64812fd0dc8a2233c81287a",
+      "card": {
+        "oracleId": "0826cf7d-7ccc-459b-a92f-29dc169628f8",
+        "scryfallId": "e69d760c-48fb-4e7f-8611-547b0c22928c",
+        "name": "Muddle the Mixture",
+        "manaCost": "{U}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Counter target instant or sorcery spell.\nTransmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Transmute"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a087439331e6c75b2fc1345f3b22e0cacae88d17b20a9b8f08a439ca8d2a6a13",
+      "card": {
+        "oracleId": "6ee51134-c4ad-4101-8ce2-23dde9359cd4",
+        "scryfallId": "d722c22d-3cab-48b5-96cd-0874060ac9a4",
+        "name": "Drift of Phantasms",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Creature — Spirit",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Spirit"
+        ],
+        "oracleText": "Defender (This creature can't attack.)\nFlying\nTransmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+        "power": "0",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Defender",
+          "Transmute"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8fc5c30d8459b4723a415d49b2a30b9e1df91ca797e811d0c0ca1d0aa6fe7015",
+      "card": {
+        "oracleId": "46eefc72-2d9e-4389-8ae1-26d9ee472b5c",
+        "scryfallId": "b005eef6-75f3-454f-a42b-d851bc84ac4e",
+        "name": "Tolaria West",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "This land enters tapped.\n{T}: Add {U}.\nTransmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with mana value 0, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Transmute"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3be7a18c213711eefc868c89c0fbf0a3b8646a0e5af0fdc4f3d750113bdd7666",
+      "card": {
+        "oracleId": "d215127b-5f1d-4d3c-935b-c228c9c7f874",
+        "scryfallId": "b94cc636-de31-41b2-9c35-0bdfcdd0c1c1",
+        "name": "Dimir Infiltrator",
+        "manaCost": "{U}{B}",
+        "cmc": 2,
+        "colors": [
+          "B",
+          "U"
+        ],
+        "colorIdentity": [
+          "B",
+          "U"
+        ],
+        "typeLine": "Creature — Spirit",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Spirit"
+        ],
+        "oracleText": "This creature can't be blocked.\nTransmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+        "power": "1",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Transmute"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2d8fb890db5c5629b21aa94b32252b48fa41aec0a371ffdda9782866f8ca490a",
+      "card": {
+        "oracleId": "7de04284-dcaa-4b63-a734-fcfe2698f83c",
+        "scryfallId": "6e0db10d-fb6d-44df-9ff2-6f1e0e8f8209",
+        "name": "Dizzy Spell",
+        "manaCost": "{U}",
+        "cmc": 1,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature gets -3/-0 until end of turn.\nTransmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Transmute"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a4895f8e7c53dd3f40359d379301199728311f22f7fadb452c0e23c5efbcc01a",
+      "card": {
+        "oracleId": "9dbc3530-b278-4c8d-b2cc-a09dfac9d5e5",
+        "scryfallId": "4d431445-d7db-4ce1-b422-41494d9be1b4",
+        "name": "Reassembling Skeleton",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Skeleton Warrior",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Skeleton",
+          "Warrior"
+        ],
+        "oracleText": "{1}{B}: Return this card from your graveyard to the battlefield tapped.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2f02845cfe979518e7704fa7df1499c5408ed4f9d099a49f73932fd423af4af9",
+      "card": {
+        "oracleId": "c30f9be4-c274-4ad0-b5d7-7d3421aa4277",
+        "scryfallId": "dbc8512a-9f6c-40d4-8049-14505e260746",
+        "name": "Drownyard Temple",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}.\n{3}: Return this card from your graveyard to the battlefield tapped.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "50d3a8cd0dc938eb498ab6b52c461ac01d807bed923d8474ca0f09ba6efc65ac",
+      "card": {
+        "oracleId": "cad09970-14c8-4d80-82fe-6c855efb0191",
+        "scryfallId": "275d6137-5eff-4e82-8232-64e8679bc11c",
+        "name": "Bloodsoaked Champion",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Human Warrior",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Warrior"
+        ],
+        "oracleText": "This creature can't block.\nRaid — {1}{B}: Return this card from your graveyard to the battlefield. Activate only if you attacked this turn.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Raid"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "142db4d10b8625dfa75cd4ee6e8d4152820376c3427dc51aad23c44f1c1e8db9",
+      "card": {
+        "oracleId": "12397dbf-99a9-40c3-aa7c-76d09baad008",
+        "scryfallId": "eaa358ac-761d-4507-aa15-3d4684027207",
+        "name": "Teacher's Pest",
+        "manaCost": "{B}{G}",
+        "cmc": 2,
+        "colors": [
+          "B",
+          "G"
+        ],
+        "colorIdentity": [
+          "B",
+          "G"
+        ],
+        "typeLine": "Creature — Skeleton Pest",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Skeleton",
+          "Pest"
+        ],
+        "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)\nWhenever this creature attacks, you gain 1 life.\n{B}{G}: Return this card from your graveyard to the battlefield tapped.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Menace"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ae5ef4a33bd4e23773aa033a5f4e64f0fa45dfce608e2de719519b1dd88724fb",
+      "card": {
+        "oracleId": "5f4ad578-f2c4-47f6-8080-8fbc17383f6f",
+        "scryfallId": "f7baf973-3202-4fea-8861-a4a5ec228640",
+        "name": "Persistent Specimen",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Skeleton",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Skeleton"
+        ],
+        "oracleText": "{2}{B}: Return this card from your graveyard to the battlefield tapped.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "83383cd04f2eac3cce02535df0e6519080dbf79b4df7fb8f374b24ddf2cd64a4",
+      "card": {
+        "oracleId": "0b683611-e46f-4105-b336-014d1556c8de",
+        "scryfallId": "37a12935-c927-4d25-a7e5-17a0b6229c60",
+        "name": "Haunt of the Dead Marshes",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Nightmare Elf",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Nightmare",
+          "Elf"
+        ],
+        "oracleText": "When this creature enters, scry 1.\n{2}{B}: Return this card from your graveyard to the battlefield tapped. Activate only if you control a legendary creature.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Scry"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "45b63c129e41cbe914ddeca43a22584e7b09c3b9a2ad13d029055e05a5ba3e0a",
+      "card": {
+        "oracleId": "058dae67-807e-4542-ae51-f2b1216ffaed",
+        "scryfallId": "12c1b83d-710b-4680-855a-02ba1f72abf0",
+        "name": "Retrofitted Transmogrant",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Artifact Creature — Zombie",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Zombie"
+        ],
+        "oracleText": "{3}{B}: Return this card from your graveyard to the battlefield tapped with two +1/+1 counters on it.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2877ebca2dade3a2618c2375c3abaedf68f3f3d624573cf3b734122479ce32ab",
+      "card": {
+        "oracleId": "e80772e2-8623-4094-81a2-70828b2b151c",
+        "scryfallId": "18adbda4-8d36-47cd-afbc-c785aaa8ed80",
+        "name": "Blightsteel Colossus",
+        "manaCost": "{12}",
+        "cmc": 12,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Phyrexian Golem",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Phyrexian",
+          "Golem"
+        ],
+        "oracleText": "Trample, infect, indestructible\nIf Blightsteel Colossus would be put into a graveyard from anywhere, reveal Blightsteel Colossus and shuffle it into its owner's library instead.",
+        "power": "11",
+        "toughness": "11",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Indestructible",
+          "Trample",
+          "Infect"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5e2fae29f4da71ccff2b1b01f3e90de16a4f4b1223160c0a1c44a17427b15772",
+      "card": {
+        "oracleId": "1b09d0cf-403c-4a15-aeee-602a1bdaf0c1",
+        "scryfallId": "70197723-c61b-4600-b61d-41380c8f3067",
+        "name": "Darksteel Colossus",
+        "manaCost": "{11}",
+        "cmc": 11,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Golem",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Golem"
+        ],
+        "oracleText": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)\nIndestructible (Damage and effects that say \"destroy\" don't destroy this creature.)\nIf Darksteel Colossus would be put into a graveyard from anywhere, reveal Darksteel Colossus and shuffle it into its owner's library instead.",
+        "power": "11",
+        "toughness": "11",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Indestructible",
+          "Trample"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d3b0085461d7443fb36dccfa757e63243918e05e0d19574064c3dc4b5150662c",
+      "card": {
+        "oracleId": "6c1d22d4-f28e-4041-a9b6-1575e8929b61",
+        "scryfallId": "f0aacf61-be23-400e-8e3c-5584b44df449",
+        "name": "Nexus of Fate",
+        "manaCost": "{5}{U}{U}",
+        "cmc": 7,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Take an extra turn after this one.\nIf Nexus of Fate would be put into a graveyard from anywhere, reveal Nexus of Fate and shuffle it into its owner's library instead.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "097266748a517bb012296852fb1efda45e9d3aca84011b535bfa481a04deed1c",
+      "card": {
+        "oracleId": "7973820b-fdaf-46ec-9e3e-d4c0e77b5067",
+        "scryfallId": "1f9fb33a-3b39-4aff-93b8-aedafe0ea694",
+        "name": "Fanatic of Rhonas",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Snake Druid",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Snake",
+          "Druid"
+        ],
+        "oracleText": "{T}: Add {G}.\nFerocious — {T}: Add {G}{G}{G}{G}. Activate only if you control a creature with power 4 or greater.\nEternalize {2}{G}{G} ({2}{G}{G}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Snake Druid with no mana cost. Eternalize only as a sorcery.)",
+        "power": "1",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Ferocious",
+          "Eternalize"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a7d28303975dd489b5425b8806e6bef3711158bdbfe8696f120a97931b7219b9",
+      "card": {
+        "oracleId": "a52a06aa-56fc-4845-bbcd-a54f16369b34",
+        "scryfallId": "8b63ec86-670b-4acd-b14c-3d90acbde087",
+        "name": "Timeless Witness",
+        "manaCost": "{2}{G}{G}",
+        "cmc": 4,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Human Shaman",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Shaman"
+        ],
+        "oracleText": "When this creature enters, return target card from your graveyard to your hand.\nEternalize {5}{G}{G} ({5}{G}{G}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Human Shaman with no mana cost. Eternalize only as a sorcery.)",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Eternalize"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0246b52f331f1413b2aaf943acef8b017964484df239a4a5fd08123321928895",
+      "card": {
+        "oracleId": "80b8ee3d-4174-4f47-a533-a3db1e703382",
+        "scryfallId": "865e267d-450c-4eeb-b61d-bd0ec5d8534a",
+        "name": "Adorned Pouncer",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Cat",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Cat"
+        ],
+        "oracleText": "Double strike\nEternalize {3}{W}{W} ({3}{W}{W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Cat with no mana cost. Eternalize only as a sorcery.)",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Double strike",
+          "Eternalize"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1d50e25ca5a86c941d11f341e68e48e5a12adeb70225bbc6cf51f80f64862e9e",
+      "card": {
+        "oracleId": "a5ae93e9-0385-47fd-9d8f-306e9a6b7fe6",
+        "scryfallId": "96fe8889-0ec8-421a-83a4-5d00ab4804db",
+        "name": "Timeless Dragon",
+        "manaCost": "{3}{W}{W}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nPlainscycling {2} ({2}, Discard this card: Search your library for a Plains card, reveal it, put it into your hand, then shuffle.)\nEternalize {2}{W}{W} ({2}{W}{W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Dragon with no mana cost. Eternalize only as a sorcery.)",
+        "power": "5",
+        "toughness": "5",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Plainscycling",
+          "Landcycling",
+          "Typecycling",
+          "Cycling",
+          "Eternalize"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8ea05aadf956a68f3e92d45fe6f8de261b6538ce5272034b15b6bf522febaf37",
+      "card": {
+        "oracleId": "d85ea576-a794-44bf-b405-1f1c49477409",
+        "scryfallId": "08891c78-13c1-4d84-aa9c-78346b3b7d18",
+        "name": "Sacred Cat",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Cat",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Cat"
+        ],
+        "oracleText": "Lifelink\nEmbalm {W} ({W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a white Zombie Cat with no mana cost. Embalm only as a sorcery.)",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Lifelink",
+          "Embalm"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6c23431996d44516a94ac2fe8d20b7d88744c3c8bfb33fc76915863140227955",
+      "card": {
+        "oracleId": "3c49e98d-d33b-47fa-8b07-b38b367de2c7",
+        "scryfallId": "f3f7f258-7ac0-4149-9d8c-712b5ea7f0a8",
+        "name": "Angel of Sanctions",
+        "manaCost": "{3}{W}{W}",
+        "cmc": 5,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Angel",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Angel"
+        ],
+        "oracleText": "Flying\nWhen this creature enters, you may exile target nonland permanent an opponent controls until this creature leaves the battlefield.\nEmbalm {5}{W} ({5}{W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a white Zombie Angel with no mana cost. Embalm only as a sorcery.)",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Embalm"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2ff77c1e8427142f48927753992e8f380c6f15ef72e8b75c22a67f9b5588edb6",
+      "card": {
+        "oracleId": "bb813ffa-2615-4177-a7fb-6e0dfb819fc2",
+        "scryfallId": "414bc716-2b1b-4731-bd0c-f4a5caf26e40",
+        "name": "Aven Wind Guide",
+        "manaCost": "{2}{W}{U}",
+        "cmc": 4,
+        "colors": [
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Creature — Bird Warrior",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Bird",
+          "Warrior"
+        ],
+        "oracleText": "Flying, vigilance\nCreature tokens you control have flying and vigilance.\nEmbalm {4}{W}{U} ({4}{W}{U}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a white Zombie Bird Warrior with no mana cost. Embalm only as a sorcery.)",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Vigilance",
+          "Embalm"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "250323fa00c4e8a5787186dd28963e6e2bac859381427ac331c5154964bef7ec",
+      "card": {
+        "oracleId": "4e0b9273-6614-41a8-9738-959349c0717b",
+        "scryfallId": "4f922231-bf41-47d3-8fa3-13b9baf4a0f3",
+        "name": "Anointer Priest",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Cleric",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Cleric"
+        ],
+        "oracleText": "Whenever a creature token you control enters, you gain 1 life.\nEmbalm {3}{W} ({3}{W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a white Zombie Human Cleric with no mana cost. Embalm only as a sorcery.)",
+        "power": "1",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Embalm"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9223bb1c9d2ec6650c2a530b6da503a73136cdd9a07ac71ceacf84bcdd15a2b4",
+      "card": {
+        "oracleId": "44e0ffa3-8915-4c1f-8f1a-4aeea1365f07",
+        "scryfallId": "0e57335d-4066-4d73-83cd-67a215e01a4e",
+        "name": "Simian Spirit Guide",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Ape Spirit",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Ape",
+          "Spirit"
+        ],
+        "oracleText": "Exile this card from your hand: Add {R}.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5dca0ada55d43842f02b43fc0b0f4c6377f0dadd8d14d465b40c5b10126fe4dc",
+      "card": {
+        "oracleId": "6b0e23cf-7d68-4329-86db-7adc26abd86b",
+        "scryfallId": "50aded92-f934-441f-8e48-d68d471e70d8",
+        "name": "Elvish Spirit Guide",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Elf Spirit",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Spirit"
+        ],
+        "oracleText": "Exile this card from your hand: Add {G}.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7e52cc7da0cb3b04dab9376aeb58ec8dc86aed9971ebc610b0c69fec81337822",
+      "card": {
+        "oracleId": "a7dc2e62-1c50-4ed7-b71f-2d782a447a5e",
+        "scryfallId": "32cf273e-b8f7-434b-9d5d-883dfd6f7423",
+        "name": "Cauldron Familiar",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Cat",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Cat"
+        ],
+        "oracleText": "When this creature enters, each opponent loses 1 life and you gain 1 life.\nSacrifice a Food: Return this card from your graveyard to the battlefield.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ebc951ca0806a5bb23604bad3d2deabc37b56b01c6181ff6e8b1ab9ce97b1864",
+      "card": {
+        "oracleId": "e5762815-5fc3-4ae7-abee-69f27c5e4e90",
+        "scryfallId": "fed77513-94ab-44e2-b9a1-30ba927cd6ee",
+        "name": "Cult Conscript",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Skeleton Warrior",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Skeleton",
+          "Warrior"
+        ],
+        "oracleText": "This creature enters tapped.\n{1}{B}: Return this card from your graveyard to the battlefield. Activate only if a non-Skeleton creature died under your control this turn.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c769a61898ef7852915e1b6db149793e7cababb71d7f25b2b356a63cc4be9040",
+      "card": {
+        "oracleId": "6c4a0e3d-c63c-4acf-8386-b51f1ec37463",
+        "scryfallId": "e22f11a1-0cbd-4b36-8dbd-37ba29ad4608",
+        "name": "Grafted Butcher",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Phyrexian Samurai",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Phyrexian",
+          "Samurai"
+        ],
+        "oracleText": "When this creature enters, Phyrexians you control gain menace until end of turn.\nOther Phyrexians you control get +1/+1.\n{3}{B}, Sacrifice an artifact or creature: Return this card from your graveyard to the battlefield. Activate only as a sorcery.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "fb67c36f2591c4b3965e4b8483709296da2acdd5e1945de8dc6efca32268ab97",
+      "card": {
+        "oracleId": "0ef760f4-bbec-4735-8d60-fc24d973452a",
+        "scryfallId": "8aabc541-ff2a-416f-a973-44eda8ec4706",
+        "name": "Squee, Goblin Nabob",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Goblin",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Goblin"
+        ],
+        "oracleText": "At the beginning of your upkeep, you may return this card from your graveyard to your hand.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ea89d9fe5d5c7a95903cd4c5315a94021fedb34baf20a7dde203890a234b9db3",
+      "card": {
+        "oracleId": "40bb7b6b-a75d-4b59-ba45-a5801dcd59a1",
+        "scryfallId": "76bdc912-61da-428d-b0d7-3a38676a402a",
+        "name": "Phoenix Chick",
+        "manaCost": "{R}",
+        "cmc": 1,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Creature — Phoenix",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Phoenix"
+        ],
+        "oracleText": "Flying, haste\nThis creature can't block.\nWhenever you attack with three or more creatures, you may pay {R}{R}. If you do, return this card from your graveyard to the battlefield tapped and attacking with a +1/+1 counter on it.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Haste"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5a109b8e251481e8b75db4f39fab76e42cec27d1c6dba63b699d59957fcc0fac",
+      "card": {
+        "oracleId": "215c287d-56a5-46da-b49e-8524b6d320a4",
+        "scryfallId": "5a0c2773-3205-4ac4-b31c-c54fb06fdd7c",
+        "name": "Sword of the Meek",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact — Equipment",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [
+          "Equipment"
+        ],
+        "oracleText": "Equipped creature gets +1/+2.\nEquip {2}\nWhenever a 1/1 creature you control enters, you may return this card from your graveyard to the battlefield, then attach it to that creature.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Equip"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9519ed723522e91ca26f35969166d20f2c1e764dc274282a377c52851a63d2a4",
+      "card": {
+        "oracleId": "087f9ad7-e74f-40e2-8102-1ed2925d0418",
+        "scryfallId": "d108c2b1-236e-4b8d-8445-d9749ccc4fea",
+        "name": "Rest in Peace",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "When this enchantment enters, exile all graveyards.\nIf a card or token would be put into a graveyard from anywhere, exile it instead.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d2bb21eb08421f3e0a4f1620c90d10fcaeb6aecd114ffb31b9e5ece97e0614a6",
+      "card": {
+        "oracleId": "cc187110-1148-4090-bbb8-e205694a39f5",
+        "scryfallId": "4f616706-ec97-4923-bb1e-11a69fbaa1f8",
+        "name": "Counterspell",
+        "manaCost": "{U}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Counter target spell.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d2e0f7e4f16b67aaa4e218a844393a9d167c546a9aab748d908b19661eeda516",
+      "card": {
+        "oracleId": "edd8d1e8-be43-4c38-bb3a-83081fbaf0b5",
+        "scryfallId": "b281a308-ab6b-47b6-bec7-632c9aaecede",
+        "name": "Thoughtseize",
+        "manaCost": "{B}",
+        "cmc": 1,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "Target player reveals their hand. You choose a nonland card from it. That player discards that card. You lose 2 life.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c88f19acb2988df946ca49bd6d24b16840e80ec7855fa568dac1274d030850c0",
+      "card": {
+        "oracleId": "f33ce38a-34ec-4b65-a0fc-160484a02007",
+        "scryfallId": "d174f42c-dcf2-4da9-812b-7e1d0991d466",
+        "name": "Bonders' Enclave",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}.\n{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1b06da2d203a9c22040d81cac475788b8d16c053793b2cc2bc5e3fc76eb4bd37",
+      "card": {
+        "oracleId": "e7286688-ffbe-4d25-ad55-27990f005368",
+        "scryfallId": "91cef7ce-aa9f-4659-ac24-394c5ab9f77c",
+        "name": "Sliver Hive",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Add {C}.\n{T}: Add one mana of any color. Spend this mana only to cast a Sliver spell.\n{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

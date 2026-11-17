@@ -312,7 +312,7 @@ function viewerMana(ctx: GameContext, playerId: string): PlayerBoardState['viewe
   // A permanent with several mana abilities is one source per ability, all sharing its card id,
   // and tapping it activates only one of them: count its largest one, not their sum.
   const bestByCard = new Map<string, number>();
-  for (const source of manaSourcesFor(ctx, playerId)) {
+  for (const source of manaSourcesFor(ctx, playerId, false, 'payment', false)) {
     if (source.manaCost !== undefined || source.restriction !== undefined) continue;
     bestByCard.set(
       source.cardId,

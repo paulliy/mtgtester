@@ -933,6 +933,12 @@ export interface EngineState extends GameState {
    */
   modifiedCreatureDiedThisTurn?: Record<PlayerId, true>;
   /**
+   * Players who declared at least one attacking creature this turn ("if you attacked this
+   * turn", Bloodsoaked Champion). Read only by activation restrictions, never by a continuous
+   * effect, so the layer cache does not digest it. Reset at the start of each turn.
+   */
+  attackedThisTurnPlayers?: Record<PlayerId, true>;
+  /**
    * "If this is the second time this ability has resolved this turn" (Rumor Gatherer): how many
    * times each counted ability has resolved this turn, keyed by the source's battlefield object
    * id and the ability's key. A source that changes zones is a new object with a fresh count

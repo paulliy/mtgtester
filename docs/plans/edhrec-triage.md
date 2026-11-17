@@ -6,20 +6,20 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 2412 | 10.99% |
-| line | 1196 | 6.70% |
-| subject | 1163 | 5.72% |
+| effect | 2401 | 10.91% |
+| line | 1211 | 6.82% |
+| subject | 1164 | 5.73% |
 | trigger event | 391 | 1.55% |
-| cost | 298 | 1.26% |
-| condition | 154 | 0.69% |
+| cost | 299 | 1.26% |
 | amount | 149 | 0.70% |
+| condition | 148 | 0.64% |
 | target | 118 | 0.51% |
 | card filter | 25 | 0.07% |
 | spell filter | 11 | 0.09% |
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (2412)
+## effect (2401)
 
 - 39 × `look at the top n cards of your library` (Thassa's Oracle, Loot, Exuberant Explorer, Experimental Augury)
 - 16 × `exile the top card of your library` (Blazing Crescendo, Cori Mountain Monastery, Count on Luck)
@@ -37,7 +37,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 8 × `discover n` (Hit the Mother Lode, Hidden Nursery, Hidden Volcano)
 - 8 × `populate` (Nesting Dovehawk, Determined Iteration, Growing Ranks)
 
-## line (1196)
+## line (1211)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
 - 10 × `when this land enters, it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
@@ -55,7 +55,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 5 × `buyback {m}` (Capsize, Sprout Swarm, Mystic Speculation)
 - 4 × `~ doesn't untap during your untap step` (Basalt Monolith, Grim Monolith, Goblin Sharpshooter)
 
-## subject (1163)
+## subject (1164)
 
 - 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)
@@ -91,7 +91,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 1 × `whenever you tap this land for mana, target opponent creates a p/t colorless spirit creature token` (Forbidden Orchard)
 - 1 × `whenever you put n or more +n/+n counters on a creature you control, you may draw that many cards. do this only once each turn` (Terrasymbiosis)
 
-## cost (298)
+## cost (299)
 
 - 8 × `{m}{m}, exile this card from your graveyard` (Qarsi Revenant, Faerie Dreamthief, Spectral Steel)
 - 5 × `enchanted land has "{m}` (Abundant Growth, Squirrel Nest, Gift of Paradise)
@@ -108,24 +108,6 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 3 × `{m}, return a land you control to its owner's hand` (Meloku the Clouded Mirror, Oboro Breezecaller, Wonderscape Sage)
 - 3 × `tap an untapped wizard you control` (Azami, Lady of Scrolls, Patron Wizard, Galecaster Colossus)
 - 3 × `{m}, sacrifice another creature or artifact` (Ahriman, Acolyte of Aclazotz, Stormclaw Rager)
-
-## condition (154)
-
-- 9 × `you gained life this turn` (Witch of the Moors, Lathiel, the Bounteous Dawn, Crested Sunmare)
-- 7 × `you cast it from your hand` (Wakening Sun's Avatar, Cyclone Summoner, Angel of the Dire Hour)
-- 6 × `you gained n or more life this turn` (The Gaffer, Valkyrie Harbinger, Angelic Accord)
-- 5 × `you attacked this turn` (Alesha, Who Laughs at Fate, Searslicer Goblin, Bloodsoaked Champion)
-- 5 × `this land entered this turn or if you control a basic land` (Dark Fortress, Gleaming Bastion, Hidden Lair)
-- 4 × `there are n or more cards in your graveyard` (Cephalid Coliseum, Barbarian Ring, Cabal Pit)
-- 4 × `you descended this turn` (Enterprising Scallywag, Ruin-Lurker Bat, Zoyowa Lava-Tongue)
-- 3 × `it was a creature` (Enduring Vitality, Enduring Curiosity, Harold and Bob, First Numens)
-- 3 × `a permanent left the battlefield under your control this turn` (Hidden Stockpile, Call for Unity, Aid from the Cowl)
-- 3 × `you gained or lost life this turn` (Star Charter, Starseer Mentor, Starlit Soothsayer)
-- 2 × `you control a basic land` (Abandoned Air Temple, Agna Qel'a)
-- 2 × `you control a legendary creature` (The Shire, Haunt of the Dead Marshes)
-- 2 × `you attacked with creatures with total power n or greater this combat` (Battle Cry Goblin, Minion of the Mighty)
-- 2 × `you put a counter on a creature this turn` (Lasting Tarfire, Lord Jyscal Guado)
-- 2 × `a creature died under your control this turn` (Denethor, Ruling Steward, Essenceknit Scholar)
 
 ## amount (149)
 
@@ -144,6 +126,24 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 3 × `n` (Arabella, Abandoned Doll, Crypt Rats, Silklash Spider)
 - 3 × `that creature's power` (Ziatora, the Incinerator, Grisly Spectacle, Infested Thrinax)
 - 3 × `the sacrificed creature's toughness` (Geralf, Visionary Stitcher, Miren, the Moaning Well, Disciple of Griselbrand)
+
+## condition (148)
+
+- 9 × `you gained life this turn` (Witch of the Moors, Lathiel, the Bounteous Dawn, Crested Sunmare)
+- 7 × `you cast it from your hand` (Wakening Sun's Avatar, Cyclone Summoner, Angel of the Dire Hour)
+- 6 × `you gained n or more life this turn` (The Gaffer, Valkyrie Harbinger, Angelic Accord)
+- 5 × `this land entered this turn or if you control a basic land` (Dark Fortress, Gleaming Bastion, Hidden Lair)
+- 4 × `there are n or more cards in your graveyard` (Cephalid Coliseum, Barbarian Ring, Cabal Pit)
+- 4 × `you attacked this turn` (Alesha, Who Laughs at Fate, Searslicer Goblin, Perforating Artist)
+- 4 × `you descended this turn` (Enterprising Scallywag, Ruin-Lurker Bat, Zoyowa Lava-Tongue)
+- 3 × `it was a creature` (Enduring Vitality, Enduring Curiosity, Harold and Bob, First Numens)
+- 3 × `a permanent left the battlefield under your control this turn` (Hidden Stockpile, Call for Unity, Aid from the Cowl)
+- 3 × `you gained or lost life this turn` (Star Charter, Starseer Mentor, Starlit Soothsayer)
+- 2 × `you control a basic land` (Abandoned Air Temple, Agna Qel'a)
+- 2 × `you attacked with creatures with total power n or greater this combat` (Battle Cry Goblin, Minion of the Mighty)
+- 2 × `you put a counter on a creature this turn` (Lasting Tarfire, Lord Jyscal Guado)
+- 2 × `a creature died under your control this turn` (Denethor, Ruling Steward, Essenceknit Scholar)
+- 2 × `creatures you control have total power n or greater` (Shaman of Forgotten Ways, Dragon-Scarred Bear)
 
 ## target (118)
 

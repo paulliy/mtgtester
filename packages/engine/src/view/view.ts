@@ -234,7 +234,7 @@ function playerView(ctx: GameContext, playerId: PlayerId): PlayerView {
     string,
     { symbols: Set<string>; count: number; perSymbol: Map<string, number> }
   >();
-  for (const source of manaSourcesFor(ctx, playerId)) {
+  for (const source of manaSourcesFor(ctx, playerId, false, 'payment', false)) {
     let entry = manaSourcesByCard.get(source.cardId);
     if (entry === undefined) {
       entry = { symbols: new Set<string>(), count: 0, perSymbol: new Map() };

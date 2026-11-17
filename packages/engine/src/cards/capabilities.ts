@@ -195,6 +195,11 @@ const shapes = {
   } satisfies Fields<Objects<TargetSpec>>,
   Effect: {
     damageIfGraveyardSpellsAtLeast: leaf,
+    counterCount: leaf,
+    setColors: { array: leaf },
+    addSubtypes: { array: leaf },
+    basePower: leaf,
+    baseToughness: leaf,
     extra: leaf,
     types: { array: leaf },
     level: leaf,
@@ -602,6 +607,8 @@ const shapes = {
     entersTapped: leaf,
     entersTappedUnless: { node: 'Condition' },
     entersUnlessDiscard: { object: { filter: { node: 'Selector' } } },
+    shuffleIntoLibraryInsteadOfGraveyard: leaf,
+    handManaAbility: { object: { units: { array: { array: leaf } } } },
     entersChoosingOption: {
       object: {
         prompt: leaf,
@@ -1289,6 +1296,8 @@ const families = {
       mayPayXThenDealDamage: true,
       destroyEachNonlandMVFromDamagedControllers: true,
       returnSelfFromGraveyardToHand: true,
+      returnSelfFromGraveyardToBattlefield: true,
+      createTokenCopyOfSourceCard: true,
       returnDiedSourceToBattlefield: true,
       putAnyFromHandOnBottomThenDraw: true,
       putDepartedSourceIntoLibrary: true,
@@ -1549,6 +1558,7 @@ const families = {
       eventPlayerHandSize: true,
       castSpellThisTurn: true,
       modifiedCreatureDiedUnderYourControlThisTurn: true,
+      youAttackedThisTurn: true,
       not: true,
     } satisfies Record<Extract<Condition['kind'], string | number>, true>,
   },

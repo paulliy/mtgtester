@@ -132,6 +132,11 @@ export interface MoveDestination {
   reason?: 'sacrifice';
   /** Internal simultaneous-move batch: leave processing is owned by the batch. */
   deferLeaveProcessing?: boolean;
+  /**
+   * The object's own "reveal it and shuffle it into its owner's library instead" replaced a
+   * move to the graveyard (Darksteel Colossus): reveal it and shuffle that library after.
+   */
+  shuffleIntoLibrary?: true;
   /** Shared pre-event snapshot for an internal simultaneous departure batch. */
   lastKnownFacts?: ObjectFacts;
   /** Internal card-zone batch: queue one aggregate departure event after every move completes. */
@@ -898,9 +903,8 @@ export function leavesBattlefieldTo(perm: EnginePermanent, zone: Zone): Zone {
   return perm.unearthed === true && zone !== 'exile' ? 'exile' : zone;
 }
 
-/** Graveyard replacements read the pre-event battlefield, including a source leaving with it. */
-function graveyardDestination(ctx: GameContext, obj: EngineObject, zone: Zone): Zone {
-  if (zone !== 'graveyard') return zone;
+/** Rest in Peace and its kin: a card that would go to a graveyard is exiled instead. */
+function graveyardToExileApplies(ctx: GameContext, obj: EngineObject): boolean {
   for (const { controllerId, static: rule } of gatherRuleStatics(ctx)) {
     if (rule.kind !== 'graveyardToExile' || (!rule.includeTokens && obj.isToken)) continue;
     const subjectPlayer =
@@ -918,9 +922,78 @@ function graveyardDestination(ctx: GameContext, obj: EngineObject, zone: Zone): 
         !computeCharacteristics(ctx, obj as EnginePermanent).types.includes('Creature'))
     )
       continue;
-    return 'exile';
+    return true;
   }
-  return zone;
+  return false;
+}
+
+/**
+ * "If ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's
+ * library instead" (Darksteel Colossus): the object's own replacement, read in whatever zone it
+ * is in. A permanent needs the ability as it is now (CR 614.12 does not apply to leaving), so a
+ * face-down or ability-less permanent goes to the graveyard.
+ */
+function shufflesInsteadOfGraveyard(ctx: GameContext, obj: EngineObject): boolean {
+  if (obj.zone === 'battlefield') {
+    const perm = obj as EnginePermanent;
+    if (perm.faceDown === true) return false;
+    if (copiableDefinition(ctx, perm).shuffleIntoLibraryInsteadOfGraveyard !== true) return false;
+    return computeCharacteristics(ctx, perm).loseAbilities !== true;
+  }
+  return ctx.defs.get(obj.oracleId)?.shuffleIntoLibraryInsteadOfGraveyard === true;
+}
+
+/** The public reveal and the owner's shuffle of a card its own replacement sent to the library. */
+function revealAndShuffleIn(
+  ctx: GameContext,
+  owner: EnginePlayerState,
+  card: EngineCardObject | EnginePermanent,
+): void {
+  emit(
+    ctx,
+    'revealCard',
+    { player: owner.id, name: card.name, source: card.name, reason: 'shuffled into library' },
+    owner.id,
+  );
+  ctx.rng.shuffle(owner.library);
+  emit(ctx, 'shuffle', { player: owner.id }, owner.id);
+}
+
+/** Where a move to the graveyard goes after replacements, and whether it shuffles in. */
+interface GraveyardReplacement {
+  zone: Zone;
+  /** The object's own "shuffle it into its owner's library instead" replaced the move. */
+  shuffle?: true;
+}
+
+/**
+ * Graveyard replacements read the pre-event battlefield, including a source leaving with it.
+ * When both a graveyard-to-exile effect and the object's own shuffle replacement apply, its
+ * owner chooses which to apply (CR 616.1); either one leaves the other nothing to replace.
+ */
+function* graveyardDestination(
+  ctx: GameContext,
+  obj: EngineObject,
+  zone: Zone,
+): GameGen<GraveyardReplacement> {
+  if (zone !== 'graveyard') return { zone };
+  const exile = graveyardToExileApplies(ctx, obj);
+  const shuffle = shufflesInsteadOfGraveyard(ctx, obj);
+  if (exile && shuffle) {
+    const outcome = yield {
+      decisionType: 'general',
+      player: obj.ownerId,
+      prompt: `${obj.name} would be put into a graveyard. Choose which replacement to apply.`,
+      options: [
+        { type: 'chooseOption', description: `Shuffle ${obj.name} into your library` },
+        { type: 'chooseOption', description: `Exile ${obj.name}` },
+      ],
+    };
+    return outcome.index === 0 ? { zone: 'library', shuffle: true } : { zone: 'exile' };
+  }
+  if (shuffle) return { zone: 'library', shuffle: true };
+  if (exile) return { zone: 'exile' };
+  return { zone };
 }
 
 export function* moveObject(
@@ -963,7 +1036,14 @@ export function* moveObject(
   }
 
   // CR 903.9b — commander headed to hand or library: owner may redirect to command zone.
-  target = { ...target, zone: graveyardDestination(ctx, obj, target.zone) };
+  {
+    const replaced = yield* graveyardDestination(ctx, obj, target.zone);
+    target = {
+      ...target,
+      zone: replaced.zone,
+      ...(replaced.shuffle === true ? { shuffleIntoLibrary: true as const } : {}),
+    };
+  }
   if (obj.isCommander && (target.zone === 'hand' || target.zone === 'library')) {
     const outcome = yield {
       decisionType: 'commanderReplacement',
@@ -1046,11 +1126,14 @@ export function* moveObject(
   // "If this would enter, you may discard a land card instead ..." (Mox Diamond): a replacement
   // (CR 614.1c), applied before it leaves the zone it is in, whichever effect moves it.
   if (target.zone === 'battlefield' && from !== 'battlefield' && !target.faceDown) {
-    if (!(yield* paysEntersUnlessDiscard(ctx, obj, target.controllerId ?? obj.ownerId)))
+    if (!(yield* paysEntersUnlessDiscard(ctx, obj, target.controllerId ?? obj.ownerId))) {
+      const replaced = yield* graveyardDestination(ctx, obj, 'graveyard');
       target = {
-        zone: graveyardDestination(ctx, obj, 'graveyard'),
+        zone: replaced.zone,
+        ...(replaced.shuffle === true ? { shuffleIntoLibrary: true as const } : {}),
         ...(target.reason !== undefined ? { reason: target.reason } : {}),
       };
+    }
   }
 
   // Its fixed effects stay until leave processing has read its last known characteristics: an
@@ -1283,13 +1366,18 @@ export function* moveObject(
         ) {
           ctx.state.battlefield.splice(ctx.state.battlefield.indexOf(perm), 1);
           releaseFixedEffects(ctx, perm.cardId);
+          const replaced = yield* graveyardDestination(ctx, obj, 'graveyard');
           target = {
-            zone: graveyardDestination(ctx, obj, 'graveyard'),
+            zone: replaced.zone,
             ...(target.reason !== undefined ? { reason: target.reason } : {}),
           };
           next = reincarnate(ctx, obj, target.zone);
           if (target.zone === 'exile') ctx.state.exile.push(next);
-          else playerById(ctx, obj.ownerId).graveyard.push(next);
+          else if (target.zone === 'library') {
+            const owner = playerById(ctx, obj.ownerId);
+            owner.library.unshift(next);
+            revealAndShuffleIn(ctx, owner, next);
+          } else playerById(ctx, obj.ownerId).graveyard.push(next);
         }
       }
     }
@@ -1315,6 +1403,7 @@ export function* moveObject(
           owner.library.splice(Math.min(target.libraryCardsAbove, owner.library.length), 0, next);
         else if ((target.libraryPosition ?? 'top') === 'top') owner.library.unshift(next);
         else owner.library.push(next);
+        if (target.shuffleIntoLibrary === true) revealAndShuffleIn(ctx, owner, next);
         break;
       case 'stack':
         // The caller (casting code) owns placing the object into its stack entry.
@@ -3589,15 +3678,19 @@ export function* movePermanentsTogether(
   const departureFacts = new Map(
     permanents.map((perm) => [perm.id, captureObjectFacts(ctx, perm)]),
   );
-  const destinations = new Map(
-    permanents.map((perm) => [
+  const replacements = new Map<string, GraveyardReplacement>();
+  for (const perm of permanents) {
+    replacements.set(
       perm.id,
-      graveyardDestination(
+      yield* graveyardDestination(
         ctx,
         perm,
         leavesBattlefieldTo(perm, plannedDestinations.get(perm.id)!.zone),
       ),
-    ]),
+    );
+  }
+  const destinations = new Map(
+    [...replacements].map(([id, replaced]) => [id, replaced.zone] as const),
   );
   // Only what really reaches the graveyard dies.
   const dying = permanents.filter((perm) => destinations.get(perm.id) === 'graveyard');
@@ -3630,6 +3723,7 @@ export function* movePermanentsTogether(
     const next = yield* moveObject(ctx, perm, {
       ...plannedDestinations.get(perm.id)!,
       zone: destinations.get(perm.id)!,
+      ...(replacements.get(perm.id)!.shuffle === true ? { shuffleIntoLibrary: true as const } : {}),
       deferLeaveProcessing: true,
       deferCardZoneTriggers: true,
       lastKnownFacts: departureFacts.get(perm.id)!,

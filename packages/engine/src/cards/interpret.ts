@@ -96,6 +96,8 @@ import {
   ofSubtype,
   ofSupertype,
   ofType,
+  manaValueAtLeast,
+  manaValueAtMost,
   powerAtLeast,
   withKeyword,
 } from './selector';
@@ -1331,6 +1333,39 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
   if (costs.some((c) => c.kind === 'loyalty') || card.types.includes('Planeswalker')) {
     timing = 'sorcery';
     oncePerTurn = true;
+  }
+
+  // "{1}{B}: Return this card from your graveyard to the battlefield [tapped] [with two +1/+1
+  // counters on it]." (Reassembling Skeleton, Retrofitted Transmogrant) — an ability that
+  // functions only from the graveyard (CR 113.6). The graveyard activation path pays mana only,
+  // so a sacrifice or other cost (Cauldron Familiar, Grafted Butcher) stays unmodeled.
+  {
+    const m = split.effectText.match(
+      /^return this card from your graveyard to the battlefield( tapped)?(?: with (\w+) ([+-]\d+\/[+-]\d+) counters? on it)?$/,
+    );
+    if (m !== null) {
+      if (oncePerTurn || costs.some((c) => c.kind !== 'mana')) return null;
+      const counterCount = m[2] === undefined ? undefined : parseAmount(m[2]);
+      if (counterCount === null || (m[2] !== undefined && m[3] === undefined)) return null;
+      return {
+        costs,
+        timing,
+        zone: 'graveyard',
+        ...(condition === undefined ? {} : { condition }),
+        ability: {
+          kind: 'activated',
+          targets: [],
+          effects: [
+            {
+              op: 'returnSelfFromGraveyardToBattlefield',
+              ...(m[1] === undefined ? {} : { tapped: true as const }),
+              ...(counterCount === undefined ? {} : { counter: m[3] as string, counterCount }),
+            },
+          ],
+          description: line,
+        },
+      };
+    }
   }
 
   const modal = parseModalSpellBlock(split.effectText, card);
@@ -3319,6 +3354,8 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
   let toxic = 0;
   let doesntUntapDuringUntapStep = false;
   let asTurnedFaceUpCounters: Record<string, number> | undefined;
+  let shuffleIntoLibraryInsteadOfGraveyard = false;
+  let handManaAbility: { units: ManaUnit[] } | undefined;
   let entersAsCopy: CardDefinition['entersAsCopy'];
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
     mdfcLandFace === null ? undefined : [mdfcLandFace];
@@ -4545,6 +4582,40 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         }
       }
     }
+    // "Transmute {1}{U}{U}" (CR 702.53a): "{cost}, Discard this card: Search your library for a
+    // card with the same mana value as the discarded card, reveal that card, put it into your
+    // hand, then shuffle. Transmute only as a sorcery." The discard is a cost, and the mana value
+    // is this card's printed one (an {X} in it counts as 0, which `cmc` already reflects).
+    {
+      const m = lower.match(/^transmute ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
+      if (m) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          const mv = card.cmc;
+          activatedAbilities.push({
+            costs: [{ kind: 'mana', cost: cost.cost }, { kind: 'discardSelf' }],
+            timing: 'sorcery',
+            zone: 'hand',
+            ability: {
+              kind: 'activated',
+              targets: [],
+              effects: [
+                {
+                  op: 'searchLibrary',
+                  filter: allOf(manaValueAtLeast(mv), manaValueAtMost(mv)),
+                  destinations: [{ zone: 'hand' }],
+                  reveal: true,
+                  allowFailToFind: true,
+                },
+                { op: 'shuffle' },
+              ],
+              description: line,
+            },
+          });
+          continue;
+        }
+      }
+    }
     /*
      * KICKER IS DELIBERATELY NOT PARSED - it falls through to `unrecognized rules text`.
      *
@@ -4587,6 +4658,27 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         continue;
       }
     }
+    // "If ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's
+    // library instead." (Darksteel Colossus, Nexus of Fate): its own replacement, applied by
+    // `moveObject` in every zone (CR 614.1a).
+    if (
+      /^if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead\.?$/.test(
+        lower,
+      )
+    ) {
+      shuffleIntoLibraryInsteadOfGraveyard = true;
+      continue;
+    }
+    // "Exile this card from your hand: Add {R}." (Simian Spirit Guide, CR 605.1a): a mana ability
+    // that works only from the hand. One fixed mana; the payment solver spends it only when a
+    // payment needs it (`ManaSource.fromHand`).
+    {
+      const m = lower.match(/^exile this card from your hand: add \{([wubrgc])\}\.?$/);
+      if (m !== null && handManaAbility === undefined) {
+        handManaAbility = { units: [[(m[1] as string).toUpperCase() as ManaUnit[number]]] };
+        continue;
+      }
+    }
     // "Replicate {2}" (CR 702.56a): an additional cost payable any number of times, and a cast
     // trigger copying the spell once per payment (`queueKeywordCastTriggers`).
     {
@@ -4595,6 +4687,38 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         const cost = parseManaCost((m[1] as string).toUpperCase() as never);
         if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
           optionalAdditionalCost = { mechanic: 'replicate', cost: cost.cost, repeatable: true };
+          continue;
+        }
+      }
+    }
+    // "Embalm {W}" / "Eternalize {2}{G}{G}" (CR 702.128a, 702.129a): "{cost}, Exile this card
+    // from your graveyard: Create a token that's a copy of it, except it's a white [black] Zombie
+    // [4/4 Zombie] ... and has no mana cost. [Activate] only as a sorcery." The exile is a cost,
+    // so the ability resolves even if the card is gone by then.
+    {
+      const m = lower.match(/^(embalm|eternalize) ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
+      if (m && card.types.includes('Creature')) {
+        const cost = parseManaCost((m[2] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          const eternalize = m[1] === 'eternalize';
+          activatedAbilities.push({
+            costs: [{ kind: 'mana', cost: cost.cost }, { kind: 'exileSelfFromGraveyard' }],
+            timing: 'sorcery',
+            zone: 'graveyard',
+            ability: {
+              kind: 'activated',
+              targets: [],
+              effects: [
+                {
+                  op: 'createTokenCopyOfSourceCard',
+                  setColors: [eternalize ? 'B' : 'W'],
+                  addSubtypes: ['Zombie'],
+                  ...(eternalize ? { basePower: 4, baseToughness: 4 } : {}),
+                },
+              ],
+              description: line,
+            },
+          });
           continue;
         }
       }
@@ -5030,6 +5154,10 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
       ...(doesntUntapDuringUntapStep ? { doesntUntapDuringUntapStep: true } : {}),
       ...(faceDownVariant !== undefined && morphCost !== undefined ? { faceDownVariant } : {}),
       ...(asTurnedFaceUpCounters !== undefined ? { asTurnedFaceUpCounters } : {}),
+      ...(shuffleIntoLibraryInsteadOfGraveyard
+        ? { shuffleIntoLibraryInsteadOfGraveyard: true as const }
+        : {}),
+      ...(handManaAbility !== undefined ? { handManaAbility } : {}),
       ...(entersAsCopy !== undefined ? { entersAsCopy } : {}),
       modeled: reasons.length === 0,
       unmodeledReasons: reasons,

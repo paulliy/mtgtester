@@ -1391,6 +1391,7 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
     perm.attackedThisTurn = true;
     perm.timesAttackedThisTurn = (perm.timesAttackedThisTurn ?? 0) + 1;
   }
+  if (declared.length > 0) (ctx.state.attackedThisTurnPlayers ??= {})[ap.id] = true;
   const defendingPlayers = [...new Set(declared.map((a) => a.attacking as PlayerId))];
   for (const defId of defendingPlayers) {
     // The defending player is woken for an attack on their planeswalker too (CR 509.1).

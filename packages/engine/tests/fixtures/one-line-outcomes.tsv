@@ -48,7 +48,7 @@ rank	outcome	definition
 426	blocked	834adef7befaa8cf
 431	blocked	f62859afa04ce305
 432	blocked	0d0f72cc64ce67f3
-433	blocked	fc1b7cb77cad9ac4
+433	modeled	3abb48d02512d63c
 435	blocked	e9f52478cf2b7bb4
 439	modeled	75d7d213dde50bc6
 440	blocked	0274ef84ba7677e2
@@ -76,7 +76,7 @@ rank	outcome	definition
 515	blocked	7929543806d77d6d
 520	blocked	453b39ec62531365
 523	blocked	cd9eadb7afbc7555
-526	blocked	8056ffe14b3a3b46
+526	modeled	84ae7f977327a2a5
 527	blocked	b258ff9d72afa420
 531	blocked	fba3db651613c7bf
 532	modeled	88eb09c54deb1044
@@ -170,7 +170,7 @@ rank	outcome	definition
 735	blocked	fd429057cf5636ce
 739	blocked	2a2f2a13ea0a6370
 740	blocked	d3f656aa59ec6419
-741	blocked	3bde71b688cf8559
+741	modeled	8c8b40815d8748f6
 742	blocked	f59dad492b3bf1a7
 746	blocked	9636592b4045e4de
 749	modeled	93a47acfc7ee12fa
@@ -180,7 +180,7 @@ rank	outcome	definition
 765	blocked	50b5176d0772e1ae
 766	blocked	6180369c0bf05a30
 768	modeled	cf5d49b2f283d0c7
-769	blocked	e13fd82ccb1d6315
+769	modeled	750a2d302b4eeaf7
 770	blocked	a412b3a99e8c5ba7
 774	modeled	3ba74e8ffc071edc
 775	blocked	644d65d900ef8b04
@@ -255,7 +255,7 @@ rank	outcome	definition
 931	blocked	e48d98a2aae08539
 932	blocked	ba9b6af18e9b5362
 936	blocked	3a2aa7ea45a1ebbc
-937	blocked	b840a6833c528dfb
+937	["instant/sorcery with no interpretable effect"]	e40468882ab5d3a9
 939	modeled	62a3a954e32c8639
 940	modeled	7634e6b8d76f9ad6
 944	blocked	4b7917c951bb255f
@@ -651,7 +651,7 @@ rank	outcome	definition
 1966	blocked	9dd04790a2d138f9
 1967	blocked	09eb312347a513ba
 1968	blocked	ed791bb8a69780b1
-1970	blocked	d563e6b2872d669e
+1970	modeled	ad34d9fc47decf44
 1971	blocked	b71b07faa2c84df1
 1973	blocked	fb3cd925110d2e4d
 1978	blocked	2283efa2d773e80e
@@ -760,7 +760,7 @@ rank	outcome	definition
 2249	blocked	962b56bf858a98c3
 2250	blocked	4e2a802c4b53a5e6
 2251	blocked	bc1308677558eaaa
-2252	blocked	1ae9bb73b07727db
+2252	["instant/sorcery with no interpretable effect"]	20c9eb524bcd2cf1
 2253	blocked	643ba507d789cbc4
 2255	blocked	ddf828f17ea8d753
 2258	blocked	8a3f0a1c47c7d985
@@ -1021,7 +1021,7 @@ rank	outcome	definition
 2795	blocked	abd41b4f8b9bf2f6
 2796	blocked	8c10021a01dddc18
 2800	blocked	bef3955604a7d3f6
-2804	blocked	b1c42a196a3ecf7c
+2804	["instant/sorcery with no interpretable effect"]	171a24703e5c6c43
 2807	blocked	c25a278bf83800a0
 2808	modeled	3db55e58082688a3
 2809	blocked	e566a1c1db277f05
@@ -1183,7 +1183,7 @@ rank	outcome	definition
 3150	blocked	781c1cc90dc1ab45
 3151	blocked	37e7446a39dba38b
 3152	blocked	0becb4fa98dd7319
-3153	blocked	d1d372939dab3fde
+3153	modeled	7340da639528ca09
 3156	blocked	8e501b125d3f1043
 3158	blocked	3baa717e838dd298
 3160	blocked	457f02ae41e31b3c
@@ -1810,7 +1810,7 @@ rank	outcome	definition
 4515	blocked	938afe0f9e2c6682
 4516	blocked	7d8708d1e6f2792c
 4517	blocked	e9ec7b039b38f1ea
-4518	blocked	473d60f3c4210c44
+4518	modeled	f7f61860b38e19c7
 4519	blocked	cd1972a4339b3a63
 4521	["instant/sorcery with no interpretable effect"]	e70755d44e4e6f06
 4522	blocked	93bc065ebf94f1f5
@@ -2003,7 +2003,7 @@ rank	outcome	definition
 4919	modeled	4a382982013f179c
 4922	blocked	79c14ff9e23c7a9e
 4923	blocked	75afd14901510de6
-4924	blocked	058cb11def5dcca6
+4924	modeled	3a04268d9bd5f8ec
 4926	blocked	9cb0513c743fb06f
 4930	blocked	620de76b7c489845
 4931	blocked	879d2084a52e70cb
@@ -2168,7 +2168,7 @@ rank	outcome	definition
 5249	modeled	29d03b4c74c0f407
 5250	blocked	276cd8729fa630ae
 5251	blocked	4e38643cb6c51bd0
-5252	blocked	feee72d752afd475
+5252	["instant/sorcery with no interpretable effect"]	65f8711ffa1a65f4
 5256	blocked	64ed732454b7d3d7
 5257	blocked	65a1b4a202644fa4
 5259	blocked	0925d739ef178e44
@@ -2422,7 +2422,7 @@ rank	outcome	definition
 5747	blocked	02cadf5620c7855b
 5751	blocked	61d81e9807229cbc
 5752	blocked	2f5c226b750be504
-5754	blocked	b78a78ce8fbe13f4
+5754	["instant/sorcery with no interpretable effect"]	23ddbd7b414360c3
 5756	blocked	28c4c55bbedec3a6
 5761	blocked	3942176b13fa9c19
 5767	blocked	77c573668f3400b3
@@ -2559,7 +2559,7 @@ rank	outcome	definition
 6033	blocked	29eae643e877bce1
 6034	blocked	b89b3db95e7210b7
 6035	blocked	c6320337a4a3ca9f
-6036	blocked	e64c7e4b5a798e18
+6036	modeled	f2c4fc98c7a381f2
 6037	blocked	d60f10bef960e6c2
 6038	modeled	2b1ce1cbc642e848
 6041	blocked	e93223da393534c0
@@ -3156,7 +3156,7 @@ rank	outcome	definition
 7298	blocked	98e5cf847df06dee
 7299	blocked	d21a4cf2ee741ae1
 7301	blocked	407e97d7001a3e16
-7302	blocked	aafed91ff732d6cb
+7302	modeled	4e6d3c7b09b3b303
 7303	blocked	fb32c41422a62011
 7304	blocked	4c1f68f2e6c50edc
 7308	blocked	c91eec6a7a5269d7
@@ -3560,7 +3560,7 @@ rank	outcome	definition
 8103	blocked	fb1aba33c4b542d1
 8105	modeled	a469b05b575b5de4
 8108	blocked	daac6239e40b03e7
-8110	blocked	ef3f41e2367b6a1e
+8110	modeled	3fc12f009be4471e
 8112	modeled	393b24998581f14b
 8113	blocked	1cfb42041712a911
 8114	blocked	6692f687d7e7f1e8
@@ -4156,7 +4156,7 @@ rank	outcome	definition
 9328	blocked	6306dd11827fac57
 9329	blocked	3bc572561a0d81cc
 9335	blocked	0e66394019d24e85
-9336	blocked	1ae2f55fd177179a
+9336	modeled	10d26db13da500f5
 9338	blocked	76d90f203876e3fd
 9339	blocked	cf607cb92d1b20a1
 9341	blocked	27ef5649048c11bb
@@ -5285,7 +5285,7 @@ rank	outcome	definition
 11613	blocked	3da522a36506eac6
 11618	blocked	b9afbc9d42167352
 11620	modeled	461c8b8049d2c08d
-11621	blocked	f290b7c3e5447d2a
+11621	modeled	ebda5dab055431dc
 11623	blocked	cf154c63b0f40104
 11624	blocked	70adda09be7cf2d8
 11625	blocked	ab87e9cf717ea39b
