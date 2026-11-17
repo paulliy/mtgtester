@@ -1045,6 +1045,12 @@ export interface GameContext {
    * entrants (CR 614.12).
    */
   enteringTogether?: ReadonlySet<CardId>;
+  /**
+   * Open while an ability deals simultaneous damage across several instructions ("deals 3 damage
+   * to each creature and each player"): lifelink's gain is summed per source here and gained as
+   * one life-gain event when the damage is done (CR 120.3f, 119.9). Absent ⇒ gained per hit.
+   */
+  lifelinkBatch?: Map<string, { controllerId: PlayerId; amount: number }>;
   /** Set while an activation's costs are paid: the life paid as part of them (Verrak). */
   costLifePaid?: { amount: number };
   /** Copied from `GameConfig.strictInvariants`: rethrow invariant failures instead of halting. */
