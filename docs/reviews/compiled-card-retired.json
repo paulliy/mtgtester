@@ -72,6 +72,13 @@
       "reason": "Its Vampire condition selects attachedToSource, which never matches in a condition (chunk 011)."
     },
     {
+      "name": "Bounty of the Luxa",
+      "oracleId": "e6b20c30-88c2-4cb0-a5e4-46f1df924a7c",
+      "patchSha256": "5b8aec22d8eda40529b76f83c82dda006599d52d9cb059d67aa4b07d47f95633",
+      "batch": "chunk-016",
+      "reason": "Codex review on PR #72, 2026-11-17: 'If no counters were removed this way' branches on sourceHasCounters, not on counters actually removed; if it leaves in response it adds {C}{G}{U} instead of drawing (the Coalition Relic gap). A scan found only Replicating Ring with a removal shape, whose tokens do not depend on the removal."
+    },
+    {
       "name": "Captain's Claws",
       "oracleId": "4cacd7de-83ac-4767-b6f2-f5a89f04a0b9",
       "patchSha256": "76a4ff5a3e8edfc9b58c2947e3dbabc2df09937194bdb24b746de833323ca496",

@@ -106,3 +106,11 @@ The owner's review of every promoted card found 4 wrong patches among this chunk
   destroyed by the land branch, but only the creature branch set `cantRegenerate`, so an animated
   land with a regeneration shield survived. Splitting the land branch into two `destroyEach` ops
   would not destroy everything at once, so the card was retired.
+
+## Retired after the Codex review of 1b25a62 (2026-11-17)
+
+- **Bounty of the Luxa:** "If no counters were removed this way" branched on whether the source
+  had counters, not on how many were removed. If the enchantment left the battlefield in response,
+  the patch added {C}{G}{U} instead of drawing. This is the gap the owner's review found in
+  Coalition Relic. A scan of the remaining patches found one other counter removal, Replicating
+  Ring, whose tokens do not depend on the removal; it stays.
