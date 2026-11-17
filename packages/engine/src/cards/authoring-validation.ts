@@ -28,6 +28,7 @@ import type { ReferenceContract, TargetDomain } from './effect-reference-contrac
 import { assertNever } from '../utils/assert-never';
 import { layerEvaluable, manaAmountEvaluable } from './value';
 import type { Value } from './value';
+import { TOKEN_OPS_ACTING_FIRST, tokenCharacteristicFixed } from './tokens';
 import { TRIGGER_SCOPE_FIELDS, VALUE_SCOPE_NEEDS } from './scope-contracts';
 import type { ScopeField } from './scope-contracts';
 
@@ -1055,6 +1056,41 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
     );
   }
 
+  // A token's printed power and toughness are fixed as the token is created. A token-creating
+  // effect's own `spec` has its values read with the resolving ability's scope first
+  // (`withTokenCharacteristicsFixed` in effects/resolve.ts), except an op that destroys, exiles,
+  // mills or counters before it creates (`TOKEN_OPS_ACTING_FIRST`), which would read the game
+  // before that change. Every other token spec (`tokenCreationReplacement`) reaches
+  // `registerTokenDef`, which reads a value with no scope at all, so a value that needs one
+  // throws in play, as Warden of the Grove's "X/X where X is the counters on this creature" did.
+  // A card definition's own power is always a number, so an object here is a token's.
+  if (typeof record['op'] === 'string' && isTokenSpec(record['spec']))
+    checkTokenCharacteristics(
+      record['spec'],
+      `${path}.spec`,
+      TOKEN_OPS_ACTING_FIRST.has(record['op'] as Effect['op']) ? 'fixed' : 'resolving',
+      issues,
+    );
+  else if (isTokenSpec(record) && !path.endsWith('.spec'))
+    checkTokenCharacteristics(record, path, 'fixed', issues);
+  // "~ enters with a counter for each creature of the chosen type" (Banner of Kinship). An
+  // entering permanent's counters and its enters-tapped condition are settled as it is built,
+  // before its as-enters choice is made (state/objects.ts), so a chosen option read there would
+  // never match and the count would always be zero.
+  if (
+    record['entersWithCounters'] !== null &&
+    typeof record['entersWithCounters'] === 'object' &&
+    !Array.isArray(record['entersWithCounters'])
+  )
+    for (const [counter, amount] of Object.entries(record['entersWithCounters'])) {
+      if (amount !== null && typeof amount === 'object' && readsChosenOption(amount))
+        issues.push({
+          path: `${path}.entersWithCounters.${counter}`,
+          message: CHOSEN_BEFORE_CHOICE,
+        });
+    }
+  if (record['entersTappedUnless'] !== undefined && readsChosenOption(record['entersTappedUnless']))
+    issues.push({ path: `${path}.entersTappedUnless`, message: CHOSEN_BEFORE_CHOICE });
   if (record['layer'] === 7) {
     for (const field of ['power', 'toughness']) {
       const operand = record[field];
@@ -1409,6 +1445,68 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
       }
       visit(entry, `${path}.${key}`, issues, nestedScope(record, key, owningScope));
     }
+  }
+}
+
+const CHOSEN_BEFORE_CHOICE =
+  'an entering permanent settles its counters and enters-tapped condition before its as-enters choice; a chosen option cannot be read here';
+
+/** Selectors and conditions that read the source's as-enters `chosenOption`. */
+const CHOSEN_OPTION_KINDS = new Set([
+  'chosenColor',
+  'chosenType',
+  'chosenSubtype',
+  'attackingChosenPlayer',
+  'chosenOptionIs',
+]);
+
+function readsChosenOption(value: unknown): boolean {
+  return containsKind(value, CHOSEN_OPTION_KINDS);
+}
+
+function containsKind(value: unknown, kinds: ReadonlySet<string>): boolean {
+  if (Array.isArray(value)) return value.some((entry) => containsKind(entry, kinds));
+  if (value === null || typeof value !== 'object') return false;
+  const record = value as Record<string, unknown>;
+  if (typeof record['kind'] === 'string' && kinds.has(record['kind'])) return true;
+  return Object.values(record).some((entry) => containsKind(entry, kinds));
+}
+
+function isTokenSpec(value: unknown): value is Record<string, unknown> {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    typeof (value as Record<string, unknown>)['typeLine'] === 'string'
+  );
+}
+
+/** Values a resolving ability cannot read: they exist only per affected object in a layer. */
+const LAYER_ONLY_VALUES = new Set(['timesAttackedThisTurn']);
+
+function checkTokenCharacteristics(
+  spec: Record<string, unknown>,
+  path: string,
+  readWith: 'fixed' | 'resolving',
+  issues: AuthoringIssue[],
+): void {
+  for (const field of ['power', 'toughness']) {
+    const operand = spec[field];
+    if (operand === null || typeof operand !== 'object') continue;
+    // A malformed value is reported by the capability IR check; judge only a well-formed one.
+    const shape: AuthoringIssue[] = [];
+    validateExpression('value', operand, `${path}.${field}`, shape);
+    if (shape.length > 0) continue;
+    if (readWith === 'fixed' && !tokenCharacteristicFixed(operand as Value))
+      issues.push({
+        path: `${path}.${field}`,
+        message:
+          'this token power and toughness are read with no ability scope (a token spec outside an effect, or an op that changes the game before it creates); only a fixed value fits here',
+      });
+    else if (readWith === 'resolving' && containsKind(operand, LAYER_ONLY_VALUES))
+      issues.push({
+        path: `${path}.${field}`,
+        message: 'a token power and toughness cannot read a value that exists only in a layer',
+      });
   }
 }
 
