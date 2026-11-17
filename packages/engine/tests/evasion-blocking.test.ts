@@ -399,6 +399,23 @@ describe('block restrictions in combat', () => {
     expect(run.applied).toHaveLength(1);
   });
 
+  it('more than one — the repair keeps a required blocker and never redirects it onto a full attacker', () => {
+    const ctx = pod('sunder-required');
+    const first = spawn(ctx, 'P1', pinned('Sunder Shaman'));
+    const second = spawn(ctx, 'P1', pinned('Sunder Shaman'));
+    const required = spawn(ctx, 'P2', body('Required Bear', { power: 1 }));
+    required.mustBlockThisTurn = true;
+    const other = spawn(ctx, 'P2', body('Other Bear', { power: 2 }));
+    const third = spawn(ctx, 'P2', body('Third Bear', { power: 3 }));
+    const run = combat(ctx, [first, second], {
+      [required.id]: first.id,
+      [other.id]: first.id,
+      [third.id]: second.id,
+    });
+    expect(new Set(run.rejections)).toEqual(new Set(['maxBlockers']));
+    expect(run.applied.sort()).toEqual(['Required Bear', 'Third Bear']);
+  });
+
   it('more than one — one blocker is accepted', () => {
     const ctx = pod('sunder-one');
     const shaman = spawn(ctx, 'P1', pinned('Sunder Shaman'));

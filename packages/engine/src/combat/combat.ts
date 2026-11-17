@@ -1720,13 +1720,40 @@ function repairBlockDeclaration(
         continue;
       }
     }
+    // A required blocker over a "can't be blocked by more than N" limit keeps its block when an
+    // optional blocker on the same attacker can stand down instead (CR 509.1c).
+    const overMax = violations.some(
+      (v) => v.subjectId === pick.blocker.id && v.kind === 'maxBlockers',
+    );
+    if (overMax && pick.blocker.mustBlockThisTurn === true && currentAttackerId != null) {
+      const optional = candidates.find(
+        (c) =>
+          c.blocker.id !== pick.blocker.id &&
+          c.blocker.mustBlockThisTurn !== true &&
+          repaired.get(c.blocker.id) === currentAttackerId,
+      );
+      if (optional !== undefined) {
+        repaired.set(optional.blocker.id, null);
+        violations = validateBlockDeclaration(ctx, candidates, repaired);
+        continue;
+      }
+    }
+    // A redirect never lands on an attacker already at its blocker limit.
+    const hasRoom = (attacker: EnginePermanent): boolean => {
+      const most = maxBlockersOf(ctx, attacker);
+      return (
+        most === null ||
+        candidates.filter((c) => repaired.get(c.blocker.id) === attacker.id).length < most
+      );
+    };
     const alternative =
       pick.blocker.mustBlockThisTurn === true && !alone
         ? pick.blockable.find(
             (a) =>
               a.id !== currentAttackerId &&
               !hasKeyword(ctx, a, 'menace') &&
-              minBlockersOf(ctx, a) === 0,
+              minBlockersOf(ctx, a) === 0 &&
+              hasRoom(a),
           )
         : undefined;
     repaired.set(pick.blocker.id, alternative?.id ?? null);
