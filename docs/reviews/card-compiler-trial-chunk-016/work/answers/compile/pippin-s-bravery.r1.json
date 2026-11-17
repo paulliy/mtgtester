@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot express 'you may sacrifice a Food' followed by an 'otherwise' branch that applies only when no sacrifice happened: sacrificeOneThen has no decline option or else-branch, and conditionalEffect has no condition for whether a sacrifice occurred."}

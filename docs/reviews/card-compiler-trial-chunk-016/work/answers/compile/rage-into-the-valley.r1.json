@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":1}},{"op":"loseLife","amount":{"kind":"const","n":1}},{"op":"amass","subtype":"Goblin","count":{"kind":"const","n":2}}],"description":"You draw a card and lose 1 life. Amass Goblins 2."}}}
