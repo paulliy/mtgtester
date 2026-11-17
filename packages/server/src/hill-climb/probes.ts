@@ -77,6 +77,8 @@ const WORK_UNITS: Record<keyof EngineWork, string> = {
   layerDigests: 'digests',
   castCheckpoints: 'checkpoints',
   castPreviews: 'previews',
+  manaSourceListings: 'listings',
+  spellPaymentSearches: 'searches',
   manaPlannerSearches: 'searches',
   manaPlannerStates: 'states',
   stateCopies: 'copies',

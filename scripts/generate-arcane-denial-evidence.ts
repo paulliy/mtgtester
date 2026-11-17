@@ -91,6 +91,7 @@ const SOURCE_FILES = [
   'packages/engine/src/turn/turn.ts',
   'packages/engine/src/view/view.ts',
   'packages/engine/src/work-counters.ts',
+  'packages/engine/src/mana/capacity.ts',
   'packages/engine/src/testing/card-scenario.ts',
   'packages/engine/src/testing/prepared-scenario.ts',
   'packages/engine/src/flow/game.ts',
