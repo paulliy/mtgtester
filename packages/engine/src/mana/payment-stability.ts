@@ -61,15 +61,35 @@ export function gateCannotOpenDuringPayment(condition: Condition): boolean {
 }
 
 /**
- * Whether anything in `value` could read state that a fixed-capacity payment changes: a tapped
- * status (`{ kind: 'tapped' }`, `isUntapped`) or any condition other than a board count over
- * selectors that ignore tapped status (a life total, a turn fact, a source's own status).
+ * Selector, condition and value kinds that read what a fixed-capacity payment changes: tapped
+ * status, life (a damage rider lowers it, a life-gain rider raises it), energy, damage dealt, and
+ * mana spent. "Gets -X/-X where X is your life total" (Death's Shadow) reads `lifeTotal` in a
+ * value, not a condition, and a damage rider can still raise that creature's power past a gate's
+ * `powerAtLeast`.
+ */
+const PAYMENT_STATE_KINDS: ReadonlySet<string> = new Set([
+  'tapped',
+  'isUntapped',
+  'countTappedPermanents',
+  'tappedCreaturesControlledByTarget',
+  'lifeTotal',
+  'opponentsLostLifeThisTurn',
+  'damageDealt',
+  'energyAvailable',
+  'manaSpent',
+  'treasureManaSpent',
+]);
+
+/**
+ * Whether anything in `value` could read state that a fixed-capacity payment changes: a kind in
+ * `PAYMENT_STATE_KINDS`, or any condition other than a board count (a life total, a turn fact, a
+ * source's own status).
  */
 function readsPaymentState(value: unknown, underCondition = false): boolean {
   if (Array.isArray(value)) return value.some((item) => readsPaymentState(item, underCondition));
   if (value === null || typeof value !== 'object') return false;
   const record = value as Record<string, unknown>;
-  if (record['kind'] === 'tapped' || record['kind'] === 'isUntapped') return true;
+  if (typeof record['kind'] === 'string' && PAYMENT_STATE_KINDS.has(record['kind'])) return true;
   if (underCondition && record['kind'] !== undefined && record['kind'] !== 'countPermanents')
     return true;
   return Object.entries(record).some(([key, child]) =>

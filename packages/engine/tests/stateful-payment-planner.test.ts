@@ -190,6 +190,22 @@ describe('payment premise', () => {
         ),
       ]),
     ).toBe(false);
+    // Death's Shadow: a damage rider lowers life and so raises power, which a gate can read.
+    expect(
+      characteristicsFixedDuringPayment([
+        holder([
+          {
+            affects: { kind: 'self' },
+            op: {
+              layer: 7,
+              sublayer: 'd',
+              power: { kind: 'negate', of: { kind: 'lifeTotal' } },
+              toughness: { kind: 'negate', of: { kind: 'lifeTotal' } },
+            },
+          },
+        ]),
+      ]),
+    ).toBe(false);
     // Iymrith's "ward {4} as long as it's untapped" and a commander-gated cost reduction change
     // nothing a payment reads.
     expect(
@@ -344,4 +360,72 @@ describe('a tap that changes other sources', () => {
       );
       expect(names).toEqual(['Suppressor', 'Island']);
     });
+});
+
+describe('a damage rider that opens a gate', () => {
+  /**
+   * Found in review: at 10 life, a 13/13 that gets -X/-X for its controller's life total is 3/3.
+   * A land taps for {G} and deals 1 damage, making it 4/4, which opens a {U} source gated on a
+   * creature with power 4 or more; Exotic Orchard makes the other {U}. {G}{U}{U} is payable only
+   * through that order.
+   */
+  it('stateful-planner-life-opens-gate — the payment taps the painland, then the gated source', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', land('Pain Forest', '{T}: Add {G}. This land deals 1 damage to you.'));
+      const shadow = spawn(
+        c,
+        'P1',
+        oracle({
+          name: 'Shadow',
+          typeLine: 'Creature — Avatar',
+          manaCost: '{B}',
+          power: '13',
+          toughness: '13',
+        }),
+      );
+      c.defs.set(shadow.oracleId, {
+        ...c.defs.get(shadow.oracleId)!,
+        staticEffects: [
+          {
+            affects: { kind: 'self' },
+            op: {
+              layer: 7,
+              sublayer: 'd',
+              power: { kind: 'negate', of: { kind: 'lifeTotal' } },
+              toughness: { kind: 'negate', of: { kind: 'lifeTotal' } },
+            },
+          },
+        ],
+      });
+      const gate = spawn(c, 'P1', artifact('Power Gate', '{T}: Add {U}.'));
+      c.defs.set(gate.oracleId, {
+        ...c.defs.get(gate.oracleId)!,
+        manaAbilities: [
+          {
+            units: [['U']],
+            condition: {
+              kind: 'countPermanents',
+              selector: {
+                kind: 'allOf',
+                of: [
+                  { kind: 'type', value: 'Creature' },
+                  { kind: 'powerAtLeast', n: 4 },
+                ],
+              },
+              scope: 'you',
+              cmp: '>=',
+              n: 1,
+            },
+          },
+        ],
+      });
+    });
+    playerById(ctx, 'P1').life = 10;
+    const outcome = search(ctx, parseManaCost('{G}{U}{U}').cost!, true);
+    expect(JSON.stringify(outcome)).toBe(
+      JSON.stringify(search(ctx, parseManaCost('{G}{U}{U}').cost!, false)),
+    );
+    expect('plan' in outcome && outcome.plan).toBeTruthy();
+  });
 });
