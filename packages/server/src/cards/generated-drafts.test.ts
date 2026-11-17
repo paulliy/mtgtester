@@ -111,6 +111,23 @@ describe('mapDraftsIntoManifest', () => {
     expect(entry.clauses[line]!.viewerScenarioIds).toEqual([]);
   });
 
+  it('adds the scenario runner to a clause whose test IDs are narrowed to named files', () => {
+    const narrowed = JSON.parse(manifestOf(['cards/x.test.ts::old'])) as {
+      cards: Record<string, { clauses: Array<Record<string, unknown>> }>;
+    };
+    const line = drafts[0]!.clauses[0]! - 1;
+    narrowed.cards[card.oracleId]!.clauses[line]!['engineTestSource'] = 'cards/x.test.ts';
+    const result = mapDraftsIntoManifest(
+      JSON.stringify(narrowed),
+      card.name,
+      card.oracleText,
+      drafts,
+    );
+    const clause = (JSON.parse(result.manifestJson) as typeof narrowed).cards[card.oracleId]!
+      .clauses[line]!;
+    expect(clause['engineTestSource']).toEqual(['cards/x.test.ts', SCENARIO_TEST_FILE]);
+  });
+
   it('maps nothing for a card the manifest does not have', () => {
     const json = JSON.stringify({ cards: {} });
     const result = mapDraftsIntoManifest(json, card.name, card.oracleText, drafts);

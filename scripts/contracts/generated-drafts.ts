@@ -22,6 +22,8 @@ interface ManifestClause {
   oracleText: string;
   engineTestIds?: Array<string | { id: string }>;
   viewerScenarioIds?: string[];
+  /** Files the clause's test IDs are narrowed to; the scenario runner must join them. */
+  engineTestSource?: string | string[];
 }
 
 interface ManifestCard {
@@ -121,6 +123,15 @@ export function mapDraftsIntoManifest(
       const ids = clause.engineTestIds ?? [];
       if (!ids.some((id) => (typeof id === 'string' ? id : id.id) === testId))
         clause.engineTestIds = [...ids, testId];
+      // A clause whose IDs are narrowed to named files would filter the scenario runner's test
+      // out, so the runner joins the list (check:manifest-tests rejects the ID otherwise).
+      if (clause.engineTestSource !== undefined) {
+        const sources = Array.isArray(clause.engineTestSource)
+          ? clause.engineTestSource
+          : [clause.engineTestSource];
+        if (!sources.includes(SCENARIO_TEST_FILE))
+          clause.engineTestSource = [...sources, SCENARIO_TEST_FILE];
+      }
     }
     mapped.push(draft.id);
   }
