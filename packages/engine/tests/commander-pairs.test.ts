@@ -13,8 +13,30 @@ import { priorityCheckpoint } from '../src/sba/sba';
 import { resolveTopOfStack } from '../src/stack/stack';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { commanderFor, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import {
+  commanderFor,
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  oracle,
+  pumpStrict,
+  spawn,
+} from './fixtures';
 import { castFromHand, choose, p, pod, putPendingTriggersOnStack, settle } from './pr10-helpers';
+import { script } from './script';
+import type { DecisionOutcome, PendingDecision } from '../src/decisions';
+
+/** Answers a trigger's target decision by naming its "Targets for" option and the player. */
+const targetsPlayer =
+  (player: string) =>
+  (decision: PendingDecision): DecisionOutcome => {
+    const index = decision.options.findIndex((option) =>
+      option.description.startsWith('Targets for'),
+    );
+    if (index < 0) throw new Error(`no target option in "${decision.prompt}"`);
+    return { index, targets: new Map([[0, player]]) };
+  };
 
 const legend = (name: string, oracleText: string, manaCost = '{1}{G}'): OracleCard =>
   oracle({
@@ -81,8 +103,16 @@ describe('Partner with (CR 702.124j)', () => {
     const ctx = pod('pairs-partner-with-opponent');
     const card = conjure(ctx, 'P2', pippin(), 'library');
     castFromHand(ctx, 'P1', merry);
-    pump(resolveTopOfStack(ctx));
-    putPendingTriggersOnStack(ctx, () => ({ index: 0, targets: new Map([[0, 'P2']]) }));
+    pumpStrict(resolveTopOfStack(ctx));
+    putPendingTriggersOnStack(
+      ctx,
+      script([
+        {
+          prompt: 'Choose targets for Merry',
+          answer: targetsPlayer('P2'),
+        },
+      ]),
+    );
     settle(ctx, (decision) =>
       decision.options.some((option) => option.description === 'Search')
         ? choose('Search')(decision)
@@ -97,8 +127,16 @@ describe('Partner with (CR 702.124j)', () => {
     conjure(ctx, 'P1', pippin(), 'library');
     const order = p(ctx, 'P1').library.map((card) => card.id);
     castFromHand(ctx, 'P1', merry);
-    pump(resolveTopOfStack(ctx));
-    putPendingTriggersOnStack(ctx, () => ({ index: 0, targets: new Map([[0, 'P1']]) }));
+    pumpStrict(resolveTopOfStack(ctx));
+    putPendingTriggersOnStack(
+      ctx,
+      script([
+        {
+          prompt: 'Choose targets for Merry',
+          answer: targetsPlayer('P1'),
+        },
+      ]),
+    );
     settle(ctx, choose("Don't search"));
     expect(p(ctx, 'P1').library.map((card) => card.id)).toEqual(order);
   });
@@ -161,10 +199,10 @@ describe('two commanders in a game', () => {
     const victim = p(ctx, 'P2');
     victim.commanderDamageTaken[one!.cardId] = 20;
     victim.commanderDamageTaken[two!.cardId] = 20;
-    pump(priorityCheckpoint(ctx));
+    pumpStrict(priorityCheckpoint(ctx));
     expect(victim.hasLost).toBe(false);
     victim.commanderDamageTaken[one!.cardId] = 21;
-    pump(priorityCheckpoint(ctx));
+    pumpStrict(priorityCheckpoint(ctx));
     expect(victim.hasLost).toBe(true);
   });
 });

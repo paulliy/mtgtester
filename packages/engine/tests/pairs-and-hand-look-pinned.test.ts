@@ -15,7 +15,7 @@ import { fixtureOracleId, getOverride } from '../src/cards/overrides';
 import { resolveTopOfStack } from '../src/stack/stack';
 import type { GameContext } from '../src/state/types';
 import { buildPlayerView } from '../src/view/view';
-import { conjure, oracle, pump, spawn } from './fixtures';
+import { conjure, oracle, pumpStrict, spawn } from './fixtures';
 import {
   activate,
   castFromHand,
@@ -25,6 +25,19 @@ import {
   putPendingTriggersOnStack,
   settle,
 } from './pr10-helpers';
+import { script } from './script';
+import type { DecisionOutcome, PendingDecision } from '../src/decisions';
+
+/** Answers a trigger's target decision by naming its "Targets for" option and the player. */
+const targetsPlayer =
+  (player: string) =>
+  (decision: PendingDecision): DecisionOutcome => {
+    const index = decision.options.findIndex((option) =>
+      option.description.startsWith('Targets for'),
+    );
+    if (index < 0) throw new Error(`no target option in "${decision.prompt}"`);
+    return { index, targets: new Map([[0, player]]) };
+  };
 
 interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
@@ -114,8 +127,16 @@ describe('pinned pair and hand-look cards', () => {
       'library',
     );
     castFromHand(ctx, 'P1', pinned('Merry, Warden of Isengard'));
-    pump(resolveTopOfStack(ctx));
-    putPendingTriggersOnStack(ctx, () => ({ index: 0, targets: new Map([[0, 'P1']]) }));
+    pumpStrict(resolveTopOfStack(ctx));
+    putPendingTriggersOnStack(
+      ctx,
+      script([
+        {
+          prompt: 'Choose targets for Merry',
+          answer: targetsPlayer('P1'),
+        },
+      ]),
+    );
     settle(ctx, (decision) =>
       decision.options.some((option) => option.description === 'Search')
         ? choose('Search')(decision)
@@ -129,7 +150,7 @@ describe('pinned pair and hand-look cards', () => {
     (name) => {
       const ctx = withSecrets(`pinned-${name}`);
       castFromHand(ctx, 'P1', pinned(name), new Map([[0, 'P2']]));
-      pump(resolveTopOfStack(ctx));
+      pumpStrict(resolveTopOfStack(ctx));
       expect(knownNames(ctx, 'P1')).toEqual(SECRETS);
       expect(p(ctx, 'P1').hand).toHaveLength(1);
       expect(knownNames(ctx, 'P3')).toEqual([]);
@@ -143,7 +164,7 @@ describe('pinned pair and hand-look cards', () => {
     const glasses = spawn(ctx, 'P1', pinned('Glasses of Urza'));
     activate(ctx, 'P1', glasses, new Map([[0, 'P2']]));
     expect(glasses.tapped).toBe(true);
-    pump(resolveTopOfStack(ctx));
+    pumpStrict(resolveTopOfStack(ctx));
     expect(knownNames(ctx, 'P1')).toEqual(SECRETS);
     expect(p(ctx, 'P1').hand).toHaveLength(0);
   });

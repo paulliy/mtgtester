@@ -14,7 +14,7 @@ import type { GameContext } from '../src/state/types';
 import { checkStateInvariants } from '../src/testing/invariants';
 import { buildPlayerBoardState, formatPlayerLog } from '../src/view/spectator';
 import { buildPlayerView } from '../src/view/view';
-import { conjure, oracle, pump } from './fixtures';
+import { conjure, oracle, pumpStrict } from './fixtures';
 import { castFromHand, p, pod } from './pr10-helpers';
 
 const peek = (): OracleCard =>
@@ -53,7 +53,7 @@ function peekAt(seed: string, target = 'P2'): GameContext {
   const ctx = pod(seed);
   for (const name of SECRETS) conjure(ctx, 'P2', secret(name), 'hand');
   castFromHand(ctx, 'P1', peek(), new Map([[0, target]]));
-  pump(resolveTopOfStack(ctx));
+  pumpStrict(resolveTopOfStack(ctx));
   return ctx;
 }
 
@@ -90,11 +90,11 @@ describe('look at target player hand: what the looker knows', () => {
   it('forgets a card that leaves the hand, even when it comes back (CR 400.7)', () => {
     const ctx = peekAt('peek-leaves');
     const [alpha, bravo] = p(ctx, 'P2').hand;
-    pump(moveObject(ctx, alpha!, { zone: 'graveyard' }));
+    pumpStrict(moveObject(ctx, alpha!, { zone: 'graveyard' }));
     expect(knownNames(ctx, 'P1', 'P2')).toEqual(['Secret Bravo', 'Secret Charlie']);
-    pump(moveObject(ctx, bravo!, { zone: 'exile' }));
+    pumpStrict(moveObject(ctx, bravo!, { zone: 'exile' }));
     const exiled = ctx.state.exile.find((card) => card.name === 'Secret Bravo')!;
-    pump(moveObject(ctx, exiled, { zone: 'hand' }));
+    pumpStrict(moveObject(ctx, exiled, { zone: 'hand' }));
     expect(p(ctx, 'P2').hand.map((card) => card.name)).toContain('Secret Bravo');
     expect(knownNames(ctx, 'P1', 'P2')).toEqual(['Secret Charlie']);
   });
@@ -103,7 +103,7 @@ describe('look at target player hand: what the looker knows', () => {
     const ctx = peekAt('peek-refresh');
     conjure(ctx, 'P2', secret('Secret Delta'), 'hand');
     castFromHand(ctx, 'P1', peek(), new Map([[0, 'P2']]));
-    pump(resolveTopOfStack(ctx));
+    pumpStrict(resolveTopOfStack(ctx));
     expect(knownNames(ctx, 'P1', 'P2')).toEqual([...SECRETS, 'Secret Delta']);
     expect(p(ctx, 'P1').knownHandCards).toHaveLength(4);
   });
@@ -113,7 +113,7 @@ describe('look at target player hand: what the looker knows', () => {
     for (const name of SECRETS) conjure(ctx, 'P2', secret(name), 'hand');
     castFromHand(ctx, 'P1', peek(), new Map([[0, 'P2']]));
     p(ctx, 'P2').hasLost = true;
-    pump(resolveTopOfStack(ctx));
+    pumpStrict(resolveTopOfStack(ctx));
     expect(p(ctx, 'P1').knownHandCards).toBeUndefined();
     expect(p(ctx, 'P1').hand).toHaveLength(0);
   });
