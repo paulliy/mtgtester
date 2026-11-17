@@ -22,7 +22,7 @@ import type { DecisionOutcome, PendingDecision } from '../src/decisions';
 import { endUntilEotEffects } from '../src/effects/resolve';
 import { addMana } from '../src/mana/pool';
 import { createGame } from '../src/state/game';
-import { playerById } from '../src/state/objects';
+import { moveObject, playerById } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { runPrioritySequence } from '../src/turn/priority';
 import {
@@ -665,6 +665,67 @@ describe('damage replacements', () => {
     expect(playerById(ctx, 'P2').life).toBe(38);
     expect(playerById(ctx, 'P3').life).toBe(38);
     expect(playerById(ctx, 'P4').life).toBe(40);
+  });
+
+  it("casting-statics-tor-wauki-new-object — Tor Wauki's earlier object is another source", () => {
+    // Tor Wauki's trigger has fired when it leaves and returns (CR 400.7): the returned
+    // Tor Wauki is a new object, so the old one's 2 damage is another source's and becomes 3.
+    const ctx = pod('casting-statics-tor-wauki-new-object');
+    const tor = spawn(ctx, 'P1', pinned('Tor Wauki the Younger'));
+    const ping = conjure(ctx, 'P1', bolt('Lab Ping', 1), 'hand');
+    addMana(playerById(ctx, 'P1'), mana('R'));
+    take(
+      ctx,
+      'P1',
+      optionFor(ctx, 'P1', ping.id)!.payload as PriorityActionPayload,
+      new Map([[0, 'P2']]),
+    );
+    const exiled = pump(moveObject(ctx, tor, { zone: 'exile' }), undefined, { strict: true });
+    pump(moveObject(ctx, exiled.value!, { zone: 'battlefield', controllerId: 'P1' }), undefined, {
+      strict: true,
+    });
+    const back = ctx.state.battlefield.find((perm) => perm.name === 'Tor Wauki the Younger');
+    expect(back).toBeDefined();
+    expect(back!.id).not.toBe(tor.id);
+    settle(ctx, (decision) =>
+      decision.options.some((option) => option.type === 'chooseTargets')
+        ? { index: 0, targets: new Map([[0, 'P3']]) }
+        : undefined,
+    );
+    expect(playerById(ctx, 'P3').life).toBe(37);
+    expect(playerById(ctx, 'P2').life).toBe(38);
+  });
+
+  it('casting-statics-source-last-controller — a gone source keeps its last controller', () => {
+    // P1 activates its rod, then P2 gains control of it and it leaves the battlefield. The rod
+    // was last controlled by P2 (CR 113.7a), so P1's Fiery Emancipation does not triple it.
+    const ctx = pod('casting-statics-source-last-controller');
+    spawn(ctx, 'P1', pinned('Fiery Emancipation'));
+    const rod = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Rod',
+        typeLine: 'Artifact',
+        manaCost: '{1}',
+        oracleText: '{T}: Lab Rod deals 1 damage to any target.',
+      }),
+    );
+    const activate = computePriorityOptions(ctx, playerById(ctx, 'P1')).find(
+      (option) => option.type === 'activateAbility' && option.description.includes('Lab Rod'),
+    );
+    expect(activate).toBeDefined();
+    take(ctx, 'P1', activate!.payload as PriorityActionPayload, new Map([[0, 'P2']]));
+    // With the ability on the stack: a stand-in for a resolved control change (Threaten), then
+    // a sacrifice.
+    expect(ctx.state.stack).toHaveLength(1);
+    rod.controllerId = 'P2';
+    pump(moveObject(ctx, rod, { zone: 'graveyard', reason: 'sacrifice' }), undefined, {
+      strict: true,
+    });
+    settle(ctx);
+    expect(ctx.state.battlefield.some((perm) => perm.name === 'Lab Rod')).toBe(false);
+    expect(playerById(ctx, 'P2').life).toBe(39);
   });
 });
 
