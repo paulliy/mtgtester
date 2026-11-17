@@ -32100,7 +32100,7 @@
         }
       },
       {
-        "description": "Attack — create Rabbits equal to this creature’s power",
+        "description": "Whenever this creature attacks, create a number of 1/1 white Rabbit creature tokens equal to this creature's power.",
         "effects": [
           {
             "count": {
@@ -32125,6 +32125,7 @@
           }
         ],
         "kind": "triggered",
+        "optional": false,
         "targets": [],
         "trigger": {
           "subject": {
