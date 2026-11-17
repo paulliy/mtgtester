@@ -1,4 +1,0 @@
-docs/reviews/card-compiler-trial-chunk-014/work/prompts/compile/bagel-and-schmear.r2.md	docs/reviews/card-compiler-trial-chunk-014/work/answers/compile/bagel-and-schmear.r2.json
-docs/reviews/card-compiler-trial-chunk-014/work/prompts/compile/brotherhood-spy.r2.md	docs/reviews/card-compiler-trial-chunk-014/work/answers/compile/brotherhood-spy.r2.json
-docs/reviews/card-compiler-trial-chunk-014/work/prompts/compile/hunting-grounds.r2.md	docs/reviews/card-compiler-trial-chunk-014/work/answers/compile/hunting-grounds.r2.json
-docs/reviews/card-compiler-trial-chunk-014/work/prompts/compile/invoke-the-winds.r2.md	docs/reviews/card-compiler-trial-chunk-014/work/answers/compile/invoke-the-winds.r2.json
