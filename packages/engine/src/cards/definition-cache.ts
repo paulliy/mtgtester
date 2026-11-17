@@ -27,11 +27,13 @@ const cache = new Map<string, CardDefinition>();
 // Read lazily: this module can load before the registry finishes initialising (import cycle).
 let cachedGeneration = -1;
 
-/** Deep-freeze entries under vitest only: the freeze costs time and production relies on tests. */
-const FREEZE =
-  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[
-    'VITEST'
-  ] !== undefined;
+/**
+ * Deep-freeze entries inside a vitest worker only: the freeze costs time and production relies on
+ * the tests. The worker global, not the `VITEST` env var, because env vars are inherited by the
+ * `bun run` children some tests spawn (`card-capabilities` over the whole corpus), and freezing
+ * there only adds seconds to a run with a fixed timeout.
+ */
+const FREEZE = (globalThis as { __vitest_worker__?: unknown }).__vitest_worker__ !== undefined;
 
 function deepFreeze(value: unknown): void {
   if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return;
