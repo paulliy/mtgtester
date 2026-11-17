@@ -7,7 +7,7 @@ import { addMana } from '../src/mana/pool';
 import { moveObject } from '../src/state/objects';
 import { playerLifeLocked, playerProtectedFromEverything } from '../src/state/phasing';
 import type { EnginePermanent, GameContext } from '../src/state/types';
-import { bear, conjure, oracle, plains, pump, spawn } from './fixtures';
+import { bear, conjure, oracle, plains, pump, pumpStrict, spawn } from './fixtures';
 import {
   activate,
   anyMana,
@@ -118,7 +118,7 @@ describe("Teferi's Protection", () => {
     const ctx = game('pr11-teferi-lock');
     castTeferi(ctx);
     const life = player(ctx, 'P1').life;
-    pump(gainLife(ctx, player(ctx, 'P1'), 4));
+    pumpStrict(gainLife(ctx, player(ctx, 'P1'), 4));
     loseLife(ctx, player(ctx, 'P1'), 4);
     expect(player(ctx, 'P1').life).toBe(life);
     conjure(ctx, 'P2', redBolt(), 'hand');
@@ -163,7 +163,7 @@ describe('The One Ring', () => {
     expect(playerLifeLocked(ctx, 'P1')).toBe(false);
     const life = player(ctx, 'P1').life;
     loseLife(ctx, player(ctx, 'P1'), 2);
-    pump(gainLife(ctx, player(ctx, 'P1'), 1));
+    pumpStrict(gainLife(ctx, player(ctx, 'P1'), 1));
     expect(player(ctx, 'P1').life).toBe(life - 1);
     conjure(ctx, 'P2', redBolt(), 'hand');
     anyMana(ctx, 'P2', 1);

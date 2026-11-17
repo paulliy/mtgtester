@@ -32,6 +32,7 @@ import {
   pick,
   plains,
   pump,
+  pumpStrict,
   spawn,
 } from './fixtures';
 
@@ -175,7 +176,7 @@ describe('Dawn of Hope', () => {
     spawn(ctx, 'P1', card);
     fund(ctx, 'P1');
     const hand = playerOf(ctx, 'P1').hand.length;
-    pump(gainLife(ctx, playerOf(ctx, 'P1'), 1));
+    pumpStrict(gainLife(ctx, playerOf(ctx, 'P1'), 1));
     expect(ctx.state.pendingTriggers).toHaveLength(1);
     resolvePending(ctx, (decision) => pick(decision, 'Pay {2}'));
     expect(playerOf(ctx, 'P1').hand.length).toBe(hand + 1);
@@ -186,13 +187,13 @@ describe('Dawn of Hope', () => {
     spawn(ctx, 'P1', card);
     fund(ctx, 'P1');
     const hand = playerOf(ctx, 'P1').hand.length;
-    pump(gainLife(ctx, playerOf(ctx, 'P1'), 1));
+    pumpStrict(gainLife(ctx, playerOf(ctx, 'P1'), 1));
     resolvePending(ctx, (decision) => pick(decision, "Don't pay"));
     expect(playerOf(ctx, 'P1').hand.length).toBe(hand);
 
     const ctx2 = pod('dawn-opp');
     spawn(ctx2, 'P1', card);
-    pump(gainLife(ctx2, playerOf(ctx2, 'P2'), 3));
+    pumpStrict(gainLife(ctx2, playerOf(ctx2, 'P2'), 3));
     expect(ctx2.state.pendingTriggers).toHaveLength(0);
   });
 
