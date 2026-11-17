@@ -10,32 +10,32 @@
         "model",
         "coverage"
       ],
-      "commit": "3a6f09b",
+      "commit": "3c76957",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 49.68,
+      "calibrationMs": 64.47,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.08,
+          "value": 7.29,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.246
+          "spread": 0.172
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.1,
+          "value": 6.82,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.165
+          "spread": 0.244
         },
         "setup.msPerGame": {
-          "value": 60.9,
+          "value": 68.62,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.205
+          "spread": 0.076
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -93,8 +93,8 @@
         }
       },
       "fingerprints": {
-        "0": "b7aba2d21b228224",
-        "3": "9a7164d65a2816cf",
+        "0": "adb92623e53f84a0",
+        "3": "08bfdde997f36db4",
         "6": "50ee176a59336fac"
       }
     },
@@ -107,32 +107,32 @@
         "model",
         "coverage"
       ],
-      "commit": "3a6f09b",
+      "commit": "3c76957",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 47.98,
+      "calibrationMs": 63.45,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 45.22,
+          "value": 46.92,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.113
+          "spread": 0.127
         },
         "engine.medianGameMsPerDecision": {
-          "value": 10.96,
+          "value": 12.6,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.198
+          "spread": 0.142
         },
         "setup.msPerGame": {
-          "value": 61.86,
+          "value": 59.79,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.177
+          "spread": 0.078
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -141,7 +141,7 @@
           "kind": "exact"
         },
         "model.default.promptTokensPerTurn": {
-          "value": 19149,
+          "value": 19148,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -153,7 +153,7 @@
           "kind": "exact"
         },
         "model.model.promptTokensPerTurn": {
-          "value": 19149,
+          "value": 19148,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -190,10 +190,10 @@
         }
       },
       "fingerprints": {
-        "0": "e4ce86049c7dfd2c",
-        "3": "57eecd1d8819a122",
+        "0": "6884a1092a51c3e7",
+        "3": "c5cecac8a7826537",
         "6": "c3936556f219bda4",
-        "9": "e70d5cb5a1f58dc0",
+        "9": "0f9c4a7b48a6d248",
         "12": "bed50eb926713fb5",
         "15": "c218b56b177b5bbe"
       }
