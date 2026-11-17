@@ -801,6 +801,7 @@ const shapes = {
     exceptCastersTurn: leaf,
     recipient: leaf,
     noncombatOnly: leaf,
+    permanentSource: leaf,
     factor: leaf,
     plus: leaf,
   } satisfies Fields<Objects<RuleStatic>>,

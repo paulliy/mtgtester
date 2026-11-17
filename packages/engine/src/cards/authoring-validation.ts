@@ -829,7 +829,7 @@ function visit(value: unknown, path: string, issues: AuthoringIssue[], scope?: S
         });
       if (record['sourceFilter'] !== undefined)
         validateExpression('selector', record['sourceFilter'], `${path}.sourceFilter`, issues);
-      for (const flag of ['excludesSelf', 'noncombatOnly'])
+      for (const flag of ['excludesSelf', 'permanentSource', 'noncombatOnly'])
         if (record[flag] !== undefined && record[flag] !== true)
           issues.push({ path: `${path}.${flag}`, message: `${flag} must be true when present` });
     }

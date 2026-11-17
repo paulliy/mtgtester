@@ -2165,6 +2165,7 @@ function parseDamageReplacement(lower: string, card: OracleCard): RuleStatic[] |
           kind: 'damageReplacement',
           sourceFilter: whole,
           ...(m[1] === undefined ? {} : { excludesSelf: true as const }),
+          permanentSource: true,
           recipient,
           ...(m[3] === undefined ? {} : { noncombatOnly: true as const }),
           ...damageReplacementAmount(m[5] as string, m[6]),
@@ -2175,7 +2176,8 @@ function parseDamageReplacement(lower: string, card: OracleCard): RuleStatic[] |
   const yours = / you control$/.test(subject);
   if (yours) subject = subject.replace(/ you control$/, '');
   let filter: Selector | undefined;
-  if (subject === 'source' || / source$/.test(subject)) {
+  const named = subject === 'source' || / source$/.test(subject);
+  if (named) {
     const qualifier = parseCharacteristicPhrase(subject.replace(/ ?source$/, ''), card);
     if (qualifier === null) return null;
     filter = qualifier;
@@ -2191,6 +2193,8 @@ function parseDamageReplacement(lower: string, card: OracleCard): RuleStatic[] |
       kind: 'damageReplacement',
       ...(filter === undefined ? {} : { sourceFilter: filter }),
       ...(m[1] === undefined ? {} : { excludesSelf: true as const }),
+      // Without the word "source", the subject is a permanent (CR 109.2).
+      ...(named ? {} : { permanentSource: true as const }),
       recipient,
       ...(m[3] === undefined ? {} : { noncombatOnly: true as const }),
       ...damageReplacementAmount(m[5] as string, m[6]),

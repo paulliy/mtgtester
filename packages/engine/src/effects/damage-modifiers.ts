@@ -261,6 +261,7 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
       }
       if (rule.excludesSelf === true && sourceIsSelf(ctx, event.source, entry.sourceCardId))
         continue;
+      if (rule.permanentSource === true && !sourceIsPermanent(ctx, event.source)) continue;
       if (rule.sourceFilter !== undefined) {
         const candidate = (sourceCandidate ??= damageSourceCandidate(ctx, event.source));
         const from: SelectorSource = {
@@ -347,6 +348,22 @@ function damageSourceCandidate(ctx: GameContext, source: EffectSource): Selector
     isToken: false,
     enteredThisTurn: false,
   };
+}
+
+/**
+ * Is the damage source a permanent (CR 109.2): on the battlefield, or a permanent that has left,
+ * as it last existed? A resolving spell, or a card dealing damage from a hand or graveyard
+ * (channel), is a source but not a permanent.
+ */
+function sourceIsPermanent(ctx: GameContext, source: EffectSource): boolean {
+  if (source.resolvingStackObject !== undefined) return false;
+  if (
+    ctx.state.battlefield.some((perm) =>
+      source.id !== undefined ? perm.id === source.id : perm.cardId === source.cardId,
+    )
+  )
+    return true;
+  return source.lastKnownFacts !== undefined;
 }
 
 /**
