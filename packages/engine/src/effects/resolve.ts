@@ -10948,6 +10948,25 @@ export function endUntilEotEffects(ctx: GameContext): void {
 }
 
 /**
+ * Run `gen`, answering its life-gain replacement order decisions (`replaceLifeGain`) from
+ * `answers` in turn; any other decision goes to the player as usual. The payment planner chose
+ * these orders because the plan is payable only under them.
+ */
+function* answerLifeGainOrders<T>(gen: GameGen<T>, answers: readonly number[]): GameGen<T> {
+  let used = 0;
+  let step = gen.next();
+  while (!step.done) {
+    const decision = step.value;
+    const answered =
+      used < answers.length &&
+      decision.options.length > 0 &&
+      decision.options.every((option) => option.type === 'lifeGainReplacement');
+    step = gen.next(answered ? { index: answers[used++]!, targets: new Map() } : yield decision);
+  }
+  return step.value;
+}
+
+/**
  * Activate sources per plan, add their production to the pool, then spend `cost` from it.
  *
  * `purpose` says what is being paid for, which is what decides whether restricted mana may be
@@ -11155,8 +11174,11 @@ export function* payManaCost(
     const traits = ctx.state.battlefield.includes(perm)
       ? combatDamageTraits(ctx, perm)
       : lastKnownTraits;
+    const orders = plan.lifeGainOrders?.[sourceIndex];
     for (const effect of source.onActivate ?? []) {
-      yield* applyManaRider(ctx, perm, player, effect, traits);
+      const rider = applyManaRider(ctx, perm, player, effect, traits);
+      if (orders === undefined) yield* rider;
+      else yield* answerLifeGainOrders(rider, orders);
     }
   }
 

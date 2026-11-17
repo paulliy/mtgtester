@@ -118,6 +118,8 @@ export function planStatefulManaPayment(
   };
   const sources: ManaSource[] = [];
   const produced: ProducedMana[] = [];
+  /** Per entry of `sources`: the life-gain orders its activation must use, if any. */
+  const orders: (number[] | undefined)[] = [];
   // A capacity bound is sound only when no activation can enable another source or increase
   // production. Ignore colors, restrictions, and activation mana costs: that overestimates
   // capacity, so it can only prune an impossible payment. Phyrexian pips may use life instead.
@@ -172,16 +174,22 @@ export function planStatefulManaPayment(
   };
   /**
    * Replay one activation on a copy of `snapshot`. A life-gain rider may ask its controller to
-   * order life-gain replacements (CR 616.1, a "plus 1" and a "twice"); every order is replayed
-   * and the copy with the least life is kept. The orders differ only in the life gained, and
-   * more life never makes a payment fail, so a plan proven from the least holds for whatever
-   * order the player chooses as the payment is made. Any other decision is outside the scope.
+   * order life-gain replacements (CR 616.1, a "plus 1" and a "twice"); every order is replayed,
+   * and one copy is kept per resulting life total, least life first. The orders differ only in
+   * the life gained, and more life never makes a payment fail, so a plan proven from the least
+   * holds whatever order the player chooses as the payment is made: it carries no answers. A
+   * higher total can pay a life cost the least cannot (Toxic Deluge after a bigger gain), so it
+   * stays a branch, and a plan through it carries the answers that reach it. Any other decision
+   * is outside the scope.
    */
   const runActivation = (
     snapshot: GameContext,
     single: PaymentPlan,
-  ): { next: GameContext; nextPlayer: EnginePlayerState } | 'outside' | 'unpayable' => {
-    let worst: { next: GameContext; nextPlayer: EnginePlayerState } | undefined;
+  ):
+    | { next: GameContext; nextPlayer: EnginePlayerState; answers?: number[] }[]
+    | 'outside'
+    | 'unpayable' => {
+    const outcomes: { next: GameContext; nextPlayer: EnginePlayerState; answers: number[] }[] = [];
     const pending: number[][] = [[]];
     let runs = 0;
     while (pending.length > 0) {
@@ -231,10 +239,13 @@ export function planStatefulManaPayment(
           return 'unpayable';
         throw error;
       }
-      if (worst === undefined || nextPlayer.life < worst.nextPlayer.life)
-        worst = { next, nextPlayer };
+      if (!outcomes.some((outcome) => outcome.nextPlayer.life === nextPlayer.life))
+        outcomes.push({ next, nextPlayer, answers });
     }
-    return worst!;
+    outcomes.sort((a, b) => a.nextPlayer.life - b.nextPlayer.life);
+    return outcomes.map((outcome, index) =>
+      index === 0 ? { next: outcome.next, nextPlayer: outcome.nextPlayer } : outcome,
+    );
   };
   const visit = (snapshot: GameContext): PaymentPlan | null => {
     const payer = snapshot.state.players.find((p) => p.id === player.id)!;
@@ -251,13 +262,18 @@ export function planStatefulManaPayment(
         allows,
         playerLifeLocked(snapshot, payer.id) ? 0 : Math.max(0, payer.life - lifeReserved),
       );
-      if (final)
+      if (final) {
+        const lifeGainOrders: Record<number, number[]> = {};
+        for (const [index, answers] of orders.entries())
+          if (answers !== undefined) lifeGainOrders[index] = answers;
         return {
           ...final,
           tapSources: [...sources, ...final.tapSources],
           tapCardIds: [...sources.map((s) => s.cardId), ...final.tapCardIds],
           produced: [...produced, ...final.produced],
+          ...(Object.keys(lifeGainOrders).length > 0 ? { lifeGainOrders } : {}),
         };
+      }
     }
     if (
       fixedCapacity &&
@@ -428,14 +444,17 @@ export function planStatefulManaPayment(
           continue;
         }
         if (ran === 'unpayable') continue;
-        const { next, nextPlayer } = ran;
-        if (nextPlayer.energy < energyReserved) continue;
-        sources.push(source);
-        produced.push(...units);
-        const found = visit(next);
-        produced.splice(produced.length - units.length, units.length);
-        sources.pop();
-        if (found) return found;
+        for (const { next, nextPlayer, answers } of ran) {
+          if (nextPlayer.energy < energyReserved) continue;
+          sources.push(source);
+          orders.push(answers);
+          produced.push(...units);
+          const found = visit(next);
+          produced.splice(produced.length - units.length, units.length);
+          orders.pop();
+          sources.pop();
+          if (found) return found;
+        }
       }
     }
     return null;

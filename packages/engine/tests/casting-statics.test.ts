@@ -793,4 +793,41 @@ describe('life-gain replacements', () => {
     // 1 + (3 or 4) - 2.
     expect([2, 3]).toContain(playerById(ctx, 'P1').life);
   });
+  it('casting-statics-life-order-in-payment-witness — a payment needing the bigger gain keeps its order', () => {
+    // At 2 life, Pristine Talisman's gain is 4 if Knight of Dawn's Light's "plus 1" applies first
+    // and 3 if Rhox Faithmender's "twice" does. Only 6 life pays three {G/P} pips, so the cast is
+    // legal through the plus-first order alone, and paying it applies that order without asking.
+    const ctx = pod('casting-statics-life-payment-witness');
+    playerById(ctx, 'P1').life = 2;
+    spawn(ctx, 'P1', pinned('Pristine Talisman'));
+    spawn(ctx, 'P1', pinned('Rhox Faithmender'));
+    spawn(ctx, 'P1', pinned("Knight of Dawn's Light"));
+    const ritual = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Phyrexian Draw',
+        typeLine: 'Instant',
+        manaCost: '{G/P}{G/P}{G/P}',
+        cmc: 3,
+        oracleText: 'Draw a card.',
+      }),
+      'hand',
+    );
+    const options = computePriorityOptions(ctx, playerById(ctx, 'P1')).filter((option) => {
+      const payload = option.payload as PriorityActionPayload;
+      return 'objectId' in payload && payload.objectId === ritual.id;
+    });
+    expect(options.length).toBeGreaterThan(0);
+    const asked: string[] = [];
+    take(ctx, 'P1', options[0]!.payload as PriorityActionPayload, new Map(), (decision) => {
+      if (decision.options.some((option) => option.type === 'lifeGainReplacement'))
+        asked.push(decision.player);
+      return undefined;
+    });
+    expect(ctx.state.stack[0]?.card?.name).toBe('Lab Phyrexian Draw');
+    expect(asked).toEqual([]);
+    // 2 + (1 + 1) * 2 - 6.
+    expect(playerById(ctx, 'P1').life).toBe(0);
+  });
 });
