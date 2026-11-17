@@ -10,32 +10,32 @@
         "model",
         "coverage"
       ],
-      "commit": "3c76957",
+      "commit": "5395f036",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 64.47,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 45.14,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 7.29,
+          "value": 4.99,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.172
+          "spread": 0.211
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.82,
+          "value": 4.95,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.244
+          "spread": 0.195
         },
         "setup.msPerGame": {
-          "value": 68.62,
+          "value": 51.66,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.076
+          "spread": 0.037
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -74,13 +74,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 3812,
+          "value": 3865,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 55.57,
+          "value": 55.839,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -107,32 +107,32 @@
         "model",
         "coverage"
       ],
-      "commit": "3c76957",
+      "commit": "5395f036",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 63.45,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 49.03,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 46.92,
+          "value": 39,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.127
+          "spread": 0.071
         },
         "engine.medianGameMsPerDecision": {
-          "value": 12.6,
+          "value": 9.38,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.142
+          "spread": 0.228
         },
         "setup.msPerGame": {
-          "value": 59.79,
+          "value": 59.45,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.078
+          "spread": 0.092
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -171,13 +171,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 3812,
+          "value": 3865,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 55.57,
+          "value": 55.839,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
