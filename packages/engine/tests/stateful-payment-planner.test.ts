@@ -7,7 +7,10 @@
 import { describe, expect, it } from 'vitest';
 import type { Condition } from '../src/cards/condition';
 import { parseManaCost, type ParsedManaCost } from '../src/mana/cost';
-import { gateCannotOpenDuringPayment } from '../src/mana/payment-stability';
+import {
+  characteristicsFixedDuringPayment,
+  gateCannotOpenDuringPayment,
+} from '../src/mana/payment-stability';
 import { searchPayment, tapOnlySource } from '../src/mana/stateful-payment';
 import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
@@ -149,6 +152,63 @@ describe('gate classifier', () => {
   });
 });
 
+describe('payment premise', () => {
+  const holder = (staticEffects: unknown[], ruleStatics: unknown[] = []) => ({
+    staticEffects,
+    ruleStatics,
+  });
+  it('stateful-planner-premise — statics reading tapped status or life break it; board counts do not', () => {
+    const lands = { kind: 'type', value: 'Land' };
+    const op = { layer: 6, loseAllAbilities: true };
+    expect(characteristicsFixedDuringPayment([holder([{ affects: lands, op }])])).toBe(true);
+    expect(
+      characteristicsFixedDuringPayment([
+        holder([
+          {
+            affects: lands,
+            op,
+            condition: { kind: 'countPermanents', selector: lands, scope: 'you', cmp: '<=', n: 3 },
+          },
+        ]),
+      ]),
+    ).toBe(true);
+    expect(
+      characteristicsFixedDuringPayment([
+        holder([{ affects: lands, op, condition: { kind: 'isUntapped' } }]),
+      ]),
+    ).toBe(false);
+    expect(
+      characteristicsFixedDuringPayment([
+        holder([{ affects: { kind: 'allOf', of: [lands, { kind: 'tapped' }] }, op }]),
+      ]),
+    ).toBe(false);
+    expect(
+      characteristicsFixedDuringPayment([
+        holder(
+          [],
+          [{ kind: 'cantActivateAbilities', condition: { kind: 'anyPlayerLifeAtMost', n: 10 } }],
+        ),
+      ]),
+    ).toBe(false);
+    // Iymrith's "ward {4} as long as it's untapped" and a commander-gated cost reduction change
+    // nothing a payment reads.
+    expect(
+      characteristicsFixedDuringPayment([
+        holder(
+          [
+            {
+              affects: { kind: 'self' },
+              op: { layer: 6, addWard: {} },
+              condition: { kind: 'isUntapped' },
+            },
+          ],
+          [{ kind: 'costReduction', condition: { kind: 'controlsYourCommander' } }],
+        ),
+      ]),
+    ).toBe(true);
+  });
+});
+
 describe('tap-only source shapes', () => {
   it('stateful-planner-tap-only — a plain or dynamic {T} source is tap-only; riders and sacrifices are not', () => {
     const ctx = board((c) => {
@@ -228,4 +288,60 @@ describe('old and new planner agree', () => {
     playerById(ctx, 'P1').manaEntries.push({ symbol: 'U' }, { symbol: 'C' });
     for (const cost of COSTS) agree(ctx, cost);
   });
+});
+
+describe('a tap that changes other sources', () => {
+  /**
+   * Found in review: artifact A taps for {G}, and while A is untapped lands P1 controls lose all
+   * abilities. Tapping A for {G} gives the Island back its {U}, so {G}{U} is payable. A gated
+   * source routes the payment through the stateful planner, and the bound must not count only
+   * what is available before any tap.
+   */
+  function suppressorBoard(gated: boolean): GameContext {
+    return board((c) => {
+      spawn(c, 'P1', island());
+      spawn(c, 'P1', plains());
+      const suppressor = spawn(c, 'P1', artifact('Suppressor', '{T}: Add {G}.'));
+      c.defs.set(suppressor.oracleId, {
+        ...c.defs.get(suppressor.oracleId)!,
+        staticEffects: [
+          {
+            affects: {
+              kind: 'allOf',
+              of: [
+                { kind: 'type', value: 'Land' },
+                { kind: 'controller', who: 'you' },
+              ],
+            },
+            op: { layer: 6, loseAllAbilities: true },
+            condition: { kind: 'isUntapped' },
+          },
+        ],
+      });
+      spawn(c, 'P1', gated ? mox() : orchard());
+      if (!gated) return;
+      const moxPerm = c.state.battlefield.find((p) => p.name === 'Gated Mox')!;
+      const def = c.defs.get(moxPerm.oracleId)!;
+      c.defs.set(moxPerm.oracleId, {
+        ...def,
+        manaAbilities: def.manaAbilities.map((ability) => ({
+          ...ability,
+          units: [],
+          dynamic: 'opponentLandColors' as const,
+        })),
+      });
+    });
+  }
+
+  for (const gated of [true, false])
+    it(`stateful-planner-tap-restores-abilities${gated ? '-gated' : ''} — the payment taps A, then the Island`, () => {
+      const ctx = suppressorBoard(gated);
+      const outcome = search(ctx, parseManaCost('{G}{U}').cost!, true);
+      expect('plan' in outcome && outcome.plan).toBeTruthy();
+      const plan = (outcome as { plan: { tapCardIds: string[] } }).plan;
+      const names = plan.tapCardIds.map(
+        (cardId) => ctx.state.battlefield.find((p) => p.cardId === cardId)!.name,
+      );
+      expect(names).toEqual(['Suppressor', 'Island']);
+    });
 });

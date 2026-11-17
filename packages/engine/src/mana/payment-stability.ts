@@ -59,3 +59,96 @@ export function gateCannotOpenDuringPayment(condition: Condition): boolean {
     stableSelector(condition.selector)
   );
 }
+
+/**
+ * Whether anything in `value` could read state that a fixed-capacity payment changes: a tapped
+ * status (`{ kind: 'tapped' }`, `isUntapped`) or any condition other than a board count over
+ * selectors that ignore tapped status (a life total, a turn fact, a source's own status).
+ */
+function readsPaymentState(value: unknown, underCondition = false): boolean {
+  if (Array.isArray(value)) return value.some((item) => readsPaymentState(item, underCondition));
+  if (value === null || typeof value !== 'object') return false;
+  const record = value as Record<string, unknown>;
+  if (record['kind'] === 'tapped' || record['kind'] === 'isUntapped') return true;
+  if (underCondition && record['kind'] !== undefined && record['kind'] !== 'countPermanents')
+    return true;
+  return Object.entries(record).some(([key, child]) =>
+    readsPaymentState(child, key === 'condition' ? true : underCondition && key !== 'selector'),
+  );
+}
+
+/**
+ * The premise behind the stateful planner's capacity bound and its copy-free search: activations
+ * that only tap permanents, pay mana, gain life or damage their controller change no permanent's
+ * characteristics, so every source keeps its mana abilities, gates and symbols until it is tapped.
+ *
+ * It fails when a static ability or rule static in play reads tapped status or life ("while this
+ * artifact is untapped, lands you control lose all abilities": tapping the artifact gives the lands
+ * their mana abilities back), so the caller must then search on copies of the game. Conservative:
+ * every condition except a board count is treated as one that could change.
+ */
+type StaticHolder = {
+  staticEffects: readonly unknown[];
+  ruleStatics: readonly unknown[];
+  backFace?: { staticEffects: readonly unknown[]; ruleStatics: readonly unknown[] };
+};
+
+/** Definitions are replaced whole, never edited (`ctx.defs.set`), so one answer per object. */
+const fixedByDefinition = new WeakMap<object, boolean>();
+
+/**
+ * Layer ops that never reach a mana ability, a gate's selector or a source's symbols: "has ward
+ * {4} as long as it's untapped" (Iymrith) may switch with a tap and change nothing a payment reads.
+ * Keyword, color, type and power changes are left out on purpose: gates and dynamic symbols read
+ * them.
+ */
+const OPS_OUTSIDE_PAYMENT = [
+  'addWard',
+  'addProtection',
+  'addProtectionFromChosenColor',
+  'setCantBeBlocked',
+  'setMustAttackEachCombat',
+  'addGoad',
+  'addTrigger',
+];
+
+/** Rule statics a payment reads: mana riders, activation bans, convoke and improvise. */
+const RULES_IN_PAYMENT: ReadonlySet<string> = new Set([
+  'manaActivationRider',
+  'cantActivateAbilities',
+  'convoke',
+  'improvise',
+]);
+
+function staticsKeepCharacteristics(
+  staticEffects: readonly unknown[],
+  ruleStatics: readonly unknown[],
+): boolean {
+  const matters = staticEffects.filter((effect) => {
+    const op = (effect as { op?: Record<string, unknown> }).op ?? {};
+    return !OPS_OUTSIDE_PAYMENT.some((key) => key in op);
+  });
+  const rules = ruleStatics.filter((rule) =>
+    RULES_IN_PAYMENT.has(String((rule as { kind?: unknown }).kind)),
+  );
+  return !readsPaymentState(matters) && !readsPaymentState(rules);
+}
+
+function definitionKeepsCharacteristics(definition: StaticHolder): boolean {
+  let answer = fixedByDefinition.get(definition);
+  if (answer === undefined) {
+    answer =
+      staticsKeepCharacteristics(definition.staticEffects, definition.ruleStatics) &&
+      (definition.backFace === undefined ||
+        staticsKeepCharacteristics(
+          definition.backFace.staticEffects,
+          definition.backFace.ruleStatics,
+        ));
+    fixedByDefinition.set(definition, answer);
+  }
+  return answer;
+}
+
+export function characteristicsFixedDuringPayment(definitions: readonly StaticHolder[]): boolean {
+  return definitions.every(definitionKeepsCharacteristics);
+}

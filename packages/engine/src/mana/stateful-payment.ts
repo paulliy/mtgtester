@@ -25,7 +25,11 @@ import {
   resolveDynamicAmount,
   resolveDynamicUnits,
 } from '../state/queries';
-import { gateCannotOpenDuringPayment } from './payment-stability';
+import {
+  characteristicsFixedDuringPayment,
+  gateCannotOpenDuringPayment,
+} from './payment-stability';
+import { selectedPermanentDefinition } from '../cards/spell-faces';
 
 const bounds = { states: 2048, activations: 32, productions: 256 };
 /**
@@ -160,6 +164,21 @@ function entriesFor(
   }));
 }
 
+/**
+ * Every definition whose statics are in play. The capacity bound and the copy-free search rest
+ * on activations leaving every characteristic as it is; a static that reads tapped status or life
+ * breaks that ("while this is untapped, lands you control lose all abilities": tapping it gives the
+ * lands their mana abilities back), and then the search copies the game with no bound at all.
+ */
+function definitionsInPlay(ctx: GameContext) {
+  return ctx.state.battlefield.flatMap((permanent) => {
+    if (permanent.faceDown) return [];
+    const printed = ctx.defs.get(permanent.oracleId);
+    if (printed === undefined) return [];
+    return [printed, selectedPermanentDefinition(printed, permanent.face, permanent.unlockedDoors)];
+  });
+}
+
 /** Actual activation replay, including post-cost production, with no strategic cost decisions. */
 export function planStatefulManaPayment(
   ctx: GameContext,
@@ -184,6 +203,9 @@ export function planStatefulManaPayment(
       current,
     );
   if (!VERIFY_MANA_PLAN) return run(true);
+  // Without the premise the current search drops the bound the old one trusted, so it may find a
+  // payment the old one wrongly ruled out; there is nothing to compare against.
+  if (!characteristicsFixedDuringPayment(definitionsInPlay(ctx))) return run(true);
   const legacy = outcomeOf(() => run(false));
   const current = outcomeOf(() => run(true));
   const [was, now] = [describeOutcome(legacy), describeOutcome(current)];
@@ -211,7 +233,8 @@ export function searchPayment(
   /** The bound with gated sources and the copy-free search; false is the search as it was. */
   current: boolean,
 ): PaymentPlan | null {
-  const gatedBound = current;
+  const premise = current && characteristicsFixedDuringPayment(definitionsInPlay(ctx));
+  const gatedBound = premise;
   let states = 0;
   let outsideScope = false;
   const seen = new Set<string>();
@@ -325,8 +348,9 @@ export function searchPayment(
     if (seen.has(key)) return null;
     seen.add(key);
     const candidates = availableSources.filter((source) => source.convoke !== true);
-    const ceilings = fixedCapacity ? availableSources.map(ceilingUnits) : [];
-    if (fixedCapacity && ceilings.every((units) => units !== null)) {
+    const bounded = fixedCapacity && (premise || !current);
+    const ceilings = bounded ? availableSources.map(ceilingUnits) : [];
+    if (bounded && ceilings.every((units) => units !== null)) {
       const remaining = new Map<string, number>();
       for (const [index, source] of availableSources.entries())
         remaining.set(
@@ -658,7 +682,7 @@ export function searchPayment(
   // The same search over tapped sets instead of copied games, for a board where activating a
   // source only taps it and adds its mana (see `tapOnlySource`). It mirrors `visit` step for step
   // and gives the same plan; anything it cannot mirror exactly hands the payment back to `visit`.
-  if (current) {
+  if (premise) {
     const light = searchTapOnly();
     if (light !== handBack) return light;
   }
