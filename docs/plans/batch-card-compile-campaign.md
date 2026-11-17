@@ -17,13 +17,13 @@ measured (see [Stage 0 status](#stage-0-status)). Sixteen chunks are done, and e
 [013](../reviews/card-compiler-trial-chunk-013/README.md),
 [014](../reviews/card-compiler-trial-chunk-014/README.md),
 [015](../reviews/card-compiler-trial-chunk-015/README.md) and
-[016](../reviews/card-compiler-trial-chunk-016/README.md). With ninety-six cards retired after review
-or fuzzing (listed in `docs/reviews/compiled-card-retired.json`, which `promote` refuses), 1,169 are
-promoted and the pool models 4,887 of 8,972 (3,718 before). Among the 1,225 patches that passed every automatic
-check, 98 were wrong (about 8.0%): the audits found 42, a PR review on 2026-11-16 found five
-more (Electroduplicate, High Score, Abzan Beastmaster, Genesis and Giott), and the Codex review when
-the pull request was marked ready found five (Helm of the Host, Molten Duplication, Fear of Missing
-Out, Forth Eorlingas! and Devastating Onslaught; see chunks 001 to 004), and the owner's review of
+[016](../reviews/card-compiler-trial-chunk-016/README.md). With ninety-seven cards retired after review
+or fuzzing (listed in `docs/reviews/compiled-card-retired.json`, which `promote` refuses), 1,168 are
+promoted and the pool models 4,886 of 8,972 (3,718 before). Among the 1,225 patches that passed every automatic
+check, 99 were wrong (about 8.1%): the audits found 42, a PR review on 2026-11-16 found five
+more (Electroduplicate, High Score, Abzan Beastmaster, Genesis and Giott), and the Codex reviews when
+the pull request was marked ready and on later commits found six (Helm of the Host, Molten Duplication, Fear of Missing
+Out, Forth Eorlingas!, Devastating Onslaught and Catastrophe), and the owner's review of
 every promoted card on 2026-11-17 found 46 more (each chunk README lists its retirements), so the audit stays at every card (decided
 2026-11-14): the ADR 0047 rule that lets audits drop to a sample is suspended until validator
 rules close the engine gaps behind those escapes. Chunk 004 tripped the calibration stop rule

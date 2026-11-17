@@ -77916,53 +77916,6 @@
     }
   },
   {
-    "oracleId": "ed68160e-5e3d-44f2-ac7a-3749fda10119",
-    "name": "Catastrophe",
-    "handledLines": [
-      "Destroy all lands or all creatures. Creatures destroyed this way can't be regenerated."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Destroy all lands or all creatures. Creatures destroyed this way can't be regenerated.",
-        "effects": [
-          {
-            "op": "chooseOne",
-            "options": [
-              {
-                "description": "Destroy all lands.",
-                "effects": [
-                  {
-                    "op": "destroyEach",
-                    "selector": {
-                      "kind": "type",
-                      "value": "Land"
-                    }
-                  }
-                ]
-              },
-              {
-                "description": "Destroy all creatures. Creatures destroyed this way can't be regenerated.",
-                "effects": [
-                  {
-                    "cantRegenerate": true,
-                    "op": "destroyEach",
-                    "selector": {
-                      "kind": "type",
-                      "value": "Creature"
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        "kind": "spell",
-        "targets": []
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "ed7bdb3e-5c51-4547-9266-76a791e0b2b0",
     "name": "Humility",
     "handledLines": [
@@ -96129,53 +96082,6 @@
           "timing": "sorcery"
         }
       ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-catastrophe",
-    "name": "Catastrophe",
-    "handledLines": [
-      "Destroy all lands or all creatures. Creatures destroyed this way can't be regenerated."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Destroy all lands or all creatures. Creatures destroyed this way can't be regenerated.",
-        "effects": [
-          {
-            "op": "chooseOne",
-            "options": [
-              {
-                "description": "Destroy all lands.",
-                "effects": [
-                  {
-                    "op": "destroyEach",
-                    "selector": {
-                      "kind": "type",
-                      "value": "Land"
-                    }
-                  }
-                ]
-              },
-              {
-                "description": "Destroy all creatures. Creatures destroyed this way can't be regenerated.",
-                "effects": [
-                  {
-                    "cantRegenerate": true,
-                    "op": "destroyEach",
-                    "selector": {
-                      "kind": "type",
-                      "value": "Creature"
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        "kind": "spell",
-        "targets": []
-      }
     },
     "compose": "append"
   },

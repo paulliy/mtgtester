@@ -5185,9 +5185,9 @@
         }
       ],
       "review": {
-        "verdict": "accepted",
-        "by": "main-thread",
-        "note": "Full audit: read against Oracle text and the engine."
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: Codex review on PR #72, 2026-11-17: 'Creatures destroyed this way can't be regenerated' covers land creatures in the land branch too, but only the creature branch sets cantRegenerate; splitting the land branch into two destroyEach ops would not destroy simultaneously."
       }
     },
     {

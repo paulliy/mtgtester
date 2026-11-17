@@ -61614,59 +61614,6 @@ const BATCH_CHUNK_016: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'ed68160e-5e3d-44f2-ac7a-3749fda10119',
-    name: 'Catastrophe',
-    handledLines: [
-      "Destroy all lands or all creatures. Creatures destroyed this way can't be regenerated.",
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [],
-        effects: [
-          {
-            op: 'chooseOne',
-            options: [
-              {
-                effects: [
-                  {
-                    op: 'destroyEach',
-                    selector: {
-                      kind: 'type',
-                      value: 'Land',
-                    },
-                  },
-                ],
-                description: 'Destroy all lands.',
-              },
-              {
-                effects: [
-                  {
-                    op: 'destroyEach',
-                    selector: {
-                      kind: 'type',
-                      value: 'Creature',
-                    },
-                    cantRegenerate: true,
-                  },
-                ],
-                description:
-                  "Destroy all creatures. Creatures destroyed this way can't be regenerated.",
-              },
-            ],
-          },
-        ],
-        description:
-          "Destroy all lands or all creatures. Creatures destroyed this way can't be regenerated.",
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-016',
-    patchSha256: 'ee85358fe901e127d3acff1d88e2aaa75ec282ced4c62bb011dfda695a3ec1d6',
-    behaviorSha256: '9b6bff00464d16d0d1b831aae9c003fc6d36d91ff17ef53e6cfe84c9dc062679',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'e42b6bd7-8fdf-4452-85cc-9aed790ff682',
     name: 'Coastal Breach',
     handledLines: ['Undaunted'],

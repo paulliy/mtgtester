@@ -99,3 +99,10 @@ The owner's review of every promoted card found 4 wrong patches among this chunk
 - **Monkey Cage:** Token creation is gated on the self-sacrifice and counts entrants wrongly.
 - **Verdant Haven:** A land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification.
 - **Witch-king, Sky Scourge:** Uses current attackers instead of the triggering attack group and LKI.
+
+## Retired after the Codex review of 36921d8 (2026-11-17)
+
+- **Catastrophe:** "Creatures destroyed this way can't be regenerated" also covers land creatures
+  destroyed by the land branch, but only the creature branch set `cantRegenerate`, so an animated
+  land with a regeneration shield survived. Splitting the land branch into two `destroyEach` ops
+  would not destroy everything at once, so the card was retired.

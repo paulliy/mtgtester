@@ -86,6 +86,13 @@
       "reason": "Owner review on PR #72, 2026-11-17: removing the Cartouche before its trigger resolves cancels the former host's fight."
     },
     {
+      "name": "Catastrophe",
+      "oracleId": "ed68160e-5e3d-44f2-ac7a-3749fda10119",
+      "patchSha256": "ee85358fe901e127d3acff1d88e2aaa75ec282ced4c62bb011dfda695a3ec1d6",
+      "batch": "chunk-016",
+      "reason": "Codex review on PR #72, 2026-11-17: 'Creatures destroyed this way can't be regenerated' covers land creatures in the land branch too, but only the creature branch sets cantRegenerate; splitting the land branch into two destroyEach ops would not destroy simultaneously."
+    },
+    {
       "name": "Chrome Dome",
       "oracleId": "3dc71e16-b935-4ad7-b3f7-945ac2c179a7",
       "patchSha256": "5aa3f47bed6ca8f5f527fec5677fa2eb7ffbad7fbaf51e3d193df64283c48044",
