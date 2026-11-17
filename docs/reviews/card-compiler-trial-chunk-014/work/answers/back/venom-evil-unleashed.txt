@@ -1,0 +1,1 @@
+{2}{B}, Exile this card from the graveyard: Put two +1/+1 counters on target creature and it gains deathtouch until end of turn. Activate only as a sorcery and only from the graveyard.
