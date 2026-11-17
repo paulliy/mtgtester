@@ -1,0 +1,43 @@
+{
+  "name": "Dreadwing Scavenger",
+  "oracleId": "bbfd0de0-3558-4833-bae4-8efae44b7fff",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ gets +1/+1 and has deathtouch as long as there are seven or more cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        },
+        "condition": {
+          "kind": "cardsInYourGraveyard",
+          "cmp": ">=",
+          "n": 7
+        }
+      },
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "deathtouch"
+        },
+        "condition": {
+          "kind": "cardsInYourGraveyard",
+          "cmp": ">=",
+          "n": 7
+        }
+      }
+    ]
+  }
+}

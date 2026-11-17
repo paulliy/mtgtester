@@ -1,0 +1,26 @@
+{
+  "name": "Ghoultree",
+  "oracleId": "5f2628e3-e29a-4d77-bc27-6e1ce240d192",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast for each creature card in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countCardsInZone",
+          "zone": "graveyard",
+          "selector": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "owner": "you"
+        },
+        "selfOnly": true
+      }
+    ]
+  }
+}

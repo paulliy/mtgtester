@@ -1,0 +1,41 @@
+{
+  "name": "Hidden Footblade",
+  "oracleId": "daed1b38-510b-4698-95c3-05c09f5fabe9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Equipment enters, attach it to target creature you control. That creature gains first strike until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "op": "attachSelfTo",
+            "target": 0
+          },
+          {
+            "op": "grantKeywordUntilEot",
+            "target": 0,
+            "keyword": "first strike"
+          }
+        ],
+        "description": "When this Equipment enters, attach it to target creature you control. That creature gains first strike until end of turn."
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "Embrace Oblivion",
+  "oracleId": "0fad5713-c09c-43d3-9cc0-10c65aead488",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target creature or Spacecraft."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "subtype",
+                "value": "Spacecraft"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroy",
+          "target": 0
+        }
+      ],
+      "description": "Destroy target creature or Spacecraft."
+    }
+  }
+}

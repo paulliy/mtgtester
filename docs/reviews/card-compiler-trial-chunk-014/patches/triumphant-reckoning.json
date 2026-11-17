@@ -1,0 +1,39 @@
+{
+  "name": "Triumphant Reckoning",
+  "oracleId": "0d3e0b38-a9ff-489b-8c00-4ca89deb4869",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return all artifact, enchantment, and planeswalker cards from your graveyard to the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "graveyardToBattlefieldEach",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Enchantment"
+              },
+              {
+                "kind": "type",
+                "value": "Planeswalker"
+              }
+            ]
+          },
+          "scope": "you"
+        }
+      ],
+      "description": "Return all artifact, enchantment, and planeswalker cards from your graveyard to the battlefield."
+    }
+  }
+}
