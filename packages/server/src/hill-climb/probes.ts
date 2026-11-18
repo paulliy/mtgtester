@@ -15,6 +15,7 @@ import { playGame } from '../cli/engine-bench-game';
 import type { FuzzDeck } from '../cli/fuzz-game';
 import { loadDecks, pod } from '../cli/fuzz-plan';
 import { TABLE_ENGINE_LIMITS } from '../match/engine-limits';
+import { authoringProbe } from './authoring';
 import type { Metric, Report } from './report';
 import { measureSettle, poolTextMatches } from '../../../../scripts/card-compiler/settle';
 
@@ -27,14 +28,30 @@ export interface Profile {
   /** Census games per tactical mode, and their turn cap. */
   censusGames: number;
   censusTurnCap: number;
+  /** The authoring probe measures every `authoringStride`-th modeled EDHREC card. */
+  authoringStride: number;
 }
 
 export const PROFILES: Record<string, Profile> = {
-  quick: { engineGames: 3, engineTurnCap: 20, setupReps: 3, censusGames: 2, censusTurnCap: 20 },
-  standard: { engineGames: 6, engineTurnCap: 40, setupReps: 10, censusGames: 4, censusTurnCap: 40 },
+  quick: {
+    engineGames: 3,
+    engineTurnCap: 20,
+    setupReps: 3,
+    censusGames: 2,
+    censusTurnCap: 20,
+    authoringStride: 8,
+  },
+  standard: {
+    engineGames: 6,
+    engineTurnCap: 40,
+    setupReps: 10,
+    censusGames: 4,
+    censusTurnCap: 40,
+    authoringStride: 1,
+  },
 };
 
-export const PROBES = ['engine', 'setup', 'model', 'coverage', 'compiler'] as const;
+export const PROBES = ['engine', 'setup', 'model', 'coverage', 'authoring', 'compiler'] as const;
 export type Probe = (typeof PROBES)[number];
 
 type Metrics = Record<string, Metric>;
@@ -339,6 +356,8 @@ export async function measure(options: MeasureOptions): Promise<Report> {
     } else if (probe === 'setup')
       Object.assign(metrics, setupProbe(decks, profile, options.repeats));
     else if (probe === 'model') Object.assign(metrics, await modelProbe(decks, profile));
+    else if (probe === 'authoring')
+      Object.assign(metrics, authoringProbe(profile.authoringStride, log).metrics);
     else if (probe === 'compiler') Object.assign(metrics, compilerProbe());
     else Object.assign(metrics, coverageProbe(decks));
   }

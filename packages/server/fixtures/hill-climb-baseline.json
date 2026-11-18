@@ -9,34 +9,35 @@
         "setup",
         "model",
         "coverage",
+        "authoring",
         "compiler"
       ],
-      "commit": "e62aefa2",
+      "commit": "dc0eb202",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 59.2,
+      "calibrationMs": 56.48,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.63,
+          "value": 7.32,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.367
+          "spread": 0.238
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.64,
+          "value": 7.43,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.3
+          "spread": 0.143
         },
         "setup.msPerGame": {
-          "value": 67.12,
+          "value": 74.41,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.048
+          "spread": 0.135
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -92,6 +93,42 @@
           "better": "higher",
           "kind": "exact"
         },
+        "authoring.poolMutantsLeftPct": {
+          "value": 76.11,
+          "unit": "%",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "authoring.poolPartsScaffoldedPct": {
+          "value": 44.97,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolCardsFullyScaffolded": {
+          "value": 125,
+          "unit": "cards",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolDraftFailures": {
+          "value": 0,
+          "unit": "drafts",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "authoring.referenceKillsReproducedPct": {
+          "value": 16.67,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.referenceDraftFailures": {
+          "value": 0,
+          "unit": "drafts",
+          "better": "lower",
+          "kind": "exact"
+        },
         "compiler.textCheckSettledPatches": {
           "value": 45,
           "unit": "patches",
@@ -119,34 +156,35 @@
         "setup",
         "model",
         "coverage",
+        "authoring",
         "compiler"
       ],
-      "commit": "e62aefa2",
+      "commit": "dc0eb202",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 58.17,
+      "calibrationMs": 57.12,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 50.63,
+          "value": 51.68,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.107
+          "spread": 0.021
         },
         "engine.medianGameMsPerDecision": {
-          "value": 12.84,
+          "value": 13.21,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.084
+          "spread": 0.115
         },
         "setup.msPerGame": {
-          "value": 63.02,
+          "value": 69.81,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.046
+          "spread": 0.094
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -200,6 +238,42 @@
           "value": 100,
           "unit": "%",
           "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolMutantsLeftPct": {
+          "value": 76.06,
+          "unit": "%",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "authoring.poolPartsScaffoldedPct": {
+          "value": 45.12,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolCardsFullyScaffolded": {
+          "value": 998,
+          "unit": "cards",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolDraftFailures": {
+          "value": 0,
+          "unit": "drafts",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "authoring.referenceKillsReproducedPct": {
+          "value": 16.67,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.referenceDraftFailures": {
+          "value": 0,
+          "unit": "drafts",
+          "better": "lower",
           "kind": "exact"
         },
         "compiler.textCheckSettledPatches": {
