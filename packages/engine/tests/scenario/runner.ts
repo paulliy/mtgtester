@@ -9,6 +9,7 @@
 import { readFileSync } from 'node:fs';
 import type { DecisionRequest, GameEvent, GameResult, OracleCard } from '@mtg/shared';
 import type { Engine } from '../../src/engine';
+import type { GameContext } from '../../src/state/types';
 import {
   buildCardScenario,
   describeRequest,
@@ -16,6 +17,7 @@ import {
   scenarioAction,
   scenarioPattern,
   scenarioTargets,
+  type CardResolver,
   type CardScenario,
   type CardScenarioFile,
   type ScenarioStep,
@@ -56,24 +58,63 @@ const MAX_DECISIONS = 2_000;
 export { describeRequest };
 
 /**
- * Play a scenario's script, passing priority between its steps. With `stopAtChoice`, a decision
+ * Halt a runaway loop (a mutant's self-retriggering ability) instead of hanging, with the same
+ * budget `EngineOptions.maxStepWork` / `maxObjects` install. Set here, after the engine is built,
+ * so `packages/engine/src` stays untouched (its tree hash pins the committed benchmark fixtures).
+ * Objects are counted from the prepared position, so its cards do not count.
+ */
+function capEngineWork(
+  engine: Engine,
+  maxStepWork?: number,
+  maxObjects?: number,
+  maxTurnObjects?: number,
+): void {
+  const ctx = (engine as unknown as { ctx: GameContext }).ctx;
+  ctx.budget = {
+    ...(maxStepWork !== undefined && { maxStepWork }),
+    ...(maxObjects !== undefined && { maxObjects }),
+    ...(maxTurnObjects !== undefined && { maxTurnObjects }),
+    stepWork: { count: 0 },
+    objectsAtStart: ctx.state.nextObjectNum,
+  };
+}
+
+/**
+ * Play a scenario's script, passing priority between its steps. `resolve` finds cards by name
+ * (default: the pin store, then basics); promotion scaffolds pass one that also knows the card
+ * under review. With `stopAtChoice`, a decision
  * other than priority that arrives after the last step stops the run there (`stoppedAt`) instead
  * of failing it, so a test can assert what the engine asks next.
  */
 export function runScenario(
   file: CardScenarioFile,
   scenario: CardScenario,
-  options: { stopAtChoice?: true } = {},
+  options: {
+    stopAtChoice?: true;
+    resolve?: CardResolver;
+    maxStepWork?: number;
+    maxObjects?: number;
+    maxTurnObjects?: number;
+    /** Decisions before the run gives up (default 2,000); mutation runs pass a lower cap. */
+    maxDecisions?: number;
+  } = {},
 ): ScenarioRun {
-  const { engine } = buildCardScenario(file, scenario, resolveScenarioCard, {
+  const { engine } = buildCardScenario(file, scenario, options.resolve ?? resolveScenarioCard, {
     gameId: `scenario-${scenario.id}`,
     strictInvariants: true,
   });
+  if (
+    options.maxStepWork !== undefined ||
+    options.maxObjects !== undefined ||
+    options.maxTurnObjects !== undefined
+  )
+    capEngineWork(engine, options.maxStepWork, options.maxObjects, options.maxTurnObjects);
   const firstSequence = engine.getState().eventLog.length;
   const end = scenario.end ?? 'script';
   const answered: ScenarioRun['answered'] = [];
   let next = 0;
-  for (let count = 0; count < MAX_DECISIONS; count++) {
+  const maxDecisions = options.maxDecisions ?? MAX_DECISIONS;
+  for (let count = 0; count < maxDecisions; count++) {
     const stepResult = engine.advance();
     if (stepResult.kind === 'gameOver') {
       const result = stepResult.result;
@@ -127,7 +168,7 @@ export function runScenario(
       }:\n${describeRequest(request)}`,
     );
   }
-  throw new Error(`${scenario.id}: no end after ${MAX_DECISIONS} decisions`);
+  throw new Error(`${scenario.id}: no end after ${maxDecisions} decisions`);
 }
 
 /** The scenario's expectations that do not hold at the end of the run. */
@@ -197,6 +238,20 @@ export function scenarioFailures(run: ScenarioRun, scenario: CardScenario): stri
           if (!keywords.includes(keyword)) failures.push(`${card} lacks ${keyword}`);
         for (const keyword of lacks)
           if (keywords.includes(keyword)) failures.push(`${card} has ${keyword}`);
+      }
+    } else if ('stats' in expectation) {
+      const { card, power, toughness, player: controller } = expectation.stats;
+      const permanent = onePermanent(card, controller);
+      if (permanent !== undefined) {
+        const view = run.engine
+          .view(permanent.controllerId)
+          .battlefield.find((candidate) => candidate.id === permanent.id);
+        if (power !== undefined && view?.power !== power)
+          failures.push(`${card} has power ${view?.power ?? 'none'}, expected ${power}`);
+        if (toughness !== undefined && view?.toughness !== toughness)
+          failures.push(
+            `${card} has toughness ${view?.toughness ?? 'none'}, expected ${toughness}`,
+          );
       }
     } else if ('tapped' in expectation) {
       const permanent = onePermanent(expectation.tapped.card, expectation.tapped.player);
