@@ -304,8 +304,8 @@ process.stdout.write(JSON.stringify({path,realpath:fs.realpathSync(path),node:pr
 
 export function bindCopiedInputs(f: ReturnType<typeof fixture>, copy: string, extra: string[]) {
   const sourceFiles = [...new Set([...f.options.sourceFiles, ...extra])].sort();
-  for (const card of cards) {
-    const path = resolve(copy, `scripts/generate-${card}-evidence.ts`);
+  {
+    const path = resolve(copy, 'scripts/card-evidence-sources.ts');
     writeFileSync(
       path,
       readFileSync(path, 'utf8').replace(

@@ -1,7 +1,7 @@
 # 0010 — Decisions are metered: local answers, and batch shortcuts in combat
 
 Date: 2026-07-25
-Status: Accepted
+Status: Accepted (2026-07-25)
 
 ## Context
 

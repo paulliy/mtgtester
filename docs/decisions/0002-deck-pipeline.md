@@ -1,6 +1,8 @@
 # 0002 — Deck pipeline (Phase 1)
 
-Status: accepted (implementation) — 2026-07-24
+Date: 2026-07-24
+Status: Accepted (2026-07-24)
+Status note: implementation
 Context: brief §8 (deck import/validation), §9 (persistence), §14.1 (Phase 1).
 
 Phase 1 turns four deck inputs into four validated, immutable snapshots or precise errors. The

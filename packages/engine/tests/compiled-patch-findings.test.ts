@@ -307,7 +307,7 @@ describe('targets that must differ are offered as legal assignments', () => {
       toughness: null,
       oracleText: '{T}: Draw a card.',
     });
-    const definition = interpretCard(card);
+    const definition = structuredClone(interpretCard(card));
     definition.activatedAbilities[0]!.ability = {
       kind: 'activated',
       targets,
