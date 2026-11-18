@@ -1,4 +1,9 @@
-# Remaining Card Primitive Backlog
+# 0049 — Remaining Card Primitive Backlog
+
+Date: 2026-07-29
+
+Status: Completed (2026-11-14)
+Status note: renumbered from 0013 on 2026-11-14, because two ADRs had that number; links to the old `0013-missing-primitives.md` now point here. This is a July snapshot of the backlog for [0013](0013-card-coverage-roadmap.md). On 2026-11-14 `bun run coverage` reported no unmodeled cards in any coverage deck, so the backlog it lists is closed.
 
 Generated from `bun run coverage --json` on 2026-07-29. A card remains unmodeled until every listed oracle-text reason has either a tested shared primitive or a tested executable override.
 

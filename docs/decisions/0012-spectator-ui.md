@@ -1,7 +1,7 @@
 # 0012 — Phase 4 scope, adjusted to the repo as it actually stands
 
 Date: 2026-07-25
-Status: Accepted
+Status: Accepted (2026-07-25)
 
 ## Context
 

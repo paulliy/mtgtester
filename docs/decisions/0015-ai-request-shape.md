@@ -1,7 +1,7 @@
 # 0015 — The AI request shape, and failures that are worth another sample
 
 Date: 2026-07-27
-Status: Accepted
+Status: Accepted (2026-07-27)
 
 Extends [0011](0011-openai-compatible-provider.md).
 
