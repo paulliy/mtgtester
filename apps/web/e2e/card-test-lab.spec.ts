@@ -730,6 +730,33 @@ test('Bojuka Bog: exile the targeted graveyard', async ({ page }) => {
   await expect(page.getByText(/exile/i).first()).toBeVisible();
 });
 
+test("Peek: look at an opponent's hand", async ({ page }) => {
+  await runScenario(page, "Peek: look at an opponent's hand");
+
+  const peek = handCard(page, 'Peek');
+  await expect(peek).toHaveClass(/actionable/);
+  await peek.click();
+  await expect(page.locator('.target-instruction')).toHaveText(
+    'Target 1 of 1: click a highlighted card or player.',
+  );
+  await page.locator('.opponent[data-seat="P2"] > header').click();
+  await expect(page.getByText(/All 1 target selected/)).toBeVisible();
+  await confirm(page);
+
+  // Only the looking seat's board carries the cards; the log names none of them (CR 402.3).
+  const target = page.locator('.opponent[data-seat="P2"]');
+  await expect(target.getByRole('heading', { name: 'Seen in hand (2)' })).toBeVisible();
+  await expect(target.getByRole('img', { name: 'Lab Ox' }).first()).toBeVisible();
+  await expect(target.getByRole('img', { name: 'Lab Servo' }).first()).toBeVisible();
+  await expect(page.locator('.opponent[data-seat="P3"]')).not.toContainText('Seen in hand');
+  await expect(page.getByText(/looks at P2's hand \(2 cards\)/).first()).toBeVisible();
+  // Peek drew the Island, so you hold priority with a land play until you pass.
+  await expect(handCard(page, 'Island')).toBeVisible();
+  await page.getByRole('button', { name: 'Pass priority' }).click();
+  await page.getByRole('button', { name: 'Pass anyway' }).click();
+  await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
+});
+
 test('Citywide Bust: destroy toughness 4 or greater', async ({ page }) => {
   await runScenario(page, 'Citywide Bust: destroy toughness 4 or greater');
 

@@ -132,6 +132,7 @@ import {
   movePermanentsTogether,
   playerById,
   queuePlayerTriggersForEvent,
+  liveKnownHandCard,
   queueTriggersForEvent,
   queueTriggersForObject,
   removeFromCurrentZone,
@@ -4460,6 +4461,25 @@ function* executeAbilityEffects(
         const count = amountOf(effect.count);
         for (const player of players) loseLife(ctx, player, amount);
         for (const player of players) yield* drawCards(ctx, player, count);
+        break;
+      }
+      case 'lookAtHand': {
+        const playerId = ref(effect.target);
+        const player = ctx.state.players.find((candidate) => candidate.id === playerId);
+        if (player === undefined || player.hasLost || player.id === controller.id) break;
+        const known = (controller.knownHandCards ?? []).filter(
+          (entry) => entry.owner !== player.id && liveKnownHandCard(ctx, entry) !== undefined,
+        );
+        for (const card of player.hand) known.push({ owner: player.id, objectId: card.id });
+        controller.knownHandCards = known;
+        // The event names no cards: the shared log, replays and spectators learn only that it
+        // happened (CR 701.20a: looking is not revealing).
+        emit(
+          ctx,
+          'lookAtHand',
+          { player: controller.id, target: player.id, count: player.hand.length },
+          controller.id,
+        );
         break;
       }
       case 'revealHandAndDiscard': {

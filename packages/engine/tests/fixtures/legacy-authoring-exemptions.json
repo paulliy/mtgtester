@@ -913,7 +913,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/w1-remaining.ts",
-      "sha256": "2da80f4124b15a979d78a77f81483d08048f1d714da2a425c1aa8330a4cc21a9",
+      "sha256": "a6d5d7af2de0282d98857e82a98cb5b29fde5f0d155143089386cf0ee2c2e865",
       "description": "registerW1RemainingOverrides"
     },
     {

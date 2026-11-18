@@ -3664,6 +3664,31 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
     ) {
       continue;
     }
+    // Two-commander pairing keywords are deck construction only (CR 702.124a); deck validation
+    // checks the pairing, and nothing happens in a game.
+    if (
+      lower === 'partner' ||
+      lower === 'choose a background' ||
+      lower === 'friends forever' ||
+      lower === "doctor's companion" ||
+      /^partner\s*—\s*\S/.test(lower)
+    ) {
+      continue;
+    }
+    // "Partner with <name>" is also an enters trigger: target player may search their library
+    // for the named card, reveal it, put it into their hand, then shuffle (CR 702.124j).
+    const partnerWith = /^partner with (.+)$/i.exec(line.replace(/\.$/, ''));
+    if (partnerWith !== null) {
+      const partnerName = (partnerWith[1] as string).trim();
+      triggers.push({
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: SELF_SUBJECT },
+        targets: [{ kind: 'player' }],
+        effects: [{ op: 'targetPlayerMaySearchNamed', target: 0, name: partnerName }],
+        description: `Target player may search their library for a card named ${partnerName}, reveal it, and put it into their hand, then shuffle`,
+      });
+      continue;
+    }
     if (/^hideaway 4/i.test(lower)) {
       triggers.push({
         kind: 'triggered',

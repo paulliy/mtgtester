@@ -3128,6 +3128,14 @@ function parseEffectSentenceUntraced(
       }
     }
   }
+  // Gitaxian Probe, Peek: a private look, not a reveal (CR 402.3, 701.20a).
+  {
+    const look = s.match(/^look at target (player|opponent)'s hand$/);
+    if (look !== null) {
+      const target = alloc('player', undefined, look[1] === 'opponent' ? 'opponent' : undefined);
+      return [{ op: 'lookAtHand', target }];
+    }
+  }
   {
     const targetHand = s.match(
       /^draw cards equal to the number of cards in target opponent's hand$/,

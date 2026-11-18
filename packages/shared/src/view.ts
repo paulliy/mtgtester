@@ -90,6 +90,11 @@ export interface OpponentView {
   poisonCounters: number;
   /** Commander damage this opponent's commander(s) have dealt to the viewing player. */
   commanderDamageDealtToYou: number;
+  /**
+   * Cards the viewer saw in this opponent's hand by "look at target player's hand" that are
+   * still there (CR 402.3). Present only for the viewer who looked, and only when non-empty.
+   */
+  knownHand?: CardView[];
 }
 
 /**

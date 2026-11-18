@@ -617,6 +617,13 @@ export interface EnginePlayerState extends PlayerState {
    * turn", CR 305.2), for the turn numbered `turn`; a later turn ignores it.
    */
   additionalLandPlays?: { turn: number; count: number };
+  /**
+   * Cards this player saw in another player's hand with "look at target player's hand"
+   * (CR 402.3). An entry stays true only while that owner's hand still holds that object id:
+   * a card that leaves the hand becomes a new object (CR 400.7), so the knowledge is the hand as
+   * it was at the look, never later draws. Created on the first look, so it is absent otherwise.
+   */
+  knownHandCards?: { owner: PlayerId; objectId: ObjectId }[];
   hand: EngineCardObject[];
   library: EngineCardObject[];
   graveyard: EngineCardObject[];

@@ -619,6 +619,7 @@ describe('deterministic Card Test Lab scenarios', () => {
       'throat-viewer-destroy-nonartifact',
       'defense-viewer-pump-and-hexproof',
       'bog-viewer-exile-targeted-graveyard',
+      'peek-viewer-private-hand-look',
       'bust-viewer-destroy-toughness-four-or-greater',
       'defile-viewer-minus-one-per-swamp',
       'fury-viewer-double-power',
@@ -1360,6 +1361,27 @@ describe('deterministic Card Test Lab scenarios — registered card scenarios', 
     expect(p2.graveyard.map((card) => card.name)).not.toContain('Lab Ox');
     expect(state.exile.some((object) => object.name === 'Lab Ox')).toBe(true);
     expect(p1.graveyard.map((card) => card.name)).toContain('Lab Servo');
+  });
+
+  it("Peek: only P1 learns P2's hand, and P1 draws", () => {
+    const { scenario } = runScenarioWith('peek-viewer-private-hand-look', (request, sc) => {
+      const cast = chooseWithTarget(request, sc, 'Peek', 'P2');
+      if (cast !== null) return cast;
+      return passChoice(request);
+    });
+    const state = scenario.engine.getState();
+    const p1 = state.players.find((player) => player.id === 'P1')!;
+    expect(p1.graveyard.map((card) => card.name)).toContain('Peek');
+    const board = scenario.engine.playerState('P1');
+    expect(board.knownHands?.[0]?.cards.map((card) => card.name).sort()).toEqual([
+      'Lab Ox',
+      'Lab Servo',
+    ]);
+    for (const seat of ['P2', 'P3', 'P4']) {
+      expect(scenario.engine.playerState(seat).knownHands).toBeUndefined();
+    }
+    const look = state.eventLog.find((event) => event.type === 'lookAtHand');
+    expect(look?.payload).toEqual({ player: 'P1', target: 'P2', count: 2 });
   });
 
   it('Citywide Bust: destroys Lab Ox and leaves Lab Servo', () => {

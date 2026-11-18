@@ -6,7 +6,7 @@ import {
   WARRIOR_1_1_RED,
 } from '../tokens';
 import { constant } from '../value';
-import { defineCard, unsupportedCard } from './index';
+import { defineCard } from './index';
 
 const ATTACKING = { kind: 'combatRole', role: 'attacking' } as const;
 const YOUR_ATTACKERS = allOf(ofType('Creature'), YOURS);
@@ -114,13 +114,6 @@ export function registerW1RemainingOverrides(): void {
         },
       ],
     },
-  );
-
-  // Catalog audit w1-batch-1: Choose a Background is claimed without a background companion.
-  unsupportedCard(
-    '60e7130a-d321-4e50-93a4-999013c76054',
-    'Gut, True Soul Zealot',
-    'Choose a Background is claimed without a background companion implementation.',
   );
 
   defineCard(
