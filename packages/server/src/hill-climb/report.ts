@@ -101,8 +101,11 @@ export interface CompareOptions {
 
 /** Smallest timed change that counts on one machine when both sides were repeated. */
 export const SAME_MACHINE_FLOOR = 0.1;
-/** With fewer repeats on either side the spread is unknown, so the floor is wider. */
-export const UNREPEATED_FLOOR = 0.2;
+/**
+ * With fewer repeats on either side the spread is unknown, so the floor is wider. A single run of
+ * unchanged code on a busy machine has read 23% and 34% slower than the baseline.
+ */
+export const UNREPEATED_FLOOR = 0.3;
 /** Repeats each side needs before the narrow floor applies. */
 export const REPEATS_FOR_NARROW_FLOOR = 3;
 /** Across machines the calibration scaling is rough, so only a large move counts. */

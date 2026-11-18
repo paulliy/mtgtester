@@ -145,14 +145,14 @@ describe('compareReports: timed metrics', () => {
     expect(faster.ok).toBe(true);
   });
 
-  it('needs a 20% move when either side was measured fewer than three times', () => {
+  it('needs a 30% move when either side was measured fewer than three times', () => {
     const baseline = report({ 'engine.msPerDecision': timed(50) });
     const once = { repeats: 1 };
-    const within = compareReports(baseline, report({ 'engine.msPerDecision': timed(42) }, once));
-    expect(within.rows[0]!.threshold).toBe(0.2);
+    const within = compareReports(baseline, report({ 'engine.msPerDecision': timed(62) }, once));
+    expect(within.rows[0]!.threshold).toBe(0.3);
     expect(within.rows[0]!.verdict).toBe('unchanged');
     expect(
-      compareReports(baseline, report({ 'engine.msPerDecision': timed(61) }, once)).rows[0]!
+      compareReports(baseline, report({ 'engine.msPerDecision': timed(66) }, once)).rows[0]!
         .verdict,
     ).toBe('regressed');
     expect(renderComparison(within)).toContain('--repeat 3');

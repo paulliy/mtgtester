@@ -22,7 +22,7 @@ played differently. It uses no network and no paid model.
 
 Exact metrics repeat to the last digit on any machine, so any move in the wrong direction fails.
 Timed metrics only count as changed when they move by more than the noise: 10% when both sides
-were measured with `--repeat 3` on one machine, 20% with fewer repeats, 30% across machines
+were measured with `--repeat 3` on one machine, 30% with fewer repeats or across machines
 (scaled by a calibration run), and never less than twice the spread between repeats.
 
 ## Engine work counters
