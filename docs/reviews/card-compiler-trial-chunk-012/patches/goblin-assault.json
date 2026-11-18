@@ -1,0 +1,32 @@
+{
+  "name": "Goblin Assault",
+  "oracleId": "d1255776-b88b-4f05-9b71-ff89a2eba453",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Goblin creatures attack each combat if able."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Goblin"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "setMustAttackEachCombat": true
+        }
+      }
+    ]
+  }
+}

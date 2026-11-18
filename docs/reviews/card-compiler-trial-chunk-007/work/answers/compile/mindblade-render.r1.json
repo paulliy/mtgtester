@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No trigger fires on combat damage dealt to opponents with a condition that the damage came from a Warrior source; playerDealtDamage does not restrict to combat damage or to the source's creature type."}

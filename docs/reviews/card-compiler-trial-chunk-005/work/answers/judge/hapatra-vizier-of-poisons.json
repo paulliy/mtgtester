@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A triggers on one or more -1/-1 counters being put on creatures (one trigger per batch of counters placed at once); Text B triggers once for each single -1/-1 counter, so putting two counters at once makes two Snakes in B and one Snake in A."]}

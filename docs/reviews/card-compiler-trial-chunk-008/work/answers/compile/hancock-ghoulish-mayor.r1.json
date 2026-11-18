@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"other"},{"kind":"controller","who":"you"},{"kind":"anyOf","of":[{"kind":"subtype","value":"Zombie"},{"kind":"subtype","value":"Mutant"}]}]},"op":{"layer":7,"sublayer":"d","power":{"kind":"allCountersOnSelf"},"toughness":{"kind":"allCountersOnSelf"}}}]}}

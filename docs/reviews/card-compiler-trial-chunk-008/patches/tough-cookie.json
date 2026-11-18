@@ -1,0 +1,59 @@
+{
+  "name": "Tough Cookie",
+  "oracleId": "8a1a5862-c027-4c15-99a7-1795d0da96da",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{G}: Until end of turn, target noncreature artifact you control becomes a 4/4 artifact creature."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "artifact",
+              "controller": "you",
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "becomeCreatureUntilEot",
+              "target": 0,
+              "subtypes": [],
+              "power": 4,
+              "toughness": 4,
+              "keywords": []
+            }
+          ],
+          "description": "{2}{G}: Until end of turn, target noncreature artifact you control becomes a 4/4 artifact creature."
+        }
+      }
+    ]
+  }
+}

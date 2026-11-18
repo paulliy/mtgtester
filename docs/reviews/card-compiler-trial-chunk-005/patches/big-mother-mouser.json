@@ -1,0 +1,31 @@
+{
+  "name": "Big Mother Mouser",
+  "oracleId": "94751968-e006-45d0-970b-0ed45d28e6cc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, double the number of +1/+1 counters on it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "doubleCountersTarget",
+            "target": "source"
+          }
+        ],
+        "description": "Whenever this creature attacks, double the number of +1/+1 counters on it."
+      }
+    ]
+  }
+}

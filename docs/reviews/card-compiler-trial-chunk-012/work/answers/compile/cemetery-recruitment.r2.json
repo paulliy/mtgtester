@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no way to branch on whether a targeted graveyard card is a Zombie card (conditions cannot read a cardInGraveyard target), and no returned-card-conditional draw op exists."}

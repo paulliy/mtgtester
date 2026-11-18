@@ -5,7 +5,8 @@
  * 1. Rewrites both definition snapshots and prints a per-card diff of what changed, to read.
  * 2. Re-seals benchmark compatibility (`ai-bench refresh --suite core-fast --write`).
  * 3. Registers new scenario files with the Card Test Lab (`runner-scenarios.ts`).
- * 4. Binds every source the evidence generators now reach into their `SOURCE_FILES` lists.
+ * 4. Binds every source the evidence generators now reach into their shared `SOURCE_FILES` list
+ *    (`scripts/card-evidence-sources.ts`).
  * 5. Reports which containment expectations the batch retires: manifest `unsupported` cards that
  *    now model, and must move to a supported status with tests.
  * 6. Prints the batch's manifest and progress skeleton.
@@ -21,7 +22,11 @@ import { interpretCard } from '../../packages/engine/src/cards/interpret';
 import { interpretSnapshot } from '../../packages/engine/src/cards/interpret-snapshot';
 import { overrideSnapshot } from '../../packages/engine/src/cards/overrides/snapshot';
 import { pinStore } from '../../packages/engine/tests/scenario/pin-store';
-import { discoverGeneratorSourceFiles } from '../card-evidence-input';
+import {
+  discoverGeneratorSourceFilesForEntries,
+  EVIDENCE_SOURCE_LIST,
+  GENERATORS,
+} from '../card-evidence-input';
 import { snapshotChange } from './card-check';
 import { withLf } from './line-endings';
 import { runPrettier } from './prettier';
@@ -271,19 +276,16 @@ function main(): void {
   }
 
   console.log('\n4. Evidence generator sources');
-  for (const generator of readdirSync('scripts')
-    .filter((name) => /^generate-.*-evidence\.ts$/.test(name))
-    .sort()) {
-    const path = `scripts/${generator}`;
-    const text = readFileSync(path, 'utf8');
-    if (!LIST.test(text)) continue;
-    const listed = sourceList(text);
-    const missing = discoverGeneratorSourceFiles(process.cwd(), path).filter(
-      (file) => !listed.includes(file),
-    );
-    if (missing.length === 0) continue;
-    write(path, bindSources(text, missing));
-    console.log(`   ${path}: bound ${missing.join(', ')}`);
+  const sourcesText = readFileSync(EVIDENCE_SOURCE_LIST, 'utf8');
+  const listed = sourceList(sourcesText);
+  const missing = discoverGeneratorSourceFilesForEntries(
+    process.cwd(),
+    GENERATORS.map((card) => `scripts/generate-${card}-evidence.ts`),
+  ).filter((file) => !listed.includes(file));
+  if (missing.length === 0) console.log('   every generator source is bound');
+  else {
+    write(EVIDENCE_SOURCE_LIST, bindSources(sourcesText, missing));
+    console.log(`   ${EVIDENCE_SOURCE_LIST}: bound ${missing.join(', ')}`);
   }
 
   console.log('\n5. Containment the batch retires');

@@ -1,0 +1,55 @@
+{
+  "name": "Split Decision",
+  "oracleId": "5f725d51-e133-488c-9ca9-1c7b0523b5bd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Choose target instant or sorcery spell. Starting with you, each player votes for denial or duplication. If denial gets more votes, counter the spell. If duplication gets more votes or the vote is tied, copy the spell. You may choose new targets for the copy."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "spell",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "councilVote",
+          "choices": [
+            "denial",
+            "duplication"
+          ],
+          "more": [
+            {
+              "op": "counter",
+              "target": 0
+            }
+          ],
+          "otherwise": [
+            {
+              "op": "copyTargetSpell",
+              "target": 0,
+              "newTargets": true
+            }
+          ]
+        }
+      ],
+      "description": "Will of the council — Choose target instant or sorcery spell. Starting with you, each player votes for denial or duplication. If denial gets more votes, counter the spell. If duplication gets more votes or the vote is tied, copy the spell. You may choose new targets for the copy."
+    }
+  }
+}

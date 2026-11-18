@@ -1,0 +1,1 @@
+When this enters, choose up to 1000 target creatures (zero or more). Phase out each of them.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The cast trigger's look-at-top-X put-onto-battlefield pick cannot cap the permanent's mana value at X (lookAtTopN.mayPut has no mana-value limit), and its remaining cards cannot be shuffled into the library (lookAtTopN.rest offers only bottom or graveyard)."}

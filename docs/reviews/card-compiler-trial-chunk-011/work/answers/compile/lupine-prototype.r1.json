@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The condition 'a player has no cards in hand' has no Condition kind, since the schema can only test the event player's hand size and the life total of players, not whether any player's hand is empty."}

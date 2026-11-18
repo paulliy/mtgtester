@@ -1,0 +1,1 @@
+Whenever another creature you control enters, this deals 2 damage to that creature. If that creature is a Dinosaur, this gets +2/+0 until end of turn.

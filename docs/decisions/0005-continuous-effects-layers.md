@@ -1,6 +1,8 @@
 # 0005 — Continuous effects & the CR 613 layer system
 
-Status: accepted (increment) — 2026-07-24
+Date: 2026-07-24
+Status: Accepted (2026-07-24)
+Status note: increment
 Context: a design stress-test against notoriously hard cards (ADR 0004 follow-up). The
 ability IR (ADR 0004) models one subsystem — effects that resolve on the stack. A pile of
 real cards is not expressible that way no matter how many `Effect` primitives are added.

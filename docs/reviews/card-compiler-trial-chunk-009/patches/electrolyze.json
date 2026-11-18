@@ -1,0 +1,41 @@
+{
+  "name": "Electrolyze",
+  "oracleId": "07b222d7-24f2-4994-9004-ff6672ebe161",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals 2 damage divided as you choose among one or two targets."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "anyTarget",
+          "count": {
+            "min": 1,
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamageDivided",
+          "targetSlot": 0,
+          "total": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Electrolyze deals 2 damage divided as you choose among one or two targets. Draw a card."
+    }
+  }
+}

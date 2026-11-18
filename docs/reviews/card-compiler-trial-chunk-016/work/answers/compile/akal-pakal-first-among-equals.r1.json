@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The intervening-if asks whether an artifact entered the battlefield under your control this turn, and the schema's condition can only count artifacts still on the battlefield (countPermanents) or test the source itself (enteredThisTurn), so an artifact that entered and then left is missed."}

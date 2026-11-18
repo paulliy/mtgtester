@@ -1,0 +1,1 @@
+Whenever you cast an artifact spell, you may pay {2}. If you do, create a token. That token is a colorless Construct artifact creature token with base power 0 and base toughness 0, and it gets +X/+X, where X is the number of artifacts you control.

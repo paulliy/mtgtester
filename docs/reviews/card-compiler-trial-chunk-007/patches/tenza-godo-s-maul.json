@@ -1,0 +1,62 @@
+{
+  "name": "Tenza, Godo's Maul",
+  "oracleId": "f8180ed7-84e9-49f7-8256-dcc21f9d334b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equipped creature gets +1/+1. As long as it's legendary, it gets an additional +2/+2. As long as it's red, it has trample."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "attachedToSource"
+            },
+            {
+              "kind": "supertype",
+              "value": "Legendary"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 2
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "attachedToSource"
+            },
+            {
+              "kind": "color",
+              "value": "R"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "trample"
+        }
+      }
+    ]
+  }
+}

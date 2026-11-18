@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A gives the target creature +2/+2 until end of turn, or +4/+4 if the spell is cast during the main phase; Text B says the spell has no effects and does nothing, so no pump happens at all.","Text B omits the target-creature pump entirely, so the spell's targeting and both its +2/+2 and +4/+4 effects are missing from B."]}

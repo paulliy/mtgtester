@@ -1,0 +1,53 @@
+{
+  "name": "Thopter Shop",
+  "oracleId": "b2f9e07b-64b7-40b3-9a5e-5f1d59b35af7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever one or more artifact creatures you control die, draw a card. This ability triggers only once each turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "aggregate": true,
+          "oncePerTurn": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever one or more artifact creatures you control die, draw a card. This ability triggers only once each turn."
+      }
+    ]
+  }
+}

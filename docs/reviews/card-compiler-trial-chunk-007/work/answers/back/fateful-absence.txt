@@ -1,0 +1,2 @@
+Its controller creates a colorless Artifact Clue token with "{2}, Sacrifice this artifact: Draw a card."
+Destroy target creature or planeswalker.

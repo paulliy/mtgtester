@@ -1,0 +1,43 @@
+{
+  "name": "Daring Saboteur",
+  "oracleId": "d36f64a0-53f7-4c56-9f40-a7927a5c2608",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{U}: ~ can't be blocked this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "cantBeBlockedUntilEot",
+              "target": "source"
+            }
+          ],
+          "description": "{2}{U}: This creature can't be blocked this turn."
+        }
+      }
+    ]
+  }
+}

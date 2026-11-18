@@ -1,0 +1,1 @@
+{2}, {T}: Put a +1/+1 counter on each creature token you control. Each creature token you control gains trample until end of turn.

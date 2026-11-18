@@ -1,0 +1,51 @@
+{
+  "name": "Linden, the Steadfast Queen",
+  "oracleId": "dbc56f3b-83b3-41c8-a8ae-d3774fe6ee01",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a white creature you control attacks, you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "color",
+                  "value": "W"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a white creature you control attacks, you gain 1 life."
+      }
+    ]
+  }
+}

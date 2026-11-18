@@ -1,0 +1,1 @@
+{1}{G}: Regenerate this. Activate only if the total power of creatures you control is 8 or greater.

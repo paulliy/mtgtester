@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","controller":"you"}],"effects":[{"op":"dealDamage","target":0,"amount":{"kind":"const","n":1}},{"op":"grantKeywordUntilEot","target":0,"keyword":"trample"}],"description":"Rile deals 1 damage to target creature you control. That creature gains trample until end of turn."}}}

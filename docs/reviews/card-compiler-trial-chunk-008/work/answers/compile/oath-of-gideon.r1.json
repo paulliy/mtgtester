@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"additionalCountersOnEntry":[{"affects":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"type","value":"Planeswalker"}]},"counter":"loyalty","count":{"kind":"const","n":1}}]}}

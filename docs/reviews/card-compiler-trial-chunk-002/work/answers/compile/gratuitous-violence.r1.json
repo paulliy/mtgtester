@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"damageDoubled","sourceFilter":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"controller","who":"you"}]}}]}}

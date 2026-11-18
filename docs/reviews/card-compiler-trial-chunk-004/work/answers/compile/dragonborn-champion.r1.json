@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"playerDealtDamage can filter only by an opponent source controller, not by 'a source you control', so 'a source you control deals 5 or more damage to a player' cannot be expressed exactly."}

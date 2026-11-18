@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"enters","subject":{"kind":"self"}},"optional":false,"targets":[{"kind":"player"}],"effects":[{"op":"exileTargetPlayerGraveyard","target":0}],"description":"When Jirina enters, exile target player's graveyard."}]}}

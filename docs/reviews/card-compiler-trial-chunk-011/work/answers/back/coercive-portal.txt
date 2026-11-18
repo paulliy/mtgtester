@@ -1,0 +1,1 @@
+At the beginning of your upkeep, council's vote: each player votes for carnage or homage. If carnage gets more votes, sacrifice this artifact and destroy each nonland permanent on the battlefield. Otherwise, draw a card.

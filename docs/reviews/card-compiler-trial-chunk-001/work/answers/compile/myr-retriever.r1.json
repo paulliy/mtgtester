@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Another' excludes the source only for permanents (the other selector), and the schema does not define that exclusion for a graveyard card target, so it could return Myr Retriever itself."}

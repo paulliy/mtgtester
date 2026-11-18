@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The top-of-library cast permission filtered to spells with flash or flying needs a keyword selector, and hasKeyword is event-only so it cannot filter a castFromZone permission."}

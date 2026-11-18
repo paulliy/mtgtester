@@ -1,0 +1,40 @@
+{
+  "name": "Gahiji, Honored One",
+  "oracleId": "110d5d45-7174-4d1b-9e9c-e1ccd950ee3b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature attacks one of your opponents or a planeswalker an opponent controls, that creature gets +2/+0 until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          },
+          "eventCondition": {
+            "kind": "triggerObjectAttackingOpponent"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "pumpUntilEot",
+            "target": "triggerObject",
+            "power": 2,
+            "toughness": 0
+          }
+        ],
+        "description": "Whenever a creature attacks one of your opponents or a planeswalker an opponent controls, that creature gets +2/+0 until end of turn."
+      }
+    ]
+  }
+}

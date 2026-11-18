@@ -1,0 +1,44 @@
+{
+  "name": "Warren Instigator",
+  "oracleId": "47f75e25-8a52-4452-a3a8-bf1bd00942d1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature deals damage to an opponent, you may put a Goblin creature card from your hand onto the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsDamageToOpponent",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "handToBattlefield",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Goblin"
+                }
+              ]
+            },
+            "count": "one"
+          }
+        ],
+        "description": "Whenever this creature deals damage to an opponent, you may put a Goblin creature card from your hand onto the battlefield."
+      }
+    ]
+  }
+}

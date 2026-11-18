@@ -1,0 +1,2 @@
+When this enters, creatures you control get +X/+0 until end of turn, where X is the number of artifacts you control.
+When this enters, creatures you control gain trample until end of turn.

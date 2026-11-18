@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The library search's mana value bounds (manaValueAtMost/manaValueAtLeast) take fixed numbers, so the filter cannot be 1 plus the sacrificed artifact's mana value."}

@@ -1,0 +1,47 @@
+{
+  "name": "Spider-Woman, Stunning Savior",
+  "oracleId": "be2b9c6d-4ecb-49ec-b276-4aa93c5dfc00",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Venom Blast — Artifacts and creatures your opponents control enter tapped."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "otherPermanentsEnterTapped",
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            },
+            {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

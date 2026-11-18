@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The choice to put the targeted card with mana value 3 or less onto the battlefield, with the hand as the fallback, has no schema shape, since graveyardToBattlefield is mandatory and no optional put exists."}

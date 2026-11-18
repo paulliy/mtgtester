@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'If a planeswalker entered the battlefield under your control this turn' needs a condition that remembers planeswalkers which entered this turn even after they leave, and countPermanents only counts those still on the battlefield."}

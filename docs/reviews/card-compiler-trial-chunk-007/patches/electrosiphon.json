@@ -1,0 +1,33 @@
+{
+  "name": "Electrosiphon",
+  "oracleId": "bff9105f-d8d4-4412-88d9-c9697581ebe9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Counter target spell. You get an amount of {E} equal to its mana value."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "op": "counter",
+          "target": 0
+        },
+        {
+          "op": "gainEnergy",
+          "amount": {
+            "kind": "manaValueOfTarget",
+            "target": 0
+          }
+        }
+      ],
+      "description": "Counter target spell. You get an amount of {E} (energy counters) equal to its mana value."
+    }
+  }
+}

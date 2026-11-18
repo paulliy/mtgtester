@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target restriction 'with lesser mana value' compares against the mana value of the triggering artifact, and no selector or Value reads the trigger object's mana value (manaValueOfTarget reads only a declared target)."}

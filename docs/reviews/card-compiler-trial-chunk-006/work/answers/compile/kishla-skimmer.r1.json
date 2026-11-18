@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The leavesGraveyard trigger takes a permanent subject selector, and no selector can say 'a card leaving your graveyard' (a card's zone or owner-of-card leave event), so the trigger subject cannot be stated exactly."}

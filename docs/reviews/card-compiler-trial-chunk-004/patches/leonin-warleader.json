@@ -1,0 +1,52 @@
+{
+  "name": "Leonin Warleader",
+  "oracleId": "8b1351e6-165e-4ca3-96d5-4774b3176362",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, create two 1/1 white Cat creature tokens with lifelink that are tapped and attacking."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenAttacking",
+            "spec": {
+              "name": "Cat",
+              "typeLine": "Token Creature — Cat",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Cat"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1,
+              "keywords": [
+                "lifelink"
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 2
+            }
+          }
+        ],
+        "description": "Whenever this creature attacks, create two 1/1 white Cat creature tokens with lifelink that are tapped and attacking."
+      }
+    ]
+  }
+}

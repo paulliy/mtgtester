@@ -1,0 +1,15 @@
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/thran-turbine.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/thran-turbine.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/pulse-of-murasa.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/pulse-of-murasa.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/exsanguinator-cavalry.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/exsanguinator-cavalry.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/descend-upon-the-sinful.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/descend-upon-the-sinful.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/on-thin-ice.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/on-thin-ice.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/bramble-wurm.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/bramble-wurm.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/hard-hitting-question.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/hard-hitting-question.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/samut-vizier-of-naktamun.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/samut-vizier-of-naktamun.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/wurmwall-sweeper.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/wurmwall-sweeper.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/dualcaster-mage.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/dualcaster-mage.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/diary-of-dreams.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/diary-of-dreams.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/thundering-raiju.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/thundering-raiju.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/scale-the-heights.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/scale-the-heights.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/dogged-detective.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/dogged-detective.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/horobi-death-s-wail.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/horobi-death-s-wail.json

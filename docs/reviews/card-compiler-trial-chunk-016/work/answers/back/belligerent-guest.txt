@@ -1,0 +1,2 @@
+Whenever this creature deals combat damage to a player, create a Blood token.
+A Blood token is an artifact with "{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card."

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The 'for the first time each turn' limit on the attack trigger has no schema field: oncePerTurn exists only on object-event triggers, not on the attackDeclared head that a 'you attack' trigger uses."}

@@ -1,0 +1,33 @@
+{
+  "name": "Fire Covenant",
+  "oracleId": "025939a0-424a-41bf-8fc9-2ef9ea5485f7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals X damage divided as you choose among any number of target creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "count": {
+            "min": 0,
+            "max": 999
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamageDivided",
+          "targetSlot": 0,
+          "total": {
+            "kind": "xValue"
+          }
+        }
+      ],
+      "description": "Fire Covenant deals X damage divided as you choose among any number of target creatures."
+    }
+  }
+}

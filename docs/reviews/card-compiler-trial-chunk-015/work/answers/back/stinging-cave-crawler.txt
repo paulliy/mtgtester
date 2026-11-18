@@ -1,0 +1,1 @@
+Whenever this creature attacks, if there are four or more cards in your graveyard that are artifact, battle, creature, enchantment, land, or planeswalker cards, you draw a card and you lose 1 life.

@@ -1,0 +1,47 @@
+{
+  "name": "Rampaging Brontodon",
+  "oracleId": "bfea2229-a1ca-40c1-aaad-5f97add3f079",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, it gets +1/+1 until end of turn for each land you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "pumpUntilEot",
+            "target": "source",
+            "power": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "type",
+                "value": "Land"
+              },
+              "scope": "you"
+            },
+            "toughness": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "type",
+                "value": "Land"
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "Whenever this creature attacks, it gets +1/+1 until end of turn for each land you control."
+      }
+    ]
+  }
+}

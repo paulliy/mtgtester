@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The sacrifice ability's counter-unless cost is {X}, where X is this creature's power, but counterUnlessControllerPays takes only a fixed ParsedManaCost, so the variable cost cannot be expressed."}

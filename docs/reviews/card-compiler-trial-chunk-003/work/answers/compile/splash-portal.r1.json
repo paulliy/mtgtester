@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The draw is conditional on the exiled creature's subtypes (Bird, Frog, Otter, or Rat), and no schema condition reads that creature's subtypes after the blink returns it as a new object, so the \"if that creature is\" branch cannot be placed to read the same object."}

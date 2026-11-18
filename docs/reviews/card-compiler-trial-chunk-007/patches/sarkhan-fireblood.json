@@ -1,0 +1,33 @@
+{
+  "name": "Sarkhan, Fireblood",
+  "oracleId": "074cbe14-a0c8-4772-955a-b4052333d6ce",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "+1: You may discard a card. If you do, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "loyalty",
+            "delta": 1
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "mayDiscardThenDraw",
+              "count": 1
+            }
+          ],
+          "description": "+1: You may discard a card. If you do, draw a card."
+        }
+      }
+    ]
+  }
+}

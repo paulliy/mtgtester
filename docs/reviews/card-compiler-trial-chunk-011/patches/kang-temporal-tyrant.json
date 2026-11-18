@@ -1,0 +1,30 @@
+{
+  "name": "Kang, Temporal Tyrant",
+  "oracleId": "b43350a8-fc4d-41ed-becd-f0277512bb5f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ attacks, he connives."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "connive"
+          }
+        ],
+        "description": "Whenever ~ attacks, he connives."
+      }
+    ]
+  }
+}

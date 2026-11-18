@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Encore (exile from the graveyard as cost, one token copy per opponent that you control, attacking that opponent, with haste, sacrificed at end step) has no single form in the schema; createTokenCopyOf with eachOpponent gives the copies to the opponents, not to the activating player."}

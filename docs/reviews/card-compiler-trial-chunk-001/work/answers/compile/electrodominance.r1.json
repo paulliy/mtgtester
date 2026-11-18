@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"castOneFromHandFreeUpTo takes a fixed number for maxManaValue, not a Value, so 'mana value X or less' where X is the announced value cannot be stated."}

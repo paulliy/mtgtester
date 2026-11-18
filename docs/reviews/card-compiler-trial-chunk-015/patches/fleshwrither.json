@@ -1,0 +1,70 @@
+{
+  "name": "Fleshwrither",
+  "oracleId": "49815e6d-b9c5-4e45-949e-34d34b3543e8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Transfigure {1}{B}{B}"
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 2,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "searchLibrary",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "manaValueAtLeast",
+                    "n": 4
+                  },
+                  {
+                    "kind": "manaValueAtMost",
+                    "n": 4
+                  }
+                ]
+              },
+              "destinations": [
+                {
+                  "zone": "battlefield"
+                }
+              ]
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "description": "Transfigure {1}{B}{B}"
+        }
+      }
+    ]
+  }
+}

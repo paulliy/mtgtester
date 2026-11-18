@@ -1,0 +1,1 @@
+{2}, {T}: Put two +1/+1 counters on target creature that isn't a Human and entered the battlefield this turn.

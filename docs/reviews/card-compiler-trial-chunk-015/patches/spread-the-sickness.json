@@ -1,0 +1,29 @@
+{
+  "name": "Spread the Sickness",
+  "oracleId": "142af8f1-6d6b-4043-8cc4-6632481972c1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target creature, then proliferate."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroy",
+          "target": 0
+        },
+        {
+          "op": "proliferate"
+        }
+      ],
+      "description": "Destroy target creature, then proliferate."
+    }
+  }
+}

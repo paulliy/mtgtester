@@ -1,0 +1,42 @@
+{
+  "name": "Tectonic Hazard",
+  "oracleId": "9097243a-39fa-4e18-8316-c0e57699c783",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals 1 damage to each opponent and each creature they control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "eachOpponentDamage",
+          "amount": 1
+        },
+        {
+          "op": "damageEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "opponents"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "amount": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Tectonic Hazard deals 1 damage to each opponent and each creature they control."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema's free-cast op (castOneFromHandFreeUpTo) takes only a fixed maximum mana value, not a permanent-spell filter or a mana value of 1 plus the greatest mana value among other permanents, so the upkeep cast cannot be stated exactly."}

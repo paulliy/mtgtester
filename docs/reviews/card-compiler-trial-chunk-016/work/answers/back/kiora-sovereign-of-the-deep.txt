@@ -1,0 +1,1 @@
+Whenever you cast a Kraken, Leviathan, Octopus, or Serpent spell from your hand, look at the top X cards of your library, where X is that spell's mana value. You may cast one spell with mana value X minus 1 or less from among them without paying its mana cost.

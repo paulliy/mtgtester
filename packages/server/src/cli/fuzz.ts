@@ -9,7 +9,8 @@
  * `coverage-oracle.json` (the bulk file is gitignored), and a provider mix: heuristic bots in every
  * seat, random players in every seat, or two of each. The decks are used as committed; fuzz tests
  * the engine, not deck legality. Each changed card (`--card`, or `--changed`: the cards whose
- * definition snapshot changed since `--base`, or HEAD's parent) is read from the pin store and
+ * definition snapshot changed since `--base`, or HEAD's parent) is read from the pin store, or for
+ * a promoted compiled card from its EDHREC pin, and
  * plays `--card-games` more pods in which it replaces up to four basic lands in every deck.
  *
  * A game fails on a thrown error or invariant violation, a halted result (an unmodeled card, the
@@ -21,12 +22,15 @@
  * when any game failed.
  */
 import { spawn } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { OracleCard } from '@mtg/shared';
+import { compiledCards } from '../../../engine/src/cards/overrides/compiled/register';
 import { pinStore } from '../../../engine/tests/scenario/pin-store';
 import { baseCommit, changedCards } from '../../../../scripts/cards/changed-cards';
+import { PINNED_ORACLE_PATH, type PinnedCard } from '../cards/edhrec-pins';
 import type { FuzzReply, FuzzRequest } from './fuzz-game';
 import { failureOf, liveness, loadDecks, pod, withCard, type Outcome } from './fuzz-plan';
 
@@ -135,12 +139,32 @@ function replay(game: Game, args: Args): string {
   return `bun run fuzz --from ${game.n} ${game.card === null ? '--games 1 ' : ''}${card} --turn-cap ${args.turnCap} --decisions ${args.decisions}`;
 }
 
+/** The pinned Oracle record of every promoted compiled card, by name. */
+function compiledCardPins(): Map<string, OracleCard> {
+  const promoted = new Set([...compiledCards().values()].map((card) => card.name));
+  if (promoted.size === 0) return new Map();
+  const pins = JSON.parse(readFileSync(resolve(PINNED_ORACLE_PATH), 'utf8')) as PinnedCard[];
+  return new Map(
+    pins.filter((pin) => promoted.has(pin.card.name)).map((pin) => [pin.card.name, pin.card]),
+  );
+}
+
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const decks = await loadDecks();
   const names = [...args.cards];
-  if (args.changed) names.push(...changedCards(baseCommit(args.base), pinStore.names()));
-  const unpinned = names.filter((name) => !pinStore.has(name));
+  // A promoted compiled card has no pin-store entry: its Oracle record is its EDHREC pin.
+  const compiled = compiledCardPins();
+  const hasPin = (name: string): boolean => pinStore.has(name) || compiled.has(name);
+  const pinOf = (name: string): OracleCard =>
+    pinStore.has(name) ? pinStore.get(name) : compiled.get(name)!;
+  if (args.changed)
+    names.push(
+      ...changedCards(baseCommit(args.base), [...pinStore.names(), ...compiled.keys()]).filter(
+        (name) => !names.includes(name),
+      ),
+    );
+  const unpinned = names.filter((name) => !hasPin(name));
   if (unpinned.length > 0)
     console.log(`fuzz: not in the pin store, so not played: ${unpinned.join('; ')}`);
 
@@ -154,8 +178,8 @@ async function main(): Promise<void> {
   });
   for (let n = args.from; n < args.from + args.games; n++)
     games.push({ n, card: null, request: request(n, `fuzz-${n}`, pod(decks, n)) });
-  for (const name of names.filter((candidate) => pinStore.has(candidate))) {
-    const card = pinStore.get(name);
+  for (const name of names.filter(hasPin)) {
+    const card = pinOf(name);
     for (let n = args.from; n < args.from + args.cardGames; n++) {
       const picked = pod(decks, n);
       games.push({

@@ -1,0 +1,53 @@
+{
+  "name": "Desynchronization",
+  "oracleId": "dab64d0f-1246-4a4d-9a79-6db2ca0c8882",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return each nonland permanent that's not historic to its owner's hand."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "returnToHandEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "supertype",
+                      "value": "Legendary"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Saga"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Return each nonland permanent that's not historic to its owner's hand."
+    }
+  }
+}

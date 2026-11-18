@@ -1,0 +1,1 @@
+Whenever you declare attackers including one or more creatures that are not Gnomes, put a +1/+1 counter on this creature. Then create a number of 1/1 colorless Gnome artifact creature tokens that are attacking equal to the number of +1/+1 counters on this creature.

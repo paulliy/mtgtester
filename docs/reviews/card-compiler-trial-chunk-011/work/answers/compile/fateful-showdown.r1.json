@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The draw count must equal the number of cards discarded (the hand size before discarding), and no op reads that count before the discard, so 'discard all the cards in your hand, then draw that many cards' cannot be stated exactly."}

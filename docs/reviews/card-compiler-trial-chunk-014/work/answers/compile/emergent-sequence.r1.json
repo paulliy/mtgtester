@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The counter count 'a +1/+1 counter for each land you had enter the battlefield under your control this turn' cannot be counted exactly: the only available count (countPermanents with enteredThisTurn) reads lands still on the battlefield, so lands that entered and then left would be missed."}

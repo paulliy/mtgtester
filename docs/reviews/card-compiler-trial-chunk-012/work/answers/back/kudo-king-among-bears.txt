@@ -1,0 +1,2 @@
+Other creatures are Bears in addition to their other creature types.
+Other creatures have base power and toughness 2/2.

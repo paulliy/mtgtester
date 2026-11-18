@@ -1,0 +1,1 @@
+When this creature enters, choose any number of target creatures and any number of target artifacts. Put a +1/+1 counter on each chosen creature and a charge counter on each chosen artifact.

@@ -1,0 +1,2 @@
+Target card in any graveyard (no owner restriction) is put into hand (graveyardToHand).
+You gain 6 life.

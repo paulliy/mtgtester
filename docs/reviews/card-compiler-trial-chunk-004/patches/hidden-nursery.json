@@ -1,0 +1,52 @@
+{
+  "name": "Hidden Nursery",
+  "oracleId": "1a26e2d6-6bfc-4cdc-9bd6-8b37a9be2961",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{4}{G}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 4,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "discover",
+              "count": {
+                "kind": "const",
+                "n": 4
+              }
+            }
+          ],
+          "description": "{4}{G}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+This enters as a copy of a creature. It gains "At the beginning of your upkeep, if this permanent is not a token, create a token that is a copy of this."

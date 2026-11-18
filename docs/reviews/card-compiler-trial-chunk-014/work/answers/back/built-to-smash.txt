@@ -1,0 +1,2 @@
+Target attacking creature gets +3/+3 until end of turn.
+If that creature is an artifact creature, it gains trample until end of turn.

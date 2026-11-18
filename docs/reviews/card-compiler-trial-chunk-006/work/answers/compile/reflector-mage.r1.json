@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The owner's restriction 'can't cast spells with the same name as that creature until your next turn' has no representation: cantCastSpells takes no name filter and no card-name cast prohibition exists in the schema."}

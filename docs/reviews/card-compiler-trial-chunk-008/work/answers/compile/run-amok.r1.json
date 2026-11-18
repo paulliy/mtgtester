@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","filter":{"kind":"combatRole","role":"attacking"}}],"effects":[{"op":"pumpUntilEot","target":0,"power":3,"toughness":3},{"op":"grantKeywordUntilEot","target":0,"keyword":"trample"}],"description":"Target attacking creature gets +3/+3 and gains trample until end of turn."}}}

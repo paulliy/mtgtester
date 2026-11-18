@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no targeted operation that doubles a chosen creature's power and toughness: powerOfTarget exists but there is no toughnessOfTarget value, and doublePowerTarget only doubles power."}

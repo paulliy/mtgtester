@@ -1,0 +1,113 @@
+{
+  "name": "Simulacrum Synthesizer",
+  "oracleId": "eb7a1f21-a66d-415b-8520-710b44890bb6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another artifact you control with mana value 3 or greater enters, create a 0/0 colorless Construct artifact creature token with \"~ gets +1/+1 for each artifact you control.\""
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "manaValueAtLeast",
+                  "n": 3
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Construct",
+              "typeLine": "Artifact Creature — Construct",
+              "types": [
+                "Artifact",
+                "Creature"
+              ],
+              "subtypes": [
+                "Construct"
+              ],
+              "colors": [],
+              "power": 0,
+              "toughness": 0,
+              "staticEffects": [
+                {
+                  "affects": {
+                    "kind": "self"
+                  },
+                  "op": {
+                    "layer": 7,
+                    "sublayer": "d",
+                    "power": {
+                      "kind": "countPermanents",
+                      "selector": {
+                        "kind": "allOf",
+                        "of": [
+                          {
+                            "kind": "controller",
+                            "who": "you"
+                          },
+                          {
+                            "kind": "type",
+                            "value": "Artifact"
+                          }
+                        ]
+                      },
+                      "scope": "you"
+                    },
+                    "toughness": {
+                      "kind": "countPermanents",
+                      "selector": {
+                        "kind": "allOf",
+                        "of": [
+                          {
+                            "kind": "controller",
+                            "who": "you"
+                          },
+                          {
+                            "kind": "type",
+                            "value": "Artifact"
+                          }
+                        ]
+                      },
+                      "scope": "you"
+                    }
+                  }
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever another artifact you control with mana value 3 or greater enters, create a 0/0 colorless Construct artifact creature token with \"This token gets +1/+1 for each artifact you control.\""
+      }
+    ]
+  }
+}

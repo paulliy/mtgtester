@@ -1,0 +1,49 @@
+{
+  "name": "Good-Fortune Unicorn",
+  "oracleId": "1e0cdff3-3ec5-41fc-8053-f072bae156b3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another creature you control enters, put a +1/+1 counter on that creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "triggerObject",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever another creature you control enters, put a +1/+1 counter on that creature."
+      }
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{2}{W}, Activate this ability only from a graveyard: Choose one —
+• Creatures you control gain protection from white until end of turn.
+• Creatures you control gain protection from blue until end of turn.
+• Creatures you control gain protection from black until end of turn.
+• Creatures you control gain protection from red until end of turn.
+• Creatures you control gain protection from green until end of turn.

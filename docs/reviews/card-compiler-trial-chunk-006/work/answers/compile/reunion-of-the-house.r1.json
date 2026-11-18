@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A target restriction of total power 10 or less across any number of targets has no schema form, since TargetSpec's only total budget is totalManaValueAtMost."}

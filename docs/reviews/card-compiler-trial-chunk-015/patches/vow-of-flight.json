@@ -1,0 +1,42 @@
+{
+  "name": "Vow of Flight",
+  "oracleId": "81fe554a-5257-446c-ad53-ee45bf5edb40",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature gets +2/+2, has flying, and can't attack you or planeswalkers you control."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 2
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "flying"
+        }
+      }
+    ],
+    "ruleStatics": [
+      {
+        "kind": "attackRestriction",
+        "filter": {
+          "kind": "attachedToSource"
+        },
+        "includePlaneswalkers": true
+      }
+    ]
+  }
+}

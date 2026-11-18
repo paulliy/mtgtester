@@ -1,0 +1,87 @@
+{
+  "name": "Mitotic Slime",
+  "oracleId": "1162c7ff-c0cb-469a-ad3c-322b0981ae1d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature dies, create two 2/2 green Ooze creature tokens. They have \"When this token dies, create two 1/1 green Ooze creature tokens.\""
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Ooze",
+              "typeLine": "Token Creature — Ooze",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Ooze"
+              ],
+              "colors": [
+                "G"
+              ],
+              "power": 2,
+              "toughness": 2,
+              "triggers": [
+                {
+                  "kind": "triggered",
+                  "trigger": {
+                    "when": "dies",
+                    "subject": {
+                      "kind": "self"
+                    }
+                  },
+                  "optional": false,
+                  "targets": [],
+                  "effects": [
+                    {
+                      "op": "createToken",
+                      "spec": {
+                        "name": "Ooze",
+                        "typeLine": "Token Creature — Ooze",
+                        "types": [
+                          "Creature"
+                        ],
+                        "subtypes": [
+                          "Ooze"
+                        ],
+                        "colors": [
+                          "G"
+                        ],
+                        "power": 1,
+                        "toughness": 1
+                      },
+                      "count": {
+                        "kind": "const",
+                        "n": 2
+                      }
+                    }
+                  ],
+                  "description": "When this token dies, create two 1/1 green Ooze creature tokens."
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 2
+            }
+          }
+        ],
+        "description": "When this creature dies, create two 2/2 green Ooze creature tokens. They have \"When this token dies, create two 1/1 green Ooze creature tokens.\""
+      }
+    ]
+  }
+}

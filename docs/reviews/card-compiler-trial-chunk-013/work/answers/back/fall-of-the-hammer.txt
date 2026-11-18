@@ -1,0 +1,2 @@
+Target creature you control and another target creature.
+The creature you control deals damage equal to its power to the other target creature.

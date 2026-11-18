@@ -1,0 +1,1 @@
+At the beginning of your precombat main phase, you may have this ability. If you control a creature, create a Treasure artifact token with "{T}, Sacrifice this artifact: Add one mana of any color." Then put a -1/-1 counter on a creature chosen by you.

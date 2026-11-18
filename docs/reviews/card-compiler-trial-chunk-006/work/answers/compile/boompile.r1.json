@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"tap"}],"timing":"any","ability":{"kind":"activated","targets":[],"effects":[{"op":"flipCoin","onWin":[{"op":"destroyEach","selector":{"kind":"not","of":{"kind":"type","value":"Land"}}}],"onLose":[]}],"description":"{T}: Flip a coin. If you win the flip, destroy all nonland permanents."}}]}}

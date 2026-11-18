@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"castOneFromHandFreeUpTo takes a fixed maxManaValue number, so 'mana value less than or equal to that damage' (the damage dealt) cannot be expressed."}

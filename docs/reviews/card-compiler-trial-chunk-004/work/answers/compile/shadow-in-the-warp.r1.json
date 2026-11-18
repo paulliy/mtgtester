@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A cost reduction for only the first creature spell each turn needs an ordinal on the creature-spell filter, and costReduction has no ordinal (castSpellThisTurn counts all spells or only noncreature spells)."}

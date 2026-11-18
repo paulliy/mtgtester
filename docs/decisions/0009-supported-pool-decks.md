@@ -1,7 +1,7 @@
 # 0009 — Playable decks come from the supported pool, not from chasing coverage
 
 Date: 2026-07-25
-Status: Accepted
+Status: Accepted (2026-07-25)
 
 ## Context
 

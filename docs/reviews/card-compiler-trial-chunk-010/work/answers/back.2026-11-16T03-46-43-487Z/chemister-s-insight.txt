@@ -1,0 +1,2 @@
+You may cast this from your graveyard by paying {3}{U} and discarding a card rather than paying its mana cost. If this spell is cast this way, exile it when it resolves.
+This spell has no spell effects.

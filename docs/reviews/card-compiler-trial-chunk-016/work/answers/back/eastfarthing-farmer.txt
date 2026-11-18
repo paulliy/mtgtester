@@ -1,0 +1,2 @@
+When this enters, create a colorless artifact token with the subtype Food. It has "{2}, {T}, Sacrifice this token: You gain 3 life."
+When you do, target creature you control gets +X/+X until end of turn, where X is the number of Food you control.

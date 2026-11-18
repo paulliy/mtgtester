@@ -1,0 +1,2 @@
+Creatures lose all abilities.
+Creatures have base power and toughness 1/1.

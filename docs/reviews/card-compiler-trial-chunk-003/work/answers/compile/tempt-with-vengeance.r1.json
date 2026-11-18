@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema's opponent-token effects (eachOpponentCreatesTokens, shareTokensWithChosenOpponent) do not model each opponent's separate 'may' choice that sets whether the controller also creates X tokens for that opponent."}

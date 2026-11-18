@@ -1,0 +1,2 @@
+Enchanted creature gets +2/+2 and has menace.
+Enchanted creature can't attack. This restriction includes planeswalkers.

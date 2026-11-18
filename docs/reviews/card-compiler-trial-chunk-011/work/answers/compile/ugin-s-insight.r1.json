@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"scry","count":{"kind":"greatestManaValueAmong","selector":{"kind":"controller","who":"you"},"scope":"you"}},{"op":"draw","count":{"kind":"const","n":3}}],"description":"Scry X, where X is the greatest mana value among permanents you control, then draw three cards."}}}

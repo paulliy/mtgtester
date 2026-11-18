@@ -1,0 +1,1 @@
+Whenever this land is tapped for mana, target opponent creates a 1/1 colorless Spirit creature token. (The token's type line is hidden; its data gives types Creature and subtype Spirit, with no colors.)

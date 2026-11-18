@@ -1,0 +1,62 @@
+{
+  "name": "Scourglass",
+  "oracleId": "78541a40-c27a-49c0-aa3e-5a48b97065f0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Sacrifice this artifact: Destroy all permanents except for artifacts and lands. Activate only during your upkeep."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "condition": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "yourTurn"
+            },
+            {
+              "kind": "duringStep",
+              "step": "upkeep"
+            }
+          ]
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "destroyEach",
+              "selector": {
+                "kind": "not",
+                "of": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "description": "{T}, Sacrifice this artifact: Destroy all permanents except for artifacts and lands. Activate only during your upkeep."
+        }
+      }
+    ]
+  }
+}

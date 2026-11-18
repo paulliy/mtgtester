@@ -1,0 +1,2 @@
+At the beginning of your upkeep, put two descent counters on this enchantment. Then create a Treasure token for each descent counter on this enchantment. Each opponent creates a Treasure token for each descent counter on this enchantment. Then each player is dealt damage equal to the number of descent counters on this enchantment.
+Each of those Treasure tokens has "{T}, Sacrifice this token: Add one mana of any color."

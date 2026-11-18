@@ -1,0 +1,67 @@
+{
+  "name": "High Score",
+  "oracleId": "d81fc181-ecb0-43a5-88e8-c61aca3428d8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your end step, draw a card if you control a creature with the greatest power among creatures on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "you",
+          "condition": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                "scope": "you",
+                "cmp": ">=",
+                "n": 1
+              },
+              {
+                "kind": "compareValues",
+                "left": {
+                  "kind": "greatestPowerAmong",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  "scope": "you"
+                },
+                "cmp": ">=",
+                "right": {
+                  "kind": "greatestPowerAmong",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  "scope": "all"
+                }
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "At the beginning of your end step, draw a card if you control a creature with the greatest power among creatures on the battlefield."
+      }
+    ]
+  }
+}

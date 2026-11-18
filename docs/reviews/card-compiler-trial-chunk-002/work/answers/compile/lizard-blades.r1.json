@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Reconfigure's \"while attached, this isn't a creature\" needs a condition that reads whether the source is attached, which no Condition provides, and its unattach mode has no effect form."}

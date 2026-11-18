@@ -1,0 +1,33 @@
+{
+  "name": "Followed Footsteps",
+  "oracleId": "732b1314-68bb-4d3d-9f3f-7e66e763caf5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, create a token that's a copy of enchanted creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": "attachedToSource",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "At the beginning of your upkeep, create a token that's a copy of enchanted creature."
+      }
+    ]
+  }
+}

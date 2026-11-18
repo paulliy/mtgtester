@@ -1,0 +1,1 @@
+When this creature enters, you may search your library for a green creature card with mana value 3 or less that isn't legendary, put that card onto the battlefield, then shuffle.

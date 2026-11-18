@@ -1,0 +1,43 @@
+{
+  "name": "Sanitarium Skeleton",
+  "oracleId": "d09b0648-e324-4a16-b78c-d1849177c04f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{B}: Return this card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "zone": "graveyard",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "returnSelfFromGraveyardToHand"
+            }
+          ],
+          "description": "{2}{B}: Return this card from your graveyard to your hand."
+        }
+      }
+    ]
+  }
+}

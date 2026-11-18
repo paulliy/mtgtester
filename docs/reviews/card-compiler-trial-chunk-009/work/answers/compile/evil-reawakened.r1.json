@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema puts one counter kind with one count on a reanimated card (reanimateEachChosen takes a single counter), and no effect places two +1/+1 counters on the card after it returns."}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Mana value X or less' needs a variable X announced as an additional life cost, but the selector's manaValueAtMost takes only a fixed number n, so the destroy filter cannot use the announced X."}

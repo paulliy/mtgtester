@@ -1,0 +1,47 @@
+{
+  "name": "Oathkeeper, Takeno's Daisho",
+  "oracleId": "7d58b478-a64b-46e9-b62a-08c6c1ca7c13",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature dies, return that card to the battlefield under your control if it's a Samurai card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "kind": "subtype",
+                "value": "Samurai"
+              }
+            },
+            "then": [
+              {
+                "op": "graveyardToBattlefield",
+                "target": "triggerObject"
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Whenever equipped creature dies, return that card to the battlefield under your control if it's a Samurai card."
+      }
+    ]
+  }
+}

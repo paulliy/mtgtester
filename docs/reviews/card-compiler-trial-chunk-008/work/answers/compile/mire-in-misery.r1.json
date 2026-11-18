@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"sacrificeOneEachOpponent","filter":{"kind":"anyOf","of":[{"kind":"type","value":"Creature"},{"kind":"type","value":"Enchantment"}]}}],"description":"Each opponent sacrifices a creature or enchantment of their choice."}}}

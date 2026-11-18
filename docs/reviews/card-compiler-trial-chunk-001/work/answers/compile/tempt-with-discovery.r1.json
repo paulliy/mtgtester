@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no op for an opponent's optional library search, and no op for a search whose count depends on how many opponents chose to search, so the 'each opponent may search' branch and its follow-up searches cannot be modeled exactly."}

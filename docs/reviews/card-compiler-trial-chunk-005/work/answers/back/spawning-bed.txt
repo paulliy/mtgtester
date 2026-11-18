@@ -1,0 +1,1 @@
+{6}, {T}, Sacrifice this land: Create three 1/1 colorless Eldrazi Scion creature tokens. Each has "Sacrifice this creature: Add {C}."

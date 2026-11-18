@@ -121,6 +121,10 @@ only sublayer "b" sets base power and toughness. Write every flag on an effect, 
 "cantRegenerate" as "They can't be regenerated." A value shown as "<text>" was hidden on purpose
 (a name or free text): never quote "<text>"; write around it, e.g. "a token" or "this ability".
 
+The data is usually only part of a card. Write only what it contains. Never remark that an
+ability, cost, type or line is absent ("this has no equip ability"), and add no notes or
+explanations.
+
 Answer with only the rules text.`;
 
 export function backSuffix(target: CompileTarget, def: Partial<CardDefinition>): string {
@@ -132,9 +136,26 @@ export const JUDGE_PREFIX = `You compare two versions of Magic: The Gathering ru
 Text A is the real card's rules text: the lines under test, then the whole card for context. Text B
 was written by someone reading a program's data for the lines under test. B may also restate other
 lines of the same card (a spell's data covers the whole spell); that is fine when it matches the
-whole card. Ignore wording, ordering, "this" versus a card name, and reminder text. Look for any difference
+whole card. An ability of the whole card that B does not mention is not a difference when it is
+outside the lines under test, and a remark in B that something is absent counts only when the
+lines under test include that thing. The one exception: when B gives the effect of an instant or
+sorcery, it must give every effect the whole card's spell has. Ignore wording, the order of
+separate abilities, and "this" versus a card name. Reminder text on the lines under test is part
+of what they mean when it says what a token, counter or keyword does: a token B creates must have
+the abilities and types that reminder text gives it. The order of the steps inside
+one ability or spell does matter: "destroy it, then create tokens" and "create tokens, then destroy
+it" differ, and so do "sacrifice two lands" and "sacrifice a land, then sacrifice a land". Look for
+any difference
 that would change what happens in a game: targets, who chooses, optional versus mandatory, amounts,
 durations, conditions, timing, zones, and anything present in one but missing from the other.
+
+A restriction is the same only when it allows exactly the same things: "can be spent only on X"
+and "can't be spent on Y" differ whenever something is neither X nor Y.
+
+An effect an ability creates is not a static ability of its source. "Put a counter on target
+creature. As long as it has that counter, it's a Wraith" lasts after the source leaves the
+battlefield and covers only that creature; "each creature with that counter on it is a Wraith" is
+a static ability that ends when the source leaves and also covers counters put by anything else.
 
 Not differences: "X spells and Y spells cost {1} less" is one ability, so a spell that is both is
 reduced once, the same as "spells that are X or Y". A token's name is cosmetic, so a missing or
@@ -145,6 +166,35 @@ A player can only sacrifice permanents they control, so "sacrifice a nontoken ar
 Answer with ONE JSON object and nothing else:
   {"verdict":"same"} or {"verdict":"different","differences":["<one difference per item>"]}`;
 
+const normalized = (text: string) => text.replace(/\s+/g, ' ').trim().toLowerCase();
+
+/**
+ * The reminder text printed on the Oracle lines under test. It says what a token, counter or
+ * keyword action on those lines does ("Create a Blood token. (It's an artifact with ...)"), so a
+ * judge shown the bare line cannot tell a Blood token with no ability from the real one.
+ */
+export function reminderTextFor(target: Pick<CompileTarget, 'lines' | 'card'>): string[] {
+  const names = [target.card.name, target.card.name.split(',')[0]!.trim()].filter(Boolean);
+  const wanted = target.lines.map((line) => normalized(line));
+  const found: string[] = [];
+  for (const oracleLine of (target.card.oracleText ?? '').split('\n')) {
+    const reminders = [...oracleLine.matchAll(/\(([^()]*)\)/g)].map((match) => match[1]!.trim());
+    if (reminders.length === 0) continue;
+    let body = oracleLine.replace(/\([^()]*\)/g, ' ');
+    for (const name of names) body = body.split(name).join('~');
+    const key = normalized(body);
+    if (key.length === 0) continue;
+    if (!wanted.some((line) => key.includes(line) || line.includes(key))) continue;
+    for (const reminder of reminders) if (!found.includes(reminder)) found.push(reminder);
+  }
+  return found;
+}
+
 export function judgeSuffix(target: CompileTarget, backTranslation: string): string {
-  return `Text A (real card), lines under test:\n${target.lines.join('\n')}\n\nWhole card, for context:\n${target.card.oracleText ?? ''}\n\nText B:\n${backTranslation.trim()}`;
+  const reminders = reminderTextFor(target);
+  const reminderBlock =
+    reminders.length === 0
+      ? ''
+      : `\n\nReminder text on those lines (part of what they mean):\n${reminders.join('\n')}`;
+  return `Text A (real card), lines under test:\n${target.lines.join('\n')}${reminderBlock}\n\nWhole card, for context:\n${target.card.oracleText ?? ''}\n\nText B:\n${backTranslation.trim()}`;
 }

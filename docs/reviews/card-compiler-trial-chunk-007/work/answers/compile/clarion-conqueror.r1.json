@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"cantActivateAbilities","who":"all","yourTurnOnly":false,"filter":{"kind":"anyOf","of":[{"kind":"type","value":"Artifact"},{"kind":"type","value":"Creature"},{"kind":"type","value":"Planeswalker"}]}}]}}

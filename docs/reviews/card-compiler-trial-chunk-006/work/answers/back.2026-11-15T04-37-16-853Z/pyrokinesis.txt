@@ -1,0 +1,1 @@
+This spell deals 4 damage divided among any number of target creatures.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target restriction 'creature card with lesser toughness' compares against the dying creature's toughness, and no selector or condition compares a card's toughness to the trigger object's toughness."}

@@ -1,0 +1,61 @@
+{
+  "name": "Temur Battle Rage",
+  "oracleId": "2fdc0d17-b683-4263-949e-4f74ec76badf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "That creature also gains trample until end of turn if you control a creature with power 4 or greater."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "double strike"
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "scope": "you",
+            "cmp": ">=",
+            "n": 1
+          },
+          "then": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": 0,
+              "keyword": "trample"
+            }
+          ],
+          "else": []
+        }
+      ],
+      "description": "Ferocious — That creature also gains trample until end of turn if you control a creature with power 4 or greater."
+    }
+  }
+}

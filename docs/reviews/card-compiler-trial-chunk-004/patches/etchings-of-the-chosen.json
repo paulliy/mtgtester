@@ -1,0 +1,68 @@
+{
+  "name": "Etchings of the Chosen",
+  "oracleId": "0114f97f-b196-4af1-90aa-eba164cb8f22",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}, Sacrifice a creature of the chosen type: Target creature you control gains indestructible until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "chosenSubtype"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you"
+            }
+          ],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": 0,
+              "keyword": "indestructible"
+            }
+          ],
+          "description": "{1}, Sacrifice a creature of the chosen type: Target creature you control gains indestructible until end of turn."
+        }
+      }
+    ]
+  }
+}

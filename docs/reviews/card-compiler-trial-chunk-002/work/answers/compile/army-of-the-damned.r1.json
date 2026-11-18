@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"createToken","spec":{"name":"Zombie","typeLine":"Creature — Zombie","types":["Creature"],"subtypes":["Zombie"],"colors":["B"],"power":2,"toughness":2},"count":{"kind":"const","n":13},"tapped":true}],"description":"Create thirteen tapped 2/2 black Zombie creature tokens."}}}

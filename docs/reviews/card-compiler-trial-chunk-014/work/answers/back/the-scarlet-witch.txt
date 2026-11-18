@@ -1,0 +1,1 @@
+Instant and sorcery spells you cast that have mana value 4 or greater cost less to cast, by an amount of generic mana equal to this creature's power.

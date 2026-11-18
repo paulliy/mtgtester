@@ -1,0 +1,1 @@
+Whenever you cast a spell with the chosen creature type, copy that spell. This trigger is mandatory, has no targets, and the copy is made with no further restriction stated.

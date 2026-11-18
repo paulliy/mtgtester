@@ -632,6 +632,8 @@ function abilityBody(ability: unknown): string {
   const ctx: EffectContext = { targets, self: '~' };
   const used = new Set<number>();
   const text = joinEffects((ability['effects'] as unknown[]) ?? [], ctx, used);
+  // An ability with no effects has no sentence to compare: it goes to the model check.
+  if (text.length === 0) throw new Unrendered('ability:no-effects');
   if (used.size !== targets.length) throw new Unrendered('ability:unused-target-slot');
   if (ability['optional'] !== true) return text;
   // Declining an optional trigger skips every effect, but "you may" in printed text covers only

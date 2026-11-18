@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"damageEach takes one source for every damage event, so \"each creature you control that's a Wolf or a Werewolf deals damage equal to its power to that creature\" (each source dealing its own power) has no schema form."}

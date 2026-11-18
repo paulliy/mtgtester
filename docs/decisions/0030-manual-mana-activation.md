@@ -1,6 +1,6 @@
 # ADR 0030: Manual mana activation
 
-Status: Accepted
+Status: Accepted (2026-10-23)
 
 Date: 2026-10-23
 

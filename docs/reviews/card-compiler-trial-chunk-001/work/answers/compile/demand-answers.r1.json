@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The additional cost is a choice between sacrificing an artifact and discarding a card, but spellAdditionalCosts is a list where every cost is paid, so the either-or cannot be expressed."}

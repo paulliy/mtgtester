@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A creates the Angel only if there are four or more card types among cards in your graveyard. Text B compares the card-type count against 3 with the comparison hidden, so the threshold does not match.","Text B does not state the four-or-more card type threshold from Text A."]}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"untapDuringOthersUntapSteps","filter":{"kind":"allOf","of":[{"kind":"anyOf","of":[{"kind":"color","value":"G"},{"kind":"color","value":"U"}]},{"kind":"type","value":"Creature"}]}}]}}

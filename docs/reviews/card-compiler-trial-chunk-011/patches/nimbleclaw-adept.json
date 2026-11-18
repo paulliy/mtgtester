@@ -1,0 +1,53 @@
+{
+  "name": "Nimbleclaw Adept",
+  "oracleId": "32e5a4ac-69c7-4de0-8b9f-dd86682f2ffd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Bigby's Hand — {T}: Untap two other target permanents. Activate only as a sorcery and only once each turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "sorcery",
+        "oncePerTurn": true,
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "filter": {
+                "kind": "other"
+              }
+            },
+            {
+              "kind": "permanent",
+              "filter": {
+                "kind": "other"
+              },
+              "differentFromSlots": [
+                0
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "op": "untapTarget",
+              "target": 0
+            },
+            {
+              "op": "untapTarget",
+              "target": 1
+            }
+          ],
+          "description": "Bigby's Hand — {T}: Untap two other target permanents. Activate only as a sorcery and only once each turn."
+        }
+      }
+    ]
+  }
+}

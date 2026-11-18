@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The cost reduction 'if you've cast another spell this turn' needs castSpellThisTurn to exclude the spell being cast, but the schema does not say whether that tally includes the spell at announcement, so the exact threshold cannot be stated."}

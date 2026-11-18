@@ -1,0 +1,1 @@
+Whenever a land you control enters, if that land is a Forest, put two +1/+1 counters on this creature. Otherwise, put one +1/+1 counter on this creature.

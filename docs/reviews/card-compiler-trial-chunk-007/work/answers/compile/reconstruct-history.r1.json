@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot say \"up to one target\" for a graveyard-to-hand return: graveyardToHand takes a single target with no variable-count form, so an empty choice for each of the five slots is not expressible."}

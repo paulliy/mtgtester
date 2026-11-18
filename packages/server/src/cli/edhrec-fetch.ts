@@ -3,6 +3,9 @@
  *
  *   bun run edhrec:fetch                 # fetch, then write both files
  *   bun run edhrec:fetch --share 0.99    # keep the cards filling 99% of slots instead of 95%
+ *   bun run edhrec:fetch --average-decks 200
+ *                                        # only: the top 200 commanders' average decks, for
+ *                                        # bun run deck-coverage (then run deck-coverage --pin)
  *
  * Reads EDHREC's "Top Cards (past 2 years)" and "Top Lands" JSON pages one at a time, with a pause
  * between requests, and writes:
@@ -18,6 +21,14 @@
 
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import {
+  AVERAGE_DECKS_PATH,
+  parseAverageDeckPage,
+  renderAverageDecks,
+  type AverageDeck,
+  type EdhrecAverageDeckPage,
+  type EdhrecCommanderView,
+} from '../cards/edhrec-average-decks';
 import {
   cutAtSlotShare,
   DEFAULT_SLOT_SHARE,
@@ -42,13 +53,24 @@ interface EdhrecPage {
   container?: { json_dict?: { cardlists?: { cardviews: EdhrecCardView[]; more?: string }[] } };
 }
 
-async function getPage(path: string): Promise<EdhrecPage> {
+class NotFound extends Error {}
+
+/** One page, retried with backoff on network errors and server errors; a 404 fails at once. */
+async function getPage<Page = EdhrecPage>(path: string): Promise<Page> {
   for (let attempt = 1; ; attempt++) {
-    const response = await fetch(BASE + path, {
-      headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
-    });
-    if (response.ok) return (await response.json()) as EdhrecPage;
-    if (attempt === 4) throw new Error(`EDHREC ${path}: HTTP ${response.status}`);
+    let failure: string;
+    try {
+      const response = await fetch(BASE + path, {
+        headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
+      });
+      if (response.ok) return (await response.json()) as Page;
+      if (response.status === 404) throw new NotFound(`EDHREC ${path}: HTTP 404`);
+      failure = `HTTP ${response.status}`;
+    } catch (err) {
+      if (err instanceof NotFound) throw err;
+      failure = (err as Error).message;
+    }
+    if (attempt === 4) throw new Error(`EDHREC ${path}: ${failure}`);
     await Bun.sleep(2000 * 2 ** attempt);
   }
 }
@@ -79,7 +101,85 @@ function shareArg(): number {
   return value;
 }
 
+const COMMANDERS_FIRST = 'commanders/year.json';
+
+interface CommanderPage {
+  cardviews?: EdhrecCommanderView[];
+  more?: string;
+  container?: {
+    json_dict?: { cardlists?: { cardviews: EdhrecCommanderView[]; more?: string }[] };
+  };
+}
+
+/** The top `top` commanders of the past two years, in EDHREC's order. */
+async function topCommanders(top: number): Promise<EdhrecCommanderView[]> {
+  const first = await getPage<CommanderPage>(COMMANDERS_FIRST);
+  const list = first.container?.json_dict?.cardlists?.[0];
+  if (list === undefined) throw new Error(`EDHREC ${COMMANDERS_FIRST}: no commander list`);
+  const views = [...list.cardviews];
+  let next = list.more;
+  while (views.length < top && next) {
+    await Bun.sleep(PAUSE_MS);
+    const more = await getPage<CommanderPage>(next);
+    if (!more.cardviews) throw new Error(`EDHREC ${next}: no cardviews`);
+    views.push(...more.cardviews);
+    next = more.more;
+  }
+  return views.slice(0, top);
+}
+
+/**
+ * Snapshot the average deck of each of the top `top` commanders. A commander whose page fails is
+ * reported and skipped, so one odd page does not lose the whole run.
+ */
+async function fetchAverageDecks(top: number): Promise<void> {
+  console.error(`Fetching the top ${top} EDHREC commanders …`);
+  const commanders = await topCommanders(top);
+  const decks: AverageDeck[] = [];
+  for (const [position, view] of commanders.entries()) {
+    await Bun.sleep(PAUSE_MS);
+    try {
+      const page = await getPage<EdhrecAverageDeckPage>(`average-decks/${view.sanitized}.json`);
+      decks.push({
+        rank: position + 1,
+        slug: view.sanitized,
+        decks: view.num_decks,
+        ...parseAverageDeckPage(view.sanitized, page),
+      });
+    } catch (err) {
+      console.error(`  ✗ ${view.name}: ${(err as Error).message}`);
+    }
+    if ((position + 1) % 25 === 0) console.error(`  ${position + 1}/${commanders.length} …`);
+  }
+  // Never overwrite a good snapshot with an empty one (a changed page shape fails every deck).
+  if (decks.length === 0)
+    throw new Error('no average deck could be read; the fixture is unchanged');
+  writeFileSync(
+    resolve(AVERAGE_DECKS_PATH),
+    renderAverageDecks({
+      source: `${BASE}average-decks/<slug>.json, top ${top} of ${BASE}${COMMANDERS_FIRST}`,
+      fetchedAt: new Date().toISOString().slice(0, 10),
+      decks,
+    }),
+  );
+  console.log(`Wrote ${decks.length} average decks to ${AVERAGE_DECKS_PATH}.`);
+  console.log('Next: bun run deck-coverage --pin, then bun run deck-coverage.');
+}
+
+function averageDecksArg(): number | undefined {
+  const slot = process.argv.indexOf('--average-decks');
+  if (slot < 0) return undefined;
+  const value = Number(process.argv[slot + 1]);
+  if (!(Number.isInteger(value) && value > 0)) throw new Error('--average-decks needs a count');
+  return value;
+}
+
 async function main(): Promise<void> {
+  const averageDecks = averageDecksArg();
+  if (averageDecks !== undefined) {
+    await fetchAverageDecks(averageDecks);
+    return;
+  }
   const share = shareArg();
   console.error('Fetching EDHREC top cards …');
   const nonland = await readList(NONLAND_FIRST);

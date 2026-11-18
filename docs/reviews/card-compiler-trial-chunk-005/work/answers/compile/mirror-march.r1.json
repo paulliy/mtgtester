@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Flip a coin until you lose a flip' with one copy per won flip is a repeated coin-flip loop; flipCoin is a single flip with no repeat."}

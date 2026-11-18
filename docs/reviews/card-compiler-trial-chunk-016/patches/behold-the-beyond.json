@@ -1,0 +1,46 @@
+{
+  "name": "Behold the Beyond",
+  "oracleId": "b2402ac0-8ab8-413c-bac4-9f4ba2163c58",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Discard your hand. Search your library for three cards, put them into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "discardHand"
+        },
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": []
+          },
+          "destinations": [
+            {
+              "zone": "hand"
+            },
+            {
+              "zone": "hand"
+            },
+            {
+              "zone": "hand"
+            }
+          ],
+          "count": {
+            "kind": "const",
+            "n": 3
+          }
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "description": "Discard your hand. Search your library for three cards, put them into your hand, then shuffle."
+    }
+  }
+}

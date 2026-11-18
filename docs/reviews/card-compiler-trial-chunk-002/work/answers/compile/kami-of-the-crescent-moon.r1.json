@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"drawStep","player":"each"},"optional":false,"targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":1},"player":"eventPlayer"}],"description":"At the beginning of each player's draw step, that player draws an additional card."}]}}

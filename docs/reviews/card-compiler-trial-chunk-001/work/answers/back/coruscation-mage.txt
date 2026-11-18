@@ -1,0 +1,2 @@
+As you cast this spell, you may pay an additional {2}. (Offspring)
+When this creature enters, create a token that is a copy of this creature, except its base power and toughness are 1/1. Create one such token for each time the offspring cost was paid.

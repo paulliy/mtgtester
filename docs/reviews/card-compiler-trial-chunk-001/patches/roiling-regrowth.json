@@ -1,0 +1,65 @@
+{
+  "name": "Roiling Regrowth",
+  "oracleId": "65d63518-3261-40b5-87b8-19c152b29ee3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAdditionalCosts": [
+      {
+        "kind": "sacrificeOther",
+        "selector": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Land"
+            }
+          ]
+        }
+      }
+    ],
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "supertype",
+                "value": "Basic"
+              },
+              {
+                "kind": "type",
+                "value": "Land"
+              }
+            ]
+          },
+          "destinations": [
+            {
+              "zone": "battlefield",
+              "tapped": true
+            }
+          ],
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "description": "Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."
+    }
+  }
+}
