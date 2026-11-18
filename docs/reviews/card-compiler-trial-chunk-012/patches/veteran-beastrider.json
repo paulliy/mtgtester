@@ -1,0 +1,41 @@
+{
+  "name": "Veteran Beastrider",
+  "oracleId": "29f1484c-91b6-436a-a6be-3ab8b58c0fc1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your end step, untap each creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "untapEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        ],
+        "description": "At the beginning of your end step, untap each creature you control."
+      }
+    ]
+  }
+}

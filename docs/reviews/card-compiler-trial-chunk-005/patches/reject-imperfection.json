@@ -1,0 +1,47 @@
+{
+  "name": "Reject Imperfection",
+  "oracleId": "25781dc5-d6ea-4273-9fe3-06a8808b3718",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Counter target spell. If that spell's mana value was 3 or less, proliferate."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "op": "counter",
+          "target": 0
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "manaValueOfTarget",
+              "target": 0
+            },
+            "cmp": "<=",
+            "right": {
+              "kind": "const",
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "proliferate"
+            }
+          ],
+          "else": []
+        }
+      ],
+      "description": "Counter target spell. If that spell's mana value was 3 or less, proliferate."
+    }
+  }
+}

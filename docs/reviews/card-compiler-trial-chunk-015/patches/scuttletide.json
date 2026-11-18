@@ -1,0 +1,45 @@
+{
+  "name": "Scuttletide",
+  "oracleId": "2be9c1e6-0226-497a-b548-21bf1cfbc286",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Crabs you control get +1/+1 as long as there are four or more card types among cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Crab"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "cardTypesInYourGraveyard"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 4
+          }
+        }
+      }
+    ]
+  }
+}

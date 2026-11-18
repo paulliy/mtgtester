@@ -1,0 +1,41 @@
+{
+  "name": "Elvish Reclaimer",
+  "oracleId": "94f01534-7bb3-4b1e-8f77-e84156408686",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ gets +2/+2 as long as there are three or more land cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 2
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "countCardsInZone",
+            "zone": "graveyard",
+            "selector": {
+              "kind": "type",
+              "value": "Land"
+            },
+            "owner": "you"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 3
+          }
+        }
+      }
+    ]
+  }
+}

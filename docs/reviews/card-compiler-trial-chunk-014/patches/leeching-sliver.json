@@ -1,0 +1,49 @@
+{
+  "name": "Leeching Sliver",
+  "oracleId": "f104b361-8000-4eda-b530-1502528e09f9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a Sliver you control attacks, defending player loses 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Sliver"
+                }
+              ]
+            }
+          },
+          "defendingPlayerIsEventPlayer": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "loseLifeTarget",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a Sliver you control attacks, defending player loses 1 life."
+      }
+    ]
+  }
+}

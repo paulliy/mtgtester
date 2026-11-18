@@ -1,0 +1,39 @@
+{
+  "name": "Aether Flash",
+  "oracleId": "a3c35742-e306-49b6-b042-db4f685c6f86",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature enters, this enchantment deals 2 damage to it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": "triggerObject",
+            "amount": {
+              "kind": "const",
+              "n": 2
+            }
+          }
+        ],
+        "description": "Whenever a creature enters, this enchantment deals 2 damage to it."
+      }
+    ]
+  }
+}

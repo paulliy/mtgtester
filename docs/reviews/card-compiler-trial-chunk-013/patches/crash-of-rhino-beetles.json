@@ -1,0 +1,34 @@
+{
+  "name": "Crash of Rhino Beetles",
+  "oracleId": "61dd63b7-11dc-49db-8106-36d455a182be",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ gets +10/+10 as long as you control ten or more lands."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 10,
+          "toughness": 10
+        },
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "type",
+            "value": "Land"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 10
+        }
+      }
+    ]
+  }
+}

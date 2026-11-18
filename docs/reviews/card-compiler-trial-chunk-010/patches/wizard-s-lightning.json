@@ -1,0 +1,31 @@
+{
+  "name": "Wizard's Lightning",
+  "oracleId": "2bd81743-84c8-43ec-86f5-68230036827b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {2} less to cast if you control a Wizard."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 2
+        },
+        "selfOnly": true,
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "subtype",
+            "value": "Wizard"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 1
+        }
+      }
+    ]
+  }
+}

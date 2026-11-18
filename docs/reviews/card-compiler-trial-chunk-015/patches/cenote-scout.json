@@ -1,0 +1,31 @@
+{
+  "name": "Cenote Scout",
+  "oracleId": "ec3911c0-686f-4c78-838d-a683eed6c01c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, it explores."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "explore",
+            "target": "source"
+          }
+        ],
+        "description": "When this creature enters, it explores."
+      }
+    ]
+  }
+}

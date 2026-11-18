@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The \"up to one target creature gets -1/-1 for each Zombie that player controls\" part needs a Value-sized -X/-X applied to each chosen object of a variable-count target slot, and the schema has no such op (pumpUntilEot is for an ordinary single target)."}

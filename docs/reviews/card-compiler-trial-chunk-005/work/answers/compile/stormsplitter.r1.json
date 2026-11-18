@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The token must be exiled at the beginning of the next end step, but createTokenCopyOf can only sacrifice its token at the end step (sacrificeAt), and no exile-at-end-step option exists."}

@@ -1,0 +1,1 @@
+{T}: Add {R} or {G}. Activate only if this entered this turn or you control at least one basic land.

@@ -1,0 +1,73 @@
+{
+  "name": "Accumulate Wisdom",
+  "oracleId": "a63eb744-71c4-447d-9372-c3a734f022c5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Look at the top three cards of your library. Put one of those cards into your hand and the rest on the bottom of your library in any order. Put each of those cards into your hand instead if there are three or more Lesson cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "description": "Look at the top three cards of your library. Put one of those cards into your hand and the rest on the bottom of your library in any order. Put each of those cards into your hand instead if there are three or more Lesson cards in your graveyard.",
+      "targets": [],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "countCardsInZone",
+              "zone": "graveyard",
+              "selector": {
+                "kind": "subtype",
+                "value": "Lesson"
+              },
+              "owner": "you"
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "lookAtTopN",
+              "count": 3,
+              "mayPut": {
+                "filter": {
+                  "kind": "allOf",
+                  "of": []
+                },
+                "destination": {
+                  "zone": "hand"
+                },
+                "required": true,
+                "count": 3
+              },
+              "rest": "bottomAnyOrder"
+            }
+          ],
+          "else": [
+            {
+              "op": "lookAtTopN",
+              "count": 3,
+              "mayPut": {
+                "filter": {
+                  "kind": "allOf",
+                  "of": []
+                },
+                "destination": {
+                  "zone": "hand"
+                },
+                "required": true
+              },
+              "rest": "bottomAnyOrder"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

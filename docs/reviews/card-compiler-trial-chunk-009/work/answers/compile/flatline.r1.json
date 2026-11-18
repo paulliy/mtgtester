@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No until-end-of-turn effect sets the base power and toughness of a group of opponent's creatures to 0/1; the only group set-P/T op is a permanent static, and becomeCreatureUntilEot covers a single target."}

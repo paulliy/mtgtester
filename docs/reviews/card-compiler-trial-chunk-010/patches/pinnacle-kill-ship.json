@@ -1,0 +1,43 @@
+{
+  "name": "Pinnacle Kill-Ship",
+  "oracleId": "ad556aee-3dbf-4c8b-9f3a-31947e26c6f5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Spacecraft enters, it deals 10 damage to up to one target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "count": {
+              "min": 0,
+              "max": 1
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamageEachChosen",
+            "targetSlot": 0,
+            "amount": {
+              "kind": "const",
+              "n": 10
+            }
+          }
+        ],
+        "description": "When this Spacecraft enters, it deals 10 damage to up to one target creature."
+      }
+    ]
+  }
+}

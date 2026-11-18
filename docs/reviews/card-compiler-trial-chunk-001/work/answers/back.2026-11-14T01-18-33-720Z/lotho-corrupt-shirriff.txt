@@ -1,0 +1,2 @@
+Whenever a player casts their second spell each turn, lose 1 life (the data does not say which player loses it), then create a Treasure artifact token.
+Each Treasure token is a colorless artifact with the ability: {T}, Sacrifice this artifact: Add one mana of any one color (white, blue, black, red, or green).

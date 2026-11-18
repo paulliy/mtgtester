@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"dealsDamageToOpponent only supports the source's own ability, so a trigger on the enchanted creature controlled by the Aura's controller cannot be said (granting it via addTrigger would give the draw to the creature's controller)."}

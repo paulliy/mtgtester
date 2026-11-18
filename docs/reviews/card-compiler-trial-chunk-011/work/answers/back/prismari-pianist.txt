@@ -1,0 +1,1 @@
+Whenever you cast an instant or sorcery spell, if that spell's mana value is 5 or greater, create three 1/1 blue and red Elemental creature tokens. Otherwise, create one 1/1 blue and red Elemental creature token.

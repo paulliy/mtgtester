@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect makes the next instant or sorcery spell you cast this turn uncounterable: Ability.cantBeCountered is a fixed property of a spell, and nextCastThisTurn only attaches a triggered ability."}

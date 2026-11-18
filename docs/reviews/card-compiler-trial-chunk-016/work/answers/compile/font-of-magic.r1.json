@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"commanderCastCount","player":"you"},"filter":{"kind":"anyOf","of":[{"kind":"type","value":"Instant"},{"kind":"type","value":"Sorcery"}]}}]}}

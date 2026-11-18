@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"tap"},{"kind":"sacrificeSelf"}],"timing":"any","ability":{"kind":"activated","targets":[{"kind":"player"}],"effects":[{"op":"exileTargetPlayerGraveyard","target":0}],"description":"{T}, Sacrifice this artifact: Exile target player's graveyard."}}]}}

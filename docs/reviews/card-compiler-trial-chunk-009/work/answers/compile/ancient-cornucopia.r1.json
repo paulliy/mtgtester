@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The 'do this only once each turn' limit on an optional life gain cannot be expressed: castsSpell triggers have no once-per-turn flag, and byResolutionCountThisTurn would count a declined 'you may' toward the turn's single use, which the printed text does not say."}

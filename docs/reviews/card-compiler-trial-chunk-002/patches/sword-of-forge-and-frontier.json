@@ -1,0 +1,44 @@
+{
+  "name": "Sword of Forge and Frontier",
+  "oracleId": "c6331ce3-21f7-4784-80fe-df1f541a4c46",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature deals combat damage to a player, exile the top two cards of your library. You may play those cards this turn. You may play an additional land this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "exileTopNPlayableUntilEot",
+            "count": {
+              "kind": "const",
+              "n": 2
+            }
+          },
+          {
+            "op": "additionalLandPlaysThisTurn",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever equipped creature deals combat damage to a player, exile the top two cards of your library. You may play those cards this turn. You may play an additional land this turn."
+      }
+    ]
+  }
+}

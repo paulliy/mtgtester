@@ -1,0 +1,1 @@
+Whenever this creature attacks, this ability deals damage to the defending player equal to the number of creatures you control that are equipped.

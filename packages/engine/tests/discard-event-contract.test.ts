@@ -40,7 +40,7 @@ function watcher(
   typeLine = 'Enchantment',
 ): EnginePermanent {
   const printed = oracle({ name, typeLine, manaCost: null, power: null, toughness: null });
-  const def = interpretCard(printed);
+  const def = structuredClone(interpretCard(printed));
   def.triggers = [{ kind: 'triggered', trigger: head, targets: [], effects }];
   ctx.defs.set(def.oracleId, def);
   return spawn(ctx, 'P1', printed);
@@ -279,7 +279,7 @@ describe('discardsCard trigger contract', () => {
       power: null,
       toughness: null,
     });
-    const ampDef = interpretCard(amplifierCard);
+    const ampDef = structuredClone(interpretCard(amplifierCard));
     ampDef.ruleStatics = [{ kind: 'triggerAdditionalForShamanOrOtherWizard' }];
     ctx.defs.set(ampDef.oracleId, ampDef);
     spawn(ctx, 'P1', amplifierCard);

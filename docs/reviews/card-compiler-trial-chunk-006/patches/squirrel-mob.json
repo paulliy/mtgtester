@@ -1,0 +1,62 @@
+{
+  "name": "Squirrel Mob",
+  "oracleId": "451486df-6160-4ff7-b47c-dd3760417a31",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ gets +1/+1 for each other Squirrel on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": {
+            "kind": "times",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Squirrel"
+                  }
+                ]
+              },
+              "scope": "all"
+            },
+            "n": 1
+          },
+          "toughness": {
+            "kind": "times",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Squirrel"
+                  }
+                ]
+              },
+              "scope": "all"
+            },
+            "n": 1
+          }
+        }
+      }
+    ]
+  }
+}

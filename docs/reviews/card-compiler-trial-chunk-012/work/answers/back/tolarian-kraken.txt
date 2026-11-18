@@ -1,0 +1,1 @@
+Whenever you draw a card, you may pay {1}. If you do, you may choose target creature. Choose one: tap that creature; or untap that creature.

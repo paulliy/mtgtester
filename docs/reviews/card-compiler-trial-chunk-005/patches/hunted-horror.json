@@ -1,0 +1,68 @@
+{
+  "name": "Hunted Horror",
+  "oracleId": "3469463e-ed4d-44bb-81f3-42bbe09d34ad",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, target opponent creates two 3/3 green Centaur creature tokens with protection from black."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "player",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "createTokenForPlayer",
+            "target": 0,
+            "spec": {
+              "name": "Centaur",
+              "typeLine": "Token Creature — Centaur",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Centaur"
+              ],
+              "colors": [
+                "G"
+              ],
+              "power": 3,
+              "toughness": 3,
+              "staticEffects": [
+                {
+                  "affects": {
+                    "kind": "self"
+                  },
+                  "op": {
+                    "layer": 6,
+                    "addProtection": [
+                      "B"
+                    ]
+                  }
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 2
+            }
+          }
+        ],
+        "description": "When this creature enters, target opponent creates two 3/3 green Centaur creature tokens with protection from black."
+      }
+    ]
+  }
+}

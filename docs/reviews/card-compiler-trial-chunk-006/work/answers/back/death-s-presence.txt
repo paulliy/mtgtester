@@ -1,0 +1,1 @@
+Whenever a creature you control dies, put a number of +1/+1 counters on target creature you control equal to the power of the creature that died.

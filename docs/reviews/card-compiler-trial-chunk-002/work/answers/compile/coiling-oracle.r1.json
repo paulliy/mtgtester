@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect reveals the top card and branches on whether it is a land (battlefield if it is, otherwise hand); lookAtTopN's mayPut cannot send a non-matching card to hand and leaves it on top of the library."}

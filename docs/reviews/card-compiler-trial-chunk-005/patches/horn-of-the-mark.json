@@ -1,0 +1,45 @@
+{
+  "name": "Horn of the Mark",
+  "oracleId": "9b836c32-84f0-41ae-b7d9-67b92c743c60",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever two or more creatures you control attack a player, look at the top five cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library in a random order."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attackDeclared",
+          "attacker": "you",
+          "attacking": {
+            "who": "opponent",
+            "planeswalkers": false
+          },
+          "minAttackers": 2
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "lookAtTopN",
+            "count": 5,
+            "mayPut": {
+              "filter": {
+                "kind": "type",
+                "value": "Creature"
+              },
+              "destination": {
+                "zone": "hand"
+              },
+              "reveal": true
+            },
+            "rest": "bottomRandom"
+          }
+        ],
+        "description": "Whenever two or more creatures you control attack a player, look at the top five cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library in a random order."
+      }
+    ]
+  }
+}

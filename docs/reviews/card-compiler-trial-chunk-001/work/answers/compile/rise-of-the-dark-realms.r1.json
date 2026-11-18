@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"graveyardToBattlefieldEach","filter":{"kind":"type","value":"Creature"},"scope":"all"}],"description":"Put all creature cards from all graveyards onto the battlefield under your control."}}}

@@ -1,0 +1,44 @@
+{
+  "name": "Invoke the Winds",
+  "oracleId": "721c3255-953c-49cd-a5dd-852c3d09eae4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Gain control of target artifact or creature. Untap it."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "duration": "permanent"
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        }
+      ],
+      "description": "Gain control of target artifact or creature. Untap it."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+Whenever a player casts their second spell each turn, connive. (Draw a card, then discard a card. If a nonland card was discarded, put a +1/+1 counter on this creature.)

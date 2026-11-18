@@ -1,0 +1,51 @@
+{
+  "name": "End the Festivities",
+  "oracleId": "09618da4-6e2d-4047-96d7-0576c0754e7d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals 1 damage to each opponent and each creature and planeswalker they control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "eachOpponentDamage",
+          "amount": 1
+        },
+        {
+          "op": "damageEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "opponents"
+              },
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              }
+            ]
+          },
+          "amount": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "End the Festivities deals 1 damage to each opponent and each creature and planeswalker they control."
+    }
+  }
+}

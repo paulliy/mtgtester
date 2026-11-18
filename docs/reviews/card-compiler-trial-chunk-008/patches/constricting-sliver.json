@@ -1,0 +1,54 @@
+{
+  "name": "Constricting Sliver",
+  "oracleId": "fd26f893-6f45-44df-aa4e-c919fc118aff",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sliver creatures you control have \"When this creature enters, you may exile target creature an opponent controls until this creature leaves the battlefield.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Sliver"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": true,
+            "targets": [
+              {
+                "kind": "creature",
+                "controller": "opponent"
+              }
+            ],
+            "effects": [
+              {
+                "op": "exileUntilSourceLeaves",
+                "targetSlot": 0
+              }
+            ],
+            "description": "When this creature enters, you may exile target creature an opponent controls until this creature leaves the battlefield."
+          }
+        }
+      }
+    ]
+  }
+}

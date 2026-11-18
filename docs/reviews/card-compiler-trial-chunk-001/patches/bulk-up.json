@@ -1,0 +1,26 @@
+{
+  "name": "Bulk Up",
+  "oracleId": "fade8af0-5fdb-4237-9dd6-48bfd1d62767",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Double target creature's power until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "doublePowerTarget",
+          "target": 0
+        }
+      ],
+      "description": "Double target creature's power until end of turn."
+    }
+  }
+}

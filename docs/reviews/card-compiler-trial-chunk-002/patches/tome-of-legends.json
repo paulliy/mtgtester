@@ -1,0 +1,81 @@
+{
+  "name": "Tome of Legends",
+  "oracleId": "cada2a1c-5db2-4702-9a57-cbe7da1bf208",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever your commander enters or attacks, put a page counter on this artifact."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "isCommander"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "self"
+            },
+            "counter": "page",
+            "count": 1
+          }
+        ],
+        "description": "Whenever your commander enters, put a page counter on this artifact."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "isCommander"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "self"
+            },
+            "counter": "page",
+            "count": 1
+          }
+        ],
+        "description": "Whenever your commander attacks, put a page counter on this artifact."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The look-at-top-six choice allows at most one Angel, one Demon and one Dragon, but the schema's mayPut filter can only take a count of any matching cards, so it would also allow two Angels or two Dragons."}

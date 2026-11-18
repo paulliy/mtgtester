@@ -1,0 +1,2 @@
+Whenever this creature deals combat damage to a player, create a number of 0/1 colorless Eldrazi Spawn creature tokens equal to the damage dealt.
+Each of those tokens has "Sacrifice this creature: Add {C}."

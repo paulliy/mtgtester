@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The upkeep effect exiles each other nonland permanent with mana value at most the number of counters removed, but selector manaValueAtMost takes a fixed number, not a Value read from the removed counters."}

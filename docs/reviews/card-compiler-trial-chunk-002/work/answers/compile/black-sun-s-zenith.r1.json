@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"putCountersEach","selector":{"kind":"type","value":"Creature"},"counter":"-1/-1","count":{"kind":"xValue"}},{"op":"resolvingSpellShuffleIntoLibrary"}],"description":"Put X -1/-1 counters on each creature. Shuffle Black Sun's Zenith into its owner's library."}}}

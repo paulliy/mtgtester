@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A has an enters-the-battlefield trigger that exiles target creature an opponent controls until this Aura leaves the battlefield; Text B says the Aura has no effects and does nothing.","Text A gives the enchanted permanent ward {1}; Text B omits it and says the Aura has no effects."]}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"lookAtTopN takes a fixed number of cards, but the line looks at the top X cards where X is the number of artifacts you control."}

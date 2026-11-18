@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The line is one search for three distinct cards (a black, a green and a blue card) chosen together, but the schema can only express it as three sequential single-filter searches, which fixes the order of assignment and can change which legal set of cards the player may pick."}

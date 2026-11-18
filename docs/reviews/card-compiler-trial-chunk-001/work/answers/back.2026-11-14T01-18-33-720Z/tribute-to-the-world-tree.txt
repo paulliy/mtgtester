@@ -1,0 +1,1 @@
+Whenever a creature you control enters, do the following. If that creature's power is 3 or greater, draw a card. Otherwise, put two +1/+1 counters on that creature. This trigger is mandatory and has no targets.

@@ -1,0 +1,47 @@
+{
+  "name": "Self-Destruct",
+  "oracleId": "98bf6311-bc9b-4bf8-ac83-c041973b86d0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control deals X damage to any other target and X damage to itself, where X is its power."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "anyTarget",
+          "differentFromSlots": [
+            0
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamage",
+          "target": 1,
+          "amount": {
+            "kind": "powerOfTarget",
+            "target": 0
+          },
+          "source": 0
+        },
+        {
+          "op": "dealDamage",
+          "target": 0,
+          "amount": {
+            "kind": "powerOfTarget",
+            "target": 0
+          },
+          "source": 0
+        }
+      ],
+      "description": "Target creature you control deals X damage to any other target and X damage to itself, where X is its power."
+    }
+  }
+}

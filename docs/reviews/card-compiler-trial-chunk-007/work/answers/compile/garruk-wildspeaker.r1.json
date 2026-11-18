@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"loyalty","delta":1}],"timing":"sorcery","oncePerTurn":true,"ability":{"kind":"activated","targets":[{"kind":"land"},{"kind":"land","differentFromSlots":[0]}],"effects":[{"op":"untapTarget","target":0},{"op":"untapTarget","target":1}],"description":"+1: Untap two target lands."}}]}}

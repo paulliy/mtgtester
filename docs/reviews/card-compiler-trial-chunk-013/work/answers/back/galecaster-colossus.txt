@@ -1,0 +1,2 @@
+Tap a Wizard you control. This creature may be the tapped Wizard.
+Return target nonland permanent an opponent controls to its owner's hand.

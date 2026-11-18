@@ -1,0 +1,3 @@
+Target creature.
+If you control an artifact, this spell deals 3 damage to that creature's controller.
+Destroy that creature.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The per-mana option to tap an untapped creature instead of paying each {4} is a cost substitution the schema cannot express (AbilityCost has no 'tap a creature in place of mana' choice)."}

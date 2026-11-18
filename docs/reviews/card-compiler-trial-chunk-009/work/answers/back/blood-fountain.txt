@@ -1,0 +1,1 @@
+When this artifact enters, create a Blood artifact token. It has "{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card."

@@ -1,0 +1,1 @@
+Target creature you control. Draw cards equal to that creature's power.

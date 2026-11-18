@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["A checks whether the creature the Equipment attached to is an Assassin; B checks whether the object that triggered the ability (the Equipment) is an Assassin, so the deathtouch condition is different."]}

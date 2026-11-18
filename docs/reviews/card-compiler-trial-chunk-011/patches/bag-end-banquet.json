@@ -1,0 +1,37 @@
+{
+  "name": "Bag End Banquet",
+  "oracleId": "2522a9dd-bcf3-4b84-abff-52b9e6dbde34",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Add {C} for each Food you control."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "C"
+          ]
+        ],
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "subtype",
+                "value": "Food"
+              }
+            ]
+          },
+          "scope": "you"
+        }
+      }
+    ]
+  }
+}

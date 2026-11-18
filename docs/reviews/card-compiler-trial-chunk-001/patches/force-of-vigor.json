@@ -1,0 +1,30 @@
+{
+  "name": "Force of Vigor",
+  "oracleId": "5f627e45-deee-4a4f-8128-57b0d8ebc553",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy up to two target artifacts and/or enchantments."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "artifactOrEnchantment",
+          "count": {
+            "min": 0,
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroyEachChosen",
+          "targetSlot": 0
+        }
+      ],
+      "description": "Destroy up to two target artifacts and/or enchantments."
+    }
+  }
+}

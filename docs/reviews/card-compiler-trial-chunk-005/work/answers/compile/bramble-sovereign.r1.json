@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"createTokenCopyOf always creates the copy under the ability's controller, but the line says the token goes to that creature's controller (which may be an opponent), and no copy effect names the trigger object's controller."}

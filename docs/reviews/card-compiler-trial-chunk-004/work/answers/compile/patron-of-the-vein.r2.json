@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A dies trigger cannot reference the dead card to exile it (exileGraveyardEventCard needs a card-zone event, and putIntoGraveyardFromAnywhere cannot be limited to creatures dying from the battlefield)."}

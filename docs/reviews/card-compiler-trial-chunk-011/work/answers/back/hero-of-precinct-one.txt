@@ -1,0 +1,1 @@
+Whenever you cast a spell that is two or more colors, create a 1/1 white Human creature token.

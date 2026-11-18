@@ -1,0 +1,47 @@
+{
+  "name": "Underworld Connections",
+  "oracleId": "39c10798-9dfc-47a2-9da3-b4038509aebe",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted land has \"{T}, Pay 1 life: Draw a card.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "tap"
+              },
+              {
+                "kind": "payLife",
+                "amount": 1
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "description": "{T}, Pay 1 life: Draw a card."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

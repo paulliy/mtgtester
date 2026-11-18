@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Casting creature spells from the graveyard by foraging, with a finality counter on the resulting creature, has no schema form: castFromGraveyard covers only the card's own permission, and no static or effect grants graveyard casting with a foraging cost."}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"player","controller":"opponent"},{"kind":"permanent","controller":"you"}],"effects":[{"op":"gainControlTarget","target":1,"recipient":{"targetPlayer":0}}],"description":"Target opponent gains control of target permanent you control."}}}

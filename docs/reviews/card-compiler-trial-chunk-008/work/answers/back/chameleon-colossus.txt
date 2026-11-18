@@ -1,0 +1,1 @@
+{2}{G}{G}: Until end of turn, this creature gets +X/+X, where X is this creature's power.

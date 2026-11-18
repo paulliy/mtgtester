@@ -1,0 +1,35 @@
+{
+  "name": "Clarion Conqueror",
+  "oracleId": "f1266a1b-bae6-4ded-b4d5-7586a5b6c5d0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Activated abilities of artifacts, creatures, and planeswalkers can't be activated."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "cantActivateAbilities",
+        "who": "all",
+        "yourTurnOnly": false,
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Artifact"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "type",
+              "value": "Planeswalker"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

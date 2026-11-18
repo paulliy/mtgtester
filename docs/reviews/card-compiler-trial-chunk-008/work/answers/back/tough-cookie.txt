@@ -1,0 +1,1 @@
+{2}{G}: Target artifact you control that isn't a creature becomes a 4/4 creature until end of turn.

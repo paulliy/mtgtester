@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The trigger needs to know which creatures were dealt damage this turn by a Spider you controlled, and no selector, condition or value records damage source per creature for the turn."}

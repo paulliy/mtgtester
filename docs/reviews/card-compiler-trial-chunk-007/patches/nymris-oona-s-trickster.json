@@ -1,0 +1,44 @@
+{
+  "name": "Nymris, Oona's Trickster",
+  "oracleId": "9ee50bae-47c4-4ae7-a82b-f2a0b366df35",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast your first spell during each opponent's turn, look at the top two cards of your library. Put one of those cards into your hand and the other into your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "ordinal": 1,
+          "condition": {
+            "kind": "notYourTurn"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "lookAtTopN",
+            "count": 2,
+            "mayPut": {
+              "filter": {
+                "kind": "allOf",
+                "of": []
+              },
+              "destination": {
+                "zone": "hand"
+              },
+              "required": true
+            },
+            "rest": "graveyard"
+          }
+        ],
+        "description": "Whenever you cast your first spell during each opponent's turn, look at the top two cards of your library. Put one of those cards into your hand and the other into your graveyard."
+      }
+    ]
+  }
+}

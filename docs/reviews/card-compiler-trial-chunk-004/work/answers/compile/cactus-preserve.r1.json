@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"becomeCreatureUntilEot takes fixed numeric power and toughness, but the line sets both to the greatest mana value among your commanders, which no Value can read."}

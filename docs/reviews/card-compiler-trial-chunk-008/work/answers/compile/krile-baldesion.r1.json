@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot require the targeted creature card's mana value to equal the cast noncreature spell's mana value (manaValueAtMost/AtLeast take only fixed numbers), so the target restriction cannot be stated exactly."}

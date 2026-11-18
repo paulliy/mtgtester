@@ -1,0 +1,52 @@
+{
+  "name": "Red Hulk",
+  "oracleId": "a14a838a-49f4-45e3-9ec0-3c803af45a68",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ is dealt damage, put a +1/+1 counter on him. When you do, he deals damage equal to the number of +1/+1 counters on him to any other target."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealtDamage",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersOnSourceThenReflexive",
+            "counter": "+1/+1",
+            "count": 1,
+            "then": {
+              "kind": "triggered",
+              "targets": [
+                {
+                  "kind": "anyTarget"
+                }
+              ],
+              "effects": [
+                {
+                  "op": "dealDamage",
+                  "target": 0,
+                  "amount": {
+                    "kind": "countersOnSelf",
+                    "counter": "+1/+1"
+                  },
+                  "source": "source"
+                }
+              ],
+              "description": "When you do, he deals damage equal to the number of +1/+1 counters on him to any other target."
+            }
+          }
+        ],
+        "description": "Enrage — Whenever Red Hulk is dealt damage, put a +1/+1 counter on him. When you do, he deals damage equal to the number of +1/+1 counters on him to any other target."
+      }
+    ]
+  }
+}

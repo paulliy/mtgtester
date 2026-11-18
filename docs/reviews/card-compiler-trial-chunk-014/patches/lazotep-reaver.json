@@ -1,0 +1,35 @@
+{
+  "name": "Lazotep Reaver",
+  "oracleId": "85643f9b-49ea-434b-9f27-c1431064345e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, amass Zombies 1."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "amass",
+            "subtype": "Zombie",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "When this creature enters, amass Zombies 1."
+      }
+    ]
+  }
+}

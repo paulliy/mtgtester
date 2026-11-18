@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"manaAbilities":[{"units":[["C"]],"amount":{"kind":"countPermanents","selector":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"subtype","value":"Food"}]},"scope":"you"}}]}}

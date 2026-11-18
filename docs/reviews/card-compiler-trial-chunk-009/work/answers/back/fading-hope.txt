@@ -1,0 +1,1 @@
+Target creature. If that creature's mana value is 3 or less, scry 1. Then return that creature to its owner's hand.

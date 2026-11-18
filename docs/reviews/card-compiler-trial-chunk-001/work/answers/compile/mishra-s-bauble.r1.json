@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no effect that only looks at the top card of a target player's library without moving it (lookAtTopN requires placing the cards), so the 'look at the top card of target player's library' part cannot be modeled exactly."}

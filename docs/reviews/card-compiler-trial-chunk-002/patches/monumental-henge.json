@@ -1,0 +1,70 @@
+{
+  "name": "Monumental Henge",
+  "oracleId": "c48df45c-3513-4d56-aed6-30c2f3a759cd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{W}{W}, {T}: Look at the top five cards of your library. You may reveal a historic card from among them and put it into your hand. Put the rest on the bottom of your library in a random order."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 2,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "lookAtTopN",
+              "count": 5,
+              "mayPut": {
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "supertype",
+                      "value": "Legendary"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Saga"
+                    }
+                  ]
+                },
+                "destination": {
+                  "zone": "hand"
+                },
+                "reveal": true
+              },
+              "rest": "bottomRandom"
+            }
+          ],
+          "description": "{2}{W}{W}, {T}: Look at the top five cards of your library. You may reveal a historic card from among them and put it into your hand. Put the rest on the bottom of your library in a random order."
+        }
+      }
+    ]
+  }
+}

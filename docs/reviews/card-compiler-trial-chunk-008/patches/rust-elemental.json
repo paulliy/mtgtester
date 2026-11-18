@@ -1,0 +1,85 @@
+{
+  "name": "Rust Elemental",
+  "oracleId": "21af6b08-1dd1-4e7f-be7b-cc8e70c578c7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, sacrifice another artifact. If you can't, tap this creature and you lose 4 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "other"
+                  }
+                ]
+              },
+              "scope": "you",
+              "cmp": ">=",
+              "n": 1
+            },
+            "then": [
+              {
+                "op": "sacrificeOneThen",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "other"
+                    }
+                  ]
+                },
+                "then": []
+              }
+            ],
+            "else": [
+              {
+                "op": "tapTarget",
+                "target": "source"
+              },
+              {
+                "op": "loseLife",
+                "amount": {
+                  "kind": "const",
+                  "n": 4
+                }
+              }
+            ]
+          }
+        ],
+        "description": "At the beginning of your upkeep, sacrifice another artifact. If you can't, tap this creature and you lose 4 life."
+      }
+    ]
+  }
+}

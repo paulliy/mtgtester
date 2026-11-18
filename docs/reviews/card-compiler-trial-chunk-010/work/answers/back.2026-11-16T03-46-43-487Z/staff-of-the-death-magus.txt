@@ -1,0 +1,2 @@
+Whenever you cast a black spell, you gain 1 life.
+Whenever a Swamp you control enters, you gain 1 life.

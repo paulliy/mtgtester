@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"endStep","player":"you"},"optional":true,"targets":[{"kind":"creature","controller":"you"}],"effects":[{"op":"gainLife","amount":{"kind":"powerOfTarget","target":0}}],"description":"At the beginning of your end step, you may gain life equal to the power of target creature you control."}]}}

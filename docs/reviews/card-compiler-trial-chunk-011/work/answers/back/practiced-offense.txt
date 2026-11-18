@@ -1,0 +1,5 @@
+Target player and target creature.
+Put a +1/+1 counter on each creature that target player controls.
+Choose one —
+• Target creature gains double strike until end of turn.
+• Target creature gains lifelink until end of turn.

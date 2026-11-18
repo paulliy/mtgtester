@@ -1,0 +1,1 @@
+{2}{G}{G}: Put a number of +1/+1 counters on this creature equal to its power.

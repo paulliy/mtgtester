@@ -1,0 +1,2 @@
+Destroy up to one target artifact, enchantment, or creature with flying.
+Create a Food artifact token with "{2}, {T}, Sacrifice this artifact: You gain 3 life."

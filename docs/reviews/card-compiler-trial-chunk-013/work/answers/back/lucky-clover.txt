@@ -1,0 +1,1 @@
+Whenever you cast an instant or sorcery spell with the subtype Adventure, copy that spell.

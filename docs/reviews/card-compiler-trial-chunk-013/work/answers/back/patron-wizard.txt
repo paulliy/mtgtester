@@ -1,0 +1,2 @@
+Tap a Wizard you control. This creature may be the tapped Wizard.
+Counter target spell unless its controller pays {1}.

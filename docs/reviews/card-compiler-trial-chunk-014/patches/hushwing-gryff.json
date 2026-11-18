@@ -1,0 +1,23 @@
+{
+  "name": "Hushwing Gryff",
+  "oracleId": "a0d615b3-7ee3-43d7-ad37-5f7f1544a8db",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures entering don't cause abilities to trigger."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "suppressObjectTriggers",
+        "events": [
+          "enters"
+        ],
+        "filter": {
+          "kind": "type",
+          "value": "Creature"
+        }
+      }
+    ]
+  }
+}

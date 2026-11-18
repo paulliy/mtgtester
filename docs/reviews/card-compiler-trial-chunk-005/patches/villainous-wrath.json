@@ -1,0 +1,42 @@
+{
+  "name": "Villainous Wrath",
+  "oracleId": "1c7c1867-20cb-4035-bb2a-42760edf0a55",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target opponent loses life equal to the number of creatures they control. Then destroy all creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "loseLifeTarget",
+          "target": 0,
+          "amount": {
+            "kind": "countPermanentsControlledByTarget",
+            "target": 0,
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          }
+        },
+        {
+          "op": "destroyEach",
+          "selector": {
+            "kind": "type",
+            "value": "Creature"
+          }
+        }
+      ],
+      "description": "Target opponent loses life equal to the number of creatures they control. Then destroy all creatures."
+    }
+  }
+}

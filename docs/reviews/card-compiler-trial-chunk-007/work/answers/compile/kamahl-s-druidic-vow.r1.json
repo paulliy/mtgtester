@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Looking at the top X cards and putting lands or legendary permanents with mana value X or less onto the battlefield needs a dynamic X, but lookAtTopN takes a fixed count and manaValueAtMost takes a fixed number."}

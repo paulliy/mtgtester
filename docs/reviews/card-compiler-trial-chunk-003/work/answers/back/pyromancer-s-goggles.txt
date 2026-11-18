@@ -1,0 +1,2 @@
+{T}: Add {R}.
+Whenever this mana is spent to cast a red instant or sorcery spell, copy that spell.

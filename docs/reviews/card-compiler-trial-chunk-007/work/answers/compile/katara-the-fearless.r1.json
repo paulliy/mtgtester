@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"triggerAdditionalTime","filter":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"subtype","value":"Ally"}]}}]}}

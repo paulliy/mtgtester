@@ -1,0 +1,1 @@
+Create X tokens that are copies of target artifact or creature you control. Those tokens have haste. Sacrifice them at the beginning of the end step.

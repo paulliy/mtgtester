@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Selectors take only fixed numbers, so 'creature with mana value X' (equal to the announced X, not at most or at least a constant) cannot be written as a target filter."}

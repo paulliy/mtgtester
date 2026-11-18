@@ -1,0 +1,1 @@
+Choose a target creature you control and a target permanent. The creature you control deals damage equal to its power to that permanent. Then if you control a permanent with the subtype Eldrazi, you gain 3 life.

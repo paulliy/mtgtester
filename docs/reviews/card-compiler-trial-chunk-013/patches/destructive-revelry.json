@@ -1,0 +1,36 @@
+{
+  "name": "Destructive Revelry",
+  "oracleId": "7165fade-ea96-4026-bc80-620729b8f70c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target artifact or enchantment. ~ deals 2 damage to that permanent's controller."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "artifactOrEnchantment"
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroy",
+          "target": 0
+        },
+        {
+          "op": "dealDamage",
+          "target": {
+            "controllerOf": 0
+          },
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        }
+      ],
+      "description": "Destroy target artifact or enchantment. Destructive Revelry deals 2 damage to that permanent's controller."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot make the two Faerie tokens conditional on each opponent who controlled a returned creature (createTokenForEachOpponent creates for every opponent), and the 'can block only creatures with flying' restriction has no field."}

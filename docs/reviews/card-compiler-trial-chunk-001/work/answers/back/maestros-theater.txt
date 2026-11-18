@@ -1,0 +1,1 @@
+When this land enters, sacrifice this land. When you do, search your library for a basic land card with the supertype Basic and the subtype Island, Swamp, or Mountain. The search may fail to find a card. If a card is found, put it onto the battlefield tapped. Then shuffle, and you gain 1 life.

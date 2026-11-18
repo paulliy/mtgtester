@@ -1,0 +1,53 @@
+{
+  "name": "Tempered Sliver",
+  "oracleId": "536c36d9-5ef4-441c-a6c8-5806644d805c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sliver creatures you control have \"Whenever this creature deals combat damage to a player, put a +1/+1 counter on it.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Sliver"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealsCombatDamageToPlayer",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "putCountersEach",
+                "selector": {
+                  "kind": "self"
+                },
+                "counter": "+1/+1",
+                "count": 1
+              }
+            ],
+            "description": "Whenever this creature deals combat damage to a player, put a +1/+1 counter on it."
+          }
+        }
+      }
+    ]
+  }
+}

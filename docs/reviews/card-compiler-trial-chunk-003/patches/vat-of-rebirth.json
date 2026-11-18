@@ -1,0 +1,64 @@
+{
+  "name": "Vat of Rebirth",
+  "oracleId": "10c31317-71e8-42e0-85e0-3e64bd0c3dd3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another artifact or creature you control is put into a graveyard from the battlefield, put an oil counter on this artifact."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "leavesBattlefield",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "leavesTo": [
+            "graveyard"
+          ]
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "oil",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever another artifact or creature you control is put into a graveyard from the battlefield, put an oil counter on this artifact."
+      }
+    ]
+  }
+}

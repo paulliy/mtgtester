@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The line returns any number of permanent cards with different names from the graveyard, but graveyardToBattlefieldEach returns every matching card and no op lets the controller choose any number subject to a distinct-names constraint."}

@@ -1,0 +1,6 @@
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/goldvein-hydra.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/goldvein-hydra.txt
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/the-battle-of-bywater.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/the-battle-of-bywater.txt
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/swarmyard-massacre.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/swarmyard-massacre.txt
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/gleaming-splendor.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/gleaming-splendor.txt
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/juri-master-of-the-revue.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/juri-master-of-the-revue.txt
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/back/agent-of-the-iron-throne.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/back/agent-of-the-iron-throne.txt

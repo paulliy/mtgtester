@@ -1,0 +1,38 @@
+{
+  "name": "Cavalier of Gales",
+  "oracleId": "08e2fead-53e9-445b-8fd1-c108bb09d81c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature dies, shuffle it into its owner's library, then scry 2."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putDepartedSourceIntoLibrary",
+            "fromTop": 1
+          },
+          {
+            "op": "shuffle"
+          },
+          {
+            "op": "scry",
+            "count": 2
+          }
+        ],
+        "description": "When this creature dies, shuffle it into its owner's library, then scry 2."
+      }
+    ]
+  }
+}

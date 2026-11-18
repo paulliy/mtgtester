@@ -1,0 +1,69 @@
+{
+  "name": "Brightglass Gearhulk",
+  "oracleId": "0c7019a7-3cca-481a-9af0-abedb89c15ad",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, you may search your library for up to two artifact, creature, and/or enchantment cards with mana value 1 or less, reveal them, put them into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    }
+                  ]
+                },
+                {
+                  "kind": "manaValueAtMost",
+                  "n": 1
+                }
+              ]
+            },
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "count": {
+              "kind": "const",
+              "n": 2
+            },
+            "reveal": true
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "When this creature enters, you may search your library for up to two artifact, creature, and/or enchantment cards with mana value 1 or less, reveal them, put them into your hand, then shuffle."
+      }
+    ]
+  }
+}

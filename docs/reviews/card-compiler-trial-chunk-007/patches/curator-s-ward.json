@@ -1,0 +1,57 @@
+{
+  "name": "Curator's Ward",
+  "oracleId": "a89ad91e-2bc2-45f4-b32c-fb2b67a2019e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When enchanted permanent leaves the battlefield, if it was historic, draw two cards."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "leavesBattlefield",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          },
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Saga"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 2
+            }
+          }
+        ],
+        "description": "When enchanted permanent leaves the battlefield, if it was historic, draw two cards."
+      }
+    ]
+  }
+}

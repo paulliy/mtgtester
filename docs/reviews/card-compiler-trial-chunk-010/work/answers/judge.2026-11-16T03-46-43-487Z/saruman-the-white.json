@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A triggers on the second spell each turn; Text B triggers on every second spell with no 'each turn' limit, so a later turn's second spell also triggers in B and the per-turn condition is missing."]}

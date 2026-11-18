@@ -1,0 +1,1 @@
+Whenever the equipped creature deals combat damage to a player, this ability has no effects and does nothing.

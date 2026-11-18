@@ -1,0 +1,44 @@
+{
+  "name": "Birchlore Rangers",
+  "oracleId": "667c5676-7a18-4fa9-b965-b26797538e23",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap two untapped Elves you control: Add one mana of any color."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ],
+        "costs": [
+          {
+            "kind": "tapOthers",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Elf"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "count": 2,
+            "allowSelf": true
+          }
+        ]
+      }
+    ]
+  }
+}

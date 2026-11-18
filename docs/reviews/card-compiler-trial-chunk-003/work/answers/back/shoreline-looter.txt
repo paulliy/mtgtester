@@ -1,0 +1,1 @@
+Whenever this creature deals combat damage to a player, draw a card. Then if there are seven or more cards in your graveyard, nothing happens. Otherwise, discard a card.

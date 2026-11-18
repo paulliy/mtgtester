@@ -1,0 +1,2 @@
+Whenever this deals combat damage to a player, sacrifice this artifact, then create a number of Treasure artifact tokens equal to the damage dealt.
+{T}, Sacrifice this artifact: Add one mana of any one of the following colors: {W}, {U}, {B}, {R}, or {G}.

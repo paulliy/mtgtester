@@ -1,0 +1,1 @@
+Choose any target. If you control three or more artifacts, this spell deals 4 damage to that target. Otherwise, this spell deals 2 damage to that target.

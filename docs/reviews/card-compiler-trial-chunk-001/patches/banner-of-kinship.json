@@ -1,0 +1,37 @@
+{
+  "name": "Banner of Kinship",
+  "oracleId": "8c220dbd-6572-4715-aae6-dd09a4252d68",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As this artifact enters, choose a creature type. ~ enters with a fellowship counter on it for each creature you control of the chosen type."
+  ],
+  "compose": "append",
+  "def": {
+    "entersChoosingOption": {
+      "prompt": "choose a creature type",
+      "domain": "creatureType"
+    },
+    "entersWithCounters": {
+      "fellowship": {
+        "kind": "countPermanents",
+        "selector": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "chosenSubtype"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "scope": "you"
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+Each creature that attacks requires its controller to pay {1} for each attacking creature. This applies to attacks on planeswalkers as well.

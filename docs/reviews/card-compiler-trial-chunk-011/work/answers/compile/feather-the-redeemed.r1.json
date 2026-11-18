@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no way for a cast trigger to make the resolving instant or sorcery exile itself instead of going to the graveyard and then return it to hand at the next end step, because the only spell-exile effects act on the spell's own resolution (resolvingSpellExile), not on a cast-triggered replacement that delays a return."}

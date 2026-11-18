@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A triggers on combat damage dealt to an opponent; Text B triggers on combat damage dealt to any player, which would include the controller of the creature if it dealt combat damage to its own controller."]}

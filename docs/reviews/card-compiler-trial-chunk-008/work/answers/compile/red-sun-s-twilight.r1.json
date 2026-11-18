@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Destroy up to X target artifacts' needs a target count equal to the announced X, but TargetSpec.count takes fixed numbers only, and the follow-up token copies of each artifact destroyed this way are not expressible."}

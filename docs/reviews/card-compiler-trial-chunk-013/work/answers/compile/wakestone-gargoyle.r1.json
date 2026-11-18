@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No op lets creatures with defender attack; loseKeywordsEachUntilEot fixes its affected set at resolution, so defender creatures entering later this turn would be missed, and a 'with defender' selector is event-only."}

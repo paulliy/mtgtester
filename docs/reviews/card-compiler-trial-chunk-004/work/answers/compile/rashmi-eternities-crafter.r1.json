@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The revealed top card goes to hand when not cast, but the free-cast-from-top op (lookAtTopNCastOneFree) has no hand destination for an unchosen card, and its rest goes to the bottom."}

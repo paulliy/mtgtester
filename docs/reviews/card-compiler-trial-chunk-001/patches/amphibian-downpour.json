@@ -1,0 +1,64 @@
+{
+  "name": "Amphibian Downpour",
+  "oracleId": "a4280cea-386b-450d-a7e9-29c7aa58ce5a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 4,
+          "setTypes": [
+            "Creature"
+          ],
+          "setSubtypes": [
+            "Frog"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 5,
+          "setColors": [
+            "U"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "loseAllAbilities": true
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "const",
+            "n": 1
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      }
+    ]
+  }
+}

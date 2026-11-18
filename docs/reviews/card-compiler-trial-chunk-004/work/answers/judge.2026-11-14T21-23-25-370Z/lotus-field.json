@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A sacrifices two lands as a single instruction; Text B sacrifices a land, then sacrifices a second land as two separate steps, which is a different order of steps."]}

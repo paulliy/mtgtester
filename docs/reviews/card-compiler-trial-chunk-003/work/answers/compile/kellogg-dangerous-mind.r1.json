@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The control change lasts as long as you control Kellogg, but gainControlTarget's durations end with the source leaving the battlefield (whileSourceOnBattlefield), so it would not end if an opponent gained control of Kellogg while it stayed on the battlefield."}

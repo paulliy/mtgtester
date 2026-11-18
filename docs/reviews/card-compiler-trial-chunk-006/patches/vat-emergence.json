@@ -1,0 +1,34 @@
+{
+  "name": "Vat Emergence",
+  "oracleId": "03e59169-d8f8-40da-b5f7-645d16365e7b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put target creature card from a graveyard onto the battlefield under your control. Proliferate."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "cardInGraveyard",
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "graveyardOwnerScope": "any"
+        }
+      ],
+      "effects": [
+        {
+          "op": "graveyardToBattlefield",
+          "target": 0
+        },
+        {
+          "op": "proliferate"
+        }
+      ],
+      "description": "Put target creature card from a graveyard onto the battlefield under your control. Proliferate."
+    }
+  }
+}

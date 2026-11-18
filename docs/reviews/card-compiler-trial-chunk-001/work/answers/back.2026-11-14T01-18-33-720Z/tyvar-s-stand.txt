@@ -1,0 +1,1 @@
+Target creature you control gets +X/+X until end of turn, where X is the value of X paid for this spell. That creature gains hexproof and indestructible until end of turn.

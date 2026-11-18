@@ -1,0 +1,2 @@
+Tap target creature.
+Put a number of stun counters on that creature equal to twice X.

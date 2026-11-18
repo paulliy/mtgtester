@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"blocks","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"returnBlockedCreatureAtEndOfCombat"}],"description":"Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat."}]}}

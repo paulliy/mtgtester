@@ -74,6 +74,7 @@ To add an ADR, take the next unused number, put a `Status:` line in the form abo
 | [0044](0044-tactician-escalation-triggers.md)                  | Named triggers for when the bot calls the tactician                                               | Accepted (2026-11-11)  | 2026-11-11 | —                        |
 | [0045](0045-strategist-critical-turns.md)                      | Find the turns where the strategist should hand the tactician the turn                            | Accepted (2026-11-11)  | 2026-11-11 | —                        |
 | [0046](0046-decision-model-tactician-bench.md)                 | Benchmarking decision models as the tactician                                                     | Accepted (2026-11-12)  | 2026-11-12 | —                        |
+| [0047](0047-compiled-cards-as-unreviewed-overrides.md)         | Compiled cards enter the pool as unreviewed overrides                                             | Accepted (2026-11-13)  | 2026-11-13 | —                        |
 | [0048](0048-color-aware-auto-pay.md)                           | Color-aware auto-pay                                                                              | Accepted (2026-11-01)  | 2026-11-01 | —                        |
 | [0049](0049-missing-primitives.md)                             | Remaining Card Primitive Backlog                                                                  | Completed (2026-11-14) | 2026-07-29 | —                        |
 

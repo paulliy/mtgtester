@@ -1,0 +1,54 @@
+{
+  "name": "Savage Thallid",
+  "oracleId": "309a57cb-cc08-4892-bc63-c424ca9c5b43",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice a Saproling: Regenerate target Fungus."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Saproling"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "count": 1
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "filter": {
+                "kind": "subtype",
+                "value": "Fungus"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "regenerate",
+              "target": 0
+            }
+          ],
+          "description": "Sacrifice a Saproling: Regenerate target Fungus."
+        }
+      }
+    ]
+  }
+}

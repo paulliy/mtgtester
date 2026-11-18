@@ -1,0 +1,46 @@
+{
+  "name": "Ghost Town",
+  "oracleId": "f2c861d3-b302-4e84-b647-099551007269",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{0}: Return this land to its owner's hand. Activate only if it's not your turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "condition": {
+          "kind": "notYourTurn"
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "returnToHand",
+              "target": "source"
+            }
+          ],
+          "description": "{0}: Return this land to its owner's hand. Activate only if it's not your turn."
+        }
+      }
+    ]
+  }
+}

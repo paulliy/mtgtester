@@ -1,0 +1,1 @@
+Return each creature on the battlefield that isn't a Kraken, Leviathan, Octopus, or Serpent to its owner's hand.

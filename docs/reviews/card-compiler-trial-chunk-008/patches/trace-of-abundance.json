@@ -1,0 +1,31 @@
+{
+  "name": "Trace of Abundance",
+  "oracleId": "530140f1-e992-4b5e-882c-c15bacc328fa",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever enchanted land is tapped for mana, its controller adds an additional one mana of any color."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "manaActivationRider",
+        "source": {
+          "kind": "attachedToSource"
+        },
+        "add": {
+          "kind": "fixed",
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}

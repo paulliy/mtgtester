@@ -1,0 +1,27 @@
+{
+  "name": "Turn Aside",
+  "oracleId": "4325ae73-af43-4a7d-a552-9909f0dc77db",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Counter target spell that targets a permanent you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "spell",
+          "spellTargetsPermanentYouControl": true
+        }
+      ],
+      "effects": [
+        {
+          "op": "counter",
+          "target": 0
+        }
+      ],
+      "description": "Counter target spell that targets a permanent you control."
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "name": "Heaped Harvest",
+  "oracleId": "bbfc5011-a9b7-442d-a443-974a5a64de46",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this artifact enters and when you sacrifice it, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "destinations": [
+              {
+                "zone": "battlefield",
+                "tapped": true
+              }
+            ]
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "When this artifact enters and when you sacrifice it, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "sacrificed",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "destinations": [
+              {
+                "zone": "battlefield",
+                "tapped": true
+              }
+            ]
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "When this artifact enters and when you sacrifice it, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle."
+      }
+    ]
+  }
+}

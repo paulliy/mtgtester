@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot make the 'return this Vehicle to its owner's hand' step depend on whether the hideaway card was actually cast (playExiledCardFree has no 'if you do' gating for a following effect)."}
