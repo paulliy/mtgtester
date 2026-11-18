@@ -320,6 +320,36 @@ export function effectSourceTraits(ctx: GameContext, source: EffectSource): Prot
   });
 }
 
+/**
+ * Lifelink's gain for damage `source` dealt (CR 702.15b). While simultaneous damage is being
+ * dealt across several instructions, it is summed per source and gained once as that damage
+ * finishes (CR 120.3f, 119.9); otherwise it is gained now.
+ */
+function* gainLifeFromLifelink(
+  ctx: GameContext,
+  source: EffectSource,
+  amount: number,
+): GameGen<void> {
+  const batch = ctx.lifelinkBatch;
+  if (batch === undefined) {
+    yield* gainLife(ctx, playerById(ctx, source.controllerId), amount);
+    return;
+  }
+  const key = source.id ?? source.cardId;
+  const entry = batch.get(key);
+  if (entry === undefined) batch.set(key, { controllerId: source.controllerId, amount });
+  else entry.amount += amount;
+}
+
+/** Gain each source's summed lifelink from a finished simultaneous-damage batch, once each. */
+function* flushLifelinkBatch(
+  ctx: GameContext,
+  batch: Map<string, { controllerId: PlayerId; amount: number }>,
+): GameGen<void> {
+  for (const { controllerId, amount } of batch.values())
+    yield* gainLife(ctx, playerById(ctx, controllerId), amount);
+}
+
 /** Deal non-combat or combat damage from `source` to a creature. */
 export function* dealDamageToCreature(
   ctx: GameContext,
@@ -368,7 +398,7 @@ export function* dealDamageToCreature(
   if (opts.sourceHasInfect === true) addCounters(ctx, source, target, '-1/-1', amount);
   else target.damageMarked += amount;
   if (opts.sourceHasDeathtouch) target.damagedByDeathtouch = true;
-  if (opts.sourceHasLifelink) yield* gainLife(ctx, playerById(ctx, source.controllerId), amount);
+  if (opts.sourceHasLifelink) yield* gainLifeFromLifelink(ctx, source, amount);
   // CR 702.90e: infect still counts as "dealt damage" for triggers even though it marks
   // -1/-1 counters instead of damage.
   if (opts.dealtTotals !== undefined)
@@ -478,7 +508,7 @@ export function* dealDamageToPlayer(
       (target.commanderDamageTaken[source.cardId] ?? 0) + amount;
   }
   const observe = function* (): GameGen<void> {
-    if (opts.sourceHasLifelink) yield* gainLife(ctx, playerById(ctx, source.controllerId), amount);
+    if (opts.sourceHasLifelink) yield* gainLifeFromLifelink(ctx, source, amount);
     emit(ctx, 'damage', {
       source: source.name,
       sourceCardId: source.cardId,
@@ -546,7 +576,7 @@ function* dealDamageToPlayersTogether(
       preparedAmount: true,
       deferredObservations: observations,
     });
-  if (lifelink) yield* gainLife(ctx, playerById(ctx, source.controllerId), total);
+  if (lifelink) yield* gainLifeFromLifelink(ctx, source, total);
   for (const observe of observations) yield* observe();
 }
 
@@ -578,7 +608,7 @@ function* dealDamageToLoyaltyOrDefense(
     ctx.state.excessDamageControllerIds.push(perm.controllerId);
   setCounterCount(perm.counters, counterKind, Math.max(0, have - amount));
   // Lifelink applies to damage dealt to any object or player (CR 702.15b).
-  if (opts.sourceHasLifelink) yield* gainLife(ctx, playerById(ctx, source.controllerId), amount);
+  if (opts.sourceHasLifelink) yield* gainLifeFromLifelink(ctx, source, amount);
   emit(ctx, 'damage', {
     source: source.name,
     sourceCardId: source.cardId,
@@ -1968,6 +1998,8 @@ function* executeAbilityEffects(
       name: facts.name,
       oracleId: facts.oracleId,
       controllerId: facts.candidate.controllerId as PlayerId,
+      // Kept whole, so damage replacements still see a departed permanent (CR 113.7a).
+      lastKnownFacts: facts,
       lastKnownColors: facts.candidate.colors,
       lastKnownTypes: facts.candidate.types,
       lastKnownDamageKeywords: (['deathtouch', 'lifelink', 'infect'] as const).filter((keyword) =>
@@ -2175,7 +2207,24 @@ function* executeAbilityEffects(
     return currentId !== null && findObjectById(ctx, currentId) !== undefined ? currentId : null;
   };
 
+  // "Deals N damage to each creature and each player" is two instructions but one simultaneous
+  // damage event, so a lifelink source's gain is summed across the run and gained once
+  // (CR 120.3f, 119.9). A run is consecutive damageEach / damageEachPlayer instructions.
+  let lifelinkBatch: Map<string, { controllerId: PlayerId; amount: number }> | undefined;
+  const closeLifelinkBatch = function* (): GameGen<void> {
+    if (lifelinkBatch === undefined) return;
+    const batch = lifelinkBatch;
+    lifelinkBatch = undefined;
+    delete ctx.lifelinkBatch;
+    yield* flushLifelinkBatch(ctx, batch);
+  };
   for (const effect of ability.effects ?? []) {
+    if (effect.op === 'damageEach' || effect.op === 'damageEachPlayer') {
+      if (lifelinkBatch === undefined && ctx.lifelinkBatch === undefined) {
+        lifelinkBatch = new Map();
+        ctx.lifelinkBatch = lifelinkBatch;
+      }
+    } else yield* closeLifelinkBatch();
     enterOp(ctx, source.name, effect.op);
     switch (effect.op) {
       case 'transformSelf': {
@@ -9744,6 +9793,7 @@ function* executeAbilityEffects(
     // as a trigger (Deflecting Palm's rulings).
     yield* flushDamageReflections(ctx);
   }
+  yield* closeLifelinkBatch();
 }
 
 /**
@@ -9752,6 +9802,10 @@ function* executeAbilityEffects(
  * it can itself be modified or prevented, which may queue more.
  */
 export function* flushDamageReflections(ctx: GameContext): GameGen<void> {
+  if (ctx.state.damageReflections.length === 0) return;
+  // Reflected damage is its own damage event, so its lifelink is not summed into an open batch.
+  const batch = ctx.lifelinkBatch;
+  delete ctx.lifelinkBatch;
   while (ctx.state.damageReflections.length > 0) {
     const reflection = ctx.state.damageReflections.shift()!;
     ctx.state.damageChain = reflection.chain;
@@ -9763,6 +9817,7 @@ export function* flushDamageReflections(ctx: GameContext): GameGen<void> {
     );
     ctx.state.damageChain = [];
   }
+  if (batch !== undefined) ctx.lifelinkBatch = batch;
 }
 
 /**

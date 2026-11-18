@@ -32,6 +32,7 @@ import {
   dealCombatDamageToPlaneswalker,
   dealDamageToCreature,
   dealDamageToPlayer,
+  gainLife,
   flushDamageReflections,
   permanentSource,
 } from '../effects/resolve';
@@ -2208,28 +2209,42 @@ function* dealCombatDamage(
   const damageToPlayers = new Map<EnginePermanent, number>();
   // Likewise "is dealt damage" is one event per damaged creature, carrying the step's total.
   const damageToCreatures = new Map<EnginePermanent, number>();
+  // A lifelinking source's simultaneous combat damage to several recipients is ONE life-gain
+  // event of the total (CR 120.3f, 119.9), so a "plus 1" replacement applies once, not per hit.
+  const lifelinkTotals = new Map<EnginePermanent, number>();
+  const noteLifelink = (source: EnginePermanent, lifelink: boolean, dealt: number) => {
+    if (lifelink && dealt > 0)
+      lifelinkTotals.set(source, (lifelinkTotals.get(source) ?? 0) + dealt);
+  };
 
   for (const a of assignments) {
     const traits = combatDamageTraits(ctx, a.source);
     if (a.targetCreature !== null) {
+      const before = damageToCreatures.get(a.targetCreature) ?? 0;
       yield* dealDamageToCreature(ctx, permanentSource(a.source), a.targetCreature, a.amount, {
         combat: true,
         sourceHasDeathtouch: traits.deathtouch,
-        sourceHasLifelink: traits.lifelink,
+        sourceHasLifelink: false,
         sourceHasInfect: traits.infect,
         sourceTraits: traits,
         dealtTotals: damageToCreatures,
       });
+      noteLifelink(
+        a.source,
+        traits.lifelink,
+        (damageToCreatures.get(a.targetCreature) ?? 0) - before,
+      );
     } else if (a.targetPlaneswalker !== null) {
       // Damage to a planeswalker is not damage to a player: no commander damage, no "deals combat
       // damage to a player" trigger, no monarch steal — it only removes loyalty (CR 120.3c).
-      yield* dealCombatDamageToPlaneswalker(
+      const dealt = yield* dealCombatDamageToPlaneswalker(
         ctx,
         permanentSource(a.source),
         a.targetPlaneswalker,
         a.amount,
-        { sourceHasLifelink: traits.lifelink, sourceTraits: traits },
+        { sourceHasLifelink: false, sourceTraits: traits },
       );
+      noteLifelink(a.source, traits.lifelink, dealt);
     } else if (a.targetPlayer !== null) {
       const dealt = yield* dealDamageToPlayer(
         ctx,
@@ -2239,11 +2254,12 @@ function* dealCombatDamage(
         {
           combat: true,
           sourceIsCommander: a.source.isCommander,
-          sourceHasLifelink: traits.lifelink,
+          sourceHasLifelink: false,
           sourceHasInfect: traits.infect,
           sourceToxic: traits.toxic,
         },
       );
+      noteLifelink(a.source, traits.lifelink, dealt);
       // Prevented damage was never dealt: no "deals combat damage to a player" trigger, and no
       // monarch steal (CR 725.2 — "whenever a creature deals combat damage to the monarch").
       if (dealt <= 0) continue;
@@ -2257,6 +2273,9 @@ function* dealCombatDamage(
       }
     }
   }
+
+  for (const [source, amount] of lifelinkTotals)
+    yield* gainLife(ctx, playerById(ctx, source.controllerId), amount);
 
   // Damage a prevention owes (Deflecting Palm) is dealt once every combat damage in the step has.
   yield* flushDamageReflections(ctx);
