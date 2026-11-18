@@ -8,34 +8,35 @@
         "engine",
         "setup",
         "model",
-        "coverage"
+        "coverage",
+        "authoring"
       ],
-      "commit": "727aeb8f",
+      "commit": "dc0eb202",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 56.24,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 56.48,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 5.92,
+          "value": 7.32,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.37
+          "spread": 0.238
         },
         "engine.medianGameMsPerDecision": {
-          "value": 5.79,
+          "value": 7.43,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.428
+          "spread": 0.143
         },
         "setup.msPerGame": {
-          "value": 59.26,
+          "value": 74.41,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.044
+          "spread": 0.135
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -62,13 +63,13 @@
           "kind": "exact"
         },
         "model.bot.callsPerTurn": {
-          "value": 0.4,
+          "value": 0.6,
           "unit": "calls",
           "better": "lower",
           "kind": "exact"
         },
         "model.bot.promptTokensPerTurn": {
-          "value": 827,
+          "value": 1292,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -89,6 +90,42 @@
           "value": 100,
           "unit": "%",
           "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolMutantsLeftPct": {
+          "value": 76.11,
+          "unit": "%",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "authoring.poolPartsScaffoldedPct": {
+          "value": 44.97,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolCardsFullyScaffolded": {
+          "value": 125,
+          "unit": "cards",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolDraftFailures": {
+          "value": 0,
+          "unit": "drafts",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "authoring.referenceKillsReproducedPct": {
+          "value": 16.67,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.referenceDraftFailures": {
+          "value": 0,
+          "unit": "drafts",
+          "better": "lower",
           "kind": "exact"
         }
       },
@@ -105,34 +142,35 @@
         "engine",
         "setup",
         "model",
-        "coverage"
+        "coverage",
+        "authoring"
       ],
-      "commit": "727aeb8f",
+      "commit": "dc0eb202",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 57.85,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 57.12,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 45.31,
+          "value": 51.68,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.049
+          "spread": 0.021
         },
         "engine.medianGameMsPerDecision": {
-          "value": 11.94,
+          "value": 13.21,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.037
+          "spread": 0.115
         },
         "setup.msPerGame": {
-          "value": 62.7,
+          "value": 69.81,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.055
+          "spread": 0.094
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -159,13 +197,13 @@
           "kind": "exact"
         },
         "model.bot.callsPerTurn": {
-          "value": 0.605,
+          "value": 0.803,
           "unit": "calls",
           "better": "lower",
           "kind": "exact"
         },
         "model.bot.promptTokensPerTurn": {
-          "value": 1898,
+          "value": 2490,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -186,6 +224,42 @@
           "value": 100,
           "unit": "%",
           "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolMutantsLeftPct": {
+          "value": 76.06,
+          "unit": "%",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "authoring.poolPartsScaffoldedPct": {
+          "value": 45.12,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolCardsFullyScaffolded": {
+          "value": 998,
+          "unit": "cards",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolDraftFailures": {
+          "value": 0,
+          "unit": "drafts",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "authoring.referenceKillsReproducedPct": {
+          "value": 16.67,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.referenceDraftFailures": {
+          "value": 0,
+          "unit": "drafts",
+          "better": "lower",
           "kind": "exact"
         }
       },

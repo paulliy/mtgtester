@@ -12,6 +12,10 @@
  * have no test IDs, a runner test file of `it.todo` placeholders that the skip lint refuses, and
  * the test file's card-gate entry. It never copies another card's definition, and it reads the
  * engine's own interpreter rather than any copy of its vocabulary.
+ *
+ * For a card the engine already models, it also runs `card:scaffold`: it prints the generated
+ * promotion drafts and the mutants they leave. `card:scaffold --write` saves them, unreviewed
+ * until `card:scaffold --approve`.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -655,6 +659,22 @@ async function main(): Promise<void> {
     console.log('\nInteraction questions to answer in tests:');
     for (const { shape, question } of prompts) console.log(`  - ${shape}: ${question}`);
   }
+
+  // Promotion drafts (hill-climb S4): a card the engine already models gets its positive
+  // scenarios drafted now, so promoting it starts from review instead of a blank file.
+  // It prints them only: --batch writes an unimplemented() stub, which would unmodel the card
+  // the drafts were made from.
+  if (def.modeled) {
+    const scaffold = await import('./card-scaffold');
+    console.log('\nPromotion drafts (card:scaffold):');
+    scaffold.printScaffoldReport(card, scaffold.scaffoldReport(card));
+    console.log(
+      `\nbun run card:scaffold "${card.name}" --write saves them; review each, then --approve <id>.`,
+    );
+  } else
+    console.log(
+      `\nOnce the card models, bun run card:scaffold "${card.name}" --write drafts its positive scenarios.`,
+    );
 
   if (batch === null) {
     console.log('\nPass --batch <id> to write the scaffold.');
