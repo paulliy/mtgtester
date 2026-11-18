@@ -124,7 +124,25 @@ export interface EngineOptions {
   maxStepWork?: number;
   /** Objects the whole game may create before it halts. Unlimited when absent. */
   maxObjects?: number;
+  /**
+   * Objects one turn may create before the game halts. A runaway loop that grows the board (a
+   * token trigger retriggering on its own token) costs more per iteration as the board grows, so
+   * it reaches `maxObjects` only after hours and `maxStepWork` never; a turn's objects stop it in
+   * about a second. Defaults to `DEFAULT_MAX_TURN_OBJECTS` whenever `maxObjects` is set, so every
+   * table game gets it with no new stored limit; unlimited when both are absent.
+   */
+  maxTurnObjects?: number;
 }
+
+/**
+ * The per-turn object limit a game with `maxObjects` gets by default. The most objects one whole
+ * seeded four-bot game created was 436 (2026-10-29 calibration, `TABLE_ENGINE_LIMITS`); over 60
+ * seeded heuristic four-player fuzz games (2026-11-16, 30-turn cap) the most one turn created was
+ * 173 and one game 544. Without strict invariants (as tables run) a board-growing loop reached
+ * 1,000 objects in about a second, 2,000 in 6 s, 4,000 in 37 s and 8,000 in 5 min, so a table's
+ * 20,000 per game would take hours (each iteration costs more as the board grows).
+ */
+export const DEFAULT_MAX_TURN_OBJECTS = 1_000;
 
 export class Engine implements EngineDriver {
   private readonly ctx: GameContext;
@@ -138,10 +156,18 @@ export class Engine implements EngineDriver {
 
   constructor(config: GameConfig, options: EngineOptions = {}) {
     this.ctx = createGame(config);
-    if (options.maxStepWork !== undefined || options.maxObjects !== undefined) {
+    const maxTurnObjects =
+      options.maxTurnObjects ??
+      (options.maxObjects !== undefined ? DEFAULT_MAX_TURN_OBJECTS : undefined);
+    if (
+      options.maxStepWork !== undefined ||
+      options.maxObjects !== undefined ||
+      maxTurnObjects !== undefined
+    ) {
       this.ctx.budget = {
         ...(options.maxStepWork !== undefined && { maxStepWork: options.maxStepWork }),
         ...(options.maxObjects !== undefined && { maxObjects: options.maxObjects }),
+        ...(maxTurnObjects !== undefined && { maxTurnObjects }),
         stepWork: { count: 0 },
         objectsAtStart: this.ctx.state.nextObjectNum,
       };

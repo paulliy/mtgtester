@@ -1070,6 +1070,10 @@ export interface EngineBudget {
   stepWork: { count: number };
   /** `nextObjectNum` when the engine was built: a game's starting cards are not counted. */
   objectsAtStart: number;
+  /** Objects one turn may create; see `EngineOptions.maxTurnObjects`. */
+  maxTurnObjects?: number;
+  /** The turn being counted and `nextObjectNum` when its first object was created. */
+  turnObjects?: { turn: number; atStart: number };
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */
