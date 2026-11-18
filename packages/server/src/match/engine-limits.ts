@@ -8,5 +8,12 @@
  * objects one game created was 436. Ten times those (630 and about 4,400) would halt legitimate
  * long games and board wipes that sample did not reach, while a runaway loop reaches 50,000 events
  * in milliseconds, so the plan's starting values stand until recorded table games say otherwise.
+ *
+ * 2026-11-16: that last assumption fails for a loop that grows the board. A token trigger that
+ * retriggers on its own token emits three events per token, and each iteration costs more as the
+ * board grows (1,000 objects in about 1 s, 8,000 in 5 min), so it would take hours to reach either
+ * limit. The engine therefore also halts a turn that creates more than `DEFAULT_MAX_TURN_OBJECTS`
+ * (1,000) objects whenever `maxObjects` is set; no stored limit changes. Over 60 seeded four-bot
+ * fuzz games the most one turn created was 173.
  */
 export const TABLE_ENGINE_LIMITS = Object.freeze({ maxStepWork: 50_000, maxObjects: 20_000 });

@@ -2,10 +2,11 @@
  * `bun run check:manifest-tests` (ADR 0034 decision 5): every engine test the card verification
  * manifest names is exactly one collected Vitest test whose file names the card. It lists the
  * Vitest collection (`vitest list`, nothing runs), or reads one given with `--collected <json>`.
- * `--report` prints every problem and exits 0.
+ * `--report` prints every problem and exits 0. It also refuses a reference to a generated
+ * promotion draft that nobody has reviewed (`contracts/generated-drafts.ts`).
  */
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -15,6 +16,8 @@ import {
   manifestReferences,
   type CollectedTest,
 } from './contracts/manifest-tests';
+import { unreviewedDraftReferences, type DraftFile } from './contracts/generated-drafts';
+import { isUnreviewedDraft } from '../packages/engine/tests/scenario/scaffold';
 
 const MANIFEST = 'packages/server/fixtures/card-verification-manifest.json';
 const args = process.argv.slice(2);
@@ -45,7 +48,8 @@ function collect(): CollectedTest[] {
 
 const tests = collect();
 const index = indexTests(tests);
-const references = manifestReferences(readFileSync(MANIFEST, 'utf8'));
+const manifestJson = readFileSync(MANIFEST, 'utf8');
+const references = manifestReferences(manifestJson);
 const files = execFileSync('git', ['ls-files', '-z', '*.test.ts'], { encoding: 'utf8' })
   .split('\0')
   .filter(Boolean);
@@ -59,6 +63,11 @@ for (const reference of references) {
     (reference.notExecutableInCi ? bulkReferenceProblem(reference, sources) : null);
   if (problem !== null) problems.push(`${reference.card}: "${reference.id}" ${problem}`);
 }
+const SCENARIO_DIR = 'packages/engine/tests/scenarios';
+const scenarioFiles = readdirSync(SCENARIO_DIR)
+  .filter((name) => name.endsWith('.json'))
+  .map((name) => JSON.parse(readFileSync(join(SCENARIO_DIR, name), 'utf8')) as DraftFile);
+problems.push(...unreviewedDraftReferences(manifestJson, scenarioFiles, isUnreviewedDraft));
 for (const problem of problems) console.log(problem);
 console.log(
   `${references.length} manifest test references, ${tests.length} collected tests: ${problems.length} problem(s)`,
