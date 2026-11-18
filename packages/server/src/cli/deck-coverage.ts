@@ -82,8 +82,7 @@ function provisionalLookup(oraclePaths: readonly string[]): ProvisionalLookup {
   for (const path of oraclePaths) {
     if (!existsSync(resolve(path))) continue;
     const parsed = JSON.parse(readFileSync(resolve(path), 'utf8')) as
-      | OracleCard[]
-      | PinnedAverageDeckOracle;
+      OracleCard[] | PinnedAverageDeckOracle;
     cards.push(...(Array.isArray(parsed) ? parsed : parsed.cards));
   }
   if (cards.length === 0) return NO_PROVISIONAL;
