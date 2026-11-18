@@ -182,13 +182,17 @@ function prepare(trial: string, useScreen: boolean): void {
   write(p.prefix('back'), BACK_PREFIX);
   write(p.prefix('judge'), JUDGE_PREFIX);
   let screened = 0;
+  let reopened = 0;
   for (const row of rows) {
     const target = targets.get(row.name);
     if (target === undefined) {
       states.set(row.name, { ...row, rounds: 0, stage: 'stale', validatorIssues: [] });
       continue;
     }
-    if (states.has(row.name)) continue;
+    // A card the model has answered keeps its outcome. A screened card is judged again, so
+    // `--no-screen` or a rule that has since retired gives it a compile prompt.
+    const existing = states.get(row.name);
+    if (existing !== undefined && existing.stage !== 'screened') continue;
     const hit = useScreen ? screenLines(target.lines, screenRules(), target.name) : null;
     if (hit !== null) {
       states.set(row.name, {
@@ -203,6 +207,7 @@ function prepare(trial: string, useScreen: boolean): void {
       screened++;
       continue;
     }
+    if (existing !== undefined) reopened++;
     states.set(row.name, {
       ...row,
       lines: target.lines,
@@ -214,7 +219,7 @@ function prepare(trial: string, useScreen: boolean): void {
   }
   saveState(trial, states);
   console.log(
-    `prepared ${states.size} cards; ${screened} declined by the screen with no model call${useScreen ? '' : ' (screen off)'}`,
+    `prepared ${states.size} cards; ${screened} declined by the screen with no model call${useScreen ? '' : ' (screen off)'}; ${reopened} screened earlier and now sent to compile`,
   );
 }
 
