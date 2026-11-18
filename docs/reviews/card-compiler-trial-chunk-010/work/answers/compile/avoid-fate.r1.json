@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"spell","spellTargetsPermanentYouControl":true,"filter":{"kind":"anyOf","of":[{"kind":"type","value":"Instant"},{"kind":"subtype","value":"Aura"}]}}],"effects":[{"op":"counter","target":0}],"description":"Counter target instant or Aura spell that targets a permanent you control."}}}

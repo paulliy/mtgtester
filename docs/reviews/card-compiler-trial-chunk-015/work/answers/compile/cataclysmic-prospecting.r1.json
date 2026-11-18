@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no count of mana spent from Desert lands on a spell, so 'for each mana from a Desert spent to cast this spell, create a tapped Treasure' cannot be expressed (treasureManaSpent counts only Treasure mana)."}

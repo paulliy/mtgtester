@@ -1,0 +1,53 @@
+{
+  "name": "Meneldor, Swift Savior",
+  "oracleId": "ef9a5bd1-6ce2-4570-9d42-89d997e2fc6f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ deals combat damage to a player, exile up to one target creature you own, then return it to the battlefield under your control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "count": {
+              "min": 0,
+              "max": 1
+            },
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "owner",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "blinkEachChosen",
+            "targetSlot": 0,
+            "returnUnder": "sourceController"
+          }
+        ],
+        "description": "Whenever Meneldor deals combat damage to a player, exile up to one target creature you own, then return it to the battlefield under your control."
+      }
+    ]
+  }
+}

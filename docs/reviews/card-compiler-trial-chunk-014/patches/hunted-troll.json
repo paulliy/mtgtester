@@ -1,0 +1,43 @@
+{
+  "name": "Hunted Troll",
+  "oracleId": "1f789fcf-3df6-45a6-a732-9f43e33718d6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{G}: Regenerate this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "regenerate",
+              "target": "source"
+            }
+          ],
+          "description": "{G}: Regenerate this creature."
+        }
+      }
+    ]
+  }
+}

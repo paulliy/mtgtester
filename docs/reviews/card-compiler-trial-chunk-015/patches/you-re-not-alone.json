@@ -1,0 +1,51 @@
+{
+  "name": "You're Not Alone",
+  "oracleId": "9dbc2fc8-ed42-4534-9676-bf0695cd518c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature gets +2/+2 until end of turn. If you control three or more creatures, it gets +4/+4 until end of turn instead."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "description": "Target creature gets +2/+2 until end of turn. If you control three or more creatures, it gets +4/+4 until end of turn instead.",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "scope": "you",
+            "cmp": ">=",
+            "n": 3
+          },
+          "then": [
+            {
+              "op": "pumpUntilEot",
+              "target": 0,
+              "power": 4,
+              "toughness": 4
+            }
+          ],
+          "else": [
+            {
+              "op": "pumpUntilEot",
+              "target": 0,
+              "power": 2,
+              "toughness": 2
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

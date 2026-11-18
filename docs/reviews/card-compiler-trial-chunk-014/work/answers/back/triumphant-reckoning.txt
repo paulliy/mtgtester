@@ -1,0 +1,1 @@
+Return each artifact, enchantment, and planeswalker card in your graveyard to the battlefield.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Each destroyed nonbasic land's controller gets an optional basic-land search and put onto the battlefield, followed by a shuffle for each player who searched; destroyEach has no per-object controller search, so the per-land search cannot be expressed."}

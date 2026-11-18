@@ -1,0 +1,60 @@
+{
+  "name": "Ironsoul Enforcer",
+  "oracleId": "a613b00e-d6e8-4470-a7dc-5eab5e48dce0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature or a commander you control attacks alone, return target artifact card from your graveyard to the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "isCommander"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "alone": true
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "cardInGraveyard",
+            "filter": {
+              "kind": "type",
+              "value": "Artifact"
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "graveyardToBattlefield",
+            "target": 0
+          }
+        ],
+        "description": "Whenever this creature or a commander you control attacks alone, return target artifact card from your graveyard to the battlefield."
+      }
+    ]
+  }
+}

@@ -1,0 +1,3 @@
+Target creature gains trample until end of turn.
+If you control a Mouse, that creature gets +1/+0 until end of turn.
+Draw a card.

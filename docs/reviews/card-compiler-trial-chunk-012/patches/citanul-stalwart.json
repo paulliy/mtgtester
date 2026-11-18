@@ -1,0 +1,55 @@
+{
+  "name": "Citanul Stalwart",
+  "oracleId": "ce291948-125d-493d-8770-8b3aac515f9b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Tap an untapped artifact or creature you control: Add one mana of any color."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ],
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "tapOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                }
+              ]
+            },
+            "allowSelf": true
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "Enduring Scalelord",
+  "oracleId": "270a21c1-4c44-46ef-8c4f-e08484f360e1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever one or more +1/+1 counters are put on another creature you control, you may put a +1/+1 counter on this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "countersPut",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "counter": "+1/+1"
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever one or more +1/+1 counters are put on another creature you control, you may put a +1/+1 counter on this creature."
+      }
+    ]
+  }
+}

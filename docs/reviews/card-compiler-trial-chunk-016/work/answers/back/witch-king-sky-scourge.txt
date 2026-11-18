@@ -1,0 +1,1 @@
+Whenever you declare attackers, if one or more Wraiths you control are attacking, exile cards from the top of your library equal to the total power of attacking Wraiths you control. Until end of turn, you may play those cards.

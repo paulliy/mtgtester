@@ -1,0 +1,54 @@
+{
+  "name": "Spectrum Sentinel",
+  "oracleId": "7c13d0ad-1235-41f7-8f9a-f39d7c544b74",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a nonbasic land an opponent controls enters, you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a nonbasic land an opponent controls enters, you gain 1 life."
+      }
+    ]
+  }
+}

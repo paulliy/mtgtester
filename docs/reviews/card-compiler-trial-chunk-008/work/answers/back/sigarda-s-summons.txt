@@ -1,0 +1,1 @@
+Each creature you control that has a +1/+1 counter on it has base power and toughness 4/4, has flying, and is an Angel in addition to its other creature types.

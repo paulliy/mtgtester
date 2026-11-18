@@ -1,0 +1,84 @@
+{
+  "name": "Prompto Argentum",
+  "oracleId": "e13d7600-0924-42eb-9d65-aa18548624a7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Selfie Shot — Whenever you cast a noncreature spell, if at least four mana was spent to cast it, create a Treasure token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "not",
+            "of": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          },
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "manaSpent"
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 4
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Treasure",
+              "typeLine": "Artifact — Treasure",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Treasure"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "manaAbilities": [
+                {
+                  "units": [
+                    [
+                      "W",
+                      "U",
+                      "B",
+                      "R",
+                      "G"
+                    ]
+                  ],
+                  "costs": [
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Selfie Shot — Whenever you cast a noncreature spell, if at least four mana was spent to cast it, create a Treasure token."
+      }
+    ]
+  }
+}

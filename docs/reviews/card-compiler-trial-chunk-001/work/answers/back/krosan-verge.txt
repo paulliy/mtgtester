@@ -1,0 +1,1 @@
+{2}, {T}, Sacrifice this land: Search a library for a Forest card and put it onto the battlefield tapped. Search a library for a Plains card and put it onto the battlefield tapped. Then shuffle.

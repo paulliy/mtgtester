@@ -1,0 +1,41 @@
+{
+  "name": "Twin Blades",
+  "oracleId": "88b076a4-46ff-4a41-95a5-2821f4d8944d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Equipment enters, attach it to target creature you control. That creature gains double strike until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "op": "attachSelfTo",
+            "target": 0
+          },
+          {
+            "op": "grantKeywordUntilEot",
+            "target": 0,
+            "keyword": "double strike"
+          }
+        ],
+        "description": "When this Equipment enters, attach it to target creature you control. That creature gains double strike until end of turn."
+      }
+    ]
+  }
+}

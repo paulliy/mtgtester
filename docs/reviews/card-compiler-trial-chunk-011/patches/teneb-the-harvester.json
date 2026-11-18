@@ -1,0 +1,60 @@
+{
+  "name": "Teneb, the Harvester",
+  "oracleId": "d41f0357-f1d6-45cc-b8ea-4efa41da1448",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ deals combat damage to a player, you may pay {2}{B}. If you do, put target creature card from a graveyard onto the battlefield under your control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "cardInGraveyard",
+            "filter": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "graveyardOwnerScope": "any"
+          }
+        ],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "mayPayMana",
+              "cost": {
+                "generic": 2,
+                "colored": {
+                  "W": 0,
+                  "U": 0,
+                  "B": 1,
+                  "R": 0,
+                  "G": 0
+                },
+                "colorless": 0
+              }
+            },
+            "then": [
+              {
+                "op": "graveyardToBattlefield",
+                "target": 0
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Whenever ~ deals combat damage to a player, you may pay {2}{B}. If you do, put target creature card from a graveyard onto the battlefield under your control."
+      }
+    ]
+  }
+}

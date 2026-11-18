@@ -1,0 +1,3 @@
+Whenever you cast a Merfolk spell, you may choose one, targeting a permanent for it:
+• Tap target permanent.
+• Untap target permanent.

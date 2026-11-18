@@ -1,0 +1,44 @@
+{
+  "name": "Tifa Lockhart",
+  "oracleId": "878df304-9d6d-4ce9-b65b-1439c251f3e0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a land you control enters, double ~'s power until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "doublePowerTarget",
+            "target": "source"
+          }
+        ],
+        "description": "Landfall — Whenever a land you control enters, double Tifa Lockhart's power until end of turn."
+      }
+    ]
+  }
+}

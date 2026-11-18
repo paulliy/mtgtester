@@ -597,6 +597,9 @@ export function makePermanent(
         !selectMatches(incoming, replacement.affects, {
           cardId: source.cardId,
           controllerId: source.controllerId,
+          // "Each creature of the chosen type enters with an additional +1/+1 counter": the
+          // source is already on the battlefield, so its as-enters choice exists.
+          ...(source.chosenOption !== undefined ? { chosenOption: source.chosenOption } : {}),
         })
       )
         continue;

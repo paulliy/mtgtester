@@ -1,0 +1,1 @@
+{T}: Each player loses life equal to the number of Zombie permanents on the battlefield.

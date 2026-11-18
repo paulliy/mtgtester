@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"attackDeclared","attacker":"you","minAttackers":1},"optional":false,"targets":[],"effects":[{"op":"grantKeywordToAttackGroupUntilEot","keyword":"indestructible"}],"description":"Whenever one or more creatures you control attack, they gain indestructible until end of turn."}]}}

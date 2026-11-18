@@ -14,10 +14,11 @@
  * `coverage-contract.json`: the unmodeled staples must be exactly the listed ones.
  */
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { coverageInput } from './coverage-input';
 import { measureCoverage } from '../cards/coverage';
+import { committedHeadlines, DECK_COVERAGE_PATH } from '../cards/deck-coverage';
 import { checkCoverageBaseline } from '../cards/coverage-baseline';
 import {
   assertCompleteCoverage,
@@ -38,6 +39,13 @@ function readNames(path: string): string[] {
 function fail(message: string): never {
   console.error(`staple coverage: ${message}`);
   process.exit(2);
+}
+
+/** One line per population from the committed deck-coverage report, if there is one. */
+function printDeckHeadlines(): void {
+  if (!existsSync(resolve(DECK_COVERAGE_PATH))) return;
+  for (const line of committedHeadlines(readFileSync(resolve(DECK_COVERAGE_PATH), 'utf8')))
+    console.log(line);
 }
 
 function main(): void {
@@ -79,6 +87,7 @@ function main(): void {
 
   const percent = ((report.modeledCards / report.uniqueCards) * 100).toFixed(1);
   console.log(`EDH staples: ${report.modeledCards}/${report.uniqueCards} modeled (${percent}%)`);
+  printDeckHeadlines();
 
   const blocked = report.cards.filter((card) => !card.modeled);
   if (blocked.length > 0) {

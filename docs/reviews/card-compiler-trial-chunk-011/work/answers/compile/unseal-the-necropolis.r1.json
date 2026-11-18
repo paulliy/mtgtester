@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The untargeted 'return up to two creature cards from your graveyard to your hand' has no schema op (graveyard-to-hand ops are single-target or return-all), and the only up-to-two form is a target slot, which the card does not use."}

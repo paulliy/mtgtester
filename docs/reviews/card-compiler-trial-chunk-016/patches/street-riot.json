@@ -1,0 +1,59 @@
+{
+  "name": "Street Riot",
+  "oracleId": "526db754-abb6-450c-bead-81dd1e1c347c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "During your turn, creatures you control get +1/+0 and have trample."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 0
+        },
+        "condition": {
+          "kind": "yourTurn"
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "trample"
+        },
+        "condition": {
+          "kind": "yourTurn"
+        }
+      }
+    ]
+  }
+}

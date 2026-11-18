@@ -1,0 +1,1 @@
+Whenever another artifact you control with mana value 3 or greater enters, create a 0/0 colorless artifact creature token named Construct with "This creature gets +X/+X, where X is the number of artifacts you control."

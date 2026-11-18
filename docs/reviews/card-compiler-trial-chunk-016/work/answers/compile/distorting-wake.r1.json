@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"TargetSpec.count only takes a fixed min and max, so the number of targets cannot be bound to the announced X."}

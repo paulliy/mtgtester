@@ -1,0 +1,33 @@
+{
+  "name": "Torment of Scarabs",
+  "oracleId": "4ba5bcee-fc95-4d05-965e-b1762529ec5f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of enchanted player's upkeep, that player loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "enchanted"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeNonlandOrDiscardOrLoseLife",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 3
+            }
+          }
+        ],
+        "description": "At the beginning of enchanted player's upkeep, that player loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card."
+      }
+    ]
+  }
+}

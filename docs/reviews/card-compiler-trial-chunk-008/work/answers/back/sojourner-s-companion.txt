@@ -1,0 +1,2 @@
+Activate only from your hand.
+{2}, Discard this card: Search your library for an artifact land card, reveal it, put it into your hand, then shuffle. You don't have to find one.

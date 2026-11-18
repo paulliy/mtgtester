@@ -1,0 +1,44 @@
+{
+  "name": "Gran-Gran",
+  "oracleId": "0259a9ed-0558-4183-b737-871ed5573c32",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Noncreature spells you cast cost {1} less to cast as long as there are three or more Lesson cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "filter": {
+          "kind": "not",
+          "of": {
+            "kind": "type",
+            "value": "Creature"
+          }
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "countCardsInZone",
+            "zone": "graveyard",
+            "selector": {
+              "kind": "subtype",
+              "value": "Lesson"
+            },
+            "owner": "you"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 3
+          }
+        }
+      }
+    ]
+  }
+}

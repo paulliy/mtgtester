@@ -1,0 +1,42 @@
+{
+  "name": "Inquisition of Kozilek",
+  "oracleId": "395611fa-aec2-4c9e-92c3-70cf95cc00f4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target player reveals their hand. You choose a nonland card from it with mana value 3 or less. That player discards that card."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player"
+        }
+      ],
+      "effects": [
+        {
+          "op": "revealHandAndDiscard",
+          "target": 0,
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              {
+                "kind": "manaValueAtMost",
+                "n": 3
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Target player reveals their hand. You choose a nonland card from it with mana value 3 or less. That player discards that card."
+    }
+  }
+}

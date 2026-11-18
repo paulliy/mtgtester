@@ -1,0 +1,59 @@
+{
+  "name": "Dead of Winter",
+  "oracleId": "4d877c28-5276-4ea6-91c6-eeed890ca545",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "All nonsnow creatures get -X/-X until end of turn, where X is the number of snow permanents you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "pumpEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "supertype",
+                  "value": "Snow"
+                }
+              }
+            ]
+          },
+          "power": {
+            "kind": "negate",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "supertype",
+                "value": "Snow"
+              },
+              "scope": "you"
+            }
+          },
+          "toughness": {
+            "kind": "negate",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "supertype",
+                "value": "Snow"
+              },
+              "scope": "you"
+            }
+          }
+        }
+      ],
+      "description": "All nonsnow creatures get -X/-X until end of turn, where X is the number of snow permanents you control."
+    }
+  }
+}

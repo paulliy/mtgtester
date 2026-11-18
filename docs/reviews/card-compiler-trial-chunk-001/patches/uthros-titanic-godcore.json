@@ -1,0 +1,65 @@
+{
+  "name": "Uthros, Titanic Godcore",
+  "oracleId": "df08ac72-010f-42f8-beb3-6d645c638e1e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "12+ | {U}, {T}: Add {U} for each artifact you control."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "U"
+          ]
+        ],
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Artifact"
+              }
+            ]
+          },
+          "scope": "you"
+        },
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "condition": {
+          "kind": "hasCounters",
+          "selector": {
+            "kind": "self"
+          },
+          "counter": "charge",
+          "cmp": ">=",
+          "n": 12
+        }
+      }
+    ]
+  }
+}

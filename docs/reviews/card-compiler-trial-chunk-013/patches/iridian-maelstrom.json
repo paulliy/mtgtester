@@ -1,0 +1,58 @@
+{
+  "name": "Iridian Maelstrom",
+  "oracleId": "92cc43e5-782f-4540-bc60-3d18f357caf3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy each creature that isn't all colors."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "destroyEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "color",
+                      "value": "W"
+                    },
+                    {
+                      "kind": "color",
+                      "value": "U"
+                    },
+                    {
+                      "kind": "color",
+                      "value": "B"
+                    },
+                    {
+                      "kind": "color",
+                      "value": "R"
+                    },
+                    {
+                      "kind": "color",
+                      "value": "G"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Destroy each creature that isn't all colors."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"One trigger for gaining or losing life during your turn that fires only once each turn needs a single combined trigger, but the schema has separate gain and lose life triggers, and only the lose-life head carries a once-per-turn form."}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"upkeep","player":"you"},"optional":false,"targets":[{"kind":"creature","filter":{"kind":"hasCounter","counter":"-1/-1"}}],"effects":[{"op":"destroy","target":0}],"description":"At the beginning of your upkeep, destroy target creature with a -1/-1 counter on it."}]}}

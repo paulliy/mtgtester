@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"There is no op that returns a random selection of creature cards from your graveyard to the battlefield (graveyardToBattlefieldEach returns all matches and returnOneFromYourGraveyardToBattlefield is a choice)."}

@@ -1,0 +1,46 @@
+{
+  "name": "Spelltithe Enforcer",
+  "oracleId": "0da4988f-47ca-4786-ac33-edbc9cfd6785",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an opponent casts a spell, that player sacrifices a permanent of their choice unless they pay {1}."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "opponent"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "unlessPays",
+            "payer": "eventPlayer",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            },
+            "then": [
+              {
+                "op": "eventPlayerSacrificesPermanents",
+                "count": 1
+              }
+            ]
+          }
+        ],
+        "description": "Whenever an opponent casts a spell, that player sacrifices a permanent of their choice unless they pay {1}."
+      }
+    ]
+  }
+}

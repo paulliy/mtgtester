@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect makes a targeted creature become red until end of turn: becomeCreatureUntilEot also changes its types and power/toughness, and color-setting (layer 5) exists only as a static effect, not as a resolving effect on a target."}

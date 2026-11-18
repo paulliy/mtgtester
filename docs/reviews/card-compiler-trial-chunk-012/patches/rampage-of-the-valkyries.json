@@ -1,0 +1,44 @@
+{
+  "name": "Rampage of the Valkyries",
+  "oracleId": "49039519-62db-4605-b600-cef6f34c893f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an Angel you control dies, each other player sacrifices a creature of their choice."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Angel"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneEachOpponent",
+            "filter": "creature"
+          }
+        ],
+        "description": "Whenever an Angel you control dies, each other player sacrifices a creature of their choice."
+      }
+    ]
+  }
+}

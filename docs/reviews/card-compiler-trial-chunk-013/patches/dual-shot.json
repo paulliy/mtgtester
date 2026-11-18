@@ -1,0 +1,34 @@
+{
+  "name": "Dual Shot",
+  "oracleId": "e56056dc-637e-4229-ae2c-dfd06d24086b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals 1 damage to each of up to two target creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "description": "Dual Shot deals 1 damage to each of up to two target creatures.",
+      "targets": [
+        {
+          "kind": "creature",
+          "count": {
+            "min": 0,
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamageEachChosen",
+          "targetSlot": 0,
+          "amount": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "name": "Mercurial Spelldancer",
+  "oracleId": "5b90f8ed-84b2-4306-9dfa-b5654ea0e4cd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature deals combat damage to a player, you may remove two oil counters from it. If you do, when you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "sourceHasCounters",
+              "counter": "oil",
+              "cmp": ">=",
+              "n": 2
+            },
+            "then": [
+              {
+                "op": "removeCounters",
+                "target": "source",
+                "counter": "oil",
+                "count": 2
+              },
+              {
+                "op": "nextCastThisTurn",
+                "filter": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Instant"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Sorcery"
+                    }
+                  ]
+                },
+                "ability": {
+                  "kind": "triggered",
+                  "targets": [],
+                  "effects": [
+                    {
+                      "op": "copyCastSpell"
+                    }
+                  ],
+                  "description": "Copy that spell. You may choose new targets for the copy."
+                }
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Whenever this creature deals combat damage to a player, you may remove two oil counters from it. If you do, when you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy."
+      }
+    ]
+  }
+}

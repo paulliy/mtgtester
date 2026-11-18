@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"registerDelayedTrigger takes only a bare event name for 'when' with no subject or selector, so 'a creature or enchantment you control enters this turn' cannot be filtered."}

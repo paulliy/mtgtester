@@ -1,0 +1,2 @@
+You may play lands from the top of your library.
+You may cast spells with mana value 4 or greater from the top of your library.

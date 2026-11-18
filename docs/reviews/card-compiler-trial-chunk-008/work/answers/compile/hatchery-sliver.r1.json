@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Granting replicate to each other Sliver spell with a replicate cost equal to that spell's own mana cost has no schema form, since optionalAdditionalCost is a fixed cost and no static grants it to spells."}

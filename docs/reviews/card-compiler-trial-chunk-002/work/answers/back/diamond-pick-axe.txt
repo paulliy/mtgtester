@@ -1,0 +1,1 @@
+Equipped creature gets +1/+1 and has "Whenever this creature attacks, create a Treasure token." The Treasure token has "{T}, Sacrifice this artifact: Add one mana of your choice of {W}, {U}, {B}, {R}, or {G}."

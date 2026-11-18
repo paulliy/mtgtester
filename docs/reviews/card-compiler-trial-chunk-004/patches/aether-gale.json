@@ -1,0 +1,30 @@
+{
+  "name": "Aether Gale",
+  "oracleId": "b21d6482-1b3a-47e6-98a5-3067f5f3818b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return six target nonland permanents to their owners' hands."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "nonlandPermanent",
+          "count": {
+            "min": 6,
+            "max": 6
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "returnToHandEachChosen",
+          "targetSlot": 0
+        }
+      ],
+      "description": "Return six target nonland permanents to their owners' hands."
+    }
+  }
+}

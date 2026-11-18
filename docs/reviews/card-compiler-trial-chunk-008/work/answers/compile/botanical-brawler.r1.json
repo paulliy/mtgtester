@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The trigger's \"first time +1/+1 counters have been put on that permanent this turn\" is a per-permanent condition; oncePerTurn limits the whole ability, not each permanent, and no condition counts counter placements per object this turn."}

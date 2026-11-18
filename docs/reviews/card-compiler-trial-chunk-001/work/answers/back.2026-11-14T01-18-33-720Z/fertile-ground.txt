@@ -1,0 +1,2 @@
+Enchant permanent. (The data does not restrict what it may enchant beyond the Aura type.)
+Enchanted permanent has a mana ability rider: whenever it is tapped for mana, add one additional mana of any one color (white, blue, black, red, or green).

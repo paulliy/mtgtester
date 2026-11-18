@@ -1,0 +1,49 @@
+{
+  "name": "Suki, Kyoshi Warrior",
+  "oracleId": "9223488e-5206-4d43-90ef-387189dcee16",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ attacks, create a 1/1 white Ally creature token that's tapped and attacking."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenAttacking",
+            "spec": {
+              "name": "Ally",
+              "typeLine": "Token Creature — Ally",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Ally"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever Suki attacks, create a 1/1 white Ally creature token that's tapped and attacking."
+      }
+    ]
+  }
+}

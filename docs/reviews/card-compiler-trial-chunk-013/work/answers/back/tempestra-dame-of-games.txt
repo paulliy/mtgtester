@@ -1,0 +1,1 @@
+{2}{R}, {T}, Sacrifice an artifact: Create a token that is a copy of target creature you control other than this creature, except it isn't legendary. It gains haste. Sacrifice it at the beginning of the end step.

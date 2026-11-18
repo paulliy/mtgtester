@@ -5,9 +5,12 @@ import { describe, expect, it } from 'vitest';
 import {
   MODELED_RATCHET_PATH,
   PINNED_ORACLE_PATH,
+  definitionFingerprint,
+  dumpDefinitions,
   modeledRatchet,
   pinReadyList,
   ratchetDrift,
+  ratchetHolds,
   renderPins,
   type ModeledRatchet,
 } from './edhrec-pins';
@@ -87,20 +90,69 @@ describe('EDHREC offline pins (coverage plan D3)', () => {
     expect(ratchetDrift(recorded, current)).toEqual({
       regressed: ['Pin Riddle'],
       newlyModeled: ['Pin Rock'],
+      behaviorChanged: [],
       fixtureChanged: true,
     });
   });
 
-  it('every pinned card that modeled when recorded still models, and none is unrecorded', () => {
+  it('flags a card that still models with a different definition', () => {
+    const before = modeledRatchet(renderPins([{ rank: 1, card: modeledCard }]));
+    // The same card, still modeled, now making green mana: only its definition differs.
+    const changedCard = { ...modeledCard, oracleText: '{T}: Add {G}.' };
+    const after = modeledRatchet(renderPins([{ rank: 1, card: changedCard }]));
+    expect(after.modeled).toEqual(before.modeled);
+    const drift = ratchetDrift(before, after);
+    expect(drift.behaviorChanged).toEqual(['Pin Rock']);
+    expect(drift.regressed).toEqual([]);
+    expect(ratchetHolds(before, drift)).toBe(false);
+    // A card is not reported as changed against itself.
+    expect(ratchetDrift(before, before).behaviorChanged).toEqual([]);
+  });
+
+  it('a ratchet recorded without fingerprints does not hold', () => {
+    const current = modeledRatchet(renderPins([{ rank: 1, card: modeledCard }]));
+    const { fingerprints: _dropped, ...legacy } = current;
+    const drift = ratchetDrift(legacy, current);
+    expect(drift.behaviorChanged).toEqual([]);
+    expect(ratchetHolds(legacy, drift)).toBe(false);
+    expect(ratchetHolds(current, ratchetDrift(current, current))).toBe(true);
+  });
+
+  it('fingerprints ignore key order and nothing else', () => {
+    expect(definitionFingerprint({ a: 1, b: [{ c: 2, d: 3 }] })).toBe(
+      definitionFingerprint({ b: [{ d: 3, c: 2 }], a: 1 }),
+    );
+    expect(definitionFingerprint({ a: [1, 2] })).not.toBe(definitionFingerprint({ a: [2, 1] }));
+    expect(definitionFingerprint({ description: 'x' })).not.toBe(
+      definitionFingerprint({ description: 'y' }),
+    );
+  });
+
+  it('dumps one line per modeled card, so two dumps diff card by card', () => {
+    const dump = dumpDefinitions(
+      renderPins([
+        { rank: 1, card: modeledCard },
+        { rank: 3, card: oneLine },
+      ]),
+    );
+    const lines = dump.trimEnd().split('\n');
+    expect(lines).toHaveLength(1);
+    expect(lines[0]!.startsWith('Pin Rock\t{')).toBe(true);
+  });
+
+  it('every pinned card that modeled when recorded still models the same way, and none is unrecorded', () => {
     const text = readFileSync(resolve(root, PINNED_ORACLE_PATH), 'utf8');
     const recorded = JSON.parse(
       readFileSync(resolve(root, MODELED_RATCHET_PATH), 'utf8'),
     ) as ModeledRatchet;
-    expect(ratchetDrift(recorded, modeledRatchet(text))).toEqual({
+    const drift = ratchetDrift(recorded, modeledRatchet(text));
+    expect(drift).toEqual({
       regressed: [],
       newlyModeled: [],
+      behaviorChanged: [],
       fixtureChanged: false,
     });
+    expect(ratchetHolds(recorded, drift)).toBe(true);
     // It interprets all 8,972 pinned cards (about 4 s alone); a loaded parallel run needs more
     // than the default 5 s.
   }, 60_000);

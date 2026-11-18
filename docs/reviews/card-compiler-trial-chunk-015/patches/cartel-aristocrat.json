@@ -1,0 +1,48 @@
+{
+  "name": "Cartel Aristocrat",
+  "oracleId": "9603e553-f72d-40bf-94ab-596afb7d6db3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice another creature: ~ gains protection from the color of your choice until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantChosenColorProtectionUntilEot",
+              "target": "source"
+            }
+          ],
+          "description": "Sacrifice another creature: This creature gains protection from the color of your choice until end of turn."
+        }
+      }
+    ]
+  }
+}

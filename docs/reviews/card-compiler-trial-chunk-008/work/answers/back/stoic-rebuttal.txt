@@ -1,0 +1,2 @@
+This spell has no effect other than its cost reduction.
+This spell costs {1} less to cast as long as you control three or more artifacts.

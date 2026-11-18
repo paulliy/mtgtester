@@ -1,0 +1,46 @@
+{
+  "name": "Darien, King of Kjeldor",
+  "oracleId": "d05336cb-6157-47e7-942f-43becd67a5bf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you're dealt damage, you may create that many 1/1 white Soldier creature tokens."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "playerDealtDamage",
+          "player": "you"
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Soldier",
+              "typeLine": "Token Creature — Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "damageDealt"
+            }
+          }
+        ],
+        "description": "Whenever you're dealt damage, you may create that many 1/1 white Soldier creature tokens."
+      }
+    ]
+  }
+}

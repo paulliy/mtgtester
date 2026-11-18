@@ -1,0 +1,58 @@
+{
+  "name": "Judge Magister Gabranth",
+  "oracleId": "1a846ad6-15c9-4bf9-9127-612018a557b9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another creature or artifact you control dies, put a +1/+1 counter on ~."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever another creature or artifact you control dies, put a +1/+1 counter on Judge Magister Gabranth."
+      }
+    ]
+  }
+}

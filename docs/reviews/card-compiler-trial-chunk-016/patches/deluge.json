@@ -1,0 +1,37 @@
+{
+  "name": "Deluge",
+  "oracleId": "cd271e61-0135-484f-ae02-5aaca57c1124",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap all creatures without flying."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "tapEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "hasKeyword",
+                  "keyword": "flying"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Tap all creatures without flying."
+    }
+  }
+}

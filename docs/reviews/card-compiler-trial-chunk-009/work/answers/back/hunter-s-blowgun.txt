@@ -1,0 +1,2 @@
+Equipped creature has deathtouch during your turn.
+Equipped creature has reach during each turn that isn't your turn.

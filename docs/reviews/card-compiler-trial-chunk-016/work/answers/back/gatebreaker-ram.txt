@@ -1,0 +1,2 @@
+As long as you control two or more permanents with the subtype Gate, this creature has vigilance.
+As long as you control two or more permanents with the subtype Gate, this creature has trample.

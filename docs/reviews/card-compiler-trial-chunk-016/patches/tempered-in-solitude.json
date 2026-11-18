@@ -1,0 +1,48 @@
+{
+  "name": "Tempered in Solitude",
+  "oracleId": "f4aedfd3-4414-493c-bbba-75db301c0737",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature you control attacks alone, exile the top card of your library. You may play that card this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "alone": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "exileTopNPlayableUntilEot",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature you control attacks alone, exile the top card of your library. You may play that card this turn."
+      }
+    ]
+  }
+}

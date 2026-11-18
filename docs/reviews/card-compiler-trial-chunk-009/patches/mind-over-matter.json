@@ -1,0 +1,74 @@
+{
+  "name": "Mind Over Matter",
+  "oracleId": "656afde2-cdf3-4907-a0fc-7ac93f5d3e03",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Discard a card: You may tap or untap target artifact, creature, or land."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "discardCard",
+            "count": 1
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "optional": true,
+          "targets": [
+            {
+              "kind": "permanent",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "chooseOne",
+              "options": [
+                {
+                  "effects": [
+                    {
+                      "op": "tapTarget",
+                      "target": 0
+                    }
+                  ],
+                  "description": "Tap target artifact, creature, or land."
+                },
+                {
+                  "effects": [
+                    {
+                      "op": "untapTarget",
+                      "target": 0
+                    }
+                  ],
+                  "description": "Untap target artifact, creature, or land."
+                }
+              ]
+            }
+          ],
+          "description": "Discard a card: You may tap or untap target artifact, creature, or land."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "Quicksmith Genius",
+  "oracleId": "bca0c136-3845-4cb9-8d80-f504a01ad50a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an artifact you control enters, you may discard a card. If you do, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "mayDiscardThenDraw",
+            "count": 1
+          }
+        ],
+        "description": "Whenever an artifact you control enters, you may discard a card. If you do, draw a card."
+      }
+    ]
+  }
+}

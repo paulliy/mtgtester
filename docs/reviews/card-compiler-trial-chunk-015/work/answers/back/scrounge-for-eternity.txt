@@ -1,0 +1,1 @@
+Choose target creature or Spacecraft card with mana value 5 or less in your graveyard. Put that card onto the battlefield. Create a colorless Lander artifact token named Lander with "{2}, {T}, Sacrifice this token: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."

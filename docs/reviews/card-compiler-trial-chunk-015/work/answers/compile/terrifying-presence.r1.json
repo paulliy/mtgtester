@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no combat-damage prevention for all creatures except a target creature (preventCombatDamageAll prevents everything, and createDamageShield only covers damage dealt by or to one object)."}

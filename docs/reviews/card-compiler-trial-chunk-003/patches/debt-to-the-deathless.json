@@ -1,0 +1,31 @@
+{
+  "name": "Debt to the Deathless",
+  "oracleId": "6130f22d-7901-4f9f-b777-27bb0dacc063",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each opponent loses two times X life. You gain life equal to the life lost this way."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "eachOpponentLosesLife",
+          "amount": {
+            "kind": "times",
+            "of": {
+              "kind": "xValue"
+            },
+            "n": 2
+          }
+        },
+        {
+          "op": "gainLifeEqualToLifeLostThisWay"
+        }
+      ],
+      "description": "Each opponent loses two times X life. You gain life equal to the life lost this way."
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "name": "Noosegraf Mob",
+  "oracleId": "f27fb53f-a983-410a-821b-e48cd8c01f2e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a player casts a spell, remove a +1/+1 counter from this creature. If you do, create a 2/2 black Zombie creature token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "each"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "sourceHasCounters",
+              "counter": "+1/+1",
+              "cmp": ">=",
+              "n": 1
+            },
+            "then": [
+              {
+                "op": "removeCounters",
+                "target": "source",
+                "counter": "+1/+1",
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              },
+              {
+                "op": "createToken",
+                "spec": {
+                  "name": "Zombie",
+                  "typeLine": "Creature — Zombie",
+                  "types": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Zombie"
+                  ],
+                  "colors": [
+                    "B"
+                  ],
+                  "power": 2,
+                  "toughness": 2
+                },
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Whenever a player casts a spell, remove a +1/+1 counter from this creature. If you do, create a 2/2 black Zombie creature token."
+      }
+    ]
+  }
+}

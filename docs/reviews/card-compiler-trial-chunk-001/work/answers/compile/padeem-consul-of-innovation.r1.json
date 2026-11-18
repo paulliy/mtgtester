@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The upkeep intervening-if \"you control the artifact with the greatest mana value or tied for the greatest\" compares one artifact's mana value with the greatest among your artifacts, and the schema's Condition kinds cannot make that comparison (manaValueAtLeast takes only a constant)."}

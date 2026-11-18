@@ -1,0 +1,77 @@
+{
+  "name": "Slumbering Keepguard",
+  "oracleId": "89078485-c438-4035-95dc-dbe37fb13e50",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{W}: ~ gets +1/+1 until end of turn for each enchantment you control."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 1,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "target": "source",
+              "power": {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    }
+                  ]
+                },
+                "scope": "you"
+              },
+              "toughness": {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    }
+                  ]
+                },
+                "scope": "you"
+              }
+            }
+          ],
+          "description": "{2}{W}: This creature gets +1/+1 until end of turn for each enchantment you control."
+        }
+      }
+    ]
+  }
+}

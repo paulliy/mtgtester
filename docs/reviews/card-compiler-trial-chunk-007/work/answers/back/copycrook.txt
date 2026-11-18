@@ -1,0 +1,2 @@
+This creature enters as a copy of a creature.
+The copy has "Whenever this creature attacks, connive."

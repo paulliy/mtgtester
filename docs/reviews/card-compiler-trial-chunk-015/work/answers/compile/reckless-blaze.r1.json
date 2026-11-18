@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The mana trigger applies only to creatures dealt damage by this spell, tracked as a set from the damage event; no delayed trigger can be keyed to those creatures."}

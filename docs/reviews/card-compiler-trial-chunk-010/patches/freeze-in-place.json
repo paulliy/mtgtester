@@ -1,0 +1,37 @@
+{
+  "name": "Freeze in Place",
+  "oracleId": "8bf90bb0-f9c1-49c8-905e-32747e921e92",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap target creature an opponent controls and put three stun counters on it. Scry 2."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "tapTarget",
+          "target": 0
+        },
+        {
+          "op": "putCounters",
+          "target": 0,
+          "counter": "stun",
+          "count": 3
+        },
+        {
+          "op": "scry",
+          "count": 2
+        }
+      ],
+      "description": "Tap target creature an opponent controls and put three stun counters on it. Scry 2."
+    }
+  }
+}

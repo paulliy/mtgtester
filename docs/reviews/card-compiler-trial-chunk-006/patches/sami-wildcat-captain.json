@@ -1,0 +1,33 @@
+{
+  "name": "Sami, Wildcat Captain",
+  "oracleId": "c4175a34-70bb-47e5-8406-efdc4d2cd079",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Spells you cast have affinity for artifacts."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "scope": "all"
+        }
+      }
+    ]
+  }
+}

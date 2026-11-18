@@ -1,0 +1,54 @@
+{
+  "name": "Unholy Grotto",
+  "oracleId": "c28211c6-a5ee-40c3-bb6a-da3e7e73fd95",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{B}, {T}: Put target Zombie card from your graveyard on top of your library."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "filter": {
+                "kind": "subtype",
+                "value": "Zombie"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToLibraryTop",
+              "target": 0
+            }
+          ],
+          "description": "{B}, {T}: Put target Zombie card from your graveyard on top of your library."
+        }
+      }
+    ]
+  }
+}

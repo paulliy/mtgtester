@@ -1,0 +1,2 @@
+Whenever a Land becomes tapped for mana, this enchantment deals 1 damage to the player associated with that event.
+Each Land has a mana activation rider: the mana it adds is one of the types it could produce.

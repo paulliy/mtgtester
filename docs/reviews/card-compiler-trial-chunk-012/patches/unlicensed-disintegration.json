@@ -1,0 +1,52 @@
+{
+  "name": "Unlicensed Disintegration",
+  "oracleId": "eaa2ff39-c3cf-428b-a2f1-a6a99a2c806b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target creature. If you control an artifact, ~ deals 3 damage to that creature's controller."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "type",
+              "value": "Artifact"
+            },
+            "scope": "you",
+            "cmp": ">=",
+            "n": 1
+          },
+          "then": [
+            {
+              "op": "dealDamage",
+              "target": {
+                "controllerOf": 0
+              },
+              "amount": {
+                "kind": "const",
+                "n": 3
+              }
+            }
+          ],
+          "else": []
+        },
+        {
+          "op": "destroy",
+          "target": 0
+        }
+      ],
+      "description": "Destroy target creature. If you control an artifact, Unlicensed Disintegration deals 3 damage to that creature's controller."
+    }
+  }
+}

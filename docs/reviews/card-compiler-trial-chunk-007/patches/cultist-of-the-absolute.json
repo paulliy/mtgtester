@@ -1,0 +1,156 @@
+{
+  "name": "Cultist of the Absolute",
+  "oracleId": "bdc2a72a-f1c0-4e67-8e86-1121a4000537",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Commander creatures you own get +3/+3 and have flying, deathtouch, \"Ward—Pay 3 life,\" and \"At the beginning of your upkeep, sacrifice a creature.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "isCommander"
+            },
+            {
+              "kind": "owner",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 3,
+          "toughness": 3
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "isCommander"
+            },
+            {
+              "kind": "owner",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "flying"
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "isCommander"
+            },
+            {
+              "kind": "owner",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "deathtouch"
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "isCommander"
+            },
+            {
+              "kind": "owner",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addWard": {
+            "kind": "life",
+            "amount": 3
+          }
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "isCommander"
+            },
+            {
+              "kind": "owner",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "upkeep",
+              "player": "you"
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "sacrificeOneThen",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                },
+                "then": []
+              }
+            ],
+            "description": "At the beginning of your upkeep, sacrifice a creature."
+          }
+        }
+      }
+    ]
+  }
+}

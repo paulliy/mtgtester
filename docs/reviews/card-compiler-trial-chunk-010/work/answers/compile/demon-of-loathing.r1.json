@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect makes the damaged player sacrifice a creature of their choice: eventPlayerSacrificesPermanents takes any permanent, and sacrificeEachPlayer and sacrificeOneEachOpponent apply to every player or opponent rather than the event player alone."}

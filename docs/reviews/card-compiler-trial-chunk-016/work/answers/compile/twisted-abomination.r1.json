@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"mana","cost":{"generic":0,"colored":{"W":0,"U":0,"B":1,"R":0,"G":0},"colorless":0}}],"timing":"any","ability":{"kind":"activated","targets":[],"effects":[{"op":"regenerate","target":"source"}],"description":"{B}: Regenerate this creature."}}]}}

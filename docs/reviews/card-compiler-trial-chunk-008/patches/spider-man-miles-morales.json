@@ -1,0 +1,123 @@
+{
+  "name": "Spider-Man, Miles Morales",
+  "oracleId": "229ecaa1-b3c9-44a1-8e7a-857ea5b8b0df",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ enters or attacks, put a +1/+1 counter on each other creature you control. Those creatures gain trample until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "keyword": "trample"
+          }
+        ],
+        "description": "Whenever ~ enters or attacks, put a +1/+1 counter on each other creature you control. Those creatures gain trample until end of turn."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "keyword": "trample"
+          }
+        ],
+        "description": "Whenever ~ enters or attacks, put a +1/+1 counter on each other creature you control. Those creatures gain trample until end of turn."
+      }
+    ]
+  }
+}

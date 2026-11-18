@@ -1,7 +1,7 @@
 # 0011 — An OpenAI-compatible client with a model fallback chain, not `@google/genai`
 
 Date: 2026-07-25
-Status: Accepted
+Status: Accepted (2026-07-25)
 Diverges from: brief §7.2, which specifies the `@google/genai` SDK instantiated as
 `new GoogleGenAI({})` reading `GEMINI_API_KEY`.
 

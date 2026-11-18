@@ -1,0 +1,30 @@
+{
+  "name": "Agna Qel'a",
+  "oracleId": "22d0a848-2126-48f0-9050-38daaf93b1d0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ enters tapped unless you control a basic land."
+  ],
+  "compose": "append",
+  "def": {
+    "entersTappedUnless": {
+      "kind": "countPermanents",
+      "selector": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "type",
+            "value": "Land"
+          },
+          {
+            "kind": "supertype",
+            "value": "Basic"
+          }
+        ]
+      },
+      "scope": "you",
+      "cmp": ">=",
+      "n": 1
+    }
+  }
+}

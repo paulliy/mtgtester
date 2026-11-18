@@ -1,0 +1,1 @@
+Whenever this becomes tapped, create a token. It is a colorless Artifact — Lander artifact token with "{2}, {T}, Sacrifice this artifact: Search for a basic land card, put it onto the battlefield tapped, then shuffle."

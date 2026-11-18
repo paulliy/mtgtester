@@ -1,0 +1,1 @@
+Each creature you control that isn't a token is a Land in addition to its other types and is a Forest in addition to its other subtypes. The data gives no base power or toughness.

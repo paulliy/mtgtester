@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no repeated coin-flip loop that stops at the first lost flip or on a player's choice and then branches on the count of won flips (one, two, three or more), so the 3, 6 and nine-card-draw-and-untap tiers cannot be expressed."}

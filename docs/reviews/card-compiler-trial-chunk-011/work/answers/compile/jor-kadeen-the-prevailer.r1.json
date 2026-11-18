@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"type","value":"Creature"}]},"op":{"layer":7,"sublayer":"d","power":3,"toughness":0},"condition":{"kind":"countPermanents","selector":{"kind":"type","value":"Artifact"},"scope":"you","cmp":">=","n":3}}]}}

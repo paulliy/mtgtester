@@ -1,0 +1,51 @@
+{
+  "name": "Traverse Eternity",
+  "oracleId": "ac5c2975-6a56-42c7-97c5-6a0e75c000bb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Draw cards equal to the greatest mana value among historic permanents you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "draw",
+          "count": {
+            "kind": "greatestManaValueAmong",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "supertype",
+                      "value": "Legendary"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Saga"
+                    }
+                  ]
+                }
+              ]
+            },
+            "scope": "you"
+          }
+        }
+      ],
+      "description": "Draw cards equal to the greatest mana value among historic permanents you control. (Artifacts, legendaries, and Sagas are historic.)"
+    }
+  }
+}

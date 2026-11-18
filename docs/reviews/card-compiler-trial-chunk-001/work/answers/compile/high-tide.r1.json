@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The extra {U} goes to the player who tapped the Island, but addMana adds mana only to the ability's controller, and no until-end-of-turn trigger can watch every player's Island taps while giving the mana to that tapping player."}

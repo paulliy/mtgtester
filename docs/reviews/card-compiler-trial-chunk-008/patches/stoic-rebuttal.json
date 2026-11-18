@@ -1,0 +1,31 @@
+{
+  "name": "Stoic Rebuttal",
+  "oracleId": "6dd5782d-2d1a-4d6b-8381-e15d0d5be24f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast if you control three or more artifacts."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "selfOnly": true,
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "type",
+            "value": "Artifact"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 3
+        }
+      }
+    ]
+  }
+}

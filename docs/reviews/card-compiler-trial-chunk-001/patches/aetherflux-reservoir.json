@@ -1,0 +1,31 @@
+{
+  "name": "Aetherflux Reservoir",
+  "oracleId": "5f15125e-ae89-471e-b055-226a783bc7c1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a spell, you gain 1 life for each spell you've cast this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "spellsCastThisTurn"
+            }
+          }
+        ],
+        "description": "Whenever you cast a spell, you gain 1 life for each spell you've cast this turn."
+      }
+    ]
+  }
+}

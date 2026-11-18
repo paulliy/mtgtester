@@ -1,0 +1,85 @@
+{
+  "name": "South Pole Voyager",
+  "oracleId": "c5173332-68ad-456e-ad85-dd7475464d94",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature or another Ally you control enters, you gain 1 life. If this is the second time this ability has resolved this turn, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Ally"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "byResolutionCountThisTurn",
+            "key": "Whenever this creature or another Ally you control enters, you gain 1 life. If this is the second time this ability has resolved this turn, draw a card.",
+            "cases": [
+              {
+                "n": 2,
+                "effects": [
+                  {
+                    "op": "gainLife",
+                    "amount": {
+                      "kind": "const",
+                      "n": 1
+                    }
+                  },
+                  {
+                    "op": "draw",
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "otherwise": [
+              {
+                "op": "gainLife",
+                "amount": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ],
+        "description": "Whenever this creature or another Ally you control enters, you gain 1 life. If this is the second time this ability has resolved this turn, draw a card."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"additionalCountersOnEntry":[{"affects":{"kind":"allOf","of":[{"kind":"other"},{"kind":"controller","who":"you"},{"kind":"type","value":"Creature"},{"kind":"not","of":{"kind":"subtype","value":"Human"}}]},"counter":"+1/+1","count":{"kind":"const","n":1}}]}}

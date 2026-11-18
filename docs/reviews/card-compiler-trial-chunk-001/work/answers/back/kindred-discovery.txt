@@ -1,0 +1,2 @@
+Whenever a creature you control with the chosen subtype enters, draw a card.
+Whenever a creature you control with the chosen subtype attacks, draw a card.

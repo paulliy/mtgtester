@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The cost reduction condition is 'an opponent cast two or more spells this turn'; the schema's castSpellThisTurn counts only the controller's own casts, and no condition reads an opponent's cast tally."}

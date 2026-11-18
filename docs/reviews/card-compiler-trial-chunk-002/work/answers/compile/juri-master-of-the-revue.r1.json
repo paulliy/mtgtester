@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"dies","subject":{"kind":"self"}},"optional":false,"targets":[{"kind":"anyTarget"}],"effects":[{"op":"dealDamage","target":0,"amount":{"kind":"powerOfTriggerObject"},"source":"triggerObject"}],"description":"When Juri dies, it deals damage equal to its power to any target."}]}}

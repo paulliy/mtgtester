@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The 'It's an enchantment' part needs the returned object alone to lose the creature type, but the only layer-4 removeCreatureType static would apply to Enduring Curiosity at all times, so no form captures that only the returned permanent is not a creature."}

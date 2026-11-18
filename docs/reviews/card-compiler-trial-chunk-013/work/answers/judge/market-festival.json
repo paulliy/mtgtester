@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A is a static trigger that adds two additional mana whenever enchanted land is tapped for mana; Text B is an activated ability costing {2} and {T} that flips a coin and may create a Treasure token.","Text B has no mana addition and no enchanted-land condition, and Text A creates no token."]}

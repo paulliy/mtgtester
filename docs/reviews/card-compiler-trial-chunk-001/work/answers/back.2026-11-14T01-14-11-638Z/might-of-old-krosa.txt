@@ -1,0 +1,1 @@
+This spell targets a creature. It has no effects, so it does nothing when it resolves.

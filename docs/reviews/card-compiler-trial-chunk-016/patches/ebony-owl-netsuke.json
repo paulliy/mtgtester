@@ -1,0 +1,38 @@
+{
+  "name": "Ebony Owl Netsuke",
+  "oracleId": "dcacb717-4ca4-47c0-9b23-26e4eb4ffdc8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of each opponent's upkeep, if that player has seven or more cards in hand, this artifact deals 4 damage to that player."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "opponent",
+          "condition": {
+            "kind": "eventPlayerHandSize",
+            "cmp": ">=",
+            "n": 7
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 4
+            }
+          }
+        ],
+        "description": "At the beginning of each opponent's upkeep, if that player has seven or more cards in hand, this artifact deals 4 damage to that player."
+      }
+    ]
+  }
+}

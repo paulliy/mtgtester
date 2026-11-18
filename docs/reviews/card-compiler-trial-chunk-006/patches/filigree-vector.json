@@ -1,0 +1,54 @@
+{
+  "name": "Filigree Vector",
+  "oracleId": "44b90948-e85a-4f69-a9e2-aba63775ba40",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, put a +1/+1 counter on each of any number of target creatures and a charge counter on each of any number of target artifacts."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "count": {
+              "min": 0,
+              "max": 999
+            }
+          },
+          {
+            "kind": "artifact",
+            "count": {
+              "min": 0,
+              "max": 999
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCountersEachChosen",
+            "targetSlot": 0,
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "putCountersEachChosen",
+            "targetSlot": 1,
+            "counter": "charge",
+            "count": 1
+          }
+        ],
+        "description": "When this creature enters, put a +1/+1 counter on each of any number of target creatures and a charge counter on each of any number of target artifacts."
+      }
+    ]
+  }
+}

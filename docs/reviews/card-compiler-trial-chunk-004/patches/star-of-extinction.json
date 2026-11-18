@@ -1,0 +1,46 @@
+{
+  "name": "Star of Extinction",
+  "oracleId": "48220e6c-5752-46e0-9b7f-f0eef274d929",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target land. ~ deals 20 damage to each creature and each planeswalker."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "land"
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroy",
+          "target": 0
+        },
+        {
+          "op": "damageEach",
+          "selector": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Planeswalker"
+              }
+            ]
+          },
+          "amount": {
+            "kind": "const",
+            "n": 20
+          }
+        }
+      ],
+      "description": "Destroy target land. Star of Extinction deals 20 damage to each creature and each planeswalker."
+    }
+  }
+}

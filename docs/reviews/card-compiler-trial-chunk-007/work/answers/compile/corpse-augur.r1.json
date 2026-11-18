@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Counting creature cards in target player's graveyard needs a count over a targeted player's graveyard, but countCardsInZone only takes an owner scope of you, opponents or all, not a target."}

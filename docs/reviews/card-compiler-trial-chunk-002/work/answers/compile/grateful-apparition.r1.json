@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The combat damage trigger only covers damage to a player; the schema has no trigger for combat damage dealt to a planeswalker, so the 'or planeswalker' half cannot be said."}

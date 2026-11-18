@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A destroy-each filter on mana value is a fixed number only (manaValueAtMost takes a constant), so it cannot read the X paid as the activation cost."}

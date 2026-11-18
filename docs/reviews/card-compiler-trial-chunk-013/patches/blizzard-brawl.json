@@ -1,0 +1,68 @@
+{
+  "name": "Blizzard Brawl",
+  "oracleId": "25a0fe3b-59c8-496a-a8d6-fca966ca6602",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Choose target creature you control and target creature you don't control. If you control three or more snow permanents, the creature you control gets +1/+0 and gains indestructible until end of turn. Then those creatures fight each other."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "creature",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "supertype",
+                  "value": "Snow"
+                }
+              ]
+            },
+            "scope": "you",
+            "cmp": ">=",
+            "n": 3
+          },
+          "then": [
+            {
+              "op": "pumpUntilEot",
+              "target": 0,
+              "power": 1,
+              "toughness": 0
+            },
+            {
+              "op": "grantKeywordUntilEot",
+              "target": 0,
+              "keyword": "indestructible"
+            }
+          ],
+          "else": []
+        },
+        {
+          "op": "fight",
+          "first": 0,
+          "second": 1
+        }
+      ],
+      "description": "Choose target creature you control and target creature you don't control. If you control three or more snow permanents, the creature you control gets +1/+0 and gains indestructible until end of turn. Then those creatures fight each other."
+    }
+  }
+}

@@ -1,0 +1,15 @@
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/yavimaya-hollow.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/yavimaya-hollow.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/goblin-chainwhirler.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/goblin-chainwhirler.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/horrific-assault.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/horrific-assault.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/bloodforged-battle-axe.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/bloodforged-battle-axe.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/damning-verdict.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/damning-verdict.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/charmbreaker-devils.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/charmbreaker-devils.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/death-baron.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/death-baron.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/archon-of-the-wild-rose.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/archon-of-the-wild-rose.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/astral-cornucopia.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/astral-cornucopia.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/guardian-of-faith.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/guardian-of-faith.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/treeguard-duo.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/treeguard-duo.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/the-gold-saucer.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/the-gold-saucer.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/cloudpost.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/cloudpost.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/might-of-old-krosa.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/might-of-old-krosa.json
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/judge/the-fifth-doctor.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/judge/the-fifth-doctor.json

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"tap"},{"kind":"payLife","amount":1}],"timing":"any","ability":{"kind":"activated","targets":[{"kind":"permanent","filter":{"kind":"owner","who":"you"}}],"effects":[{"op":"destroy","target":0}],"description":"{T}, Pay 1 life: Destroy target permanent you own."}}]}}

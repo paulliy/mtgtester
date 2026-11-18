@@ -1,0 +1,29 @@
+{
+  "name": "Riders of Rohan",
+  "oracleId": "688a559d-249f-4d03-98e6-581843e7ddc3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Dash {4}{R}{W}"
+  ],
+  "compose": "append",
+  "def": {
+    "alternativeCasts": [
+      {
+        "kind": "nonMana",
+        "manaCost": {
+          "generic": 4,
+          "colored": {
+            "W": 1,
+            "U": 0,
+            "B": 0,
+            "R": 1,
+            "G": 0
+          },
+          "colorless": 0
+        },
+        "dashed": true,
+        "description": "Dash {4}{R}{W}"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"destroyEach","selector":{"kind":"allOf","of":[{"kind":"anyOf","of":[{"kind":"type","value":"Creature"},{"kind":"type","value":"Planeswalker"}]},{"kind":"controller","who":"opponents"}]}}],"description":"Destroy all creatures you don't control and all planeswalkers you don't control."}}}

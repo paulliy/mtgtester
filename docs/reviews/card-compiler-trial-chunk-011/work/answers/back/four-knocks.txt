@@ -1,0 +1,2 @@
+This enters with four time counters on it.
+At the beginning of your upkeep, remove a time counter from this. If this has no time counters on it, sacrifice this.

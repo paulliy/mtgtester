@@ -1,0 +1,24 @@
+{
+  "name": "Animar, Soul of Elements",
+  "oracleId": "725880b2-1675-414f-b61b-cf6533797dbf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creature spells you cast cost {1} less to cast for each +1/+1 counter on ~."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countersOnSelf",
+          "counter": "+1/+1"
+        },
+        "filter": {
+          "kind": "type",
+          "value": "Creature"
+        }
+      }
+    ]
+  }
+}

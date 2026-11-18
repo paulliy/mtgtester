@@ -1,0 +1,59 @@
+{
+  "name": "Necrotic Sliver",
+  "oracleId": "9655569d-bfa5-4665-9371-9f275b8d223e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "All Slivers have \"{3}, Sacrifice this permanent: Destroy target permanent.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "subtype",
+          "value": "Sliver"
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 3,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 0
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "sacrificeSelf"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [
+                {
+                  "kind": "permanent"
+                }
+              ],
+              "effects": [
+                {
+                  "op": "destroy",
+                  "target": 0
+                }
+              ],
+              "description": "{3}, Sacrifice this permanent: Destroy target permanent."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

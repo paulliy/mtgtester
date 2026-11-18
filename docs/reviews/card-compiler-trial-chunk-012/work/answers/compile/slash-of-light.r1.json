@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No single Value sums creatures you control plus Equipment you control: a countPermanents over anyOf(creature, Equipment) would count a creature that is also an Equipment once instead of twice."}

@@ -1,0 +1,1 @@
+If it's your turn and the declare blockers step is happening, you may cast this card at instant speed by paying {1}{B} and returning an unblocked attacking creature you control to its owner's hand, rather than paying its mana cost.

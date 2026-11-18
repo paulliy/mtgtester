@@ -1,0 +1,1 @@
+At the beginning of your upkeep, create a token that's a copy of target another nonland permanent you control.

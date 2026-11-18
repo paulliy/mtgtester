@@ -1,0 +1,26 @@
+{
+  "name": "Overwhelming Remorse",
+  "oracleId": "bb4507c1-1e5d-48b5-8fc0-1d26bd1c9e72",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast for each creature card in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countCardsInZone",
+          "zone": "graveyard",
+          "selector": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "owner": "you"
+        },
+        "selfOnly": true
+      }
+    ]
+  }
+}

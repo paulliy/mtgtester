@@ -1,0 +1,77 @@
+{
+  "name": "Vial Smasher, Gleeful Grenadier",
+  "oracleId": "a66d8dc6-ced4-4b24-b0c2-3557b2a851be",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another outlaw you control enters, ~ deals 1 damage to target opponent."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Assassin"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Mercenary"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Pirate"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Rogue"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Warlock"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "player",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever another outlaw you control enters, Vial Smasher deals 1 damage to target opponent."
+      }
+    ]
+  }
+}

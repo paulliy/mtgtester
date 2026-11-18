@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The optional counter and the {C} for each counter are the active player's choice and mana, but addMana and putCounters have no way to route them to the triggering player instead of the ability's controller."}

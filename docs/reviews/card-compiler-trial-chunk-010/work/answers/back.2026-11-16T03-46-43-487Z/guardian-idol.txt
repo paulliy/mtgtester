@@ -1,0 +1,1 @@
+{2}: Until end of turn, this artifact becomes a 2/2 Golem creature.

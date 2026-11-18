@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature"}],"effects":[{"op":"grantKeywordUntilEot","target":0,"keyword":"vigilance"},{"op":"cantBeBlockedUntilEot","target":0},{"op":"draw","count":{"kind":"const","n":1}}],"description":"Target creature gains vigilance until end of turn and can't be blocked this turn. Draw a card."}}}

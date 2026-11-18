@@ -1,0 +1,5 @@
+Enchant creature (the data does not include an enchant restriction; the static effects apply to the enchanted creature).
+Enchanted creature is an Elk creature (the card types are set to Creature and the creature subtype is set to Elk).
+Enchanted creature is green.
+Enchanted creature loses all abilities.
+Enchanted creature has base power 3 and base toughness 3.

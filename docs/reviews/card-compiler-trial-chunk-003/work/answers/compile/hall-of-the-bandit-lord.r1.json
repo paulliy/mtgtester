@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The only spend-trigger haste op (grantHasteToResolvingSpell) grants haste until end of turn, while the line grants haste with no duration."}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The amass count is the number of instant and sorcery cards in the targeted player's graveyard, but countCardsInZone counts only your, the opponents', or all graveyards, not a chosen target player's."}

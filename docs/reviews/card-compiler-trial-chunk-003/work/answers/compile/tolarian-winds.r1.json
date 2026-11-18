@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No Value counts the cards just discarded by discardHand for the draw that follows, and eachPlayerDiscardHandThenDraw makes every player discard and draw rather than only the controller."}

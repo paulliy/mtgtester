@@ -1,0 +1,1 @@
+Whenever this creature deals combat damage to a player, exile up to one target creature you own, then return that creature to the battlefield under the control of this creature's controller.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The trigger must fire only for combat damage dealt to the enchanted player, and no trigger head, condition or selector checks the damaged player against the Aura's enchanted player (attackDeclared's enchantedPlayer test covers attacks, not damage)."}

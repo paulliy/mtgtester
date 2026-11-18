@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A adds {C} only if the tap was done ('If you do'). Text B adds {C} unconditionally after the tap instruction, so the mana is missing from the 'if you do' condition."]}

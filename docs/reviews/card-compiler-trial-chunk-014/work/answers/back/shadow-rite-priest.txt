@@ -1,0 +1,1 @@
+{3}{B}{B}, {T}, Sacrifice another Cleric you control: Search for a black creature card. Put that card onto the battlefield. Then shuffle.

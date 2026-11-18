@@ -1,0 +1,36 @@
+{
+  "name": "Step Through",
+  "oracleId": "c4fa89c7-f00d-42ef-bd67-407a288cd054",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return two target creatures to their owners' hands."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        },
+        {
+          "kind": "creature",
+          "differentFromSlots": [
+            0
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "op": "returnToHand",
+          "target": 0
+        },
+        {
+          "op": "returnToHand",
+          "target": 1
+        }
+      ],
+      "description": "Return two target creatures to their owners' hands."
+    }
+  }
+}

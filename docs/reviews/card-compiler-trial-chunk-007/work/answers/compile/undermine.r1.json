@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"spell"}],"effects":[{"op":"counter","target":0},{"op":"loseLifeTarget","target":{"controllerOf":0},"amount":{"kind":"const","n":3}}],"description":"Counter target spell. Its controller loses 3 life."}}}

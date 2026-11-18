@@ -1,0 +1,22 @@
+{
+  "name": "Stony Silence",
+  "oracleId": "12c63a45-7eb2-4262-b571-3358182f5610",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Activated abilities of artifacts can't be activated."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "cantActivateAbilities",
+        "who": "all",
+        "yourTurnOnly": false,
+        "filter": {
+          "kind": "type",
+          "value": "Artifact"
+        }
+      }
+    ]
+  }
+}

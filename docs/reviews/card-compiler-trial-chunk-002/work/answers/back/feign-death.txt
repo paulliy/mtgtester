@@ -1,0 +1,1 @@
+Target creature gains "When this creature dies, return it to the battlefield tapped with a +1/+1 counter on it." until end of turn.

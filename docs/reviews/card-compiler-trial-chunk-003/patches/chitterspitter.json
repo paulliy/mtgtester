@@ -1,0 +1,51 @@
+{
+  "name": "Chitterspitter",
+  "oracleId": "4a338863-d599-46e7-9c30-e11b898ae1b0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, you may sacrifice a token. If you do, put an acorn counter on this artifact."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "isToken"
+                }
+              ]
+            },
+            "then": [
+              {
+                "op": "putCounters",
+                "target": "source",
+                "counter": "acorn",
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ],
+        "description": "At the beginning of your upkeep, you may sacrifice a token. If you do, put an acorn counter on this artifact."
+      }
+    ]
+  }
+}

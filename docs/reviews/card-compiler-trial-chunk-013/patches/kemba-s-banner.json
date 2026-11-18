@@ -1,0 +1,54 @@
+{
+  "name": "Kemba's Banner",
+  "oracleId": "bd31c248-8b3f-4fa5-a639-19b0e37b15c3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "For Mirrodin!"
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Rebel",
+              "typeLine": "Creature — Rebel",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Rebel"
+              ],
+              "colors": [
+                "R"
+              ],
+              "power": 2,
+              "toughness": 2
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "attach",
+            "what": "source",
+            "to": "createdToken"
+          }
+        ],
+        "description": "For Mirrodin! When this Equipment enters, create a 2/2 red Rebel creature token, then attach this to it."
+      }
+    ]
+  }
+}

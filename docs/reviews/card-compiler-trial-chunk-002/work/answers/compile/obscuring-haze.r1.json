@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Preventing all damage this turn dealt by creatures your opponents control needs a damage prevention over a set of sources, but preventCombatDamageAll is combat-only and createDamageShield covers only damage to a player or to one named object."}

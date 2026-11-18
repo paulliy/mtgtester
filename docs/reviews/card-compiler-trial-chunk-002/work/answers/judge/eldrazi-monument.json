@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text B adds an intervening-if condition ('if you control one or more creatures') so the trigger does nothing when you control no creatures. Text A always triggers; if you control no creature, you sacrifice this artifact. Under Text B, the artifact is not sacrificed in that case."]}

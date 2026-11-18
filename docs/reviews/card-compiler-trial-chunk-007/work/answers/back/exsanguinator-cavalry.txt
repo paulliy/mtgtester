@@ -1,0 +1,1 @@
+Whenever a Knight you control deals combat damage to a player, put a +1/+1 counter on that creature and create a colorless Blood artifact token. It has "{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card."

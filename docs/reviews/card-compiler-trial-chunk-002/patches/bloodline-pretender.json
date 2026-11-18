@@ -1,0 +1,54 @@
+{
+  "name": "Bloodline Pretender",
+  "oracleId": "51d6d164-6e5f-4be3-8f09-433e0b8d4c6b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another creature you control of the chosen type enters, put a +1/+1 counter on this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "chosenSubtype"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "self"
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever another creature you control of the chosen type enters, put a +1/+1 counter on this creature."
+      }
+    ]
+  }
+}

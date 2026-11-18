@@ -1,0 +1,1 @@
+Spells you cast cost {1} less to cast for each artifact you control.

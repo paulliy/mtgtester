@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":3}},{"op":"untapUpTo","selector":{"kind":"type","value":"Land"},"max":2},{"op":"discard","count":1}],"description":"Draw three cards, untap up to two lands, then discard a card."}}}
