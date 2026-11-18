@@ -443,8 +443,11 @@ describe('StrategyCoordinator with delta prompts', () => {
     return { sent, stats: coordinator.strategistStats };
   }
 
-  it('is off by default, and the env switch turns it on', () => {
-    expect(DEFAULT_AI_CONFIG.strategistDeltaEnabled).toBe(false);
+  it('is on by default, and the env switch sets it', () => {
+    expect(DEFAULT_AI_CONFIG.strategistDeltaEnabled).toBe(true);
+    expect(loadAiConfig({ AI_STRATEGIST_DELTA_ENABLED: 'false' }).strategistDeltaEnabled).toBe(
+      false,
+    );
     expect(DEFAULT_AI_CONFIG.strategistDeltaRefreshEvery).toBe(3);
     const config = loadAiConfig({
       AI_STRATEGIST_DELTA_ENABLED: 'true',
@@ -484,8 +487,11 @@ describe('StrategyCoordinator with delta prompts', () => {
   });
 
   it('leaves every prompt as it was when off', async () => {
-    const off = await prompts({}, 3);
-    const explicit = await prompts({ strategistDeltaEnabled: false }, 3);
+    const off = await prompts({ strategistDeltaEnabled: false }, 3);
+    const explicit = await prompts(
+      { strategistDeltaEnabled: false, strategistDeltaRefreshEvery: 5 },
+      3,
+    );
     expect(explicit.sent).toEqual(off.sent);
     for (const prompt of off.sent)
       expect(observation(prompt)).not.toHaveProperty('sinceYourLastPlan');
@@ -493,7 +499,7 @@ describe('StrategyCoordinator with delta prompts', () => {
   });
 
   it('does nothing in model-led tactics', async () => {
-    const plain = await prompts({ tacticalMode: 'model' }, 2);
+    const plain = await prompts({ tacticalMode: 'model', strategistDeltaEnabled: false }, 2);
     const flagged = await prompts({ tacticalMode: 'model', strategistDeltaEnabled: true }, 2);
     expect(flagged.sent).toEqual(plain.sent);
   });

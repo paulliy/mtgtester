@@ -114,7 +114,8 @@ export interface AiConfig {
   /**
    * Hill-climb S6: in `bot` mode, send the strategist its last intent and knobs plus what changed,
    * instead of the whole board again (`strategist-delta.ts`). Env:
-   * `AI_STRATEGIST_DELTA_ENABLED`. Default: off until a paid duel shows knob quality holds.
+   * `AI_STRATEGIST_DELTA_ENABLED`. Default: on since 2026-11-18, after a paid duel (delta seats won
+   * both games, prompts 33% smaller per call); `AI_STRATEGIST_DELTA_ENABLED=false` turns it off.
    */
   strategistDeltaEnabled: boolean;
   /** Delta prompts a seat may get in a row before a full one. Env: `AI_STRATEGIST_DELTA_REFRESH`. Default 3. */
@@ -333,7 +334,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   botEscalationMargin: 1,
   strategistReplan: 'onChange',
   strategistMaxReuseTurns: 3,
-  strategistDeltaEnabled: false,
+  strategistDeltaEnabled: true,
   strategistDeltaRefreshEvery: 3,
   strategistTacticianFlag: 'off',
   filterNonCachingProviders: true,

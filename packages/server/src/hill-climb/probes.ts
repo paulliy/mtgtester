@@ -170,14 +170,14 @@ const CENSUS_MODES: Array<{ key: string; config: Partial<AiConfig> }> = [
     },
   },
   {
-    // Hill-climb S6: bot mode with strategist delta prompts, off by default until a paid duel.
-    // The layout stays at its default, so this compares like for like with `bot`.
-    key: 'botDelta',
+    // Hill-climb S6: delta prompts are the default since 2026-11-18, so `bot` measures them; this
+    // keeps the full-prompt strategist measured for comparison.
+    key: 'botNoDelta',
     config: {
       tacticalMode: 'bot',
       botEscalation: [],
       strategistReplan: 'onChange',
-      strategistDeltaEnabled: true,
+      strategistDeltaEnabled: false,
     },
   },
 ];
