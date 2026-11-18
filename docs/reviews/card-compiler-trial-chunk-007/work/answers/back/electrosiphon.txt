@@ -1,0 +1,1 @@
+Counter target spell. You gain energy equal to the mana value of that spell.

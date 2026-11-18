@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Exiling the top card of the defending player's library with a put-onto-the-battlefield-or-create-a-Fish branch has no IR op: lookAtTopN only reads the controller's library and exileFaceDownPlayable exiles face down and is castOnly."}

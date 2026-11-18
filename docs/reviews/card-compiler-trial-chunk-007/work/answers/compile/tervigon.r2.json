@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The ability-word line 'Spawn Termagants' is already parsed into a trigger but flagged unrecognized, and the patch can only append triggers, so re-adding it would create tokens twice and it cannot be replaced."}

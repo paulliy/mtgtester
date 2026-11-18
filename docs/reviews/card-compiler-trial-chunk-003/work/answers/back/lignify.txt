@@ -1,0 +1,1 @@
+Enchanted creature has only the creature type Treefolk, loses all abilities, and has base power and toughness 0/4.

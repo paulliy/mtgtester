@@ -1,0 +1,1 @@
+Look at the top seven cards of a library. You may reveal up to two artifact cards from among them and put them into your hand. Put the rest on the bottom of that library in a random order.

@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A triggers on creature cards put into your graveyard; Text B triggers on creature permanents you own put into any graveyard. B misses creature cards that were never on the battlefield (e.g. milled or discarded) and adds creature cards put into an opponent's graveyard."]}

@@ -1,6 +1,7 @@
 # 0001 — Phase 0 Foundations
 
-- **Status:** Accepted
+Status: Accepted (2026-07-23)
+
 - **Date:** 2026-07-23
 - **Phase:** 0 — Foundations (brief §14.1)
 

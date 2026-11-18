@@ -1,0 +1,46 @@
+{
+  "name": "Stitch Together",
+  "oracleId": "bc3d5911-3580-4132-9daf-2826495b5739",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return that card from your graveyard to the battlefield instead if there are seven or more cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "cardInGraveyard",
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "cardsInYourGraveyard",
+            "cmp": ">=",
+            "n": 7
+          },
+          "then": [
+            {
+              "op": "graveyardToBattlefield",
+              "target": 0
+            }
+          ],
+          "else": [
+            {
+              "op": "graveyardToHand",
+              "target": 0
+            }
+          ]
+        }
+      ],
+      "description": "Threshold — Return that card from your graveyard to the battlefield instead if there are seven or more cards in your graveyard."
+    }
+  }
+}

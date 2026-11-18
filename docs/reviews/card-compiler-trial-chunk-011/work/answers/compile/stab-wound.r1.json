@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The upkeep trigger's player 'enchanted' means the player this Aura enchants, but Stab Wound enchants a creature, so the schema cannot name the controller of the enchanted creature as the player whose upkeep triggers."}

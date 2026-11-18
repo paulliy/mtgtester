@@ -1,0 +1,1 @@
+You may cast this spell by paying {B} and returning an unblocked attacking creature you control to its owner's hand, rather than paying its mana cost. You may do so only during your turn, during the declare blockers step. This spell may be cast at instant speed in that way.

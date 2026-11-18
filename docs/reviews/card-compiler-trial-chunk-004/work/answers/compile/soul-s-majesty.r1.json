@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","controller":"you"}],"effects":[{"op":"draw","count":{"kind":"powerOfTarget","target":0}}],"description":"Draw cards equal to the power of target creature you control."}}}

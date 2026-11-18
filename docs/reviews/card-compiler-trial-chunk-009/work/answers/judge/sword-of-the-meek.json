@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A's trigger checks for a creature that is currently a 1/1; Text B checks for a creature with base power and toughness 1/1, so a creature whose power or toughness is modified (for example by +1/+2 from an equipment or a counter) differs between the two."]}

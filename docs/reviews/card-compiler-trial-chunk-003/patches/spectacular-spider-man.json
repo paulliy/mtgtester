@@ -1,0 +1,44 @@
+{
+  "name": "Spectacular Spider-Man",
+  "oracleId": "eed5e0cc-8f88-4779-bf10-6a823c72df7f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}: ~ gains flying until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": "source",
+              "keyword": "flying"
+            }
+          ],
+          "description": "{1}: ~ gains flying until end of turn."
+        }
+      }
+    ]
+  }
+}

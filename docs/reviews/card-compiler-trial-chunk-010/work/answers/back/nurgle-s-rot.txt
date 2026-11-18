@@ -1,0 +1,1 @@
+When enchanted permanent dies, return this from the graveyard to its owner's hand. Create a 1/3 black Demon creature token.

@@ -1,0 +1,2 @@
+{G}, {T}: Activate only if you control two or more creatures that entered the battlefield this turn.
+Move a shield counter from this land onto target creature.

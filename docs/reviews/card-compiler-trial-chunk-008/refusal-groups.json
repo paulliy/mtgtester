@@ -1,0 +1,350 @@
+[
+  {
+    "feature": "Selector predicates in targets and statics",
+    "description": "Add selector and condition predicates for colorless creatures, untapped creatures, mana-value equality or parity, names taken from a target, tokens put there this turn, controlled Equipment, spell origin, colors of mana spent, shared colors, distinct powers or mana values, targeted commanders, and exiled-flashback target zones.",
+    "cards": [
+      "Bane's Contingency",
+      "Batwing Brume",
+      "Calamity of Cinders",
+      "Grindstone",
+      "Iron Man, Armored Avenger",
+      "Krile Baldesion",
+      "Legions to Ashes",
+      "Leinore, Autumn Sovereign",
+      "Lobelia Sackville-Baggins",
+      "Lunar Insight",
+      "Mutinous Massacre",
+      "Mythos of Snapdax",
+      "Ruins of Oran-Rief",
+      "See the Truth",
+      "Sorceress's Schemes"
+    ]
+  },
+  {
+    "feature": "Trigger events and filters that do not exist yet",
+    "description": "Add trigger events for cycling this card, a Saga's final chapter, playing a land from exile, proliferating, combat damage to planeswalkers or battles, any damage from an enchanted creature, excess noncombat damage, becoming the target of a spell on the stack, damage naming the source creature, drawing-only trigger doubling, and delayed combat-damage triggers.",
+    "cards": [
+      "Bladewing, Deathless Tyrant",
+      "Fall of Cair Andros",
+      "Furnace Reins",
+      "Historian's Boon",
+      "Krang, the All-Powerful",
+      "Long River Lurker",
+      "Narci, Fable Singer",
+      "Nimble Obstructionist",
+      "Pia Nalaar, Consul of Revival",
+      "Scheming Aspirant",
+      "Spirit Loop",
+      "Surrak, Elusive Hunter",
+      "Teysa, Envoy of Ghosts",
+      "Valor's Flagship"
+    ]
+  },
+  {
+    "feature": "Conditional rule statics and permissions",
+    "description": "Add rule statics for untap limits, cost increases on all spells, granting flash or instant-speed equip, convoke filters, crew-power bonuses, forced blocking, legend-rule exemptions, spell-count limits, skipped steps, and activated-ability or turn-scoped cost changes.",
+    "cards": [
+      "Agatha of the Vile Cauldron",
+      "Chief Engineer",
+      "Fatespinner",
+      "Hall of Echoes",
+      "Irencrag Feat",
+      "Leonin Shikari",
+      "Lure",
+      "Nemesis Mask",
+      "Prodigy's Prototype",
+      "Raff Capashen, Ship's Mage",
+      "Smoke",
+      "Soul Partition",
+      "Thorn of Amethyst",
+      "Will, Scion of Peace"
+    ]
+  },
+  {
+    "feature": "Modern keyword actions (venture, ring tempts, suspect, crime)",
+    "description": "Add effects and triggers for the Ring tempting you, earthbend, cloak, committing a crime, villainous choices, connive on chosen creatures, dice rolls, coin-flip loops, votes and random player or opponent choices.",
+    "cards": [
+      "Change of Plans",
+      "Crystalline Giant",
+      "Earthshape",
+      "Fiery Gambit",
+      "Great Intelligence's Plan",
+      "Kaervek, the Punisher",
+      "Mob Verdict",
+      "Rakdos, the Showstopper",
+      "Territorial Hellkite",
+      "The Ring Goes South",
+      "Underdark Rift",
+      "Unexplained Absence",
+      "Wildfire Devils"
+    ]
+  },
+  {
+    "feature": "Token copy color, type and cost overrides",
+    "description": "Let token copies and becomes-a-copy effects carry overrides: replaced colors and types, subtype and keyword additions, extra triggered abilities, counters, base power and toughness, tapped state and linked exile.",
+    "cards": [
+      "Adorned Pouncer",
+      "Aggressive Biomancy",
+      "Cephalid Facetaker",
+      "Drafna, Founder of Lat-Nam",
+      "Espers to Magicite",
+      "Hashaton, Scarab's Fist",
+      "Hofri Ghostforge",
+      "Kimahri, Valiant Guardian",
+      "Moritte of the Frost",
+      "Nexus of Becoming",
+      "Ochre Jelly",
+      "Superior Spider-Man"
+    ]
+  },
+  {
+    "feature": "Per-player scope and chooser on effects",
+    "description": "Add player-scope and chooser fields so shuffles, per-opponent targets, defender or opponent choices, controller-chosen optional damage, hand exiling and discard-then-draw apply per player, and allow optional effects on activated abilities.",
+    "cards": [
+      "Bladegriff Prototype",
+      "Crawling Barrens",
+      "Drana, the Last Bloodchief",
+      "Elminster's Simulacrum",
+      "Emergent Ultimatum",
+      "Fatestitcher",
+      "Imposing Grandeur",
+      "Memory Jar",
+      "Requiem Monolith",
+      "Time Reversal",
+      "Time Spiral"
+    ]
+  },
+  {
+    "feature": "Announced X where a fixed number is required",
+    "description": "Let counts, cost reductions, mill amounts, counter-unless payments, doubling repeats and selector limits take the announced X or another computed Value (mana value X or less, X counters removed as a cost, domain count, life total, sacrificed creature's mana value).",
+    "cards": [
+      "Collective Restraint",
+      "Exponential Growth",
+      "G'raha Tia, Scion Reborn",
+      "Halo Forager",
+      "Industrial Advancement",
+      "Kinetic Ooze",
+      "Mausoleum Wanderer",
+      "Retribution of the Ancients",
+      "Space-Time Anomaly"
+    ]
+  },
+  {
+    "feature": "Amounts produced by the previous effect or event",
+    "description": "Add Values that read the toughness, power or colors of a targeted or destroyed creature, the total mana value or power of several chosen or exiled objects, cards returned, event-player land counts, creature types in a chosen graveyard, and total counters of all kinds.",
+    "cards": [
+      "Breathe Your Last",
+      "Citadel of Pain",
+      "Command the Dreadhorde",
+      "Dire Tactics",
+      "Hancock, Ghoulish Mayor",
+      "Oversimplify",
+      "Paradoxical Outcome",
+      "Sapling of Colfenor",
+      "The Mouth of Sauron"
+    ]
+  },
+  {
+    "feature": "Alternative-cost keyword mechanics",
+    "description": "Model warp, plot, encore, harmonize, mayhem, sneak, web-slinging, replicate grants and fast healing.",
+    "cards": [
+      "Belonging",
+      "Demonic Ruckus",
+      "Eusocial Engineering",
+      "Hatchery Sliver",
+      "Old One Eye",
+      "Raphael, the Nightwatcher",
+      "Roamer's Routine",
+      "Spider-Man, Brooklyn Visionary",
+      "Ultimate Green Goblin"
+    ]
+  },
+  {
+    "feature": "Turn-history conditions",
+    "description": "Add conditions and values for what happened this turn: life gained, cards drawn, attacking, artifacts entering, a creature dying, and the first time a permanent was tapped or got counters.",
+    "cards": [
+      "Assemble the Entmoot",
+      "Botanical Brawler",
+      "Captain America, Living Legend",
+      "Defiling Daemogoth",
+      "Ebondeath, Dracolich",
+      "Gwaihir the Windlord",
+      "Perforating Artist",
+      "The Prydwen, Steel Flagship"
+    ]
+  },
+  {
+    "feature": "Granted statics and characteristic-setting effects",
+    "description": "Add effects that grant static abilities, activated abilities with costs, keywords to spells, hand-zone cycling, until-end-of-turn subtypes, swapped or set base power and toughness, and abilities removed until end of turn.",
+    "cards": [
+      "Banishing Knack",
+      "Hellish Rebuke",
+      "Homing Sliver",
+      "Loki's Scepter",
+      "Samut, Tyrant of Naktamun",
+      "Tectonic Reformation",
+      "Twisted Image",
+      "Warkite Marauder"
+    ]
+  },
+  {
+    "feature": "Life totals and game-result effects",
+    "description": "Add effects that set or exchange life totals, double a controller's life, and make a player win or lose the game or stop winning.",
+    "cards": [
+      "Abyssal Persecutor",
+      "Celestial Mantle",
+      "Dire Fleet Ravager",
+      "Magister Sphinx",
+      "Mayael's Aria",
+      "Profane Transfusion",
+      "Ramses, Assassin Lord",
+      "Shaman of Forgotten Ways"
+    ]
+  },
+  {
+    "feature": "Ability cost forms",
+    "description": "Add cost components and alternatives: discard a typed card, return a creature to hand, either/or additional costs, sacrifice-lands entry replacement, exile a typed graveyard card, and unless-pays with non-mana payments.",
+    "cards": [
+      "Combustion Man",
+      "Disruption Protocol",
+      "Familiar's Ruse",
+      "Floral Evoker",
+      "Fungal Plots",
+      "Lightning Axe",
+      "Lotus Vale",
+      "Sanctum of Shattered Heights"
+    ]
+  },
+  {
+    "feature": "Reveal/exile/mill-until loops with leftovers handling",
+    "description": "Add reveal-until, choose-a-kind-then-reveal, exile-two-face-down, count-matched reveals and library or graveyard repositioning (return same-name cards, ordered exile-sacrifice-return, search to hand, mass shuffles).",
+    "cards": [
+      "Abundant Harvest",
+      "Black Cat, Cunning Thief",
+      "Delivery Moogle",
+      "Echoing Return",
+      "Empty the Laboratory",
+      "Scrap Mastery",
+      "Solstice Revelations",
+      "Warp World"
+    ]
+  },
+  {
+    "feature": "Missing keyword mechanics (delve, echo, myriad, decayed, splice)",
+    "description": "Add keywords and keyword-like fields the schema lacks or cannot grant: poisonous, partner, skulk, myriad, afterlife, umbra armor, protection from a subtype.",
+    "cards": [
+      "Afterlife Insurance",
+      "Dog Umbra",
+      "Hungry Lynx",
+      "Ishai, Ojutai Dragonspeaker",
+      "Mass of Mysteries",
+      "Vampire Cutthroat",
+      "Virulent Sliver"
+    ]
+  },
+  {
+    "feature": "Variable-count target slots and chosen-count value",
+    "description": "Add any-number, announced-count, up-to-one and per-opponent target slots, including tapping, gaining control, goading and attaching each chosen object.",
+    "cards": [
+      "Armory Automaton",
+      "By Force",
+      "Dreamdew Entrancer",
+      "Havoc Eater",
+      "Jolted Awake",
+      "Mass Mutiny",
+      "Red Sun's Twilight"
+    ]
+  },
+  {
+    "feature": "Damage prevention and replacement variants",
+    "description": "Add replacement effects for life gain becoming life loss, draws becoming exile, token creation becoming copies, added noncombat damage, exile instead of dying, and combat damage prevention to your creatures.",
+    "cards": [
+      "Combustion Technique",
+      "Eruth, Tormented Prophet",
+      "Esix, Fractal Bloom",
+      "Loyal Unicorn",
+      "Plague Drone",
+      "Tainted Remedy",
+      "Tor Wauki the Younger"
+    ]
+  },
+  {
+    "feature": "Put onto battlefield tapped and attacking or attached",
+    "description": "Add entry options for returned and put-onto-battlefield cards (tapped, attacking, optional, any number from the top of the library) and effects that attach a targeted Equipment to a creature.",
+    "cards": [
+      "Cosmic Rebirth",
+      "Kinscaer Sentry",
+      "Magnetic Theft",
+      "Mind into Matter",
+      "Mystifying Maze",
+      "Through the Forest Gate"
+    ]
+  },
+  {
+    "feature": "Control changes and durations tied to controlling the source",
+    "description": "Add durations such as for as long as you control the source and control-changing statics, effects that exchange control, and permanent indestructible or no-untap grants tied to the source.",
+    "cards": [
+      "Aegis Angel",
+      "Control Magic",
+      "Dragonlord Silumgar",
+      "Merchant Raiders",
+      "Sudden Substitution",
+      "Willbreaker"
+    ]
+  },
+  {
+    "feature": "Cast a card from other zones with a rider",
+    "description": "Add free or alternative casting of cards from graveyards, hands and the top of the library with cost riders, mana-value limits by the triggering spell, noncreature-only limits and turn-long play permissions.",
+    "cards": [
+      "Horde of Notions",
+      "Hurl Through Hell",
+      "Into the Pit",
+      "Kellan, the Kid",
+      "The Belligerent",
+      "Yue, the Moon Spirit"
+    ]
+  },
+  {
+    "feature": "Reference to the card moved by the previous effect",
+    "description": "Let follow-up effects refer to the object a previous effect moved, destroyed or returned, for keywords, counters, power-based damage, delayed copies and stun counters.",
+    "cards": [
+      "Daydream",
+      "Esoteric Duplicator",
+      "Justiciar's Portal",
+      "Magmatic Hellkite",
+      "Too Greedily, Too Deep",
+      "Whiptongue Hydra"
+    ]
+  },
+  {
+    "feature": "Counterspell variants",
+    "description": "Let counter effects put the spell on top of the library, counter every opposing spell or ability, counter activated or triggered abilities, cast the exiled spell free, and add any-color mana from the countered spell's mana value.",
+    "cards": [
+      "Glen Elendra's Answer",
+      "Lapse of Certainty",
+      "Plasm Capture",
+      "Transcendent Dragon",
+      "Trickbind"
+    ]
+  },
+  {
+    "feature": "Mana production and spending restrictions",
+    "description": "Add mana abilities that read a creature's current power, state-derived additional costs per permanent, and name-based mana amounts.",
+    "cards": ["Elvish Guidance", "Topiary Lecturer", "_____ Goblin"]
+  },
+  {
+    "feature": "Unrecognized ability-word lines the patch cannot replace",
+    "description": "The patch can only append triggers, so a labeled ability line already parsed into a generic ability cannot be marked handled.",
+    "cards": ["Samurai's Katana", "Termagant Swarm"]
+  },
+  {
+    "feature": "Withheld: smoke game did not finish",
+    "description": "Refusal written by the main thread because the compiled patch's smoke game never finished.",
+    "cards": ["Theoretical Duplication"]
+  },
+  {
+    "feature": "one-off",
+    "description": "Lines needing a bespoke mechanic found on a single card.",
+    "cards": ["Inferno of the Star Mounts", "Plague of Vermin", "Time Stop"]
+  }
+]

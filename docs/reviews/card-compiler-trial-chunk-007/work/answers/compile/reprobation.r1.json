@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"attachedToSource"},"op":{"layer":4,"setTypes":["Creature"],"setSubtypes":["Coward"]}},{"affects":{"kind":"attachedToSource"},"op":{"layer":6,"loseAllAbilities":true}},{"affects":{"kind":"attachedToSource"},"op":{"layer":7,"sublayer":"b","power":{"kind":"const","n":0},"toughness":{"kind":"const","n":1}}}]}}

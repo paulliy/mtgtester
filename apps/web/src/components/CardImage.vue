@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * A real card image, resolved from Scryfall's CDN by `scryfallId` (brief §10.2's board/hand
- * requirements, satisfied with art instead of text — see ADR 0013). Falls back to a text-only
+ * requirements, satisfied with art instead of text). Falls back to a text-only
  * frame — never a broken-image icon — for cards with no printing (tokens) or a failed load.
  */
 import { computed, ref, watch } from 'vue';

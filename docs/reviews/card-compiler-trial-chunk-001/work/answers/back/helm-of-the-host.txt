@@ -1,0 +1,1 @@
+At the beginning of combat on your turn, create a token that is a copy of equipped creature, except it is nonlegendary and has haste. Create one such token.

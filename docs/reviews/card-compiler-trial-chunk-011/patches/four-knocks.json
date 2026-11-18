@@ -1,0 +1,50 @@
+{
+  "name": "Four Knocks",
+  "oracleId": "64fe83b1-5aae-4433-82c3-a11c8c83137e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Vanishing 4"
+  ],
+  "compose": "append",
+  "def": {
+    "entersWithCounters": {
+      "time": 4
+    },
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "removeCounters",
+            "target": "source",
+            "counter": "time",
+            "count": 1
+          },
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "sourceHasCounters",
+              "counter": "time",
+              "cmp": "==",
+              "n": 0
+            },
+            "then": [
+              {
+                "op": "sacrifice",
+                "target": "source"
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Vanishing 4"
+      }
+    ]
+  }
+}

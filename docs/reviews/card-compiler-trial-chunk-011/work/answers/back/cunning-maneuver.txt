@@ -1,0 +1,2 @@
+Target creature gets +3/+1 until end of turn.
+Create a Clue, a colorless artifact token with "{2}, Sacrifice this token: Draw a card."

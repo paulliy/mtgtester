@@ -1,0 +1,29 @@
+{
+  "name": "Kinjalli's Sunwing",
+  "oracleId": "b9243163-b726-432e-830f-86132aa7f34a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures your opponents control enter tapped."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "otherPermanentsEnterTapped",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "opponents"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

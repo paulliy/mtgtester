@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The optional token goes to the controller of the Sliver that dealt damage, which may be an opponent, and no token effect addresses the controller of a trigger's subject (subjectControllerIsEventPlayer applies only to dies triggers)."}

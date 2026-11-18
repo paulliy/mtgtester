@@ -1,0 +1,1 @@
+Whenever equipped creature attacks, create a 2/2 white Knight creature token with vigilance that is attacking.

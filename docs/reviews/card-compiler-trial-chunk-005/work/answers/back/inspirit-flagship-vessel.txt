@@ -1,0 +1,3 @@
+At the beginning of combat on your turn, if this has one or more charge counters on it, choose up to one target other artifact. Then choose one:
+• Put a +1/+1 counter on that artifact.
+• Put two charge counters on that artifact.

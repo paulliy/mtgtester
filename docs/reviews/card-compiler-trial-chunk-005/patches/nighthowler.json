@@ -1,0 +1,48 @@
+{
+  "name": "Nighthowler",
+  "oracleId": "57b3f7fc-1812-4134-a645-6cef48a8aa71",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ and enchanted creature each get +X/+X, where X is the number of creature cards in all graveyards."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "self"
+            },
+            {
+              "kind": "attachedToSource"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": {
+            "kind": "countCardsInZone",
+            "zone": "graveyard",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "owner": "all"
+          },
+          "toughness": {
+            "kind": "countCardsInZone",
+            "zone": "graveyard",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "owner": "all"
+          }
+        }
+      }
+    ]
+  }
+}

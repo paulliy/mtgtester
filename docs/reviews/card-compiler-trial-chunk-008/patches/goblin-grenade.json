@@ -1,0 +1,29 @@
+{
+  "name": "Goblin Grenade",
+  "oracleId": "20aecb7b-7e37-4efe-ac27-f9f9042203f4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As an additional cost to cast this spell, sacrifice a Goblin."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAdditionalCosts": [
+      {
+        "kind": "sacrificeOther",
+        "selector": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Goblin"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

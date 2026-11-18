@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no way to return a card from the graveyard to the battlefield tapped and attacking; returnDiedSourceToBattlefield can return it tapped but never attacking."}

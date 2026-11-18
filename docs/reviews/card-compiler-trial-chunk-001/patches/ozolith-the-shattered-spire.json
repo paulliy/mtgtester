@@ -1,0 +1,41 @@
+{
+  "name": "Ozolith, the Shattered Spire",
+  "oracleId": "41fed659-237c-4d8e-ad31-d17fa0d3f764",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If one or more +1/+1 counters would be put on an artifact or creature you control, that many plus one +1/+1 counters are put on it instead."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "counterPlacementReplacement",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          ]
+        },
+        "counter": "+1/+1",
+        "multiplier": 1,
+        "addition": 1
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+No player can cast more than one spell each turn.

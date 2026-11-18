@@ -1,0 +1,48 @@
+{
+  "name": "Three Dreams",
+  "oracleId": "b3f9da94-c822-49b8-a1fc-be82189206af",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Search your library for up to three Aura cards with different names, reveal them, put them into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Enchantment"
+              },
+              {
+                "kind": "subtype",
+                "value": "Aura"
+              }
+            ]
+          },
+          "destinations": [
+            {
+              "zone": "hand"
+            }
+          ],
+          "count": {
+            "kind": "const",
+            "n": 3
+          },
+          "differentNames": true,
+          "reveal": true
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "description": "Search your library for up to three Aura cards with different names, reveal them, put them into your hand, then shuffle."
+    }
+  }
+}

@@ -1,0 +1,2 @@
+Offspring {1}{R} (You may pay {1}{R} as an additional cost to cast this spell. This is optional.)
+When this creature enters, create a number of tokens that are copies of this creature equal to the number of times its offspring cost was paid (0 or 1). Each of those tokens has base power and toughness 1/1. If the offspring cost was not paid, no tokens are created. This trigger has no targets and is mandatory.

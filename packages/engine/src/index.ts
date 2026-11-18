@@ -56,6 +56,7 @@ export type {
 export { interpretCard, interpretCardWithDiagnostics } from './cards/interpret';
 export { interpretProvisional } from './cards/provisional';
 export type { ProvisionalPatch, ProvisionalResult } from './cards/provisional';
+export { clearDefinitionCache, definitionCacheSize } from './cards/definition-cache';
 export type { GrammarSlot, SlotFailure } from './cards/grammar/diagnostics';
 export type {
   CardDefinition,

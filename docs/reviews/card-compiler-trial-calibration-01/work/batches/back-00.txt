@@ -1,0 +1,15 @@
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/yavimaya-hollow.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/yavimaya-hollow.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/goblin-chainwhirler.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/goblin-chainwhirler.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/horrific-assault.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/horrific-assault.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/bloodforged-battle-axe.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/bloodforged-battle-axe.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/damning-verdict.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/damning-verdict.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/charmbreaker-devils.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/charmbreaker-devils.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/death-baron.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/death-baron.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/archon-of-the-wild-rose.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/archon-of-the-wild-rose.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/astral-cornucopia.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/astral-cornucopia.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/guardian-of-faith.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/guardian-of-faith.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/treeguard-duo.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/treeguard-duo.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/the-gold-saucer.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/the-gold-saucer.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/cloudpost.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/cloudpost.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/might-of-old-krosa.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/might-of-old-krosa.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/the-fifth-doctor.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/the-fifth-doctor.txt

@@ -1,0 +1,16 @@
+{
+  "name": "Leyline Axe",
+  "oracleId": "4f597675-0f6d-438c-990c-337171927a5e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If this card is in your opening hand, you may begin the game with it on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "beginOnBattlefieldFromOpeningHand"
+      }
+    ]
+  }
+}

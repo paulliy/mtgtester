@@ -1,0 +1,16 @@
+{
+  "name": "Sakashima's Protege",
+  "oracleId": "cf127842-5fb1-44df-8d91-8cc0f48c559a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may have this creature enter as a copy of any permanent that entered this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "entersAsCopy": {
+      "selector": {
+        "kind": "enteredThisTurn"
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The intervening-if 'if this creature is tapped' reads the source's own current tapped state, which the schema's tapped selector cannot express outside an event, so the conditional mana-and-damage trigger cannot be modeled exactly."}

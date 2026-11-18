@@ -1,0 +1,1 @@
+Whenever you cast a spell that isn't a creature spell, you may have this ability: draw cards equal to the mana spent to cast that spell, then discard two cards.

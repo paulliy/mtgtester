@@ -1,0 +1,38 @@
+{
+  "name": "Ajani's Anguish",
+  "oracleId": "4a37f4a0-2869-4f81-b51b-4c3e7e0e0671",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this enchantment enters, it deals X damage to any target."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "anyTarget"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "xValue"
+            }
+          }
+        ],
+        "description": "When this enchantment enters, it deals X damage to any target."
+      }
+    ]
+  }
+}

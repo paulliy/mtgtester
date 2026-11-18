@@ -1,0 +1,38 @@
+{
+  "name": "Congregate",
+  "oracleId": "d139294c-36bb-4a1e-800d-50c4a4ae9877",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target player gains 2 life for each creature on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player"
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainLifeTarget",
+          "target": 0,
+          "amount": {
+            "kind": "times",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              },
+              "scope": "all"
+            },
+            "n": 2
+          }
+        }
+      ],
+      "description": "Target player gains 2 life for each creature on the battlefield."
+    }
+  }
+}

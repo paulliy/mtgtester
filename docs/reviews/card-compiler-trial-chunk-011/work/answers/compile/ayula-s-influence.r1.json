@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The discard cost cannot be restricted to a land card: discardCard takes only a count, with no card filter, so 'discard a land card' cannot be stated exactly."}

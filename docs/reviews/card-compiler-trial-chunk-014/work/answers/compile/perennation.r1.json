@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The return-to-battlefield ops take at most one counter kind (reanimateEachChosen and returnDiedSourceToBattlefield carry a single counter), but the line puts both a hexproof counter and an indestructible counter on the returned permanent."}

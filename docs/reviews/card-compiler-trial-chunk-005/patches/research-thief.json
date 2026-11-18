@@ -1,0 +1,51 @@
+{
+  "name": "Research Thief",
+  "oracleId": "ba5055ce-6809-47a4-bee6-fb97a5b60f8a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an artifact creature you control deals combat damage to a player, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever an artifact creature you control deals combat damage to a player, draw a card."
+      }
+    ]
+  }
+}

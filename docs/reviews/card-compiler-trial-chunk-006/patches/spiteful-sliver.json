@@ -1,0 +1,60 @@
+{
+  "name": "Spiteful Sliver",
+  "oracleId": "c4d2c804-1448-4639-b41b-0a86bac083b9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sliver creatures you control have \"Whenever this creature is dealt damage, it deals that much damage to target player or planeswalker.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Sliver"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealtDamage",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [
+              {
+                "kind": "playerOrPlaneswalker"
+              }
+            ],
+            "effects": [
+              {
+                "op": "dealDamage",
+                "target": 0,
+                "amount": {
+                  "kind": "damageDealt"
+                }
+              }
+            ],
+            "description": "Whenever this creature is dealt damage, it deals that much damage to target player or planeswalker."
+          }
+        }
+      }
+    ]
+  }
+}

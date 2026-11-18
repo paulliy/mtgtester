@@ -1,0 +1,30 @@
+{
+  "name": "Sigarda, Font of Blessings",
+  "oracleId": "5fe07a76-f261-4f16-8a15-571bed707261",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may cast Angel spells and Human spells from the top of your library."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "castFromZone",
+        "zone": "libraryTop",
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Angel"
+            },
+            {
+              "kind": "subtype",
+              "value": "Human"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

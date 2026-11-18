@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The 'with first strike' selector (hasKeyword) is event-only in the schema, so a static effect cannot read which creatures currently have first strike."}

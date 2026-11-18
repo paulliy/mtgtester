@@ -1,0 +1,52 @@
+{
+  "name": "Loyal Retainers",
+  "oracleId": "55b88d43-ec45-4435-a316-1c8aee249ff0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice this creature: Return target legendary creature card from your graveyard to the battlefield. Activate only during your turn, before attackers are declared."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "yourTurn",
+        "condition": {
+          "kind": "beforeAttackersDeclared"
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "supertype",
+                    "value": "Legendary"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToBattlefield",
+              "target": 0
+            }
+          ],
+          "description": "Sacrifice this creature: Return target legendary creature card from your graveyard to the battlefield. Activate only during your turn, before attackers are declared."
+        }
+      }
+    ]
+  }
+}

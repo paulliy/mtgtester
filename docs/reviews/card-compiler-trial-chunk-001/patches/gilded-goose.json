@@ -1,0 +1,45 @@
+{
+  "name": "Gilded Goose",
+  "oracleId": "f2f09757-1931-47c0-a5f0-39280445489d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Sacrifice a Food: Add one mana of any color."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ],
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Food"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

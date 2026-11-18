@@ -1,0 +1,37 @@
+{
+  "name": "Renegade Tactics",
+  "oracleId": "7fbcd256-c132-406f-a490-df9709835504",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature can't block this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "count": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "cantBlockEachChosenThisTurn",
+          "targetSlot": 0
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Target creature can't block this turn."
+    }
+  }
+}

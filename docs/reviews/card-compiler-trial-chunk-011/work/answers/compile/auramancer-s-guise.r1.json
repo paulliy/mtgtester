@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The +2/+2 per Aura attached to the enchanted creature needs a value counting Auras on the affected creature, but aurasAttachedToSource counts Auras on the static's source (the Aura itself)."}

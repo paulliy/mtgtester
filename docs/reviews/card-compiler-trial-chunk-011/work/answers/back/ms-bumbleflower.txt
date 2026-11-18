@@ -1,0 +1,2 @@
+Whenever you cast a spell, target opponent draws a card, and target creature gets a +1/+1 counter and gains flying until end of turn.
+If this is the second time this ability has resolved this turn, you draw two cards.

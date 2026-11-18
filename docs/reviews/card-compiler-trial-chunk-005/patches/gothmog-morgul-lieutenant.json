@@ -1,0 +1,35 @@
+{
+  "name": "Gothmog, Morgul Lieutenant",
+  "oracleId": "f3817f63-7bde-46c5-93cb-b4756f5f821e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ enters, amass Orcs 1."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "amass",
+            "subtype": "Orc",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "When Gothmog enters, amass Orcs 1."
+      }
+    ]
+  }
+}

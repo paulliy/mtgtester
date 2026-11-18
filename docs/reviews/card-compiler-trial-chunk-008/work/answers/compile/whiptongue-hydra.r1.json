@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Destroying all creatures with flying and then putting a +1/+1 counter for each one destroyed has no schema form, since destroyEach does not expose how many objects it destroyed."}

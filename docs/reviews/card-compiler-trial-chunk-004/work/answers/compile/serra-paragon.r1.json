@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot limit the graveyard play-or-cast permission to once per turn in total (playFromZone's budget is per permanent type), nor give the played permanent the exile-and-gain-2-life trigger."}

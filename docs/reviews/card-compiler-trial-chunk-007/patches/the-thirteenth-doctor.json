@@ -1,0 +1,44 @@
+{
+  "name": "The Thirteenth Doctor",
+  "oracleId": "3778e06c-62c7-4b8f-90ff-b2fc2d2e213c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Team TARDIS — At the beginning of your end step, untap each creature you control with a counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "untapEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "hasAnyCounter"
+                }
+              ]
+            }
+          }
+        ],
+        "description": "Team TARDIS — At the beginning of your end step, untap each creature you control with a counter on it."
+      }
+    ]
+  }
+}

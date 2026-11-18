@@ -1,0 +1,45 @@
+{
+  "name": "Amazing Alliance",
+  "oracleId": "5a824aff-52fe-4402-b074-884afb5286d4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you attack with one or more legendary creatures, you gain that much life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attackDeclared",
+          "attacker": "you",
+          "minAttackers": 1,
+          "attackerFilter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "supertype",
+                "value": "Legendary"
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "triggerCount"
+            }
+          }
+        ],
+        "description": "Whenever you attack with one or more legendary creatures, you gain that much life."
+      }
+    ]
+  }
+}

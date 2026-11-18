@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The activation is restricted to 'if you attacked this turn' (a player-level fact), but requiresAttackedThisTurn tests whether this creature attacked and no condition tests whether you attacked this turn."}

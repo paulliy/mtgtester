@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"hasCounter","counter":"+1/+1"},{"kind":"controller","who":"you"},{"kind":"type","value":"Creature"}]},"op":{"layer":6,"addManaAbility":{"units":[["W","U","B","R","G"]]}}}]}}

@@ -1,0 +1,1 @@
+{T}: Add {B} or {R}. Activate only if this entered the battlefield this turn or you control a basic land.

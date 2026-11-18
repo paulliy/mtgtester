@@ -1,0 +1,46 @@
+{
+  "name": "Arlinn, Voice of the Pack",
+  "oracleId": "a15b83df-91b7-49f0-9bec-5776a3dac8bd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each creature you control that's a Wolf or a Werewolf enters with an additional +1/+1 counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "additionalCountersOnEntry": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Wolf"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Werewolf"
+                }
+              ]
+            }
+          ]
+        },
+        "counter": "+1/+1",
+        "count": {
+          "kind": "const",
+          "n": 1
+        }
+      }
+    ]
+  }
+}

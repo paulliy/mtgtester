@@ -1,0 +1,1 @@
+Whenever you cast an artifact spell, you may pay {2}. If you do, create a colorless 0/0 Construct artifact creature token with "This creature gets +X/+X, where X is the number of artifacts you control."

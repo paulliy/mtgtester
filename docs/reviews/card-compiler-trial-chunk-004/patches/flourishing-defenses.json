@@ -1,0 +1,55 @@
+{
+  "name": "Flourishing Defenses",
+  "oracleId": "f1b26eb1-6337-42d6-a475-53ad6427f00f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a -1/-1 counter is put on a creature, you may create a 1/1 green Elf Warrior creature token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "countersPut",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          },
+          "counter": "-1/-1"
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Elf Warrior",
+              "typeLine": "Token Creature — Elf Warrior",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Elf",
+                "Warrior"
+              ],
+              "colors": [
+                "G"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a -1/-1 counter is put on a creature, you may create a 1/1 green Elf Warrior creature token."
+      }
+    ]
+  }
+}

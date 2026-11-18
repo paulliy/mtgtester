@@ -1,0 +1,5 @@
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/compile/marwyn-the-nurturer.r2.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/compile/marwyn-the-nurturer.r2.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/compile/slip-out-the-back.r2.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/compile/slip-out-the-back.r2.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/compile/jaheira-friend-of-the-forest.r2.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/compile/jaheira-friend-of-the-forest.r2.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/compile/curiosity.r2.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/compile/curiosity.r2.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/compile/shifting-woodland.r2.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/compile/shifting-woodland.r2.json

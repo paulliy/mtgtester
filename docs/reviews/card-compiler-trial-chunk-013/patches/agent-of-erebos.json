@@ -1,0 +1,59 @@
+{
+  "name": "Agent of Erebos",
+  "oracleId": "3fa5e109-4a67-4523-8183-90e48a906400",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature or another enchantment you control enters, exile target player's graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "player"
+          }
+        ],
+        "effects": [
+          {
+            "op": "exileTargetPlayerGraveyard",
+            "target": 0
+          }
+        ],
+        "description": "Constellation — Whenever this creature or another enchantment you control enters, exile target player's graveyard."
+      }
+    ]
+  }
+}

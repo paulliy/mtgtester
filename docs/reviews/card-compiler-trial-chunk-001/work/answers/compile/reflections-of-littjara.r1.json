@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"castsSpell","caster":"you","filter":{"kind":"chosenSubtype"}},"optional":false,"targets":[],"effects":[{"op":"copyCastSpell"}],"description":"Whenever you cast a spell of the chosen type, copy that spell."}]}}

@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A has this creature itself deal the damage; Text B has no damage source, so the damage is not dealt by this creature.","Text A counts modified creatures using the reminder definition (counters, Auras you control, Equipment); Text B counts any equipped creature, which includes Equipment another player controls."]}

@@ -1,0 +1,29 @@
+{
+  "name": "Root Maze",
+  "oracleId": "2f4abc5e-5aad-455e-b1ec-137d7ac4a10c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Artifacts and lands enter tapped."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "otherPermanentsEnterTapped",
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Artifact"
+            },
+            {
+              "kind": "type",
+              "value": "Land"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

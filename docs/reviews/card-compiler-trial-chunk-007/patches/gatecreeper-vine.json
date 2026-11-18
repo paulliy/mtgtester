@@ -1,0 +1,70 @@
+{
+  "name": "Gatecreeper Vine",
+  "oracleId": "0f539127-535f-4e0d-abaa-e884521098d2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, you may search your library for a basic land card or a Gate card, reveal it, put it into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "supertype",
+                      "value": "Basic"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  ]
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Gate"
+                    }
+                  ]
+                }
+              ]
+            },
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "reveal": true
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "When this creature enters, you may search your library for a basic land card or a Gate card, reveal it, put it into your hand, then shuffle."
+      }
+    ]
+  }
+}

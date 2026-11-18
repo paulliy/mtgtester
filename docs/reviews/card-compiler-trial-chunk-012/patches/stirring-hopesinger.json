@@ -1,0 +1,60 @@
+{
+  "name": "Stirring Hopesinger",
+  "oracleId": "7244d04a-bb9c-4fbe-a346-4a3f45709da7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on each creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              }
+            ]
+          },
+          "targetFilter": {
+            "kind": "type",
+            "value": "Creature"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on each creature you control."
+      }
+    ]
+  }
+}

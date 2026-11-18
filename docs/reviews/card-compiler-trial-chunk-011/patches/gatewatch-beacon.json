@@ -1,0 +1,53 @@
+{
+  "name": "Gatewatch Beacon",
+  "oracleId": "2a31cd16-fb30-4bb0-b775-d5e8b9221dd4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a planeswalker you control enters, if this artifact has loyalty counters on it, you may move a loyalty counter from this artifact onto that planeswalker."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                }
+              ]
+            }
+          },
+          "condition": {
+            "kind": "sourceHasCounters",
+            "counter": "loyalty",
+            "cmp": ">=",
+            "n": 1
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "moveCounters",
+            "from": "source",
+            "to": "triggerObject",
+            "counter": "loyalty",
+            "count": 1
+          }
+        ],
+        "description": "Whenever a planeswalker you control enters, if this artifact has loyalty counters on it, you may move a loyalty counter from this artifact onto that planeswalker."
+      }
+    ]
+  }
+}

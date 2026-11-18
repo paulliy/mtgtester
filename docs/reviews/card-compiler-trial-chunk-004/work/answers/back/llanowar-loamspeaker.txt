@@ -1,0 +1,1 @@
+{T}: Target land you control becomes a 3/3 Elemental creature with haste until end of turn. Activate only as a sorcery.

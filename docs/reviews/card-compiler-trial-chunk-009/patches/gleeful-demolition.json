@@ -1,0 +1,63 @@
+{
+  "name": "Gleeful Demolition",
+  "oracleId": "66465bc1-4a34-4951-be53-57f90002976a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target artifact. If you controlled that artifact, create three 1/1 red Phyrexian Goblin creature tokens."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "artifact"
+        }
+      ],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "controller",
+              "who": "you"
+            }
+          },
+          "checkTarget": 0,
+          "then": [
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Phyrexian Goblin",
+                "typeLine": "Token Creature — Phyrexian Goblin",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Phyrexian",
+                  "Goblin"
+                ],
+                "colors": [
+                  "R"
+                ],
+                "power": 1,
+                "toughness": 1
+              },
+              "count": {
+                "kind": "const",
+                "n": 3
+              }
+            }
+          ],
+          "else": []
+        },
+        {
+          "op": "destroy",
+          "target": 0
+        }
+      ],
+      "description": "Destroy target artifact. If you controlled that artifact, create three 1/1 red Phyrexian Goblin creature tokens."
+    }
+  }
+}

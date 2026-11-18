@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The library search cannot bound the permanent's mana value by the announced X: searchLibrary takes only a fixed manaValueAtMost number, and the X-bounded search op covers creature cards in the library and graveyard, not permanents from the library alone."}

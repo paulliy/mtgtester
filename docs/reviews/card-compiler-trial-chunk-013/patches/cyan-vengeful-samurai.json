@@ -1,0 +1,26 @@
+{
+  "name": "Cyan, Vengeful Samurai",
+  "oracleId": "5a2fa420-c27f-4c14-b285-e0bb2828e053",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast for each creature card in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countCardsInZone",
+          "zone": "graveyard",
+          "selector": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "owner": "you"
+        },
+        "selfOnly": true
+      }
+    ]
+  }
+}

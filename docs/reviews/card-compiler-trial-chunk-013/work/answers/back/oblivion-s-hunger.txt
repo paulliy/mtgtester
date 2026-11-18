@@ -1,0 +1,2 @@
+Target creature you control gains indestructible until end of turn.
+If that creature has a +1/+1 counter on it, draw a card.

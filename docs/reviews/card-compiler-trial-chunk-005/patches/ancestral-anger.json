@@ -1,0 +1,52 @@
+{
+  "name": "Ancestral Anger",
+  "oracleId": "e0828e8d-f01f-4088-9123-6d923ddb3242",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature gains trample and gets +X/+0 until end of turn, where X is 1 plus the number of cards named ~ in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": {
+            "kind": "plus",
+            "of": {
+              "kind": "countCardsInZone",
+              "zone": "graveyard",
+              "selector": {
+                "kind": "name",
+                "value": "Ancestral Anger"
+              },
+              "owner": "you"
+            },
+            "n": 1
+          },
+          "toughness": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "trample"
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Target creature gains trample and gets +X/+0 until end of turn, where X is 1 plus the number of cards named Ancestral Anger in your graveyard. Draw a card."
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "name": "Sinkhole Surveyor",
+  "oracleId": "83a47724-b8d1-4884-9442-b62aa1510dc3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, you lose 1 life and this creature endures 1."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "loseLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "chooseOne",
+            "options": [
+              {
+                "effects": [
+                  {
+                    "op": "putCounters",
+                    "target": "source",
+                    "counter": "+1/+1",
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    }
+                  }
+                ],
+                "description": "Put a +1/+1 counter on it"
+              },
+              {
+                "effects": [
+                  {
+                    "op": "createToken",
+                    "spec": {
+                      "name": "Spirit",
+                      "typeLine": "Token Creature — Spirit",
+                      "types": [
+                        "Creature"
+                      ],
+                      "subtypes": [
+                        "Spirit"
+                      ],
+                      "colors": [
+                        "W"
+                      ],
+                      "power": 1,
+                      "toughness": 1
+                    },
+                    "count": {
+                      "kind": "const",
+                      "n": 1
+                    }
+                  }
+                ],
+                "description": "Create a 1/1 white Spirit creature token"
+              }
+            ]
+          }
+        ],
+        "description": "Whenever this creature attacks, you lose 1 life and this creature endures 1."
+      }
+    ]
+  }
+}

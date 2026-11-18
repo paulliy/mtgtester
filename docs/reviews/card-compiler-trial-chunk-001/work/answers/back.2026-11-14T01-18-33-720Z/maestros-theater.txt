@@ -1,0 +1,1 @@
+When this land enters, sacrifice it. When you do, search your library for a basic land card with the Island, Swamp, or Mountain subtype and put it onto the battlefield tapped. The search may fail to find one. Then shuffle, and you gain 1 life. This trigger has no targets and is mandatory.

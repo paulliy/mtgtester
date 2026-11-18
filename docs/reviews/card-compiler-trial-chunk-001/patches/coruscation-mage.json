@@ -1,0 +1,50 @@
+{
+  "name": "Coruscation Mage",
+  "oracleId": "88bb91b5-2ccd-4ce9-8cd4-e54d63c12abf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Offspring {2}"
+  ],
+  "compose": "append",
+  "def": {
+    "optionalAdditionalCost": {
+      "mechanic": "offspring",
+      "cost": {
+        "generic": 2,
+        "colored": {
+          "W": 0,
+          "U": 0,
+          "B": 0,
+          "R": 0,
+          "G": 0
+        },
+        "colorless": 0
+      }
+    },
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": "source",
+            "count": {
+              "kind": "optionalCostCount",
+              "mechanic": "offspring"
+            },
+            "powerOverride": 1,
+            "toughnessOverride": 1
+          }
+        ],
+        "description": "Offspring {2}"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A's trigger fires whenever you cycle or discard another card; Text B omits cycling and covers only discarding, so cycling another card does not make Text B's trigger scry 1."]}

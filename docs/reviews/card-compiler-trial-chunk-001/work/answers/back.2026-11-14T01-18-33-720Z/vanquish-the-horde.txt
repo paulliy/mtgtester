@@ -1,0 +1,2 @@
+This spell costs {1} less to cast for each creature on the battlefield, counting creatures of all controllers. This reduction applies only to this spell.
+This spell has no spell effect, so it does nothing on resolution.

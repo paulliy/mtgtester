@@ -1,0 +1,2 @@
+Target opponent.
+Look at the top two cards of target opponent's library. Exile one of them face down. It may be played or cast, and it may be any card type. Then the rest of those cards are put on the bottom of that library in random order.

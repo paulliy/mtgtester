@@ -1,0 +1,1 @@
+Whenever a creature you control with deathtouch deals combat damage to a player, that player gets two poison counters.

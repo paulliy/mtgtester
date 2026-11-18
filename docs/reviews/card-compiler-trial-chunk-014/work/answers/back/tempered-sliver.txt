@@ -1,0 +1,1 @@
+Each Sliver you control has "Whenever this creature deals combat damage to a player, put a +1/+1 counter on this creature."

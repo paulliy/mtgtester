@@ -1,0 +1,1 @@
+Whenever you cast an artifact spell, a legendary spell, or a Saga spell, you may pay {1}. If you do, create a token that's a copy of this.

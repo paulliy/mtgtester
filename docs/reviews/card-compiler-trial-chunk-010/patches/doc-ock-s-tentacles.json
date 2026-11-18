@@ -1,0 +1,49 @@
+{
+  "name": "Doc Ock's Tentacles",
+  "oracleId": "a5a18764-eb29-4bd8-a2e9-0ce55f4f6c88",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature you control with mana value 5 or greater enters, you may attach this Equipment to it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "manaValueAtLeast",
+                  "n": 5
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "attach",
+            "what": "source",
+            "to": "triggerObject"
+          }
+        ],
+        "description": "Whenever a creature you control with mana value 5 or greater enters, you may attach this Equipment to it."
+      }
+    ]
+  }
+}

@@ -1,0 +1,2 @@
+Create X tapped 2/1 white and black Inkling creature tokens with flying.
+If X is 6 or more, destroy each permanent that is neither a creature nor a land.

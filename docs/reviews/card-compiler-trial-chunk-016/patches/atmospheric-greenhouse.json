@@ -1,0 +1,45 @@
+{
+  "name": "Atmospheric Greenhouse",
+  "oracleId": "52c6afc6-aff1-46a8-b1ea-b183facec1ae",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Spacecraft enters, put a +1/+1 counter on each creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "When this Spacecraft enters, put a +1/+1 counter on each creature you control."
+      }
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "name": "Jinxed Idol",
+  "oracleId": "89b1eab9-4d24-4367-99f7-263349f69c3a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice a creature: Target opponent gains control of this artifact."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "player",
+              "controller": "opponent"
+            }
+          ],
+          "effects": [
+            {
+              "op": "gainControlTarget",
+              "target": "source",
+              "recipient": {
+                "targetPlayer": 0
+              }
+            }
+          ],
+          "description": "Sacrifice a creature: Target opponent gains control of this artifact."
+        }
+      }
+    ]
+  }
+}

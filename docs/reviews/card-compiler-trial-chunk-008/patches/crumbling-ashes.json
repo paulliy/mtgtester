@@ -1,0 +1,37 @@
+{
+  "name": "Crumbling Ashes",
+  "oracleId": "2e4030eb-c74f-4f81-8d35-8f1d080b15cf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, destroy target creature with a -1/-1 counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "filter": {
+              "kind": "hasCounter",
+              "counter": "-1/-1"
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "destroy",
+            "target": 0
+          }
+        ],
+        "description": "At the beginning of your upkeep, destroy target creature with a -1/-1 counter on it."
+      }
+    ]
+  }
+}

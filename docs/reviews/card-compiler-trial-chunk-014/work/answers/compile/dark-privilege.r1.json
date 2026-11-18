@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"sacrificeOther","selector":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"type","value":"Creature"}]}}],"timing":"any","ability":{"kind":"activated","targets":[],"effects":[{"op":"regenerate","target":"attachedToSource"}],"description":"Sacrifice a creature: Regenerate enchanted creature."}}]}}

@@ -1,0 +1,46 @@
+{
+  "name": "Hunting Grounds",
+  "oracleId": "2f3fec87-3dd2-4e5d-835c-eae535da4ecb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as there are seven or more cards in your graveyard, this enchantment has \"Whenever an opponent casts a spell, you may put a creature card from your hand onto the battlefield.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "castsSpell",
+              "caster": "opponent"
+            },
+            "optional": true,
+            "targets": [],
+            "effects": [
+              {
+                "op": "handToBattlefield",
+                "filter": {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                "count": "one"
+              }
+            ],
+            "description": "Whenever an opponent casts a spell, you may put a creature card from your hand onto the battlefield."
+          }
+        },
+        "condition": {
+          "kind": "cardsInYourGraveyard",
+          "cmp": ">=",
+          "n": 7
+        }
+      }
+    ]
+  }
+}

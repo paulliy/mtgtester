@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Restating the parsed 'up to one target permanent card' return would replace the parsed spellAbility, and the schema does not say that graveyardToHand accepts zero chosen targets in a count:{min:0,max:1} slot."}

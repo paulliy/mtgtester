@@ -1,0 +1,1 @@
+When this enters, exile each card in each opponent's graveyard. Create a Lander artifact token with "{2}, {T}, Sacrifice this token: Search a library for a basic land card, put it onto the battlefield tapped, then shuffle."

@@ -1,0 +1,75 @@
+{
+  "name": "Plate Armor",
+  "oracleId": "36082b5e-760b-4245-af59-00d308470d1a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equip {3}. This ability costs {1} less to activate for each other Equipment you control."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 3,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you"
+            }
+          ],
+          "effects": [
+            {
+              "op": "attachSelfTo",
+              "target": 0
+            }
+          ],
+          "description": "Equip {3}. This ability costs {1} less to activate for each other Equipment you control."
+        },
+        "timing": "sorcery"
+      }
+    ],
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "appliesTo": "activate",
+        "selfOnly": true,
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "other"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "subtype",
+                "value": "Equipment"
+              }
+            ]
+          },
+          "scope": "you"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "name": "Graduation Day",
+  "oracleId": "40e0665d-57b8-4c19-9fb8-b3155d7bbb94",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on target creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              }
+            ]
+          },
+          "targetFilter": {
+            "kind": "type",
+            "value": "Creature"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": 0,
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, put a +1/+1 counter on target creature you control."
+      }
+    ]
+  }
+}

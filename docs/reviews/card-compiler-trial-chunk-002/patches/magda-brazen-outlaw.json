@@ -1,0 +1,66 @@
+{
+  "name": "Magda, Brazen Outlaw",
+  "oracleId": "3d268e48-3004-4384-bf52-e63243fb5e02",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice five Treasures: Search your library for an artifact or Dragon card, put that card onto the battlefield, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Treasure"
+                }
+              ]
+            },
+            "count": 5
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "searchLibrary",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Dragon"
+                  }
+                ]
+              },
+              "destinations": [
+                {
+                  "zone": "battlefield"
+                }
+              ]
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "description": "Sacrifice five Treasures: Search your library for an artifact or Dragon card, put that card onto the battlefield, then shuffle."
+        }
+      }
+    ]
+  }
+}

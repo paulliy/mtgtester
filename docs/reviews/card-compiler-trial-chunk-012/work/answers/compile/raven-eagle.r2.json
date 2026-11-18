@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot say \"if a creature card is exiled this way\" for a targeted graveyard card (exileEachChosen is permanent-domain and conditions cannot read a cardInGraveyard target), and exileGraveyardCardWithSource draws a card rather than creating a Clue."}

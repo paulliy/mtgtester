@@ -1,0 +1,1 @@
+When this creature or another Ally you control enters, count how many times this ability has resolved this turn, including this resolution, using a hidden key. If that count is 2, you gain 1 life and draw a card. Otherwise, you gain 1 life.

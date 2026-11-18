@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot choose a creature card exiled as this activation's cost and copy that exact card into a token with a 0/0 Construct type and a granted '+1/+1 for each Construct you control' ability (createTokenCopyOf has no added static effects or type-and-ability override for the copy)."}

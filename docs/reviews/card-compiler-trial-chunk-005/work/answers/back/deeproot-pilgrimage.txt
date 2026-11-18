@@ -1,0 +1,1 @@
+Whenever one or more non-token Merfolk you control become tapped, create a 1/1 blue Merfolk creature token with hexproof. The token is a Creature — Merfolk.

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"enters","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"sacrificeOneThen","selector":{"kind":"type","value":"Land"},"then":[{"op":"sacrificeOneThen","selector":{"kind":"type","value":"Land"},"then":[]}]}],"description":"When this land enters, sacrifice two lands."}]}}

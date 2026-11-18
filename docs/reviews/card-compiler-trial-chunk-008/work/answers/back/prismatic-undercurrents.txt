@@ -1,0 +1,1 @@
+When this enters, search your library for a number of basic land cards equal to the number of colors among permanents, reveal them, and put them into your hand. The search may fail to find. Then shuffle.

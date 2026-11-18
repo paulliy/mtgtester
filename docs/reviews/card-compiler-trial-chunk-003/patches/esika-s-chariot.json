@@ -1,0 +1,43 @@
+{
+  "name": "Esika's Chariot",
+  "oracleId": "8e7b079d-9ede-421c-bd2b-f9a5126a8e6f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ attacks, create a token that's a copy of target token you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "permanent",
+            "controller": "you",
+            "filter": {
+              "kind": "isToken"
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": 0,
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever Esika's Chariot attacks, create a token that's a copy of target token you control."
+      }
+    ]
+  }
+}

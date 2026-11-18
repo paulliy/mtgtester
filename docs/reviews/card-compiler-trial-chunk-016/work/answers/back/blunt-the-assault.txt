@@ -1,0 +1,2 @@
+You gain life equal to the number of creatures on the battlefield.
+Prevent all combat damage. No duration is specified.

@@ -1,0 +1,58 @@
+{
+  "name": "Wartime Protestors",
+  "oracleId": "6557813b-4ee7-4881-a37c-10c8ea097360",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another Ally you control enters, put a +1/+1 counter on that creature and it gains haste until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Ally"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "triggerObject",
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "grantKeywordUntilEot",
+            "target": "triggerObject",
+            "keyword": "haste"
+          }
+        ],
+        "description": "Whenever another Ally you control enters, put a +1/+1 counter on that creature and it gains haste until end of turn."
+      }
+    ]
+  }
+}

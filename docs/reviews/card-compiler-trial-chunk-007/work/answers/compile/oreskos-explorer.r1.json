@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The search count X is the number of opponents who control more lands than you, and no value counts opponents by a per-opponent land comparison (opponentControlsMore is a yes/no condition and countPermanents pools all opponents' lands)."}

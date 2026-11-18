@@ -1,0 +1,66 @@
+{
+  "name": "Quest for the Necropolis",
+  "oracleId": "407d9d09-3db6-49b0-9e80-4e1538156e44",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{5}{B}, Sacrifice this enchantment: Put target creature card from a graveyard onto the battlefield under your control. This ability costs {1} less to activate for each quest counter on this enchantment. Activate only as a sorcery."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 5,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "filter": {
+                "kind": "type",
+                "value": "Creature"
+              },
+              "graveyardOwnerScope": "any"
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToBattlefield",
+              "target": 0
+            }
+          ],
+          "description": "{5}{B}, Sacrifice this enchantment: Put target creature card from a graveyard onto the battlefield under your control. This ability costs {1} less to activate for each quest counter on this enchantment. Activate only as a sorcery."
+        }
+      }
+    ],
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countersOnSelf",
+          "counter": "quest"
+        },
+        "selfOnly": true,
+        "appliesTo": "activate"
+      }
+    ]
+  }
+}

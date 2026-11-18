@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The creature choice is limited to mana value at most the number of lands you control, but Selector manaValueAtMost takes only a fixed number and lookAtTopN has no mana-value limit."}

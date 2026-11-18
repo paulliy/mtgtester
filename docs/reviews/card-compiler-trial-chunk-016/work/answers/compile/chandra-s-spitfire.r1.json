@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The trigger 'an opponent is dealt noncombat damage' needs a player-damaged event filtered to noncombat damage, and the playerDealtDamage trigger has no noncombat restriction (it filters on the source's controller only)."}

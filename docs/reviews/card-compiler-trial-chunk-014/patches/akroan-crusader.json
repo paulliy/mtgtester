@@ -1,0 +1,53 @@
+{
+  "name": "Akroan Crusader",
+  "oracleId": "d981d85c-e97b-4fe7-b415-6e73a3e7e35c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a spell that targets this creature, create a 1/1 red Soldier creature token with haste."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "targetFilter": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Soldier",
+              "typeLine": "Creature — Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "R"
+              ],
+              "power": 1,
+              "toughness": 1,
+              "keywords": [
+                "haste"
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you cast a spell that targets this creature, create a 1/1 red Soldier creature token with haste."
+      }
+    ]
+  }
+}

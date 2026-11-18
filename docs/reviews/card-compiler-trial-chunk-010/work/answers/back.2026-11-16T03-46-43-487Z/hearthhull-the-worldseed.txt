@@ -1,0 +1,1 @@
+{1}, {T}, Sacrifice another land you control: Draw two cards. You may play an additional land this turn. Activate only if this has two or more charge counters on it.

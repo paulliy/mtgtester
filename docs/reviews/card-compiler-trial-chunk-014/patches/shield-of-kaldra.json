@@ -1,0 +1,45 @@
+{
+  "name": "Shield of Kaldra",
+  "oracleId": "4fdd570f-dbe0-486f-9843-f77f80956307",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equipment named Sword of Kaldra, ~, and Helm of Kaldra have indestructible."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Equipment"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "name",
+                  "value": "Sword of Kaldra"
+                },
+                {
+                  "kind": "name",
+                  "value": "Shield of Kaldra"
+                },
+                {
+                  "kind": "name",
+                  "value": "Helm of Kaldra"
+                }
+              ]
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "indestructible"
+        }
+      }
+    ]
+  }
+}

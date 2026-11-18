@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Each chosen creature deals damage equal to its own power, but dealDamageEachChosen applies one fixed Value to every chosen target and no Value reads the power of a chosen target by slot."}

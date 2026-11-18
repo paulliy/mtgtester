@@ -1,0 +1,2 @@
+Put a +1/+1 counter on target creature. That creature gains flying until end of turn.
+Create a damage shield on that creature that applies only to combat damage dealt to it.

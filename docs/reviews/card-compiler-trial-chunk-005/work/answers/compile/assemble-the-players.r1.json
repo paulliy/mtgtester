@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"castFromZone has no once-each-turn budget, and the power-2-or-less filter needs powerAtMost, which is event-only and cannot be used in a static permission."}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no optional payment repeated any number of times (mayPayMana offers a single fixed payment), so 'pay {1}{W} any number of times' and the valor counters that follow cannot be expressed."}

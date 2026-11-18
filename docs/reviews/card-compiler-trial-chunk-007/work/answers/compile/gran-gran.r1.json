@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"const","n":1},"filter":{"kind":"not","of":{"kind":"type","value":"Creature"}},"condition":{"kind":"compareValues","left":{"kind":"countCardsInZone","zone":"graveyard","selector":{"kind":"subtype","value":"Lesson"},"owner":"you"},"cmp":">=","right":{"kind":"const","n":3}}}]}}

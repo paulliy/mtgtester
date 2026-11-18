@@ -1,0 +1,2 @@
+When this creature enters, copy target spell (any spell, no controller restriction). The copy gets new targets (newTargets: true). The data does not say who chooses the new targets.
+This trigger is mandatory (no "you may").

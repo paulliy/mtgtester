@@ -1,0 +1,1 @@
+{T}: Target player gains control of target artifact, creature, or land you control.

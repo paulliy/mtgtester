@@ -1,0 +1,2 @@
+{5}, {T}: Create a Blood artifact token.
+This ability costs {1} less to activate for each Vampire you control.

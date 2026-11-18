@@ -1,0 +1,1 @@
+Whenever one or more Halflings you control attack, for each opponent who is attacked (not a planeswalker), create a Food artifact token. Each of those tokens is a colorless Food artifact with "{2}, {T}, Sacrifice this artifact: You gain 3 life."

@@ -1,0 +1,44 @@
+{
+  "name": "Poison Dart Frog",
+  "oracleId": "e88a2b71-c90d-4e16-99a3-93d11fe7a968",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}: ~ gains deathtouch until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": "source",
+              "keyword": "deathtouch"
+            }
+          ],
+          "description": "{2}: This creature gains deathtouch until end of turn."
+        }
+      }
+    ]
+  }
+}

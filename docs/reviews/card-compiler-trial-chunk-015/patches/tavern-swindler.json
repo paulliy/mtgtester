@@ -1,0 +1,45 @@
+{
+  "name": "Tavern Swindler",
+  "oracleId": "81674138-08d0-4126-9e6d-27f6e7dd2403",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Pay 3 life: Flip a coin. If you win the flip, you gain 6 life."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "payLife",
+            "amount": 3
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "flipCoin",
+              "onWin": [
+                {
+                  "op": "gainLife",
+                  "amount": {
+                    "kind": "const",
+                    "n": 6
+                  }
+                }
+              ],
+              "onLose": []
+            }
+          ],
+          "description": "{T}, Pay 3 life: Flip a coin. If you win the flip, you gain 6 life."
+        }
+      }
+    ]
+  }
+}

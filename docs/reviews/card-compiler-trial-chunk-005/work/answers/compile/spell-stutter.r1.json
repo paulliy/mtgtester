@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Counter target spell unless its controller pays {2} plus {1} per Faerie you control needs a dynamic generic amount, but counterUnlessControllerPays takes only a fixed ParsedManaCost."}

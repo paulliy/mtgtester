@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"addMana has no player routing, so the {G}{G} would go to this creature's controller rather than to each player whose first main phase it is (the 'that player adds' clause)."}

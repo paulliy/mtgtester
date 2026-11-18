@@ -1,0 +1,73 @@
+{
+  "name": "Loyal Inventor",
+  "oracleId": "eff22b28-88b8-4251-937f-4c06b6ca7bd2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, you may search your library for an artifact card, reveal it, then shuffle. Put that card into your hand if you control an Assassin. Otherwise, put that card on top of your library."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "shuffle"
+          },
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "subtype",
+                "value": "Assassin"
+              },
+              "scope": "you",
+              "cmp": ">=",
+              "n": 1
+            },
+            "then": [
+              {
+                "op": "searchLibrary",
+                "filter": {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                "destinations": [
+                  {
+                    "zone": "hand"
+                  }
+                ],
+                "reveal": true
+              }
+            ],
+            "else": [
+              {
+                "op": "searchLibrary",
+                "filter": {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                "destinations": [
+                  {
+                    "zone": "libraryTop"
+                  }
+                ],
+                "reveal": true
+              }
+            ]
+          }
+        ],
+        "description": "When this creature enters, you may search your library for an artifact card, reveal it, then shuffle. Put that card into your hand if you control an Assassin. Otherwise, put that card on top of your library."
+      }
+    ]
+  }
+}

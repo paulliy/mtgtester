@@ -1,0 +1,99 @@
+{
+  "name": "Firemind's Foresight",
+  "oracleId": "bf5765e0-def0-4ddf-9cd7-083feae71660",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Search your library for an instant card with mana value 3, reveal it, and put it into your hand. Then repeat this process for instant cards with mana values 2 and 1. Then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "manaValueAtLeast",
+                "n": 3
+              },
+              {
+                "kind": "manaValueAtMost",
+                "n": 3
+              }
+            ]
+          },
+          "destinations": [
+            {
+              "zone": "hand"
+            }
+          ],
+          "reveal": true
+        },
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "manaValueAtLeast",
+                "n": 2
+              },
+              {
+                "kind": "manaValueAtMost",
+                "n": 2
+              }
+            ]
+          },
+          "destinations": [
+            {
+              "zone": "hand"
+            }
+          ],
+          "reveal": true
+        },
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "manaValueAtLeast",
+                "n": 1
+              },
+              {
+                "kind": "manaValueAtMost",
+                "n": 1
+              }
+            ]
+          },
+          "destinations": [
+            {
+              "zone": "hand"
+            }
+          ],
+          "reveal": true
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "description": "Search your library for an instant card with mana value 3, reveal it, and put it into your hand. Then repeat this process for instant cards with mana values 2 and 1. Then shuffle."
+    }
+  }
+}

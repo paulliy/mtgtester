@@ -1,0 +1,1 @@
+Whenever you cast your second spell, put a rally counter on this enchantment, then create a 1/1 white Monk creature token for each rally counter on this enchantment. Each of those tokens has "Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn."

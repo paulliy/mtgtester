@@ -1,0 +1,1 @@
+{2}{R}{G}: This land becomes a 3/3 red and green Elemental creature until end of turn. It gains "Whenever this creature attacks, put a +1/+1 counter on it." until end of turn.

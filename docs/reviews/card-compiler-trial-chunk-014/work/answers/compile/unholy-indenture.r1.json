@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Returning the dead enchanted creature under your control with a +1/+1 counter on it needs a counter placed on the object as it returns from the graveyard, and the schema has no such return-with-counter effect for another card (returnDiedSourceToBattlefield applies only to the source itself, under its owner's control)."}

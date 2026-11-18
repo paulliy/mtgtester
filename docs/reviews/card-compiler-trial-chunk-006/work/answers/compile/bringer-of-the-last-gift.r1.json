@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No op makes each player sacrifice all other creatures they control and then return the creature cards from their graveyard that were not put there this way; sacrificeEachPlayer takes one creature and livingDeath exiles before sacrificing, which is a different order."}

@@ -1,0 +1,66 @@
+{
+  "name": "Verdant Embrace",
+  "oracleId": "f0bbd988-50b7-476c-9183-dfabd4a95079",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature gets +3/+3 and has \"At the beginning of each upkeep, create a 1/1 green Saproling creature token.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 3,
+          "toughness": 3
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "upkeep",
+              "player": "each"
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "createToken",
+                "spec": {
+                  "name": "Saproling",
+                  "typeLine": "Creature — Saproling",
+                  "types": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Saproling"
+                  ],
+                  "colors": [
+                    "G"
+                  ],
+                  "power": 1,
+                  "toughness": 1
+                },
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "At the beginning of each upkeep, create a 1/1 green Saproling creature token."
+          }
+        }
+      }
+    ]
+  }
+}

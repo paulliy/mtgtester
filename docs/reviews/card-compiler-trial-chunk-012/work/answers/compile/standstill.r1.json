@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Each of that player's opponents draws three cards' needs a draw scope relative to the spell's caster (the trigger's event player), and the schema offers draw scopes only relative to the controller or the event player themself."}

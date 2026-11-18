@@ -1,0 +1,81 @@
+{
+  "name": "Cori-Steel Cutter",
+  "oracleId": "46b1a169-bc32-47bf-b379-fa0c3d13878f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Flurry — Whenever you cast your second spell each turn, create a 1/1 white Monk creature token with prowess. You may attach this Equipment to it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "ordinal": 2
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Monk",
+              "typeLine": "Creature — Monk",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Monk"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1,
+              "triggers": [
+                {
+                  "kind": "triggered",
+                  "trigger": {
+                    "when": "castsSpell",
+                    "caster": "you",
+                    "filter": {
+                      "kind": "not",
+                      "of": {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    }
+                  },
+                  "optional": false,
+                  "targets": [],
+                  "effects": [
+                    {
+                      "op": "pumpUntilEot",
+                      "target": "source",
+                      "power": 1,
+                      "toughness": 1
+                    }
+                  ],
+                  "description": "Prowess"
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "attach",
+            "what": "source",
+            "to": "createdToken",
+            "optional": true
+          }
+        ],
+        "description": "Flurry — Whenever you cast your second spell each turn, create a 1/1 white Monk creature token with prowess. You may attach this Equipment to it."
+      }
+    ]
+  }
+}

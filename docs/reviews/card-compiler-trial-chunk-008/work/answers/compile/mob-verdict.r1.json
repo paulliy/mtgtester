@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The secret vote in which each player votes for another player, with damage and draws computed per vote received, has no schema form (councilVote takes two fixed choices, not a vote for a player)."}

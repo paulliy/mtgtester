@@ -1,0 +1,1 @@
+Whenever a land you control enters, target creature you control. Under a hidden key, count how many times this ability has resolved this turn, including this resolution. If that count is 2, put a number of +1/+1 counters on that creature equal to the number of +1/+1 counters on it. Otherwise, put a +1/+1 counter on that creature.

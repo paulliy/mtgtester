@@ -1,0 +1,2 @@
+As an additional cost to cast this spell, you may pay {1}.
+When this creature enters, create a token that is a copy of this creature with base power and toughness 1/1, once for each time the additional cost was paid.

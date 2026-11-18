@@ -1,0 +1,1 @@
+{4}, Sacrifice this artifact: Choose target player and up to one target creature. This deals damage to that player equal to the number of charge counters on this artifact. This deals damage equal to the number of charge counters on this artifact to each chosen creature.

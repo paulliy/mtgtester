@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no condition for 'this spell was cast from a graveyard' (sourceWasCast means only that it was cast), so the X-tokens branch cannot be gated on the casting zone."}

@@ -1,0 +1,40 @@
+{
+  "name": "Commune with Evil",
+  "oracleId": "0248bf01-14e0-4a39-ba3a-5177fe272fe9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. You gain 3 life."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "lookAtTopN",
+          "count": 4,
+          "mayPut": {
+            "filter": {
+              "kind": "allOf",
+              "of": []
+            },
+            "destination": {
+              "zone": "hand"
+            },
+            "required": true
+          },
+          "rest": "graveyard"
+        },
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "const",
+            "n": 3
+          }
+        }
+      ],
+      "description": "Look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. You gain 3 life."
+    }
+  }
+}

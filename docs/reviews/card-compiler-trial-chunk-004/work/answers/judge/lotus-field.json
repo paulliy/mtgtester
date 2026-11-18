@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A makes the controller sacrifice two lands as one instruction; Text B makes two sequential sacrifices of a land, with the second chosen after the first, which the instructions treat as a different sequence."]}
