@@ -5,7 +5,7 @@
  *   bun run hill-climb --quick              # the small profile, about 20 seconds
  *   bun run hill-climb --save F             # also write this run's report to F
  *   bun run hill-climb --against F          # compare with a report saved earlier on this machine
- *   bun run hill-climb --only engine,model  # run some probes: engine, setup, model, coverage
+ *   bun run hill-climb --only engine,model  # run some probes: engine, setup, model, coverage, authoring
  *   bun run hill-climb --repeat N           # repeat the timed probes N times (default 1)
  *   bun run hill-climb --allow-behavior-change   # the games are meant to differ
  *   bun run hill-climb --write-baseline     # measure both profiles and rewrite the baseline
