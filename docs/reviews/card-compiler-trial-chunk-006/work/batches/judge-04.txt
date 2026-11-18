@@ -1,0 +1,16 @@
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/thopter-assembly.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/thopter-assembly.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/underworld-connections.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/underworld-connections.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/dark-fortress.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/dark-fortress.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/restless-prairie.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/restless-prairie.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/samut-vizier-of-naktamun.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/samut-vizier-of-naktamun.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/the-odd-acorn-gang.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/the-odd-acorn-gang.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/song-of-the-worldsoul.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/song-of-the-worldsoul.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/delete.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/delete.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/benthic-biomancer.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/benthic-biomancer.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/scale-the-heights.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/scale-the-heights.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/wolfwillow-haven.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/wolfwillow-haven.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/honden-of-infinite-rage.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/honden-of-infinite-rage.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/haystack.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/haystack.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/voldaren-epicure.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/voldaren-epicure.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/sanctum-of-calm-waters.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/sanctum-of-calm-waters.json
+docs/reviews/card-compiler-trial-chunk-006/work/prompts/judge/stonehoof-chieftain.md	docs/reviews/card-compiler-trial-chunk-006/work/answers/judge/stonehoof-chieftain.json

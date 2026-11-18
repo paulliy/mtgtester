@@ -1,0 +1,2 @@
+Target creature.
+This spell has no effects, so it does nothing.

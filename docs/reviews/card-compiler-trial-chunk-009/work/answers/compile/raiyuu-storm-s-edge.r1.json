@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'If it's the first combat phase of the turn' has no condition form: byResolutionCountThisTurn counts this ability's resolutions rather than combat phases, and extraCombatPhase takes no condition."}

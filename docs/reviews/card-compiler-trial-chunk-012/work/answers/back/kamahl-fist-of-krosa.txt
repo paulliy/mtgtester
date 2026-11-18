@@ -1,0 +1,1 @@
+{G}: Target land becomes a 1/1 creature with no creature types and no keyword abilities until end of turn. Activate at any time.

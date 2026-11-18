@@ -1,0 +1,53 @@
+{
+  "name": "Reprobation",
+  "oracleId": "445dfef5-358e-49b1-880c-b30fc45f0a9a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature loses all abilities and is a Coward creature with base power and toughness 0/1."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 4,
+          "setTypes": [
+            "Creature"
+          ],
+          "setSubtypes": [
+            "Coward"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "loseAllAbilities": true
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "const",
+            "n": 0
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      }
+    ]
+  }
+}

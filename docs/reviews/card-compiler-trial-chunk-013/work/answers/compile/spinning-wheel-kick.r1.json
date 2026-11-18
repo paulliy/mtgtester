@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target count is X (the announced value), but TargetSpec.count only takes fixed min and max numbers, so 'each of X target creatures and/or planeswalkers' cannot be expressed."}

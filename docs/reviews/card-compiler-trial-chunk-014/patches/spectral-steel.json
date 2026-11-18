@@ -1,0 +1,64 @@
+{
+  "name": "Spectral Steel",
+  "oracleId": "95f74c0d-3f89-4944-997e-1bdc408bae71",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{W}, Exile this card from your graveyard: Return another target Aura or Equipment card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 1,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "exileSelfFromGraveyard"
+          }
+        ],
+        "timing": "any",
+        "zone": "graveyard",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Aura"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Equipment"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToHand",
+              "target": 0
+            }
+          ],
+          "description": "{1}{W}, Exile this card from your graveyard: Return another target Aura or Equipment card from your graveyard to your hand."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "Workshop Assistant",
+  "oracleId": "319ee221-bace-41e9-b386-6b528bd780c1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature dies, return another target artifact card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "cardInGraveyard",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "self"
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "graveyardToHand",
+            "target": 0
+          }
+        ],
+        "description": "When this creature dies, return another target artifact card from your graveyard to your hand."
+      }
+    ]
+  }
+}

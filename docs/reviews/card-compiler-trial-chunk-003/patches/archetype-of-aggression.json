@@ -1,0 +1,34 @@
+{
+  "name": "Archetype of Aggression",
+  "oracleId": "263408e6-b315-4af5-8cb8-3fd1aa88e48c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures your opponents control lose trample and can't have or gain trample."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "opponents"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "denyKeywords": [
+            "trample"
+          ]
+        }
+      }
+    ]
+  }
+}

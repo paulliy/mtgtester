@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"const","n":1},"selfOnly":true,"targetFilter":{"kind":"subtype","value":"Spider"}}]}}

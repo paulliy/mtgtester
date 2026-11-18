@@ -1,0 +1,57 @@
+{
+  "name": "Serra Ascendant",
+  "oracleId": "27ad3e00-6ffb-48f7-8469-8868d066d1e2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as you have 30 or more life, this creature gets +5/+5 and has flying."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 5,
+          "toughness": 5
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "lifeTotal",
+            "scope": "you"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 30
+          }
+        }
+      },
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "flying"
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "lifeTotal",
+            "scope": "you"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 30
+          }
+        }
+      }
+    ]
+  }
+}

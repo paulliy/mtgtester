@@ -1,0 +1,1 @@
+Whenever you put a -1/-1 counter on a creature, create a 1/1 green Snake creature token with deathtouch.

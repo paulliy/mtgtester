@@ -1,0 +1,2 @@
+Commander creatures you own have base power and toughness 10/10.
+Commander creatures you own are Giants in addition to their other creature types.

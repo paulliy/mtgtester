@@ -1,0 +1,50 @@
+{
+  "name": "Ashroot Animist",
+  "oracleId": "3f008b57-6471-4785-9571-3b90193da7e2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, another target creature you control gains trample and gets +X/+X until end of turn, where X is this creature's power."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you",
+            "filter": {
+              "kind": "other"
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "grantKeywordUntilEot",
+            "target": 0,
+            "keyword": "trample"
+          },
+          {
+            "op": "pumpUntilEot",
+            "target": 0,
+            "power": {
+              "kind": "powerOfSource"
+            },
+            "toughness": {
+              "kind": "powerOfSource"
+            }
+          }
+        ],
+        "description": "Whenever this creature attacks, another target creature you control gains trample and gets +X/+X until end of turn, where X is this creature's power."
+      }
+    ]
+  }
+}

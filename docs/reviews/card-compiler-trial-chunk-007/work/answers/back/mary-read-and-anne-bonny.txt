@@ -1,0 +1,1 @@
+Whenever you discard a card with subtype Island, Pirate, or Vehicle, create a tapped Treasure token. It has "{T}, Sacrifice this artifact: Add one mana of any color."

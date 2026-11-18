@@ -1,0 +1,576 @@
+[
+  {
+    "name": "Archon of the Wild Rose",
+    "rank": 10237,
+    "lines": [
+      "Other creatures you control that are enchanted by Auras you control have base power and toughness 4/4 and have flying."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "archon-of-the-wild-rose~const-n-n",
+      "expected": "different"
+    },
+    "backTranslation": "Each other creature you control that is enchanted by an Aura you control has base power and toughness 5/4.\nEach other creature you control that is enchanted by an Aura you control has flying.",
+    "verdict": "different",
+    "differences": [
+      "Text A sets base power and toughness to 4/4; Text B sets it to 5/4."
+    ]
+  },
+  {
+    "name": "Astral Cornucopia",
+    "rank": 1288,
+    "lines": [
+      "{T}: Choose a color. Add one mana of that color for each charge counter on this artifact."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "astral-cornucopia",
+      "expected": "same"
+    },
+    "backTranslation": "{T}: Add {W} for each charge counter on this artifact.\n{T}: Add {U} for each charge counter on this artifact.\n{T}: Add {B} for each charge counter on this artifact.\n{T}: Add {R} for each charge counter on this artifact.\n{T}: Add {G} for each charge counter on this artifact.",
+    "verdict": "same",
+    "differences": []
+  },
+  {
+    "name": "Bloodforged Battle-Axe",
+    "rank": 1554,
+    "lines": [
+      "Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "bloodforged-battle-axe~drop-effect-n",
+      "expected": "different"
+    },
+    "backTranslation": "Whenever the equipped creature deals combat damage to a player, this ability does nothing.\n(The data contains no equip ability.)",
+    "verdict": "different",
+    "differences": [
+      "Text A creates a token copy of the Equipment when the equipped creature deals combat damage to a player; Text B's ability does nothing, so no token is created."
+    ]
+  },
+  {
+    "name": "Bramble Wurm",
+    "rank": 12458,
+    "lines": [
+      "{2}{G}, Exile this card from your graveyard: You gain 5 life."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "bramble-wurm~const-n-n",
+      "expected": "different"
+    },
+    "backTranslation": "Activated from the graveyard (zone: graveyard). Timing: any.\n{2}{G}, Exile this card from your graveyard: You gain 4 life.",
+    "verdict": "different",
+    "differences": [
+      "Text A gains 5 life. Text B gains 4 life."
+    ]
+  },
+  {
+    "name": "Charmbreaker Devils",
+    "rank": 7376,
+    "lines": [
+      "At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "charmbreaker-devils",
+      "expected": "different"
+    },
+    "backTranslation": "At the beginning of your upkeep, choose target instant or sorcery card in your graveyard at random as this ability is put on the stack. Move that card from your graveyard to your hand.",
+    "verdict": "different",
+    "differences": [
+      "Text A's upkeep trigger has no target and picks a card at random from the graveyard; Text B says 'choose target' instruction, which adds a targeting element not on the card.",
+      "Text B's card choice is made as the ability is put on the stack, which is timing text not in Text A."
+    ]
+  },
+  {
+    "name": "Cloudpost",
+    "rank": 5691,
+    "lines": [
+      "{T}: Add {C} for each Locus on the battlefield."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "cloudpost",
+      "expected": "same"
+    },
+    "backTranslation": "{T}: Add {C} for each permanent with the subtype Locus (counted with scope \"all\").",
+    "verdict": "same",
+    "differences": []
+  },
+  {
+    "name": "Damning Verdict",
+    "rank": 1105,
+    "lines": [
+      "Destroy all creatures with no counters on them."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "damning-verdict~drop-effect-n",
+      "expected": "different"
+    },
+    "backTranslation": "This spell does nothing. It has no targets and no effects.",
+    "verdict": "different",
+    "differences": [
+      "Text A destroys all creatures with no counters on them; Text B's spell does nothing and has no effects."
+    ]
+  },
+  {
+    "name": "Death Baron",
+    "rank": 1642,
+    "lines": [
+      "Skeletons you control and other Zombies you control get +1/+1 and have deathtouch."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "death-baron",
+      "expected": "same"
+    },
+    "backTranslation": "Skeletons you control and other Zombies you control get +1/+1 (a layer 7d change that adds to their current power and toughness).\nSkeletons you control and other Zombies you control have deathtouch.",
+    "verdict": "same",
+    "differences": []
+  },
+  {
+    "name": "Descend upon the Sinful",
+    "rank": 12608,
+    "lines": [
+      "Create a 4/4 white Angel creature token with flying if there are four or more card types among cards in your graveyard."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "descend-upon-the-sinful~const-n-n",
+      "expected": "different"
+    },
+    "backTranslation": "Exile each creature on the battlefield (no controller restriction).\nThen, if the number of card types among cards in your graveyard is [comparison hidden in the data] 3, create a 4/4 white Angel creature token with flying. Otherwise, nothing happens.\nThe Angel token's type line is hidden in the data, so it is not stated here. Its subtype is Angel and its type is Creature.",
+    "verdict": "different",
+    "differences": [
+      "Text A creates the Angel only if there are four or more card types among cards in your graveyard. Text B compares the card-type count against 3 with the comparison hidden, so the threshold does not match.",
+      "Text B does not state the four-or-more card type threshold from Text A."
+    ]
+  },
+  {
+    "name": "Diary of Dreams",
+    "rank": 9034,
+    "lines": [
+      "{5}, {T}: Draw a card. This ability costs {1} less to activate for each page counter on this artifact."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "diary-of-dreams~const-n-n",
+      "expected": "different"
+    },
+    "backTranslation": "{5}, {T}: Draw two cards.\nThis ability costs {1} less to activate for each page counter on this permanent (selfOnly cost reduction applying to activation).\nThe data contains no effect that puts page counters on this permanent.",
+    "verdict": "different",
+    "differences": [
+      "Text A has the ability cost {1} less for each page counter, and draws a card. Text B draws two cards, which is a different amount.",
+      "Text A's cost reduction is tied to page counters placed by its own trigger, which Text B says is absent from the data. The page counter trigger is missing from Text B."
+    ]
+  },
+  {
+    "name": "Dogged Detective",
+    "rank": 7058,
+    "lines": [
+      "Whenever an opponent draws their second card each turn, you may return this card from your graveyard to your hand."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "dogged-detective~flip-optional-to-false",
+      "expected": "different"
+    },
+    "backTranslation": "Whenever an opponent draws their second card each turn (ordinalThisTurn 2), return this card from your graveyard to hand. The trigger has no optional flag, so it is mandatory. It functions from the graveyard.",
+    "verdict": "different",
+    "differences": [
+      "Text A makes the return optional ('you may return this card'). Text B says the trigger is mandatory, so the optional choice is missing."
+    ]
+  },
+  {
+    "name": "Dualcaster Mage",
+    "rank": 683,
+    "lines": [
+      "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "dualcaster-mage~widen-target-n-to-its-kind-drop-filter-",
+      "expected": "different"
+    },
+    "backTranslation": "When this creature enters, copy target spell (any spell, no controller restriction). The copy gets new targets (newTargets: true). The data does not say who chooses the new targets.\nThis trigger is mandatory (no \"you may\").",
+    "verdict": "different",
+    "differences": [
+      "Text A copies only a target instant or sorcery spell. Text B copies any target spell, so the instant-or-sorcery restriction is missing.",
+      "Text A says you may choose new targets for the copy. Text B does not say who chooses the new targets."
+    ]
+  },
+  {
+    "name": "Exsanguinator Cavalry",
+    "rank": 6760,
+    "lines": [
+      "Whenever a Knight you control deals combat damage to a player, put a +1/+1 counter on that creature and create a Blood token."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "exsanguinator-cavalry~widen-trigger-subject-drop-condition-n-",
+      "expected": "different"
+    },
+    "backTranslation": "Whenever a Knight deals combat damage to a player, put a +1/+1 counter on that Knight, then create a Blood token. (The trigger has no controller restriction, so it applies to any Knight, not only Knights you control. It is mandatory: no \"you may\".)\nThe Blood token is an Artifact with subtype Blood. Its type line is hidden in the data, so it is not stated here. It has no colors and no power or toughness.\nThe Blood token has this ability: {1}, {T}, Discard a card, Sacrifice this artifact: Draw a card. It can be activated at any time.",
+    "verdict": "different",
+    "differences": [
+      "Text A triggers only on a Knight you control. Text B triggers on any Knight, with no controller restriction."
+    ]
+  },
+  {
+    "name": "Goblin Chainwhirler",
+    "rank": 4906,
+    "lines": [
+      "When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "goblin-chainwhirler~flip-optional-to-true",
+      "expected": "different"
+    },
+    "backTranslation": "When this enters, you may have the following happen. Each opponent is dealt 1 damage. Deal 1 damage to each creature and each planeswalker controlled by an opponent.",
+    "verdict": "different",
+    "differences": [
+      "Text A's enters trigger is mandatory; Text B makes it optional with 'you may'."
+    ]
+  },
+  {
+    "name": "Guardian of Faith",
+    "rank": 1895,
+    "lines": [
+      "When this creature enters, any number of other target creatures you control phase out."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "guardian-of-faith~widen-target-n-to-its-kind-drop-filter-controller-",
+      "expected": "different"
+    },
+    "backTranslation": "When this enters, choose up to 1000 target creatures (zero or more). Phase out each of them.",
+    "verdict": "different",
+    "differences": [
+      "Text A's targets are 'other' creatures, so the card itself is excluded; Text B's targets are any creatures and could include this creature.",
+      "Text A's targets must be creatures you control; Text B's targets have no 'you control' restriction."
+    ]
+  },
+  {
+    "name": "Hard-Hitting Question",
+    "rank": 9792,
+    "lines": [
+      "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "hard-hitting-question~widen-target-n-to-its-kind-drop-controller-",
+      "expected": "different"
+    },
+    "backTranslation": "Choose two targets: a target creature (no controller restriction), and a target permanent an opponent controls that is a creature or a planeswalker.\nThe first target creature deals damage equal to its power to the second target. The first target is the source of the damage.",
+    "verdict": "different",
+    "differences": [
+      "Text A requires the first target to be a creature you control. Text B allows any creature with no controller restriction."
+    ]
+  },
+  {
+    "name": "Horobi, Death's Wail",
+    "rank": 11816,
+    "lines": [
+      "Whenever a creature becomes the target of a spell or ability, destroy that creature."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "horobi-death-s-wail~flip-optional-to-true",
+      "expected": "different"
+    },
+    "backTranslation": "Whenever a creature (any creature, not only this creature) becomes targeted, you may destroy that creature.",
+    "verdict": "different",
+    "differences": [
+      "Text A destroys the creature mandatorily. Text B says you may destroy that creature, which makes it optional."
+    ]
+  },
+  {
+    "name": "Horrific Assault",
+    "rank": 10954,
+    "lines": [
+      "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. If you control an Eldrazi, you gain 3 life."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "horrific-assault~widen-target-n-to-its-kind-drop-filter-controller-",
+      "expected": "different"
+    },
+    "backTranslation": "Choose a creature you control and target permanent. The chosen creature deals damage equal to its power to that permanent, with the creature as the source of the damage.\nIf the number of Eldrazi permanents you control is (comparison not shown in the data) 1, you gain 3 life.",
+    "verdict": "different",
+    "differences": [
+      "Text A's second target must be a creature or planeswalker you don't control; Text B's target is any permanent with no such restriction.",
+      "Text A's Eldrazi condition is 'if you control an Eldrazi' (at least one); Text B's condition is an exact count of 1 that is not shown in the data."
+    ]
+  },
+  {
+    "name": "Might of Old Krosa",
+    "rank": 10032,
+    "lines": [
+      "Target creature gets +2/+2 until end of turn. If you cast this spell during your main phase, that creature gets +4/+4 until end of turn instead."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "might-of-old-krosa~drop-effect-n",
+      "expected": "different"
+    },
+    "backTranslation": "Target creature. This spell does nothing.",
+    "verdict": "different",
+    "differences": [
+      "Text A gives the target creature +2/+2 until end of turn (+4/+4 if cast during main phase); Text B's spell does nothing and has no pump effect.",
+      "Text B's spell has a target but no effect, so the targeted pump is missing entirely."
+    ]
+  },
+  {
+    "name": "On Thin Ice",
+    "rank": 9470,
+    "lines": [
+      "Enchant snow land you control"
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "on-thin-ice~widen-target-n-to-its-kind-drop-filter-controller-",
+      "expected": "different"
+    },
+    "backTranslation": "Snow Enchantment — Aura.\nTarget land (no controller restriction).\nThis Aura has no effects. It does nothing when it resolves.",
+    "verdict": "different",
+    "differences": [
+      "Text A is an Aura that exiles target creature an opponent controls until the Aura leaves the battlefield. Text B says the Aura has no effects and does nothing, so the exile ability is missing.",
+      "Text B targets any land with no controller restriction, while Text A enchants a snow land you control."
+    ]
+  },
+  {
+    "name": "Pulse of Murasa",
+    "rank": 10599,
+    "lines": [
+      "Return target creature or land card from a graveyard to its owner's hand. You gain 6 life."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "pulse-of-murasa~widen-target-n-to-its-kind-drop-filter-",
+      "expected": "different"
+    },
+    "backTranslation": "Target card in any graveyard (no owner restriction) is put into hand (graveyardToHand).\nYou gain 6 life.",
+    "verdict": "different",
+    "differences": [
+      "Text A targets only a creature or land card in a graveyard. Text B targets any card in any graveyard, so the card-type restriction is missing."
+    ]
+  },
+  {
+    "name": "Samut, Vizier of Naktamun",
+    "rank": 7367,
+    "lines": [
+      "Whenever a creature you control deals combat damage to a player, if that creature entered this turn, draw a card."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "samut-vizier-of-naktamun~widen-trigger-subject-drop-condition-n-",
+      "expected": "different"
+    },
+    "backTranslation": "Whenever a creature that entered this turn deals combat damage to a player, draw a card.\nThe trigger is mandatory (no \"you may\"). The data has no controller restriction on the creature, so it applies to a creature controlled by any player, not only to creatures you control.",
+    "verdict": "different",
+    "differences": [
+      "Text A triggers only on a creature you control. Text B triggers on a creature controlled by any player, with no controller restriction."
+    ]
+  },
+  {
+    "name": "Scale the Heights",
+    "rank": 6064,
+    "lines": [
+      "Put a +1/+1 counter on up to one target creature. You gain 2 life. You may play an additional land this turn."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "scale-the-heights~const-n-n",
+      "expected": "different"
+    },
+    "backTranslation": "Up to one target creature (zero or one target; no controller restriction).\nPut a +1/+1 counter on each creature chosen this way. If no creature was chosen, this does nothing.\nYou gain 1 life.\nYou get one additional land play this turn (count 1).\nDraw a card.",
+    "verdict": "different",
+    "differences": [
+      "Text A gains 2 life. Text B gains 1 life.",
+      "Text A makes the extra land play optional with 'you may play an additional land'. Text B states an extra land play as a mandatory grant, so the optional wording is lost."
+    ]
+  },
+  {
+    "name": "The Fifth Doctor",
+    "rank": 11545,
+    "lines": [
+      "Peaceful Coexistence — At the beginning of your end step, put a +1/+1 counter on each creature you control that didn't attack or enter this turn. Untap those creatures."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "the-fifth-doctor~flip-optional-to-true",
+      "expected": "different"
+    },
+    "backTranslation": "At the beginning of your end step, you may do the following. Put a +1/+1 counter on each creature you control that didn't attack this turn and didn't enter this turn. Untap each creature you control that didn't attack this turn and didn't enter this turn.",
+    "verdict": "different",
+    "differences": [
+      "Text A's end step counter-and-untap effect is mandatory; Text B makes it optional with 'you may do the following'."
+    ]
+  },
+  {
+    "name": "The Gold Saucer",
+    "rank": 3196,
+    "lines": [
+      "{2}, {T}: Flip a coin. If you win the flip, create a Treasure token."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "the-gold-saucer~const-n-n",
+      "expected": "different"
+    },
+    "backTranslation": "{2}, {T}: Flip a coin. If you win the flip, create two Treasure tokens. If you lose the flip, this ability does nothing.\nEach Treasure token is named Treasure, is an Artifact with the subtype Treasure, is colorless, and has no power or toughness. (Its type line text is hidden in the data.) Each has the ability: {T}, Sacrifice this token: Add one mana of any color.",
+    "verdict": "different",
+    "differences": [
+      "Text A creates one Treasure token on a won flip; Text B creates two Treasure tokens on a won flip."
+    ]
+  },
+  {
+    "name": "Thran Turbine",
+    "rank": 10288,
+    "lines": [
+      "At the beginning of your upkeep, you may add {C}{C}. This mana can't be spent to cast spells."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "thran-turbine",
+      "expected": "different"
+    },
+    "backTranslation": "At the beginning of your upkeep, you may add {C}{C}. Spend this mana only to activate abilities.",
+    "verdict": "different",
+    "differences": [
+      "Text A forbids the mana only from being spent to cast spells, so it can still pay for other things such as special actions. Text B restricts the mana to activating abilities only, which forbids those other uses."
+    ]
+  },
+  {
+    "name": "Thundering Raiju",
+    "rank": 4155,
+    "lines": [
+      "Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "thundering-raiju~widen-target-n-to-its-kind-drop-controller-",
+      "expected": "different"
+    },
+    "backTranslation": "Whenever this creature attacks, put a +1/+1 counter on target creature (no controller restriction). This trigger is mandatory (no \"you may\").\nThen each opponent is dealt damage equal to the number of permanents that meet all of the following, counted by you: are other than this creature; are controlled by you; are creatures; and have any counter, or are enchanted by an Aura you control, or are equipped.\nThe count is made after the counter is placed, so the targeted creature counts if it is a permanent you control that meets these conditions.",
+    "verdict": "different",
+    "differences": [
+      "Text A's counter targets a creature you control. Text B targets any creature with no controller restriction.",
+      "Text A's damage is dealt by this creature to each opponent. Text B does not name this creature as the source of the damage."
+    ]
+  },
+  {
+    "name": "Treeguard Duo",
+    "rank": 7787,
+    "lines": [
+      "When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "treeguard-duo~drop-effect-n",
+      "expected": "different"
+    },
+    "backTranslation": "When this enters, target creature you control gets +N/+N until end of turn, where N is the number of creatures you control.",
+    "verdict": "different",
+    "differences": [
+      "Text A's enters trigger gives the target creature vigilance until end of turn; Text B's trigger only gives the +N/+N bonus and omits the vigilance grant."
+    ]
+  },
+  {
+    "name": "Wurmwall Sweeper",
+    "rank": 12255,
+    "lines": [
+      "When this Spacecraft enters, surveil 2."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "wurmwall-sweeper~flip-optional-to-true",
+      "expected": "different"
+    },
+    "backTranslation": "When this permanent enters, you may surveil 2.",
+    "verdict": "different",
+    "differences": [
+      "Text A makes the surveil 2 mandatory when the Spacecraft enters. Text B says you may surveil 2, which makes it optional."
+    ]
+  },
+  {
+    "name": "Yavimaya Hollow",
+    "rank": 3619,
+    "lines": [
+      "{G}, {T}: Regenerate target creature."
+    ],
+    "rounds": 0,
+    "stage": "done",
+    "validatorIssues": [],
+    "calibration": {
+      "id": "yavimaya-hollow~drop-effect-n",
+      "expected": "different"
+    },
+    "backTranslation": "{G}, {T}: Target creature. This ability does nothing.",
+    "verdict": "different",
+    "differences": [
+      "Text A's ability regenerates target creature; Text B's ability targets a creature but does nothing, so the regeneration effect is missing."
+    ]
+  }
+]

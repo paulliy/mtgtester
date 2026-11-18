@@ -1,0 +1,6 @@
+Target opponent sacrifices a creature.
+That player discards three cards.
+That player loses 5 life.
+Return a creature card from a graveyard to hand.
+Draw three cards.
+You gain 5 life.

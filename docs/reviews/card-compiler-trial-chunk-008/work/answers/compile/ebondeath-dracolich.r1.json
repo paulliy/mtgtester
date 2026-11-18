@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The graveyard-cast permission needs a condition that a creature other than Ebondeath died this turn, but creaturesDiedThisTurn cannot exclude a creature named Ebondeath, Dracolich, so the condition cannot be stated exactly."}

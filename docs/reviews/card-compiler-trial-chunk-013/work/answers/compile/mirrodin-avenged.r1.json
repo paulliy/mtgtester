@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A target restriction 'creature that was dealt damage this turn' has no selector or target filter in the schema (no damaged-this-turn leaf; TargetSpec only offers tapState)."}

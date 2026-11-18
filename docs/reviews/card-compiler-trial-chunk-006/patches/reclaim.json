@@ -1,0 +1,26 @@
+{
+  "name": "Reclaim",
+  "oracleId": "797155cd-faf4-4321-8629-c8c352392748",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put target card from your graveyard on top of your library."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "cardInGraveyard"
+        }
+      ],
+      "effects": [
+        {
+          "op": "graveyardToLibraryTop",
+          "target": 0
+        }
+      ],
+      "description": "Put target card from your graveyard on top of your library."
+    }
+  }
+}

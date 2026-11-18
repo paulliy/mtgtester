@@ -1,0 +1,49 @@
+{
+  "name": "Lava Dart",
+  "oracleId": "e48891e3-30a2-4fc8-a858-cec33c6e4ab5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Flashback—Sacrifice a Mountain."
+  ],
+  "compose": "append",
+  "def": {
+    "alternativeCasts": [
+      {
+        "kind": "nonMana",
+        "from": "graveyard",
+        "manaCost": {
+          "generic": 0,
+          "colored": {
+            "W": 0,
+            "U": 0,
+            "B": 0,
+            "R": 0,
+            "G": 0
+          },
+          "colorless": 0
+        },
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Mountain"
+                }
+              ]
+            },
+            "count": 1
+          }
+        ],
+        "exileOnResolution": true,
+        "description": "Flashback—Sacrifice a Mountain."
+      }
+    ]
+  }
+}

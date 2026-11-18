@@ -1,0 +1,1 @@
+Whenever you attack with an artifact creature you control, this deals damage to any target equal to the number of tapped artifacts you control, then scry X, where X is the number of tapped artifacts you control.

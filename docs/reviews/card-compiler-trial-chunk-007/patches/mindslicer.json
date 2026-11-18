@@ -1,0 +1,34 @@
+{
+  "name": "Mindslicer",
+  "oracleId": "76c229d2-4bdd-4520-97dd-afb40f8c65ec",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature dies, each player discards their hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "eachPlayerDiscardHandThenDraw",
+            "count": {
+              "kind": "const",
+              "n": 0
+            }
+          }
+        ],
+        "description": "When this creature dies, each player discards their hand."
+      }
+    ]
+  }
+}

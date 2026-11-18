@@ -1,0 +1,55 @@
+{
+  "name": "Selesnya Eulogist",
+  "oracleId": "a0335224-9523-47d5-8944-486f2d4a6b8f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{G}: Exile target creature card from a graveyard, then populate."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "graveyardOwnerScope": "any",
+              "filter": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "exileCard",
+              "target": 0
+            },
+            {
+              "op": "populate"
+            }
+          ],
+          "description": "{2}{G}: Exile target creature card from a graveyard, then populate."
+        }
+      }
+    ]
+  }
+}

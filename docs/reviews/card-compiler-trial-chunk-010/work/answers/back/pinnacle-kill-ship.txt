@@ -1,0 +1,1 @@
+When this Spacecraft enters, it deals 10 damage to up to one target creature.

@@ -1,0 +1,55 @@
+{
+  "name": "Eumidian Hatchery",
+  "oracleId": "5b6d933e-2830-4f5a-b244-a421aa9615dc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this land is put into a graveyard from the battlefield, for each hatchling counter on it, create a 1/1 black Insect creature token with flying."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "leavesBattlefield",
+          "subject": {
+            "kind": "self"
+          },
+          "leavesTo": [
+            "graveyard"
+          ]
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Insect",
+              "typeLine": "Token Creature — Insect",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Insect"
+              ],
+              "colors": [
+                "B"
+              ],
+              "power": 1,
+              "toughness": 1,
+              "keywords": [
+                "flying"
+              ]
+            },
+            "count": {
+              "kind": "countersOnSelf",
+              "counter": "hatchling"
+            }
+          }
+        ],
+        "description": "When this land is put into a graveyard from the battlefield, for each hatchling counter on it, create a 1/1 black Insect creature token with flying."
+      }
+    ]
+  }
+}

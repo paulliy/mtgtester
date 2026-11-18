@@ -1,0 +1,59 @@
+{
+  "name": "Imperial Subduer",
+  "oracleId": "bedf1dd5-b133-455b-bc3d-c7b1f469d91f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a Samurai or Warrior you control attacks alone, tap target creature you don't control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Samurai"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Warrior"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "alone": true
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "tapTarget",
+            "target": 0
+          }
+        ],
+        "description": "Whenever a Samurai or Warrior you control attacks alone, tap target creature you don't control."
+      }
+    ]
+  }
+}

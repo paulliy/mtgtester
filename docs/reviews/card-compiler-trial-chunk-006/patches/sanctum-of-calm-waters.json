@@ -1,0 +1,49 @@
+{
+  "name": "Sanctum of Calm Waters",
+  "oracleId": "1cd1e3a8-e09d-4b61-8244-92b317132d6a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your first main phase, you may draw X cards, where X is the number of Shrines you control. If you do, discard a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "precombatMain",
+          "player": "you"
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Shrine"
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          },
+          {
+            "op": "discard",
+            "count": 1
+          }
+        ],
+        "description": "At the beginning of your first main phase, you may draw X cards, where X is the number of Shrines you control. If you do, discard a card."
+      }
+    ]
+  }
+}

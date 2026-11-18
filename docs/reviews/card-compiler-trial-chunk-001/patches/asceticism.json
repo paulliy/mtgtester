@@ -1,0 +1,47 @@
+{
+  "name": "Asceticism",
+  "oracleId": "9396546c-d067-4ce3-9c3d-b62cca970b4f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{G}: Regenerate target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [
+            {
+              "op": "regenerate",
+              "target": 0
+            }
+          ],
+          "description": "{1}{G}: Regenerate target creature."
+        }
+      }
+    ]
+  }
+}

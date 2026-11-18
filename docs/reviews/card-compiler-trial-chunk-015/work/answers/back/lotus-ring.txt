@@ -1,0 +1,2 @@
+Equipped creature gets +3/+3 and has vigilance.
+Equipped creature has "{T}, Sacrifice this creature: Add three mana of one color chosen from white, blue, black, red, or green."

@@ -1,0 +1,60 @@
+{
+  "name": "Frozen Aether",
+  "oracleId": "32452ccf-88c7-41d6-93e5-15d31f29726d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Artifacts, creatures, and lands your opponents control enter tapped."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "otherPermanentsEnterTapped",
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            },
+            {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            },
+            {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

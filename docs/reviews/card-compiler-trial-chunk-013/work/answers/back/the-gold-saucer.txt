@@ -1,0 +1,1 @@
+{2}, {T}: Flip a coin. If you win the flip, create a Treasure token. (A Treasure token is an artifact with "{T}, Sacrifice this artifact: Add one mana of any color.")

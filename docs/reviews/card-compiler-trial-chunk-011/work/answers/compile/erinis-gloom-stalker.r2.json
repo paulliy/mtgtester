@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Choose a Background is a deck-construction rule with no in-game behavior, and the IR has no way to record a rules line that does nothing, so the validator rejects an override without executable behavior."}

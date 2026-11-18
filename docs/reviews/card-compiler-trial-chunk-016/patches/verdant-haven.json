@@ -1,0 +1,31 @@
+{
+  "name": "Verdant Haven",
+  "oracleId": "09381494-393d-4ddf-b79f-7c0ae5dce912",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever enchanted land is tapped for mana, its controller adds an additional one mana of any color."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "manaActivationRider",
+        "source": {
+          "kind": "attachedToSource"
+        },
+        "add": {
+          "kind": "fixed",
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}

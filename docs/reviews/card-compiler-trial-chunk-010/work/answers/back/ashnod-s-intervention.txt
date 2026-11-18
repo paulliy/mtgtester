@@ -1,0 +1,1 @@
+Target creature gets +2/+0 until end of turn and gains "When this creature leaves the battlefield and goes to a graveyard or exile, return that card to its owner's hand." until end of turn.

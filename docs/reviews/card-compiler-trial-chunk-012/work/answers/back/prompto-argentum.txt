@@ -1,0 +1,1 @@
+Whenever you cast a spell that isn't a creature spell, if at least four mana was spent to cast it, create a token. It is a Treasure artifact token with "{T}, Sacrifice this artifact: Add one mana of any color."

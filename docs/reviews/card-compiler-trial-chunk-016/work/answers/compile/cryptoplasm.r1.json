@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Become a copy of another target creature, except it has this ability' needs the copy to keep this card's upkeep trigger, and the schema's becomeCopyOf/becomeCopyOfTarget effects have no field to add an ability on top of the copied values."}

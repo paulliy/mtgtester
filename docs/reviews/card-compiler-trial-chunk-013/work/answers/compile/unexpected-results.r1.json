@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The top card is revealed once and then branches: a nonland card may be cast free, while a land card is put onto the battlefield and returns this spell to hand, and the schema cannot express that single-reveal branch without leaving the nonland card on top."}

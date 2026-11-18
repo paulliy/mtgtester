@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no search-replacement effect: \"if an opponent would search a library, that player searches the top four cards instead\" needs a replacement on library searches, and no RuleStatic or StaticEffect kind can express it."}

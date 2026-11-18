@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The attacks trigger with eventObjectDefendingPlayerIsYou also fires when a creature attacks your planeswalker, and no condition limits the trigger to attacks on you alone."}

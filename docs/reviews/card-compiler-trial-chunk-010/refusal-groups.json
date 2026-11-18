@@ -1,0 +1,299 @@
+[
+  {
+    "feature": "Missing keyword mechanics (delve, echo, myriad, decayed, splice)",
+    "description": "Add keyword mechanics and grantable keywords the schema lacks: myriad, delve, skulk, fear, buyback, madness, miracle, foretell, warp, awaken, embalm and eternalize subtype overrides, ninjutsu entry, firebending mana, cascade grants, partner variants, incubate, earthbend, airbend, and time travel.",
+    "cards": [
+      "Angel of Sanctions",
+      "Aphotic Wisps",
+      "Battle Mammoth",
+      "Beifong's Bounty Hunters",
+      "Boar Umbra",
+      "Contaminated Drink",
+      "Drix Fatemaker",
+      "Fiery Temper",
+      "Flamekin Herald",
+      "Forbid",
+      "From the Catacombs",
+      "Glider Staff",
+      "Herald of the Host",
+      "Molecule Man",
+      "Murderous Cut",
+      "Obsessive Search",
+      "Part the Waterveil",
+      "Phyrexian Awakening",
+      "Quandrix, the Proof",
+      "Sacred Cat",
+      "Skeleton Key",
+      "Splinter, the Mentor",
+      "Spring-Leaf Avenger",
+      "Sun Warriors",
+      "Tributary Instructor",
+      "Uncle Iroh",
+      "Wibbly-wobbly, Timey-wimey",
+      "Wyrm's Crossing Patrol"
+    ]
+  },
+  {
+    "feature": "Per-player scope and chooser on effects",
+    "description": "Add player routing and chooser fields so effects can make an opponent, each player, or a targeted player choose, sacrifice, vote, reveal, reselect, or pay, including per-opponent conditions and opponent-chosen objects.",
+    "cards": [
+      "Acidic Soil",
+      "Arena",
+      "Capricopian",
+      "Commander's Insight",
+      "Duneblast",
+      "Extract Brain",
+      "Faerie Slumber Party",
+      "Illusion of Choice",
+      "Midnight Crusader Shuttle",
+      "Osseous Sticktwister",
+      "Parker Luck",
+      "Rejoin the Fight",
+      "Scrabbling Claws",
+      "Scuttlemutt",
+      "The Ruinous Powers",
+      "Thirst for Meaning",
+      "This Is How It Ends",
+      "Threats Undetected",
+      "Trenchpost",
+      "Winding Way",
+      "Zimone's Hypothesis",
+      "Zoyowa Lava-Tongue"
+    ]
+  },
+  {
+    "feature": "Selector predicates in targets and statics",
+    "description": "Add selector and condition predicates for current-state keywords such as flying, exact power and toughness, power equal to energy paid, lesser power, subtype comparisons with an attached creature, unrestricted card filters, any-kind counters, and per-opponent graveyard counts.",
+    "cards": [
+      "Aryel, Knight of Windgrace",
+      "Aurelia's Fury",
+      "Barbflare Gremlin",
+      "Conjurer's Mantle",
+      "Cryptic Gateway",
+      "Diabolic Revelation",
+      "Essence Anchor",
+      "Fluctuator",
+      "Jace's Phantasm",
+      "Jagged-Scar Archers",
+      "Localized Destruction",
+      "Opportunistic Dragon",
+      "Pendelhaven",
+      "Radagast the Brown",
+      "Rocco, Cabaretti Caterer",
+      "Salvation Swan",
+      "Shelob, Child of Ungoliant",
+      "Subterranean Schooner",
+      "Tegwyll's Scouring",
+      "Trade Routes",
+      "Vicious Rivalry"
+    ]
+  },
+  {
+    "feature": "Optional choices and if-you-do follow-ups",
+    "description": "Add may-decline forms and follow-up effects gated on whether an optional action, discard, exile, sacrifice, payment or return actually happened, including repeat-while-you-do loops and reflexive triggers with their own targets.",
+    "cards": [
+      "Azra Oddsmaker",
+      "Bristlebud Farmer",
+      "Craig Boone, Novac Guard",
+      "Curious Forager",
+      "Desecration Demon",
+      "Dream Eater",
+      "Guild Summit",
+      "Ill-Timed Explosion",
+      "Kabira Evangel",
+      "Mana Clash",
+      "Midnight Tilling",
+      "Mog, Moogle Warrior",
+      "Primal Surge",
+      "Ravenous Rotbelly",
+      "Sorin the Mirthless",
+      "Summoner's Sending",
+      "Valgavoth's Onslaught"
+    ]
+  },
+  {
+    "feature": "Rule statics and permissions that do not exist yet",
+    "description": "Add rule statics for global or per-player spell cost increases, land-play bans, graveyard cast and activation bans, extra blocking, forced or conditional attack and block restrictions, haste-like attack permission, hexproof-like targeting protection for attached creatures, legend-rule suppression, hand-size reductions, damage-unpreventable turns, damage-prevention scopes, and keyword grants to spells.",
+    "cards": [
+      "Aggressive Mining",
+      "Ashes of the Abhorrent",
+      "Entangler",
+      "Ethereal Haze",
+      "Frenzied Saddlebrute",
+      "Gnat Miser",
+      "Martyr's Cause",
+      "Mirror Gallery",
+      "Oketra the True",
+      "Pyrewood Gearhulk",
+      "Shielding Plax",
+      "Sigarda's Vanguard",
+      "Sphere of Resistance",
+      "Undergrowth Champion",
+      "Vryn Wingmare",
+      "Wall of Glare"
+    ]
+  },
+  {
+    "feature": "Trigger events and filters that do not exist yet",
+    "description": "Add trigger events and filters for cycling this card, a creature dealing damage to any object, fully unlocking a Room, becoming the target of an ability you control, once-each-turn limits on cast and attack triggers, and cycling versus discard distinctions.",
+    "cards": [
+      "Balemurk Leech",
+      "Decree of Justice",
+      "Desert Were-Worm",
+      "Essence Sliver",
+      "Faith of the Devoted",
+      "Flitterwing Nuisance",
+      "Gempalm Polluter",
+      "Guilty Conscience",
+      "Harnesser of Storms",
+      "Loki, God of Mischief",
+      "Mirrorwing Dragon",
+      "Olivia's Attendants",
+      "Poetic Ingenuity",
+      "The Sibsig Ceremony",
+      "Yidaro, Wandering Monster"
+    ]
+  },
+  {
+    "feature": "Amounts produced by the previous effect or event",
+    "description": "Add Values that read amounts and objects from earlier in the resolution or from the event: sacrificed or exiled card power, toughness and mana value, excess damage, life gained, counters on the dying creature, cards drawn this turn, creatures convoked, greatest mana value, Locus counts, per-player land counts, and the found card's mana value.",
+    "cards": [
+      "Amzu, Swarm's Hunger",
+      "Anchor to Reality",
+      "Ancient Imperiosaur",
+      "Ascendant Packleader",
+      "Metamorphosis",
+      "Miren, the Moaning Well",
+      "Puca's Covenant",
+      "Rite of Consumption",
+      "Sunbond",
+      "Surveyor's Scope",
+      "Venerable Warsinger",
+      "Yuna's Whistle"
+    ]
+  },
+  {
+    "feature": "Turn-history conditions",
+    "description": "Add per-turn history tracking and conditions such as cards leaving the graveyard, permanents leaving the battlefield (Revolt), descended, lands entering, creature cards put into a graveyard, first combat phase, once-per-turn limits on triggers, and cast-time checks.",
+    "cards": [
+      "Call for Unity",
+      "Cloakwood Hermit",
+      "Confounding Conundrum",
+      "Faerie Fencing",
+      "Gau, Feral Youth",
+      "God-Eternal Kefnet",
+      "Groundswell",
+      "Hidden Stockpile",
+      "Knowledge Is Power",
+      "Raph & Leo, Sibling Rivals",
+      "Ruin-Lurker Bat"
+    ]
+  },
+  {
+    "feature": "Put onto battlefield tapped and attacking or attached",
+    "description": "Add tapped, tapped-and-attacking, untapped-under-owner, counter, subtype, and attach options for permanents entering from graveyard, hand or exile, including token copies with added subtypes or colors and attaching chosen Equipment.",
+    "cards": [
+      "Adarkar Valkyrie",
+      "Angelic Renewal",
+      "Anikthea, Hand of Erebos",
+      "H.E.R.B.I.E. Scout Unit",
+      "Matter Reshaper",
+      "Otherworldly Journey",
+      "Pirated Copy",
+      "Polymorph",
+      "Saheeli Rai",
+      "Shadow Kin"
+    ]
+  },
+  {
+    "feature": "Reveal/exile/mill-until loops with leftovers handling",
+    "description": "Add reveal-until, exile-until, mill-and-choose, and look-at-top ops with unrestricted filters, any-number picks, and leftovers sent to hand or library.",
+    "cards": [
+      "Armory Paladin",
+      "Coalstoke Gearhulk",
+      "Deep-Cavern Bat",
+      "Feral Appetite",
+      "Lotuslight Dancers",
+      "Melek, Izzet Paragon",
+      "Pull from Eternity",
+      "Sphinx of Foresight",
+      "Unlucky Cabbage Merchant"
+    ]
+  },
+  {
+    "feature": "Variable-count target slots and chosen-count value",
+    "description": "Add target slots and selectors that accept an announced X, a chosen number, or any number of objects, including group effects over each chosen creature and X-bounded mana value, power, and search filters.",
+    "cards": [
+      "Beatrix, Loyal General",
+      "Coronation of Chaos",
+      "Domineering Will",
+      "For the Ancestors",
+      "Full Moon's Rise",
+      "In Search of Greatness",
+      "Seasons Past",
+      "Taskmaster, Mercenary Mimic",
+      "Vanishing"
+    ]
+  },
+  {
+    "feature": "Control changes and durations tied to controlling the source",
+    "description": "Add permanent exchange-of-control, durations lasting as long as the source remains, and stolen-object statics.",
+    "cards": [
+      "Gandalf's Sanction",
+      "Grell Philosopher",
+      "Mirrorshell Crab",
+      "Modify Memory",
+      "Nettling Nuisance",
+      "Sardian Avenger",
+      "Spry and Mighty",
+      "Yusri, Fortune's Flame"
+    ]
+  },
+  {
+    "feature": "Ability cost forms",
+    "description": "Add cost forms: card-type-filtered discards, any-kind counter removal, return-self-to-hand costs, forage, snow mana symbols, and counter removal for library-top casts.",
+    "cards": [
+      "Backdraft Hellkite",
+      "Dreadhorde Arcanist",
+      "Falco Spara, Pactweaver",
+      "Grinning Ignus",
+      "Kheru Spellsnatcher",
+      "Scrying Sheets",
+      "Swallowed by Leviathan"
+    ]
+  },
+  {
+    "feature": "Modern keyword actions (venture, ring tempts, suspect, crime)",
+    "description": "Add modern keyword actions and game-state effects: the Ring tempts you, taking the initiative, rolling dice, rad counters, end the turn, controlling another player's turn, and winning the game.",
+    "cards": [
+      "Bilbo, Retired Burglar",
+      "Biovisionary",
+      "Circuits Act",
+      "Grave Endeavor",
+      "Ultima",
+      "Worst Fears"
+    ]
+  },
+  {
+    "feature": "Cast a card from other zones with a rider",
+    "description": "Add free casts from graveyards, exile, or hand with mana value filters and exile-instead riders.",
+    "cards": ["Diviner of Mist", "Slagstone Refinery", "Terisiare's Devastation"]
+  },
+  {
+    "feature": "Life totals and game-result effects",
+    "description": "Add set-life-total effects, life-total reads, and clamped life-based amounts.",
+    "cards": ["Iron Maiden", "Vraska, Relic Seeker", "Worldfire"]
+  },
+  {
+    "feature": "one-off",
+    "description": "Single cards with their own missing feature: destruction replacement for umbra armor, shuffling only nonland graveyard cards back with a life gain, damage replacement adding the source's power, an artifact-token replacement into a different Dragon token, a graveyard-card exile that creates a creature-only token, and an ability counter.",
+    "cards": [
+      "Cling to Dust",
+      "Demon of Loathing",
+      "Draconic Visitor",
+      "Elixir",
+      "Hawkeye, Young Avenger",
+      "Michelangelo, Mutant BFF"
+    ]
+  }
+]

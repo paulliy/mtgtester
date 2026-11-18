@@ -1,0 +1,69 @@
+{
+  "name": "Invisible Woman, Sue Storm",
+  "oracleId": "e9d20b6d-fa4f-473b-9866-230fd92a1319",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you put one or more +1/+1 counters on one or more other Heroes you control, you may create a 0/4 colorless Wall creature token with defender."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "countersPut",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Hero"
+                }
+              ]
+            }
+          },
+          "aggregate": true,
+          "counter": "+1/+1",
+          "byYou": true
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Wall",
+              "typeLine": "Token Creature — Wall",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Wall"
+              ],
+              "colors": [],
+              "power": 0,
+              "toughness": 4,
+              "keywords": [
+                "defender"
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you put one or more +1/+1 counters on one or more other Heroes you control, you may create a 0/4 colorless Wall creature token with defender."
+      }
+    ]
+  }
+}

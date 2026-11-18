@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Mobilize's created token must be sacrificed at the next end step, but createTokenAttacking has no sacrifice-at field and no EffectRef names the just-created token for a delayed sacrifice."}

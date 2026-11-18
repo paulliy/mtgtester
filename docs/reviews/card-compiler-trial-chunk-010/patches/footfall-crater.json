@@ -1,0 +1,50 @@
+{
+  "name": "Footfall Crater",
+  "oracleId": "ca4fdf89-a74e-4086-8109-b0f9dd91710e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted land has \"{T}: Target creature gains trample and haste until end of turn.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [
+                {
+                  "kind": "creature"
+                }
+              ],
+              "effects": [
+                {
+                  "op": "grantKeywordUntilEot",
+                  "target": 0,
+                  "keyword": "trample"
+                },
+                {
+                  "op": "grantKeywordUntilEot",
+                  "target": 0,
+                  "keyword": "haste"
+                }
+              ],
+              "description": "{T}: Target creature gains trample and haste until end of turn."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "Voidslime",
+  "oracleId": "c4851768-e210-4aaf-935e-715942e198f9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Counter target spell, activated ability, or triggered ability."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "stackObject"
+        }
+      ],
+      "effects": [
+        {
+          "op": "counter",
+          "target": 0
+        }
+      ],
+      "description": "Counter target spell, activated ability, or triggered ability."
+    }
+  }
+}

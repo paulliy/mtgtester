@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no rule static that prohibits players from casting spells from graveyards or activating abilities of graveyard cards; cantCastSpells has no zone field and playFromZone only grants permission."}

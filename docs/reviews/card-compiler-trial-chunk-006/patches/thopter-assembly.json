@@ -1,0 +1,71 @@
+{
+  "name": "Thopter Assembly",
+  "oracleId": "007c110d-4364-41e5-a8bc-6ac05ecbbd00",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, if you control no Thopters other than this creature, return this creature to its owner's hand and create five 1/1 colorless Thopter artifact creature tokens with flying."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you",
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Thopter"
+                },
+                {
+                  "kind": "other"
+                }
+              ]
+            },
+            "scope": "you",
+            "cmp": "<=",
+            "n": 0
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "returnToHand",
+            "target": "source"
+          },
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Thopter",
+              "typeLine": "Artifact Creature — Thopter",
+              "types": [
+                "Artifact",
+                "Creature"
+              ],
+              "subtypes": [
+                "Thopter"
+              ],
+              "colors": [],
+              "power": 1,
+              "toughness": 1,
+              "keywords": [
+                "flying"
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 5
+            }
+          }
+        ],
+        "description": "At the beginning of your upkeep, if you control no Thopters other than this creature, return this creature to its owner's hand and create five 1/1 colorless Thopter artifact creature tokens with flying."
+      }
+    ]
+  }
+}

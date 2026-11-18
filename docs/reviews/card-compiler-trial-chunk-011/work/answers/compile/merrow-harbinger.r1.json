@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Islandwalk (unblockable while the defending player controls an Island) has no landwalk keyword or per-defending-player evasion condition in the schema; the nearest static condition counts opponents' Islands in total, not the defending player's."}

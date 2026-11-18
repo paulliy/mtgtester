@@ -1,0 +1,35 @@
+{
+  "name": "Colossus Hammer",
+  "oracleId": "8ec03b88-8d3a-4a32-8b7c-7da59b0c03d0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equipped creature gets +10/+10 and loses flying."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 10,
+          "toughness": 10
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "removeKeywords": [
+            "flying"
+          ]
+        }
+      }
+    ]
+  }
+}

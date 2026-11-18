@@ -1,0 +1,1 @@
+Whenever an opponent draws a card, if you control at least one red permanent, you may have that player take 1 damage.

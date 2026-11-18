@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A permanent exchange of control of two creatures has no op: swapCreatureControlUntilEot lasts only until end of turn, and the draw-three branch depends on that exchange."}

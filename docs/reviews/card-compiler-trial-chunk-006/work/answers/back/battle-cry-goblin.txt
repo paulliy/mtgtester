@@ -1,0 +1,1 @@
+Whenever this creature attacks, if the total power of attacking creatures is 6 or greater, create a 1/1 red Goblin creature token that's attacking.

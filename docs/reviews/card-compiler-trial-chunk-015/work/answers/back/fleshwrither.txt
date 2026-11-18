@@ -1,0 +1,1 @@
+{1}{B}, Sacrifice this creature: Activate this ability only as a sorcery. Search for a creature card with mana value 4, put it onto the battlefield, then shuffle.

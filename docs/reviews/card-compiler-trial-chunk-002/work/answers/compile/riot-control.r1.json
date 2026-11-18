@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"gainLife","amount":{"kind":"countPermanents","selector":{"kind":"type","value":"Creature"},"scope":"opponents"}},{"op":"createDamageShield","player":"you"}],"description":"You gain 1 life for each creature your opponents control. Prevent all damage that would be dealt to you this turn."}}}

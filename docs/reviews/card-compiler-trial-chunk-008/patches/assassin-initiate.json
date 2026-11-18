@@ -1,0 +1,74 @@
+{
+  "name": "Assassin Initiate",
+  "oracleId": "23be5c68-6530-474d-b677-551da4745b3c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}: ~ gains your choice of flying, deathtouch, or lifelink until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "chooseOne",
+              "options": [
+                {
+                  "effects": [
+                    {
+                      "op": "grantKeywordUntilEot",
+                      "target": "source",
+                      "keyword": "flying"
+                    }
+                  ],
+                  "description": "Flying"
+                },
+                {
+                  "effects": [
+                    {
+                      "op": "grantKeywordUntilEot",
+                      "target": "source",
+                      "keyword": "deathtouch"
+                    }
+                  ],
+                  "description": "Deathtouch"
+                },
+                {
+                  "effects": [
+                    {
+                      "op": "grantKeywordUntilEot",
+                      "target": "source",
+                      "keyword": "lifelink"
+                    }
+                  ],
+                  "description": "Lifelink"
+                }
+              ]
+            }
+          ],
+          "description": "{1}: This creature gains your choice of flying, deathtouch, or lifelink until end of turn."
+        }
+      }
+    ]
+  }
+}

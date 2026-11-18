@@ -1,0 +1,25 @@
+{
+  "name": "Primeval Protector",
+  "oracleId": "a9581345-87dc-4fbd-acc1-bb629f2cf40f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast for each creature your opponents control."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "scope": "opponents"
+        },
+        "selfOnly": true
+      }
+    ]
+  }
+}

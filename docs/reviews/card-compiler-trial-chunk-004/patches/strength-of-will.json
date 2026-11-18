@@ -1,0 +1,56 @@
+{
+  "name": "Strength of Will",
+  "oracleId": "0389b48a-e64c-44fb-8a41-fd571cba237c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Until end of turn, target creature you control gains indestructible and \"Whenever this creature is dealt damage, put that many +1/+1 counters on it.\""
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "indestructible"
+        },
+        {
+          "op": "grantAbilityUntilEot",
+          "target": 0,
+          "ability": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealtDamage",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "putCountersEach",
+                "selector": {
+                  "kind": "self"
+                },
+                "counter": "+1/+1",
+                "count": {
+                  "kind": "damageDealt"
+                }
+              }
+            ],
+            "description": "Whenever this creature is dealt damage, put that many +1/+1 counters on it."
+          }
+        }
+      ],
+      "description": "Until end of turn, target creature you control gains indestructible and \"Whenever this creature is dealt damage, put that many +1/+1 counters on it.\""
+    }
+  }
+}

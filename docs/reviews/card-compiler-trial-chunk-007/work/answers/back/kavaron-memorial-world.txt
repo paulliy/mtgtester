@@ -1,0 +1,4 @@
+{1}{R}, {T}, Sacrifice a land you control (this land may be sacrificed): Activate only if this land has twelve or more charge counters on it.
+Create a 2/2 colorless Robot artifact creature token.
+Creatures you control get +1/+0 until end of turn.
+Creatures you control gain haste until end of turn.

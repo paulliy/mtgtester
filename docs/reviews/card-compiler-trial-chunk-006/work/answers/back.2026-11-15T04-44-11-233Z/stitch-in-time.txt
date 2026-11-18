@@ -1,0 +1,1 @@
+Flip a coin. If you win the flip, take an extra turn. If you lose the flip, nothing happens.

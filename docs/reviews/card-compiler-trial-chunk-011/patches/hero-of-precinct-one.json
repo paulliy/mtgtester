@@ -1,0 +1,182 @@
+{
+  "name": "Hero of Precinct One",
+  "oracleId": "5a66802a-76f9-4a31-a776-24110dcfca64",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a multicolored spell, create a 1/1 white Human creature token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "W"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "U"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "W"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "B"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "W"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "R"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "W"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "G"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "U"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "B"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "U"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "R"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "U"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "G"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "B"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "R"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "B"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "G"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "R"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "G"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Human",
+              "typeLine": "Creature — Human",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Human"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you cast a multicolored spell, create a 1/1 white Human creature token."
+      }
+    ]
+  }
+}

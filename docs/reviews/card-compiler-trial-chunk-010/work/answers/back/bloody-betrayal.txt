@@ -1,0 +1,2 @@
+Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn.
+Create a Blood token. It is an artifact with "{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card."

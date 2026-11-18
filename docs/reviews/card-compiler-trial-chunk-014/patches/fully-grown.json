@@ -1,0 +1,34 @@
+{
+  "name": "Fully Grown",
+  "oracleId": "c98163f4-4a78-43f8-9855-4a23ebb9ceeb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature gets +3/+3 until end of turn. Put a trample counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": 3,
+          "toughness": 3
+        },
+        {
+          "op": "putCounters",
+          "target": 0,
+          "counter": "trample",
+          "count": 1
+        }
+      ],
+      "description": "Target creature gets +3/+3 until end of turn. Put a trample counter on it."
+    }
+  }
+}

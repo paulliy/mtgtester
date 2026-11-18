@@ -1,0 +1,31 @@
+{
+  "name": "Oakhame Adversary",
+  "oracleId": "3afe4852-d506-45d7-8a19-ddcbc3dd90d4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {2} less to cast if an opponent controls a green permanent."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 2
+        },
+        "selfOnly": true,
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "color",
+            "value": "G"
+          },
+          "scope": "opponents",
+          "cmp": ">=",
+          "n": 1
+        }
+      }
+    ]
+  }
+}

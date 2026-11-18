@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"anyOf","of":[{"kind":"type","value":"Artifact"},{"kind":"type","value":"Battle"},{"kind":"type","value":"Creature"},{"kind":"type","value":"Enchantment"},{"kind":"type","value":"Land"},{"kind":"type","value":"Planeswalker"}]},"op":{"layer":4,"addTypes":["Enchantment"]}}]}}

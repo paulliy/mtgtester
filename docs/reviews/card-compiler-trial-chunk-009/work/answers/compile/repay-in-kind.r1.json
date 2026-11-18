@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Each player's life total becomes the lowest life total among all players' needs a set-life-total effect, and the schema has only gain and loss of life, with no operation that sets a player's life total."}

@@ -1,0 +1,32 @@
+{
+  "name": "Vizier of Remedies",
+  "oracleId": "79770e65-740a-44c7-bea2-a24e6a722c22",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If one or more -1/-1 counters would be put on a creature you control, that many -1/-1 counters minus one are put on it instead."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "counterPlacementReplacement",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            }
+          ]
+        },
+        "counter": "-1/-1",
+        "multiplier": 1,
+        "addition": -1
+      }
+    ]
+  }
+}

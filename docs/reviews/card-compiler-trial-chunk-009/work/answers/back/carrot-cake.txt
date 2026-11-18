@@ -1,0 +1,2 @@
+When this artifact enters, create a 1/1 white Rabbit creature token. Then scry 1.
+When this artifact is sacrificed, create a 1/1 white Rabbit creature token. Then scry 1.

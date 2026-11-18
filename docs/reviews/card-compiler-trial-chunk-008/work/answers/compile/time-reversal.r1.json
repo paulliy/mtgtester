@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect shuffles every player's hand and graveyard into their library (shuffleHandGraveyardIntoLibrary has no each-player scope), so the first clause cannot be expressed."}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"castsSpell","caster":"you"},"optional":false,"targets":[],"effects":[{"op":"gainLife","amount":{"kind":"spellsCastThisTurn"}}],"description":"Whenever you cast a spell, you gain 1 life for each spell you've cast this turn."}]}}

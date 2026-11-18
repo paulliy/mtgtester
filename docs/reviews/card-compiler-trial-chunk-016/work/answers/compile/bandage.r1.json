@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A damage shield on any target can only prevent all damage from the next event (createDamageShield has no prevent-N amount), so it cannot limit the prevention to the next 1 damage."}

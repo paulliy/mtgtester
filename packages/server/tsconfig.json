@@ -20,6 +20,7 @@
     "src/cli/fuzz-plan.ts",
     "src/cli/engine-bench.ts",
     "src/cli/engine-bench-game.ts",
+    "src/cli/definition-bench.ts",
     "src/cli/hill-climb.ts",
     "src/hill-climb"
   ],

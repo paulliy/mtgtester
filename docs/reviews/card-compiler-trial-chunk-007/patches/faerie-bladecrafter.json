@@ -1,0 +1,39 @@
+{
+  "name": "Faerie Bladecrafter",
+  "oracleId": "164b064e-de50-468a-b874-b054897a5be9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature dies, each opponent loses X life and you gain X life, where X is its power."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "eachOpponentLosesLife",
+            "amount": {
+              "kind": "powerOfSource"
+            }
+          },
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "powerOfSource"
+            }
+          }
+        ],
+        "description": "When this creature dies, each opponent loses X life and you gain X life, where X is its power."
+      }
+    ]
+  }
+}

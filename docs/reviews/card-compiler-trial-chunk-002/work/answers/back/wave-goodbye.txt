@@ -1,0 +1,1 @@
+Return each creature that has no +1/+1 counters on it to its owner's hand.

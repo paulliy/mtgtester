@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'If you do, it becomes a copy of that card until end of turn' needs a reference to the searched card and a found-check; becomeCopyOf takes an EffectRef, and searchLibrary's bind is not an EffectRef, and no condition tests whether the search found a card."}

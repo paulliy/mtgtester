@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"castsSpell","caster":"you"},"optional":false,"targets":[],"effects":[{"op":"populate"}],"description":"Whenever you cast a spell, populate."}]}}

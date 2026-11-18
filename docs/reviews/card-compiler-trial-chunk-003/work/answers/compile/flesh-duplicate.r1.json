@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The copy's extra keyword is conditional on whether the copied creature has vanishing, and the schema has no condition over the copied creature's keywords and no vanishing keyword to grant (vanishing 3 is not in IMPLEMENTED_KEYWORDS)."}

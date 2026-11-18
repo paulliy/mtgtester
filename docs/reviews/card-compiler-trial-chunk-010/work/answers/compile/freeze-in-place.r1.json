@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","controller":"opponent"}],"effects":[{"op":"tapTarget","target":0},{"op":"putCounters","target":0,"counter":"stun","count":3},{"op":"scry","count":2}],"description":"Tap target creature an opponent controls and put three stun counters on it. Scry 2."}}}

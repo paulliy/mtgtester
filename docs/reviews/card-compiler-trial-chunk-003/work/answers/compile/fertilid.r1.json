@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The ability's target player must search their own library, but searchLibrary has no player field and always searches the ability's controller's library."}

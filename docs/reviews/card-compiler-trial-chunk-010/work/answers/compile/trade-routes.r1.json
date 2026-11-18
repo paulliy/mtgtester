@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The cost \"Discard a land card\" needs a card-type filter on the discard, and the schema's discardCard cost takes only a count, so it cannot say the discarded card must be a land."}

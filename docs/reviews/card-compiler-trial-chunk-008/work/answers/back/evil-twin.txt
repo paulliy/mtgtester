@@ -1,0 +1,2 @@
+This enters as a copy of a creature on the battlefield chosen as it enters.
+{U}{B}, {T}: Destroy target creature with the same name as this creature.

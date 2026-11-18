@@ -1,0 +1,42 @@
+{
+  "name": "Fiendlash",
+  "oracleId": "2d21dc80-2900-4dc3-9657-f17b50716481",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature is dealt damage, it deals damage equal to its power to target player or planeswalker."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealtDamage",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "playerOrPlaneswalker"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "powerOfTriggerObject"
+            },
+            "source": "triggerObject"
+          }
+        ],
+        "description": "Whenever equipped creature is dealt damage, it deals damage equal to its power to target player or planeswalker."
+      }
+    ]
+  }
+}

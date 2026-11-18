@@ -1,0 +1,65 @@
+{
+  "name": "Crawling Sensation",
+  "oracleId": "98441834-7da0-4d9f-88a4-a342a9b2a4c3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever one or more land cards are put into your graveyard from anywhere for the first time each turn, create a 1/1 green Insect creature token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "putIntoGraveyardFromAnywhere",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "owner",
+                  "who": "you"
+                }
+              ]
+            }
+          },
+          "aggregate": true,
+          "oncePerTurn": true,
+          "fromAnyOrigin": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Insect",
+              "typeLine": "Token Creature — Insect",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Insect"
+              ],
+              "colors": [
+                "G"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever one or more land cards are put into your graveyard from anywhere for the first time each turn, create a 1/1 green Insect creature token."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Gaining life equal to the damage dealt by an earlier effect of the same spell has no schema value (damageDealt reads only a trigger's damage), so the lifegain amount cannot be stated exactly."}

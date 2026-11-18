@@ -1,0 +1,1 @@
+Whenever a creature attacks, if the player it attacks is you, the event player mills two cards.

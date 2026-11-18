@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The 'whenever you gain life this turn' delayed trigger needs its event scoped to its controller, and registerDelayedTrigger's bare `when` event name has no player scope and no worked example of one."}

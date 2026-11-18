@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"castsSpell","caster":"each","ordinal":2},"optional":false,"targets":[],"effects":[{"op":"connive"}],"description":"Whenever a player casts their second spell each turn, this creature connives."}]}}

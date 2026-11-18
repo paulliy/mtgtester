@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"addMana always adds mana to the ability controller's pool, and no count reads the artifacts controlled by the event player, so \"that player adds {C} for each artifact they control\" cannot be stated."}

@@ -1,0 +1,1 @@
+When this land enters, sacrifice a land. Then sacrifice a land. This trigger is mandatory and has no targets. The data does not say what happens if you control fewer than two other lands.

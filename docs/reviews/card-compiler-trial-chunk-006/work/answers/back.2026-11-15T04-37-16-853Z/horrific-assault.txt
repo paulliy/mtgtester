@@ -1,0 +1,1 @@
+Target creature you control deals damage equal to its power to target creature or planeswalker an opponent controls. Then if you control a permanent with subtype Eldrazi, you gain 3 life.

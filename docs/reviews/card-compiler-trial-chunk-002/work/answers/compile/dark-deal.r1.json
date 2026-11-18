@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Each player draws the number of cards they discarded minus one, but eachPlayerDiscardHandThenDraw offers only a fixed count or the greatest number discarded by any player, not each player's own discarded count."}

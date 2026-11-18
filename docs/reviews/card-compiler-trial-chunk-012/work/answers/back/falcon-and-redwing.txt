@@ -1,0 +1,1 @@
+Whenever this creature deals combat damage to a player, create a number of 1/1 white Bird creature tokens with flying equal to the damage dealt. Then put a +1/+1 counter on this creature.

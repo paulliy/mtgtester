@@ -1,0 +1,1 @@
+This spell deals X damage to each of up to three chosen targets. Each target can be any target.

@@ -1,0 +1,1 @@
+Whenever this creature attacks, it gets +X/+0 until end of turn, where X is twice the number of other attacking Goblins.

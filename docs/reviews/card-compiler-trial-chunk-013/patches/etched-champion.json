@@ -1,0 +1,38 @@
+{
+  "name": "Etched Champion",
+  "oracleId": "7cd7102d-6413-4f46-9434-9130aefa2f88",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ has protection from each color as long as you control three or more artifacts."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addProtection": [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        },
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "type",
+            "value": "Artifact"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 3
+        }
+      }
+    ]
+  }
+}

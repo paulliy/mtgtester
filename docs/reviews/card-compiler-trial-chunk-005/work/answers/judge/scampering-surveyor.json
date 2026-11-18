@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A is an enters-the-battlefield search for a basic land or Cave card put onto the battlefield tapped; Text B instead has each opponent create a 1/1 white Human token and has no land search.","Text B's token creation does not appear in Text A's lines under test."]}

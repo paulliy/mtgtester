@@ -1,0 +1,48 @@
+{
+  "name": "Lodestone Myr",
+  "oracleId": "7635fb35-7ac8-4e61-8a52-6b0c14cd88b8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap an untapped artifact you control: ~ gets +1/+1 until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tapOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "target": "source",
+              "power": 1,
+              "toughness": 1
+            }
+          ],
+          "description": "Tap an untapped artifact you control: This creature gets +1/+1 until end of turn."
+        }
+      }
+    ]
+  }
+}

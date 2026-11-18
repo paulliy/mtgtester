@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Each token must fight a different one of the opposing creatures (a one-to-one pairing of tokens to those creatures), and the schema's fight op takes a single pair of EffectRefs with no per-object pairing across a created set."}

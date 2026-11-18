@@ -1,0 +1,1 @@
+Whenever you cast an instant or sorcery spell, if five or more mana was spent to cast that spell, each opponent takes 3 damage. Otherwise, each opponent takes 1 damage.

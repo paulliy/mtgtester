@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot restrict which creatures Equipment may be attached to (power 3 or greater); the equip ability's target list is parsed and list fields only append, so the restriction cannot be applied."}

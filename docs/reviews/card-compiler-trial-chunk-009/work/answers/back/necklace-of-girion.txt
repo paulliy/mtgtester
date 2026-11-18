@@ -1,0 +1,2 @@
+Whenever you cast a green spell, put a +1/+1 counter on target creature you control.
+Whenever a Forest you control enters, put a +1/+1 counter on target creature you control.

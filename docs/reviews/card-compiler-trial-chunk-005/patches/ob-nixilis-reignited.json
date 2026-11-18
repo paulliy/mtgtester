@@ -1,0 +1,61 @@
+{
+  "name": "Ob Nixilis Reignited",
+  "oracleId": "65481ae1-54b2-44d2-91e1-20cd486386da",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "−8: Target opponent gets an emblem with \"Whenever a player draws a card, you lose 2 life.\""
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "loyalty",
+            "delta": -8
+          }
+        ],
+        "timing": "sorcery",
+        "oncePerTurn": true,
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "player",
+              "controller": "opponent"
+            }
+          ],
+          "effects": [
+            {
+              "op": "createEmblem",
+              "name": "Ob Nixilis Reignited",
+              "abilities": [
+                {
+                  "kind": "triggered",
+                  "trigger": {
+                    "when": "drawsCard",
+                    "player": "each"
+                  },
+                  "optional": false,
+                  "targets": [],
+                  "effects": [
+                    {
+                      "op": "loseLife",
+                      "amount": {
+                        "kind": "const",
+                        "n": 2
+                      }
+                    }
+                  ],
+                  "description": "Whenever a player draws a card, you lose 2 life."
+                }
+              ],
+              "forPlayer": 0
+            }
+          ],
+          "description": "−8: Target opponent gets an emblem with \"Whenever a player draws a card, you lose 2 life.\""
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "name": "Gutterbones",
+  "oracleId": "76ae3779-c821-4cd3-8d0f-8c42d1206ce4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{B}: Return this card from your graveyard to your hand. Activate only during your turn and only if an opponent lost life this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "zone": "graveyard",
+        "condition": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "yourTurn"
+            },
+            {
+              "kind": "compareValues",
+              "left": {
+                "kind": "opponentsLostLifeThisTurn"
+              },
+              "cmp": ">=",
+              "right": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ]
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "returnSelfFromGraveyardToHand"
+            }
+          ],
+          "description": "{1}{B}: Return this card from your graveyard to your hand. Activate only during your turn and only if an opponent lost life this turn."
+        }
+      }
+    ]
+  }
+}

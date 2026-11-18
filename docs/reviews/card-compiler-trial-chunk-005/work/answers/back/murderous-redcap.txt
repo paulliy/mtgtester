@@ -1,0 +1,1 @@
+When this creature enters, it deals damage equal to its power to any target.

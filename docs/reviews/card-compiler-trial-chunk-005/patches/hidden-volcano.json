@@ -1,0 +1,52 @@
+{
+  "name": "Hidden Volcano",
+  "oracleId": "a1c7cd7a-0795-4135-b787-effeb981d95b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{4}{R}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 4,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 1,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "discover",
+              "count": {
+                "kind": "const",
+                "n": 4
+              }
+            }
+          ],
+          "description": "{4}{R}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."
+        }
+      }
+    ]
+  }
+}

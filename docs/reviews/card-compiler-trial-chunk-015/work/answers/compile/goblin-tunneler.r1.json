@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"tap"}],"timing":"any","ability":{"kind":"activated","targets":[{"kind":"creature","filter":{"kind":"powerAtMost","n":2}}],"effects":[{"op":"cantBeBlockedUntilEot","target":0}],"description":"{T}: Target creature with power 2 or less can't be blocked this turn."}}]}}

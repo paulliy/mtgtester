@@ -1,0 +1,56 @@
+{
+  "name": "Gravespawn Sovereign",
+  "oracleId": "4235c99b-50de-4190-8938-3ce5ec5c5248",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap five untapped Zombies you control: Put target creature card from a graveyard onto the battlefield under your control."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tapOthers",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Zombie"
+                }
+              ]
+            },
+            "count": 5,
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "filter": {
+                "kind": "type",
+                "value": "Creature"
+              },
+              "graveyardOwnerScope": "any"
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToBattlefield",
+              "target": 0
+            }
+          ],
+          "description": "Tap five untapped Zombies you control: Put target creature card from a graveyard onto the battlefield under your control."
+        }
+      }
+    ]
+  }
+}

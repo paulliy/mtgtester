@@ -1,0 +1,77 @@
+{
+  "name": "Growth Spasm",
+  "oracleId": "6c022656-2b97-46c5-8f7b-72a71996457a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Create a 0/1 colorless Eldrazi Spawn creature token. It has \"Sacrifice this token: Add {C}.\""
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "supertype",
+                "value": "Basic"
+              },
+              {
+                "kind": "type",
+                "value": "Land"
+              }
+            ]
+          },
+          "destinations": [
+            {
+              "zone": "battlefield",
+              "tapped": true
+            }
+          ]
+        },
+        {
+          "op": "shuffle"
+        },
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Eldrazi Spawn",
+            "typeLine": "Creature — Eldrazi",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Eldrazi"
+            ],
+            "colors": [],
+            "power": 0,
+            "toughness": 1,
+            "manaAbilities": [
+              {
+                "costs": [
+                  {
+                    "kind": "sacrificeSelf"
+                  }
+                ],
+                "units": [
+                  [
+                    "C"
+                  ]
+                ]
+              }
+            ]
+          },
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Create a 0/1 colorless Eldrazi Spawn creature token. It has \"Sacrifice this token: Add {C}.\""
+    }
+  }
+}

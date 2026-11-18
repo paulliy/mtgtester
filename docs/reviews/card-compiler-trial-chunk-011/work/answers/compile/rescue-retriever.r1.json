@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Preventing all damage dealt to each other attacking Soldier you control needs a group-scoped combat damage shield; createDamageShield covers only one target object or the controller's own damage."}

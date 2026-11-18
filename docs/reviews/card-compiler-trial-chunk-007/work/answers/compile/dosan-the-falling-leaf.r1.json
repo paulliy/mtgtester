@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"cantCastSpells only restricts a fixed player set during the controller's own turn, and cannot express 'players cast only during their own turns' (each player barred on the other players' turns)."}

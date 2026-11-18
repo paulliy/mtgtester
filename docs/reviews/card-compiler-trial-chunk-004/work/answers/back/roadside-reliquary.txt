@@ -1,0 +1,1 @@
+{2}, {T}, Sacrifice this land: If you control an artifact, draw a card. If you control an enchantment, draw a card.

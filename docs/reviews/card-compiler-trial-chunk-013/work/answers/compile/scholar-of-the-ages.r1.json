@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Up to two target instant and/or sorcery cards' from the graveyard needs a variable-count target with each chosen card returned to hand, and graveyardToHand takes one target while no op returns each chosen graveyard card to hand."}

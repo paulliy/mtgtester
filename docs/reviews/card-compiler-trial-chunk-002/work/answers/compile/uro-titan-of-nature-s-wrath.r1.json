@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"enters","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"conditionalEffect","condition":{"kind":"escaped"},"then":[],"else":[{"op":"sacrifice","target":"source"}]}],"description":"When Uro enters, sacrifice it unless it escaped."}]}}
