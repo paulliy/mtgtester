@@ -1,6 +1,7 @@
-# ADR 0037: Color-aware auto-pay
+# ADR 0048: Color-aware auto-pay
 
-Status: Accepted
+Status: Accepted (2026-11-01)
+Status note: renumbered from 0037 on 2026-11-14, because two ADRs had that number. [0037](0037-sampled-card-test-lab-and-weekly-runs.md) is the Card Test Lab sampling ADR.
 
 Date: 2026-11-01
 

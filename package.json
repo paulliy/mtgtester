@@ -76,6 +76,7 @@
     "card:evidence": "bun run scripts/card-evidence.ts",
     "check:ratchets": "bun run scripts/check-ratchets.ts",
     "lab:index": "bun run scripts/card-test-lab-sample.ts index",
+    "adr:index": "bun run scripts/adr-index.ts",
     "lab:select": "bun run scripts/card-test-lab-sample.ts select",
     "card-slugs:generate": "bun run scripts/generate-card-name-slugs.ts",
     "card-capabilities": "bun run scripts/card-capability-impact.ts",

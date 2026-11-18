@@ -31,6 +31,7 @@
     "../card-authoring-metrics.ts",
     "../generate-card-name-slugs.ts",
     "../card-evidence.ts",
-    "../card-evidence-sources.ts"
+    "../card-evidence-sources.ts",
+    "../adr-index.ts"
   ]
 }

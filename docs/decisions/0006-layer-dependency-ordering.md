@@ -1,7 +1,7 @@
 # 0006 — CR 613.8 dependency ordering, and selectors over current characteristics
 
 Date: 2026-07-24
-Status: Accepted
+Status: Accepted (2026-07-24)
 Supersedes the "deferred" note on dependency reordering in [ADR 0005](./0005-continuous-effects-layers.md).
 
 ## Context
