@@ -666,6 +666,64 @@ describe('shuffle into its owner’s library instead of a graveyard', () => {
     }
   });
 
+  it('graveyard-hand-colossus-stolen-rest-in-peace — the controller chooses; the owner shuffles', () => {
+    const ctx = pod('graveyard-hand-colossus-rip-stolen');
+    spawn(ctx, 'P3', pinned('Rest in Peace'));
+    const colossus = spawn(ctx, 'P1', pinned('Darksteel Colossus'));
+    colossus.controllerId = 'P2';
+    const triumph = conjure(ctx, 'P1', edict(), 'hand');
+    addMana(playerById(ctx, 'P1'), mana('BC'));
+    take(ctx, 'P1', optionFor(ctx, 'P1', triumph.id)!.payload as PriorityActionPayload);
+    const choosers: string[] = [];
+    settle(ctx, (decision) => {
+      if (decision.prompt.includes('Choose which replacement')) {
+        choosers.push(decision.player);
+        const index = decision.options.findIndex((o) => o.description.startsWith('Shuffle'));
+        return { index, targets: new Map() };
+      }
+      return { index: 0, targets: new Map() };
+    });
+    // CR 616.1: the affected object's controller chooses; the card still goes to its owner's library.
+    expect(choosers).toEqual(['P2']);
+    expect(playerById(ctx, 'P1').library.some((c) => c.cardId === colossus.cardId)).toBe(true);
+    expect(playerById(ctx, 'P2').library.some((c) => c.cardId === colossus.cardId)).toBe(false);
+  });
+
+  it('graveyard-hand-colossus-mill-batch — a mill takes the cards it fixed before the shuffle', () => {
+    for (const text of ['Target player mills nine cards.', 'Each opponent mills nine cards.']) {
+      const ctx = pod(`graveyard-hand-colossus-mill-${text}`);
+      const victim = playerById(ctx, 'P2');
+      const colossus = conjure(ctx, 'P2', pinned('Darksteel Colossus'), 'library');
+      victim.library.splice(victim.library.indexOf(colossus), 1);
+      victim.library.splice(3, 0, colossus);
+      expect(victim.library).toHaveLength(9);
+      const mill = oracle({
+        name: 'Lab Mill',
+        typeLine: 'Sorcery',
+        manaCost: '{1}',
+        oracleText: text,
+      });
+      expect(interpretCard(mill).modeled, text).toBe(true);
+      const spell = conjure(ctx, 'P1', mill, 'hand');
+      addMana(playerById(ctx, 'P1'), mana('C'));
+      take(
+        ctx,
+        'P1',
+        optionFor(ctx, 'P1', spell.id)!.payload as PriorityActionPayload,
+        text.startsWith('Target') ? new Map([[0, 'P2']]) : new Map(),
+      );
+      settle(ctx);
+      expect(
+        victim.library.map((c) => c.cardId),
+        text,
+      ).toEqual([colossus.cardId]);
+      expect(
+        victim.graveyard.map((c) => c.name),
+        text,
+      ).toEqual(Array(8).fill('Forest'));
+    }
+  });
+
   it('graveyard-hand-colossus-humility — an ability-less permanent goes to the graveyard', () => {
     const ctx = pod('graveyard-hand-colossus-humility');
     const colossus = spawn(ctx, 'P2', pinned('Darksteel Colossus'));

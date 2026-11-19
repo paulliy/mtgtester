@@ -991,6 +991,14 @@ function revealAndShuffleIn(
   emit(ctx, 'shuffle', { player: owner.id }, owner.id);
 }
 
+/** CR 616.1: the affected object's controller, or its owner when it has no controller. */
+function replacementChooser(ctx: GameContext, obj: EngineObject): PlayerId {
+  if (obj.zone === 'battlefield') return (obj as EnginePermanent).controllerId;
+  if (obj.zone === 'stack')
+    return ctx.state.stack.find((entry) => entry.card === obj)?.controllerId ?? obj.ownerId;
+  return obj.ownerId;
+}
+
 /** Where a move to the graveyard goes after replacements, and whether it shuffles in. */
 interface GraveyardReplacement {
   zone: Zone;
@@ -1000,8 +1008,9 @@ interface GraveyardReplacement {
 
 /**
  * Graveyard replacements read the pre-event battlefield, including a source leaving with it.
- * When both a graveyard-to-exile effect and the object's own shuffle replacement apply, its
- * owner chooses which to apply (CR 616.1); either one leaves the other nothing to replace.
+ * When both a graveyard-to-exile effect and the object's own shuffle replacement apply, the
+ * affected object's controller, or its owner if it has none, chooses which to apply (CR 616.1);
+ * either one leaves the other nothing to replace. The shuffle still goes to the owner's library.
  */
 function* graveyardDestination(
   ctx: GameContext,
@@ -1014,7 +1023,7 @@ function* graveyardDestination(
   if (exile && shuffle) {
     const outcome = yield {
       decisionType: 'general',
-      player: obj.ownerId,
+      player: replacementChooser(ctx, obj),
       prompt: `${obj.name} would be put into a graveyard. Choose which replacement to apply.`,
       options: [
         { type: 'chooseOption', description: `Shuffle ${obj.name} into your library` },

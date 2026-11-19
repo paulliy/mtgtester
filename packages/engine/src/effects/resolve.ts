@@ -192,6 +192,13 @@ import type {
   GameContext,
 } from '../state/types';
 
+/**
+ * The cards a mill of `count` takes: fixed before any of them moves (CR 701.17a), so a card that
+ * shuffles itself back instead (Darksteel Colossus) does not change which cards the rest take.
+ */
+function millBatch(player: EnginePlayerState, count: number): EngineCardObject[] {
+  return player.library.slice(0, Math.max(0, Math.ceil(count)));
+}
 function* destroyPermanent(
   ctx: GameContext,
   source: EffectSource,
@@ -3629,9 +3636,7 @@ function* executeAbilityEffects(
             yield* moveObject(ctx, entry.card, { zone: counteredCardZone(entry) });
         }
         const count = 1 + ctx.rng.nextInt(3);
-        for (let i = 0; i < count; i++) {
-          const top = victim.library[0];
-          if (top === undefined) break;
+        for (const top of millBatch(victim, count)) {
           yield* moveObject(ctx, top, { zone: 'graveyard' });
           emit(ctx, 'mill', { player: victim.id, cardId: top.cardId, name: top.name }, victim.id);
         }
@@ -4270,9 +4275,7 @@ function* executeAbilityEffects(
       }
       case 'mill': {
         const count = amountOf(effect.count);
-        for (let i = 0; i < count; i++) {
-          const top = controller.library[0];
-          if (top === undefined) break;
+        for (const top of millBatch(controller, count)) {
           yield* moveObject(ctx, top, { zone: 'graveyard' });
           emit(
             ctx,
@@ -4437,9 +4440,7 @@ function* executeAbilityEffects(
         for (const player of playersInApnapOrder(ctx)) {
           if (player.hasLost || (effect.scope === 'opponents' && player.id === controller.id))
             continue;
-          for (let i = 0; i < count; i++) {
-            const top = player.library[0];
-            if (top === undefined) break;
+          for (const top of millBatch(player, count)) {
             yield* moveObject(ctx, top, { zone: 'graveyard' });
             emit(
               ctx,
@@ -4485,9 +4486,7 @@ function* executeAbilityEffects(
           (player) => !player.hasLost && chosen.has(player.id),
         );
         for (const player of players)
-          for (let i = 0; i < count; i++) {
-            const top = player.library[0];
-            if (top === undefined) break;
+          for (const top of millBatch(player, count)) {
             yield* moveObject(ctx, top, { zone: 'graveyard' });
             emit(
               ctx,
@@ -5617,9 +5616,7 @@ function* executeAbilityEffects(
       }
       case 'millAndCreateTokensForCreatures': {
         let creatureCount = 0;
-        for (let i = 0; i < 3; i++) {
-          const top = controller.library[0];
-          if (top === undefined) break;
+        for (const top of millBatch(controller, 3)) {
           if (getDefByOracleId(ctx, top.oracleId, top.name).types.includes('Creature'))
             creatureCount++;
           yield* moveObject(ctx, top, { zone: 'graveyard' });
@@ -5803,9 +5800,7 @@ function* executeAbilityEffects(
         const target =
           targetId === null ? undefined : ctx.state.players.find((p) => p.id === targetId);
         if (target === undefined) break;
-        for (let i = 0; i < effect.count; i++) {
-          const top = target.library[0];
-          if (top === undefined) break;
+        for (const top of millBatch(target, effect.count)) {
           yield* moveObject(ctx, top, { zone: 'graveyard' });
           emit(
             ctx,
@@ -5818,9 +5813,7 @@ function* executeAbilityEffects(
       }
       case 'millAndChooseArtifact': {
         const milled: (EngineCardObject | EnginePermanent)[] = [];
-        for (let i = 0; i < 3; i++) {
-          const top = controller.library[0];
-          if (top === undefined) break;
+        for (const top of millBatch(controller, 3)) {
           const moved = yield* moveObject(ctx, top, { zone: 'graveyard' });
           // CR 701.17c: follow the milled card into its public replacement destination.
           // Retain the new object, never another incarnation of the same physical card.
@@ -5855,9 +5848,7 @@ function* executeAbilityEffects(
       }
       case 'millThenReturnMilledCard': {
         const milled: (EngineCardObject | EnginePermanent)[] = [];
-        for (let i = 0; i < effect.count; i++) {
-          const top = controller.library[0];
-          if (top === undefined) break;
+        for (const top of millBatch(controller, effect.count)) {
           const moved = yield* moveObject(ctx, top, { zone: 'graveyard' });
           // CR 701.13c: a milled card is found in the public zone it moved to, as the new object.
           if (moved !== null && moved.zone !== 'library' && moved.zone !== 'hand')
@@ -8150,9 +8141,7 @@ function* executeAbilityEffects(
           yield* drawCards(ctx, controller, effect.drawCount);
         } else {
           let damage = 0;
-          for (let i = 0; i < effect.millCount; i++) {
-            const top = controller.library[0];
-            if (top === undefined) break;
+          for (const top of millBatch(controller, effect.millCount)) {
             damage += spellManaValue(getDefByOracleId(ctx, top.oracleId, top.name), undefined);
             yield* moveObject(ctx, top, { zone: 'graveyard' });
           }
