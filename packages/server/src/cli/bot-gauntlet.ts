@@ -11,10 +11,13 @@
  *
  *   bun run bot-gauntlet [--pods N] [--seed S] [--old ARM] [--new ARM,ARM] [--decks a,b,...]
  *                        [--turn-cap N] [--jobs N] [--timeout-ms N] [--trace-dir DIR]
- *                        [--json out.json]
+ *                        [--json out.json] [--resume]
  *
  * A deck-styled arm (`styled`, `proxy-v2-styled`) plays each deck in the style
  * `fixtures/deck-styles.json` pins for it, not the classifier's guess.
+ *
+ * `--resume` reuses the rows (`out.rows.jsonl`) a stopped run with the same `--json` and seed
+ * wrote, and plays only the games missing from them.
  *
  * `--trace-dir` keeps a compact trace of each game (`game-trace.ts`): every seat in a baseline
  * game, the switched seat in the others, for reviewing where the bots' play differed.
@@ -48,6 +51,8 @@ interface Args {
   timeoutMs: number;
   traceDir?: string;
   json?: string;
+  /** Keep the games a stopped run with the same `--json` already played. */
+  resume: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -59,6 +64,7 @@ function parseArgs(argv: string[]): Args {
     turnCap: 120,
     jobs: 4,
     timeoutMs: 300_000,
+    resume: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const next = argv[i + 1];
@@ -91,6 +97,9 @@ function parseArgs(argv: string[]): Args {
       case '--trace-dir':
         if (next !== undefined) args.traceDir = next;
         break;
+      case '--resume':
+        args.resume = true;
+        continue;
       case '--json':
         if (next !== undefined) args.json = next;
         break;
@@ -185,6 +194,8 @@ interface Row {
   winnerSeat: number | null;
   life: number[];
   turns: number;
+  /** Wall-clock time of the game, for spotting slow tables. */
+  ms?: number;
   note?: string;
 }
 
@@ -220,6 +231,7 @@ function rowFor(
     winnerSeat: reply.winner === null ? null : Number(reply.winner.slice(1)) - 1,
     life: [0, 1, 2, 3].map((i) => Math.max(0, reply.life[`P${i + 1}`] ?? 0)),
     turns: reply.turns,
+    ms: reply.ms,
     ...(reply.halted && { note: reply.haltReason ?? '' }),
   };
 }
@@ -363,12 +375,28 @@ async function main(): Promise<void> {
       }
   });
 
+  // `--resume`: keep the rows a stopped run already wrote and play only the games it did not.
   const rows: Row[] = [];
+  const done = new Set<string>();
+  const jobKey = (pod: number, game: string, hero: number | null) => `${pod}/${game}/${hero}`;
+  if (args.resume && args.json !== undefined && existsSync(rowsPath)) {
+    for (const line of readFileSync(rowsPath, 'utf8').split('\n')) {
+      if (line.trim().length === 0) continue;
+      const row = JSON.parse(line) as Row;
+      if (row.seed !== `${args.seed}-${row.pod}`) continue;
+      rows.push(row);
+      done.add(jobKey(row.pod, row.game, row.hero));
+    }
+    console.log(`resuming: ${rows.length} games already played`);
+  } else if (args.json !== undefined) {
+    writeFileSync(rowsPath, '');
+  }
+  const todo = jobs.filter((job) => !done.has(jobKey(job.pod, job.game, job.hero)));
   let next = 0;
   const worker = async (): Promise<void> => {
-    while (next < jobs.length) {
+    while (next < todo.length) {
       const n = next++;
-      const job = jobs[n]!;
+      const job = todo[n]!;
       const outcome = await runInChild(job.request, args.timeoutMs, dir, n);
       const row = rowFor(job.pod, job.request.seed, pods[job.pod]!, job.game, job.hero, outcome);
       rows.push(row);
