@@ -22955,7 +22955,7 @@
       "review": {
         "verdict": "rejected",
         "by": "retired",
-        "note": "Retired: The engine-features stack (PRs #93, #94, #96) now parses the line this patch claims; the interpreter's own reading replaces it."
+        "note": "Retired: PR #94's grammar now parses the claimed line (evasion/blocking batch); the interpreter models the card"
       }
     },
     {

@@ -907,6 +907,42 @@ describe('life-gain replacements', () => {
     expect(playerById(ctx, 'P1').life).toBe(44);
   });
 
+  it('casting-statics-lifelink-fixed-and-chosen — one sentence of damage to three targets gains once', () => {
+    // "4 damage to any target and 3 damage to each of up to two other targets" is one damage
+    // event (CR 120.3f, 119.9): a lifelink source gains 10 once, which Knight of Dawn's Light
+    // makes 11, not 4 + 1 and then 6 + 1.
+    const ctx = pod('casting-statics-lifelink-fixed-and-chosen');
+    spawn(ctx, 'P1', pinned("Knight of Dawn's Light"));
+    const breath = oracle({
+      name: 'Lab Breath',
+      typeLine: 'Creature — Dragon',
+      manaCost: '{R}',
+      power: '1',
+      toughness: '1',
+      oracleText:
+        'Lifelink\nWhen this creature enters, it deals 4 damage to any target and 3 damage to each of up to two other targets.',
+    });
+    expect(interpretCard(breath).triggers[0]?.effects?.map((effect) => effect.op)).toEqual([
+      'dealDamage',
+      'dealDamageEachChosen',
+    ]);
+    const object = conjure(ctx, 'P1', breath, 'hand');
+    addMana(playerById(ctx, 'P1'), mana('R'));
+    take(ctx, 'P1', optionFor(ctx, 'P1', object.id)!.payload as PriorityActionPayload);
+    const picks = ['Target P3', 'Target P4'];
+    settle(ctx, (decision) => {
+      if (decision.decisionType === 'chooseTargets')
+        return { index: 0, targets: new Map([[0, 'P2']]) };
+      const pick = picks.shift();
+      return pick === undefined
+        ? undefined
+        : { index: decision.options.findIndex((o) => o.description === pick), targets: new Map() };
+    });
+    expect(playerById(ctx, 'P2').life).toBe(36);
+    for (const id of ['P3', 'P4']) expect(playerById(ctx, id).life, id).toBe(37);
+    expect(playerById(ctx, 'P1').life).toBe(51);
+  });
+
   it('casting-statics-life-order — "plus 1" and "twice": the gaining player orders them', () => {
     const run = (first: RegExp) => {
       const ctx = pod('casting-statics-life-order');
