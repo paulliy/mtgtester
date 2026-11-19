@@ -84,6 +84,13 @@ export function newObjectId(ctx: GameContext): ObjectId {
     ctx.state.nextObjectNum - budget.objectsAtStart >= budget.maxObjects
   )
     throw new EngineBudgetError('objects', budget.maxObjects);
+  if (budget?.maxTurnObjects !== undefined) {
+    const turn = ctx.state.turnNumber;
+    if (budget.turnObjects?.turn !== turn)
+      budget.turnObjects = { turn, atStart: ctx.state.nextObjectNum };
+    else if (ctx.state.nextObjectNum - budget.turnObjects.atStart >= budget.maxTurnObjects)
+      throw new EngineBudgetError('turnObjects', budget.maxTurnObjects);
+  }
   return `o-${ctx.state.nextObjectNum++}`;
 }
 
