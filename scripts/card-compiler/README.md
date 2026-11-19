@@ -207,6 +207,16 @@ bun run scripts/card-compiler/run.ts retire "<name>" --reason "<why>"
   parsing a line a compiled patch claims, the drift guard turns the card unmodeled and the modeled
   ratchet fails; `retire` then reports whether the interpreter's own reading has the same behavior
   as the patch. If it differs, one of the two is wrong.
+- **Known engine gaps** (`known-gaps.ts`, issue #95): a patch can validate and still use an IR shape
+  the engine runs wrongly (tokens created attacking, a land's tapped-for-mana rider, a
+  self-eligible cost compiled as `…Other`, and more). Each such shape has a detector, written from
+  the retired cards that showed it. The compile round sends a match back to the model like a
+  validator rejection, and `promote` refuses it. The gate sits outside `applyPatch`, because the
+  calibration set's known-wrong patches must still validate. When an engine change fixes a gap, it
+  sets that detector's `open` to `false`. `known-gaps.test.ts` requires each detector to match all
+  its retired examples, and no promoted card to match an open one unless it is listed there with
+  a reason. `bun run scripts/card-compiler/gap-sweep.ts` lists every live compiled card that
+  matches.
 
 ## Running a campaign in chunks
 

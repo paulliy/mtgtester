@@ -76,6 +76,7 @@ import {
   type CompileTarget,
   type SmokeResult,
 } from './lib';
+import { knownGapIssues } from './known-gaps';
 import {
   BACK_PREFIX,
   JUDGE_PREFIX,
@@ -371,8 +372,11 @@ function check(trial: string): void {
           continue;
         }
         const result = applyPatch(target, answer.def);
-        issues = result.issues;
-        if (result.ok) {
+        // A patch that validates but uses a shape an open engine gap runs wrongly goes back to the
+        // model like a validator rejection (known-gaps.ts, issue #95).
+        const gaps = result.ok ? knownGapIssues(target, answer.def) : [];
+        issues = [...result.issues, ...gaps];
+        if (result.ok && gaps.length === 0) {
           state.valid = true;
           write(
             p.patch(state.name),
@@ -527,10 +531,11 @@ function resmoke(trial: string): void {
     if (target === undefined || state.valid !== true || !existsSync(p.patch(state.name))) continue;
     const patch = JSON.parse(readFileSync(p.patch(state.name), 'utf8')) as PatchFile;
     const result = applyPatch(target, patch.def);
-    if (!result.ok) {
+    const gaps = result.ok ? knownGapIssues(target, patch.def) : [];
+    if (!result.ok || gaps.length > 0) {
       state.valid = false;
       state.stage = 'invalid';
-      state.validatorIssues.push(result.issues);
+      state.validatorIssues.push([...result.issues, ...gaps]);
       delete state.smoke;
       rejected++;
       continue;

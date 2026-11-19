@@ -14,7 +14,7 @@ bun run scripts/card-compiler/gap-sweep.ts --json sweep.json --markdown sweep.md
 
 `scripts/card-compiler/gap-sweep.ts` has two parts.
 
-1. **Shape detectors.** There are 28 detectors, one per engine gap or misreading named in #95 or in
+1. **Shape detectors.** There are 29 detectors, one per engine gap or misreading named in #95 or in
    `docs/reviews/compiled-card-retired.json`. Each one matches an IR shape in a card's patch. Each
    detector lists the retired cards it was written from, and the script reports its recall on
    them. **Every detector matches every one of its retired examples.** The sweep started at 40
