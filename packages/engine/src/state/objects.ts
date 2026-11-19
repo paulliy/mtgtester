@@ -84,6 +84,13 @@ export function newObjectId(ctx: GameContext): ObjectId {
     ctx.state.nextObjectNum - budget.objectsAtStart >= budget.maxObjects
   )
     throw new EngineBudgetError('objects', budget.maxObjects);
+  if (budget?.maxTurnObjects !== undefined) {
+    const turn = ctx.state.turnNumber;
+    if (budget.turnObjects?.turn !== turn)
+      budget.turnObjects = { turn, atStart: ctx.state.nextObjectNum };
+    else if (ctx.state.nextObjectNum - budget.turnObjects.atStart >= budget.maxTurnObjects)
+      throw new EngineBudgetError('turnObjects', budget.maxTurnObjects);
+  }
   return `o-${ctx.state.nextObjectNum++}`;
 }
 
@@ -123,6 +130,28 @@ export function playerById(ctx: GameContext, id: PlayerId): EnginePlayerState {
   const p = ctx.state.players.find((pl) => pl.id === id);
   if (p === undefined) throw new Error(`unknown player ${id}`);
   return p;
+}
+
+/** The card behind a "look at target player's hand" entry, if it is still in that hand. */
+export function liveKnownHandCard(
+  ctx: GameContext,
+  entry: { owner: PlayerId; objectId: ObjectId },
+): EngineCardObject | undefined {
+  const owner = ctx.state.players.find((player) => player.id === entry.owner);
+  if (owner === undefined || owner.hasLost) return undefined;
+  return owner.hand.find((card) => card.id === entry.objectId);
+}
+
+/** The cards `viewer` still knows in `owner`'s hand, in that hand's order. */
+export function knownHandOf(
+  ctx: GameContext,
+  viewer: EnginePlayerState,
+  owner: EnginePlayerState,
+): EngineCardObject[] {
+  const entries = viewer.knownHandCards;
+  if (entries === undefined || viewer.hasLost || owner.id === viewer.id) return [];
+  const ids = new Set(entries.filter((entry) => entry.owner === owner.id).map((e) => e.objectId));
+  return owner.hand.filter((card) => ids.has(card.id));
 }
 
 /** Where a moved object should land. */

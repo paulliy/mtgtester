@@ -285,7 +285,7 @@ function validateViewPrivacy(view: Record<string, unknown>, observerSeat: unknow
     if (!Array.isArray(view['opponents'])) throw new Error('view.opponents must be an array');
     for (const [index, value] of view['opponents'].entries()) {
       const label = `opponent[${index}]`;
-      const opponent = exactObject(value, label, [...OPPONENT_VIEW_KEYS]);
+      const opponent = exactObject(value, label, [...OPPONENT_VIEW_KEYS], ['knownHand']);
       for (const key of ['seat'] as const) stringField(opponent, key, label);
       numberField(opponent, 'life', label);
       for (const key of [
@@ -297,6 +297,8 @@ function validateViewPrivacy(view: Record<string, unknown>, observerSeat: unknow
         nonNegativeIntegerField(opponent, key, label);
       validateCards(opponent['graveyard'], `${label}.graveyard`, true);
       validateCommanders(opponent['commanders'], `${label}.commanders`);
+      if (opponent['knownHand'] !== undefined)
+        validateCards(opponent['knownHand'], `${label}.knownHand`);
     }
   }
   for (const zone of ['hand', 'deck', 'graveyard', 'exile'] as const) {

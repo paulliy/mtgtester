@@ -256,6 +256,7 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   discardChosenPlayers: { targetSlot: many(player) },
   millAndLoseLifeChosenPlayers: { targetSlot: many(player) },
   revealHandAndDiscard: { target: player },
+  lookAtHand: { target: player },
   discardEachPlayer: {},
   mill: {},
   gainEnergy: {},

@@ -21,6 +21,8 @@ import type { OracleCard } from '@mtg/shared';
 import { DEFAULT_POLICY_FIXES, POLICY_FIXES } from '@mtg/bot';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
+import { DEFAULT_AI_CONFIG } from '../ai/config';
+import type { WakeRule } from '../ai/steering';
 // Type-only: the game module runs a game when it is the entry point.
 import type { LeagueArm, LeagueGameReply, LeagueGameRequest } from './bot-league-game';
 
@@ -47,7 +49,20 @@ export const ARMS: Record<string, LeagueArm> = {
     knowledge: true,
     steering: { aggression: 0.3, holdUpMana: 2, avoidOverextending: true },
   },
+  // Hill-climb S7: the production bot steered by the proxy strategist, under each wake schedule.
+  'proxy-every-turn': proxyArm('proxy-every-turn', 'everyTurn', 'table-v1'),
+  'proxy-v1': proxyArm('proxy-v1', 'onChange', 'table-v1'),
+  'proxy-v2': proxyArm('proxy-v2', 'onChange', 'table-v2'),
 };
+
+function proxyArm(name: string, replan: 'everyTurn' | 'onChange', rule: WakeRule): LeagueArm {
+  return {
+    name,
+    knowledge: true,
+    fixes: [...DEFAULT_POLICY_FIXES],
+    proxy: { replan, rule, maxReuseTurns: DEFAULT_AI_CONFIG.strategistMaxReuseTurns },
+  };
+}
 
 interface Args {
   games: number;
@@ -173,6 +188,8 @@ interface Tally {
   games: number;
   turns: number;
   ms: number;
+  /** Proxy strategist calls and reuses per arm, summed over played games. */
+  proxyCalls: Record<string, { calls: number; reused: number }>;
 }
 
 async function main(): Promise<void> {
@@ -191,6 +208,7 @@ async function main(): Promise<void> {
     games: 0,
     turns: 0,
     ms: 0,
+    proxyCalls: {},
   };
 
   const requests: LeagueGameRequest[] = [];
@@ -235,6 +253,11 @@ async function main(): Promise<void> {
       }
       tally.turns += reply.turns;
       tally.ms += reply.ms;
+      for (const [arm, c] of Object.entries(reply.proxyCalls ?? {})) {
+        const entry = (tally.proxyCalls[arm] ??= { calls: 0, reused: 0 });
+        entry.calls += c.calls;
+        entry.reused += c.reused;
+      }
       if (reply.winnerArm === null) tally.draws++;
       else tally.wins[reply.winnerArm]!++;
       const total = Object.values(reply.life).reduce((s, l) => s + Math.max(0, l), 0);
@@ -277,6 +300,7 @@ async function main(): Promise<void> {
     ),
     meanTurns: Number((tally.turns / Math.max(1, played)).toFixed(1)),
     meanGameSeconds: Number((tally.ms / Math.max(1, played) / 1000).toFixed(1)),
+    ...(Object.keys(tally.proxyCalls).length > 0 ? { proxyCalls: tally.proxyCalls } : {}),
   };
   console.log(JSON.stringify(summary, null, 2));
   if (args.json !== undefined)

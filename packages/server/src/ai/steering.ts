@@ -87,20 +87,53 @@ const POWER_SWING = 8;
 const NONLAND_SWING = 4;
 
 /**
+ * Which table changes wake the strategist (`AI_STRATEGIST_WAKE_RULE`).
+ *
+ * - `table-v1` (ADR 0039): any seat's life, power or nonland count moving past its threshold, in
+ *   either direction, any commander arriving or leaving, or a player dying.
+ * - `table-v2` (hill-climb S7): the same thresholds, minus the changes the seat's knobs already
+ *   expected. The seat's own board growing or its own commander arriving is mostly the seat
+ *   carrying out its own knobs, so only its own losses wake it (a wipe, a removed commander, a
+ *   life swing). No commander arriving wakes it: every commander is public from turn 0, in the
+ *   prompt with its text and cast count, so its arrival is expected, and a big body still shows
+ *   in its seat's power and permanents. A commander leaving, which nobody can schedule, still
+ *   wakes. In the hill-climb census, commander arrivals were 30% of all wakes.
+ */
+export type WakeRule = 'table-v1' | 'table-v2';
+
+export const WAKE_RULES: readonly WakeRule[] = ['table-v1', 'table-v2'];
+
+interface WakeOptions {
+  /** The seat whose knobs are being judged; its own changes are read as its own under v2. */
+  self?: string;
+  rule?: WakeRule;
+}
+
+/**
  * Whether the table has moved enough since `before` to be worth new knobs, for
  * `strategistReplan: 'onChange'`. Measured as distance from when the knobs were set, not as
  * bucket boundaries, so a 1-point change never triggers a call by crossing a line: a board wipe,
  * a big new threat, a large life swing, a commander arriving or leaving, or a player dying does.
  */
-export function tableChanged(before: TableSnapshot, now: TableSnapshot): boolean {
-  return tableChangeReasons(before, now).length > 0;
+export function tableChanged(
+  before: TableSnapshot,
+  now: TableSnapshot,
+  options: WakeOptions = {},
+): boolean {
+  return tableChangeReasons(before, now, options).length > 0;
 }
 
 /**
  * What moved since `before`, in words (`P2 life`, `P3 power`, `P4 eliminated`): the changes that
  * would wake the strategist under `onChange`. ADR 0045 records them beside each tactician request.
+ * Without `rule` this is `table-v1`, as it was before `WakeRule` existed.
  */
-export function tableChangeReasons(before: TableSnapshot, now: TableSnapshot): string[] {
+export function tableChangeReasons(
+  before: TableSnapshot,
+  now: TableSnapshot,
+  options: WakeOptions = {},
+): string[] {
+  const v2 = options.rule === 'table-v2';
   const reasons: string[] = [];
   for (const [seat, was] of Object.entries(before)) {
     const is = now[seat];
@@ -113,11 +146,16 @@ export function tableChangeReasons(before: TableSnapshot, now: TableSnapshot): s
       continue;
     }
     if (is.life <= 0) continue;
+    const own = v2 && seat === options.self;
     if (Math.abs(is.life - was.life) >= LIFE_SWING) reasons.push(`${seat} life`);
-    if (Math.abs(is.power - was.power) >= Math.max(POWER_SWING, was.power / 2))
+    const power = is.power - was.power;
+    if (Math.abs(power) >= Math.max(POWER_SWING, was.power / 2) && !(own && power > 0))
       reasons.push(`${seat} power`);
-    if (Math.abs(is.nonland - was.nonland) >= NONLAND_SWING) reasons.push(`${seat} permanents`);
-    if (is.commanderOut !== was.commanderOut) reasons.push(`${seat} commander`);
+    const nonland = is.nonland - was.nonland;
+    if (Math.abs(nonland) >= NONLAND_SWING && !(own && nonland > 0))
+      reasons.push(`${seat} permanents`);
+    if (is.commanderOut !== was.commanderOut && !(v2 && is.commanderOut))
+      reasons.push(`${seat} commander`);
   }
   return reasons;
 }
