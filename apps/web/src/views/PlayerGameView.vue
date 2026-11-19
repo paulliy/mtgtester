@@ -701,6 +701,9 @@ function chooseAction(action: LegalAction): void {
     targetSlots(action).length === 0 &&
     sourceActions.value.filter((candidate) => sourceId(candidate) === sourceId(action)).length === 1
   ) {
+    // Taken at once, so close the source: otherwise its tray shows a stale "Play" button until
+    // the next request arrives, and pressing it resubmits an action that is already gone.
+    focusedSourceId.value = null;
     store.submitPlayerAction(action.id);
     return;
   }
