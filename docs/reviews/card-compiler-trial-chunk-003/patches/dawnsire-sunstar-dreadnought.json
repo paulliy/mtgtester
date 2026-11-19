@@ -1,0 +1,63 @@
+{
+  "name": "Dawnsire, Sunstar Dreadnought",
+  "oracleId": "afc9436b-8cad-4916-929d-ff33a37b42d5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "10+ | Whenever you attack, ~ deals 100 damage to up to one target creature or planeswalker."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attackDeclared",
+          "attacker": "you",
+          "condition": {
+            "kind": "hasCounters",
+            "selector": {
+              "kind": "self"
+            },
+            "counter": "charge",
+            "cmp": ">=",
+            "n": 10
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "permanent",
+            "count": {
+              "min": 0,
+              "max": 1
+            },
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamageEachChosen",
+            "targetSlot": 0,
+            "amount": {
+              "kind": "const",
+              "n": 100
+            }
+          }
+        ],
+        "description": "10+ | Whenever you attack, Dawnsire deals 100 damage to up to one target creature or planeswalker."
+      }
+    ]
+  }
+}

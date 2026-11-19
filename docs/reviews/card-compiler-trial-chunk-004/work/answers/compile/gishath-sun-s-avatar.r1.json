@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Revealing as many cards as the damage dealt and putting any number of Dinosaurs onto the battlefield needs a dynamic look count and an any-number pick, but lookAtTopN takes a fixed count and a single optional pick."}

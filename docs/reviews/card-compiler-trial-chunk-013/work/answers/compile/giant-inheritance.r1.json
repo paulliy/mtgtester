@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The granted attack trigger creates a Monster Role token attached to 'up to one target attacking creature', and the schema has no Monster Role token spec and no optional-target attach (createAttachedToken takes one required target)."}

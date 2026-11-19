@@ -1,0 +1,2 @@
+Target creature you control.
+Create a token that is a copy of that creature, except it has haste. Sacrifice that token at the beginning of the end step.

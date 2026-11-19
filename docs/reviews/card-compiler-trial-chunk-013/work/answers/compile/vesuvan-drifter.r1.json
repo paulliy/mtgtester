@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'This creature becomes a copy of that revealed card until end of turn, except it has flying' needs a become-a-copy of the top library card revealed on the trigger, and the schema has becomeCopyOf only for a referent it can name (not a revealed library card)."}

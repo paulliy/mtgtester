@@ -1,0 +1,80 @@
+{
+  "name": "Al Bhed Salvagers",
+  "oracleId": "43f81514-e812-4e17-9b1a-704c136d8ffd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature or another creature or artifact you control dies, target opponent loses 1 life and you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "anyOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Artifact"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "player",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "loseLifeTarget",
+            "target": 0,
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever this creature or another creature or artifact you control dies, target opponent loses 1 life and you gain 1 life."
+      }
+    ]
+  }
+}

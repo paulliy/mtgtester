@@ -1,0 +1,3 @@
+As this artifact enters, choose a creature type.
+This artifact enters with a fellowship counter on it for each creature you control of the chosen creature type.
+The data lists no other abilities; this artifact has no other behavior.

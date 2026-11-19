@@ -1,0 +1,30 @@
+{
+  "name": "Wayfaring Temple",
+  "oracleId": "c0525645-9b5a-488d-b4d1-e80f16a1e4e1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature deals combat damage to a player, populate."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "populate"
+          }
+        ],
+        "description": "Whenever this creature deals combat damage to a player, populate."
+      }
+    ]
+  }
+}

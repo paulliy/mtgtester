@@ -1,0 +1,2 @@
+Target creature you control gets +1/+0 until end of turn.
+Target creature an opponent controls is dealt damage equal to the power of the first target creature, and the first target creature is the source of that damage.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot say 'discard two cards unless you discard an enchantment card' as a choice between two discards; the discard op has no alternative branch."}

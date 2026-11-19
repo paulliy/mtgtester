@@ -1,0 +1,46 @@
+{
+  "name": "Smoke Shroud",
+  "oracleId": "a621c5f6-c1c6-4bc9-88b1-f459efa07a39",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When a Ninja you control enters, you may return this card from your graveyard to the battlefield attached to that creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Ninja"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "returnDepartedSourceToBattlefield",
+            "fromYourGraveyard": true,
+            "attachTo": "triggerObject"
+          }
+        ],
+        "functionsInGraveyard": true,
+        "description": "When a Ninja you control enters, you may return this card from your graveyard to the battlefield attached to that creature."
+      }
+    ]
+  }
+}

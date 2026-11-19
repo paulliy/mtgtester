@@ -1,0 +1,76 @@
+{
+  "name": "Urza's Tower",
+  "oracleId": "32fbb638-ab14-4e8b-a07a-d4c44e3496f2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Add {C}. If you control an Urza's Mine and an Urza's Power-Plant, add {C}{C}{C} instead."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "C"
+          ]
+        ],
+        "conditionalUnits": {
+          "condition": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Urza's"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Mine"
+                    }
+                  ]
+                },
+                "scope": "you",
+                "cmp": ">=",
+                "n": 1
+              },
+              {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Urza's"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Power-Plant"
+                    }
+                  ]
+                },
+                "scope": "you",
+                "cmp": ">=",
+                "n": 1
+              }
+            ]
+          },
+          "units": [
+            [
+              "C"
+            ],
+            [
+              "C"
+            ],
+            [
+              "C"
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}

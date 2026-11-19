@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"spell","filter":{"kind":"allOf","of":[{"kind":"manaValueAtLeast","n":1},{"kind":"manaValueAtMost","n":1}]}}],"effects":[{"op":"counter","target":0}],"description":"Counter target spell with mana value 1."}}}

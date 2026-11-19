@@ -1,0 +1,65 @@
+{
+  "name": "Robe of the Archmagi",
+  "oracleId": "570de99a-7c65-4052-bc4b-cfb8caef40b3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equip Shaman, Warlock, or Wizard {1}"
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Shaman"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Warlock"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Wizard"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "attachSelfTo",
+              "target": 0
+            }
+          ],
+          "description": "Equip Shaman, Warlock, or Wizard {1}"
+        }
+      }
+    ]
+  }
+}

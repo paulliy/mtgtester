@@ -1,0 +1,83 @@
+{
+  "name": "Obscura Storefront",
+  "oracleId": "dc31a6f8-6228-4a25-b937-5d8d78514333",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this land enters, sacrifice it. When you do, search your library for a basic Plains, Island, or Swamp card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeSourceThenReflexive",
+            "then": {
+              "kind": "triggered",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "searchLibrary",
+                  "filter": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "supertype",
+                        "value": "Basic"
+                      },
+                      {
+                        "kind": "anyOf",
+                        "of": [
+                          {
+                            "kind": "subtype",
+                            "value": "Plains"
+                          },
+                          {
+                            "kind": "subtype",
+                            "value": "Island"
+                          },
+                          {
+                            "kind": "subtype",
+                            "value": "Swamp"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "destinations": [
+                    {
+                      "zone": "battlefield",
+                      "tapped": true
+                    }
+                  ],
+                  "allowFailToFind": true
+                },
+                {
+                  "op": "shuffle"
+                },
+                {
+                  "op": "gainLife",
+                  "amount": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "description": "Search your library for a basic Plains, Island, or Swamp card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+            }
+          }
+        ],
+        "description": "When this land enters, sacrifice it. When you do, search your library for a basic Plains, Island, or Swamp card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+      }
+    ]
+  }
+}

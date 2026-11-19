@@ -1,0 +1,2 @@
+Whenever a creature you control enters, if that creature's power is compared to 3 by a comparison operator that is hidden in the data (the operator is not shown), draw a card. Otherwise, put two +1/+1 counters on that creature.
+The condition uses the power of the entering creature (the trigger object). The comparison operator and its direction are not stated in the data.

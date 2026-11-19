@@ -1,0 +1,1 @@
+{1}, {T}, Tap another Gate you control: Create a colorless Treasure artifact token with "{T}, Sacrifice this artifact: Add one mana of any color."

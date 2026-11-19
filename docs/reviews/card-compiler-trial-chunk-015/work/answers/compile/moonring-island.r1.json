@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No op looks at the top card of a target player's library: lookAtTopN rearranges the rest of the library, and lookTopLibrary is a controller-only permission rather than an effect."}

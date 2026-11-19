@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No trigger event means 'you cycle another card for the first time each turn': discardsCard has no cycling filter or per-turn ordinal, and activatesAbility cannot be limited to cycling."}

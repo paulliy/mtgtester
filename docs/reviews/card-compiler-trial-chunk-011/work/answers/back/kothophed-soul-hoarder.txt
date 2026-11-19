@@ -1,0 +1,1 @@
+Whenever a permanent you don't own leaves the battlefield and is put into a graveyard, you draw a card and you lose 1 life.

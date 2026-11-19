@@ -1,0 +1,59 @@
+{
+  "name": "Kudo, King Among Bears",
+  "oracleId": "070d22cf-2eed-4d04-b932-4b8339ea9b7a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Other creatures have base power and toughness 2/2 and are Bears in addition to their other types."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 4,
+          "addSubtypes": [
+            "Bear"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "const",
+            "n": 2
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 2
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The delayed return cannot put the creature under your control (returnDiedTriggerObjectAtNextEndStep only returns under its owner), and there is no way to add a +1/+1 counter plus a Zombie type to that return."}

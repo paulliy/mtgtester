@@ -1,0 +1,1 @@
+Target creature gets +1/+0 until end of turn. It gains lifelink until end of turn. It gains "When this creature dies, return it to the battlefield tapped" until end of turn.

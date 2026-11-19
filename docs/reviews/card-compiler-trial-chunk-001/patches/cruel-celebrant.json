@@ -1,0 +1,71 @@
+{
+  "name": "Cruel Celebrant",
+  "oracleId": "3ee78cfc-0e9e-4737-a7e2-b42f94228040",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature or another creature or planeswalker you control dies, each opponent loses 1 life and you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "anyOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Planeswalker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "eachOpponentLosesLife",
+            "amount": 1
+          },
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever this creature or another creature or planeswalker you control dies, each opponent loses 1 life and you gain 1 life."
+      }
+    ]
+  }
+}

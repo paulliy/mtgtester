@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The library search needs a 'creature card with defender' filter, and the only keyword selector (hasKeyword) is event-only, so it cannot select library cards by defender."}

@@ -1,0 +1,54 @@
+{
+  "name": "Dragonstorm",
+  "oracleId": "d74c3871-018a-4450-a613-f67703bb0d72",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Search your library for a Dragon permanent card, put it onto the battlefield, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Dragon"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Instant"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Sorcery"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "destinations": [
+            {
+              "zone": "battlefield"
+            }
+          ]
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "description": "Search your library for a Dragon permanent card, put it onto the battlefield, then shuffle."
+    }
+  }
+}

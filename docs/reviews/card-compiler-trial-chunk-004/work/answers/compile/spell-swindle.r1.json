@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The Treasure count is the countered spell's mana value, and no Value reads the mana value of the spell that this same counter removes from the stack (manaValueOfTarget reads a target's mana value, not a countered spell's last-known value)."}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The {S} snow-mana pip in the activation cost (payable only with mana from a snow source) has no field in the ParsedManaCost schema, and writing it as generic {5} would approximate the cost."}

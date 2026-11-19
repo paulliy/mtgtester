@@ -1,0 +1,52 @@
+{
+  "name": "Vital Splicer",
+  "oracleId": "e1899133-635d-46ff-b90d-6f8d46a1ffe1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}: Regenerate target Golem you control."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you",
+              "filter": {
+                "kind": "subtype",
+                "value": "Golem"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "regenerate",
+              "target": 0
+            }
+          ],
+          "description": "{1}: Regenerate target Golem you control."
+        }
+      }
+    ]
+  }
+}

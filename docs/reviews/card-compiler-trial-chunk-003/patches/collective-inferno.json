@@ -1,0 +1,28 @@
+{
+  "name": "Collective Inferno",
+  "oracleId": "649e4969-71d4-434f-85b0-205ec2c6b24f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Double all damage that sources you control of the chosen type would deal."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "damageDoubled",
+        "sourceFilter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "chosenSubtype"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

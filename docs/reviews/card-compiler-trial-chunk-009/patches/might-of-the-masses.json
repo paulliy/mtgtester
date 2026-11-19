@@ -1,0 +1,60 @@
+{
+  "name": "Might of the Masses",
+  "oracleId": "f73416a8-40e5-4791-948f-147ef2221ee7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature gets +1/+1 until end of turn for each creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "scope": "you"
+          },
+          "toughness": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "scope": "you"
+          }
+        }
+      ],
+      "description": "Target creature gets +1/+1 until end of turn for each creature you control."
+    }
+  }
+}

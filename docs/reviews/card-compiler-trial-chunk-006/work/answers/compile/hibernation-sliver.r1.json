@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"subtype","value":"Sliver"},"op":{"layer":6,"addActivatedAbility":{"costs":[{"kind":"payLife","amount":2}],"timing":"any","ability":{"kind":"activated","targets":[],"effects":[{"op":"returnToHand","target":"source"}],"description":"Pay 2 life: Return this permanent to its owner's hand."}}}}]}}

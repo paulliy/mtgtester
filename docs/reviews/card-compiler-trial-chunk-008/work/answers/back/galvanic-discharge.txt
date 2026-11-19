@@ -1,0 +1,3 @@
+Target creature or planeswalker.
+You get three {E}.
+You may pay any amount of {E} up to the amount of energy you have. If you do, this spell deals damage equal to the amount of energy paid to that permanent.

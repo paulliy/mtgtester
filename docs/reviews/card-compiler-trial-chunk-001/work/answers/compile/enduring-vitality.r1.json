@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"\"It's an enchantment\" (the returned permanent is no longer a creature) has no schema field for a type change on the object after it returns from the graveyard; removeCreatureType as a static would apply while it is still on the battlefield as a creature."}

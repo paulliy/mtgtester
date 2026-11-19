@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The static 'other creatures you control with flying get +1/+0' needs a hasKeyword selector, which the schema marks event-only, so it cannot select flying creatures as a continuous static."}

@@ -1,0 +1,54 @@
+{
+  "name": "Isolation Cell",
+  "oracleId": "56c558f3-535d-49aa-a2de-54e0bb598483",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an opponent casts a creature spell, that player loses 2 life unless they pay {2}."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "opponent",
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "unlessPays",
+            "payer": "eventPlayer",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            },
+            "then": [
+              {
+                "op": "loseLifeTarget",
+                "target": "eventPlayer",
+                "amount": {
+                  "kind": "const",
+                  "n": 2
+                }
+              }
+            ]
+          }
+        ],
+        "description": "Whenever an opponent casts a creature spell, that player loses 2 life unless they pay {2}."
+      }
+    ]
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "name": "Undercity Scrounger",
+  "oracleId": "2750451f-348e-452f-88d0-bc921c46e8cc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Create a Treasure token. Activate only if a creature died this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "creaturesDiedThisTurn"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 1
+          }
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Treasure",
+                "typeLine": "Artifact — Treasure",
+                "types": [
+                  "Artifact"
+                ],
+                "subtypes": [
+                  "Treasure"
+                ],
+                "colors": [],
+                "power": null,
+                "toughness": null,
+                "manaAbilities": [
+                  {
+                    "units": [
+                      [
+                        "W",
+                        "U",
+                        "B",
+                        "R",
+                        "G"
+                      ]
+                    ],
+                    "costs": [
+                      {
+                        "kind": "tap"
+                      },
+                      {
+                        "kind": "sacrificeSelf"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "{T}: Create a Treasure token. Activate only if a creature died this turn."
+        }
+      }
+    ]
+  }
+}

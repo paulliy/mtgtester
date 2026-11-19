@@ -1,0 +1,49 @@
+{
+  "name": "Azami, Lady of Scrolls",
+  "oracleId": "0f8b97fe-3e5e-47c2-9a9d-7f77482aa159",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap an untapped Wizard you control: Draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tapOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Wizard"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "draw",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "Tap an untapped Wizard you control: Draw a card."
+        }
+      }
+    ]
+  }
+}

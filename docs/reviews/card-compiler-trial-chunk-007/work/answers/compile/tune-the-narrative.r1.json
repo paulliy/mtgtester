@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":1}},{"op":"gainEnergy","amount":{"kind":"const","n":2}}],"description":"Draw a card. You get {E}{E}."}}}

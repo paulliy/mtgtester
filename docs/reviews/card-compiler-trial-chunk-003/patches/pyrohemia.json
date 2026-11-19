@@ -1,0 +1,39 @@
+{
+  "name": "Pyrohemia",
+  "oracleId": "9ac57a10-3402-4656-9079-f713884cde35",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of the end step, if no creatures are on the battlefield, sacrifice this enchantment."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "each",
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "scope": "all",
+            "cmp": "<=",
+            "n": 0
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrifice",
+            "target": "source"
+          }
+        ],
+        "description": "At the beginning of the end step, if no creatures are on the battlefield, sacrifice this enchantment."
+      }
+    ]
+  }
+}

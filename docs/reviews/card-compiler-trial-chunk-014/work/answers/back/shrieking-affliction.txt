@@ -1,0 +1,1 @@
+At the beginning of each opponent's upkeep, if that player has one or fewer cards in hand, that player loses 3 life.

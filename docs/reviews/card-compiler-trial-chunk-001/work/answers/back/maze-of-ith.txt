@@ -1,0 +1,1 @@
+{T}: Untap target attacking creature. Create a combat-only damage shield on that creature that applies to damage dealt to it and damage dealt by it.

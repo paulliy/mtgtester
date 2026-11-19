@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The dealsDamageToOpponent trigger only supports the damaging source itself as subject, and a trigger granted to the enchanted creature would belong to that creature's controller rather than the Aura's controller ('you may draw')."}

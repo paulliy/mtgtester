@@ -1,0 +1,37 @@
+{
+  "name": "Infiltration Lens",
+  "oracleId": "72dfd729-ebba-4bb1-83eb-54c2051fea3b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature becomes blocked by a creature, you may draw two cards."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "becomesBlocked",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 2
+            }
+          }
+        ],
+        "description": "Whenever equipped creature becomes blocked by a creature, you may draw two cards."
+      }
+    ]
+  }
+}

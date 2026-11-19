@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Each player may discard their hand and draw five cards (an optional per-player discard-and-draw), and then 5 damage goes to each opponent who chose to discard this way; the schema has no way to track which players discarded this way for a later damage effect."}

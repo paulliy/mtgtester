@@ -1,0 +1,2 @@
+When this enters, return target artifact, legendary, or Saga card in your graveyard to your hand.
+Whenever one or more Assassins you control deal combat damage to a player, return target artifact, legendary, or Saga card in your graveyard to your hand. (Triggers once for each player dealt damage.)

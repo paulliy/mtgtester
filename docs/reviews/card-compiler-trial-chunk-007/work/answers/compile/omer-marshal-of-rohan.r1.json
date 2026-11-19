@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No selector checks that a dying creature was attacking when it died; attackedThisTurn also matches creatures that attacked earlier in the turn."}

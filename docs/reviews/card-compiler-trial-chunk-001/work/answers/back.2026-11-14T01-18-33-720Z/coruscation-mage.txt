@@ -1,0 +1,2 @@
+Offspring {2} (As you cast this spell, you may pay an additional {2}.)
+When this creature enters, create a number of tokens that are copies of this creature equal to the number of times the offspring cost was paid. If the offspring cost was not paid, create none. Each of those tokens has base power 1 and base toughness 1.

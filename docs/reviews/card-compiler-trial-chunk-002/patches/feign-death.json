@@ -1,0 +1,44 @@
+{
+  "name": "Feign Death",
+  "oracleId": "f718e507-296b-4f22-842b-5fb91322069b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Until end of turn, target creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it.\""
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantAbilityUntilEot",
+          "target": 0,
+          "ability": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dies",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "targets": [],
+            "effects": [
+              {
+                "op": "returnDiedSourceToBattlefield",
+                "counter": "+1/+1",
+                "tapped": true
+              }
+            ],
+            "description": "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it."
+          }
+        }
+      ],
+      "description": "Until end of turn, target creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it.\""
+    }
+  }
+}

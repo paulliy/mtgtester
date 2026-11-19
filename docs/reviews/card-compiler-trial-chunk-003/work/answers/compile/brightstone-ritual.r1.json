@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"addMana","amount":{"kind":"countPermanents","selector":{"kind":"subtype","value":"Goblin"},"scope":"all"},"colors":["R"]}],"description":"Add {R} for each Goblin on the battlefield."}}}

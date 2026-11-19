@@ -1,0 +1,43 @@
+{
+  "name": "Ultimecia, Temporal Threat",
+  "oracleId": "5a8e7e35-e9ea-4808-8aa7-7580a23b9d9d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ enters, tap all creatures your opponents control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "tapEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          }
+        ],
+        "description": "When Ultimecia enters, tap all creatures your opponents control."
+      }
+    ]
+  }
+}

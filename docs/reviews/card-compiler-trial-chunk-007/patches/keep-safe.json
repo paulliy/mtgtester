@@ -1,0 +1,34 @@
+{
+  "name": "Keep Safe",
+  "oracleId": "5602c14d-cc22-47d7-a1b0-6491749f00dd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Counter target spell that targets a permanent you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "spell",
+          "spellTargetsPermanentYouControl": true
+        }
+      ],
+      "effects": [
+        {
+          "op": "counter",
+          "target": 0
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Counter target spell that targets a permanent you control."
+    }
+  }
+}

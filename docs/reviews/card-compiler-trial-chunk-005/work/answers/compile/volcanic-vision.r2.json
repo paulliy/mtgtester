@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Damage equal to the mana value of a targeted graveyard card: manaValueOfTarget only reads permanent or spell targets (cardInGraveyard is rejected), and no combined graveyard-to-hand-and-damage op exists."}

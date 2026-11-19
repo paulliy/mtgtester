@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"controller","who":"opponents"},{"kind":"type","value":"Creature"}]},"op":{"layer":6,"denyKeywords":["flying"]}}]}}

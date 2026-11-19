@@ -1,0 +1,48 @@
+{
+  "name": "Progenitor Mimic",
+  "oracleId": "88929ea9-900f-4dbb-b16c-cf3bad4e410c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may have this creature enter as a copy of any creature on the battlefield, except it has \"At the beginning of your upkeep, if this creature isn't a token, create a token that's a copy of this creature.\""
+  ],
+  "compose": "append",
+  "def": {
+    "entersAsCopy": {
+      "selector": {
+        "kind": "type",
+        "value": "Creature"
+      },
+      "addTriggers": [
+        {
+          "kind": "triggered",
+          "trigger": {
+            "when": "upkeep",
+            "player": "you",
+            "condition": {
+              "kind": "sourceMatches",
+              "selector": {
+                "kind": "not",
+                "of": {
+                  "kind": "isToken"
+                }
+              }
+            }
+          },
+          "optional": false,
+          "targets": [],
+          "effects": [
+            {
+              "op": "createTokenCopyOf",
+              "ref": "source",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "At the beginning of your upkeep, if this creature isn't a token, create a token that's a copy of this creature."
+        }
+      ]
+    }
+  }
+}

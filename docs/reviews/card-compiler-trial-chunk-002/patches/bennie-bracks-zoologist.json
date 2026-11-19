@@ -1,0 +1,35 @@
+{
+  "name": "Bennie Bracks, Zoologist",
+  "oracleId": "17bd7ef7-8b4b-4a2d-a667-c751e10e2a47",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of each end step, if you created a token this turn, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "each",
+          "condition": {
+            "kind": "createdTokenThisTurn"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "At the beginning of each end step, if you created a token this turn, draw a card."
+      }
+    ]
+  }
+}

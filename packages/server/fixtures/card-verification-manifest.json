@@ -19970,7 +19970,7 @@
     },
     "873abbf4-c9b5-4b8f-8cd0-613cf3b9b1d5": {
       "name": "Peek",
-      "oracleSha256": "041bbab79dfbf61c8a4e478c21987483d7ee8a55cb2da4239f9261e3a9486152",
+      "oracleSha256": "8790f7745ab1f5bc917ed2d1240bdb6a1ca3c80fac493306486fd78bc71f1558",
       "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
@@ -20000,7 +20000,7 @@
     },
     "1d67f5ff-1fce-45e5-b6a1-416c569351e2": {
       "name": "Gitaxian Probe",
-      "oracleSha256": "61caf913b061d40968fee45ac9527accf8e6aac1e76a8536bf1e0d45760730a4",
+      "oracleSha256": "9ce669bc5d6856ad604519c11b1119d762f1b3ff12d5564c4410fcdc0c02bf0e",
       "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {
@@ -20030,7 +20030,7 @@
     },
     "af7fabf4-8d55-4b06-9c21-472f4a5775b4": {
       "name": "Glasses of Urza",
-      "oracleSha256": "145012eb7c41e882cc115a55da81c0d402635d2e98493824566204fbc7fa7848",
+      "oracleSha256": "e0a17638116a28cc492deec29ba97a438046d7aea79c3b4f465a330eac3256f9",
       "implementationStatus": "implemented-unreviewed",
       "clauses": [
         {

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No Value counts cards in the targeted player's graveyard, since countCardsInZone only counts cards by 'you', 'opponents' or 'all' and cardsInTargetHand covers only hand."}

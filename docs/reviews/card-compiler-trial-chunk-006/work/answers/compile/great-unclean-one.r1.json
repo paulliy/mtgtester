@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Creating a token for each opponent who has less life than you has no schema form, since createTokenForEachOpponent has no per-opponent life condition."}

@@ -1,0 +1,54 @@
+{
+  "name": "Shoot the Sheriff",
+  "oracleId": "2038138e-2e52-41e4-90fc-443fa054c5c0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target non-outlaw creature."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "filter": {
+            "kind": "not",
+            "of": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Assassin"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Mercenary"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Pirate"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Rogue"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Warlock"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroy",
+          "target": 0
+        }
+      ],
+      "description": "Destroy target non-outlaw creature."
+    }
+  }
+}

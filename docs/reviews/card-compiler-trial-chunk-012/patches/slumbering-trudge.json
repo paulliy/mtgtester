@@ -1,0 +1,28 @@
+{
+  "name": "Slumbering Trudge",
+  "oracleId": "d04bce9a-822b-4a52-8826-b503ef5f5b2e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ enters with a number of stun counters on it equal to three minus X. If X is 2 or less, it enters tapped."
+  ],
+  "compose": "append",
+  "def": {
+    "entersTapped": true,
+    "entersTappedUnless": {
+      "kind": "announcedXAtLeast",
+      "n": 3
+    },
+    "entersWithCounters": {
+      "stun": {
+        "kind": "plus",
+        "of": {
+          "kind": "negate",
+          "of": {
+            "kind": "xValue"
+          }
+        },
+        "n": 3
+      }
+    }
+  }
+}

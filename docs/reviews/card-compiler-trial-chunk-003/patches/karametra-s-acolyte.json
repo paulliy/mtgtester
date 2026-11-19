@@ -1,0 +1,24 @@
+{
+  "name": "Karametra's Acolyte",
+  "oracleId": "e8cf80a1-6908-4adb-88e7-2015672d4905",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Add an amount of {G} equal to your devotion to green."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G"
+          ]
+        ],
+        "amount": {
+          "kind": "devotionTo",
+          "color": "G"
+        }
+      }
+    ]
+  }
+}

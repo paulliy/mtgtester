@@ -1,0 +1,2 @@
+{4}: Until end of turn, this land becomes a 3/3 Citizen creature with vigilance.
+This ability costs {1} less to activate for each permanent you control that is a legendary creature or a planeswalker.

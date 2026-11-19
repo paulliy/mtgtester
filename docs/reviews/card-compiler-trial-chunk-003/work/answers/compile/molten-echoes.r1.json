@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The copy must be exiled at the next end step, but createTokenCopyOf's sacrificeAt only sacrifices, which would wrongly fire dies triggers."}

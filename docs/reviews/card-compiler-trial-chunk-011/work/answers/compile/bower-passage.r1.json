@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The rule stops flying creatures blocking creatures you control, but the only blocking restriction shapes are cantBlockMatching (by blocker only) and cantBlockCreatures (by attacker filter with a power comparison), so no static pairs a blocker filter with an attacker filter."}

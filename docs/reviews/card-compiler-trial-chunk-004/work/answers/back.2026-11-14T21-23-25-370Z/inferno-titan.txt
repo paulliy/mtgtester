@@ -1,0 +1,2 @@
+When this enters, it deals 3 damage divided as you choose among one, two, or three targets. Each target can be any target.
+Whenever this attacks, it deals 3 damage divided as you choose among one, two, or three targets. Each target can be any target.

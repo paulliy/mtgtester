@@ -1,0 +1,105 @@
+{
+  "name": "Curse of Opulence",
+  "oracleId": "ba0d3df2-3acf-46d7-8d64-8d67d1579adc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever enchanted player is attacked, create a Gold token. Each opponent attacking that player does the same."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enchantedPlayerAttacked",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Gold",
+              "typeLine": "Artifact — Gold",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Gold"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "manaAbilities": [
+                {
+                  "units": [
+                    [
+                      "W",
+                      "U",
+                      "B",
+                      "R",
+                      "G"
+                    ]
+                  ],
+                  "costs": [
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "createTokenForPlayer",
+            "target": "eventPlayer",
+            "spec": {
+              "name": "Gold",
+              "typeLine": "Artifact — Gold",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Gold"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "manaAbilities": [
+                {
+                  "units": [
+                    [
+                      "W",
+                      "U",
+                      "B",
+                      "R",
+                      "G"
+                    ]
+                  ],
+                  "costs": [
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "opponentsOnly": true
+          }
+        ],
+        "description": "Whenever enchanted player is attacked, create a Gold token. Each opponent attacking that player does the same."
+      }
+    ]
+  }
+}

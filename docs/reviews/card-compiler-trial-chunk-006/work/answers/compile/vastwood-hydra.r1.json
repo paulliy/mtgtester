@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"distributeCountersFromSource lets the controller move any number of counters, but this line requires distributing exactly the number of counters the dead creature had, among creatures you control, with no way to pin the total."}

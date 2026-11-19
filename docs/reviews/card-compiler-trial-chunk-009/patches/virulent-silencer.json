@@ -1,0 +1,55 @@
+{
+  "name": "Virulent Silencer",
+  "oracleId": "7d70a2f4-92cb-40c3-9e5a-f6c57d4a64c2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a nontoken artifact creature you control deals combat damage to a player, that player gets two poison counters."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "isToken"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "giveTargetPoisonCounters",
+            "target": "eventPlayer",
+            "count": 2
+          }
+        ],
+        "description": "Whenever a nontoken artifact creature you control deals combat damage to a player, that player gets two poison counters."
+      }
+    ]
+  }
+}

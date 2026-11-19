@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The token's conditional +2/+2 (as long as an artifact entered the battlefield under your control this turn) needs a this-turn entry-event condition, but the only counting condition checks artifacts still on the battlefield, which is not the same."}

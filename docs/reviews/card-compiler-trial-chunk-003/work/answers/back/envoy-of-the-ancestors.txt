@@ -1,0 +1,1 @@
+Creatures you control that are equipped, enchanted by an Aura you control, or have a counter on them have lifelink.

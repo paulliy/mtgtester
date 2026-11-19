@@ -1,0 +1,41 @@
+{
+  "name": "Brazen Collector",
+  "oracleId": "f93dc9cc-3dd2-4e2b-b972-217ab9d89dfe",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, add {R}. Until end of turn, you don't lose this mana as steps and phases end."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "addMana",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            },
+            "colors": [
+              "R"
+            ],
+            "fixedSymbols": [
+              "R"
+            ],
+            "persistent": true
+          }
+        ],
+        "description": "Whenever this creature attacks, add {R}. Until end of turn, you don't lose this mana as steps and phases end."
+      }
+    ]
+  }
+}

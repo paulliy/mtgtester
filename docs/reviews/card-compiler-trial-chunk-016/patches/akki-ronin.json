@@ -1,0 +1,54 @@
+{
+  "name": "Akki Ronin",
+  "oracleId": "4b4c76e1-c480-4d10-93d4-483ef2debc4b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a Samurai or Warrior you control attacks alone, you may discard a card. If you do, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Samurai"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Warrior"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "alone": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "mayDiscardThenDraw",
+            "count": 1
+          }
+        ],
+        "description": "Whenever a Samurai or Warrior you control attacks alone, you may discard a card. If you do, draw a card."
+      }
+    ]
+  }
+}

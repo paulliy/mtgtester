@@ -1,0 +1,1 @@
+Only one spell of any category can be cast each turn.

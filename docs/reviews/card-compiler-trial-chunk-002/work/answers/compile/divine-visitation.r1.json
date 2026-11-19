@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The replacement swaps each creature token for a 4/4 Angel (the original tokens are never created), but tokenCreationReplacement only adds an extra token and tokenCountMultiplier only multiplies the count, so no IR replaces the token being created."}

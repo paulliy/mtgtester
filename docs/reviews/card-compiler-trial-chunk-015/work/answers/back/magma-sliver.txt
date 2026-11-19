@@ -1,0 +1,1 @@
+Each Sliver has "{T}: Target Sliver creature gets +N/+0 until end of turn, where N is the number of Slivers on the battlefield."

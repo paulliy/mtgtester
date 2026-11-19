@@ -1,0 +1,23 @@
+{
+  "name": "Geyser Drake",
+  "oracleId": "411b9158-e427-4099-bd30-3fbb22edb553",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "During turns other than yours, spells you cast cost {1} less to cast."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "condition": {
+          "kind": "notYourTurn"
+        }
+      }
+    ]
+  }
+}

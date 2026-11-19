@@ -379,7 +379,10 @@ function uniqueJson(text: string): unknown {
   return value;
 }
 
-const GENERATORS = [
+/** The one `SOURCE_FILES` list all evidence generators import and hash. */
+export const EVIDENCE_SOURCE_LIST = 'scripts/card-evidence-sources.ts';
+
+export const GENERATORS = [
   'arcane-denial',
   'fabled-passage',
   'myriad-landscape',
@@ -918,12 +921,13 @@ function discoverViewerEvidenceSources(repoRoot: string) {
   const state = discoveryState(root);
   const closures: { generator: string; files: string[]; edges: string[][]; data: string[][] }[] =
     [];
+  // Every generator hashes the one shared list, so read it once and check each closure against it.
+  const sourceList = readFileSync(resolve(repoRoot, EVIDENCE_SOURCE_LIST), 'utf8');
+  const list = sourceList.match(/const SOURCE_FILES = \[([\s\S]*?)\] as const;/)?.[1];
+  if (!list || list.replace(/'[^']+'\s*,?/g, '').trim()) throw new Error('Malformed source list');
+  const paths = [...list.matchAll(/'([^']+)'/g)].map((match) => match[1]!);
+  if (new Set(paths).size !== paths.length) throw new Error('Duplicate source list entry');
   for (const card of GENERATORS) {
-    const source = readFileSync(resolve(repoRoot, `scripts/generate-${card}-evidence.ts`), 'utf8');
-    const list = source.match(/const SOURCE_FILES = \[([\s\S]*?)\] as const;/)?.[1];
-    if (!list || list.replace(/'[^']+'\s*,?/g, '').trim()) throw new Error('Malformed source list');
-    const paths = [...list.matchAll(/'([^']+)'/g)].map((match) => match[1]!);
-    if (new Set(paths).size !== paths.length) throw new Error('Duplicate source list entry');
     const consumed = discoverGeneratorSources(
       repoRoot,
       `scripts/generate-${card}-evidence.ts`,
@@ -940,8 +944,8 @@ function discoverViewerEvidenceSources(repoRoot: string) {
       edges: consumed.edges.sort(order),
       data: consumed.data.sort(order),
     });
-    for (const path of paths) union.add(path);
   }
+  for (const path of paths) union.add(path);
   // Generator imports cannot discover Vue imports or the separately launched server. Bind
   // the complete owned runtime input trees conservatively, including new files, rather than
   // allowing an unlisted component/session dependency to leave an old receipt current.

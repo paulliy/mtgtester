@@ -1,0 +1,47 @@
+{
+  "name": "Decimate",
+  "oracleId": "a4e5693f-12a0-451e-818d-d6efc7b4ed25",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target artifact, target creature, target enchantment, and target land."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "artifact"
+        },
+        {
+          "kind": "creature"
+        },
+        {
+          "kind": "enchantment"
+        },
+        {
+          "kind": "land"
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroy",
+          "target": 0
+        },
+        {
+          "op": "destroy",
+          "target": 1
+        },
+        {
+          "op": "destroy",
+          "target": 2
+        },
+        {
+          "op": "destroy",
+          "target": 3
+        }
+      ],
+      "description": "Destroy target artifact, target creature, target enchantment, and target land."
+    }
+  }
+}

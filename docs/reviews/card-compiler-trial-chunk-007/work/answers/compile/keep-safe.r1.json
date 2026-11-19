@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"spell","spellTargetsPermanentYouControl":true}],"effects":[{"op":"counter","target":0},{"op":"draw","count":{"kind":"const","n":1}}],"description":"Counter target spell that targets a permanent you control."}}}

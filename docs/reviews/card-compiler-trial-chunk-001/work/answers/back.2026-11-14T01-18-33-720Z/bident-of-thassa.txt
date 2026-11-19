@@ -1,0 +1,1 @@
+{1}{U}, {T}: Each creature your opponents control attacks this turn if able. Activate at any time. The data gives no duration beyond this turn and no other restriction on the creatures.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target restriction 'nontoken artifact you control with mana value X' compares against the announced X of the {X} cost, and no selector can match a mana value equal to an announced value (only fixed manaValueAtMost or manaValueAtLeast with a constant n)."}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Persist is not a grantable keyword in the schema (grantKeywordEachUntilEot takes only IMPLEMENTED_KEYWORDS), so granting persist to each nontoken Vampire until end of turn cannot be expressed."}

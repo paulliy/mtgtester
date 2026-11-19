@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The activatesAbility trigger watches only its controller's own abilities (player 'you') and has no opponent or source-type filter, so it cannot fire on an opponent's creature or land abilities."}

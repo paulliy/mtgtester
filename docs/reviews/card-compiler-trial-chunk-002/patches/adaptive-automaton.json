@@ -1,0 +1,22 @@
+{
+  "name": "Adaptive Automaton",
+  "oracleId": "53c730c6-2f8c-4af8-b400-b9d573a71e60",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ is the chosen type in addition to its other types."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 4,
+          "addChosenSubtype": true
+        }
+      }
+    ]
+  }
+}

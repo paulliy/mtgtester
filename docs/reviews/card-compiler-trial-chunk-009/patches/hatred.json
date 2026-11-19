@@ -1,0 +1,30 @@
+{
+  "name": "Hatred",
+  "oracleId": "40601061-1b25-4db8-8b99-33324ce945cf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature gets +X/+0 until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": {
+            "kind": "xValue"
+          },
+          "toughness": 0
+        }
+      ],
+      "description": "Target creature gets +X/+0 until end of turn."
+    }
+  }
+}

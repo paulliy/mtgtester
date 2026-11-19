@@ -1,0 +1,2 @@
+Whenever a creature that entered this turn deals combat damage to a player, draw a card.
+The trigger is mandatory (no "you may"). The data has no controller restriction on the creature, so it applies to a creature controlled by any player, not only to creatures you control.

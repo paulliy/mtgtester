@@ -1,0 +1,105 @@
+{
+  "name": "Moonstone Eulogist",
+  "oracleId": "cf9190e0-6f53-44fb-8afa-c16f5bf9829e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature an opponent controls dies, you create a Blood token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Blood",
+              "typeLine": "Artifact — Blood",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Blood"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "activatedAbilities": [
+                {
+                  "costs": [
+                    {
+                      "kind": "mana",
+                      "cost": {
+                        "generic": 1,
+                        "colored": {
+                          "W": 0,
+                          "U": 0,
+                          "B": 0,
+                          "R": 0,
+                          "G": 0
+                        },
+                        "colorless": 0
+                      }
+                    },
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "discardCard",
+                      "count": 1
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ],
+                  "timing": "any",
+                  "ability": {
+                    "kind": "activated",
+                    "targets": [],
+                    "effects": [
+                      {
+                        "op": "draw",
+                        "count": {
+                          "kind": "const",
+                          "n": 1
+                        }
+                      }
+                    ],
+                    "description": "{1}, {T}, Discard a card, Sacrifice this token: Draw a card."
+                  }
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature an opponent controls dies, you create a Blood token. (It's an artifact with \"{1}, {T}, Discard a card, Sacrifice this token: Draw a card.\")"
+      }
+    ]
+  }
+}

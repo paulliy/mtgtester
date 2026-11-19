@@ -1,0 +1,59 @@
+{
+  "name": "Zegana, Utopian Speaker",
+  "oracleId": "04260930-ff38-4b35-9ec4-e89196a4f2c7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{4}{G}{U}: Adapt 4."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 4,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "conditionalEffect",
+              "condition": {
+                "kind": "sourceHasCounters",
+                "counter": "+1/+1",
+                "cmp": "==",
+                "n": 0
+              },
+              "then": [
+                {
+                  "op": "putCountersEach",
+                  "selector": {
+                    "kind": "self"
+                  },
+                  "counter": "+1/+1",
+                  "count": 4
+                }
+              ],
+              "else": []
+            }
+          ],
+          "description": "{4}{G}{U}: Adapt 4."
+        }
+      }
+    ]
+  }
+}

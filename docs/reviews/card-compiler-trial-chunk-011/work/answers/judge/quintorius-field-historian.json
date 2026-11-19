@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A's trigger fires when cards leave your graveyard (the controller's graveyard only); Text B's trigger fires when cards you own leave any graveyard, which covers cards leaving other players' graveyards."]}

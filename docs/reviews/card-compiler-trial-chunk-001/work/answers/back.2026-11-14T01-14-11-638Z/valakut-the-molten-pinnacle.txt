@@ -1,0 +1,1 @@
+Whenever a Mountain you control enters (this land included), if the number of Mountains you control meets a hidden comparison with 5 (the comparison is not shown), you may have this land deal 3 damage to any target. The target is chosen when the ability is put on the stack.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No trigger fires when the controller player (not a permanent) becomes the target, and counterUnlessPays is only the ward payoff keyed to a ward-recorded stack object."}

@@ -1,0 +1,1 @@
+Whenever you declare attackers, each creature you control that has one or more counters on it gains double strike until end of turn.

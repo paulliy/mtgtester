@@ -1,0 +1,67 @@
+{
+  "name": "Blade of the Bloodchief",
+  "oracleId": "8985e545-07c3-45f9-9058-fe3c1f50de04",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature dies, put a +1/+1 counter on equipped creature. If equipped creature is a Vampire, put two +1/+1 counters on it instead."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          }
+        },
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "attachedToSource"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Vampire"
+                  }
+                ]
+              },
+              "scope": "all",
+              "cmp": ">=",
+              "n": 1
+            },
+            "then": [
+              {
+                "op": "putCounters",
+                "target": "attachedToSource",
+                "counter": "+1/+1",
+                "count": 2
+              }
+            ],
+            "else": [
+              {
+                "op": "putCounters",
+                "target": "attachedToSource",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            ]
+          }
+        ],
+        "description": "Whenever a creature dies, put a +1/+1 counter on equipped creature. If equipped creature is a Vampire, put two +1/+1 counters on it instead."
+      }
+    ]
+  }
+}

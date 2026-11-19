@@ -1,0 +1,45 @@
+{
+  "name": "Honor-Worn Shaku",
+  "oracleId": "babeeaf6-0fe4-491f-bbf5-63a0568b3d6e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap an untapped legendary permanent you control: Untap this artifact."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tapOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "untapTarget",
+              "target": "source"
+            }
+          ],
+          "description": "Tap an untapped legendary permanent you control: Untap this artifact."
+        }
+      }
+    ]
+  }
+}

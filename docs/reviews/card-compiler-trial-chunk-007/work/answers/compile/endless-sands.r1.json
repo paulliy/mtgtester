@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no way to return each creature card exiled with this land: the parsed {2},{T} exile ability is not linked to this land (no exiledWithIds linkage), and no documented op returns all cards linked to the source."}

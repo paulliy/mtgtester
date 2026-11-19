@@ -1,0 +1,3 @@
+Choose target creature you control and target permanent an opponent controls that is a creature or planeswalker.
+That opponent's permanent is dealt damage equal to the power of the creature you control, by the creature you control as the source.
+If you control a permanent of creature type Eldrazi, you gain 3 life.

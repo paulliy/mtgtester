@@ -1,0 +1,80 @@
+{
+  "name": "Oakhollow Village",
+  "oracleId": "177b7fe4-8565-4631-b4d9-8b2b4282f3ac",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{G}, {T}: Put a +1/+1 counter on each Frog, Rabbit, Raccoon, or Squirrel you control that entered the battlefield this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "enteredThisTurn"
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "subtype",
+                        "value": "Frog"
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Rabbit"
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Raccoon"
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Squirrel"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ],
+          "description": "{G}, {T}: Put a +1/+1 counter on each Frog, Rabbit, Raccoon, or Squirrel you control that entered the battlefield this turn."
+        }
+      }
+    ]
+  }
+}

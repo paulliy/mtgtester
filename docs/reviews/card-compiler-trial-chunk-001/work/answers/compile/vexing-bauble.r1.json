@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Counter that spell' needs the triggering spell as the counter's target, but counter takes only an announced target slot index and no effect reference names the spell that fired the trigger."}

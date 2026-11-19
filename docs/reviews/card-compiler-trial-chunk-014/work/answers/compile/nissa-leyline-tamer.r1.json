@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The reveal-until-creature step needs an op whose exact behavior (put onto the battlefield, rest on the bottom in random order) the schema does not document; revealCreatureOrBottom is undocumented."}

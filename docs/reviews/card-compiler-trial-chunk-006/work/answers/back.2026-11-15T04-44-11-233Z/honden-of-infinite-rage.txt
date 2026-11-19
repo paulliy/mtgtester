@@ -1,0 +1,1 @@
+At the beginning of your upkeep, this deals damage equal to the number of Shrines you control to any target.

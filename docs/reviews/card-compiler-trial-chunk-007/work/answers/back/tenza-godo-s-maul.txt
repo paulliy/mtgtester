@@ -1,0 +1,3 @@
+Equipped creature gets +1/+1.
+Equipped creature that is legendary gets an additional +2/+2.
+Equipped creature that is red has trample.

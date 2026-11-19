@@ -1,0 +1,42 @@
+{
+  "name": "Veilstone Amulet",
+  "oracleId": "55e21534-ec3e-46e1-8faf-59f0c3d48128",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a spell, creatures you control can't be the targets of spells or abilities your opponents control this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "keyword": "hexproof"
+          }
+        ],
+        "description": "Whenever you cast a spell, creatures you control can't be the targets of spells or abilities your opponents control this turn."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"const","n":1},"filter":{"kind":"manaValueAtLeast","n":5}},{"kind":"cantBeCountered","filter":{"kind":"manaValueAtLeast","n":5}}]}}

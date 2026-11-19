@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Exiling cards until a nonland card, then casting it free only if its mana value is 8 or less and otherwise putting it into hand, has no schema form (exileLibraryTop has no mana-value gate or hand fallback)."}

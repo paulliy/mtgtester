@@ -1,0 +1,38 @@
+{
+  "name": "Angrath, Captain of Chaos",
+  "oracleId": "de08f5d4-8868-4d0f-8c0e-d0d3a2105581",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "−2: Amass Zombies 2."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "loyalty",
+            "delta": -2
+          }
+        ],
+        "timing": "sorcery",
+        "oncePerTurn": true,
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "amass",
+              "subtype": "Zombie",
+              "count": {
+                "kind": "const",
+                "n": 2
+              }
+            }
+          ],
+          "description": "−2: Amass Zombies 2."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Searching for up to four creatures with different powers, with an opponent choosing two of them to shuffle back and the rest going to hand, has no schema form (searchLibrary has no different-powers constraint and no opponent choice of which found cards go where)."}

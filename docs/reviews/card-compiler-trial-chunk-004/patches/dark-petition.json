@@ -1,0 +1,78 @@
+{
+  "name": "Dark Petition",
+  "oracleId": "79acdb37-8d52-4bc8-a7be-a7e92b6166e5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If there are two or more instant and/or sorcery cards in your graveyard, add {B}{B}{B}."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": []
+          },
+          "destinations": [
+            {
+              "zone": "hand"
+            }
+          ]
+        },
+        {
+          "op": "shuffle"
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "countCardsInZone",
+              "zone": "graveyard",
+              "selector": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Instant"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Sorcery"
+                  }
+                ]
+              },
+              "owner": "you"
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 2
+            }
+          },
+          "then": [
+            {
+              "op": "addMana",
+              "amount": {
+                "kind": "const",
+                "n": 3
+              },
+              "colors": [],
+              "fixedSymbols": [
+                "B",
+                "B",
+                "B"
+              ]
+            }
+          ],
+          "else": []
+        }
+      ],
+      "description": "Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, add {B}{B}{B}."
+    }
+  }
+}

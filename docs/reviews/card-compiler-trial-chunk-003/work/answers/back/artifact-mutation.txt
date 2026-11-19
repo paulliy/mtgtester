@@ -1,0 +1,2 @@
+Create a number of 1/1 green Saproling creature tokens equal to the mana value of target artifact.
+Destroy that artifact. It can't be regenerated.

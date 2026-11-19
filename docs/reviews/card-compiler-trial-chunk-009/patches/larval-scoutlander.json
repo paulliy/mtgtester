@@ -1,0 +1,92 @@
+{
+  "name": "Larval Scoutlander",
+  "oracleId": "b3f3d55c-a3f6-441b-a380-60c0734dc514",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Spacecraft enters, you may sacrifice a land or Lander. If you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Lander"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              ]
+            },
+            "then": [
+              {
+                "op": "searchLibrary",
+                "filter": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "supertype",
+                      "value": "Basic"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    }
+                  ]
+                },
+                "destinations": [
+                  {
+                    "zone": "battlefield",
+                    "tapped": true
+                  }
+                ],
+                "count": {
+                  "kind": "const",
+                  "n": 2
+                }
+              },
+              {
+                "op": "shuffle"
+              }
+            ]
+          }
+        ],
+        "description": "When this Spacecraft enters, you may sacrifice a land or Lander. If you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."
+      }
+    ]
+  }
+}

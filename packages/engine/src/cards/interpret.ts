@@ -18,6 +18,7 @@ import { colorsOfManaCost, combinedManaCost, emptyCost, parseManaCost } from '..
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { AbilityCost, ActivatedAbility, AlternativeCast, MdfcLandFace } from './ability';
 import { transformDefinition } from '../testing/definition-transform';
+import { cachedDefinition } from './definition-cache';
 import { SELF_SUBJECT } from './ability';
 import type { Ability, Effect, KeywordAbility, TargetSpec, TokenSpec } from './ability';
 import { parseEntersAsCopy } from './grammar/copy';
@@ -2882,9 +2883,15 @@ function buildPathwayLand(card: OracleCard): {
   };
 }
 
-/** Interpret one oracle card. Never throws â€” unmodeled cards are reported, not errors. */
+/**
+ * Interpret one oracle card. Never throws â€” unmodeled cards are reported, not errors.
+ *
+ * Each distinct card is interpreted once per process (`definition-cache.ts`); the returned
+ * definition is shared, so callers must not mutate it. The test-only transform applies on every
+ * call, after the cache.
+ */
 export function interpretCard(card: OracleCard): CardDefinition {
-  return transformDefinition(interpretOracleCard(card));
+  return transformDefinition(cachedDefinition(card, interpretOracleCard));
 }
 
 /**
@@ -2896,7 +2903,10 @@ export function interpretCardWithDiagnostics(card: OracleCard): {
   definition: CardDefinition;
   failures: SlotFailure[];
 } {
-  const { result, failures } = collectSlotDiagnostics(() => interpretCard(card));
+  // Bypasses the cache: slot failures are recorded only while the grammar actually runs.
+  const { result, failures } = collectSlotDiagnostics(() =>
+    transformDefinition(interpretOracleCard(card)),
+  );
   return { definition: result, failures };
 }
 

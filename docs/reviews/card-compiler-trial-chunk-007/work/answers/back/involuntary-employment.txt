@@ -1,0 +1,2 @@
+Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn.
+Create a Treasure token. It has "{T}, Sacrifice this artifact: Add one mana of any color."

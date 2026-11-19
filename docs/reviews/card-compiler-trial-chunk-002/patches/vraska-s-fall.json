@@ -1,0 +1,39 @@
+{
+  "name": "Vraska's Fall",
+  "oracleId": "33fd9192-3e9b-4d3a-92aa-06de29d449df",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each opponent sacrifices a creature or planeswalker of their choice and gets a poison counter."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "sacrificeOneEachOpponent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Planeswalker"
+              }
+            ]
+          }
+        },
+        {
+          "op": "giveTargetPoisonCounters",
+          "target": "eachOpponent",
+          "count": 1
+        }
+      ],
+      "description": "Each opponent sacrifices a creature or planeswalker of their choice and gets a poison counter."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"status": "inexpressible", "reason": "Withheld by the main thread: the compiled patch's smoke game never finished (its delayed enters trigger also fires on the token copies it creates, so the game loops without a decision), and the smoke harness has no time limit."}

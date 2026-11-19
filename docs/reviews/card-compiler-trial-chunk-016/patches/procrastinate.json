@@ -1,0 +1,38 @@
+{
+  "name": "Procrastinate",
+  "oracleId": "6f8fa68e-e961-4ae1-b27d-22d87e90f26b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap target creature. Put twice X stun counters on it."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "tapTarget",
+          "target": 0
+        },
+        {
+          "op": "putCounters",
+          "target": 0,
+          "counter": "stun",
+          "count": {
+            "kind": "times",
+            "of": {
+              "kind": "xValue"
+            },
+            "n": 2
+          }
+        }
+      ],
+      "description": "Tap target creature. Put twice X stun counters on it."
+    }
+  }
+}

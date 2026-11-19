@@ -1,0 +1,2 @@
+Enchanted creature is a black Skeleton creature with base power and toughness 1/1.
+Enchanted creature loses all abilities.

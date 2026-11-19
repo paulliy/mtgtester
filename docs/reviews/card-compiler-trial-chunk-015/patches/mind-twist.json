@@ -1,0 +1,30 @@
+{
+  "name": "Mind Twist",
+  "oracleId": "78f9c223-9982-4282-a496-a6f892f0a5bf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target player discards X cards at random."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player"
+        }
+      ],
+      "effects": [
+        {
+          "op": "discardTarget",
+          "target": 0,
+          "count": {
+            "kind": "xValue"
+          },
+          "atRandom": true
+        }
+      ],
+      "description": "Target player discards X cards at random."
+    }
+  }
+}

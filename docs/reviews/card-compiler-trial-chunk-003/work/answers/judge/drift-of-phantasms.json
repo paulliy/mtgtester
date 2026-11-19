@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A searches for a card with the same mana value as this card; Text B hard-codes mana value 3, so the searched mana value is not tied to this card in B and the two match only if this card's mana value is 3, which neither text states."]}

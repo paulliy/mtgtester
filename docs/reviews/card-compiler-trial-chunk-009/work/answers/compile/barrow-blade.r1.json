@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect makes a creature lose all abilities until end of turn (loseAllAbilities exists only as a static layer-6 op), so the trigger's effect cannot be written."}

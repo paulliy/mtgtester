@@ -9,6 +9,7 @@ import {
   creatureToken,
   HUMAN_SOLDIER_1_1_WHITE,
   INKLING_2_1_FLYING,
+  TOKEN_OPS_ACTING_FIRST,
   TREASURE,
 } from '../cards/tokens';
 import {
@@ -32,7 +33,12 @@ import {
 } from '../state/counters';
 import { isPermanentCard, PERMANENT_CARD_TYPES } from '../cards/definition';
 import type { ObjectFacts } from '../cards/source-identity';
-import { eventObjectFacts, sourceObjectFacts, sourceObjectState } from '../cards/source-identity';
+import {
+  eventObjectFacts,
+  sourceObjectFacts,
+  sourceObjectState,
+  targetObjectFacts,
+} from '../cards/source-identity';
 import { assertDelayedTriggerEvent } from '../cards/trigger-contracts';
 import { queueAbilityCopy, queueReplicateCopy, queueSpellCopy } from '../stack/copy';
 import { chooseReplicateTargets } from '../stack/replicate-targets';
@@ -57,6 +63,7 @@ import type {
   AttackRequirementSpec,
   ManaRider,
   StackAbilitySnapshot,
+  TokenSpec,
   WardCost,
 } from '../cards/ability';
 import type {
@@ -2089,7 +2096,8 @@ function* executeAbilityEffects(
     return currentId !== null && findObjectById(ctx, currentId) !== undefined ? currentId : null;
   };
 
-  for (const effect of ability.effects ?? []) {
+  for (const listed of ability.effects ?? []) {
+    const effect = withTokenCharacteristicsFixed(ctx, listed, scope);
     enterOp(ctx, source.name, effect.op);
     switch (effect.op) {
       case 'transformSelf': {
@@ -3881,12 +3889,18 @@ function* executeAbilityEffects(
         // "Return all Zombie cards from your graveyard to the battlefield." One simultaneous move:
         // every returned creature is on the battlefield before any enters trigger is checked, so
         // each sees the others enter (CR 603.6a), and leaving the graveyard is one event.
-        const owner = playerById(ctx, source.controllerId);
-        const matching = owner.graveyard.filter((card) =>
-          selectMatches(cardZoneCandidate(ctx, card, owner.id), effect.filter, {
-            cardId: source.cardId,
-            controllerId: source.controllerId,
-          }),
+        // `scope: 'all'` reads every graveyard ("Put all creature cards from all graveyards onto
+        // the battlefield under your control", Rise of the Dark Realms); the cards still enter
+        // under the source's controller, and a card returned to hand goes to its owner's hand.
+        const owners =
+          effect.scope === 'all' ? ctx.state.players : [playerById(ctx, source.controllerId)];
+        const matching = owners.flatMap((owner) =>
+          owner.graveyard.filter((card) =>
+            selectMatches(cardZoneCandidate(ctx, card, owner.id), effect.filter, {
+              cardId: source.cardId,
+              controllerId: source.controllerId,
+            }),
+          ),
         );
         yield* moveObjects(
           ctx,
@@ -5723,7 +5737,24 @@ function* executeAbilityEffects(
       case 'explore': {
         const currentId = ref(effect.target);
         const permanent = currentId === null ? undefined : findPermanent(ctx, currentId);
-        const last = eventObjectFacts(ctx, scope);
+        // A permanent that left the battlefield still explores, as it last existed (CR 701.44c).
+        // Read the last-known facts of the object the reference names: an activated ability (a
+        // Map token's) has no event object, and a trigger's event object is not its target.
+        const last =
+          permanent !== undefined
+            ? undefined
+            : typeof effect.target === 'number'
+              ? targetObjectFacts(ctx, scope, effect.target)
+              : effect.target === 'triggerObject'
+                ? eventObjectFacts(ctx, scope)
+                : effect.target === 'source'
+                  ? sourceObjectFacts(ctx, scope)
+                  : undefined;
+        // A target that was illegal as the ability began to resolve is not affected
+        // (CR 608.2b): `scope.targets` holds no id for it, so it has no last-known facts either
+        // and does not explore. A legal one that left during this resolution still does.
+        if (permanent === undefined && last === undefined && typeof effect.target === 'number')
+          break;
         const playerId = permanent?.controllerId ?? last?.candidate.controllerId ?? controller.id;
         const player = playerById(ctx, playerId);
         const top = player.library[0];
@@ -11546,6 +11577,35 @@ export function* payAbilityCosts(
     yield* moveObject(ctx, perm, { zone: 'exile' });
   }
   return stationPower === undefined ? {} : { stationPower };
+}
+
+/**
+ * "Create X 1/1 ... X/X green Ooze creature tokens" (Gelatinous Genesis), "an X/X Spirit where X
+ * is the number of counters on this creature": a token's power and toughness written as a value
+ * are fixed as the token is created, from the creating ability. `registerTokenDef` reads a value
+ * with no scope at all, so the effect's spec is given numbers here, read with the resolving
+ * ability's scope, before any op creates the token.
+ */
+function withTokenCharacteristicsFixed(
+  ctx: GameContext,
+  effect: Effect,
+  scope: ValueScope,
+): Effect {
+  // An op that destroys, exiles, mills or counters first keeps a fixed spec (validation).
+  if (!('spec' in effect) || TOKEN_OPS_ACTING_FIRST.has(effect.op)) return effect;
+  const spec = effect.spec as TokenSpec | undefined;
+  if (spec === undefined || spec === null || typeof spec !== 'object') return effect;
+  const fixed = (value: TokenSpec['power']): TokenSpec['power'] =>
+    value === null || typeof value !== 'object' ? value : evaluateValueIn(ctx, value, scope);
+  if (
+    (spec.power === null || typeof spec.power !== 'object') &&
+    (spec.toughness === null || typeof spec.toughness !== 'object')
+  )
+    return effect;
+  return {
+    ...effect,
+    spec: { ...spec, power: fixed(spec.power), toughness: fixed(spec.toughness) },
+  } as Effect;
 }
 
 /**

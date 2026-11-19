@@ -188,7 +188,7 @@ and **84 real frontend/backend/WebSocket viewer scenarios**, with no skips or fl
 results. It captured 84 Playwright traces and checked source hashes before and after execution:
 all captured sources stayed unchanged. Temporary reports, traces, receipts, and the verification
 checkout were removed during commit cleanup. These counts record historical observations;
-fresh evidence must be generated with `scripts/run-white-black-verification.ts` before reuse.
+fresh evidence must be generated before reuse (the original `scripts/run-white-black-verification.ts` was retired; it is in history at `fae4d11`).
 Engine and server test typechecks passed.
 These are generated observations from isolated committed candidate
 `86aee6b`, with a clean tree and unchanged captured sources. The user's working checkout is

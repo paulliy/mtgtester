@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"manaActivationRider","source":{"kind":"allOf","of":[{"kind":"type","value":"Land"},{"kind":"controller","who":"you"}]},"add":{"kind":"fixed","units":[["G"]]}}]}}

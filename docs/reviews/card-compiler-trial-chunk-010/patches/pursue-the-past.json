@@ -1,0 +1,29 @@
+{
+  "name": "Pursue the Past",
+  "oracleId": "4384996f-aeaa-41ac-aa0e-12d72c887731",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You gain 2 life. You may discard a card. If you do, draw two cards."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "mayDiscardThenDraw",
+          "count": 2
+        }
+      ],
+      "description": "You gain 2 life. You may discard a card. If you do, draw two cards."
+    }
+  }
+}

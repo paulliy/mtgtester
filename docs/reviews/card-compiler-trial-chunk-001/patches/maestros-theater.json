@@ -1,0 +1,82 @@
+{
+  "name": "Maestros Theater",
+  "oracleId": "9464ddf2-4bcb-44f6-b945-89a132544de6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this land enters, sacrifice it. When you do, search your library for a basic Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeSourceThenReflexive",
+            "then": {
+              "kind": "triggered",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "searchLibrary",
+                  "filter": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "supertype",
+                        "value": "Basic"
+                      },
+                      {
+                        "kind": "anyOf",
+                        "of": [
+                          {
+                            "kind": "subtype",
+                            "value": "Island"
+                          },
+                          {
+                            "kind": "subtype",
+                            "value": "Swamp"
+                          },
+                          {
+                            "kind": "subtype",
+                            "value": "Mountain"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "destinations": [
+                    {
+                      "zone": "battlefield",
+                      "tapped": true
+                    }
+                  ],
+                  "allowFailToFind": true
+                },
+                {
+                  "op": "shuffle"
+                },
+                {
+                  "op": "gainLife",
+                  "amount": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "description": "Search your library for a basic Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+            }
+          }
+        ],
+        "description": "When this land enters, sacrifice it. When you do, search your library for a basic Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+      }
+    ]
+  }
+}

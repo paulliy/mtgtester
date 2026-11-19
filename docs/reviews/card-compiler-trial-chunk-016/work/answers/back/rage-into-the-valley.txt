@@ -1,0 +1,3 @@
+Draw a card.
+You lose 1 life.
+Amass Goblin 2.

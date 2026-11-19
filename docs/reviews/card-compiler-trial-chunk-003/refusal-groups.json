@@ -1,0 +1,376 @@
+[
+  {
+    "feature": "one-off",
+    "description": "Lines needing a bespoke mechanic found on a single card.",
+    "cards": [
+      "Arcane Bombardment",
+      "Autumn's Veil",
+      "Beacon of Immortality",
+      "Bruvac the Grandiloquent",
+      "Endbringer",
+      "Expel the Interlopers",
+      "Gilded Drake",
+      "Hall of the Bandit Lord",
+      "Hell to Pay",
+      "Hyena Umbra",
+      "Inspiring Leader",
+      "Kellogg, Dangerous Mind",
+      "Lim-Dûl's Vault",
+      "Misleading Signpost",
+      "Nowhere to Run",
+      "Nuclear Fallout",
+      "Oath of Teferi",
+      "Odric, Master Tactician",
+      "Protean Hulk",
+      "Robe of Stars",
+      "Royal Treatment",
+      "Sovereign Okinec Ahau",
+      "Sundial of the Infinite",
+      "Winds of Change"
+    ]
+  },
+  {
+    "feature": "Alternative-cost keyword mechanics",
+    "description": "Model suspend, encore, miracle and warp as alternative casts with exile/time-counter, token-copy and recast riders.",
+    "cards": [
+      "Ancestral Vision",
+      "Angel of Indemnity",
+      "Fangs of Kalonia",
+      "Foundation Breaker",
+      "Overlord of the Floodpits",
+      "Resurgent Belief",
+      "Saw It Coming",
+      "Sol Talisman",
+      "Temporal Mastery"
+    ]
+  },
+  {
+    "feature": "Trigger events and filters that do not exist yet",
+    "description": "Add trigger events for an opponent playing a land, searching a library, a permanent untapping, creating a token, cards milled to graveyard, and a cause filter on trigger doubling.",
+    "cards": [
+      "Beamtown Beatstick",
+      "Double Vision",
+      "Keen Sense",
+      "Niv-Mizzet, Visionary",
+      "Spirit Link",
+      "Umezawa's Jitte",
+      "Yarok, the Desecrated"
+    ]
+  },
+  {
+    "feature": "Turn-history conditions",
+    "description": "Add a condition counting creatures that attacked this turn.",
+    "cards": [
+      "Celestine, the Living Saint",
+      "Fraying Sanity",
+      "Rionya, Fire Dancer",
+      "River of Tears",
+      "Thalisse, Reverent Medium",
+      "Valkyrie Harbinger",
+      "Witch of the Moors"
+    ]
+  },
+  {
+    "feature": "Per-player scope and chooser on effects",
+    "description": "Add player-scope/chooser fields so sacrifice, search, copy and lose-life ops can target each player, a single opponent, or chosen players with filters like nontoken or creature-or-planeswalker.",
+    "cards": [
+      "Bribery",
+      "Fertilid",
+      "Geode Rager",
+      "Price of Progress",
+      "Render Silent",
+      "River's Rebuke",
+      "Stonespeaker Crystal"
+    ]
+  },
+  {
+    "feature": "Ability cost forms",
+    "description": "Add AbilityCost forms: exert, put a -1/-1 counter on this, mill a card, tap X untapped Myr on an attack trigger.",
+    "cards": [
+      "Daze",
+      "Master Transmuter",
+      "Maze's End",
+      "Scholar of New Horizons",
+      "The Unagi of Kyoshi Island",
+      "Vein Ripper"
+    ]
+  },
+  {
+    "feature": "Selector predicates in targets and statics",
+    "description": "Make powerAtMost usable in target filters and library searches and add a toughnessAtMost leaf.",
+    "cards": [
+      "Empyrean Eagle",
+      "Magewright's Stone",
+      "Overgrown Battlement",
+      "Sanctum of Ugin",
+      "Sandwurm Convergence",
+      "Zenith Chronicler"
+    ]
+  },
+  {
+    "feature": "Put onto battlefield tapped and attacking or attached",
+    "description": "Add tapped (and attached) options to graveyard/exile-to-battlefield ops, including return-each and delayed returns.",
+    "cards": [
+      "Brass Squire",
+      "Ilharg, the Raze-Boar",
+      "Redoubled Stormsinger",
+      "Worldsoul's Rage",
+      "Zack Fair",
+      "Zombie Apocalypse"
+    ]
+  },
+  {
+    "feature": "Sacrificed cost object's power/mana value",
+    "description": "Add a Value reading the power of the permanent sacrificed as a cost, usable for draw and mill counts.",
+    "cards": [
+      "Burnt Offering",
+      "Ghoulcaller Gisa",
+      "Life's Legacy",
+      "Momentous Fall",
+      "Sacrifice",
+      "Witch's Oven"
+    ]
+  },
+  {
+    "feature": "Dynamic mana-value comparand in selectors",
+    "description": "Let manaValueAtMost/AtLeast/equals and cast-free limits take a Value (announced X, mana spent, trigger object's mana value, damage dealt, lands controlled) instead of a fixed number.",
+    "cards": [
+      "Ascend from Avernus",
+      "Carmen, Cruel Skymarcher",
+      "Neoform",
+      "Oswald Fiddlebender",
+      "Reshape"
+    ]
+  },
+  {
+    "feature": "Target slot constraints and kinds",
+    "description": "Add target kinds and constraints: spell-or-any-permanent, any-target filtered by creature type, same-controller graveyard card for a second slot, and creatures controlled by different players.",
+    "cards": [
+      "Cornered by Black Mages",
+      "Peter Parker's Camera",
+      "Tinder Wall",
+      "Tishana's Tidebinder",
+      "Wrathful Raptors"
+    ]
+  },
+  {
+    "feature": "Become-copy and enters-as-copy variants",
+    "description": "Add become-copy of a graveyard card, until-end-of-turn enters-as-copy, copy that keeps an extra ability, and optional enter-tapped choice on copy.",
+    "cards": [
+      "Brudiclad, Telchor Engineer",
+      "Echoing Deeps",
+      "Flesh Duplicate",
+      "Machine God's Effigy"
+    ]
+  },
+  {
+    "feature": "Reveal/exile/mill-until loops with leftovers handling",
+    "description": "Add a repeat-until-predicate or repeat-N-times op for reveal/exile/mill/draw sequences with leftover routing and chosen-name matching.",
+    "cards": ["Clifftop Lookout", "Genesis Hydra", "Tasha's Hideous Laughter", "The Regalia"]
+  },
+  {
+    "feature": "Token creation ops lacking riders",
+    "description": "Add sacrifice-at-end, tapped, per-token copy and exile-then-token-for-controller options to token creation ops.",
+    "cards": ["Flameshadow Conjuring", "Infantry Shield", "Molten Echoes", "Urabrask's Forge"]
+  },
+  {
+    "feature": "Announced X where a fixed number is required",
+    "description": "Allow announced X or a Value for look-at-top, mill, connive, attack-tax, sacrifice-count and optional pay-X amounts.",
+    "cards": ["Heroes' Podium", "Rampaging Yao Guai", "Repulsive Mutation", "Villainous Wealth"]
+  },
+  {
+    "feature": "Cast a card from other zones with a rider",
+    "description": "Add cast-from-graveyard-with-condition, cast chosen graveyard card, and copy-exiled-card-and-cast-free ops.",
+    "cards": ["Aminatou's Augury", "Cunning Rhetoric", "Mnemonic Betrayal", "Torrential Gearhulk"]
+  },
+  {
+    "feature": "Damage prevention variants",
+    "description": "Add combat damage prevention filtered by creature subtype and for all your attackers.",
+    "cards": ["Pariah", "Phyrexian Vindicator", "Temple Altisaur", "The Mindskinner"]
+  },
+  {
+    "feature": "Variable-count target slots and chosen-count value",
+    "description": "Support target counts bounded by announced X or chosen at resolution, with a delayed return of the whole chosen set.",
+    "cards": ["Brago, King Eternal", "Dance of the Manse", "Doppelgang", "Lich-Knights' Conquest"]
+  },
+  {
+    "feature": "Grant spell keywords to later spells",
+    "description": "Add effects or statics granting improvise or uncounterable to the next or all nonartifact spells.",
+    "cards": [
+      "Boseiju, Who Shelters All",
+      "Domri, Anarch of Bolas",
+      "Imoti, Celebrant of Bounty",
+      "Overmaster"
+    ]
+  },
+  {
+    "feature": "Another player's optional choice on resolution",
+    "description": "Add an effect where another player decides on resolution (opponent may search, opponent may tap the entering permanent) with a fallback branch.",
+    "cards": ["Kwain, Itinerant Meddler", "Plargg and Nassari", "Tempt with Vengeance"]
+  },
+  {
+    "feature": "Missing keyword mechanics (delve, echo, myriad, decayed, splice)",
+    "description": "Add delve, echo, myriad, decayed and splice as keywords with their cost or token-copy mechanics.",
+    "cards": ["Crowded Crypt", "Legion Loyalty", "Temporal Trespass"]
+  },
+  {
+    "feature": "Conditional spell cost modification",
+    "description": "Extend costReduction to activated abilities of your creatures and add Phyrexian-life payments for any colored symbol.",
+    "cards": ["God-Pharaoh's Statue", "Inquisitive Glimmer", "Thalia, Guardian of Thraben"]
+  },
+  {
+    "feature": "Temporary or permanent characteristic-setting effects",
+    "description": "Add set-base-P/T with X values, add card types until end of turn, untargeted become-creature, and type changes on a returned object.",
+    "cards": ["Captivating Vampire", "Crimson Wisps", "Jolrael, Mwonvuli Recluse"]
+  },
+  {
+    "feature": "Trigger source, subject and payload filters",
+    "description": "Add source/subject filters and defined event payloads (damage source's controller, damage total, creature-only source, equipped creature, dying creature) to damage, ability-activation and death triggers.",
+    "cards": ["Harsh Mentor", "Nykthos Paragon", "Runic Armasaur"]
+  },
+  {
+    "feature": "Extra turns and phases for other players",
+    "description": "Add extra turn for a target player and an additional beginning phase.",
+    "cards": ["Paradox Haze", "Time Stretch", "Y'shtola Rhul"]
+  },
+  {
+    "feature": "Effect references to the triggering object or event player",
+    "description": "Let effects reference the trigger's spell, object or event player (counter it, gain control for the attacker, damage source, redirect a target to this creature).",
+    "cards": ["Blood Seeker", "Genesis Chamber", "Repercussion"]
+  },
+  {
+    "feature": "Damage and life-change replacement variants",
+    "description": "Add replacement effects that double life gain or life loss, triple damage, add flat damage, or double only noncombat damage.",
+    "cards": ["Fated Firepower", "Lightning, Army of One", "Sulfuric Vortex"]
+  },
+  {
+    "feature": "Modern keyword actions (venture, ring tempts, suspect, crime)",
+    "description": "Add the Ring tempts you / Ring-bearer action.",
+    "cards": ["Forsaken Miner", "Ringsight"]
+  },
+  {
+    "feature": "Conditional rule statics and permissions",
+    "description": "Add condition fields to castFromGraveyard, castFromZone, cantCastSpells and attack/block restriction statics.",
+    "cards": ["Ethersworn Canonist", "The Indomitable"]
+  },
+  {
+    "feature": "Token copy color, type and cost overrides",
+    "description": "Add color, subtype and no-mana-cost overrides to createTokenCopyOf for eternalize.",
+    "cards": ["Astral Dragon", "The Jolly Balloon Man"]
+  },
+  {
+    "feature": "Toughness Values for other objects",
+    "description": "Add Values for toughness of the trigger object or a target and a difference of two Values (excess damage).",
+    "cards": ["Canopy Gargantuan", "Wolverine Riders"]
+  },
+  {
+    "feature": "Reference to the card moved by the previous effect",
+    "description": "Let later effects reference the card discarded or exiled by an earlier step (its type, its identity for a free cast).",
+    "cards": ["Reckless Handling", "Splash Portal"]
+  },
+  {
+    "feature": "Enter-with-counters rider on blink, reanimation and copy",
+    "description": "Let blink and return ops reference the returned object to add counters, Roles or attachments (flying counter, +1/+1 on a Spirit, -1/-1 for persist).",
+    "cards": ["Semester's End", "Teferi's Time Twist"]
+  },
+  {
+    "feature": "Conditions on the triggering object or event player",
+    "description": "Add conditions comparing the entering creature's name, the first combat phase, and cast-from-graveyard on a resolving spell.",
+    "cards": ["Increasing Vengeance", "Nalfeshnee"]
+  },
+  {
+    "feature": "Count of objects affected by the previous effect",
+    "description": "Add a Value counting what the preceding effect actually destroyed, sacrificed or killed in the same resolution.",
+    "cards": ["Settle the Wreckage", "Tolarian Winds"]
+  },
+  {
+    "feature": "Either-or and variable additional costs",
+    "description": "Add either-or additional cost choice for spells.",
+    "cards": ["Bone Shards", "Eaten Alive"]
+  },
+  {
+    "feature": "Combat and untap rule statics",
+    "description": "Add rule statics capping attackers per combat, stopping all creatures or an opponent's land from untapping, and extra blocks per creature.",
+    "cards": ["Meekstone", "Winter Moon"]
+  },
+  {
+    "feature": "Discard filtered by card type",
+    "description": "Add a card-type filter to discardCard costs and discard effects (creature card, artifact card) and branch on the discarded card's type.",
+    "cards": ["Survival of the Fittest"]
+  },
+  {
+    "feature": "Replacement effects redirecting where a card goes",
+    "description": "Add replacements that exile a reanimated creature at end step and that reveal and shuffle a card into the library instead of the graveyard.",
+    "cards": ["Worldspine Wurm"]
+  },
+  {
+    "feature": "Resolution-time creature type choice for spells",
+    "description": "Add a choose-a-creature-type step on spell resolution whose result feeds later effects.",
+    "cards": ["Harmonized Crescendo"]
+  },
+  {
+    "feature": "Ability and spell copying with source filters",
+    "description": "Add a pay-mana option to copyActivatedAbility.",
+    "cards": ["Double Major"]
+  },
+  {
+    "feature": "Die rolling",
+    "description": "Add a die-roll effect (d20) whose result feeds draw counts, token counts and reflexive effects.",
+    "cards": ["Ancient Bronze Dragon"]
+  },
+  {
+    "feature": "Missing board and game-state conditions",
+    "description": "Add conditions for seven differently named lands, the game turn number, attached-to-creature, greatest mana value among artifacts, per-opponent creature counts, and mana added by this ability this turn.",
+    "cards": ["Cosmos Elixir"]
+  },
+  {
+    "feature": "Division/halving Value",
+    "description": "Add Value division with round-up or round-down (half power/toughness, half library, half life).",
+    "cards": ["Traumatize"]
+  },
+  {
+    "feature": "Shares-a-creature-type selector",
+    "description": "Add selectors and per-affected-object values for sharing a creature type, and a target constraint tying two slots to a shared type.",
+    "cards": ["Cloudstone Curio"]
+  },
+  {
+    "feature": "Durations until end of your next turn",
+    "description": "Add an until-end-of-your-next-turn duration for control changes, keyword grants and play permissions on exiled cards.",
+    "cards": ["Inspired Tinkering"]
+  },
+  {
+    "feature": "Look-without-moving effects",
+    "description": "Add looking at a target player's hand or top card without revealing, discarding or moving it.",
+    "cards": ["Urza's Bauble"]
+  },
+  {
+    "feature": "Counter-kind-specific counter operations",
+    "description": "Add ops that double or move only a named or chosen counter kind.",
+    "cards": ["Brokers Ascendancy"]
+  },
+  {
+    "feature": "Win/lose-game effects and static",
+    "description": "Add 'you win the game' and 'you lose the game' effects and a cast-from-hand plus same-name-cast condition.",
+    "cards": ["Vorpal Sword"]
+  },
+  {
+    "feature": "Casting-permission and restriction statics",
+    "description": "Add static free-cast from hand, flashback granting for graveyard spells, and restriction of opponent casting to hand only.",
+    "cards": ["Gwenom, Remorseless"]
+  },
+  {
+    "feature": "Grant landwalk, horsemanship and afflict keywords",
+    "description": "Add landwalk (nonbasic, island), fear and similar evasion keywords to IMPLEMENTED_KEYWORDS and token specs.",
+    "cards": ["Shadow Rift"]
+  },
+  {
+    "feature": "Color-specific protection and hexproof grants",
+    "description": "Add hexproof-from-color, protection from colors outside commander identity, and protection from colorless or a chosen color.",
+    "cards": ["Greensleeves, Maro-Sorcerer"]
+  },
+  {
+    "feature": "Blocker restriction by creature selector",
+    "description": "Add can't-be-blocked-by restriction keyed to the creatures of the chosen player.",
+    "cards": ["Alpha Authority"]
+  }
+]

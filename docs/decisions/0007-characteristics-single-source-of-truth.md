@@ -1,7 +1,7 @@
 # 0007 — Computed characteristics as the single source of truth
 
 Date: 2026-07-24
-Status: Accepted
+Status: Accepted (2026-07-24)
 
 ## Context
 

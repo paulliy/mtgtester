@@ -1,0 +1,43 @@
+{
+  "name": "Githzerai Monk",
+  "oracleId": "d4d3cba8-562d-4208-ab0a-c82b4dd8e959",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Psychic Defense — When this creature enters, tap all creatures you don't control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "tapEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          }
+        ],
+        "description": "Psychic Defense — When this creature enters, tap all creatures you don't control."
+      }
+    ]
+  }
+}
