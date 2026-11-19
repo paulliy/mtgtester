@@ -18,6 +18,7 @@ import { buildPlayerView } from '../src/view/view';
 import { conjure, oracle, pumpStrict, spawn } from './fixtures';
 import {
   activate,
+  activateOption,
   castFromHand,
   choose,
   p,
@@ -145,21 +146,40 @@ describe('pinned pair and hand-look cards', () => {
     expect(p(ctx, 'P1').hand.some((card) => card.cardId === pippin.cardId)).toBe(true);
   });
 
-  it.each(['Peek', 'Gitaxian Probe'])(
-    'hand-look-cast — the real %s shows P1 the hand, draws, and shows P3 nothing',
-    (name) => {
-      const ctx = withSecrets(`pinned-${name}`);
-      castFromHand(ctx, 'P1', pinned(name), new Map([[0, 'P2']]));
-      pumpStrict(resolveTopOfStack(ctx));
-      expect(knownNames(ctx, 'P1')).toEqual(SECRETS);
-      expect(p(ctx, 'P1').hand).toHaveLength(1);
-      expect(knownNames(ctx, 'P3')).toEqual([]);
-      const third = JSON.stringify(buildPlayerView(ctx, 'P3'));
-      for (const hidden of SECRETS) expect(third).not.toContain(hidden);
-    },
-  );
+  const lookAndDraw = (name: string) => {
+    const ctx = withSecrets(`pinned-${name}`);
+    castFromHand(ctx, 'P1', pinned(name), new Map([[0, 'P2']]));
+    pumpStrict(resolveTopOfStack(ctx));
+    expect(knownNames(ctx, 'P1')).toEqual(SECRETS);
+    expect(p(ctx, 'P1').hand).toHaveLength(1);
+    expect(knownNames(ctx, 'P3')).toEqual([]);
+    const third = JSON.stringify(buildPlayerView(ctx, 'P3'));
+    for (const hidden of SECRETS) expect(third).not.toContain(hidden);
+  };
 
-  it('hand-look-glasses — the real Glasses of Urza looks through its tap activation', () => {
+  /** The target leaves before resolution: the only target is illegal, so nothing happens. */
+  const fizzle = (name: string) => {
+    const ctx = withSecrets(`pinned-${name}-fizzle`);
+    castFromHand(ctx, 'P1', pinned(name), new Map([[0, 'P2']]));
+    p(ctx, 'P2').hasLost = true;
+    pumpStrict(resolveTopOfStack(ctx));
+    expect(p(ctx, 'P1').knownHandCards).toBeUndefined();
+    expect(p(ctx, 'P1').hand).toHaveLength(0);
+  };
+
+  it('peek-look-and-draw — the real Peek shows P1 the hand, draws, and shows P3 nothing', () =>
+    lookAndDraw('Peek'));
+
+  it('peek-fizzle — the real Peek learns and draws nothing when its target is gone', () =>
+    fizzle('Peek'));
+
+  it('gitaxian-probe-look-and-draw — the real Gitaxian Probe shows P1 the hand and draws', () =>
+    lookAndDraw('Gitaxian Probe'));
+
+  it('gitaxian-probe-fizzle — the real Gitaxian Probe does nothing when its target is gone', () =>
+    fizzle('Gitaxian Probe'));
+
+  it('glasses-of-urza-look — the real Glasses of Urza looks through its tap activation', () => {
     const ctx = withSecrets('pinned-glasses');
     const glasses = spawn(ctx, 'P1', pinned('Glasses of Urza'));
     activate(ctx, 'P1', glasses, new Map([[0, 'P2']]));
@@ -167,5 +187,15 @@ describe('pinned pair and hand-look cards', () => {
     pumpStrict(resolveTopOfStack(ctx));
     expect(knownNames(ctx, 'P1')).toEqual(SECRETS);
     expect(p(ctx, 'P1').hand).toHaveLength(0);
+    expect(knownNames(ctx, 'P3')).toEqual([]);
+  });
+
+  it('glasses-of-urza-tapped — tapped Glasses of Urza offers no second look', () => {
+    const ctx = withSecrets('pinned-glasses-tapped');
+    const glasses = spawn(ctx, 'P1', pinned('Glasses of Urza'));
+    activate(ctx, 'P1', glasses, new Map([[0, 'P2']]));
+    expect(activateOption(ctx, 'P1', glasses)).toBeUndefined();
+    pumpStrict(resolveTopOfStack(ctx));
+    expect(activateOption(ctx, 'P1', glasses)).toBeUndefined();
   });
 });

@@ -19967,6 +19967,85 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "873abbf4-c9b5-4b8f-8cd0-613cf3b9b1d5": {
+      "name": "Peek",
+      "oracleSha256": "041bbab79dfbf61c8a4e478c21987483d7ee8a55cb2da4239f9261e3a9486152",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Look at target player's hand.",
+          "implementation": [
+            "spell; Effect.lookAtHand on a player target: the controller records a private snapshot of that hand (CR 402.3, 701.20a), shown only in its own view"
+          ],
+          "engineTestIds": [
+            "pairs-and-hand-look-pinned.test.ts::peek-look-and-draw",
+            "pairs-and-hand-look-pinned.test.ts::peek-fizzle"
+          ],
+          "viewerScenarioIds": ["peek-viewer-private-hand-look"]
+        },
+        {
+          "oracleText": "Draw a card.",
+          "implementation": [
+            "Effect.draw 1 for the controller; skipped when the only target is illegal (CR 608.2b)"
+          ],
+          "engineTestIds": [
+            "pairs-and-hand-look-pinned.test.ts::peek-look-and-draw",
+            "pairs-and-hand-look-pinned.test.ts::peek-fizzle"
+          ],
+          "viewerScenarioIds": ["peek-viewer-private-hand-look"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1d67f5ff-1fce-45e5-b6a1-416c569351e2": {
+      "name": "Gitaxian Probe",
+      "oracleSha256": "61caf913b061d40968fee45ac9527accf8e6aac1e76a8536bf1e0d45760730a4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Look at target player's hand.",
+          "implementation": [
+            "spell; Effect.lookAtHand on a player target: the controller records a private snapshot of that hand (CR 402.3, 701.20a), shown only in its own view"
+          ],
+          "engineTestIds": [
+            "pairs-and-hand-look-pinned.test.ts::gitaxian-probe-look-and-draw",
+            "pairs-and-hand-look-pinned.test.ts::gitaxian-probe-fizzle"
+          ],
+          "viewerScenarioIds": []
+        },
+        {
+          "oracleText": "Draw a card.",
+          "implementation": [
+            "Effect.draw 1 for the controller; skipped when the only target is illegal (CR 608.2b)"
+          ],
+          "engineTestIds": [
+            "pairs-and-hand-look-pinned.test.ts::gitaxian-probe-look-and-draw",
+            "pairs-and-hand-look-pinned.test.ts::gitaxian-probe-fizzle"
+          ],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "af7fabf4-8d55-4b06-9c21-472f4a5775b4": {
+      "name": "Glasses of Urza",
+      "oracleSha256": "145012eb7c41e882cc115a55da81c0d402635d2e98493824566204fbc7fa7848",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}: Look at target player's hand.",
+          "implementation": [
+            "activated ability with a tap cost; Effect.lookAtHand on a player target (CR 402.3, 701.20a)"
+          ],
+          "engineTestIds": [
+            "pairs-and-hand-look-pinned.test.ts::glasses-of-urza-look",
+            "pairs-and-hand-look-pinned.test.ts::glasses-of-urza-tapped"
+          ],
+          "viewerScenarioIds": []
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
