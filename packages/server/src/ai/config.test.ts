@@ -173,9 +173,23 @@ describe('AI Config', () => {
   it('keeps role-specific capacity fallbacks in the default OpenRouter chains', () => {
     const config = loadAiConfig({ OPENROUTER_API_KEY: 'sk-or-123' });
     expect(config.strategist.models).toEqual(['z-ai/glm-5.3-flash', 'deepseek/deepseek-v4-flash']);
-    expect(config.tactician.models).toEqual(['particle-ai/particle-1', 'deepseek/deepseek-v4-flash']);
+    expect(config.tactician.models).toEqual([
+      'particle-ai/particle-1',
+      'deepseek/deepseek-v4-flash',
+    ]);
     expect(config.tactician.reasoningEnabled).toBe(true);
     expect(config.tactician.reasoningEffort).toBe('low');
+    expect(config.tactician.ignoreProviders).toEqual(['CoreWeave', 'Modal', 'Cohere']);
+    expect(config.strategist.ignoreProviders).toEqual([]);
+    expect(configForRole(config, 'tactician').ignoreProviders).toEqual([
+      'CoreWeave',
+      'Modal',
+      'Cohere',
+    ]);
+    expect(
+      loadAiConfig({ OPENROUTER_API_KEY: 'k', AI_TACTICIAN_IGNORE_PROVIDERS: 'Foo, Bar' }).tactician
+        .ignoreProviders,
+    ).toEqual(['Foo', 'Bar']);
     expect(config.archetype.models).toEqual(['qwen/qwen3.7-flash', 'deepseek/deepseek-v4-flash']);
   });
 
