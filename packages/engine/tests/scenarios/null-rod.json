@@ -1,5 +1,83 @@
 {
   "schemaVersion": 1,
   "card": "Null Rod",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Wand",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": "{1}: You gain 1 life."
+    },
+    {
+      "name": "Scenario Squire",
+      "typeLine": "Creature — Human",
+      "manaCost": "{1}",
+      "oracleText": "{1}: You gain 1 life.",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "null-rod-locks-artifact-ability",
+      "title": "Null Rod: an artifact's activated ability can't be activated",
+      "clauses": [1],
+      "instructions": [
+        "You control Null Rod and Scenario Wand (an artifact with an ability you could afford).",
+        "Look for its ability in your priority options."
+      ],
+      "expectedOutcome": "Scenario Wand's ability is not offered, so nothing is activated and you stay at 40 life.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Null Rod", "Scenario Wand", "Forest", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Wand"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "null-rod-creature-ability-allowed",
+      "title": "Null Rod: a creature's activated ability is not locked",
+      "clauses": [1],
+      "instructions": [
+        "With Null Rod on the battlefield, activate Scenario Squire (a nonartifact creature)."
+      ],
+      "expectedOutcome": "Only artifacts are locked, so Scenario Squire's ability resolves and you gain 1 life.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Null Rod", "Scenario Squire", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Scenario Squire/"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 41
+          }
+        }
+      ]
+    }
+  ]
 }

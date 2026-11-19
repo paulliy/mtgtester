@@ -1,5 +1,98 @@
 {
   "schemaVersion": 1,
   "card": "Pearl of Wisdom",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Otter",
+      "typeLine": "Creature — Otter",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Elk",
+      "typeLine": "Creature — Elk",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "pearl-of-wisdom-cheaper-with-otter",
+      "title": "Pearl of Wisdom: it costs {1} less to cast while you control an Otter",
+      "clauses": [1],
+      "instructions": [
+        "Control Scenario Otter and two Islands.",
+        "Cast Pearl of Wisdom ({2}{U} printed, {1}{U} with the reduction)."
+      ],
+      "expectedOutcome": "Pearl of Wisdom is cast with two Islands and resolves, drawing two cards.",
+      "seats": {
+        "P1": {
+          "hand": ["Pearl of Wisdom"],
+          "battlefield": ["Scenario Otter", "Island", "Island"],
+          "libraryTop": ["Scenario Bear", "Scenario Elk"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Pearl of Wisdom/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Bear", "Scenario Elk"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Pearl of Wisdom"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "pearl-of-wisdom-full-price-without-otter",
+      "title": "Pearl of Wisdom: without an Otter it costs full price",
+      "clauses": [1],
+      "instructions": [
+        "Control only Scenario Bear (not an Otter) and two Islands.",
+        "Pearl of Wisdom ({2}{U}) cannot be cast."
+      ],
+      "expectedOutcome": "Pearl of Wisdom is not castable and stays in your hand; nothing is drawn.",
+      "seats": {
+        "P1": {
+          "hand": ["Pearl of Wisdom"],
+          "battlefield": ["Scenario Bear", "Island", "Island"],
+          "libraryTop": ["Scenario Bear", "Scenario Elk"]
+        },
+        "P2": {}
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Pearl of Wisdom"],
+            "lacks": ["Scenario Bear", "Scenario Elk"]
+          }
+        }
+      ]
+    }
+  ]
 }

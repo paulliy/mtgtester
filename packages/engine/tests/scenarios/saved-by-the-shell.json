@@ -1,5 +1,102 @@
 {
   "schemaVersion": 1,
   "card": "Saved by the Shell",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Turtle",
+      "typeLine": "Creature — Turtle",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "3"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "saved-by-the-shell-cheaper-with-turtle",
+      "title": "Saved by the Shell: it costs {1} less to cast while you control a Turtle",
+      "clauses": [1],
+      "instructions": [
+        "Control Scenario Turtle and one Forest.",
+        "Cast Saved by the Shell ({1}{G} printed, {G} with the reduction) on Scenario Turtle."
+      ],
+      "expectedOutcome": "It is cast with a single Forest; Scenario Turtle gets a +1/+1 counter, trample, hexproof and indestructible.",
+      "seats": {
+        "P1": {
+          "hand": ["Saved by the Shell"],
+          "battlefield": ["Scenario Turtle", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Saved by the Shell/",
+          "targets": ["Scenario Turtle"]
+        }
+      ],
+      "expect": [
+        {
+          "counters": {
+            "card": "Scenario Turtle",
+            "counter": "+1/+1",
+            "equals": 1
+          }
+        },
+        {
+          "keywords": {
+            "card": "Scenario Turtle",
+            "has": ["trample", "hexproof", "indestructible"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Saved by the Shell"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "saved-by-the-shell-full-price-without-turtle",
+      "title": "Saved by the Shell: without a Turtle it costs full price",
+      "clauses": [1],
+      "instructions": [
+        "Control only Scenario Bear (not a Turtle) and one Forest.",
+        "Saved by the Shell ({1}{G}) cannot be cast."
+      ],
+      "expectedOutcome": "Saved by the Shell is not castable and stays in your hand; Scenario Bear gets no counter.",
+      "seats": {
+        "P1": {
+          "hand": ["Saved by the Shell"],
+          "battlefield": ["Scenario Bear", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Saved by the Shell"]
+          }
+        },
+        {
+          "counters": {
+            "card": "Scenario Bear",
+            "counter": "+1/+1",
+            "equals": 0
+          }
+        }
+      ]
+    }
+  ]
 }

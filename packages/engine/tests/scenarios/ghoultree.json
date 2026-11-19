@@ -1,5 +1,88 @@
 {
   "schemaVersion": 1,
   "card": "Ghoultree",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Bolt",
+      "typeLine": "Instant",
+      "manaCost": "{R}",
+      "oracleText": "Scenario Bolt deals 3 damage to any target."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "ghoultree-cheaper-per-creature-card-in-graveyard",
+      "title": "Ghoultree: costs {1} less for each creature card in your graveyard",
+      "clauses": [1],
+      "instructions": [
+        "P1 has three creature cards in their graveyard and five Forests; cast Ghoultree (normally {7}{G})."
+      ],
+      "expectedOutcome": "Ghoultree costs {4}{G} and resolves onto the battlefield.",
+      "seats": {
+        "P1": {
+          "hand": ["Ghoultree"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest"],
+          "graveyard": ["Scenario Bear", "Scenario Bear", "Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Ghoultree/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Ghoultree"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ghoultree-only-own-creature-cards-count",
+      "title": "Ghoultree: noncreature cards and an opponent's graveyard give no discount",
+      "clauses": [1],
+      "instructions": [
+        "P1 has three noncreature cards in their graveyard and five Forests while P2 has three creature cards in theirs; try to cast Ghoultree."
+      ],
+      "expectedOutcome": "Ghoultree stays in P1's hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Ghoultree"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest"],
+          "graveyard": ["Scenario Bolt", "Scenario Bolt", "Scenario Bolt"]
+        },
+        "P2": {
+          "graveyard": ["Scenario Bear", "Scenario Bear", "Scenario Bear"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Ghoultree"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Ghoultree"]
+          }
+        }
+      ]
+    }
+  ]
 }

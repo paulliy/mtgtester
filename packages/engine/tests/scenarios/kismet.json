@@ -1,5 +1,141 @@
 {
   "schemaVersion": 1,
   "card": "Kismet",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Relic",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": ""
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "kismet-opponent-permanents-enter-tapped",
+      "title": "Kismet: artifacts, creatures and lands an opponent controls enter tapped",
+      "clauses": [1],
+      "instructions": [
+        "Cast Kismet and pass the turn.",
+        "On P2's turn, P2 plays a Mountain and casts Scenario Bear and Scenario Relic."
+      ],
+      "expectedOutcome": "P2's Mountain, Scenario Bear and Scenario Relic all entered tapped.",
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true,
+        "toEndStep": true,
+        "throughNextTurn": true
+      },
+      "seats": {
+        "P1": {
+          "hand": ["Kismet"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains"]
+        },
+        "P2": {
+          "hand": ["Mountain", "Scenario Bear", "Scenario Relic"],
+          "battlefield": ["Forest", "Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Kismet/"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Play Mountain/"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Bear/"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Relic/"
+        }
+      ],
+      "expect": [
+        {
+          "tapped": {
+            "card": "Mountain",
+            "equals": true,
+            "player": "P2"
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Bear",
+            "equals": true,
+            "player": "P2"
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Relic",
+            "equals": true,
+            "player": "P2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "kismet-own-permanents-enter-untapped",
+      "title": "Kismet: your own artifacts, creatures and lands enter untapped",
+      "clauses": [1],
+      "instructions": [
+        "With Kismet on the battlefield, play a Mountain and cast Scenario Bear and Scenario Relic."
+      ],
+      "expectedOutcome": "Your Mountain, Scenario Bear and Scenario Relic enter untapped.",
+      "seats": {
+        "P1": {
+          "hand": ["Mountain", "Scenario Bear", "Scenario Relic"],
+          "battlefield": ["Kismet", "Forest", "Forest", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Play Mountain/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Bear/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Relic/"
+        }
+      ],
+      "expect": [
+        {
+          "tapped": {
+            "card": "Mountain",
+            "equals": false,
+            "player": "P1"
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Bear",
+            "equals": false,
+            "player": "P1"
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Relic",
+            "equals": false,
+            "player": "P1"
+          }
+        }
+      ]
+    }
+  ]
 }

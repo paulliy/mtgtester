@@ -1,5 +1,95 @@
 {
   "schemaVersion": 1,
   "card": "Rumbleweed",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "rumbleweed-cheaper-per-land-card-in-graveyard",
+      "title": "Rumbleweed: costs {1} less for each land card in your graveyard",
+      "clauses": [1],
+      "instructions": [
+        "P1 has seven land cards in their graveyard, four Forests and Scenario Bear; cast Rumbleweed (normally {10}{G})."
+      ],
+      "expectedOutcome": "Rumbleweed costs {3}{G}, resolves, and its enter trigger pumps Scenario Bear to 5/5.",
+      "seats": {
+        "P1": {
+          "hand": ["Rumbleweed"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest", "Scenario Bear"],
+          "graveyard": ["Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Rumbleweed/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Rumbleweed"]
+          }
+        },
+        {
+          "stats": {
+            "card": "Scenario Bear",
+            "power": 5,
+            "toughness": 5,
+            "player": "P1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "rumbleweed-creature-cards-give-no-discount",
+      "title": "Rumbleweed: creature cards in the graveyard give no discount",
+      "clauses": [1],
+      "instructions": [
+        "P1 has seven creature cards in their graveyard and four Forests; try to cast Rumbleweed."
+      ],
+      "expectedOutcome": "Rumbleweed stays in P1's hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Rumbleweed"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest"],
+          "graveyard": [
+            "Scenario Bear",
+            "Scenario Bear",
+            "Scenario Bear",
+            "Scenario Bear",
+            "Scenario Bear",
+            "Scenario Bear",
+            "Scenario Bear"
+          ]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Rumbleweed"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Rumbleweed"]
+          }
+        }
+      ]
+    }
+  ]
 }

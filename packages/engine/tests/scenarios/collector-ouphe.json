@@ -1,5 +1,128 @@
 {
   "schemaVersion": 1,
   "card": "Collector Ouphe",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Widget",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": "{T}: You gain 1 life."
+    },
+    {
+      "name": "Scenario Healer",
+      "typeLine": "Creature — Elf",
+      "manaCost": "{G}",
+      "oracleText": "{T}: You gain 1 life.",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "collector-ouphe-artifact-cannot-activate",
+      "title": "Collector Ouphe: an artifact's activated ability cannot be activated",
+      "clauses": [1],
+      "instructions": [
+        "P1 controls Collector Ouphe and Scenario Widget ({T}: You gain 1 life); try to activate the Widget."
+      ],
+      "expectedOutcome": "The Widget offers no activation: P1 stays at 40 life and the Widget stays untapped.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Collector Ouphe", "Scenario Widget"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 40
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Widget",
+            "equals": false,
+            "player": "P1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "collector-ouphe-opponent-artifact-cannot-activate",
+      "title": "Collector Ouphe: it also stops an opponent's artifact",
+      "clauses": [1],
+      "instructions": [
+        "P2 controls Scenario Widget on their turn while P1 controls Collector Ouphe."
+      ],
+      "expectedOutcome": "P2 cannot activate the Widget: P2 stays at 40 life and the Widget stays untapped.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Collector Ouphe"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Widget"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Widget",
+            "equals": false,
+            "player": "P2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "collector-ouphe-nonartifact-still-activates",
+      "title": "Collector Ouphe: a nonartifact creature's ability can still be activated",
+      "clauses": [1],
+      "instructions": [
+        "P1 activates Scenario Healer ({T}: You gain 1 life) while controlling Collector Ouphe."
+      ],
+      "expectedOutcome": "P1 gains 1 life and the Healer is tapped.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Collector Ouphe",
+            {
+              "card": "Scenario Healer"
+            }
+          ]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Scenario Healer/"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 41
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Healer",
+            "equals": true,
+            "player": "P1"
+          }
+        }
+      ]
+    }
+  ]
 }

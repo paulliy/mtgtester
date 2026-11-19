@@ -1,5 +1,111 @@
 {
   "schemaVersion": 1,
   "card": "Boggart Trawler // Boggart Bog",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "boggart-trawler-exiles-target-graveyard",
+      "title": "Boggart Trawler: its enters trigger exiles the target player's graveyard",
+      "clauses": [1],
+      "instructions": ["Cast Boggart Trawler and target P2 with its enters trigger."],
+      "expectedOutcome": "P2's Scenario Bear is exiled from P2's graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Boggart Trawler // Boggart Bog"],
+          "battlefield": ["Swamp", "Swamp", "Swamp"]
+        },
+        "P2": {
+          "graveyard": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Boggart Trawler/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Targets for Boggart Trawler/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "exile",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "lacks": ["Scenario Bear"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "boggart-trawler-leaves-other-graveyards",
+      "title": "Boggart Trawler: only the targeted player's graveyard is exiled",
+      "clauses": [1],
+      "instructions": [
+        "Cast Boggart Trawler and target yourself; P2 has a card in their graveyard."
+      ],
+      "expectedOutcome": "Your graveyard is exiled; P2's Scenario Bear stays in P2's graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Boggart Trawler // Boggart Bog"],
+          "battlefield": ["Swamp", "Swamp", "Swamp"],
+          "graveyard": ["Scenario Bear"]
+        },
+        "P2": {
+          "graveyard": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Boggart Trawler/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Targets for Boggart Trawler/",
+          "targets": ["P1"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    }
+  ]
 }

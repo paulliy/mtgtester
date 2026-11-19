@@ -1,5 +1,154 @@
 {
   "schemaVersion": 1,
   "card": "Shelter",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Bolt",
+      "typeLine": "Instant",
+      "manaCost": "{R}",
+      "oracleText": "Scenario Bolt deals 3 damage to any target."
+    },
+    {
+      "name": "Scenario Elk",
+      "typeLine": "Creature — Elk",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "shelter-protection-from-chosen-color",
+      "title": "Shelter: protection from red stops a red spell's damage",
+      "clauses": [1, 2],
+      "instructions": [
+        "P2 casts Scenario Bolt (red) at your Scenario Bear.",
+        "Cast Shelter targeting your Bear, choosing Red."
+      ],
+      "expectedOutcome": "Protection from red makes Scenario Bolt's target illegal, so it is countered on resolution and the Bear survives; you draw Scenario Elk.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "hand": ["Shelter"],
+          "battlefield": ["Plains", "Plains", "Scenario Bear"],
+          "libraryTop": ["Scenario Elk"]
+        },
+        "P2": {
+          "hand": ["Scenario Bolt"],
+          "battlefield": ["Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Bolt/",
+          "targets": ["Scenario Bear"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Shelter/",
+          "targets": ["Scenario Bear"]
+        },
+        {
+          "player": "P1",
+          "choose": "Protection from R"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Elk"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Bolt"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "shelter-protection-only-from-chosen-color",
+      "title": "Shelter: protection from white does not stop a red spell",
+      "clauses": [1, 2],
+      "instructions": [
+        "P2 casts Scenario Bolt (red) at your Scenario Bear.",
+        "Cast Shelter targeting your Bear, choosing White."
+      ],
+      "expectedOutcome": "Protection from White does nothing against a red spell: Scenario Bolt deals 3 damage and the Bear dies; you still draw Scenario Elk.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "hand": ["Shelter"],
+          "battlefield": ["Plains", "Plains", "Scenario Bear"],
+          "libraryTop": ["Scenario Elk"]
+        },
+        "P2": {
+          "hand": ["Scenario Bolt"],
+          "battlefield": ["Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Bolt/",
+          "targets": ["Scenario Bear"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Shelter/",
+          "targets": ["Scenario Bear"]
+        },
+        {
+          "player": "P1",
+          "choose": "Protection from W"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Elk"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Bolt"]
+          }
+        }
+      ]
+    }
+  ]
 }

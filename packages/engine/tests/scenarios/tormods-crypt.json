@@ -1,5 +1,162 @@
 {
   "schemaVersion": 1,
   "card": "Tormod's Crypt",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Elk",
+      "typeLine": "Creature — Elk",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "tormods-crypt-exiles-target-graveyard",
+      "title": "Tormod's Crypt: tap and sacrifice it to exile target player's graveyard",
+      "clauses": [1],
+      "instructions": ["Activate Tormod's Crypt targeting P2."],
+      "expectedOutcome": "P2's graveyard is exiled and Tormod's Crypt is sacrificed; your own graveyard card stays.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Tormod's Crypt"],
+          "graveyard": ["Scenario Elk"]
+        },
+        "P2": {
+          "graveyard": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Tormod's Crypt: /",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": [],
+            "lacks": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "exile",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Elk", "Tormod's Crypt"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": [],
+            "lacks": ["Tormod's Crypt"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tormods-crypt-only-targeted-graveyard",
+      "title": "Tormod's Crypt: only the targeted player's graveyard is exiled",
+      "clauses": [1],
+      "instructions": ["Activate Tormod's Crypt targeting P1 (yourself)."],
+      "expectedOutcome": "Your own graveyard card is exiled; P2's graveyard stays.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Tormod's Crypt"],
+          "graveyard": ["Scenario Elk"]
+        },
+        "P2": {
+          "graveyard": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Tormod's Crypt: /",
+          "targets": ["P1"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Scenario Elk"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "exile",
+            "has": [],
+            "lacks": ["Scenario Bear"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tormods-crypt-tapped-cannot-activate",
+      "title": "Tormod's Crypt: a tapped Crypt cannot pay its {T} cost",
+      "clauses": [1],
+      "instructions": ["Control a tapped Tormod's Crypt; its ability is not offered."],
+      "expectedOutcome": "Nothing is exiled: P2's graveyard keeps Scenario Bear and Tormod's Crypt stays on the battlefield.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            {
+              "card": "Tormod's Crypt",
+              "tapped": true
+            }
+          ],
+          "graveyard": ["Scenario Elk"]
+        },
+        "P2": {
+          "graveyard": ["Scenario Bear"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Tormod's Crypt"]
+          }
+        }
+      ]
+    }
+  ]
 }

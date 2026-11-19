@@ -1,5 +1,118 @@
 {
   "schemaVersion": 1,
   "card": "Draconic Lore",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Dragon",
+      "typeLine": "Creature — Dragon",
+      "manaCost": "{4}{R}",
+      "power": "4",
+      "toughness": "4"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ant",
+      "typeLine": "Creature — Ant",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Bee",
+      "typeLine": "Creature — Insect",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Cat",
+      "typeLine": "Creature — Cat",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "draconic-lore-cheaper-with-dragon",
+      "title": "Draconic Lore: costs {2} less while you control a Dragon",
+      "clauses": [1],
+      "instructions": [
+        "P1 controls Scenario Dragon and four Islands; cast Draconic Lore (normally {5}{U})."
+      ],
+      "expectedOutcome": "Draconic Lore is castable for {3}{U} and resolves: P1 draws Scenario Ant, Bee and Cat.",
+      "seats": {
+        "P1": {
+          "hand": ["Draconic Lore"],
+          "battlefield": ["Scenario Dragon", "Island", "Island", "Island", "Island"],
+          "libraryTop": ["Scenario Ant", "Scenario Bee", "Scenario Cat"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Draconic Lore/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Ant", "Scenario Bee", "Scenario Cat"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Draconic Lore"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "draconic-lore-opponents-dragon-no-discount",
+      "title": "Draconic Lore: a Dragon an opponent controls gives no discount",
+      "clauses": [1],
+      "instructions": [
+        "P1 controls Scenario Bear and four Islands while P2 controls Scenario Dragon; try to cast Draconic Lore."
+      ],
+      "expectedOutcome": "Draconic Lore is not castable for four mana and stays in P1's hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Draconic Lore"],
+          "battlefield": ["Scenario Bear", "Island", "Island", "Island", "Island"],
+          "libraryTop": ["Scenario Ant", "Scenario Bee", "Scenario Cat"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Dragon"]
+        }
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Draconic Lore"],
+            "lacks": ["Scenario Ant"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Draconic Lore"]
+          }
+        }
+      ]
+    }
+  ]
 }

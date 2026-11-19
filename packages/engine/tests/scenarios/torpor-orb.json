@@ -1,5 +1,96 @@
 {
   "schemaVersion": 1,
   "card": "Torpor Orb",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Mystic",
+      "typeLine": "Creature — Human Wizard",
+      "manaCost": "{1}{U}",
+      "oracleText": "When this creature enters, you gain 3 life.",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Shrine",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": "When this artifact enters, you gain 3 life."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "torpor-orb-creature-enters-trigger-suppressed",
+      "title": "Torpor Orb: a creature entering causes no abilities to trigger",
+      "clauses": [1],
+      "instructions": [
+        "With Torpor Orb on the battlefield, cast Scenario Mystic (\"When this creature enters, you gain 3 life\")."
+      ],
+      "expectedOutcome": "Scenario Mystic enters but its trigger never happens: life stays at 40.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Mystic"],
+          "battlefield": ["Torpor Orb", "Island", "Island"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Mystic/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Mystic"]
+          }
+        },
+        {
+          "life": {
+            "player": "P1",
+            "equals": 40
+          }
+        }
+      ]
+    },
+    {
+      "id": "torpor-orb-noncreature-enters-trigger-works",
+      "title": "Torpor Orb: a noncreature permanent entering still triggers",
+      "clauses": [1],
+      "instructions": [
+        "With Torpor Orb on the battlefield, cast Scenario Shrine (\"When this artifact enters, you gain 3 life\")."
+      ],
+      "expectedOutcome": "Torpor Orb only stops creatures entering: you gain 3 life (43).",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Shrine"],
+          "battlefield": ["Torpor Orb", "Island"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Shrine/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Shrine"]
+          }
+        },
+        {
+          "life": {
+            "player": "P1",
+            "equals": 43
+          }
+        }
+      ]
+    }
+  ]
 }

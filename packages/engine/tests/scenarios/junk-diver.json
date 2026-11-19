@@ -1,5 +1,107 @@
 {
   "schemaVersion": 1,
   "card": "Junk Diver",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Relic",
+      "typeLine": "Artifact",
+      "manaCost": "{1}"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Snuff",
+      "typeLine": "Instant",
+      "manaCost": "{B}",
+      "oracleText": "Destroy target creature."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "junk-diver-returns-another-artifact-card",
+      "title": "Junk Diver: when it dies, it returns another target artifact card from your graveyard",
+      "clauses": [2],
+      "instructions": [
+        "Destroy your Junk Diver with Scenario Snuff; its dies trigger has only Scenario Relic as a legal target (Scenario Bear is not an artifact and the Diver is not \"another\")."
+      ],
+      "expectedOutcome": "Scenario Relic returns to your hand; Junk Diver stays in the graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Snuff"],
+          "battlefield": ["Swamp", "Junk Diver"],
+          "graveyard": ["Scenario Relic", "Scenario Bear"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Snuff/",
+          "targets": ["Junk Diver"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Relic"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Junk Diver"],
+            "lacks": ["Scenario Relic"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "junk-diver-does-not-return-itself",
+      "title": "Junk Diver: it is not another artifact card, so it can't return itself",
+      "clauses": [2],
+      "instructions": [
+        "Destroy your Junk Diver with Scenario Snuff while it is the only artifact card in your graveyard."
+      ],
+      "expectedOutcome": "The dies trigger has no legal target (a nonartifact Scenario Bear is not one, and Junk Diver itself is excluded): nothing returns and Junk Diver stays in the graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Snuff"],
+          "battlefield": ["Swamp", "Junk Diver"],
+          "graveyard": ["Scenario Bear"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Snuff/",
+          "targets": ["Junk Diver"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Junk Diver", "Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Junk Diver"]
+          }
+        }
+      ]
+    }
+  ]
 }

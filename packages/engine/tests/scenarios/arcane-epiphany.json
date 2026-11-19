@@ -1,5 +1,105 @@
 {
   "schemaVersion": 1,
   "card": "Arcane Epiphany",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Wizard",
+      "typeLine": "Creature — Human Wizard",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature — Ogre",
+      "manaCost": "{3}{R}",
+      "power": "4",
+      "toughness": "4"
+    },
+    {
+      "name": "Scenario Elk",
+      "typeLine": "Creature — Elk",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "arcane-epiphany-cheaper-with-wizard",
+      "title": "Arcane Epiphany: it costs {1} less to cast while you control a Wizard",
+      "clauses": [1],
+      "instructions": [
+        "Control Scenario Wizard and four Islands.",
+        "Cast Arcane Epiphany ({3}{U}{U} printed, {2}{U}{U} with the reduction)."
+      ],
+      "expectedOutcome": "Arcane Epiphany is cast with four Islands and resolves, drawing three cards.",
+      "seats": {
+        "P1": {
+          "hand": ["Arcane Epiphany"],
+          "battlefield": ["Scenario Wizard", "Island", "Island", "Island", "Island"],
+          "libraryTop": ["Scenario Bear", "Scenario Ogre", "Scenario Elk"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Arcane Epiphany/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Bear", "Scenario Ogre", "Scenario Elk"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Arcane Epiphany"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "arcane-epiphany-full-price-without-wizard",
+      "title": "Arcane Epiphany: without a Wizard it costs full price",
+      "clauses": [1],
+      "instructions": [
+        "Control only Scenario Bear (not a Wizard) and four Islands.",
+        "Arcane Epiphany ({3}{U}{U}) cannot be cast."
+      ],
+      "expectedOutcome": "Arcane Epiphany is not castable and stays in your hand; nothing is drawn.",
+      "seats": {
+        "P1": {
+          "hand": ["Arcane Epiphany"],
+          "battlefield": ["Scenario Bear", "Island", "Island", "Island", "Island"],
+          "libraryTop": ["Scenario Bear", "Scenario Ogre", "Scenario Elk"]
+        },
+        "P2": {}
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Arcane Epiphany"],
+            "lacks": ["Scenario Bear", "Scenario Ogre", "Scenario Elk"]
+          }
+        }
+      ]
+    }
+  ]
 }

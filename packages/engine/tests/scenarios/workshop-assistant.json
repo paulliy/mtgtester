@@ -1,5 +1,105 @@
 {
   "schemaVersion": 1,
   "card": "Workshop Assistant",
-  "scenarios": []
+  "supportCards": [
+    {
+      "name": "Scenario Snuff",
+      "typeLine": "Instant",
+      "manaCost": "{B}",
+      "oracleText": "Destroy target creature."
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Trinket",
+      "typeLine": "Artifact",
+      "manaCost": "{1}"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "workshop-assistant-returns-another-artifact",
+      "title": "Workshop Assistant: when it dies, returns another artifact card from your graveyard to your hand",
+      "clauses": [1],
+      "instructions": [
+        "P1 destroys their own Workshop Assistant with Scenario Snuff while Scenario Trinket is in their graveyard."
+      ],
+      "expectedOutcome": "Scenario Trinket returns to P1's hand; Workshop Assistant stays in the graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Snuff"],
+          "battlefield": ["Swamp", "Workshop Assistant"],
+          "graveyard": ["Scenario Trinket"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Snuff/",
+          "targets": ["Workshop Assistant"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Trinket"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Workshop Assistant"],
+            "lacks": ["Scenario Trinket"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "workshop-assistant-cannot-return-itself",
+      "title": "Workshop Assistant: \"another\" artifact card, so it does not return itself or nonartifact cards",
+      "clauses": [1],
+      "instructions": [
+        "P1 destroys their own Workshop Assistant with Scenario Snuff while only Scenario Bear (not an artifact) is in their graveyard."
+      ],
+      "expectedOutcome": "Nothing returns: Workshop Assistant and Scenario Bear stay in the graveyard and P1's hand holds neither.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Snuff"],
+          "battlefield": ["Swamp", "Workshop Assistant"],
+          "graveyard": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Snuff/",
+          "targets": ["Workshop Assistant"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Workshop Assistant", "Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Workshop Assistant", "Scenario Bear"]
+          }
+        }
+      ]
+    }
+  ]
 }
