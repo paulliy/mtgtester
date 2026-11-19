@@ -11,32 +11,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "9ad1dc1d",
+      "commit": "121f266a",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 42.33,
+      "calibrationMs": 46.28,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 5.23,
+          "value": 5.32,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.293
+          "spread": 0.206
         },
         "engine.medianGameMsPerDecision": {
-          "value": 5.42,
+          "value": 5.59,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.287
+          "spread": 0.125
         },
         "setup.msPerGame": {
-          "value": 0.87,
+          "value": 0.85,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.061
+          "spread": 0.745
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -63,13 +63,13 @@
           "kind": "exact"
         },
         "model.bot.callsPerTurn": {
-          "value": 0.6,
+          "value": 0.4,
           "unit": "calls",
           "better": "lower",
           "kind": "exact"
         },
         "model.bot.promptTokensPerTurn": {
-          "value": 1292,
+          "value": 827,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -157,32 +157,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "9ad1dc1d",
+      "commit": "121f266a",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 48.59,
+      "calibrationMs": 45.77,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 10.77,
+          "value": 10.63,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.117
+          "spread": 0.164
         },
         "engine.medianGameMsPerDecision": {
-          "value": 10.34,
+          "value": 9.97,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.184
+          "spread": 0.172
         },
         "setup.msPerGame": {
-          "value": 0.77,
+          "value": 0.79,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.187
+          "spread": 0.111
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -209,13 +209,13 @@
           "kind": "exact"
         },
         "model.bot.callsPerTurn": {
-          "value": 0.803,
+          "value": 0.605,
           "unit": "calls",
           "better": "lower",
           "kind": "exact"
         },
         "model.bot.promptTokensPerTurn": {
-          "value": 2490,
+          "value": 1898,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
