@@ -534,67 +534,6 @@
     },
     {
       "rank": 9,
-      "feature": "Conditional spell cost modification",
-      "description": "Extend costReduction/tax with conditions: spell cast from graveyard, target is tapped, spells targeting this creature, spells the drawing player casts.",
-      "cards": 6,
-      "weightedCards": 5.5,
-      "weightedDecks": 175482,
-      "slotShare": 0.00020872,
-      "xmageKnown": 4,
-      "members": [
-        {
-          "name": "Grand Arbiter Augustin IV",
-          "rank": 2115,
-          "decks": 78335,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-01",
-          "reason": "The only opponent-spell cost increase (opponentNonHandSpellCostIncrease) applies just to spells cast from graveyards or exile, and no static taxes every spell opponents cast, so 'Spells your opponents cast cost {1} more to cast' cannot be stated exactly."
-        },
-        {
-          "name": "Gravebreaker Lamia",
-          "rank": 3772,
-          "decks": 43564,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The costReduction static has no way to limit it to spells cast from a graveyard; its filter selects spells by printed characteristics only."
-        },
-        {
-          "name": "Jubilant Skybonder",
-          "rank": 6019,
-          "decks": 25472,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The schema cannot grant a cast-tax rule static (spells that target this creature cost {2} more) to flying creatures through a layer-6 effect, and targetLifeTax charges life rather than mana."
-        },
-        {
-          "name": "Commander Liara Portyr",
-          "rank": 7968,
-          "decks": 17375,
-          "weight": 0.5,
-          "xmageBucket": "xmage-custom-classes",
-          "trial": "docs/reviews/card-compiler-trial-01",
-          "reason": "The reduction is X = the number of players being attacked, which no Value expresses, and the reduction applies only to spells cast from exile this turn, which costReduction cannot restrict by zone."
-        },
-        {
-          "name": "Luminous Rebuke",
-          "rank": 10795,
-          "decks": 10744,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The cost reduction depends on the chosen target being tapped, and the schema reads a target's tapped state only through tapState, which would restrict targeting instead of reducing cost."
-        },
-        {
-          "name": "Academy Loremaster",
-          "rank": 12055,
-          "decks": 8679,
-          "xmageBucket": "xmage-custom-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "No schema rule makes spells the drawing player casts this turn cost {2} more: costReduction only lowers costs, and opponentNonHandSpellCostIncrease covers only opponents' non-hand spells."
-        }
-      ]
-    },
-    {
-      "rank": 10,
       "feature": "Another player's optional choice on resolution",
       "description": "Add an effect where another player decides on resolution (opponent may sacrifice, each player may discard, defending player may let you draw) with a fallback branch.",
       "cards": 4,
@@ -638,7 +577,7 @@
       ]
     },
     {
-      "rank": 11,
+      "rank": 10,
       "feature": "Grant landwalk, horsemanship and afflict keywords",
       "description": "Add landwalk (forestwalk, mountainwalk), horsemanship and afflict to IMPLEMENTED_KEYWORDS so addKeyword/static grants work.",
       "cards": 5,
@@ -690,7 +629,7 @@
       ]
     },
     {
-      "rank": 12,
+      "rank": 11,
       "feature": "Cast a card from other zones with a rider",
       "description": "Add cast-from-opponent-graveyard and reveal-top-then-cast-if-equal-mana-value ops.",
       "cards": 4,
@@ -735,7 +674,7 @@
       ]
     },
     {
-      "rank": 13,
+      "rank": 12,
       "feature": "Conditions on the triggering object or event player",
       "description": "Add conditions on the trigger object/event player: power equals toughness, 'other than the entering permanent', event player's own turn, defending player poisoned, cast from hand.",
       "cards": 6,
@@ -796,7 +735,7 @@
       ]
     },
     {
-      "rank": 14,
+      "rank": 13,
       "feature": "Dynamic mana-value comparand in selectors",
       "description": "Let manaValueAtMost/AtLeast/equals take a Value (announced X, count of Shrines, graveyard permanent count, dead target's mana value) instead of a fixed number.",
       "cards": 6,
@@ -856,7 +795,7 @@
       ]
     },
     {
-      "rank": 15,
+      "rank": 14,
       "feature": "Hand-size rule changes",
       "description": "Add maximum-hand-size reduction and time-limited no-maximum-hand-size.",
       "cards": 2,
@@ -884,7 +823,7 @@
       ]
     },
     {
-      "rank": 16,
+      "rank": 15,
       "feature": "Mana production variants",
       "description": "Add single-shared-color X mana and optional addMana.",
       "cards": 2,
@@ -912,7 +851,7 @@
       ]
     },
     {
-      "rank": 17,
+      "rank": 16,
       "feature": "Damage prevention variants",
       "description": "Add permanent prevent combat damage dealt by self and colored-source damage shields.",
       "cards": 3,
@@ -948,7 +887,7 @@
       ]
     },
     {
-      "rank": 18,
+      "rank": 17,
       "feature": "Variable-count target slots and chosen-count value",
       "description": "Support 'any number of target' slots, distributing counters among them, and a Value counting the cards/targets chosen.",
       "cards": 5,
@@ -1000,7 +939,7 @@
       ]
     },
     {
-      "rank": 19,
+      "rank": 18,
       "feature": "Global alternative cost for spells",
       "description": "Add a static alternative cost for all/some spells (pay WUBRG, pay {0} once per turn for colorless from hand).",
       "cards": 2,
@@ -1028,7 +967,7 @@
       ]
     },
     {
-      "rank": 20,
+      "rank": 19,
       "feature": "Division/halving Value",
       "description": "Add Value division with round-down (half the Zombies, half the non-God creatures).",
       "cards": 2,
@@ -1056,7 +995,7 @@
       ]
     },
     {
-      "rank": 21,
+      "rank": 20,
       "feature": "Reveal/exile/mill-until loops with leftovers handling",
       "description": "Add a repeat-until-predicate reveal/exile/mill op (until creature/land/instant card or N cards) with rest to bottom/graveyard and optional cast or hand.",
       "cards": 5,
@@ -1109,7 +1048,7 @@
       ]
     },
     {
-      "rank": 22,
+      "rank": 21,
       "feature": "Announced X where a fixed number is required",
       "description": "Allow announced X (or a Value) for look-at-top counts, target counts and repeat counts (populate X times).",
       "cards": 4,
@@ -1153,7 +1092,7 @@
       ]
     },
     {
-      "rank": 23,
+      "rank": 22,
       "feature": "Ability and spell copying with source filters",
       "description": "Allow copying activated and triggered abilities filtered by source (enchantment, other legendary non-commander) and a copied permanent spell rider.",
       "cards": 2,
@@ -1181,7 +1120,7 @@
       ]
     },
     {
-      "rank": 24,
+      "rank": 23,
       "feature": "Devour",
       "description": "Add devour N: choose creatures to sacrifice on entry and count them for counters.",
       "cards": 2,
@@ -1205,6 +1144,59 @@
           "xmageBucket": "xmage-known-classes",
           "trial": "docs/reviews/card-compiler-trial-02",
           "reason": "The schema has no way to say devour 2 (the token enters with twice the number of creatures sacrificed as +1/+1 counters, chosen as it enters), and TokenSpec has no counters-on-entry choice."
+        }
+      ]
+    },
+    {
+      "rank": 24,
+      "feature": "Conditional spell cost modification",
+      "description": "Extend costReduction/tax with conditions: spell cast from graveyard, target is tapped, spells targeting this creature, spells the drawing player casts.",
+      "cards": 5,
+      "weightedCards": 4.5,
+      "weightedDecks": 97147,
+      "slotShare": 0.00011555,
+      "xmageKnown": 3,
+      "members": [
+        {
+          "name": "Gravebreaker Lamia",
+          "rank": 3772,
+          "decks": 43564,
+          "xmageBucket": "xmage-known-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The costReduction static has no way to limit it to spells cast from a graveyard; its filter selects spells by printed characteristics only."
+        },
+        {
+          "name": "Jubilant Skybonder",
+          "rank": 6019,
+          "decks": 25472,
+          "xmageBucket": "xmage-known-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema cannot grant a cast-tax rule static (spells that target this creature cost {2} more) to flying creatures through a layer-6 effect, and targetLifeTax charges life rather than mana."
+        },
+        {
+          "name": "Commander Liara Portyr",
+          "rank": 7968,
+          "decks": 17375,
+          "weight": 0.5,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-01",
+          "reason": "The reduction is X = the number of players being attacked, which no Value expresses, and the reduction applies only to spells cast from exile this turn, which costReduction cannot restrict by zone."
+        },
+        {
+          "name": "Luminous Rebuke",
+          "rank": 10795,
+          "decks": 10744,
+          "xmageBucket": "xmage-known-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The cost reduction depends on the chosen target being tapped, and the schema reads a target's tapped state only through tapState, which would restrict targeting instead of reducing cost."
+        },
+        {
+          "name": "Academy Loremaster",
+          "rank": 12055,
+          "decks": 8679,
+          "xmageBucket": "xmage-custom-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "No schema rule makes spells the drawing player casts this turn cost {2} more: costReduction only lowers costs, and opponentNonHandSpellCostIncrease covers only opponents' non-hand spells."
         }
       ]
     },
@@ -1688,34 +1680,6 @@
     },
     {
       "rank": 38,
-      "feature": "Static permission to cast spells with flash",
-      "description": "Add static rule letting players cast (matching) spells as though they had flash, optionally only during a given step.",
-      "cards": 2,
-      "weightedCards": 2,
-      "weightedDecks": 51616,
-      "slotShare": 0.00006139,
-      "xmageKnown": 2,
-      "members": [
-        {
-          "name": "Quick Sliver",
-          "rank": 4650,
-          "decks": 34295,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "No static or rule-static grants every player permission to cast matching Sliver spells at flash timing; the schema only has flash as the card's own keyword."
-        },
-        {
-          "name": "Final-Word Phantom",
-          "rank": 7986,
-          "decks": 17321,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The schema has no static permission to cast spells as though they had flash during each opponent's end step."
-        }
-      ]
-    },
-    {
-      "rank": 39,
       "feature": "Selector predicates in targets and statics",
       "description": "Make powerAtMost and hasKeyword predicates usable in target filters and continuous statics (layer-aware).",
       "cards": 3,
@@ -1751,7 +1715,7 @@
       ]
     },
     {
-      "rank": 40,
+      "rank": 39,
       "feature": "Counterspell riders",
       "description": "Add counter variants: counter then put on battlefield under your control, counter unless pay X with tap-lands penalty, lose life per creature for countered object's controller.",
       "cards": 3,
@@ -1787,7 +1751,7 @@
       ]
     },
     {
-      "rank": 41,
+      "rank": 40,
       "feature": "Modern keyword actions (venture, ring tempts, suspect, crime)",
       "description": "Add venture, the Ring tempts you, suspect state and commit-a-crime trigger.",
       "cards": 4,
@@ -1831,7 +1795,7 @@
       ]
     },
     {
-      "rank": 42,
+      "rank": 41,
       "feature": "Select-by-target-player scope",
       "description": "Let selectors/ops scope to a targeted player's permanents (tap all, destroy all, return each commander).",
       "cards": 3,
@@ -1868,7 +1832,7 @@
       ]
     },
     {
-      "rank": 43,
+      "rank": 42,
       "feature": "Incubate",
       "description": "Add an incubate effect creating an Incubator token with X +1/+1 counters and its {2} transform into a 0/0 artifact creature.",
       "cards": 3,
@@ -1904,7 +1868,7 @@
       ]
     },
     {
-      "rank": 44,
+      "rank": 43,
       "feature": "Face-down pile split with opponent choice",
       "description": "Add two-pile split where an opponent chooses which pile goes to hand.",
       "cards": 2,
@@ -1932,7 +1896,7 @@
       ]
     },
     {
-      "rank": 45,
+      "rank": 44,
       "feature": "Damage-would-kill replacement: exile instead",
       "description": "Add a this-turn replacement exiling creatures damaged by the effect that would die.",
       "cards": 2,
@@ -1960,7 +1924,7 @@
       ]
     },
     {
-      "rank": 46,
+      "rank": 45,
       "feature": "Unless-you-do non-mana payments",
       "description": "Support 'unless you return a land / tap two creatures' as a choice with sacrifice-or-draw fallback.",
       "cards": 2,
@@ -1988,7 +1952,7 @@
       ]
     },
     {
-      "rank": 47,
+      "rank": 46,
       "feature": "Count of distinct names/powers",
       "description": "Add Values counting differently named lands and different powers among creatures.",
       "cards": 2,
@@ -2012,6 +1976,26 @@
           "xmageBucket": "xmage-known-classes",
           "trial": "docs/reviews/card-compiler-trial-02",
           "reason": "No Value or Condition counts the number of different powers among creatures you control."
+        }
+      ]
+    },
+    {
+      "rank": 47,
+      "feature": "Static permission to cast spells with flash",
+      "description": "Add static rule letting players cast (matching) spells as though they had flash, optionally only during a given step.",
+      "cards": 1,
+      "weightedCards": 1,
+      "weightedDecks": 17321,
+      "slotShare": 0.0000206,
+      "xmageKnown": 1,
+      "members": [
+        {
+          "name": "Final-Word Phantom",
+          "rank": 7986,
+          "decks": 17321,
+          "xmageBucket": "xmage-known-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "The schema has no static permission to cast spells as though they had flash during each opponent's end step."
         }
       ]
     },
@@ -2060,14 +2044,6 @@
       "xmageBucket": "xmage-custom-classes",
       "trial": "docs/reviews/card-compiler-trial-02",
       "reason": "Choosing one creature or planeswalker card from each player's graveyard to put onto the battlefield under your control has no schema form."
-    },
-    {
-      "name": "City on Fire",
-      "rank": 896,
-      "decks": 168386,
-      "xmageBucket": "xmage-custom-classes",
-      "trial": "docs/reviews/card-compiler-trial-02",
-      "reason": "The schema can double damage (damageDoubled, damageDoubledToOpponents) but has no way to triple it."
     },
     {
       "name": "Feldon of the Third Path",
@@ -2366,14 +2342,6 @@
       "reason": "The schema has no effect where the player chooses a basic land type on resolution and then each land you control becomes that type until end of turn."
     },
     {
-      "name": "Thor, Asgard's Avenger",
-      "rank": 12570,
-      "decks": 8009,
-      "xmageBucket": "xmage-custom-classes",
-      "trial": "docs/reviews/card-compiler-trial-01",
-      "reason": "The ruleStatics damage replacements only double, halve or prevent damage; the schema has no replacement that adds a fixed amount (plus 1) to another source's damage to opponents and their permanents."
-    },
-    {
       "name": "Ambitious Dragonborn",
       "rank": 12774,
       "decks": 7761,
@@ -2385,7 +2353,23 @@
   "ungrouped": [],
   "unblocked": [
     {
+      "name": "City on Fire",
+      "by": "modeled"
+    },
+    {
       "name": "Ganax, Astral Hunter",
+      "by": "modeled"
+    },
+    {
+      "name": "Grand Arbiter Augustin IV",
+      "by": "modeled"
+    },
+    {
+      "name": "Quick Sliver",
+      "by": "modeled"
+    },
+    {
+      "name": "Thor, Asgard's Avenger",
       "by": "modeled"
     }
   ],
