@@ -480,6 +480,23 @@ describe('sacrifice mana sources', () => {
     expect(agree(altarBoard(5), '{W}{U}')).toEqual({ plan: null });
   });
 
+  it('stateful-planner-mana-only-repeats — an ability paid only with mana can fire again and again', () => {
+    // Review finding: counting a mana-only cost as fixed capacity let the bound see one activation
+    // of a source that can be activated twice from floating mana, and rule out a legal payment.
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', artifact('Test Converter', '{1}: Add {W}.'));
+    });
+    const player = playerById(ctx, 'P1');
+    for (let i = 0; i < 4; i++) player.manaEntries.push({ symbol: 'C' });
+    const outcome = agree(ctx, '{W}{W}');
+    expect(outcome).not.toEqual({ plan: null });
+    const tapped = (outcome as { plan: { tapCardIds: string[] } }).plan.tapCardIds.map(
+      (cardId) => ctx.state.battlefield.find((p) => p.cardId === cardId)!.name,
+    );
+    expect(tapped.filter((name) => name === 'Test Converter')).toHaveLength(2);
+  });
+
   it('stateful-planner-sacrifice-payable — a cast only a sacrifice can pay for is found, victim unpinned', () => {
     const ctx = altarBoard(3);
     const outcome = agree(ctx, '{W}{2}');
@@ -600,12 +617,12 @@ describe('sacrifice mana sources', () => {
       ])
         expect(keeps(holder([effect(op)])), JSON.stringify(op)).toBe(false);
       // Power and toughness matter only when a mana ability is gated on them.
-      const pump = (power: unknown) =>
+      const pumped = (power: unknown) =>
         holder([effect({ layer: 7, sublayer: 'd', power, toughness: 1 })]);
-      expect(keeps(pump(1), true)).toBe(true);
-      expect(keeps(pump(-1), true)).toBe(false);
-      expect(keeps(pump({ kind: 'negate', of: { kind: 'lifeTotal' } }), true)).toBe(false);
-      expect(keeps(pump({ kind: 'negate', of: { kind: 'lifeTotal' } }), false)).toBe(true);
+      expect(keeps(pumped(1), true)).toBe(true);
+      expect(keeps(pumped(-1), true)).toBe(false);
+      expect(keeps(pumped({ kind: 'negate', of: { kind: 'lifeTotal' } }), true)).toBe(false);
+      expect(keeps(pumped({ kind: 'negate', of: { kind: 'lifeTotal' } }), false)).toBe(true);
       // Rule statics are listed as irrelevant or they count against it.
       expect(keeps(holder([], [{ kind: 'attackTax' }]))).toBe(true);
       expect(keeps(holder([], [{ kind: 'triggerAdditionalTime' }]))).toBe(true);
@@ -646,6 +663,7 @@ describe('sacrifice mana sources', () => {
         );
         return choice < 0 ? undefined : { index: choice, targets: new Map() };
       },
+      { strict: true },
     );
     const asked = decisions.filter((decision) =>
       decision.options.some((option) => option.description.includes('Sacrifice Fodder')),

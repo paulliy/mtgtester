@@ -312,7 +312,9 @@ export function searchPayment(
       (ability.condition === undefined ||
         (gatedBound && gateCannotOpenDuringPayment(ability.condition))) &&
       (ability.costs === undefined ||
-        (ability.costs.some((cost) => cost.kind === 'tap' || keepsCapacity(cost.kind)) &&
+        (ability.costs.some(
+          (cost) => cost.kind === 'tap' || (sacrificeBound && cost.kind === 'sacrificeOther'),
+        ) &&
           ability.costs.every((cost) => keepsCapacity(cost.kind)))) &&
       (ability.onActivate ?? []).every(
         (effect) => effect.op === 'gainLife' || effect.op === 'damageController',
