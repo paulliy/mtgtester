@@ -626,6 +626,31 @@ describe('steering', () => {
     expect(answer([card('dl', 'Dissolve Late', 'Instant', '{3}{U}')])).toBe(1);
   });
 
+  it('never holds up against casting the commander, or from a hand that would discard', () => {
+    const sources = [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 }));
+    const fromCommand: LegalAction = {
+      ...spell(1, 'Sorcery', '{3}'),
+      data: { sourceName: 'Sorcery', manaCost: '{3}', sourceZone: 'command' },
+    };
+    const commander = decide(
+      request([PASS, fromCommand]),
+      holding({ manaSources: sources }),
+      new Rng('a'),
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
+    );
+    expect(commander.actionId).toBe(1);
+    const fullHand = Array.from({ length: 6 }, (_, i) =>
+      card(`x${i}`, `Filler ${i}`, 'Sorcery', '{5}'),
+    );
+    const full = decide(
+      request([PASS, spell(1, 'Sorcery', '{3}')]),
+      holding({ hand: [counterspell, ...fullHand], manaSources: sources }),
+      new Rng('a'),
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
+    );
+    expect(full.actionId).toBe(1);
+  });
+
   it('counts grouped sources once toward held mana', () => {
     // The view folds untapped sources into availableMana too; they must not count twice.
     const actions = [PASS, spell(1, 'Sorcery', '{3}')];
@@ -740,7 +765,7 @@ describe('steering', () => {
     expect(raging.targets![0]!.choice).not.toBe(NO_ATTACK_TARGET);
   });
 
-  it('riskyAttackValue: a lone creature or a 1-power body without a trigger stays home', () => {
+  it('a risky attack needs a reason: a lone creature or a 1-power body without a trigger stays home', () => {
     const walls = [creature('wall', 'P2', 4, 6), creature('wall2', 'P3', 4, 6)];
     const swing = (
       board: PermanentView[],

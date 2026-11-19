@@ -295,9 +295,9 @@ export const WEIGHTS = {
     faceDamagePerLife: 1,
     /** `commanderValue`: added to a commander's permanent value, on either side of the table. */
     commanderPermanentBonus: 4,
-    /** `riskyAttackValue`: an unsafe attacker at or below this power needs an attack trigger. */
+    /** An unsafe attacker at or below this power needs an attack trigger. */
     riskyAttackMinPower: 1,
-    /** `holdUpRelief`: from this many cards in hand, cleanup would discard, so the mana is spent. */
+    /** `holdUpMana` lapses from this many cards in hand, cleanup would discard, so the mana is spent. */
     holdUpFullHand: 7,
   },
 

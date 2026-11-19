@@ -53,7 +53,16 @@ export const ARMS: Record<string, LeagueArm> = {
   'fixed-0043': {
     name: 'fixed-0043',
     knowledge: true,
-    fixes: DEFAULT_POLICY_FIXES.filter((fix) => fix !== 'scarceAnswer' && fix !== 'faceDamage'),
+    // Named, not "all but the new ones": a fix added later must not leak into the old bot.
+    fixes: [
+      'ownStack',
+      'neverYield',
+      'lethalTargets',
+      'lethalValue',
+      'castOrder',
+      'landColors',
+      'attackReserve',
+    ],
   },
   ...FIX_ARMS,
   aggro: { name: 'aggro', knowledge: true, steering: { aggression: 0.85 } },

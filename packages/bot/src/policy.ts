@@ -146,11 +146,15 @@ export function permanentValue(p: PermanentView, ctx: PolicyContext): number {
 }
 
 /**
- * `commanderValue`: whether `name` is a commander at this table, ours or an opponent's. A body
- * alone undervalues it: it comes back taxed, and it is what the deck is built around.
+ * `commanderValue`: whether `name` is a commander at this table, ours or an opponent's, so worth
+ * more than its body: it comes back taxed, and it is what the deck is built around.
  */
 function isCommanderName(name: string, ctx: PolicyContext): boolean {
-  if (!fixOn(ctx, 'commanderValue')) return false;
+  return fixOn(ctx, 'commanderValue') && commanderNamed(name, ctx);
+}
+
+/** Whether `name` is a commander at this table, whatever the fixes. */
+function commanderNamed(name: string, ctx: PolicyContext): boolean {
   const names = once(ctx, 'commanderNames', () => {
     const { view } = ctx;
     return new Set([
@@ -650,7 +654,7 @@ function attackIsSafe(
 }
 
 /**
- * `riskyAttackValue`: an unsafe attack must be worth losing the creature. One with an attack
+ * An unsafe attack (only made at high aggression) must be worth losing the creature. One with an attack
  * trigger is; a lone attacker, the commander, or a 1-power body with nothing on attack is not.
  */
 function weakRiskyAttacker(
@@ -659,9 +663,9 @@ function weakRiskyAttacker(
   ownCreatures: number,
   ctx: PolicyContext,
 ): boolean {
-  if (!fixOn(ctx, 'riskyAttackValue') || subject.hasTriggers) return false;
+  if (subject.hasTriggers) return false;
   if (ownCreatures <= 1) return true;
-  if (attacker !== undefined && isCommanderName(attacker.name, ctx)) return true;
+  if (attacker !== undefined && commanderNamed(attacker.name, ctx)) return true;
   return subject.power <= P.riskyAttackMinPower;
 }
 
@@ -1161,11 +1165,9 @@ function manaBase(ctx: PolicyContext): number {
 function holdUpPenalty(mv: number, action: LegalAction, ctx: PolicyContext): number {
   const knob = ctx.steering?.holdUpMana ?? 0;
   if (knob <= 0 || action.data?.['instantSpeed'] === true) return 0;
-  if (fixOn(ctx, 'holdUpRelief')) {
-    // The commander is the deck's plan, and a full hand discards what it does not cast.
-    if (action.data?.['sourceZone'] === 'command') return 0;
-    if (ctx.view.hand.length >= P.holdUpFullHand) return 0;
-  }
+  // The commander is the deck's plan, and a full hand discards what it does not cast.
+  if (action.data?.['sourceZone'] === 'command') return 0;
+  if (ctx.view.hand.length >= P.holdUpFullHand) return 0;
   const want = Math.min(
     knob,
     once(ctx, 'heldInteraction', () => heldInteractionCost(ctx)),
