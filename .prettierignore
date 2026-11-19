@@ -55,3 +55,6 @@ packages/server/fixtures/edhrec-pinned-oracle.json
 docs/reviews/card-compiler-trial-*/work
 # Patches are hashed byte for byte by the review queue and the promoted module
 docs/reviews/card-compiler-trial-chunk-*/patches
+
+# The hill-climb baseline, written by `bun run hill-climb --write-baseline`
+packages/server/fixtures/hill-climb-baseline.json

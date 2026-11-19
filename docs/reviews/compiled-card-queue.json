@@ -14487,9 +14487,9 @@
         }
       ],
       "review": {
-        "verdict": "accepted",
-        "by": "main-thread",
-        "note": "Full audit: read against Oracle text and the engine."
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
       }
     },
     {

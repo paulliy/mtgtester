@@ -40,11 +40,24 @@ Limits (prompt rules):
 - Do not delegate conflicting edits to several agents. Assign disjoint files or use read-only parallel tasks, then integrate on the main thread.
 - Treat subagent reports as leads, not verification. Inspect changes and run the relevant command yourself before claiming a card is modeled or a check passes.
 
+## Performance and cost work (hill climbing)
+
+Measure, change, compare, and keep only real wins. `bun run hill-climb` reports engine CPU, game setup time, model calls and tokens per turn, and card coverage, and proves the benchmark games played the same through their fingerprints. The full guide is `docs/guides/hill-climbing.md`.
+
+1. On the base commit: `bun run hill-climb --repeat 3 --save <scratch>/before.json`.
+2. Make one change.
+3. `bun run hill-climb --repeat 3 --against <scratch>/before.json`.
+4. Keep the change only if the table shows `IMPROVED` on the target metric, no `REGRESSED` row, and every fingerprint identical. `UNCHANGED` means the change is inside the noise: drop it.
+5. Paste the table in the pull request, then bank the win with `bun run hill-climb --write-baseline`.
+
+Never rewrite the baseline to make a regression pass. A change meant to alter play passes `--allow-behavior-change` and says so in the pull request.
+
 ## Where to find everything else
 
 Read these only when the task needs them:
 
 - **Before changing engine, bot, or provider code:** [rules-engine constraints](docs/guides/rules-engine-constraints.md)
+- **Performance or cost work:** [hill climbing](docs/guides/hill-climbing.md)
 - **Package overview, audit residual risks:** [current state](docs/guides/current-state.md)
 - **Modeling or auditing cards, template layer, snapshots, coverage backlog:** [card coverage workflow](docs/guides/card-coverage-workflow.md)
 - **Batch-compiling cards with Haiku workers, promoting or retiring a compiled card:** [batch card compiler](scripts/card-compiler/README.md) and the [campaign plan](docs/plans/batch-card-compile-campaign.md)

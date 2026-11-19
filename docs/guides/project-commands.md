@@ -82,6 +82,9 @@ bun run fuzz [--from N] [--games N] [--changed [--base S]] [--card "<name>"] [--
 bun run engine-bench [--games N] [--turn-cap N] [--json F] [--compare F]
                                         # engine CPU over the heuristic fuzz pods; --compare fails if any game's
                                         # fingerprint (every menu, response and event) differs from a saved run
+bun run hill-climb [--quick] [--repeat N] [--save F] [--against F] [--only P,..] [--write-baseline]
+                                        # engine CPU, setup time, model calls and tokens per turn, card coverage
+                                        # and game fingerprints against a baseline; see hill-climbing.md
 bun run diplomacy-sweep [--games N] [--seed S] [--turn-cap N] [--all] [--talk]   # ADR 0035 self-play
 bun run ai-bench                        # AI benchmark harness (ADR 0026)
 bun run bot-bench list|inspect|verify   # engine-backed tactician cases (ADR 0042); see bot-bench/README.md

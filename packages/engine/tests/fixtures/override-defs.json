@@ -1609,38 +1609,6 @@
     }
   },
   {
-    "oracleId": "04b7362d-0490-4cb0-b5d7-2a7732f659ce",
-    "name": "Bojuka Bog",
-    "handledLines": [
-      "When this land enters, exile target player's graveyard."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Enters — exile target player’s graveyard",
-          "effects": [
-            {
-              "op": "exileTargetPlayerGraveyard",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "04e575d1-f843-4330-972f-e77b264073e0",
     "name": "Ozox, the Clattering King",
     "handledLines": [
@@ -2641,32 +2609,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "085bc7be-bd44-40af-8e8f-a1a8006fe22c",
-    "name": "Assert Authority",
-    "handledLines": [
-      "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
-        "effects": [
-          {
-            "exileIfCountered": true,
-            "op": "counter",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "spell"
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "0866a630-d962-4aa9-a15f-08b2947540ef",
     "name": "Cosmic Cube",
     "handledLines": [
@@ -2879,55 +2821,6 @@
               "kind": "self"
             },
             "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "08c595da-9305-42a9-b72f-5ccc546edc01",
-    "name": "Junk Diver",
-    "handledLines": [
-      "When this creature dies, return another target artifact card from your graveyard to your hand."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When this creature dies, return another target artifact card from your graveyard to your hand.",
-          "effects": [
-            {
-              "op": "graveyardToHand",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "filter": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "not",
-                    "of": {
-                      "kind": "self"
-                    }
-                  }
-                ]
-              },
-              "kind": "cardInGraveyard"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "dies"
           }
         }
       ]
@@ -4914,36 +4807,6 @@
     }
   },
   {
-    "oracleId": "0eaea4fd-a377-4541-9bdd-14921034a975",
-    "name": "Doorkeeper Thrull",
-    "handledLines": [
-      "unrecognized rules text: \"Artifacts and creatures entering don't cause abilities to trigger.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "events": [
-            "enters"
-          ],
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Artifact"
-              },
-              {
-                "kind": "type",
-                "value": "Creature"
-              }
-            ]
-          },
-          "kind": "suppressObjectTriggers"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "0eaec4ec-0f50-4470-a7bf-acd8c6c52dc2",
     "name": "Long-Lost Lances",
     "handledLines": [
@@ -6912,59 +6775,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "13be47e4-9da2-4f9e-baf0-db96f7777ccb",
-    "name": "Thalia, Heretic Cathar",
-    "handledLines": [
-      "Creatures and nonbasic lands your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Land"
-                  },
-                  {
-                    "kind": "not",
-                    "of": {
-                      "kind": "supertype",
-                      "value": "Basic"
-                    }
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "13d34f21-f0ce-4e59-ac3e-6635bf7292d3",
     "name": "Skybind",
     "handledLines": [
@@ -7378,44 +7188,6 @@
             },
             "when": "enters"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "1573f7f9-672c-421a-b1ac-3d0d8aea59ca",
-    "name": "Tormod's Crypt",
-    "handledLines": [
-      "{T}, Sacrifice this artifact: Exile target player's graveyard."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{T}, Sacrifice this artifact: Exile target player's graveyard.",
-            "effects": [
-              {
-                "op": "exileTargetPlayerGraveyard",
-                "target": 0
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "kind": "player"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "kind": "tap"
-            },
-            {
-              "kind": "sacrificeSelf"
-            }
-          ],
-          "timing": "any"
         }
       ]
     },
@@ -9836,41 +9608,6 @@
             }
           ],
           "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "1b600345-2b89-45bc-98c8-609fdd08a5fd",
-    "name": "Merry, Warden of Isengard",
-    "handledLines": [
-      "Partner with Pippin, Warden of Isengard"
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Partner with Pippin, Warden of Isengard",
-          "effects": [
-            {
-              "name": "Pippin, Warden of Isengard",
-              "op": "targetPlayerMaySearchNamed",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
         }
       ]
     },
@@ -14224,36 +13961,6 @@
     }
   },
   {
-    "oracleId": "2bd81743-84c8-43ec-86f5-68230036827b",
-    "name": "Wizard's Lightning",
-    "handledLines": [
-      "This spell costs {2} less to cast if you control a Wizard."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 2
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Wizard"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "2be9c1e6-0226-497a-b548-21bf1cfbc286",
     "name": "Scuttletide",
     "handledLines": [
@@ -16226,55 +15933,6 @@
     }
   },
   {
-    "oracleId": "319ee221-bace-41e9-b386-6b528bd780c1",
-    "name": "Workshop Assistant",
-    "handledLines": [
-      "When this creature dies, return another target artifact card from your graveyard to your hand."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When this creature dies, return another target artifact card from your graveyard to your hand.",
-          "effects": [
-            {
-              "op": "graveyardToHand",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "filter": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "not",
-                    "of": {
-                      "kind": "self"
-                    }
-                  }
-                ]
-              },
-              "kind": "cardInGraveyard"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "dies"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "31cb87bf-1020-4fd5-95f7-8ecb197d823b",
     "name": "Pia Nalaar, Chief Mechanic",
     "handledLines": [
@@ -16567,65 +16225,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "32452ccf-88c7-41d6-93e5-15d31f29726d",
-    "name": "Frozen Aether",
-    "handledLines": [
-      "Artifacts, creatures, and lands your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Land"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "3292d795-4fdc-4e42-959a-dd5e8591c5cc",
@@ -17107,23 +16706,6 @@
               "C"
             ]
           ]
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "33017203-233e-498e-806e-94b1dccf5c35",
-    "name": "Eidolon of Rhetoric",
-    "handledLines": [
-      "Each player can't cast more than one spell each turn."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "any",
-          "kind": "spellCastLimit",
-          "limit": 1
         }
       ]
     },
@@ -20148,28 +19730,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "3d21f710-6bbc-41ae-a8e5-02debe3e02bd",
-    "name": "Hushbringer",
-    "handledLines": [
-      "unrecognized rules text: \"Creatures entering or dying don't cause abilities to trigger.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "events": [
-            "enters",
-            "dies"
-          ],
-          "filter": {
-            "kind": "type",
-            "value": "Creature"
-          },
-          "kind": "suppressObjectTriggers"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "3d2bd4f6-174d-411a-b930-9161aeefd33a",
     "name": "Tinybones Joins Up",
     "handledLines": [
@@ -21047,64 +20607,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "3fa5e109-4a67-4523-8183-90e48a906400",
-    "name": "Agent of Erebos",
-    "handledLines": [
-      "Whenever this creature or another enchantment you control enters, exile target player's graveyard."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Constellation — Whenever this creature or another enchantment you control enters, exile target player's graveyard.",
-          "effects": [
-            {
-              "op": "exileTargetPlayerGraveyard",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "permanent",
-              "selector": {
-                "kind": "anyOf",
-                "of": [
-                  {
-                    "kind": "self"
-                  },
-                  {
-                    "kind": "allOf",
-                    "of": [
-                      {
-                        "kind": "other"
-                      },
-                      {
-                        "kind": "controller",
-                        "who": "you"
-                      },
-                      {
-                        "kind": "type",
-                        "value": "Enchantment"
-                      }
-                    ]
-                  }
-                ]
-              }
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "405c4a7b-dbb3-48a1-9205-7dbe6e2ad363",
     "name": "Aatchik, Emerald Radian",
     "handledLines": [
@@ -21801,32 +21303,6 @@
     }
   },
   {
-    "oracleId": "4325ae73-af43-4a7d-a552-9909f0dc77db",
-    "name": "Turn Aside",
-    "handledLines": [
-      "Counter target spell that targets a permanent you control."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Counter target spell that targets a permanent you control.",
-        "effects": [
-          {
-            "op": "counter",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "spell",
-            "spellTargetsPermanentYouControl": true
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "43674fdf-496f-42dc-8a0a-5c42a7c7d910",
     "name": "Nylea, God of the Hunt",
     "handledLines": [
@@ -22211,36 +21687,6 @@
               "n": 1
             }
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "440881ad-48cf-4b82-8bb5-f506d1a51755",
-    "name": "Draconic Lore",
-    "handledLines": [
-      "This spell costs {2} less to cast if you control a Dragon."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 2
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Dragon"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
         }
       ]
     },
@@ -23725,40 +23171,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "48d14b5c-711a-4f8a-9de5-55415cb7a79a",
-    "name": "Angel of Finality",
-    "handledLines": [
-      "When this creature enters, exile target player's graveyard."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When this creature enters, exile target player's graveyard.",
-          "effects": [
-            {
-              "op": "exileTargetPlayerGraveyard",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "48ddba1e-2ad7-463f-9307-d2379a800e51",
     "name": "Mizzium Mortars",
     "handledLines": [],
@@ -23828,36 +23240,6 @@
         ]
       }
     }
-  },
-  {
-    "oracleId": "48e603a2-b965-4fbc-ad57-4388bce5ac8b",
-    "name": "Gods Willing",
-    "handledLines": [
-      "Target creature you control gains protection from the color of your choice until end of turn."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature you control gains protection from the color of your choice until end of turn.",
-        "effects": [
-          {
-            "op": "grantChosenColorProtectionUntilEot",
-            "target": 0
-          },
-          {
-            "count": 1,
-            "op": "scry"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
-    },
-    "compose": "append"
   },
   {
     "oracleId": "48e6d3d8-2f27-4017-acdd-40bce8cdbc02",
@@ -24854,34 +24236,6 @@
             "player": "enchanted",
             "when": "upkeep"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "4bba3663-7f3c-4589-88aa-cf0bfe36b171",
-    "name": "Imposing Sovereign",
-    "handledLines": [
-      "Creatures your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
         }
       ]
     },
@@ -26283,41 +25637,6 @@
     }
   },
   {
-    "oracleId": "506a972d-d226-44dc-95b7-a6e7a63d76cd",
-    "name": "Rocksteady, Mutant Marauder",
-    "handledLines": [
-      "Partner with Bebop, Skull & Crossbones"
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Partner with Bebop, Skull & Crossbones",
-          "effects": [
-            {
-              "name": "Bebop, Skull & Crossbones",
-              "op": "targetPlayerMaySearchNamed",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "507d2f27-08a9-4938-b191-5734cda42ef2",
     "name": "Angelic Exaltation",
     "handledLines": [
@@ -27335,22 +26654,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "53e88e64-6f82-4154-a66e-6aeb0154b368",
-    "name": "Rule of Law",
-    "handledLines": [
-      "unrecognized rules text: \"Each player can't cast more than one spell each turn.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "any",
-          "kind": "spellCastLimit",
-          "limit": 1
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "542e7d60-3fc8-46e2-8786-f7c8b3d4c979",
     "name": "Diamond Pick-Axe",
     "handledLines": [
@@ -28007,33 +27310,6 @@
     }
   },
   {
-    "oracleId": "55f3c721-e13a-406e-bc8e-d6cdc91ac477",
-    "name": "Authority of the Consuls",
-    "handledLines": [
-      "unrecognized rules text: \"Creatures your opponents control enter tapped.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "55fe5ec3-1c81-4e9d-9e4c-f68ce6d7c2de",
     "name": "Pore Over the Pages",
     "handledLines": [
@@ -28065,39 +27341,6 @@
         ],
         "kind": "spell",
         "targets": []
-      }
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "5602c14d-cc22-47d7-a1b0-6491749f00dd",
-    "name": "Keep Safe",
-    "handledLines": [
-      "Counter target spell that targets a permanent you control."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Counter target spell that targets a permanent you control.",
-        "effects": [
-          {
-            "op": "counter",
-            "target": 0
-          },
-          {
-            "count": {
-              "kind": "const",
-              "n": 1
-            },
-            "op": "draw"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "spell",
-            "spellTargetsPermanentYouControl": true
-          }
-        ]
       }
     },
     "compose": "append"
@@ -29509,31 +28752,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "5a2fa420-c27f-4c14-b285-e0bb2828e053",
-    "name": "Cyan, Vengeful Samurai",
-    "handledLines": [
-      "This spell costs {1} less to cast for each creature card in your graveyard."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "countCardsInZone",
-            "owner": "you",
-            "selector": {
-              "kind": "type",
-              "value": "Creature"
-            },
-            "zone": "graveyard"
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "5a343a5f-3f9b-43c3-8532-8391de7a5443",
     "name": "Jacked Rabbit",
     "handledLines": [
@@ -29911,34 +29129,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "5b2ffb53-86b7-4665-a5c7-b85b035b6c81",
-    "name": "Urabrask the Hidden",
-    "handledLines": [
-      "Creatures your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "5b5bf1fa-6502-4790-b66b-f0f8504ebc7c",
@@ -31189,31 +30379,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "5f2628e3-e29a-4d77-bc27-6e1ce240d192",
-    "name": "Ghoultree",
-    "handledLines": [
-      "This spell costs {1} less to cast for each creature card in your graveyard."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "countCardsInZone",
-            "owner": "you",
-            "selector": {
-              "kind": "type",
-              "value": "Creature"
-            },
-            "zone": "graveyard"
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "5f532b7f-cb76-4be7-b361-0106c561dcb2",
     "name": "Sami's Curiosity",
     "handledLines": [
@@ -31562,41 +30727,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "60433b48-d27f-413c-905c-43839b1943f1",
-    "name": "Mother of Runes",
-    "handledLines": [
-      "unrecognized rules text: \"{T}: Target creature you control gains protection from the color of your choice until end of turn.\""
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Target creature you control gains protection from a color of your choice until end of turn",
-            "effects": [
-              {
-                "op": "grantChosenColorProtectionUntilEot",
-                "target": 0
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "controller": "you",
-                "kind": "creature"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "604c581e-c1ba-417c-b9de-182192cc85cb",
     "name": "Taunting Kobold",
     "handledLines": [
@@ -31728,7 +30858,6 @@
     "oracleId": "60e7130a-d321-4e50-93a4-999013c76054",
     "name": "Gut, True Soul Zealot",
     "handledLines": [
-      "unrecognized rules text: \"Choose a Background\"",
       "unrecognized rules text: \"Whenever you attack, you may sacrifice another creature or an artifact. If you do, create a 4/1 black Skeleton creature token with menace that's tapped and attacking.\""
     ],
     "def": {
@@ -32289,22 +31418,6 @@
       ]
     },
     "compose": "append"
-  },
-  {
-    "oracleId": "6284ef01-d17d-4584-aecb-1b841ae638e5",
-    "name": "Deafening Silence",
-    "handledLines": [
-      "unrecognized rules text: \"Each player can't cast more than one noncreature spell each turn.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "noncreature",
-          "kind": "spellCastLimit",
-          "limit": 1
-        }
-      ]
-    }
   },
   {
     "oracleId": "6288c0cb-cf32-4ae9-abf0-104ec71654fa",
@@ -37375,59 +36488,9 @@
     "oracleId": "73dad679-1edb-41c9-9d43-56dc93c3e9fe",
     "name": "Stone of Erech",
     "handledLines": [
-      "unrecognized rules text: \"If a creature an opponent controls would die, exile it instead.\"",
-      "unrecognized rules text: \"{2}, {T}, Sacrifice ~: Exile target player's graveyard. Draw a card.\""
+      "unrecognized rules text: \"If a creature an opponent controls would die, exile it instead.\""
     ],
     "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Exile target player's graveyard. Draw a card",
-            "effects": [
-              {
-                "op": "exileTargetPlayerGraveyard",
-                "target": 0
-              },
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "draw"
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "kind": "player"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 2
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            },
-            {
-              "kind": "sacrificeSelf"
-            }
-          ],
-          "timing": "any"
-        }
-      ],
       "ruleStatics": [
         {
           "basis": "controller",
@@ -40210,36 +39273,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "7ef5c812-ad7d-4d6c-8ee5-68561e7e4bd7",
-    "name": "Saved by the Shell",
-    "handledLines": [
-      "This spell costs {1} less to cast if you control a Turtle."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Turtle"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "7f268b15-ac92-4e98-821b-78d15d9285d9",
     "name": "Loyal Apprentice",
     "handledLines": [
@@ -41104,65 +40137,6 @@
     }
   },
   {
-    "oracleId": "81fdd1c4-d43b-4f8b-8712-7c2bf45a3e0b",
-    "name": "Kismet",
-    "handledLines": [
-      "Artifacts, creatures, and lands your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Land"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "82333385-631f-4abf-b159-bb367f1c6fd9",
     "name": "Abandon Attachments",
     "handledLines": [
@@ -41457,36 +40431,6 @@
               "G"
             ]
           ]
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "8388faa0-f64e-4b01-836e-617f99b808a4",
-    "name": "Venom's Hunger",
-    "handledLines": [
-      "This spell costs {2} less to cast if you control a Villain."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 2
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Villain"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
         }
       ]
     },
@@ -42440,65 +41384,6 @@
     "def": {}
   },
   {
-    "oracleId": "861f0b1c-3b37-4d38-9232-e42565247076",
-    "name": "Loxodon Gatekeeper",
-    "handledLines": [
-      "Artifacts, creatures, and lands your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Land"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "8629fdef-dbbe-4a97-a7e1-6b1646f4ca0b",
     "name": "Elemental Eruption",
     "handledLines": [
@@ -43336,32 +42221,6 @@
           "timing": "any"
         }
       ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "894015d5-ee78-45df-8d37-53df963c59a6",
-    "name": "Emerge Unscathed",
-    "handledLines": [
-      "Target creature you control gains protection from the color of your choice until end of turn."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature you control gains protection from the color of your choice until end of turn.",
-        "effects": [
-          {
-            "op": "grantChosenColorProtectionUntilEot",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
     },
     "compose": "append"
   },
@@ -45864,36 +44723,6 @@
         {
           "kind": "minBlockers",
           "minimum": 3
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "91ddd2bd-2dec-4670-8edb-e89c009b2187",
-    "name": "Pearl of Wisdom",
-    "handledLines": [
-      "This spell costs {1} less to cast if you control an Otter."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Otter"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
         }
       ]
     },
@@ -53701,30 +52530,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "a9581345-87dc-4fbd-acc1-bb629f2cf40f",
-    "name": "Primeval Protector",
-    "handledLines": [
-      "This spell costs {1} less to cast for each creature your opponents control."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "countPermanents",
-            "scope": "opponents",
-            "selector": {
-              "kind": "type",
-              "value": "Creature"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "a97e760a-99c8-47ea-a875-451aca913ee7",
     "name": "Collective Effort",
     "handledLines": [
@@ -55529,36 +54334,6 @@
       ]
     },
     "compose": "append"
-  },
-  {
-    "oracleId": "aecc621f-67da-41a7-9d47-05ded302ae35",
-    "name": "Karn, Argent Defender",
-    "handledLines": [
-      "unrecognized rules text: \"Artifacts and creatures entering the battlefield don't cause abilities to trigger.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "events": [
-            "enters"
-          ],
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Artifact"
-              },
-              {
-                "kind": "type",
-                "value": "Creature"
-              }
-            ]
-          },
-          "kind": "suppressObjectTriggers"
-        }
-      ]
-    }
   },
   {
     "oracleId": "aeec8e85-6571-4da6-8a48-f5d3985ca10b",
@@ -58280,36 +57055,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "b828251c-86a9-454f-9852-d0876d0f5153",
-    "name": "Wizard's Retort",
-    "handledLines": [
-      "This spell costs {1} less to cast if you control a Wizard."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Wizard"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "b8602f19-6fc2-43c4-b0c4-2cd11d5dbda2",
     "name": "Keen Duelist",
     "handledLines": [
@@ -58699,34 +57444,6 @@
           }
         ]
       }
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "b9243163-b726-432e-830f-86132aa7f34a",
-    "name": "Kinjalli's Sunwing",
-    "handledLines": [
-      "Creatures your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
     },
     "compose": "append"
   },
@@ -59476,31 +58193,6 @@
             "addKeyword": "flying",
             "layer": 6
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "bb4507c1-1e5d-48b5-8fc0-1d26bd1c9e72",
-    "name": "Overwhelming Remorse",
-    "handledLines": [
-      "This spell costs {1} less to cast for each creature card in your graveyard."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "countCardsInZone",
-            "owner": "you",
-            "selector": {
-              "kind": "type",
-              "value": "Creature"
-            },
-            "zone": "graveyard"
-          },
-          "kind": "costReduction",
-          "selfOnly": true
         }
       ]
     },
@@ -60887,52 +59579,6 @@
     }
   },
   {
-    "oracleId": "be2b9c6d-4ecb-49ec-b276-4aa93c5dfc00",
-    "name": "Spider-Woman, Stunning Savior",
-    "handledLines": [
-      "Venom Blast — Artifacts and creatures your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "be6cab52-b3ae-46a2-a581-2468a49bff25",
     "name": "Architect of the Untamed",
     "handledLines": [
@@ -62270,39 +60916,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "c1909d70-d8f4-4c54-8587-0a910f123238",
-    "name": "Shelter",
-    "handledLines": [
-      "Target creature you control gains protection from the color of your choice until end of turn."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature you control gains protection from the color of your choice until end of turn. Draw a card.",
-        "effects": [
-          {
-            "op": "grantChosenColorProtectionUntilEot",
-            "target": 0
-          },
-          {
-            "count": {
-              "kind": "const",
-              "n": 1
-            },
-            "op": "draw"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "c1a7d108-8073-42a5-ade0-a0643d078268",
     "name": "Ashnod's Intervention",
     "handledLines": [
@@ -62358,39 +60971,9 @@
     "oracleId": "c20a96f7-aa5a-4c15-b8b1-806685c99b27",
     "name": "Bolt Bend",
     "handledLines": [
-      "Change the target of target spell or ability with a single target.",
-      "This spell costs {3} less to cast if you control a creature with power 4 or greater."
+      "Change the target of target spell or ability with a single target."
     ],
     "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 3
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                },
-                {
-                  "kind": "powerAtLeast",
-                  "n": 4
-                }
-              ]
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ],
       "spellAbility": {
         "description": "Change the target of target spell or ability with a single target",
         "effects": [
@@ -63109,41 +61692,6 @@
             },
             "when": "enters"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "c40bc9f6-2b72-4ae1-b912-50075af59628",
-    "name": "Remorseful Cleric",
-    "handledLines": [
-      "Sacrifice this creature: Exile target player's graveyard."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Sacrifice this creature: Exile target player's graveyard.",
-            "effects": [
-              {
-                "op": "exileTargetPlayerGraveyard",
-                "target": 0
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "kind": "player"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "kind": "sacrificeSelf"
-            }
-          ],
-          "timing": "any"
         }
       ]
     },
@@ -64481,42 +63029,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "c8c38570-0b42-4bfc-896f-f57f9a11ba9d",
-    "name": "Benevolent Bodyguard",
-    "handledLines": [
-      "Sacrifice this creature: Target creature you control gains protection from the color of your choice until end of turn."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Sacrifice this creature: Target creature you control gains protection from the color of your choice until end of turn.",
-            "effects": [
-              {
-                "op": "grantChosenColorProtectionUntilEot",
-                "target": 0
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "controller": "you",
-                "kind": "creature"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "kind": "sacrificeSelf"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "c8f1e3bd-bbf0-4750-b054-03553fc61850",
@@ -66038,46 +64550,6 @@
       ]
     },
     "compose": "append"
-  },
-  {
-    "oracleId": "ceef2d5a-77ea-4e56-9806-fd1a2d5be400",
-    "name": "Archon of Emeria",
-    "handledLines": [
-      "unrecognized rules text: \"Each player can't cast more than one spell each turn.\"",
-      "unrecognized rules text: \"Nonbasic lands your opponents control enter tapped.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "any",
-          "kind": "spellCastLimit",
-          "limit": 1
-        },
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Land"
-              },
-              {
-                "kind": "not",
-                "of": {
-                  "kind": "supertype",
-                  "value": "Basic"
-                }
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    }
   },
   {
     "oracleId": "cef82674-1f61-407b-801b-a76a3803e598",
@@ -68648,31 +67120,6 @@
           }
         }
       ]
-    }
-  },
-  {
-    "oracleId": "d54e4e37-042b-44a5-918d-757308545d4d",
-    "name": "Sejiri Shelter // Sejiri Glacier",
-    "handledLines": [
-      "unrecognized rules text: \"Target creature you control gains protection from the color of your choice until end of turn.\""
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature you control gains protection from a color of your choice until end of turn",
-        "effects": [
-          {
-            "op": "grantChosenColorProtectionUntilEot",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
     }
   },
   {
@@ -72836,7 +71283,6 @@
     "name": "Rowan Kenrith",
     "handledLines": [
       "+2: During target player's next turn, each creature that player controls attacks if able.",
-      "Partner with Will Kenrith",
       "−2: ~ deals 3 damage to each tapped creature target player controls.",
       "−8: Target player gets an emblem with \"Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy.\""
     ],
@@ -73638,36 +72084,6 @@
             },
             "when": "enters"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "e2e44d46-9df4-46f8-acf7-5581b2257620",
-    "name": "Lookout's Dispersal",
-    "handledLines": [
-      "This spell costs {1} less to cast if you control a Pirate."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Pirate"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
         }
       ]
     },
@@ -80847,31 +79263,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "f5822e53-ddec-4c77-bcf4-091e35c1e731",
-    "name": "Rebuff the Wicked",
-    "handledLines": [
-      "unrecognized rules text: \"Counter target spell that targets a permanent you control.\""
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Counter target spell that targets a permanent you control",
-        "effects": [
-          {
-            "op": "counter",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "spell",
-            "spellTargetsPermanentYouControl": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "oracleId": "f586ecb8-310c-4f40-a766-6a7ca46a254d",
     "name": "Flare of Duplication",
     "handledLines": [
@@ -81059,23 +79450,6 @@
         "kind": "spell",
         "targets": []
       }
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "f5e3c26c-c28c-455f-a682-2597e4b92d10",
-    "name": "Arcane Laboratory",
-    "handledLines": [
-      "Each player can't cast more than one spell each turn."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "any",
-          "kind": "spellCastLimit",
-          "limit": 1
-        }
-      ]
     },
     "compose": "append"
   },
@@ -82124,43 +80498,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "f8536726-993b-4100-918c-e3c7177d4c65",
-    "name": "Spectral Denial",
-    "handledLines": [
-      "This spell costs {1} less to cast for each creature you control with power 4 or greater."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "countPermanents",
-            "scope": "all",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "powerAtLeast",
-                  "n": 4
-                },
-                {
-                  "kind": "controller",
-                  "who": "you"
-                },
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                }
-              ]
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "f8bf3d91-cb50-48ce-88c6-cdcb37b64b57",
@@ -83448,40 +81785,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "fda76032-7e6f-416f-8874-2a0642837522",
-    "name": "Jirina, Dauntless General",
-    "handledLines": [
-      "When ~ enters, exile target player's graveyard."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When Jirina enters, exile target player's graveyard.",
-          "effects": [
-            {
-              "op": "exileTargetPlayerGraveyard",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "fdba89eb-1cf5-46e6-9d09-1adb9bc40fcd",
@@ -85868,64 +84171,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-agent-of-erebos",
-    "name": "Agent of Erebos",
-    "handledLines": [
-      "Whenever this creature or another enchantment you control enters, exile target player's graveyard."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Constellation — Whenever this creature or another enchantment you control enters, exile target player's graveyard.",
-          "effects": [
-            {
-              "op": "exileTargetPlayerGraveyard",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "permanent",
-              "selector": {
-                "kind": "anyOf",
-                "of": [
-                  {
-                    "kind": "self"
-                  },
-                  {
-                    "kind": "allOf",
-                    "of": [
-                      {
-                        "kind": "other"
-                      },
-                      {
-                        "kind": "controller",
-                        "who": "you"
-                      },
-                      {
-                        "kind": "type",
-                        "value": "Enchantment"
-                      }
-                    ]
-                  }
-                ]
-              }
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-agitator-ant",
     "name": "Agitator Ant",
     "handledLines": [
@@ -87358,40 +85603,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-angel-of-finality",
-    "name": "Angel of Finality",
-    "handledLines": [
-      "When this creature enters, exile target player's graveyard."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When this creature enters, exile target player's graveyard.",
-          "effects": [
-            {
-              "op": "exileTargetPlayerGraveyard",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-angel-of-the-ruins",
     "name": "Angel of the Ruins",
     "handledLines": [
@@ -88029,23 +86240,6 @@
     }
   },
   {
-    "oracleId": "oracle-arcane-laboratory",
-    "name": "Arcane Laboratory",
-    "handledLines": [
-      "Each player can't cast more than one spell each turn."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "any",
-          "kind": "spellCastLimit",
-          "limit": 1
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-arcane-lighthouse",
     "name": "Arcane Lighthouse",
     "handledLines": [
@@ -88306,46 +86500,6 @@
           "amount": 1,
           "includePlaneswalkers": true,
           "kind": "attackTax"
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "oracle-archon-of-emeria",
-    "name": "Archon of Emeria",
-    "handledLines": [
-      "unrecognized rules text: \"Each player can't cast more than one spell each turn.\"",
-      "unrecognized rules text: \"Nonbasic lands your opponents control enter tapped.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "any",
-          "kind": "spellCastLimit",
-          "limit": 1
-        },
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Land"
-              },
-              {
-                "kind": "not",
-                "of": {
-                  "kind": "supertype",
-                  "value": "Basic"
-                }
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
         }
       ]
     }
@@ -89038,32 +87192,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-assert-authority",
-    "name": "Assert Authority",
-    "handledLines": [
-      "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
-        "effects": [
-          {
-            "exileIfCountered": true,
-            "op": "counter",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "spell"
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-atarka-monument",
     "name": "Atarka Monument",
     "handledLines": [
@@ -89415,33 +87543,6 @@
             },
             "when": "castsSpell"
           }
-        }
-      ]
-    }
-  },
-  {
-    "oracleId": "oracle-authority-of-the-consuls",
-    "name": "Authority of the Consuls",
-    "handledLines": [
-      "unrecognized rules text: \"Creatures your opponents control enter tapped.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
         }
       ]
     }
@@ -91069,42 +89170,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-benevolent-bodyguard",
-    "name": "Benevolent Bodyguard",
-    "handledLines": [
-      "Sacrifice this creature: Target creature you control gains protection from the color of your choice until end of turn."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Sacrifice this creature: Target creature you control gains protection from the color of your choice until end of turn.",
-            "effects": [
-              {
-                "op": "grantChosenColorProtectionUntilEot",
-                "target": 0
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "controller": "you",
-                "kind": "creature"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "kind": "sacrificeSelf"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-benevolent-offering",
     "name": "Benevolent Offering",
     "handledLines": [
@@ -92599,38 +90664,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-bojuka-bog",
-    "name": "Bojuka Bog",
-    "handledLines": [
-      "When this land enters, exile target player's graveyard."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Enters — exile target player’s graveyard",
-          "effects": [
-            {
-              "op": "exileTargetPlayerGraveyard",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-bolas-s-citadel",
     "name": "Bolas's Citadel",
     "handledLines": [
@@ -92698,39 +90731,9 @@
     "oracleId": "oracle-bolt-bend",
     "name": "Bolt Bend",
     "handledLines": [
-      "Change the target of target spell or ability with a single target.",
-      "This spell costs {3} less to cast if you control a creature with power 4 or greater."
+      "Change the target of target spell or ability with a single target."
     ],
     "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 3
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                },
-                {
-                  "kind": "powerAtLeast",
-                  "n": 4
-                }
-              ]
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ],
       "spellAbility": {
         "description": "Change the target of target spell or ability with a single target",
         "effects": [
@@ -100520,31 +98523,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-cyan-vengeful-samurai",
-    "name": "Cyan, Vengeful Samurai",
-    "handledLines": [
-      "This spell costs {1} less to cast for each creature card in your graveyard."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "countCardsInZone",
-            "owner": "you",
-            "selector": {
-              "kind": "type",
-              "value": "Creature"
-            },
-            "zone": "graveyard"
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-cycle-of-renewal",
     "name": "Cycle of Renewal",
     "handledLines": [
@@ -101743,22 +99721,6 @@
       ]
     },
     "compose": "append"
-  },
-  {
-    "oracleId": "oracle-deafening-silence",
-    "name": "Deafening Silence",
-    "handledLines": [
-      "unrecognized rules text: \"Each player can't cast more than one noncreature spell each turn.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "noncreature",
-          "kind": "spellCastLimit",
-          "limit": 1
-        }
-      ]
-    }
   },
   {
     "oracleId": "oracle-death-s-presence",
@@ -104303,36 +102265,6 @@
     }
   },
   {
-    "oracleId": "oracle-doorkeeper-thrull",
-    "name": "Doorkeeper Thrull",
-    "handledLines": [
-      "unrecognized rules text: \"Artifacts and creatures entering don't cause abilities to trigger.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "events": [
-            "enters"
-          ],
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Artifact"
-              },
-              {
-                "kind": "type",
-                "value": "Creature"
-              }
-            ]
-          },
-          "kind": "suppressObjectTriggers"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-doublecast",
     "name": "Doublecast",
     "handledLines": [
@@ -104462,36 +102394,6 @@
             },
             "layer": 6
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-draconic-lore",
-    "name": "Draconic Lore",
-    "handledLines": [
-      "This spell costs {2} less to cast if you control a Dragon."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 2
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Dragon"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
         }
       ]
     },
@@ -106035,23 +103937,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-eidolon-of-rhetoric",
-    "name": "Eidolon of Rhetoric",
-    "handledLines": [
-      "Each player can't cast more than one spell each turn."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "any",
-          "kind": "spellCastLimit",
-          "limit": 1
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-eiganjo-dynastorian-replenish",
     "name": "Eiganjo Dynastorian // Replenish",
     "handledLines": [
@@ -106646,32 +104531,6 @@
               ]
             },
             "kind": "permanent"
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-emerge-unscathed",
-    "name": "Emerge Unscathed",
-    "handledLines": [
-      "Target creature you control gains protection from the color of your choice until end of turn."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature you control gains protection from the color of your choice until end of turn.",
-        "effects": [
-          {
-            "op": "grantChosenColorProtectionUntilEot",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
           }
         ]
       }
@@ -111933,65 +109792,6 @@
     }
   },
   {
-    "oracleId": "oracle-frozen-aether",
-    "name": "Frozen Aether",
-    "handledLines": [
-      "Artifacts, creatures, and lands your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Land"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-fully-grown",
     "name": "Fully Grown",
     "handledLines": [
@@ -113708,31 +111508,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-ghoultree",
-    "name": "Ghoultree",
-    "handledLines": [
-      "This spell costs {1} less to cast for each creature card in your graveyard."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "countCardsInZone",
-            "owner": "you",
-            "selector": {
-              "kind": "type",
-              "value": "Creature"
-            },
-            "zone": "graveyard"
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-giada-font-of-hope",
     "name": "Giada, Font of Hope",
     "handledLines": [
@@ -115104,36 +112879,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-gods-willing",
-    "name": "Gods Willing",
-    "handledLines": [
-      "Target creature you control gains protection from the color of your choice until end of turn."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature you control gains protection from the color of your choice until end of turn.",
-        "effects": [
-          {
-            "op": "grantChosenColorProtectionUntilEot",
-            "target": 0
-          },
-          {
-            "count": 1,
-            "op": "scry"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-gold-forged-thopteryx",
     "name": "Gold-Forged Thopteryx",
     "handledLines": [
@@ -116434,7 +114179,6 @@
     "oracleId": "oracle-gut-true-soul-zealot",
     "name": "Gut, True Soul Zealot",
     "handledLines": [
-      "unrecognized rules text: \"Choose a Background\"",
       "unrecognized rules text: \"Whenever you attack, you may sacrifice another creature or an artifact. If you do, create a 4/1 black Skeleton creature token with menace that's tapped and attacking.\""
     ],
     "def": {
@@ -120001,28 +117745,6 @@
     }
   },
   {
-    "oracleId": "oracle-hushbringer",
-    "name": "Hushbringer",
-    "handledLines": [
-      "unrecognized rules text: \"Creatures entering or dying don't cause abilities to trigger.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "events": [
-            "enters",
-            "dies"
-          ],
-          "filter": {
-            "kind": "type",
-            "value": "Creature"
-          },
-          "kind": "suppressObjectTriggers"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-hymn-to-tourach",
     "name": "Hymn to Tourach",
     "handledLines": [
@@ -120702,34 +118424,6 @@
             "player": "you",
             "when": "upkeep"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-imposing-sovereign",
-    "name": "Imposing Sovereign",
-    "handledLines": [
-      "Creatures your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
         }
       ]
     },
@@ -122648,40 +120342,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-jirina-dauntless-general",
-    "name": "Jirina, Dauntless General",
-    "handledLines": [
-      "When ~ enters, exile target player's graveyard."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When Jirina enters, exile target player's graveyard.",
-          "effects": [
-            {
-              "op": "exileTargetPlayerGraveyard",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-joo-dee-one-of-many",
     "name": "Joo Dee, One of Many",
     "handledLines": [
@@ -122991,55 +120651,6 @@
               }
             },
             "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-junk-diver",
-    "name": "Junk Diver",
-    "handledLines": [
-      "When this creature dies, return another target artifact card from your graveyard to your hand."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When this creature dies, return another target artifact card from your graveyard to your hand.",
-          "effects": [
-            {
-              "op": "graveyardToHand",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "filter": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "not",
-                    "of": {
-                      "kind": "self"
-                    }
-                  }
-                ]
-              },
-              "kind": "cardInGraveyard"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "dies"
           }
         }
       ]
@@ -123859,36 +121470,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-karn-argent-defender",
-    "name": "Karn, Argent Defender",
-    "handledLines": [
-      "unrecognized rules text: \"Artifacts and creatures entering the battlefield don't cause abilities to trigger.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "events": [
-            "enters"
-          ],
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Artifact"
-              },
-              {
-                "kind": "type",
-                "value": "Creature"
-              }
-            ]
-          },
-          "kind": "suppressObjectTriggers"
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-kasmina-s-transmutation",
     "name": "Kasmina's Transmutation",
     "handledLines": [
@@ -124214,39 +121795,6 @@
     }
   },
   {
-    "oracleId": "oracle-keep-safe",
-    "name": "Keep Safe",
-    "handledLines": [
-      "Counter target spell that targets a permanent you control."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Counter target spell that targets a permanent you control.",
-        "effects": [
-          {
-            "op": "counter",
-            "target": 0
-          },
-          {
-            "count": {
-              "kind": "const",
-              "n": 1
-            },
-            "op": "draw"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "spell",
-            "spellTargetsPermanentYouControl": true
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-keeper-of-the-nine-gales",
     "name": "Keeper of the Nine Gales",
     "handledLines": [
@@ -124403,34 +121951,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-kinjalli-s-sunwing",
-    "name": "Kinjalli's Sunwing",
-    "handledLines": [
-      "Creatures your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-kiora-sovereign-of-the-deep",
     "name": "Kiora, Sovereign of the Deep",
     "handledLines": [
@@ -124516,65 +122036,6 @@
             "sublayer": "d",
             "toughness": 2
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-kismet",
-    "name": "Kismet",
-    "handledLines": [
-      "Artifacts, creatures, and lands your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Land"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
         }
       ]
     },
@@ -127240,36 +124701,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-lookout-s-dispersal",
-    "name": "Lookout's Dispersal",
-    "handledLines": [
-      "This spell costs {1} less to cast if you control a Pirate."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Pirate"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-loran-of-the-third-path",
     "name": "Loran of the Third Path",
     "handledLines": [
@@ -127572,65 +125003,6 @@
             "addKeyword": "haste",
             "layer": 6
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-loxodon-gatekeeper",
-    "name": "Loxodon Gatekeeper",
-    "handledLines": [
-      "Artifacts, creatures, and lands your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Land"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
         }
       ]
     },
@@ -130056,41 +127428,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-merry-warden-of-isengard",
-    "name": "Merry, Warden of Isengard",
-    "handledLines": [
-      "Partner with Pippin, Warden of Isengard"
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Partner with Pippin, Warden of Isengard",
-          "effects": [
-            {
-              "name": "Pippin, Warden of Isengard",
-              "op": "targetPlayerMaySearchNamed",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-meteor-crater",
     "name": "Meteor Crater",
     "handledLines": [
@@ -132484,41 +129821,6 @@
       ]
     },
     "compose": "append"
-  },
-  {
-    "oracleId": "oracle-mother-of-runes",
-    "name": "Mother of Runes",
-    "handledLines": [
-      "unrecognized rules text: \"{T}: Target creature you control gains protection from the color of your choice until end of turn.\""
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Target creature you control gains protection from a color of your choice until end of turn",
-            "effects": [
-              {
-                "op": "grantChosenColorProtectionUntilEot",
-                "target": 0
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "controller": "you",
-                "kind": "creature"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    }
   },
   {
     "oracleId": "oracle-mox-diamond",
@@ -137016,31 +134318,6 @@
     }
   },
   {
-    "oracleId": "oracle-overwhelming-remorse",
-    "name": "Overwhelming Remorse",
-    "handledLines": [
-      "This spell costs {1} less to cast for each creature card in your graveyard."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "countCardsInZone",
-            "owner": "you",
-            "selector": {
-              "kind": "type",
-              "value": "Creature"
-            },
-            "zone": "graveyard"
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-overwhelming-stampede",
     "name": "Overwhelming Stampede",
     "handledLines": [
@@ -137864,36 +135141,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-pearl-of-wisdom",
-    "name": "Pearl of Wisdom",
-    "handledLines": [
-      "This spell costs {1} less to cast if you control an Otter."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Otter"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "oracle-peema-aether-seer",
@@ -139389,30 +136636,6 @@
         ]
       }
     }
-  },
-  {
-    "oracleId": "oracle-primeval-protector",
-    "name": "Primeval Protector",
-    "handledLines": [
-      "This spell costs {1} less to cast for each creature your opponents control."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "countPermanents",
-            "scope": "opponents",
-            "selector": {
-              "kind": "type",
-              "value": "Creature"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "oracle-prismari-pianist",
@@ -141679,31 +138902,6 @@
     }
   },
   {
-    "oracleId": "oracle-rebuff-the-wicked",
-    "name": "Rebuff the Wicked",
-    "handledLines": [
-      "unrecognized rules text: \"Counter target spell that targets a permanent you control.\""
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Counter target spell that targets a permanent you control",
-        "effects": [
-          {
-            "op": "counter",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "spell",
-            "spellTargetsPermanentYouControl": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "oracleId": "oracle-reckless-fireweaver",
     "name": "Reckless Fireweaver",
     "handledLines": [],
@@ -142275,41 +139473,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-remorseful-cleric",
-    "name": "Remorseful Cleric",
-    "handledLines": [
-      "Sacrifice this creature: Exile target player's graveyard."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Sacrifice this creature: Exile target player's graveyard.",
-            "effects": [
-              {
-                "op": "exileTargetPlayerGraveyard",
-                "target": 0
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "kind": "player"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "kind": "sacrificeSelf"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "oracle-renegade-tactics",
@@ -143652,41 +140815,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-rocksteady-mutant-marauder",
-    "name": "Rocksteady, Mutant Marauder",
-    "handledLines": [
-      "Partner with Bebop, Skull & Crossbones"
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Partner with Bebop, Skull & Crossbones",
-          "effects": [
-            {
-              "name": "Bebop, Skull & Crossbones",
-              "op": "targetPlayerMaySearchNamed",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "kind": "player"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-rogue-refiner",
     "name": "Rogue Refiner",
     "handledLines": [
@@ -143793,7 +140921,6 @@
     "name": "Rowan Kenrith",
     "handledLines": [
       "+2: During target player's next turn, each creature that player controls attacks if able.",
-      "Partner with Will Kenrith",
       "−2: ~ deals 3 damage to each tapped creature target player controls.",
       "−8: Target player gets an emblem with \"Whenever you activate an ability that isn't a mana ability, copy it. You may choose new targets for the copy.\""
     ],
@@ -143993,22 +141120,6 @@
       }
     },
     "compose": "append"
-  },
-  {
-    "oracleId": "oracle-rule-of-law",
-    "name": "Rule of Law",
-    "handledLines": [
-      "unrecognized rules text: \"Each player can't cast more than one spell each turn.\""
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "category": "any",
-          "kind": "spellCastLimit",
-          "limit": 1
-        }
-      ]
-    }
   },
   {
     "oracleId": "oracle-run-amok",
@@ -145303,36 +142414,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-saved-by-the-shell",
-    "name": "Saved by the Shell",
-    "handledLines": [
-      "This spell costs {1} less to cast if you control a Turtle."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Turtle"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "oracle-scalelord-reckoner",
@@ -146770,31 +143851,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-sejiri-shelter-sejiri-glacier",
-    "name": "Sejiri Shelter // Sejiri Glacier",
-    "handledLines": [
-      "unrecognized rules text: \"Target creature you control gains protection from the color of your choice until end of turn.\""
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature you control gains protection from a color of your choice until end of turn",
-        "effects": [
-          {
-            "op": "grantChosenColorProtectionUntilEot",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
-    }
-  },
-  {
     "oracleId": "oracle-selesnya-eulogist",
     "name": "Selesnya Eulogist",
     "handledLines": [
@@ -147768,39 +144824,6 @@
           }
         }
       ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-shelter",
-    "name": "Shelter",
-    "handledLines": [
-      "Target creature you control gains protection from the color of your choice until end of turn."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Target creature you control gains protection from the color of your choice until end of turn. Draw a card.",
-        "effects": [
-          {
-            "op": "grantChosenColorProtectionUntilEot",
-            "target": 0
-          },
-          {
-            "count": {
-              "kind": "const",
-              "n": 1
-            },
-            "op": "draw"
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
     },
     "compose": "append"
   },
@@ -151146,43 +148169,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-spectral-denial",
-    "name": "Spectral Denial",
-    "handledLines": [
-      "This spell costs {1} less to cast for each creature you control with power 4 or greater."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "countPermanents",
-            "scope": "all",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "powerAtLeast",
-                  "n": 4
-                },
-                {
-                  "kind": "controller",
-                  "who": "you"
-                },
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                }
-              ]
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-spell-snare",
     "name": "Spell Snare",
     "handledLines": [
@@ -151773,52 +148759,6 @@
             "sublayer": "d",
             "toughness": 2
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-spider-woman-stunning-savior",
-    "name": "Spider-Woman, Stunning Savior",
-    "handledLines": [
-      "Venom Blast — Artifacts and creatures your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
         }
       ]
     },
@@ -153328,59 +150268,9 @@
     "oracleId": "oracle-stone-of-erech",
     "name": "Stone of Erech",
     "handledLines": [
-      "unrecognized rules text: \"If a creature an opponent controls would die, exile it instead.\"",
-      "unrecognized rules text: \"{2}, {T}, Sacrifice ~: Exile target player's graveyard. Draw a card.\""
+      "unrecognized rules text: \"If a creature an opponent controls would die, exile it instead.\""
     ],
     "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Exile target player's graveyard. Draw a card",
-            "effects": [
-              {
-                "op": "exileTargetPlayerGraveyard",
-                "target": 0
-              },
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "draw"
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "kind": "player"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 2
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            },
-            {
-              "kind": "sacrificeSelf"
-            }
-          ],
-          "timing": "any"
-        }
-      ],
       "ruleStatics": [
         {
           "basis": "controller",
@@ -156650,59 +153540,6 @@
     }
   },
   {
-    "oracleId": "oracle-thalia-heretic-cathar",
-    "name": "Thalia, Heretic Cathar",
-    "handledLines": [
-      "Creatures and nonbasic lands your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "anyOf",
-            "of": [
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              },
-              {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Land"
-                  },
-                  {
-                    "kind": "not",
-                    "of": {
-                      "kind": "supertype",
-                      "value": "Basic"
-                    }
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  }
-                ]
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-the-battle-of-bywater",
     "name": "The Battle of Bywater",
     "handledLines": [
@@ -159730,44 +156567,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-tormod-s-crypt",
-    "name": "Tormod's Crypt",
-    "handledLines": [
-      "{T}, Sacrifice this artifact: Exile target player's graveyard."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{T}, Sacrifice this artifact: Exile target player's graveyard.",
-            "effects": [
-              {
-                "op": "exileTargetPlayerGraveyard",
-                "target": 0
-              }
-            ],
-            "kind": "activated",
-            "targets": [
-              {
-                "kind": "player"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "kind": "tap"
-            },
-            {
-              "kind": "sacrificeSelf"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-tough-cookie",
     "name": "Tough Cookie",
     "handledLines": [
@@ -161254,32 +158053,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-turn-aside",
-    "name": "Turn Aside",
-    "handledLines": [
-      "Counter target spell that targets a permanent you control."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Counter target spell that targets a permanent you control.",
-        "effects": [
-          {
-            "op": "counter",
-            "target": 0
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "kind": "spell",
-            "spellTargetsPermanentYouControl": true
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-turn-to-mist",
     "name": "Turn to Mist",
     "handledLines": [
@@ -162658,34 +159431,6 @@
             },
             "when": "castsSpell"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-urabrask-the-hidden",
-    "name": "Urabrask the Hidden",
-    "handledLines": [
-      "Creatures your opponents control enter tapped."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "filter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "opponents"
-              }
-            ]
-          },
-          "kind": "otherPermanentsEnterTapped"
         }
       ]
     },
@@ -164153,36 +160898,6 @@
             },
             "when": "dies"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-venom-s-hunger",
-    "name": "Venom's Hunger",
-    "handledLines": [
-      "This spell costs {2} less to cast if you control a Villain."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 2
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Villain"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
         }
       ]
     },
@@ -167893,66 +164608,6 @@
     }
   },
   {
-    "oracleId": "oracle-wizard-s-lightning",
-    "name": "Wizard's Lightning",
-    "handledLines": [
-      "This spell costs {2} less to cast if you control a Wizard."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 2
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Wizard"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-wizard-s-retort",
-    "name": "Wizard's Retort",
-    "handledLines": [
-      "This spell costs {1} less to cast if you control a Wizard."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "amount": {
-            "kind": "const",
-            "n": 1
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Wizard"
-            }
-          },
-          "kind": "costReduction",
-          "selfOnly": true
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-wolfwillow-haven",
     "name": "Wolfwillow Haven",
     "handledLines": [
@@ -168105,55 +164760,6 @@
         "kind": "spell",
         "targets": []
       }
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-workshop-assistant",
-    "name": "Workshop Assistant",
-    "handledLines": [
-      "When this creature dies, return another target artifact card from your graveyard to your hand."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When this creature dies, return another target artifact card from your graveyard to your hand.",
-          "effects": [
-            {
-              "op": "graveyardToHand",
-              "target": 0
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [
-            {
-              "filter": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "type",
-                    "value": "Artifact"
-                  },
-                  {
-                    "kind": "not",
-                    "of": {
-                      "kind": "self"
-                    }
-                  }
-                ]
-              },
-              "kind": "cardInGraveyard"
-            }
-          ],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "dies"
-          }
-        }
-      ]
     },
     "compose": "append"
   },
