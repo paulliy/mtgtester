@@ -1,0 +1,113 @@
+{
+  "seed": "s7-batch-21",
+  "swap": false,
+  "spendCap": {
+    "maxUsd": 1,
+    "maxCalls": 1500,
+    "reached": false,
+    "spentUsd": 0.0068
+  },
+  "turns": 34,
+  "minutes": 0.9,
+  "winner": "P2",
+  "winnerMode": "model",
+  "finishingOrder": ["P1", "P3", "P4", "P2"],
+  "halted": false,
+  "haltReason": null,
+  "life": {
+    "P1": 0,
+    "P2": 39,
+    "P3": 0,
+    "P4": 0
+  },
+  "seatTurns": {
+    "P1": {
+      "ownTurns": 2,
+      "eliminatedOnTurn": 11
+    },
+    "P2": {
+      "ownTurns": 16,
+      "eliminatedOnTurn": null
+    },
+    "P3": {
+      "ownTurns": 3,
+      "eliminatedOnTurn": 12
+    },
+    "P4": {
+      "ownTurns": 14,
+      "eliminatedOnTurn": 34
+    }
+  },
+  "seats": {
+    "P1": "bot",
+    "P2": "model",
+    "P3": "bot",
+    "P4": "model"
+  },
+  "opponents": "bot-v1",
+  "escalation": [],
+  "shadow": [],
+  "perMode": {
+    "bot": {
+      "tacticianCalls": 0,
+      "strategistCalls": 3,
+      "promptTokens": 6821,
+      "responseTokens": 682,
+      "costUsd": 0.0009,
+      "costKnown": true,
+      "failedCalls": 0,
+      "unpricedAttempts": 0,
+      "unknownCostCalls": 0,
+      "settledUsd": 0,
+      "unsettledAttempts": 0,
+      "providers": {
+        "Mistral": 1,
+        "Wafer": 1,
+        "CoreWeave": 1
+      },
+      "ownTurns": 5,
+      "strategistCallsPerOwnTurn": 0.6,
+      "promptTokensPerOwnTurn": 1364,
+      "strategistWakes": {
+        "first knobs": 2,
+        "life": 2
+      },
+      "callsPerTurn": 0.09,
+      "promptTokensPerTurn": 201
+    },
+    "model": {
+      "tacticianCalls": 0,
+      "strategistCalls": 16,
+      "promptTokens": 40157,
+      "responseTokens": 3905,
+      "costUsd": 0.0059,
+      "costKnown": true,
+      "failedCalls": 0,
+      "unpricedAttempts": 0,
+      "unknownCostCalls": 0,
+      "settledUsd": 0,
+      "unsettledAttempts": 0,
+      "providers": {
+        "Wafer": 3,
+        "CoreWeave": 1,
+        "InferenceNet": 4,
+        "Together": 3,
+        "Particle AI": 4,
+        "Mistral": 1
+      },
+      "ownTurns": 30,
+      "strategistCallsPerOwnTurn": 0.533,
+      "promptTokensPerOwnTurn": 1339,
+      "strategistWakes": {
+        "first knobs": 2,
+        "commander": 8,
+        "power": 3,
+        "life": 4,
+        "gone": 4,
+        "reuse limit": 3
+      },
+      "callsPerTurn": 0.47,
+      "promptTokensPerTurn": 1181
+    }
+  }
+}

@@ -2413,6 +2413,45 @@ describe('Arcbond', () => {
     expect(ctx.state.delayedTriggers.length).toBeLessThanOrEqual(1);
   });
 
+  it("arcbond-lifelink-one-gain — the creature's damage to every creature and player is one lifelink gain", () => {
+    // Seven shares of 3 dealt at once are one life-gain event of 21 (CR 120.3f, 119.9), which a
+    // "plus 1" replacement makes 22, not seven gains of 4.
+    const { ctx, chosen } = board('arcbond-one-gain', LEECH);
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Dawn Knight',
+        typeLine: 'Enchantment',
+        oracleText: 'If you would gain life, you gain that much life plus 1 instead.',
+      }),
+    );
+    arcbond(ctx, chosen.id);
+    bolt(ctx, chosen.id);
+    expect(life(ctx, 'P1')).toBe(40 - 3 + 21 + 1);
+    for (const id of ['P2', 'P3', 'P4']) expect(life(ctx, id), id).toBe(37);
+  });
+
+  it('arcbond-dead-creature-is-a-permanent-source — a creature that died still deals its damage as a creature you controlled', () => {
+    // The chosen creature dies to the bolt; it deals its 3 as it last existed, a creature P1
+    // controlled (CR 113.7a), so P1's "a creature you control deals double" still applies.
+    const { ctx, chosen } = board('arcbond-dead-double', FRAIL_LEECH);
+    spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Lab Violence',
+        typeLine: 'Enchantment',
+        oracleText:
+          'If a creature you control would deal damage to a permanent or player, it deals double that damage instead.',
+      }),
+    );
+    arcbond(ctx, chosen.id);
+    bolt(ctx, chosen.id);
+    expect(onField(ctx, chosen.cardId)).toBeUndefined();
+    for (const id of ['P2', 'P3', 'P4']) expect(life(ctx, id), id).toBe(34);
+  });
+
   it('arcbond-each-time — every time the creature is dealt damage this turn triggers again, for that amount', () => {
     const { ctx, chosen, foe } = board('arcbond-twice');
     arcbond(ctx, chosen.id);

@@ -13,6 +13,7 @@ import type {
 import { emptyCost, planPayment } from './cost';
 import { payManaCost } from '../effects/resolve';
 import { UnmodeledCardError } from '../errors';
+import type { PendingDecision } from '../decisions';
 import { battlefieldCharacteristics } from '../effects/continuous';
 import type { ManaAbilitySpec } from '../cards/ability';
 import { activationInvariantProduction } from '../cards/mana-production';
@@ -28,10 +29,19 @@ import {
 import {
   characteristicsFixedDuringPayment,
   gateCannotOpenDuringPayment,
+  leavingPermanentsKeepProduction,
 } from './payment-stability';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 
-const bounds = { states: 2048, activations: 32, productions: 256 };
+const bounds = { states: 2048, activations: 32, productions: 256, lifeGainOrders: 64 };
+
+/** A decision that only orders life-gain replacements (`replaceLifeGain`, CR 616.1). */
+function onlyLifeGainOrder(decision: PendingDecision): boolean {
+  return (
+    decision.options.length > 0 &&
+    decision.options.every((option) => option.type === 'lifeGainReplacement')
+  );
+}
 /**
  * A copy to replay activations on. It leaves out the spectator snapshots and the debug log: no
  * rule reads them, and where nothing drains them (a bot game, a test) they grow with every event.
@@ -148,6 +158,25 @@ export function tapOnlySource(source: ManaSource): boolean {
   );
 }
 
+/**
+ * A source that pays by sacrificing and makes a fixed amount of mana (Ashnod's Altar, Phyrexian
+ * Altar, Illuminor Szeras once its victim is pinned). Its production is already resolved and no
+ * activation of it can raise what another source makes, so the final payment solves it exactly,
+ * victims included, instead of the search replaying it: a replay would have to name the victim,
+ * and the victim is the player's choice (the plan carries the source unpinned, and paying asks).
+ */
+export function sacrificeSource(source: ManaSource): boolean {
+  return (
+    source.sacrifices !== undefined &&
+    source.convoke !== true &&
+    source.productionSpec === undefined &&
+    source.stateDependentProduction !== true &&
+    source.costs.every(
+      (cost) => cost.kind === 'tap' || cost.kind === 'mana' || cost.kind === 'sacrificeOther',
+    )
+  );
+}
+
 /** Mirror of the entries `payManaCost` adds for one activation. */
 function entriesFor(
   source: ManaSource,
@@ -237,6 +266,8 @@ export function searchPayment(
   const gatedBound = premise;
   let states = 0;
   let outsideScope = false;
+  /** Second phase: sacrifice sources join the final payment (see `sacrificeSource`). */
+  let withSacrifice = false;
   const seen = new Set<string>();
   const unsupported = (reason: string): never => {
     throw new UnmodeledCardError(
@@ -247,6 +278,8 @@ export function searchPayment(
   };
   const sources: ManaSource[] = [];
   const produced: ProducedMana[] = [];
+  /** Per entry of `sources`: the life-gain orders its activation must use, if any. */
+  const orders: (number[] | undefined)[] = [];
   // A capacity bound is sound only when no activation can enable another source or increase
   // production. Ignore colors, restrictions, and activation mana costs: that overestimates
   // capacity, so it can only prune an impossible payment. Phyrexian pips may use life instead.
@@ -259,6 +292,19 @@ export function searchPayment(
     .filter((permanent) => permanent.controllerId === player.id)
     .map(charsOf);
   const ownAbilities = ownCharacteristics.flatMap((chars) => chars.manaAbilities);
+  // "Sacrifice a creature: Add {B}{B}" (Ashnod's Altar) or "{T}, Sacrifice another creature" is a
+  // fixed-capacity cost too, once nothing in play can give production back when a permanent leaves.
+  // Its victim is the player's choice, so the search never makes it (see `outsideScope` below);
+  // the bound only has to know that no sacrifice can make another source produce more.
+  const sacrificeBound =
+    ownAbilities.some((ability) => ability.costs?.some((cost) => cost.kind === 'sacrificeOther')) &&
+    characteristicsFixedDuringPayment(definitionsInPlay(ctx)) &&
+    leavingPermanentsKeepProduction(
+      definitionsInPlay(ctx),
+      ownAbilities.some((ability) => ability.condition !== undefined),
+    );
+  const keepsCapacity = (kind: string): boolean =>
+    kind === 'tap' || kind === 'mana' || (sacrificeBound && kind === 'sacrificeOther');
   const fixedCapacity = ownAbilities.every(
     (ability) =>
       ability.amount === undefined &&
@@ -266,8 +312,10 @@ export function searchPayment(
       (ability.condition === undefined ||
         (gatedBound && gateCannotOpenDuringPayment(ability.condition))) &&
       (ability.costs === undefined ||
-        (ability.costs.some((cost) => cost.kind === 'tap') &&
-          ability.costs.every((cost) => cost.kind === 'tap' || cost.kind === 'mana'))) &&
+        (ability.costs.some(
+          (cost) => cost.kind === 'tap' || (sacrificeBound && cost.kind === 'sacrificeOther'),
+        ) &&
+          ability.costs.every((cost) => keepsCapacity(cost.kind)))) &&
       (ability.onActivate ?? []).every(
         (effect) => effect.op === 'gainLife' || effect.op === 'damageController',
       ),
@@ -302,6 +350,81 @@ export function searchPayment(
     }
     return choices;
   };
+  /**
+   * Replay one activation on a copy of `snapshot`. A life-gain rider may ask its controller to
+   * order life-gain replacements (CR 616.1, a "plus 1" and a "twice"); every order is replayed,
+   * and one copy is kept per resulting life total, least life first. The orders differ only in
+   * the life gained, and more life never makes a payment fail, so a plan proven from the least
+   * holds whatever order the player chooses as the payment is made: it carries no answers. A
+   * higher total can pay a life cost the least cannot (Toxic Deluge after a bigger gain), so it
+   * stays a branch, and a plan through it carries the answers that reach it. Any other decision
+   * is outside the scope.
+   */
+  const runActivation = (
+    snapshot: GameContext,
+    single: PaymentPlan,
+  ):
+    | { next: GameContext; nextPlayer: EnginePlayerState; answers?: number[] }[]
+    | 'outside'
+    | 'unpayable' => {
+    const outcomes: { next: GameContext; nextPlayer: EnginePlayerState; answers: number[] }[] = [];
+    const pending: number[][] = [[]];
+    let runs = 0;
+    while (pending.length > 0) {
+      const answers = pending.pop()!;
+      if (++runs > bounds.lifeGainOrders)
+        unsupported('life-gain replacement order budget exceeded');
+      const next = clone(snapshot);
+      const nextPlayer = next.state.players.find((p) => p.id === player.id)!;
+      const activation = payManaCost(
+        next,
+        nextPlayer,
+        emptyCost(),
+        { kind: 'other' },
+        [],
+        reservedObjectIds,
+        single,
+      );
+      try {
+        let used = 0;
+        let step = activation.next();
+        while (!step.done) {
+          const decision = step.value;
+          if (!onlyLifeGainOrder(decision)) {
+            activation.return(undefined as never);
+            return 'outside';
+          }
+          let index: number;
+          if (used < answers.length) index = answers[used]!;
+          else {
+            for (let other = decision.options.length - 1; other >= 1; other--)
+              pending.push([...answers.slice(0, used), other]);
+            answers.push(0);
+            index = 0;
+          }
+          used += 1;
+          step = activation.next({ index, targets: new Map() });
+        }
+      } catch (error) {
+        if (error instanceof UnmodeledCardError) throw error;
+        if (
+          error instanceof Error &&
+          (error.message === 'life cost became unpayable' ||
+            error.message.endsWith("'s own mana cost became unpayable") ||
+            error.message === 'engine bug: counter cost became unpayable' ||
+            error.message === 'engine bug: energy cost became unpayable')
+        )
+          return 'unpayable';
+        throw error;
+      }
+      if (!outcomes.some((outcome) => outcome.nextPlayer.life === nextPlayer.life))
+        outcomes.push({ next, nextPlayer, answers });
+    }
+    outcomes.sort((a, b) => a.nextPlayer.life - b.nextPlayer.life);
+    return outcomes.map((outcome, index) =>
+      index === 0 ? { next: outcome.next, nextPlayer: outcome.nextPlayer } : outcome,
+    );
+  };
   const visit = (snapshot: GameContext): PaymentPlan | null => {
     const payer = snapshot.state.players.find((p) => p.id === player.id)!;
     const availableSources = sourcesFor(snapshot, payer);
@@ -313,17 +436,24 @@ export function searchPayment(
       const final = planPayment(
         cost,
         payer.manaEntries,
-        availableSources.filter((source) => source.convoke === true),
+        availableSources.filter(
+          (source) => source.convoke === true || (withSacrifice && sacrificeSource(source)),
+        ),
         allows,
         playerLifeLocked(snapshot, payer.id) ? 0 : Math.max(0, payer.life - lifeReserved),
       );
-      if (final)
+      if (final) {
+        const lifeGainOrders: Record<number, number[]> = {};
+        for (const [index, answers] of orders.entries())
+          if (answers !== undefined) lifeGainOrders[index] = answers;
         return {
           ...final,
           tapSources: [...sources, ...final.tapSources],
           tapCardIds: [...sources.map((s) => s.cardId), ...final.tapCardIds],
           produced: [...produced, ...final.produced],
+          ...(Object.keys(lifeGainOrders).length > 0 ? { lifeGainOrders } : {}),
         };
+      }
     }
     if (
       fixedCapacity &&
@@ -347,20 +477,42 @@ export function searchPayment(
     ]);
     if (seen.has(key)) return null;
     seen.add(key);
-    const candidates = availableSources.filter((source) => source.convoke !== true);
+    const candidates = availableSources.filter(
+      (source) => source.convoke !== true && !(withSacrifice && sacrificeSource(source)),
+    );
+    // Sacrifice mana is only spent in the final payment, after every replayed activation. Two
+    // things the search cannot order or tell apart then stay outside its scope: a source that costs
+    // mana to activate, which could need that mana first, and a permanent that has both a replayed
+    // ability and a sacrifice ability (Phyrexian Tower), whose activations would share an index.
+    if (
+      withSacrifice &&
+      candidates.some(
+        (source) =>
+          source.manaCost !== undefined ||
+          availableSources.some(
+            (other) => sacrificeSource(other) && other.cardId === source.cardId,
+          ),
+      )
+    )
+      outsideScope = true;
     const bounded = fixedCapacity && (premise || !current);
     const ceilings = bounded ? availableSources.map(ceilingUnits) : [];
     if (bounded && ceilings.every((units) => units !== null)) {
-      const remaining = new Map<string, number>();
-      for (const [index, source] of availableSources.entries())
-        remaining.set(
-          source.cardId,
-          Math.max(remaining.get(source.cardId) ?? 0, ceilings[index]!.length),
-        );
-      if (
-        payer.manaEntries.length + [...remaining.values()].reduce((sum, count) => sum + count, 0) <
-        totalPips(cost) - (cost.phyrexian?.length ?? 0)
-      )
+      // Alternative abilities of one permanent count at the most any one makes. A sacrifice source
+      // with no {T} is different: each copy `manaSourcesFor` lists is one more creature it can
+      // sacrifice, so its copies add up.
+      const alternatives = new Map<string, number>();
+      const repeats = new Map<string, number>();
+      for (const [index, source] of availableSources.entries()) {
+        const units = ceilings[index]!.length;
+        if (source.sacrifices !== undefined && !source.costs.some((c) => c.kind === 'tap'))
+          repeats.set(source.cardId, (repeats.get(source.cardId) ?? 0) + units);
+        else alternatives.set(source.cardId, Math.max(alternatives.get(source.cardId) ?? 0, units));
+      }
+      const capacity =
+        [...alternatives.values()].reduce((sum, count) => sum + count, 0) +
+        [...repeats.values()].reduce((sum, count) => sum + count, 0);
+      if (payer.manaEntries.length + capacity < totalPips(cost) - (cost.phyrexian?.length ?? 0))
         return null;
       // The same bound with colors: each source at its ceiling, a dynamic one making any type.
       // Nothing an activation does can beat that, so if the static solver cannot pay from it,
@@ -456,7 +608,12 @@ export function searchPayment(
           },
         );
         try {
-          if (!probing.next().done) {
+          // The probe wants only the production; a life-gain replacement order (any answer
+          // gives the same production) is answered with the first option.
+          let step = probing.next();
+          while (!step.done && onlyLifeGainOrder(step.value))
+            step = probing.next({ index: 0, targets: new Map() });
+          if (!step.done) {
             outsideScope = true;
             probing.return(undefined as never);
             continue;
@@ -478,49 +635,29 @@ export function searchPayment(
       if (currentProduction === undefined)
         throw new Error('mana production probe did not reach production');
       for (const units of knownChoices ?? choicesFor(currentProduction)) {
-        const next = clone(snapshot);
-        const nextPlayer = next.state.players.find((p) => p.id === player.id)!;
         const single: PaymentPlan = {
           tapSources: [source],
           tapCardIds: [source.cardId],
           produced: units,
           fromPool: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 },
         };
-        const activation = payManaCost(
-          next,
-          nextPlayer,
-          emptyCost(),
-          { kind: 'other' },
-          [],
-          reservedObjectIds,
-          single,
-        );
-        try {
-          const result = activation.next();
-          if (!result.done) {
-            outsideScope = true;
-            activation.return(undefined as never);
-            continue;
-          }
-        } catch (error) {
-          if (error instanceof UnmodeledCardError) throw error;
-          if (
-            error instanceof Error &&
-            (error.message === 'life cost became unpayable' ||
-              error.message.endsWith("'s own mana cost became unpayable") ||
-              error.message === 'engine bug: counter cost became unpayable' ||
-              error.message === 'engine bug: energy cost became unpayable')
-          )
-            continue;
-          throw error;
+        const ran = runActivation(snapshot, single);
+        if (ran === 'outside') {
+          outsideScope = true;
+          continue;
         }
-        if (nextPlayer.energy < energyReserved) continue;
-        sources.push(source);
-        produced.push(...units);
-        const found = visit(next);
-        produced.splice(produced.length - units.length, units.length);
-        sources.pop();
-        if (found) return found;
+        if (ran === 'unpayable') continue;
+        for (const { next, nextPlayer, answers } of ran) {
+          if (nextPlayer.energy < energyReserved) continue;
+          sources.push(source);
+          orders.push(answers);
+          produced.push(...units);
+          const found = visit(next);
+          produced.splice(produced.length - units.length, units.length);
+          orders.pop();
+          sources.pop();
+          if (found) return found;
+        }
       }
     }
     return null;
@@ -682,11 +819,26 @@ export function searchPayment(
   // The same search over tapped sets instead of copied games, for a board where activating a
   // source only taps it and adds its mana (see `tapOnlySource`). It mirrors `visit` step for step
   // and gives the same plan; anything it cannot mirror exactly hands the payment back to `visit`.
-  if (premise) {
-    const light = searchTapOnly();
-    if (light !== handBack) return light;
+  const attempt = (): PaymentPlan | null => {
+    if (premise) {
+      const light = searchTapOnly();
+      if (light !== handBack) return light;
+    }
+    return visit(clone(ctx));
+  };
+  let result = attempt();
+  // A cast that only a sacrifice can pay for stopped the search above at the sacrifice source
+  // (`outsideScope`). Where nothing in play can give production back when a permanent leaves, solve
+  // those sources with the final payment instead. The first search runs unchanged and comes first,
+  // so a cast it could already pay is paid the same way, and no creature is sacrificed that did
+  // not have to be.
+  if (result === null && outsideScope && sacrificeBound) {
+    states = 0;
+    outsideScope = false;
+    seen.clear();
+    withSacrifice = true;
+    result = attempt();
   }
-  const result = visit(clone(ctx));
   if (!result && outsideScope)
     unsupported(
       'payment requires a static production rider or strategic activation-cost continuation outside the proven scope',

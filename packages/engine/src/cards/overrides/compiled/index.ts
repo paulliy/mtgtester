@@ -5509,38 +5509,6 @@ const BATCH_CHUNK_002: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '7c340a39-4ee0-4ba1-bb66-6674f8020fda',
-    name: 'Gratuitous Violence',
-    handledLines: [
-      'If a creature you control would deal damage to a permanent or player, it deals double that damage instead.',
-    ],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'damageDoubled',
-          sourceFilter: {
-            kind: 'allOf',
-            of: [
-              {
-                kind: 'type',
-                value: 'Creature',
-              },
-              {
-                kind: 'controller',
-                who: 'you',
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-002',
-    patchSha256: 'cbfea6a3925f22721cf2ccd77fb1d4fee97e278821e161c4ce7156227b639b05',
-    behaviorSha256: '3aea7087945cda8020bee681946940e5b2a49b0e5a86f40080bf5ab2ab3d901d',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'd22ff377-d282-4a28-9dce-96f25913dc96',
     name: 'Grazilaxx, Illithid Scholar',
     handledLines: [
@@ -11079,42 +11047,6 @@ const BATCH_CHUNK_003: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-003',
     patchSha256: '72e9492b0a3499e94330efc9a216daeb2e3fe257a1958417b153112884c2f622',
     behaviorSha256: 'bbb6e91f45a8b3d4c23b852fe22d199149c17012c1f50c54326ebbbb81c339b3',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'bd655e8b-f192-4635-9e23-357b6f89ef8f',
-    name: 'Uncivil Unrest',
-    handledLines: [
-      'If a creature you control with a +1/+1 counter on it would deal damage to a permanent or player, it deals double that damage instead.',
-    ],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'damageDoubled',
-          sourceFilter: {
-            kind: 'allOf',
-            of: [
-              {
-                kind: 'type',
-                value: 'Creature',
-              },
-              {
-                kind: 'controller',
-                who: 'you',
-              },
-              {
-                kind: 'hasCounter',
-                counter: '+1/+1',
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-003',
-    patchSha256: '20b20bb6fb31951916d0fefaaa07bd957c0c0abb46ba86ee4fd1812498daf453',
-    behaviorSha256: '2a7244cdebc593605287c2988c7fc87fb8562efafd6e5e507bcac14e93317fa6',
     acceptedBy: 'main-thread',
   },
   {
@@ -43502,38 +43434,6 @@ const BATCH_CHUNK_012: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-012',
     patchSha256: '15747c66177bcd8d2a0bdd1a1c0e093e7ec6f33961c07d711b798cc46aea114c',
     behaviorSha256: '9b405af8949d58c32a1fcf8eb727fedd244acb68eb7b3089092db7dd770d27eb',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'b3f7c4ac-b788-4307-9bc3-d99ce310e07c',
-    name: 'Calamity Bearer',
-    handledLines: [
-      'If a Giant source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead.',
-    ],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'damageDoubled',
-          sourceFilter: {
-            kind: 'allOf',
-            of: [
-              {
-                kind: 'subtype',
-                value: 'Giant',
-              },
-              {
-                kind: 'controller',
-                who: 'you',
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-012',
-    patchSha256: '5607d8e0949d908f144cb6060a15faa4d38f147f92f1d99f3113ad143c99a454',
-    behaviorSha256: '9d0fb7ddac82fb6e1195b87c09e4e9ab2595f678e45668833be5da38ed76c54e',
     acceptedBy: 'main-thread',
   },
   {
