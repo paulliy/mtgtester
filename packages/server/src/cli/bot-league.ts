@@ -65,7 +65,10 @@ export const ARMS: Record<string, LeagueArm> = {
   // Play styles (`BotSteering.style`): each preset on its own, and the style the deck's archetype
   // implies, with no strategist and under the proxy strategist.
   'style-aggro': styleArm('aggro'),
+  'style-tempo': styleArm('tempo'),
+  'style-value': styleArm('value'),
   'style-control': styleArm('control'),
+  'style-ramp': styleArm('ramp'),
   'style-combo': styleArm('combo'),
   styled: {
     name: 'styled',

@@ -408,6 +408,14 @@ export const WEIGHTS = {
       /** Multiply flat role values in `policy.roles`, and the removal target share. */
       roles: { pump: 2, burn: 1.5, tokens: 1.3, draw: 0.75, ramp: 0.75 },
     },
+    /** Between aggro and midrange: presses the attack without giving up card value. */
+    tempo: {
+      defaults: { aggression: 0.7 },
+      faceDamage: 1.25,
+      counterThreshold: 1.1,
+      removalThreshold: 1.1,
+      roles: { pump: 1.5, burn: 1.25, tokens: 1.15, draw: 0.9, ramp: 0.9 },
+    },
     midrange: {
       defaults: {},
       faceDamage: 1,
@@ -415,12 +423,31 @@ export const WEIGHTS = {
       removalThreshold: 1,
       roles: {},
     },
+    /**
+     * Between midrange and control: values cards and answers like control but plays at the plain
+     * bot's pace. The control ablation found the passive knobs, not the weights, cost games.
+     */
+    value: {
+      defaults: {},
+      faceDamage: 0.75,
+      counterThreshold: 0.875,
+      removalThreshold: 0.9,
+      roles: { draw: 1.25, removal: 1.15, recursion: 1.15 },
+    },
     control: {
       defaults: { aggression: 0.3, holdUpMana: 2, avoidOverextending: true },
       faceDamage: 0.5,
       counterThreshold: 0.75,
       removalThreshold: 0.8,
       roles: { draw: 1.5, removal: 1.3, recursion: 1.3 },
+    },
+    /** Between midrange and combo: builds mana and cards first, keeps answers for big threats. */
+    ramp: {
+      defaults: { aggression: 0.4 },
+      faceDamage: 0.75,
+      counterThreshold: 1.1,
+      removalThreshold: 1,
+      roles: { ramp: 1.5, draw: 1.25, tutor: 1.25 },
     },
     combo: {
       defaults: { aggression: 0.2 },

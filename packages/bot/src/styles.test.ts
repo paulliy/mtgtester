@@ -26,6 +26,24 @@ describe('play styles', () => {
     expect(roleScale('control', 'draw')).toBe(1.5);
   });
 
+  it('places each in-between preset between its neighbours on every scale', () => {
+    const between = (a: number, x: number, b: number) => Math.min(a, b) <= x && x <= Math.max(a, b);
+    for (const [low, mid, high] of [
+      ['aggro', 'tempo', 'midrange'],
+      ['midrange', 'value', 'control'],
+      ['midrange', 'ramp', 'combo'],
+    ] as const) {
+      const [a, x, b] = [styleProfile(low), styleProfile(mid), styleProfile(high)];
+      for (const key of ['faceDamage', 'counterThreshold', 'removalThreshold'] as const) {
+        expect({ preset: mid, key, ok: between(a[key], x[key], b[key]) }).toEqual({
+          preset: mid,
+          key,
+          ok: true,
+        });
+      }
+    }
+  });
+
   describe('what a last counterspell is kept for', () => {
     const table: Record<string, Partial<CardTraits>> = {
       Counterspell: { manaValue: 2, roles: ['counter'], spellTargets: ['hostile'] },

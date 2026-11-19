@@ -407,7 +407,15 @@ export interface BotSteering {
 }
 
 /** The play styles a strategist can set (`BotSteering.style`). */
-export const PLAY_STYLES = ['aggro', 'midrange', 'control', 'combo'] as const;
+export const PLAY_STYLES = [
+  'aggro',
+  'tempo',
+  'midrange',
+  'value',
+  'control',
+  'ramp',
+  'combo',
+] as const;
 export type PlayStyle = (typeof PLAY_STYLES)[number];
 
 /**

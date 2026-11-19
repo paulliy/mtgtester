@@ -1,7 +1,6 @@
 /**
  * A deck's default play style (`BotSteering.style`) from its archetype (ADR 0022 §5): what a seat
- * plays like when nobody has told it otherwise. `ramp` plays as midrange (its plan is a bigger
- * midgame) and `stax` as control (it holds the table down).
+ * plays like when nobody has told it otherwise. `stax` plays as control (it holds the table down).
  */
 import type { Color, OracleCard, PlayStyle } from '@mtg/shared';
 import { inferArchetype, type ArchetypeStrategy } from '../decks/archetype';
@@ -11,7 +10,7 @@ const BY_STRATEGY: Record<ArchetypeStrategy, PlayStyle> = {
   midrange: 'midrange',
   control: 'control',
   combo: 'combo',
-  ramp: 'midrange',
+  ramp: 'ramp',
   stax: 'control',
 };
 
