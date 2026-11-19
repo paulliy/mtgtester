@@ -30,9 +30,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { DecisionRequest, OracleCard, PlayerId } from '@mtg/shared';
+import type { OracleCard, PlayerId } from '@mtg/shared';
 import { Engine, runToCompletionAsync } from '@mtg/engine';
-import { decide as botDecide, Rng } from '@mtg/bot';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
 import {
@@ -45,9 +44,6 @@ import {
   StrategyCoordinator,
   type AiConfig,
 } from '../ai';
-import type { AiAttemptObserver } from '../ai/client';
-import { knowledgeFor } from '../ai/bot-tactician';
-import { localCallMeta } from '../ai/logger';
 import {
   JevClient,
   JevResponseValidationError,
@@ -68,8 +64,8 @@ import {
   budgetedFetch,
   counting,
   emptyTally,
+  offlineChatClient,
   type Budget,
-  type CountableClient,
   type CountingClient,
   type Tally,
 } from './ai-mode-duel';
@@ -244,31 +240,6 @@ export function offlineJevTransport(): JevDecisionsTransport {
       });
     },
   };
-}
-
-/** Offline chat clients: the tactician is the bot, the strategist returns fixed knobs. */
-function offlineChatClient(engine: Engine, role: 'tactician' | 'strategist'): CountableClient {
-  const knowledge = knowledgeFor(engine);
-  return {
-    activeModel: `offline-${role}`,
-    setAttemptObserver(_observer: AiAttemptObserver | undefined) {},
-    settleUnknownCosts: () => Promise.resolve({ attempts: [], settledUsd: 0, unresolved: 0 }),
-    requestDecision(_prompt, request: DecisionRequest) {
-      if (role === 'strategist') {
-        return Promise.resolve({
-          response: {
-            requestId: request.requestId,
-            actionId: 0,
-            turnStrategy: { intent: 'offline', plannedActions: [], steering: { aggression: 0.5 } },
-          },
-          meta: { ...localCallMeta(), costUsd: 0 },
-        });
-      }
-      const view = engine.view(request.decidingPlayer);
-      const response = botDecide(request, view, new Rng(request.requestId), { knowledge });
-      return Promise.resolve({ response, meta: { ...localCallMeta(), costUsd: 0 } });
-    },
-  } as CountableClient;
 }
 
 export interface AgreementStats {
