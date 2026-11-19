@@ -450,6 +450,13 @@
       "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
     },
     {
+      "name": "Kolaghan, the Storm's Fury",
+      "oracleId": "f6e160c1-b29f-4f3d-ab55-43ffe3ab4acf",
+      "patchSha256": "e36e8bfc12dd618e1596df7ae1653259b466d6b6b04ffb86668037aeaeb0f68e",
+      "batch": "chunk-008",
+      "reason": "PR #94's grammar now parses the claimed line (evasion/blocking batch); the interpreter models the card"
+    },
+    {
       "name": "Krang, Master Mind",
       "oracleId": "52562194-4a97-40d2-aa73-7827f7834f2f",
       "patchSha256": "56731a3f8e14c89db6382b2eaac2a853e14d4c518146e0fa5856df260f8d7293",
@@ -660,6 +667,13 @@
       "reason": "Owner review on PR #72, 2026-11-17: offspring has no intervening-if, so the trigger goes on the stack when offspring was not paid."
     },
     {
+      "name": "Rampaging Ceratops",
+      "oracleId": "91d01119-9b3e-4629-8cf0-bbca2c19a7cc",
+      "patchSha256": "e1b26e637a29e4a34e2a3f0b728c9b3ae099f91470eec8e1362c043996f57157",
+      "batch": "chunk-016",
+      "reason": "PR #94's grammar now parses the claimed line (evasion/blocking batch); the interpreter models the card"
+    },
+    {
       "name": "Reject Imperfection",
       "oracleId": "25781dc5-d6ea-4273-9fe3-06a8808b3718",
       "patchSha256": "9225620ce13e5fef9bd317a55684f35cb7022b0907b3faab563066db41042a8f",
@@ -679,6 +693,13 @@
       "patchSha256": "78efd668c9419c007f681a174938c2f931693b1c2ccd4b5a5b8871574b4e2449",
       "batch": "chunk-006",
       "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Riders of Rohan",
+      "oracleId": "688a559d-249f-4d03-98e6-581843e7ddc3",
+      "patchSha256": "d0aed02347954f470fecbff4928b34bba1adf2d5875a06872c6f036d0442bab3",
+      "batch": "chunk-008",
+      "reason": "PR #94's grammar now parses the claimed line (evasion/blocking batch); the interpreter models the card"
     },
     {
       "name": "Ring of Evos Isle",
@@ -861,6 +882,13 @@
       "patchSha256": "46b834ce0653293da4b4028b04410720eaf6aa39b66ed4ca445953b82d8da144",
       "batch": "chunk-008",
       "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
+    },
+    {
+      "name": "Troll of Khazad-dûm",
+      "oracleId": "222fd9fc-7af4-4269-bbb9-cd7b8ac029bd",
+      "patchSha256": "8b05bba3f78380a382a1191f12100dab47c88068aab880f5446b9336a9d98f4a",
+      "batch": "chunk-003",
+      "reason": "PR #94's grammar now parses the claimed line (evasion/blocking batch); the interpreter models the card"
     },
     {
       "name": "Turn Aside",

@@ -10975,24 +10975,6 @@ const BATCH_CHUNK_003: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '222fd9fc-7af4-4269-bbb9-cd7b8ac029bd',
-    name: 'Troll of Khazad-dûm',
-    handledLines: ["~ can't be blocked except by three or more creatures."],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'minBlockers',
-          minimum: 3,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-003',
-    patchSha256: '8b05bba3f78380a382a1191f12100dab47c88068aab880f5446b9336a9d98f4a',
-    behaviorSha256: '35c4da0d30ab51ced387f347e6aec8d4a46793859d8ab7bb5720a9d3a213f9e8',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '63a37c08-7e38-4fe2-9a71-cc4604c4f831',
     name: 'Ulvenwald Tracker',
     handledLines: ['{1}{G}, {T}: Target creature you control fights another target creature.'],
@@ -28151,36 +28133,6 @@ const BATCH_CHUNK_008: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'f6e160c1-b29f-4f3d-ab55-43ffe3ab4acf',
-    name: "Kolaghan, the Storm's Fury",
-    handledLines: ['Dash {3}{B}{R}'],
-    def: {
-      alternativeCasts: [
-        {
-          kind: 'nonMana',
-          manaCost: {
-            generic: 3,
-            colored: {
-              W: 0,
-              U: 0,
-              B: 1,
-              R: 1,
-              G: 0,
-            },
-            colorless: 0,
-          },
-          dashed: true,
-          description: 'Dash {3}{B}{R}',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-008',
-    patchSha256: 'e36e8bfc12dd618e1596df7ae1653259b466d6b6b04ffb86668037aeaeb0f68e',
-    behaviorSha256: '505ebf68774bffdc22088a33cb1c401c0226d3c3a59bed714a510ba2ed61170d',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'e27feb69-3120-4e8d-8ee6-0f87b58e2ae3',
     name: 'Layla Hassan',
     handledLines: [
@@ -28952,36 +28904,6 @@ const BATCH_CHUNK_008: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-008',
     patchSha256: '6e57d4e2acad47ebaabedcf4d69ab798212f5ebb136f834513e39e5431cae9f6',
     behaviorSha256: '5a621b8f723909dafdb047092010b9fbc935875b70607332f9150025f7e4db16',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '688a559d-249f-4d03-98e6-581843e7ddc3',
-    name: 'Riders of Rohan',
-    handledLines: ['Dash {4}{R}{W}'],
-    def: {
-      alternativeCasts: [
-        {
-          kind: 'nonMana',
-          manaCost: {
-            generic: 4,
-            colored: {
-              W: 1,
-              U: 0,
-              B: 0,
-              R: 1,
-              G: 0,
-            },
-            colorless: 0,
-          },
-          dashed: true,
-          description: 'Dash {4}{R}{W}',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-008',
-    patchSha256: 'd0aed02347954f470fecbff4928b34bba1adf2d5875a06872c6f036d0442bab3',
-    behaviorSha256: '482bc708e384cb9237f1e94b44e0bb20d9f6772e6c71f57f16160cd7cb05fdce',
     acceptedBy: 'main-thread',
   },
   {
@@ -62022,24 +61944,6 @@ const BATCH_CHUNK_016: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-016',
     patchSha256: '0f9bf86a0f1414eaf0ba0d63c2ebe967195ff5bb5a6cb53b04d19cdd07a16e54',
     behaviorSha256: '5db4c4537a14a8f10fcc0d0b159eda8691261ab26eab348ba6d6f9ad5fbad4f3',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '91d01119-9b3e-4629-8cf0-bbca2c19a7cc',
-    name: 'Rampaging Ceratops',
-    handledLines: ["~ can't be blocked except by three or more creatures."],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'minBlockers',
-          minimum: 3,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-016',
-    patchSha256: 'e1b26e637a29e4a34e2a3f0b728c9b3ae099f91470eec8e1362c043996f57157',
-    behaviorSha256: '81fd583e816c01321b9a241a0eb2f3354134583c7265b86a594d249a90be40c5',
     acceptedBy: 'main-thread',
   },
   {
