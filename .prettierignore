@@ -20,6 +20,13 @@ packages/engine/tests/fixtures
 # compared byte-for-byte by its --check (part of snapshots:check).
 packages/server/fixtures/edhrec-triage.json
 docs/plans/edhrec-triage.md
+# The primitive backlog queue and report, written byte-for-byte by `bun run primitive-backlog`
+# and compared byte-for-byte by its --check (part of snapshots:check).
+packages/server/fixtures/primitive-backlog.json
+# Hand-edited, but also rewritten with JSON.stringify by scripts/card-compiler/run.ts report.
+packages/server/fixtures/primitive-backlog-groups.json
+docs/plans/primitive-backlog.md
+
 # The card compiler's ledger, one card per line, written by `run.ts ledger`.
 docs/reviews/compiled-card-ledger.json
 
