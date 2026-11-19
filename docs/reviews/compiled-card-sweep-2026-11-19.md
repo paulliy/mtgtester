@@ -478,4 +478,35 @@ compiled card gets played only if it happens to be in one. Exercising them takes
 
 ### One card-game for every compiled card
 
-COMPILED_FUZZ_PLACEHOLDER
+```bash
+bun run fuzz --games 0 --card-games 1 --jobs 3 --game-timeout 300 --card "<name>" ...  # all 1,125
+```
+
+This ran on `15ee003c`, before the ten retirements. 36 of 1,125 games failed (median 7.4 s per
+game, longest 217 s, 67 minutes in all).
+
+| Failures | Kind                                                                                   | Cards                                                                                                                                                                                                                                                |
+| -------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 17       | `payment requires a static production rider or strategic activation-cost continuation` | Noxious Revival, Riveteers Overlook, Staff of Compleation, The Battle of Bywater, Cackling Counterpart, Lifeblood Hydra, Moogles' Valor, Gene Pollinator, Shepherd of Rot, Woodland Bellower, Titanic Ultimatum, Slobad, Goblin Tinkerer, and 5 more |
+| 8        | `mana activation state budget exceeded`                                                | Basilisk Gate, Roadside Reliquary, Magma Opus, Song of Creation, Gatecreeper Vine, Ms. Bumbleflower, Dismiss into Dream, Firemind's Foresight                                                                                                        |
+| 1        | `mana activation depth budget exceeded`                                                | The Notary Hobbits                                                                                                                                                                                                                                   |
+| 3        | `cost … became unpayable at application time` (#63)                                    | Kaervek the Merciless, Hexhaven Invigorator, Bag End Banquet                                                                                                                                                                                         |
+| 2        | wall clock past 300 s                                                                  | Amphibian Downpour, Carnivorous Canopy                                                                                                                                                                                                               |
+| 2        | 80-turn cap (heuristic seats)                                                          | Inferno Titan, Goblin Assault                                                                                                                                                                                                                        |
+| 2        | `one turn created more than 1000 objects`                                              | Chocobo Knights, Fading Hope                                                                                                                                                                                                                         |
+| 1        | out of memory                                                                          | Tragic Slip                                                                                                                                                                                                                                          |
+
+Reading these:
+
+- **26 of 36 are the mana planner's halts (#46).** They show up because the card adds a mana
+  source or a cost the planner can't prove, not because its patch is wrong. These cards can't be
+  played reliably until the planner work lands.
+- **#63 reproduces on three cards**, the same three the campaign saw. Each is a deterministic
+  repro: `bun run fuzz --from 0 --card "<name>" --games 0 --card-games 1`.
+- **The rest have no diagnosis yet.** Tragic Slip's out-of-memory, the two wall-clock games and
+  the two 1000-object games each need a replay. None of the 36 is one of the ten cards retired
+  today.
+- **This pass is narrow.** Every card game uses the same seed and the same four precon decks,
+  with the card in place of up to four basic lands. One clean game shows a card can be played,
+  not that it's right. More seeds per card would test more interactions, at about an hour per
+  1,125 games.
