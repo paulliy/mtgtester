@@ -17,7 +17,7 @@
  */
 
 import { spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -202,14 +202,29 @@ function parseArgs(argv: string[]): Args {
   return args;
 }
 
-/** A premade coverage deck by file name, for a mirror (`--deck`). One commander only. */
+/** Where `--deck` looks, and the Oracle fixture each folder's cards resolve against. */
+const DECK_SOURCES = [
+  { dir: 'packages/server/fixtures/coverage-decks', oracle: [FIXTURE] },
+  {
+    dir: 'packages/server/fixtures/archetype-decks',
+    oracle: [FIXTURE, 'packages/server/fixtures/archetype-decks-oracle.json'],
+  },
+];
+
+/**
+ * A premade deck by file name, for a mirror (`--deck`): a coverage deck, or an archetype test deck
+ * (`fixtures/archetype-decks`, real decks adapted to the modeled pool). One commander only.
+ */
 async function premadeDeck(name: string): Promise<{ commander: OracleCard; cards: OracleCard[] }> {
+  const source = DECK_SOURCES.find((s) => existsSync(resolve(s.dir, `${name}.txt`)));
+  if (source === undefined) throw new Error(`--deck: no deck named ${name}`);
   const index = buildOracleIndexFromCards(
-    JSON.parse(readFileSync(resolve(FIXTURE), 'utf8')) as OracleCard[],
+    source.oracle.flatMap(
+      (path) => JSON.parse(readFileSync(resolve(path), 'utf8')) as OracleCard[],
+    ),
   );
-  const path = resolve('packages/server/fixtures/coverage-decks', `${name}.txt`);
   const { resolved, unresolvedNames } = resolveDeck(
-    await importDeck(readFileSync(path, 'utf8')),
+    await importDeck(readFileSync(resolve(source.dir, `${name}.txt`), 'utf8')),
     index,
   );
   if (resolved === null)
