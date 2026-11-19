@@ -5,18 +5,31 @@
  * null, the same error. Each agreement test runs the search both ways on one board.
  */
 import { describe, expect, it } from 'vitest';
+import { applyPriorityAction } from '../src/actions/apply';
+import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
 import type { Condition } from '../src/cards/condition';
 import { parseManaCost, type ParsedManaCost } from '../src/mana/cost';
 import {
   characteristicsFixedDuringPayment,
   gateCannotOpenDuringPayment,
+  leavingPermanentsKeepProduction,
 } from '../src/mana/payment-stability';
 import { searchPayment, tapOnlySource } from '../src/mana/stateful-payment';
 import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
 import { allowanceFor, manaSourcesFor } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
-import { copies, forest, gameConfig, island, oracle, plains, spawn } from './fixtures';
+import {
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  island,
+  oracle,
+  plains,
+  pump,
+  spawn,
+} from './fixtures';
 
 const artifact = (name: string, oracleText: string) =>
   oracle({ name, typeLine: 'Artifact', oracleText, manaCost: '{2}', power: null, toughness: null });
@@ -427,5 +440,225 @@ describe('a damage rider that opens a gate', () => {
       JSON.stringify(search(ctx, parseManaCost('{G}{U}{U}').cost!, false)),
     );
     expect('plan' in outcome && outcome.plan).toBeTruthy();
+  });
+});
+
+describe('sacrifice mana sources', () => {
+  /**
+   * Found in the bot league (seeds league-0, -7, -15, -17): a player with a source whose symbols
+   * depend on the board (Exotic Orchard, Fellwar Stone, Mox Amber) and a "sacrifice a creature: add
+   * mana" source (Ashnod's Altar, Phyrexian Altar) made the planner skip the Altar, fail to find a
+   * payment, and halt the whole game with an unmodeled-mana-payment error. That happened for a
+   * cast that no creature could pay for just as for one only a sacrifice could.
+   */
+  const altar = () => artifact("Ashnod's Altar", 'Sacrifice a creature: Add {C}{C}.');
+  const fodder = (name: string) =>
+    oracle({ name, typeLine: 'Creature — Human', manaCost: '{1}', power: '1', toughness: '1' });
+  const names = (ctx: GameContext, outcome: Outcome): string[] =>
+    (outcome as { plan: { tapCardIds: string[] } }).plan.tapCardIds.map(
+      (cardId) => ctx.state.battlefield.find((p) => p.cardId === cardId)!.name,
+    );
+
+  function altarBoard(creatures: number, extra?: (c: GameContext) => void): GameContext {
+    return board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', altar());
+      for (let i = 0; i < creatures; i++) spawn(c, 'P1', fodder(`Fodder ${i + 1}`));
+      extra?.(c);
+    });
+  }
+
+  it('stateful-planner-sacrifice-unpayable — a cast no sacrifice can pay for is unpayable, not a halt', () => {
+    // One creature gives the Altar one activation: {C}{C} and the Orchard's one mana make three.
+    const ctx = altarBoard(1);
+    expect(agree(ctx, '{W}{4}')).toEqual({ plan: null });
+    // Enough mana, wrong colors: the Altar and the Orchard make no {B}.
+    expect(agree(ctx, '{B}')).toEqual({ plan: null });
+    // Each creature is one more activation, so the same cost becomes payable.
+    expect(agree(altarBoard(2), '{W}{4}')).not.toEqual({ plan: null });
+    // The Orchard makes one mana, not both of {W}{U}, however many creatures the Altar has.
+    expect(agree(altarBoard(5), '{W}{U}')).toEqual({ plan: null });
+  });
+
+  it('stateful-planner-sacrifice-payable — a cast only a sacrifice can pay for is found, victim unpinned', () => {
+    const ctx = altarBoard(3);
+    const outcome = agree(ctx, '{W}{2}');
+    expect(outcome).not.toEqual({ plan: null });
+    expect(names(ctx, outcome)).toEqual(['Exotic Orchard', "Ashnod's Altar"]);
+    const plan = (
+      outcome as {
+        plan: {
+          tapSources: { costs: { kind: string; onlyCardId?: string }[]; sacrifices?: string[][] }[];
+        };
+      }
+    ).plan;
+    const altarSource = plan.tapSources.find((source) =>
+      source.costs.some((cost) => cost.kind === 'sacrificeOther'),
+    )!;
+    // Who is sacrificed is the player's choice: the plan names no victim and offers all three.
+    expect(altarSource.costs.some((cost) => cost.onlyCardId !== undefined)).toBe(false);
+    expect(altarSource.sacrifices?.map((group) => group.length)).toEqual([3]);
+  });
+
+  it('stateful-planner-sacrifice-last-resort — a cast the lands can pay never sacrifices anything', () => {
+    const withAltar = board((c) => {
+      spawn(c, 'P1', forest());
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', altar());
+      spawn(c, 'P1', fodder('Fodder 1'));
+    });
+    const without = board((c) => {
+      spawn(c, 'P1', forest());
+      spawn(c, 'P1', orchard());
+    });
+    const [a, b] = [agree(withAltar, '{G}'), agree(without, '{G}')];
+    expect(names(withAltar, a)).not.toContain("Ashnod's Altar");
+    // The Altar and its creature change nothing about how this cast was already paid.
+    expect(names(withAltar, a)).toEqual(names(without, b));
+  });
+
+  it('stateful-planner-sacrifice-suppressor — with a static that could give production back, it still halts', () => {
+    // Blood Moon-style: while the Suppressor is in play, P1's lands lose their abilities. Sacrificing
+    // it would give the Orchard back; the bound cannot assume sacrifices only take things away.
+    const ctx = altarBoard(1, (c) => {
+      const suppressor = spawn(c, 'P1', artifact('Suppressor', 'Flying'));
+      c.defs.set(suppressor.oracleId, {
+        ...c.defs.get(suppressor.oracleId)!,
+        staticEffects: [
+          {
+            affects: {
+              kind: 'allOf',
+              of: [
+                { kind: 'type', value: 'Land' },
+                { kind: 'controller', who: 'you' },
+              ],
+            },
+            op: { layer: 6, loseAllAbilities: true },
+          },
+        ],
+      });
+    });
+    const outcome = agree(ctx, '{B}');
+    expect(outcome).toHaveProperty('error');
+    expect((outcome as { error: string }).error).toMatch(/Unmodeled card "mana payment"/);
+  });
+
+  it('stateful-planner-sacrifice-same-permanent — a tap ability and a sacrifice ability of one permanent never share an activation', () => {
+    // Phyrexian Tower's shape. Its {T} ability and its sacrifice ability share one {T}, so a
+    // plan uses one of them; the planner must not hand back two activations with one identity.
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(
+        c,
+        'P1',
+        land('Two Way Tower', '{T}: Add {C}.\n{T}, Sacrifice a creature: Add {B}{B}.'),
+      );
+      spawn(c, 'P1', fodder('Fodder 1'));
+      spawn(c, 'P1', fodder('Fodder 2'));
+    });
+    const tower = ctx.state.battlefield.find((p) => p.name === 'Two Way Tower')!;
+    // Both abilities are listed, or this test would prove nothing.
+    expect(manaSourcesFor(ctx, 'P1', true).filter((s) => s.cardId === tower.cardId).length).toBe(2);
+    // {B}{B} can only come from the Tower's sacrifice ability, {W} only from the Orchard.
+    const outcome = agree(ctx, '{B}{B}{W}');
+    expect(names(ctx, outcome)).toEqual(['Exotic Orchard', 'Two Way Tower']);
+    const identities = (
+      outcome as { plan: { tapSources: { cardId: string; activation?: number }[] } }
+    ).plan.tapSources.map((source) => `${source.cardId}/${source.activation ?? '-'}`);
+    expect(new Set(identities).size).toBe(identities.length);
+    // One {T} cannot pay for both of the Tower's abilities.
+    expect(agree(ctx, '{B}{B}{W}{C}')).toEqual({ plan: null });
+  });
+
+  describe('the guard behind the bound', () => {
+    const holder = (
+      staticEffects: unknown[],
+      ruleStatics: unknown[] = [],
+    ): Parameters<typeof leavingPermanentsKeepProduction>[0][number] => ({
+      staticEffects,
+      ruleStatics,
+    });
+    const effect = (op: Record<string, unknown>) => ({ affects: { kind: 'self' }, op });
+
+    it('stateful-planner-leaving-guard — what a permanent leaving could give back', () => {
+      const keeps = (definition: ReturnType<typeof holder>, powerGated = false) =>
+        leavingPermanentsKeepProduction([definition], powerGated);
+      expect(keeps(holder([]))).toBe(true);
+      // Adding never gives anything back when it ends.
+      expect(keeps(holder([effect({ layer: 6, addKeyword: 'flying' })]))).toBe(true);
+      expect(keeps(holder([effect({ layer: 4, addTypes: ['Creature'] })]))).toBe(true);
+      // Stripping, setting and denying do.
+      for (const op of [
+        { layer: 6, loseAllAbilities: true },
+        { layer: 6, denyKeywords: ['flying'] },
+        { layer: 6, removeKeywords: ['flying'] },
+        { layer: 5, setColors: ['W'] },
+        { layer: 4, setLandSubtype: 'Mountain' },
+        { layer: 4, setTypes: ['Artifact'] },
+        { layer: 4, removeCreatureType: true },
+        { layer: 4, loseAbilities: true },
+      ])
+        expect(keeps(holder([effect(op)])), JSON.stringify(op)).toBe(false);
+      // Power and toughness matter only when a mana ability is gated on them.
+      const pump = (power: unknown) =>
+        holder([effect({ layer: 7, sublayer: 'd', power, toughness: 1 })]);
+      expect(keeps(pump(1), true)).toBe(true);
+      expect(keeps(pump(-1), true)).toBe(false);
+      expect(keeps(pump({ kind: 'negate', of: { kind: 'lifeTotal' } }), true)).toBe(false);
+      expect(keeps(pump({ kind: 'negate', of: { kind: 'lifeTotal' } }), false)).toBe(true);
+      // Rule statics are listed as irrelevant or they count against it.
+      expect(keeps(holder([], [{ kind: 'attackTax' }]))).toBe(true);
+      expect(keeps(holder([], [{ kind: 'triggerAdditionalTime' }]))).toBe(true);
+      expect(keeps(holder([], [{ kind: 'cantActivateAbilities' }]))).toBe(false);
+      expect(keeps(holder([], [{ kind: 'lifeGainReplacement' }]))).toBe(false);
+      expect(keeps(holder([], [{ kind: 'aKindThatDoesNotExistYet' }]))).toBe(false);
+    });
+  });
+
+  it('stateful-planner-sacrifice-cast — a real cast asks who to sacrifice and sacrifices only that one', () => {
+    const ctx = altarBoard(3);
+    const hulk = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Hulk',
+        typeLine: 'Creature — Hulk',
+        manaCost: '{2}{W}',
+        power: '2',
+        toughness: '2',
+      }),
+      'hand',
+    );
+    const player = playerById(ctx, 'P1');
+    const cast = computePriorityOptions(ctx, player).find(
+      (action) => action.type === 'castSpell' && action.description.includes(hulk.name),
+    );
+    // Before the fix the game halted here, while working out what could be cast.
+    expect(cast).toBeDefined();
+    const { decisions } = pump(
+      applyPriorityAction(ctx, player, cast!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+      (decision) => {
+        const choice = decision.options.findIndex((option) =>
+          option.description.includes('Sacrifice Fodder 2'),
+        );
+        return choice < 0 ? undefined : { index: choice, targets: new Map() };
+      },
+    );
+    const asked = decisions.filter((decision) =>
+      decision.options.some((option) => option.description.includes('Sacrifice Fodder')),
+    );
+    expect(asked).toHaveLength(1);
+    expect(
+      asked[0]!.options.filter((o) => o.description.includes('Sacrifice Fodder')),
+    ).toHaveLength(3);
+    expect(player.graveyard.map((card) => card.name)).toEqual(['Fodder 2']);
+    expect(
+      ctx.state.battlefield.filter((p) => p.name.startsWith('Fodder')).map((p) => p.name),
+    ).toEqual(['Fodder 1', 'Fodder 3']);
+    expect(ctx.state.stack.some((entry) => entry.description.includes(hulk.name))).toBe(true);
+    expect(player.manaEntries).toEqual([]);
   });
 });
