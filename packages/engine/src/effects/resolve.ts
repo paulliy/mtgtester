@@ -9149,6 +9149,70 @@ function* executeAbilityEffects(
         yield* moveObject(ctx, card, { zone: 'hand' });
         break;
       }
+      case 'createTokenCopyOfSourceCard': {
+        // The card itself, as printed (CR 707.2): it was exiled as the cost, and whatever became
+        // of it since, the token copies the card's copiable values.
+        const card = findObjectByCardId(ctx, source.cardId);
+        const printed = ctx.defs.get(source.oracleId);
+        if (printed === undefined) break;
+        const base = tokenSpecCopying(
+          ctx,
+          {
+            id: source.id ?? source.cardId,
+            cardId: source.cardId,
+            oracleId: source.oracleId,
+            name: printed.name,
+            typeLine: printed.typeLine,
+            oracleText: card?.oracleText ?? '',
+            manaCost: card?.manaCost ?? null,
+            transformed: false,
+          } as unknown as EnginePermanent,
+          false,
+        );
+        const subtypes = [...new Set([...base.subtypes, ...effect.addSubtypes])];
+        const [typesPart] = base.typeLine.split(' — ');
+        // eslint-disable-next-line no-restricted-syntax -- a copy of the source card (CR 707.2, 702.128a), with the embalm/eternalize exceptions; not a catalog token
+        const spec = {
+          ...base,
+          typeLine: subtypes.length === 0 ? base.typeLine : `${typesPart} — ${subtypes.join(' ')}`,
+          subtypes,
+          colors: [...effect.setColors],
+          manaCost: null,
+          manaCostText: null,
+          ...(effect.basePower === undefined ? {} : { power: effect.basePower }),
+          ...(effect.baseToughness === undefined ? {} : { toughness: effect.baseToughness }),
+        };
+        createTokens(
+          ctx,
+          spec,
+          tokenCreationMultiplierFor(ctx, controller.id),
+          controller.id,
+          false,
+          true,
+        );
+        break;
+      }
+      case 'returnSelfFromGraveyardToBattlefield': {
+        // Only the graveyard object the ability was activated from (CR 400.7): a card that left
+        // the graveyard in response, and even one that came back, is a new object.
+        const card = controller.graveyard.find(
+          (c) => c.cardId === source.cardId && c.id === source.id,
+        );
+        if (card === undefined) {
+          noop(ctx, 'returnSelfFromGraveyardToBattlefield', 'objectGone');
+          break;
+        }
+        emit(ctx, 'graveyardToBattlefield', { target: card.name, source: source.name });
+        yield* moveObject(ctx, card, {
+          zone: 'battlefield',
+          controllerId: controller.id,
+          ...(effect.tapped === true ? { entersTapped: true } : {}),
+          ...(effect.counter === undefined
+            ? {}
+            : { withCounters: { [effect.counter]: effect.counterCount ?? 1 } }),
+        });
+        break;
+      }
       case 'shuffleChosenGraveyardCardsIntoLibrary': {
         const playerId = ref(effect.playerSlot);
         const target =
@@ -11177,6 +11241,24 @@ export function* payManaCost(
   // for a board of ordinary lands — the pool ends up identical — and load-bearing for a source
   // whose own activation costs mana, which can only be paid out of what earlier sources made.
   for (const [sourceIndex, source] of plan.tapSources.entries()) {
+    if (source.fromHand === true) {
+      // "Exile this card from your hand: Add {R}." The cost is the exile (CR 605.3b); the mana
+      // ability resolves at once, without the stack.
+      const card = player.hand.find((c) => c.cardId === source.cardId);
+      if (card === undefined) throw new Error('engine bug: hand mana source left the hand');
+      yield* moveObject(ctx, card, { zone: 'exile' });
+      const symbols = plan.produced
+        .filter((p) => p.cardId === source.cardId && p.activation === source.activation)
+        .map(({ symbol }) => ({ symbol }));
+      addMana(player, symbols);
+      emit(
+        ctx,
+        'manaAbilityActivated',
+        { name: card.name, mana: symbols.map(({ symbol }) => `{${symbol}}`).join('') },
+        player.id,
+      );
+      continue;
+    }
     const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId);
     if (perm === undefined) throw new Error('engine bug: payment source vanished');
     // Read before the cost is paid: a Treasure's cost sacrifices it, so by the time its mana is
