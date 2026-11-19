@@ -11,32 +11,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "6c16031f",
+      "commit": "089b2cb2",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 55.28,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 47.73,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.92,
+          "value": 6.25,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.466
+          "spread": 0.215
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.87,
+          "value": 6.28,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.264
+          "spread": 0.186
         },
         "setup.msPerGame": {
-          "value": 0.82,
+          "value": 0.87,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.113
+          "spread": 0.83
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -92,6 +92,18 @@
           "better": "higher",
           "kind": "exact"
         },
+        "coverage.compilerScreenCatches": {
+          "value": 11,
+          "unit": "calls",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "coverage.compilerScreenLosses": {
+          "value": 0,
+          "unit": "cards",
+          "better": "lower",
+          "kind": "exact"
+        },
         "coverage.compilerRefusals": {
           "value": 221,
           "unit": "cards",
@@ -129,7 +141,7 @@
           "kind": "exact"
         },
         "authoring.referenceKillsReproducedPct": {
-          "value": 19.07,
+          "value": 23.32,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -157,32 +169,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "6c16031f",
+      "commit": "089b2cb2",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 61.31,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 49.25,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 14.23,
+          "value": 11.92,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.049
+          "spread": 0.06
         },
         "engine.medianGameMsPerDecision": {
-          "value": 13.27,
+          "value": 11.28,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.076
+          "spread": 0.046
         },
         "setup.msPerGame": {
-          "value": 1.47,
+          "value": 0.97,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.137
+          "spread": 0.152
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -238,6 +250,18 @@
           "better": "higher",
           "kind": "exact"
         },
+        "coverage.compilerScreenCatches": {
+          "value": 11,
+          "unit": "calls",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "coverage.compilerScreenLosses": {
+          "value": 0,
+          "unit": "cards",
+          "better": "lower",
+          "kind": "exact"
+        },
         "coverage.compilerRefusals": {
           "value": 221,
           "unit": "cards",
@@ -275,7 +299,7 @@
           "kind": "exact"
         },
         "authoring.referenceKillsReproducedPct": {
-          "value": 19.07,
+          "value": 23.32,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
