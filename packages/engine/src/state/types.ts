@@ -973,6 +973,11 @@ export interface EngineState extends GameState {
   cantLoseTurn?: Record<PlayerId, number>;
   spellsProhibitedTurn?: number;
   playerHexproofTurn?: Record<PlayerId, number>;
+  /**
+   * The turn number during which each player may cast spells as though they had flash (Borne
+   * Upon a Wind, CR 601.3b). Ends with the turn's until-end-of-turn effects (CR 514.2).
+   */
+  flashPermissionTurn?: Record<PlayerId, number>;
   extraTurns?: PlayerId[];
   phasedOut?: { permanent: EnginePermanent; phaseInPlayerId: PlayerId }[];
   playerProtectionUntilNextTurn?: Record<PlayerId, number>;
@@ -1047,6 +1052,12 @@ export interface GameContext {
    * entrants (CR 614.12).
    */
   enteringTogether?: ReadonlySet<CardId>;
+  /**
+   * Open while an ability deals simultaneous damage across several instructions ("deals 3 damage
+   * to each creature and each player"): lifelink's gain is summed per source here and gained as
+   * one life-gain event when the damage is done (CR 120.3f, 119.9). Absent ⇒ gained per hit.
+   */
+  lifelinkBatch?: Map<string, { controllerId: PlayerId; amount: number }>;
   /** Set while an activation's costs are paid: the life paid as part of them (Verrak). */
   costLifePaid?: { amount: number };
   /** Copied from `GameConfig.strictInvariants`: rethrow invariant failures instead of halting. */
