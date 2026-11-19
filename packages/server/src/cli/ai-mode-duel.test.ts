@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { DecisionRequest } from '@mtg/shared';
 import type { AiAttemptObserver, AiNetworkAttempt, OpenAiCompatibleClient } from '../ai/client';
 import type { AiPrompt } from '../ai/context';
-import { budgetedFetch, counting, emptyTally, type Budget } from './ai-mode-duel';
+import { budgetedFetch, counting, emptyTally, SeatTracker, type Budget } from './ai-mode-duel';
 
 const request = { requestId: 'r1', decidingPlayer: 'P2' } as DecisionRequest;
 const prompt = { messages: [] } as unknown as AiPrompt;
@@ -143,5 +143,24 @@ describe('ai-mode-duel spend accounting', () => {
       'spend cap',
     );
     expect(sent).toBe(2);
+  });
+});
+
+describe('ai-mode-duel seat turns', () => {
+  it('counts each seat own turns once and keeps the first turn it was seen eliminated', () => {
+    const tracker = new SeatTracker();
+    tracker.observe({ turn: 1, activePlayer: 'P1' }, []);
+    tracker.observe({ turn: 1, activePlayer: 'P1' }, []);
+    tracker.observe({ turn: 2, activePlayer: 'P2' }, []);
+    tracker.observe({ turn: 5, activePlayer: 'P1' }, ['P2']);
+    tracker.observe({ turn: 6, activePlayer: 'P3' }, ['P2']);
+    tracker.finish(7, ['P2', 'P3']);
+
+    expect(tracker.ownTurnsOf('P1')).toBe(2);
+    expect(tracker.ownTurnsOf('P2')).toBe(1);
+    expect(tracker.ownTurnsOf('P4')).toBe(0);
+    expect(tracker.eliminationTurnOf('P2')).toBe(5);
+    expect(tracker.eliminationTurnOf('P3')).toBe(7);
+    expect(tracker.eliminationTurnOf('P1')).toBeNull();
   });
 });
