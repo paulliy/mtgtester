@@ -11,65 +11,65 @@
         "coverage",
         "authoring"
       ],
-      "commit": "47f8f796",
+      "commit": "bab56ed6",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 54.13,
+      "calibrationMs": 56.04,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.07,
+          "value": 6.98,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.291
+          "spread": 0.358
         },
         "engine.medianGameMsPerDecision": {
-          "value": 5.88,
+          "value": 6.95,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.304
+          "spread": 0.326
         },
         "setup.msPerGame": {
-          "value": 0.77,
+          "value": 0.91,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.854
+          "spread": 0.113
         },
         "model.default.callsPerTurn": {
-          "value": 3.75,
+          "value": 4.075,
           "unit": "calls",
           "better": "lower",
           "kind": "exact"
         },
         "model.default.promptTokensPerTurn": {
-          "value": 9112,
+          "value": 10123,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
         },
         "model.model.callsPerTurn": {
-          "value": 3.75,
+          "value": 4.075,
           "unit": "calls",
           "better": "lower",
           "kind": "exact"
         },
         "model.model.promptTokensPerTurn": {
-          "value": 9112,
+          "value": 10123,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
         },
         "model.bot.callsPerTurn": {
-          "value": 0.4,
+          "value": 0.425,
           "unit": "calls",
           "better": "lower",
           "kind": "exact"
         },
         "model.bot.promptTokensPerTurn": {
-          "value": 827,
+          "value": 907,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -157,65 +157,65 @@
         "coverage",
         "authoring"
       ],
-      "commit": "47f8f796",
+      "commit": "bab56ed6",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 53.87,
+      "calibrationMs": 62.96,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 12.19,
+          "value": 13.24,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.086
+          "spread": 0.129
         },
         "engine.medianGameMsPerDecision": {
-          "value": 11.43,
+          "value": 12.62,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.092
+          "spread": 0.125
         },
         "setup.msPerGame": {
-          "value": 0.78,
+          "value": 0.8,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.172
+          "spread": 0.016
         },
         "model.default.callsPerTurn": {
-          "value": 5.675,
+          "value": 6.125,
           "unit": "calls",
           "better": "lower",
           "kind": "exact"
         },
         "model.default.promptTokensPerTurn": {
-          "value": 19148,
+          "value": 21032,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
         },
         "model.model.callsPerTurn": {
-          "value": 5.675,
+          "value": 6.125,
           "unit": "calls",
           "better": "lower",
           "kind": "exact"
         },
         "model.model.promptTokensPerTurn": {
-          "value": 19148,
+          "value": 21032,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
         },
         "model.bot.callsPerTurn": {
-          "value": 0.605,
+          "value": 0.613,
           "unit": "calls",
           "better": "lower",
           "kind": "exact"
         },
         "model.bot.promptTokensPerTurn": {
-          "value": 1898,
+          "value": 1956,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
