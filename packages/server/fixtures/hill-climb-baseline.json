@@ -117,19 +117,19 @@
           "kind": "exact"
         },
         "authoring.poolMutantsLeftPct": {
-          "value": 79.79,
+          "value": 81.04,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 39.44,
+          "value": 39.26,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolCardsFullyScaffolded": {
-          "value": 126,
+          "value": 123,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
