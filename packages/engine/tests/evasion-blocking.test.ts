@@ -102,22 +102,26 @@ function combat(
 ) {
   const offered = new Map<string, string[]>();
   const rejections: string[] = [];
-  pump(runCombatAndExtraCombats(ctx), (decision) => {
-    if (decision.presentationAttackDeclaration !== undefined)
-      return declareAttacks(decision, (id) => (attackers.some((a) => a.id === id) ? 'P2' : null));
-    if (decision.presentationBlockDeclaration !== undefined) {
-      for (const subject of decision.presentationBlockDeclaration.subjects)
-        offered.set(
-          subject.subjectId,
-          subject.attackers.map((a) => a.attackerId),
-        );
-      for (const violation of decision.presentationBlockDeclaration.rejection?.violations ?? [])
-        rejections.push(violation.kind);
-      return declareBlocks(decision, (id) => blocks[id] ?? null);
-    }
-    const pass = decision.options.findIndex((option) => option.type === 'pass');
-    return { index: Math.max(pass, 0), targets: new Map() };
-  });
+  pump(
+    runCombatAndExtraCombats(ctx),
+    (decision) => {
+      if (decision.presentationAttackDeclaration !== undefined)
+        return declareAttacks(decision, (id) => (attackers.some((a) => a.id === id) ? 'P2' : null));
+      if (decision.presentationBlockDeclaration !== undefined) {
+        for (const subject of decision.presentationBlockDeclaration.subjects)
+          offered.set(
+            subject.subjectId,
+            subject.attackers.map((a) => a.attackerId),
+          );
+        for (const violation of decision.presentationBlockDeclaration.rejection?.violations ?? [])
+          rejections.push(violation.kind);
+        return declareBlocks(decision, (id) => blocks[id] ?? null);
+      }
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      return { index: Math.max(pass, 0), targets: new Map() };
+    },
+    { strict: true },
+  );
   const applied = ctx.state.eventLog
     .filter((event) => event.type === 'block')
     .map((event) => event.payload['blocker'] as string);
