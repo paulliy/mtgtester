@@ -2,6 +2,7 @@ import type { ManaAbilitySpec } from '../cards/ability';
 import { battlefieldCharacteristics } from '../effects/continuous';
 import { gatherRuleStatics } from '../state/queries';
 import type { EnginePlayerState, GameContext } from '../state/types';
+import { characteristicsFixedDuringPayment, definitionsInPlay } from './payment-stability';
 
 /**
  * Whether a mana ability's production is a fixed count that one activation pays out at most once:
@@ -37,12 +38,16 @@ function fixedCountAbility(ability: ManaAbilitySpec): boolean {
  * those permanents, tapped or not, is a fixed-count `{T}` ability and no static adds mana to an
  * activation (`manaActivationRider`): then each permanent pays out at most once per payment, a
  * tapped one never, and no activation changes another's production. Colors, restrictions,
- * summoning sickness and activation mana costs are ignored, which can only overestimate. Anything
- * else returns null, and the caller does the full check.
+ * summoning sickness and activation mana costs are ignored, which can only overestimate. It also
+ * needs every static in play to leave characteristics as they are while a payment taps
+ * (`characteristicsFixedDuringPayment`): "while this is untapped, lands you control lose all
+ * abilities" hides mana that tapping it gives back. Anything else returns null, and the caller
+ * does the full check.
  */
 export function fixedManaCapacity(ctx: GameContext, player: EnginePlayerState): number | null {
   if (gatherRuleStatics(ctx).some((entry) => entry.static.kind === 'manaActivationRider'))
     return null;
+  if (!characteristicsFixedDuringPayment(definitionsInPlay(ctx))) return null;
   const charsOf = battlefieldCharacteristics(ctx);
   let capacity = player.manaEntries.length;
   for (const permanent of ctx.state.battlefield) {

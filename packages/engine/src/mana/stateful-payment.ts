@@ -28,9 +28,9 @@ import {
 } from '../state/queries';
 import {
   characteristicsFixedDuringPayment,
+  definitionsInPlay,
   gateCannotOpenDuringPayment,
 } from './payment-stability';
-import { selectedPermanentDefinition } from '../cards/spell-faces';
 import { countWork } from '../work-counters';
 
 const bounds = { states: 2048, activations: 32, productions: 256, lifeGainOrders: 64 };
@@ -174,21 +174,6 @@ function entriesFor(
     ...(fromTreasure ? { fromTreasure: true as const } : {}),
     ...(source.persistent === true ? { persistent: true } : {}),
   }));
-}
-
-/**
- * Every definition whose statics are in play. The capacity bound and the copy-free search rest
- * on activations leaving every characteristic as it is; a static that reads tapped status or life
- * breaks that ("while this is untapped, lands you control lose all abilities": tapping it gives the
- * lands their mana abilities back), and then the search copies the game with no bound at all.
- */
-function definitionsInPlay(ctx: GameContext) {
-  return ctx.state.battlefield.flatMap((permanent) => {
-    if (permanent.faceDown) return [];
-    const printed = ctx.defs.get(permanent.oracleId);
-    if (printed === undefined) return [];
-    return [printed, selectedPermanentDefinition(printed, permanent.face, permanent.unlockedDoors)];
-  });
 }
 
 /** Actual activation replay, including post-cost production, with no strategic cost decisions. */
