@@ -1,0 +1,105 @@
+{
+  "seed": "s7-batch-4",
+  "swap": true,
+  "spendCap": {
+    "maxUsd": 1,
+    "maxCalls": 1500,
+    "reached": false,
+    "spentUsd": 0.0103
+  },
+  "turns": 30,
+  "minutes": 1.1,
+  "winner": null,
+  "winnerMode": null,
+  "finishingOrder": ["P4"],
+  "halted": true,
+  "haltReason": "Unmodeled card \"mana payment\" (proving a changing-resource casting payment): payment requires a static production rider or strategic activation-cost continuation outside the proven scope. The engine halts rather than guessing (brief §6.3).",
+  "life": {
+    "P1": 42,
+    "P2": 44,
+    "P3": 34,
+    "P4": 0
+  },
+  "seatTurns": {
+    "P1": {
+      "ownTurns": 8,
+      "eliminatedOnTurn": null
+    },
+    "P2": {
+      "ownTurns": 8,
+      "eliminatedOnTurn": null
+    },
+    "P3": {
+      "ownTurns": 9,
+      "eliminatedOnTurn": null
+    },
+    "P4": {
+      "ownTurns": 6,
+      "eliminatedOnTurn": 25
+    }
+  },
+  "seats": {
+    "P1": "model",
+    "P2": "bot",
+    "P3": "model",
+    "P4": "bot"
+  },
+  "opponents": "bot-v1",
+  "escalation": [],
+  "shadow": [],
+  "perMode": {
+    "bot": {
+      "tacticianCalls": 0,
+      "strategistCalls": 8,
+      "promptTokens": 25075,
+      "responseTokens": 3380,
+      "costUsd": 0.0048,
+      "costKnown": true,
+      "failedCalls": 0,
+      "unpricedAttempts": 0,
+      "unknownCostCalls": 0,
+      "settledUsd": 0,
+      "unsettledAttempts": 0,
+      "ownTurns": 14,
+      "strategistCallsPerOwnTurn": 0.571,
+      "promptTokensPerOwnTurn": 1791,
+      "strategistWakes": {
+        "first knobs": 2,
+        "permanents": 1,
+        "life": 3,
+        "power": 1,
+        "reuse limit": 1,
+        "commander": 1,
+        "gone": 1
+      },
+      "callsPerTurn": 0.27,
+      "promptTokensPerTurn": 836
+    },
+    "model": {
+      "tacticianCalls": 0,
+      "strategistCalls": 11,
+      "promptTokens": 33269,
+      "responseTokens": 4447,
+      "costUsd": 0.0055,
+      "costKnown": true,
+      "failedCalls": 0,
+      "unpricedAttempts": 0,
+      "unknownCostCalls": 0,
+      "settledUsd": 0,
+      "unsettledAttempts": 0,
+      "ownTurns": 17,
+      "strategistCallsPerOwnTurn": 0.647,
+      "promptTokensPerOwnTurn": 1957,
+      "strategistWakes": {
+        "first knobs": 2,
+        "commander": 8,
+        "life": 4,
+        "power": 2,
+        "permanents": 1,
+        "gone": 2
+      },
+      "callsPerTurn": 0.37,
+      "promptTokensPerTurn": 1109
+    }
+  }
+}

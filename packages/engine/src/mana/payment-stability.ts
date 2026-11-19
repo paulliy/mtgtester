@@ -189,3 +189,142 @@ export function definitionsInPlay(ctx: GameContext) {
     return [printed, selectedPermanentDefinition(printed, permanent.face, permanent.unlockedDoors)];
   });
 }
+
+/** Layer-4 keys that replace or strip what a permanent is, so that ending them can give it back. */
+const TYPE_STRIPPING_KEYS = [
+  'setLandSubtype',
+  'setTypes',
+  'setSubtypes',
+  'removeCreatureType',
+  'setSupertypes',
+  'loseAbilities',
+];
+
+/** Ops, in any layer, whose end can restore a mana ability, a color, a keyword or a gate. */
+const STRIPPING_OPS = ['setColors', 'denyKeywords', 'removeKeywords', 'loseAllAbilities'];
+
+/**
+ * Rule statics that say nothing about mana abilities, activation, sacrifice candidates, life or
+ * what a source produces, so that one leaving the battlefield cannot raise what a payment can
+ * make. Anything not listed (`cantActivateAbilities`, life and damage replacements, a ruling on
+ * which type a source produces) is treated as one that could.
+ */
+const RULES_IRRELEVANT_TO_PRODUCTION: ReadonlySet<string> = new Set([
+  'attackOnlyNearestOpponent',
+  'attackRequirement',
+  'attackRestriction',
+  'attackTax',
+  'cantAttackAlone',
+  'cantAttackOwner',
+  'cantBeCountered',
+  'cantBeSacrificed',
+  'cantBeTargetedByOpponentAbilities',
+  'cantBlockAlone',
+  'cantBlockCreatures',
+  'cantBlockMatching',
+  'cantCastSpells',
+  'castAsThoughFlash',
+  'castFromZone',
+  'convoke',
+  'costReduction',
+  'grantForetell',
+  'improvise',
+  'kicker',
+  'legendRuleDoesntApply',
+  // A rider adds mana (or a penalty) when a mana ability fires, so ending one can only take mana
+  // away from a source that has it listed among its units now.
+  'manaActivationRider',
+  'minBlockers',
+  'noMaximumHandSize',
+  'opponentNonHandSpellCostIncrease',
+  'opponentsAttackWithAll',
+  'playFromZone',
+  'additionalLandDrops',
+  'artifactTokenCreatesThopter',
+  'counterPlacementReplacement',
+  'spellCastLimit',
+  'spellCostIncrease',
+  // A trigger waits for the stack, so doubling, adding to or suppressing one changes nothing a
+  // payment reads (Harmonic Prodigy, Panharmonicon, Torbran-style riders).
+  'suppressObjectTriggers',
+  'triggerAdditionalForShamanOrOtherWizard',
+  'triggerAdditionalOnArtifactOrCreatureEntry',
+  'triggerAdditionalTime',
+]);
+
+const present = (op: Record<string, unknown>, key: string): boolean =>
+  op[key] !== undefined && op[key] !== false;
+
+/** Could ending this effect make a permanent lose less than it loses now, power aside? */
+function endingCanRaise(op: Record<string, unknown>): boolean {
+  if (STRIPPING_OPS.some((key) => present(op, key))) return true;
+  if (op['layer'] === 4) return TYPE_STRIPPING_KEYS.some((key) => present(op, key));
+  return false;
+}
+
+/**
+ * Could ending this layer-7 effect leave a power or toughness higher than it is now? A pump only
+ * adds, but a set value, a characteristic-defining one, or a negative or computed modifier (which
+ * may change sign as the payment sacrifices) can end higher.
+ */
+function endingCanRaisePower(op: Record<string, unknown>): boolean {
+  if (op['layer'] !== 7) return false;
+  const nonNegative = (value: unknown): boolean => typeof value === 'number' && value >= 0;
+  return !(op['sublayer'] === 'd' && nonNegative(op['power']) && nonNegative(op['toughness']));
+}
+
+interface LeavingAnswer {
+  /** Nothing but a power or toughness effect can give anything back. */
+  general: boolean;
+  /** No layer-7 effect can end higher. */
+  power: boolean;
+}
+
+function leavingKeepsProduction(
+  staticEffects: readonly unknown[],
+  ruleStatics: readonly unknown[],
+): LeavingAnswer {
+  const ops = staticEffects.map((effect) => (effect as { op?: Record<string, unknown> }).op ?? {});
+  return {
+    general:
+      ops.every((op) => !endingCanRaise(op)) &&
+      ruleStatics.every((rule) =>
+        RULES_IRRELEVANT_TO_PRODUCTION.has(String((rule as { kind?: unknown }).kind)),
+      ),
+    power: ops.every((op) => !endingCanRaisePower(op)),
+  };
+}
+
+const leavingByDefinition = new WeakMap<object, LeavingAnswer>();
+
+/**
+ * True when no permanent in play can, by leaving the battlefield, give another one back an ability,
+ * a color, a type or a mana-affecting rule it holds back now. Sacrificing a permanent to pay for
+ * mana changes the board in a way a tap or a life rider does not: every source then keeps only what
+ * it makes now or less, so the capacity bound may count each source at its present units. A static
+ * that suppresses (Blood Moon, "loses all abilities", a ban on activating abilities) breaks that,
+ * and so does any rule static not listed as irrelevant; the caller must then search without the
+ * bound. Power and toughness count only when a mana ability is gated (`powerGated`): nothing else
+ * reads them. Conservative: it is a bound's premise, never a rule.
+ */
+export function leavingPermanentsKeepProduction(
+  definitions: readonly StaticHolder[],
+  powerGated: boolean,
+): boolean {
+  return definitions.every((definition) => {
+    let answer = leavingByDefinition.get(definition);
+    if (answer === undefined) {
+      const front = leavingKeepsProduction(definition.staticEffects, definition.ruleStatics);
+      const back =
+        definition.backFace === undefined
+          ? { general: true, power: true }
+          : leavingKeepsProduction(
+              definition.backFace.staticEffects,
+              definition.backFace.ruleStatics,
+            );
+      answer = { general: front.general && back.general, power: front.power && back.power };
+      leavingByDefinition.set(definition, answer);
+    }
+    return answer.general && (!powerGated || answer.power);
+  });
+}
