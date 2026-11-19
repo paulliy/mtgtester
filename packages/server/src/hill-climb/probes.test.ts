@@ -9,6 +9,7 @@ import {
   PROFILES,
   backlogRefusals,
   calibrate,
+  compilerScreenMetrics,
   coverageProbe,
   edhrecCoverage,
   engineProbe,
@@ -165,6 +166,13 @@ describe('probe helpers', () => {
       ] as Array<[string, number, 'land' | 'nonland']>,
     };
     expect(edhrecCoverage(pins, ranking)).toEqual({ modeled: 1, slotSharePct: 25 });
+  });
+
+  it('replays the compiler screen over the committed trials without losing a compiled card', () => {
+    const metrics = compilerScreenMetrics();
+    expect(metrics['coverage.compilerScreenLosses']!.value).toBe(0);
+    expect(metrics['coverage.compilerScreenCatches']!.value).toBeGreaterThanOrEqual(11);
+    expect(metrics['coverage.compilerScreenCatches']!.kind).toBe('exact');
   });
 
   it('reads the optional backlog and deck-coverage reports', () => {

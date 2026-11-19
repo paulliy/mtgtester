@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "card": "Keep Safe",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Wolf",
+      "typeLine": "Creature — Wolf",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Bolt",
+      "typeLine": "Instant",
+      "manaCost": "{R}",
+      "oracleText": "Scenario Bolt deals 3 damage to any target."
+    },
+    {
+      "name": "Scenario Elk",
+      "typeLine": "Creature — Elk",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "keep-safe-counters-spell-targeting-your-permanent",
+      "title": "Keep Safe: counters a spell that targets a permanent you control",
+      "clauses": [1],
+      "instructions": [
+        "P2 casts Scenario Bolt at your Scenario Bear.",
+        "Cast Keep Safe targeting Scenario Bolt."
+      ],
+      "expectedOutcome": "Scenario Bolt targets your Bear, so it can be countered: it goes to P2's graveyard without dealing damage, the Bear survives, and you draw Scenario Elk.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "hand": ["Keep Safe"],
+          "battlefield": ["Island", "Island", "Scenario Bear"],
+          "libraryTop": ["Scenario Elk"]
+        },
+        "P2": {
+          "hand": ["Scenario Bolt"],
+          "battlefield": ["Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Bolt/",
+          "targets": ["Scenario Bear"]
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Keep Safe/",
+          "targets": ["Scenario Bolt"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Bolt"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Keep Safe"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Elk"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "keep-safe-spell-targeting-you-not-counterable",
+      "title": "Keep Safe: a spell that targets you, not a permanent, can't be targeted",
+      "clauses": [1],
+      "instructions": [
+        "P2 casts Scenario Bolt at you.",
+        "Keep Safe is not offered, because the spell targets a player, not a permanent you control."
+      ],
+      "expectedOutcome": "Scenario Bolt resolves: you take 3 damage and your Bear is untouched; Keep Safe stays in your hand and you draw nothing.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "hand": ["Keep Safe"],
+          "battlefield": ["Island", "Island", "Scenario Bear"],
+          "libraryTop": ["Scenario Elk"]
+        },
+        "P2": {
+          "hand": ["Scenario Bolt"],
+          "battlefield": ["Mountain"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Bolt/",
+          "targets": ["P1"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 37
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Keep Safe"],
+            "lacks": ["Scenario Elk"]
+          }
+        }
+      ]
+    }
+  ]
+}

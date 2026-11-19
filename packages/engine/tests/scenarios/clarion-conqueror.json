@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "card": "Clarion Conqueror",
+  "supportCards": [
+    {
+      "name": "Scenario Wand",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": "{1}: You gain 1 life."
+    },
+    {
+      "name": "Scenario Squire",
+      "typeLine": "Creature — Human",
+      "manaCost": "{1}",
+      "oracleText": "{1}: You gain 1 life.",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Walker",
+      "typeLine": "Planeswalker — Test",
+      "manaCost": "{2}",
+      "oracleText": "+1: You gain 1 life.",
+      "loyalty": "3"
+    },
+    {
+      "name": "Scenario Totem",
+      "typeLine": "Enchantment",
+      "manaCost": "{1}",
+      "oracleText": "{1}: You gain 1 life."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "clarion-conqueror-locks-artifact-creature-planeswalker",
+      "title": "Clarion Conqueror: artifacts, creatures and planeswalkers can't be activated",
+      "clauses": [2],
+      "instructions": [
+        "You control Clarion Conqueror, Scenario Wand (artifact), Scenario Squire (creature) and Scenario Walker (planeswalker), each with an ability you could afford.",
+        "Look for their abilities in your priority options."
+      ],
+      "expectedOutcome": "None of the three abilities is offered, so nothing is activated and you stay at 40 life with Forest untapped.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Clarion Conqueror",
+            "Scenario Wand",
+            "Scenario Squire",
+            "Scenario Walker",
+            "Forest",
+            "Forest"
+          ]
+        },
+        "P2": {}
+      },
+      "script": [],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 40
+          }
+        },
+        {
+          "counters": {
+            "card": "Scenario Walker",
+            "counter": "loyalty",
+            "equals": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "clarion-conqueror-enchantment-ability-allowed",
+      "title": "Clarion Conqueror: an enchantment's activated ability is not locked",
+      "clauses": [2],
+      "instructions": [
+        "With Clarion Conqueror on the battlefield, activate Scenario Totem (an enchantment)."
+      ],
+      "expectedOutcome": "Enchantments are not in the locked list, so Scenario Totem's ability resolves and you gain 1 life.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Clarion Conqueror", "Scenario Totem", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/Scenario Totem/"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 41
+          }
+        }
+      ]
+    }
+  ]
+}

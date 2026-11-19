@@ -24,6 +24,11 @@ export interface AiModelProfile {
   preferredMaxLatencySeconds: number;
   /** OpenRouter preference, in tokens/second; zero disables the preference. */
   preferredMinThroughput: number;
+  /**
+   * OpenRouter provider names this role must never be routed to (`provider.ignore`), on top of
+   * the non-caching providers `filterNonCachingProviders` already skips.
+   */
+  ignoreProviders: string[];
 }
 
 export interface AiConfig {
@@ -86,7 +91,8 @@ export interface AiConfig {
    * Who answers tactical decisions the local plan, heuristics and cache leave (ADR 0039).
    * `model`: the tactician LLM, as before. `bot`: the card-aware heuristic bot, steered by the
    * strategist's knobs, with the model asked only as `botEscalation` allows.
-   * Env: `AI_TACTICAL_MODE`. Default: `model`.
+   * Env: `AI_TACTICAL_MODE`. Default: `model`; bot seats missed the win bar in the 2026-11-19 duel
+   * (ADR 0039).
    */
   tacticalMode: 'model' | 'bot';
   /**
@@ -155,6 +161,8 @@ export interface AiConfig {
   preferredMaxLatencySeconds: number;
   /** OpenRouter routing preference; role profiles override this in configForRole. */
   preferredMinThroughput: number;
+  /** OpenRouter providers never to route to; role profiles override this in configForRole. */
+  ignoreProviders: string[];
   /** Larger, reasoning-enabled call made once per active turn. */
   strategist: AiModelProfile;
   /** Small menu-pick call used for decisions the local plan cannot answer. */
@@ -360,6 +368,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   reasoningTokenHeadroom: 4000,
   preferredMaxLatencySeconds: 0,
   preferredMinThroughput: 0,
+  ignoreProviders: [],
   strategist: {
     // Paul's pick (2026-11-10): GLM 5.3 Flash at low effort. The strategist is most of the
     // per-game bill, and its thinking tokens are most of each call (ADR 0040).
@@ -372,24 +381,28 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
     maxRetries: 2,
     preferredMaxLatencySeconds: 30,
     preferredMinThroughput: 100,
+    ignoreProviders: [],
   },
   tactician: {
-    models: ['qwen/qwen3.7-flash', 'sao10k/l3-lunaris-8b:nitro', 'poolside/laguna-s-2.1'],
-    reasoningEnabled: false,
-    reasoningEffort: 'none',
-    // 85 tokens routinely truncates menu decisions once JSON targets are included. Keep a
-    // larger answer budget so provider output limits do not cut off otherwise valid choices.
+    // Particle-1 first (low reasoning), DeepSeek V4 Flash as the backup. Checked on OpenRouter
+    // 2026-11-19: particle-ai/particle-1 is listed and takes `reasoning_effort`.
+    models: ['particle-ai/particle-1', 'deepseek/deepseek-v4-flash'],
+    reasoningEnabled: true,
+    reasoningEffort: 'low',
+    // 256 tokens of answer, plus headroom for the low-effort thinking that `max_tokens` also caps.
     maxOutputTokens: 256,
-    reasoningTokenHeadroom: 0,
+    reasoningTokenHeadroom: 1024,
     requestTimeoutMs: 10000,
     maxRetries: 1,
     preferredMaxLatencySeconds: 10,
     preferredMinThroughput: 10,
+    // Never routed to these providers (requested 2026-11-19).
+    ignoreProviders: ['CoreWeave', 'Modal', 'Cohere'],
   },
   archetype: {
     // Import-time only, one call per deck, and a heuristic tag already exists to fall back on —
     // so this is the cheapest, fastest profile in the file rather than the smartest.
-    models: ['qwen/qwen3.7-flash', 'poolside/laguna-s-2.1'],
+    models: ['qwen/qwen3.7-flash', 'deepseek/deepseek-v4-flash'],
     reasoningEnabled: false,
     reasoningEffort: 'none',
     maxOutputTokens: 60,
@@ -398,6 +411,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
     maxRetries: 1,
     preferredMaxLatencySeconds: 10,
     preferredMinThroughput: 10,
+    ignoreProviders: [],
   },
   reflection: {
     // Prose, not a menu pick, so the output budget is the largest here — but reasoning stays off:
@@ -412,6 +426,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
     maxRetries: 1,
     preferredMaxLatencySeconds: 0,
     preferredMinThroughput: 0,
+    ignoreProviders: [],
   },
   strategistEnabled: true,
   archetypeInferenceEnabled: false,
@@ -671,6 +686,9 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_STRATEGIST_PREFERRED_MIN_THROUGHPUT'],
       DEFAULT_AI_CONFIG.strategist.preferredMinThroughput,
     ),
+    ignoreProviders:
+      parseModels(env['AI_STRATEGIST_IGNORE_PROVIDERS']) ??
+      DEFAULT_AI_CONFIG.strategist.ignoreProviders,
   };
   const tactician: AiModelProfile = {
     models:
@@ -707,6 +725,9 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_TACTICIAN_PREFERRED_MIN_THROUGHPUT'],
       DEFAULT_AI_CONFIG.tactician.preferredMinThroughput,
     ),
+    ignoreProviders:
+      parseModels(env['AI_TACTICIAN_IGNORE_PROVIDERS']) ??
+      DEFAULT_AI_CONFIG.tactician.ignoreProviders,
   };
   const archetype: AiModelProfile = {
     ...DEFAULT_AI_CONFIG.archetype,
@@ -939,5 +960,6 @@ export function configForRole(
     maxRetries: profile.maxRetries,
     preferredMaxLatencySeconds: profile.preferredMaxLatencySeconds,
     preferredMinThroughput: profile.preferredMinThroughput,
+    ignoreProviders: [...profile.ignoreProviders],
   };
 }

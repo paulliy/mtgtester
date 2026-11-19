@@ -7,6 +7,13 @@ import { existsSync, readFileSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { Engine, type EngineWork } from '@mtg/engine';
 import type { AiConfig } from '../ai/config';
+import {
+  compilerTrials,
+  loadRuleEvidence,
+  loadScreenHistory,
+  loadTrialCards,
+  replayScreen,
+} from '../cards/compiler-screen';
 import { measureCoverage } from '../cards/coverage';
 import { PINNED_ORACLE_PATH, type PinnedCard } from '../cards/edhrec-pins';
 import type { EdhrecRanking } from '../cards/edhrec-ranking';
@@ -291,6 +298,30 @@ export function playableDeckPct(report: {
 }
 
 /**
+ * The compiler's pre-call screen replayed over every committed trial, leaving each card's own
+ * outcome out of the screen that judges it. Catches are refusals declined with no model call;
+ * losses are cards that compiled but would have been declined. A rule confirmed by one card alone
+ * catches nothing here, so the metric rewards rules that generalize. A refusal whose rule (one in
+ * the committed screen history) has since retired, because a modeled card or validated patch now
+ * covers the wording, still counts: closing the gap is progress, not a screen regression.
+ */
+export function compilerScreenMetrics(): Metrics {
+  const matches = loadRuleEvidence();
+  const history = loadScreenHistory();
+  let caught = 0;
+  let lost = 0;
+  for (const trial of compilerTrials()) {
+    const replay = replayScreen(loadTrialCards(trial), matches, { leaveOneOut: true, history });
+    caught += replay.caught + replay.settled;
+    lost += replay.acceptedLost.length;
+  }
+  return {
+    'coverage.compilerScreenCatches': exact(caught, 'calls', 'higher'),
+    'coverage.compilerScreenLosses': exact(lost, 'cards', 'lower'),
+  };
+}
+
+/**
  * Card coverage, computed live from the pinned Oracle fixtures so an interpreter change shows at
  * once. The backlog and deck metrics are read from their committed reports when those exist.
  */
@@ -311,6 +342,7 @@ export function coverageProbe(decks: FuzzDeck[]): Metrics {
       'higher',
     ),
   };
+  Object.assign(metrics, compilerScreenMetrics());
   if (existsSync(PRIMITIVE_BACKLOG_PATH)) {
     const refusals = backlogRefusals(readJson(PRIMITIVE_BACKLOG_PATH));
     if (refusals !== null) metrics['coverage.compilerRefusals'] = exact(refusals, 'cards', 'lower');

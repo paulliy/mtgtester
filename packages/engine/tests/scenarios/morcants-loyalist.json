@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "card": "Morcant's Loyalist",
+  "supportCards": [
+    {
+      "name": "Scenario Elf",
+      "typeLine": "Creature — Elf Warrior",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Smite",
+      "typeLine": "Instant",
+      "manaCost": "{B}",
+      "oracleText": "Destroy target creature."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "morcants-loyalist-returns-another-elf",
+      "title": "Morcant's Loyalist: when it dies, another Elf card returns from your graveyard to your hand",
+      "clauses": [2],
+      "instructions": [
+        "Cast Scenario Smite on your own Morcant's Loyalist.",
+        "Its death trigger targets Scenario Elf in your graveyard; Scenario Bear is not an Elf."
+      ],
+      "expectedOutcome": "Scenario Elf is returned to your hand; Scenario Bear and Morcant's Loyalist stay in the graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Smite"],
+          "battlefield": ["Morcant's Loyalist", "Swamp"],
+          "graveyard": ["Scenario Elf", "Scenario Bear"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Smite/",
+          "targets": ["Morcant's Loyalist"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Elf"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Morcant's Loyalist", "Scenario Bear"],
+            "lacks": ["Scenario Elf"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "morcants-loyalist-non-elf-and-itself-not-returned",
+      "title": "Morcant's Loyalist: neither a non-Elf nor itself can be returned",
+      "clauses": [2],
+      "instructions": [
+        "Cast Scenario Smite on your own Morcant's Loyalist with only Scenario Bear (not an Elf) in your graveyard."
+      ],
+      "expectedOutcome": "The trigger has no legal target; Morcant's Loyalist (an Elf, but not 'another') and Scenario Bear stay in the graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Smite"],
+          "battlefield": ["Morcant's Loyalist", "Swamp"],
+          "graveyard": ["Scenario Bear"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Smite/",
+          "targets": ["Morcant's Loyalist"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Morcant's Loyalist", "Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": [],
+            "lacks": ["Morcant's Loyalist", "Scenario Bear"]
+          }
+        }
+      ]
+    }
+  ]
+}

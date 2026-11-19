@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "card": "Spider-Woman, Stunning Savior",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Relic",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": ""
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "spider-woman-opponent-creatures-and-artifacts-enter-tapped",
+      "title": "Spider-Woman, Stunning Savior: artifacts and creatures an opponent controls enter tapped",
+      "clauses": [2],
+      "instructions": [
+        "Cast Spider-Woman, Stunning Savior and pass the turn.",
+        "On P2's turn, P2 casts Scenario Bear and Scenario Relic."
+      ],
+      "expectedOutcome": "P2's Scenario Bear and Scenario Relic entered tapped.",
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true,
+        "toEndStep": true,
+        "throughNextTurn": true
+      },
+      "seats": {
+        "P1": {
+          "hand": ["Spider-Woman, Stunning Savior"],
+          "battlefield": ["Plains", "Plains"]
+        },
+        "P2": {
+          "hand": ["Scenario Bear", "Scenario Relic"],
+          "battlefield": ["Forest", "Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Spider-Woman, Stunning Savior/"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Bear/"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Relic/"
+        }
+      ],
+      "expect": [
+        {
+          "tapped": {
+            "card": "Scenario Bear",
+            "equals": true,
+            "player": "P2"
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Relic",
+            "equals": true,
+            "player": "P2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "spider-woman-opponent-land-enters-untapped",
+      "title": "Spider-Woman, Stunning Savior: an opponent's land is not an artifact or creature and enters untapped",
+      "clauses": [2],
+      "instructions": [
+        "Cast Spider-Woman, Stunning Savior and pass the turn.",
+        "On P2's turn, P2 plays a Mountain."
+      ],
+      "expectedOutcome": "P2's Mountain enters untapped.",
+      "continue": {
+        "throughCombat": true,
+        "toPostcombatMain": true,
+        "toEndStep": true,
+        "throughNextTurn": true
+      },
+      "seats": {
+        "P1": {
+          "hand": ["Spider-Woman, Stunning Savior"],
+          "battlefield": ["Plains", "Plains"]
+        },
+        "P2": {
+          "hand": ["Mountain"],
+          "battlefield": ["Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Spider-Woman, Stunning Savior/"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Play Mountain/"
+        }
+      ],
+      "expect": [
+        {
+          "tapped": {
+            "card": "Mountain",
+            "equals": false,
+            "player": "P2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "spider-woman-own-permanents-enter-untapped",
+      "title": "Spider-Woman, Stunning Savior: your own creatures and artifacts enter untapped",
+      "clauses": [2],
+      "instructions": [
+        "With Spider-Woman on the battlefield, cast Scenario Bear and Scenario Relic."
+      ],
+      "expectedOutcome": "Your Scenario Bear and Scenario Relic enter untapped.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Bear", "Scenario Relic"],
+          "battlefield": ["Spider-Woman, Stunning Savior", "Forest", "Forest", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Bear/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Relic/"
+        }
+      ],
+      "expect": [
+        {
+          "tapped": {
+            "card": "Scenario Bear",
+            "equals": false,
+            "player": "P1"
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Relic",
+            "equals": false,
+            "player": "P1"
+          }
+        }
+      ]
+    }
+  ]
+}
