@@ -421,9 +421,45 @@ export interface ReplayResult {
   refused: number;
   /** Refusals the screen catches: compile calls saved. */
   caught: number;
+  /**
+   * Refusals a rule in the screen's history would catch, had a modeled card or validated patch not
+   * since retired it: the gap was real and the engine has closed it. Counted beside `caught` so
+   * supporting a primitive does not read as the screen getting worse. Zero without a history.
+   */
+  settled: number;
   /** Accepted cards the screen would have declined. */
   acceptedLost: string[];
   byRule: Record<string, string[]>;
+}
+
+/**
+ * Rule ids that have screened cards, kept in a committed fixture. A rule stays listed after it
+ * retires, which is how the replay tells a gap the engine closed from a rule that never screened.
+ */
+export const SCREEN_HISTORY_PATH = 'packages/server/fixtures/compiler-screen-history.json';
+
+export function loadScreenHistory(): Set<string> {
+  if (!existsSync(SCREEN_HISTORY_PATH)) return new Set();
+  return new Set(JSON.parse(readFileSync(SCREEN_HISTORY_PATH, 'utf8')) as string[]);
+}
+
+/**
+ * True when a retired rule from the screen's history counts this card among its confirming
+ * refusals, and (left one out) another card too, so it would screen the card but for the
+ * primitive the engine gained.
+ */
+function settles(
+  card: string,
+  screen: Screen,
+  evidenceOf: ReadonlyMap<string, RuleEvidence>,
+  options: ReplayOptions,
+): boolean {
+  return screen.retired.some(({ rule }) => {
+    if (options.history?.has(rule.id) !== true) return false;
+    const refusers = new Set(evidenceOf.get(rule.id)?.refused.map((line) => line.card));
+    if (!refusers.has(card)) return false;
+    return options.leaveOneOut !== true || refusers.size > 1;
+  });
 }
 
 /**
@@ -431,25 +467,37 @@ export interface ReplayResult {
  * built without that card's own outcome, so a rule confirmed only by the card itself does not
  * count: that is the estimate for cards the screen has never seen.
  */
+export interface ReplayOptions {
+  leaveOneOut?: boolean;
+  /** Rules that have screened before (`loadScreenHistory`); only these can settle a refusal. */
+  history?: ReadonlySet<string>;
+}
+
 export function replayScreen(
   cards: readonly TrialCard[],
   matches: readonly RuleEvidence[],
-  options: { leaveOneOut?: boolean } = {},
+  options: ReplayOptions = {},
 ): ReplayResult {
   const result: ReplayResult = {
     cards: cards.length,
     refused: 0,
     caught: 0,
+    settled: 0,
     acceptedLost: [],
     byRule: {},
   };
   const shared = buildScreen(matches);
+  const evidenceOf = new Map(matches.map((match) => [match.rule.id, match]));
   for (const card of cards) {
     if (card.outcome === 'refused') result.refused++;
-    const rules =
-      options.leaveOneOut === true ? buildScreen(matches, card.name).active : shared.active;
-    const hit = screenLines(card.lines, rules, card.name);
-    if (hit === null) continue;
+    const screen = options.leaveOneOut === true ? buildScreen(matches, card.name) : shared;
+    const hit = screenLines(card.lines, screen.active, card.name);
+    if (hit === null) {
+      if (card.outcome === 'refused' && settles(card.name, screen, evidenceOf, options)) {
+        result.settled++;
+      }
+      continue;
+    }
     (result.byRule[hit.rule.id] ??= []).push(card.name);
     if (card.outcome === 'refused') result.caught++;
     else result.acceptedLost.push(card.name);

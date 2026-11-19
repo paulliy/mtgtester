@@ -11,6 +11,7 @@ import {
   loadRuleEvidence,
   loadScreen,
   loadScreenEvidence,
+  loadScreenHistory,
   loadTrialCards,
   matchEvidence,
   normalizeLine,
@@ -31,14 +32,18 @@ const ruleById = (id: string): ScreenRule => {
 /**
  * The gain this screen was built for (hill-climb S1). Trial 02 made 305 compile calls; 191 cards
  * were refused. If one of these fails, a change cost the screen catches or, worse, made it decline
- * a card that compiles. Update the floors only when the screen legitimately gets better.
+ * a card that compiles. Update the floors only when the screen legitimately gets better. The
+ * floors count settled refusals too, so a rule that retires because the engine gained its
+ * primitive keeps them green.
  */
 describe('compiler screen: replay of the committed trials', () => {
   it('declines at least 31 of trial 02’s refusals and no card that compiled', () => {
-    const replay = replayScreen(loadTrialCards(TRIAL_02), loadRuleEvidence());
+    const replay = replayScreen(loadTrialCards(TRIAL_02), loadRuleEvidence(), {
+      history: loadScreenHistory(),
+    });
     expect(replay.refused).toBe(191);
     expect(replay.acceptedLost).toEqual([]);
-    expect(replay.caught).toBeGreaterThanOrEqual(31);
+    expect(replay.caught + replay.settled).toBeGreaterThanOrEqual(31);
   });
 
   it('still loses no compiled card when each card is judged by a screen that never saw it', () => {
@@ -48,8 +53,9 @@ describe('compiler screen: replay of the committed trials', () => {
     }
     const unseen = replayScreen(loadTrialCards(TRIAL_02), loadRuleEvidence(), {
       leaveOneOut: true,
+      history: loadScreenHistory(),
     });
-    expect(unseen.caught).toBeGreaterThanOrEqual(11);
+    expect(unseen.caught + unseen.settled).toBeGreaterThanOrEqual(11);
   });
 
   it('declines no line of any modeled card or validated patch', () => {
@@ -59,6 +65,14 @@ describe('compiler screen: replay of the committed trials', () => {
       const hit = screenLines([line], active);
       expect(hit, `${card}: ${line}`).toBeNull();
     }
+  });
+
+  it('lists every active rule in the committed screen history', () => {
+    // A missing id means a new rule started screening: add it to compiler-screen-history.json and
+    // never remove one, so the replay can credit its refusals once the engine covers them.
+    const history = loadScreenHistory();
+    const missing = loadScreen().active.filter((rule) => !history.has(rule.id));
+    expect(missing.map((rule) => rule.id)).toEqual([]);
   });
 
   it('keeps every confirmed rule tied to a refusal whose reason names the gap', () => {
@@ -192,5 +206,25 @@ describe('compiler screen: evidence', () => {
       refusedLines: [refusal],
     });
     expect(buildScreen(onlyMulldrifter, 'Mulldrifter').active).toEqual([]);
+  });
+
+  it('credits a retired rule’s refusals as settled only when the rule is in the history', () => {
+    const cards = [
+      { name: 'Mulldrifter', outcome: 'refused' as const, lines: ['Evoke {2}{U}'] },
+      { name: 'Shriekmaw', outcome: 'accepted' as const, lines: ['Evoke {1}{B}'] },
+    ];
+    const matches = matchEvidence([evoke()], {
+      modeledLines: [{ card: 'Solitude', line: 'evoke—exile a white card from your hand.' }],
+      acceptedLines: [],
+      refusedLines: [refusal],
+    });
+    const withHistory = replayScreen(cards, matches, { history: new Set(['ability:evoke']) });
+    expect(withHistory).toMatchObject({ caught: 0, settled: 1, acceptedLost: [] });
+    expect(replayScreen(cards, matches).settled).toBe(0);
+    // Left one out, Mulldrifter's own refusal cannot vouch for the rule that would screen it.
+    expect(
+      replayScreen(cards, matches, { leaveOneOut: true, history: new Set(['ability:evoke']) })
+        .settled,
+    ).toBe(0);
   });
 });

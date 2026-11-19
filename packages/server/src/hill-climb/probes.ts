@@ -10,6 +10,7 @@ import type { AiConfig } from '../ai/config';
 import {
   compilerTrials,
   loadRuleEvidence,
+  loadScreenHistory,
   loadTrialCards,
   replayScreen,
 } from '../cards/compiler-screen';
@@ -258,15 +259,18 @@ export function playableDeckPct(report: {
  * The compiler's pre-call screen replayed over every committed trial, leaving each card's own
  * outcome out of the screen that judges it. Catches are refusals declined with no model call;
  * losses are cards that compiled but would have been declined. A rule confirmed by one card alone
- * catches nothing here, so the metric rewards rules that generalize.
+ * catches nothing here, so the metric rewards rules that generalize. A refusal whose rule (one in
+ * the committed screen history) has since retired, because a modeled card or validated patch now
+ * covers the wording, still counts: closing the gap is progress, not a screen regression.
  */
 export function compilerScreenMetrics(): Metrics {
   const matches = loadRuleEvidence();
+  const history = loadScreenHistory();
   let caught = 0;
   let lost = 0;
   for (const trial of compilerTrials()) {
-    const replay = replayScreen(loadTrialCards(trial), matches, { leaveOneOut: true });
-    caught += replay.caught;
+    const replay = replayScreen(loadTrialCards(trial), matches, { leaveOneOut: true, history });
+    caught += replay.caught + replay.settled;
     lost += replay.acceptedLost.length;
   }
   return {
