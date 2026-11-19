@@ -11,32 +11,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "28d5449c",
+      "commit": "1a1b33a1",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 54.78,
+      "calibrationMs": 55.58,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 7.03,
+          "value": 6.22,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.391
+          "spread": 0.326
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.89,
+          "value": 5.8,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.288
+          "spread": 0.451
         },
         "setup.msPerGame": {
-          "value": 0.89,
+          "value": 0.88,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.099
+          "spread": 0.084
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -75,13 +75,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 4952,
+          "value": 5022,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 60.75,
+          "value": 61.214,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -117,19 +117,19 @@
           "kind": "exact"
         },
         "authoring.poolMutantsLeftPct": {
-          "value": 79.79,
+          "value": 78.76,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 39.44,
+          "value": 40.44,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolCardsFullyScaffolded": {
-          "value": 126,
+          "value": 133,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
@@ -141,7 +141,7 @@
           "kind": "exact"
         },
         "authoring.referenceKillsReproducedPct": {
-          "value": 16.67,
+          "value": 20,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -169,32 +169,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "28d5449c",
+      "commit": "1a1b33a1",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 65.99,
+      "calibrationMs": 53.39,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 14.21,
+          "value": 12.59,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.08
+          "spread": 0.07
         },
         "engine.medianGameMsPerDecision": {
-          "value": 13.49,
+          "value": 12.06,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.09
+          "spread": 0.064
         },
         "setup.msPerGame": {
-          "value": 1.06,
+          "value": 1,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.24
+          "spread": 0.137
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -233,13 +233,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 4952,
+          "value": 5022,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 60.75,
+          "value": 61.214,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -275,19 +275,19 @@
           "kind": "exact"
         },
         "authoring.poolMutantsLeftPct": {
-          "value": 79.05,
+          "value": 78.98,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 40.47,
+          "value": 40.45,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolCardsFullyScaffolded": {
-          "value": 1040,
+          "value": 1058,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
@@ -299,7 +299,7 @@
           "kind": "exact"
         },
         "authoring.referenceKillsReproducedPct": {
-          "value": 16.67,
+          "value": 20,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
