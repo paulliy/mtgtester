@@ -887,24 +887,31 @@ describe('Gut, True Soul Zealot', () => {
     const attackers = typeof attacker === 'string' ? [attacker] : attacker;
     ctx.state.phase = 'combat';
     const offered: string[] = [];
-    pump(runCombatPhase(ctx), (decision) => {
-      if (decision.decisionType === 'declareAttackers')
-        return declareAttacks(decision, (id) => (attackers.includes(id) ? 'P2' : null));
-      const accept = decision.options.findIndex((option) => option.type === 'acceptTrigger');
-      if (accept >= 0) {
-        triggers.offered += 1;
-        const decline = decision.options.findIndex((option) => option.type === 'declineTrigger');
-        return { index: sacrifice === null ? decline : accept, targets: new Map() };
-      }
-      if (decision.prompt.includes('choose a permanent to sacrifice')) {
-        offered.push(...decision.options.map((option) => option.description));
-        const index = decision.options.findIndex(
-          (option) => option.description === `Sacrifice ${sacrifice}`,
-        );
-        return { index: Math.max(0, index), targets: new Map() };
-      }
-      return { index: 0, targets: new Map() };
-    });
+    pump(
+      runCombatPhase(ctx),
+      (decision) => {
+        if (decision.decisionType === 'declareAttackers')
+          return declareAttacks(decision, (id) => (attackers.includes(id) ? 'P2' : null));
+        const accept = decision.options.findIndex((option) => option.type === 'acceptTrigger');
+        if (accept >= 0) {
+          triggers.offered += 1;
+          const decline = decision.options.findIndex((option) => option.type === 'declineTrigger');
+          return { index: sacrifice === null ? decline : accept, targets: new Map() };
+        }
+        if (decision.prompt.includes('choose a permanent to sacrifice')) {
+          offered.push(...decision.options.map((option) => option.description));
+          const index = decision.options.findIndex(
+            (option) => option.description === `Sacrifice ${sacrifice}`,
+          );
+          return { index: Math.max(0, index), targets: new Map() };
+        }
+        if (decision.decisionType === 'declareBlockers') return declareBlocks(decision, () => null);
+        // Two of Gut's triggers at once (a per-attacker trigger) ask for an order; any order will do.
+        if (decision.decisionType === 'orderTriggers') return { index: 0, targets: new Map() };
+        return undefined;
+      },
+      { strict: true },
+    );
     return offered;
   }
 
@@ -967,6 +974,8 @@ describe('Gut, True Soul Zealot', () => {
         if (decision.decisionType === 'declareAttackers')
           return declareAttacks(decision, (id) => (id === raider.id ? 'P1' : null));
         if (decision.decisionType === 'declareBlockers') return declareBlocks(decision, () => null);
+        // Two of Gut's triggers at once (a per-attacker trigger) ask for an order; any order will do.
+        if (decision.decisionType === 'orderTriggers') return { index: 0, targets: new Map() };
         return { index: 0, targets: new Map() };
       },
       { strict: true },
