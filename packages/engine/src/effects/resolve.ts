@@ -6822,30 +6822,31 @@ function* executeAbilityEffects(
               : playerById(ctx, scope.eventPlayerId)
             : controller;
         if (owner === undefined || owner.hasLost) break;
-        let attackChoice: { defenderId: PlayerId; planeswalkerId: ObjectId | null };
-        if (effect.defender === 'attackedPlayer') {
-          // "…that's attacking that opponent": the player the firing was about, not a planeswalker
-          // of theirs, and only while they are still in the game and not the token's controller.
-          const attacked = scope.attackedPlayerId;
-          const player = ctx.state.players.find((candidate) => candidate.id === attacked);
-          if (player === undefined || player.hasLost || player.id === owner.id) break;
-          attackChoice = { defenderId: player.id, planeswalkerId: null };
-        } else {
-          const defenders = (ctx.state.combat?.defendingPlayers ?? []).filter((id) => {
-            const player = ctx.state.players.find((candidate) => candidate.id === id);
-            return player !== undefined && !player.hasLost && id !== owner.id;
-          });
-          if (defenders.length === 0) break;
-          // "Tapped and attacking" names no player (CR 508.4): its controller chooses which
-          // defending player, or planeswalker one of them controls, it attacks.
-          attackChoice = yield* chooseEnteringAttackTarget(
-            ctx,
-            owner,
-            source.name,
-            defenders,
-            true,
-          );
-        }
+        // The tokens are always created. They attack only during combat, under the attacking
+        // player's control (CR 506.3b); otherwise they enter and are never attacking.
+        const combat = ctx.state.combat;
+        const canAttack =
+          combat !== null && combat !== undefined && owner.id === ctx.state.currentTurnPlayer;
+        const inGameOpponent = (id: PlayerId | undefined): id is PlayerId => {
+          const player = ctx.state.players.find((candidate) => candidate.id === id);
+          return player !== undefined && !player.hasLost && player.id !== owner.id;
+        };
+        // "…that's attacking that opponent" names the player the firing was about (not a
+        // planeswalker of theirs), only while they are still in the game (CR 508.4a). Otherwise
+        // the text names no one, so each token's controller chooses, as that token enters, among
+        // every defending player and the planeswalkers they control (CR 508.4). With attacks on
+        // several players every opponent is a defending player (CR 802.2), not just the players
+        // already attacked this combat.
+        const named = effect.defender === 'attackedPlayer' ? scope.attackedPlayerId : undefined;
+        const defenders: PlayerId[] = !canAttack
+          ? []
+          : effect.defender === 'attackedPlayer'
+            ? inGameOpponent(named)
+              ? [named]
+              : []
+            : opponentsOf(ctx, owner.id)
+                .filter((player) => !player.hasLost)
+                .map((player) => player.id);
         const spec = {
           ...effect.spec,
           ...(effect.powerOverride === undefined ? {} : { power: amountOf(effect.powerOverride) }),
@@ -6856,11 +6857,25 @@ function* executeAbilityEffects(
         const created: EnginePermanent[] = [];
         const multiplier = tokenCreationMultiplierFor(ctx, owner.id);
         for (let i = 0; i < count * multiplier; i++) {
-          const token = createToken(ctx, spec, owner.id, false, false, false);
-          token.tapped = true;
-          token.attacking = attackChoice.defenderId;
-          token.attackingPlaneswalker = attackChoice.planeswalkerId;
-          token.statuses.push('attacking');
+          // "Create a tapped … token that's attacking" enters tapped; "a token that's attacking"
+          // without "tapped" (Inquisitorial Rosette) enters untapped. Either way it enters that
+          // way and never becomes tapped (CR 508.4).
+          const token = createToken(ctx, spec, owner.id, false, false, false, !effect.untapped);
+          if (defenders.length > 0) {
+            const choice =
+              effect.defender === 'attackedPlayer'
+                ? { defenderId: defenders[0]!, planeswalkerId: null }
+                : yield* chooseEnteringAttackTarget(ctx, owner, source.name, defenders, true);
+            token.attacking = choice.defenderId;
+            token.attackingPlaneswalker = choice.planeswalkerId;
+            token.statuses.push('attacking');
+            // A player first attacked by this token is a defending player from now on: they can
+            // block it, and they are woken for the rest of combat, as a declared attack does.
+            if (!combat!.defendingPlayers.includes(choice.defenderId)) {
+              combat!.defendingPlayers.push(choice.defenderId);
+              playerById(ctx, choice.defenderId).yieldUntilEndOfTurn = false;
+            }
+          }
           created.push(token);
         }
         if (created.length > 0) {

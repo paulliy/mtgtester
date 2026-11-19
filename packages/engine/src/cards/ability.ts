@@ -1413,9 +1413,14 @@ export type Effect =
       tapped?: boolean;
     }
   /**
-   * Create a batch of tokens tapped and attacking a defending player chosen on resolution. They
-   * were never declared as attackers (CR 506.3, 508.4): no attack trigger, no attack restriction
-   * or cost applies to them.
+   * Create tokens that are attacking. They were never declared as attackers (CR 506.3, 508.4): no
+   * attack trigger, no attack restriction or cost applies to them. Each token's controller chooses,
+   * as it enters, which opponent or planeswalker of theirs it attacks; every opponent is a
+   * defending player (CR 802.2), whether or not anything attacked them yet. Outside combat, or
+   * when the controller is not the attacking player, the tokens enter but never attack.
+   *
+   * They enter tapped ("a tapped … token that's attacking", "tapped and attacking") unless
+   * `untapped` is set ("a token that's attacking", Inquisitorial Rosette).
    *
    * `player: 'eventPlayer'` makes the event player (the attacking player) the tokens' controller
    * instead of the ability's controller (Combat Calligrapher: "that attacking player creates …"),
@@ -1430,6 +1435,7 @@ export type Effect =
       toughnessOverride?: number | Value;
       player?: 'eventPlayer';
       defender?: 'attackedPlayer';
+      untapped?: true;
     }
   /** Create one token already attached to an announced permanent target. */
   | { op: 'createAttachedToken'; spec: TokenSpec; target: EffectRef }

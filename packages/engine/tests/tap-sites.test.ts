@@ -19,8 +19,6 @@ const SRC = join(import.meta.dirname, '../src');
 const NOT_BECOMING_TAPPED: Record<string, string> = {
   'effects/resolve.ts: token.tapped = true; #1':
     'a token created tapped and attacking enters tapped; it never becomes tapped (CR 508.4)',
-  'effects/resolve.ts: token.tapped = true; #2':
-    'a token created tapped and attacking enters tapped; it never becomes tapped (CR 508.4)',
 };
 
 function sourceFiles(directory: string): string[] {

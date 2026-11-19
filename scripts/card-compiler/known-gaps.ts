@@ -138,7 +138,9 @@ export const DETECTORS: readonly Detector[] = [
   },
   {
     id: 'token-created-attacking',
-    open: true,
+    // Closed: each token now chooses among every opponent, enters untapped when `untapped` is
+    // set, and a newly attacked player can block it (token-created-attacking.test.ts).
+    open: false,
     gap: 'Tokens created attacking share one defender choice, limited to players already attacked, and are always tapped.',
     examples: [
       'Andúril, Flame of the West',
