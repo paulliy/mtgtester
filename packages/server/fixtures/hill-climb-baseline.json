@@ -75,13 +75,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 4952,
+          "value": 4942,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 60.75,
+          "value": 60.719,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -233,13 +233,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 4952,
+          "value": 4942,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 60.75,
+          "value": 60.719,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
