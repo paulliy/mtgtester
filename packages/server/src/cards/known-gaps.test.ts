@@ -78,25 +78,35 @@ describe('known engine gap detectors', () => {
   );
 
   it('make the compiler refuse a patch that uses an open gap, and pass a clean one', () => {
-    // Leonin Warleader was retired for its attacking tokens; it is unmodeled, so it is a target.
-    const warleader = compileTarget(pinned.get('Leonin Warleader')!)!;
-    const issues = knownGapIssues(warleader, patches.get('Leonin Warleader')!.def);
+    // Mana Flare was retired for its tapped-for-mana rider, an open gap; it is unmodeled, so it is
+    // a compile target.
+    const flare = compileTarget(pinned.get('Mana Flare')!)!;
+    const issues = knownGapIssues(flare, patches.get('Mana Flare')!.def);
     expect(issues).toHaveLength(1);
-    expect(issues[0]).toMatch(/^known engine gap token-created-attacking: .*inexpressible/);
+    expect(issues[0]).toMatch(/^known engine gap mana-activation-rider: .*inexpressible/);
 
-    // The same card with a patch that uses no gap shape: one ordinary token, not attacking.
+    // A patch that uses no gap shape passes the gate (the gate judges shape, not meaning).
     const clean: Partial<CardDefinition> = {
       triggers: [
         {
           kind: 'triggered',
-          trigger: { when: 'attacks', subject: { kind: 'self' } },
+          trigger: { when: 'upkeep', player: 'you' },
           optional: false,
           targets: [],
           effects: [{ op: 'draw', count: { kind: 'const', n: 1 } }],
         },
       ],
     } as Partial<CardDefinition>;
-    expect(knownGapIssues(warleader, clean)).toEqual([]);
+    expect(knownGapIssues(flare, clean)).toEqual([]);
+  });
+
+  it('stop refusing a shape once its gap is closed', () => {
+    // Leonin Warleader's attacking tokens: the token-created-attacking gap is closed, so its
+    // retired patch is no longer refused (it is recompiled through the normal checks).
+    const closed = DETECTORS.find((d) => d.id === 'token-created-attacking')!;
+    expect(closed.open).toBe(false);
+    const warleader = compileTarget(pinned.get('Leonin Warleader')!)!;
+    expect(knownGapIssues(warleader, patches.get('Leonin Warleader')!.def)).toEqual([]);
   });
 
   it('match no promoted compiled card except those kept on review', () => {
