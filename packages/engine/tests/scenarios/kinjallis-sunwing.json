@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "card": "Kinjalli's Sunwing",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Trinket",
+      "typeLine": "Artifact",
+      "manaCost": "{1}"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "kinjallis-sunwing-opponent-creature-enters-tapped",
+      "title": "Kinjalli's Sunwing: a creature an opponent casts enters tapped",
+      "clauses": [2],
+      "instructions": [
+        "P2 casts Scenario Bear on their turn while P1 controls Kinjalli's Sunwing."
+      ],
+      "expectedOutcome": "Scenario Bear enters tapped under P2.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Kinjalli's Sunwing"]
+        },
+        "P2": {
+          "hand": ["Scenario Bear"],
+          "battlefield": ["Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Bear/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Bear",
+            "equals": true,
+            "player": "P2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "kinjallis-sunwing-opponent-noncreature-enters-untapped",
+      "title": "Kinjalli's Sunwing: an opponent's noncreature artifact enters untapped",
+      "clauses": [2],
+      "instructions": [
+        "P2 casts Scenario Trinket on their turn while P1 controls Kinjalli's Sunwing."
+      ],
+      "expectedOutcome": "Scenario Trinket is not a creature, so it enters untapped.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Kinjalli's Sunwing"]
+        },
+        "P2": {
+          "hand": ["Scenario Trinket"],
+          "battlefield": ["Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Trinket/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Trinket"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Trinket",
+            "equals": false,
+            "player": "P2"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "card": "Arwen's Gift",
+  "supportCards": [
+    {
+      "name": "Scenario Elder",
+      "typeLine": "Legendary Creature — Elf",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Queen",
+      "typeLine": "Legendary Creature — Elf",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Elk",
+      "typeLine": "Creature — Elk",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Owl",
+      "typeLine": "Creature — Bird",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "arwens-gift-two-legends",
+      "title": "Arwen's Gift: with two legendary creatures it costs {2}{U}",
+      "clauses": [1, 2],
+      "instructions": [
+        "Cast Arwen's Gift for {2}{U} while you control two legendary creatures.",
+        "Keep the scried cards on top."
+      ],
+      "expectedOutcome": "The Gift costs {1} less, so {2}{U} from three lands; you scry 2, then draw Scenario Elk and Scenario Owl.",
+      "seats": {
+        "P1": {
+          "hand": ["Arwen's Gift"],
+          "battlefield": ["Island", "Island", "Island", "Scenario Elder", "Scenario Queen"],
+          "libraryTop": ["Scenario Elk", "Scenario Owl", "Scenario Bear"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Arwen's Gift \\(\\{2\\}\\{U\\}\\)/"
+        },
+        {
+          "player": "P1",
+          "choose": "Keep Scenario Elk on top"
+        },
+        {
+          "player": "P1",
+          "choose": "Keep Scenario Owl on top"
+        },
+        {
+          "player": "P1",
+          "choose": "Keep the current top order"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Elk", "Scenario Owl"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "arwens-gift-one-legend",
+      "title": "Arwen's Gift: with only one legendary creature it costs full price",
+      "clauses": [1],
+      "instructions": [
+        "Cast Arwen's Gift for {3}{U} while you control one legendary creature and one nonlegendary creature."
+      ],
+      "expectedOutcome": "One legendary creature is not enough, so the Gift costs {3}{U}; all four Islands pay for it, and you scry 2 and draw two cards.",
+      "seats": {
+        "P1": {
+          "hand": ["Arwen's Gift"],
+          "battlefield": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Scenario Elder",
+            "Scenario Bear"
+          ],
+          "libraryTop": ["Scenario Elk", "Scenario Owl", "Scenario Queen"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Arwen's Gift \\(\\{3\\}\\{U\\}\\)/"
+        },
+        {
+          "player": "P1",
+          "choose": "Keep Scenario Elk on top"
+        },
+        {
+          "player": "P1",
+          "choose": "Keep Scenario Owl on top"
+        },
+        {
+          "player": "P1",
+          "choose": "Keep the current top order"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Elk", "Scenario Owl"]
+          }
+        }
+      ]
+    }
+  ]
+}
