@@ -11,35 +11,35 @@
         "coverage",
         "authoring"
       ],
-      "commit": "68194000",
+      "commit": "80868db4",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 42.37,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 53.53,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 5.03,
+          "value": 6.31,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.511
+          "spread": 0.325
         },
         "engine.medianGameMsPerDecision": {
-          "value": 5.01,
+          "value": 6.5,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.41
+          "spread": 0.157
         },
         "engine.work.layerPasses": {
-          "value": 2853,
+          "value": 2665,
           "unit": "passes",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
         "engine.work.layerCacheHits": {
-          "value": 105523,
+          "value": 105711,
           "unit": "hits",
           "better": "lower",
           "kind": "exact",
@@ -47,7 +47,7 @@
           "informational": true
         },
         "engine.work.layerDigests": {
-          "value": 36053,
+          "value": 36054,
           "unit": "digests",
           "better": "lower",
           "kind": "exact",
@@ -103,11 +103,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 0.74,
+          "value": 1.01,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.037
+          "spread": 0.085
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -228,35 +228,35 @@
         "coverage",
         "authoring"
       ],
-      "commit": "68194000",
+      "commit": "80868db4",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 50.19,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 62.7,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 10.06,
+          "value": 12.63,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.216
+          "spread": 0.092
         },
         "engine.medianGameMsPerDecision": {
-          "value": 9.61,
+          "value": 12.27,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.181
+          "spread": 0.143
         },
         "engine.work.layerPasses": {
-          "value": 13865,
+          "value": 11781,
           "unit": "passes",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
         "engine.work.layerCacheHits": {
-          "value": 1533679,
+          "value": 1535763,
           "unit": "hits",
           "better": "lower",
           "kind": "exact",
@@ -264,7 +264,7 @@
           "informational": true
         },
         "engine.work.layerDigests": {
-          "value": 289854,
+          "value": 289863,
           "unit": "digests",
           "better": "lower",
           "kind": "exact",
@@ -320,11 +320,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 0.65,
+          "value": 0.81,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.076
+          "spread": 0.087
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
