@@ -10,6 +10,10 @@ import {
   observePriority,
 } from './pr09-viewer-helpers';
 import { RUNNER_ALL_SCENARIOS } from '../../../packages/server/src/cards/runner-scenario-catalog';
+import { s3g1Flows } from './runner-flows-s3-g1';
+import { s3g2Flows } from './runner-flows-s3-g2';
+import { s3g3Flows } from './runner-flows-s3-g3';
+import { s3g4Flows } from './runner-flows-s3-g4';
 
 /**
  * Viewer evidence for the scenarios the engine-test runner also drives (ADR 0034 decision 10).
@@ -468,6 +472,11 @@ const exileThumb = (page: Page, seat: string, name: string): Locator =>
     .filter({ has: page.getByRole('img', { name, exact: true }) });
 
 const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
+  // PR #89's common blocking lines.
+  ...s3g1Flows({ passUntil, passStackUntil }),
+  ...s3g2Flows({ passUntil, passStackUntil }),
+  ...s3g3Flows({ passUntil, passStackUntil }),
+  ...s3g4Flows({ passUntil, passStackUntil }),
   'mizzium-mortars-target': async (page) => {
     await castWith(page, hand(page, 'Mizzium Mortars'), {
       targets: [['P2', 'Scenario Ox']],

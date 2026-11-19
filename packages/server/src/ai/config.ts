@@ -24,6 +24,11 @@ export interface AiModelProfile {
   preferredMaxLatencySeconds: number;
   /** OpenRouter preference, in tokens/second; zero disables the preference. */
   preferredMinThroughput: number;
+  /**
+   * OpenRouter provider names this role must never be routed to (`provider.ignore`), on top of
+   * the non-caching providers `filterNonCachingProviders` already skips.
+   */
+  ignoreProviders: string[];
 }
 
 export interface AiConfig {
@@ -86,7 +91,8 @@ export interface AiConfig {
    * Who answers tactical decisions the local plan, heuristics and cache leave (ADR 0039).
    * `model`: the tactician LLM, as before. `bot`: the card-aware heuristic bot, steered by the
    * strategist's knobs, with the model asked only as `botEscalation` allows.
-   * Env: `AI_TACTICAL_MODE`. Default: `model`.
+   * Env: `AI_TACTICAL_MODE`. Default: `model`; bot seats missed the win bar in the 2026-11-19 duel
+   * (ADR 0039).
    */
   tacticalMode: 'model' | 'bot';
   /**
@@ -132,6 +138,14 @@ export interface AiConfig {
    */
   filterNonCachingProviders: boolean;
   /**
+   * OpenRouter only: per model, the providers a call may be routed to (sent as
+   * `provider.only`). A model with no entry may go to any provider. Keys are model ids as they
+   * appear in a model chain. Env: `AI_OPENROUTER_PROVIDER_ONLY`, `model=slug,slug;model=slug`,
+   * or `off` for no allowlist. Default: GLM 5.3 Flash on the providers that served it at normal
+   * reasoning length and price in the 2026-11-19 paid duels.
+   */
+  openRouterProviderOnly: Record<string, string[]>;
+  /**
    * Enable/disable reasoning (thinking tokens) for AI requests.
    * Default: false (disabled).
    */
@@ -147,6 +161,8 @@ export interface AiConfig {
   preferredMaxLatencySeconds: number;
   /** OpenRouter routing preference; role profiles override this in configForRole. */
   preferredMinThroughput: number;
+  /** OpenRouter providers never to route to; role profiles override this in configForRole. */
+  ignoreProviders: string[];
   /** Larger, reasoning-enabled call made once per active turn. */
   strategist: AiModelProfile;
   /** Small menu-pick call used for decisions the local plan cannot answer. */
@@ -331,6 +347,20 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   strategistWakeRule: 'table-v2',
   strategistTacticianFlag: 'off',
   filterNonCachingProviders: true,
+  // Cohere and OpenInference spent about 8x the reasoning tokens of the others at effort low,
+  // and Makora none; see docs/reviews/strategist-wake-rule-s7-2026-11-19.md.
+  openRouterProviderOnly: {
+    'z-ai/glm-5.3-flash': [
+      'wafer',
+      'inference-net',
+      'coreweave',
+      'particle-ai',
+      'together',
+      'modal',
+      'mistral',
+      'reka',
+    ],
+  },
   streamResponses: true,
   retryOnTimeout: false,
   reasoningEnabled: false,
@@ -338,6 +368,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   reasoningTokenHeadroom: 4000,
   preferredMaxLatencySeconds: 0,
   preferredMinThroughput: 0,
+  ignoreProviders: [],
   strategist: {
     // Paul's pick (2026-11-10): GLM 5.3 Flash at low effort. The strategist is most of the
     // per-game bill, and its thinking tokens are most of each call (ADR 0040).
@@ -350,24 +381,28 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
     maxRetries: 2,
     preferredMaxLatencySeconds: 30,
     preferredMinThroughput: 100,
+    ignoreProviders: [],
   },
   tactician: {
-    models: ['qwen/qwen3.7-flash', 'sao10k/l3-lunaris-8b:nitro', 'poolside/laguna-s-2.1'],
-    reasoningEnabled: false,
-    reasoningEffort: 'none',
-    // 85 tokens routinely truncates menu decisions once JSON targets are included. Keep a
-    // larger answer budget so provider output limits do not cut off otherwise valid choices.
+    // Particle-1 first (low reasoning), DeepSeek V4 Flash as the backup. Checked on OpenRouter
+    // 2026-11-19: particle-ai/particle-1 is listed and takes `reasoning_effort`.
+    models: ['particle-ai/particle-1', 'deepseek/deepseek-v4-flash'],
+    reasoningEnabled: true,
+    reasoningEffort: 'low',
+    // 256 tokens of answer, plus headroom for the low-effort thinking that `max_tokens` also caps.
     maxOutputTokens: 256,
-    reasoningTokenHeadroom: 0,
+    reasoningTokenHeadroom: 1024,
     requestTimeoutMs: 10000,
     maxRetries: 1,
     preferredMaxLatencySeconds: 10,
     preferredMinThroughput: 10,
+    // Never routed to these providers (requested 2026-11-19).
+    ignoreProviders: ['CoreWeave', 'Modal', 'Cohere'],
   },
   archetype: {
     // Import-time only, one call per deck, and a heuristic tag already exists to fall back on —
     // so this is the cheapest, fastest profile in the file rather than the smartest.
-    models: ['qwen/qwen3.7-flash', 'poolside/laguna-s-2.1'],
+    models: ['qwen/qwen3.7-flash', 'deepseek/deepseek-v4-flash'],
     reasoningEnabled: false,
     reasoningEffort: 'none',
     maxOutputTokens: 60,
@@ -376,6 +411,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
     maxRetries: 1,
     preferredMaxLatencySeconds: 10,
     preferredMinThroughput: 10,
+    ignoreProviders: [],
   },
   reflection: {
     // Prose, not a menu pick, so the output budget is the largest here — but reasoning stays off:
@@ -390,6 +426,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
     maxRetries: 1,
     preferredMaxLatencySeconds: 0,
     preferredMinThroughput: 0,
+    ignoreProviders: [],
   },
   strategistEnabled: true,
   archetypeInferenceEnabled: false,
@@ -475,6 +512,31 @@ function parseChoice<T extends string>(
   return trimmed !== undefined && (choices as readonly string[]).includes(trimmed)
     ? (trimmed as T)
     : fallback;
+}
+
+/** `model=slug,slug;model=slug`, or `off`; unset keeps the default. */
+export function parseProviderOnly(
+  raw: string | undefined,
+  fallback: Record<string, string[]>,
+): Record<string, string[]> {
+  if (raw === undefined || raw.trim() === '') return fallback;
+  if (raw.trim().toLowerCase() === 'off') return {};
+  const out: Record<string, string[]> = {};
+  for (const entry of raw.split(';')) {
+    if (entry.trim() === '') continue;
+    const [model, list, ...rest] = entry.split('=');
+    const providers = (list ?? '')
+      .split(',')
+      .map((p) => p.trim())
+      .filter((p) => p !== '');
+    if (model === undefined || model.trim() === '' || rest.length > 0 || providers.length === 0) {
+      throw new Error(
+        `AI_OPENROUTER_PROVIDER_ONLY: expected model=slug,slug;... or off, got "${entry}"`,
+      );
+    }
+    out[model.trim()] = providers;
+  }
+  return out;
 }
 
 function parseNumber(val: string | undefined, fallback: number): number {
@@ -624,6 +686,9 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_STRATEGIST_PREFERRED_MIN_THROUGHPUT'],
       DEFAULT_AI_CONFIG.strategist.preferredMinThroughput,
     ),
+    ignoreProviders:
+      parseModels(env['AI_STRATEGIST_IGNORE_PROVIDERS']) ??
+      DEFAULT_AI_CONFIG.strategist.ignoreProviders,
   };
   const tactician: AiModelProfile = {
     models:
@@ -660,6 +725,9 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_TACTICIAN_PREFERRED_MIN_THROUGHPUT'],
       DEFAULT_AI_CONFIG.tactician.preferredMinThroughput,
     ),
+    ignoreProviders:
+      parseModels(env['AI_TACTICIAN_IGNORE_PROVIDERS']) ??
+      DEFAULT_AI_CONFIG.tactician.ignoreProviders,
   };
   const archetype: AiModelProfile = {
     ...DEFAULT_AI_CONFIG.archetype,
@@ -751,6 +819,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     filterNonCachingProviders: parseBoolean(
       env['AI_FILTER_NON_CACHING_PROVIDERS'] || env['OPENROUTER_FILTER_NON_CACHING'],
       DEFAULT_AI_CONFIG.filterNonCachingProviders,
+    ),
+    openRouterProviderOnly: parseProviderOnly(
+      env['AI_OPENROUTER_PROVIDER_ONLY'],
+      DEFAULT_AI_CONFIG.openRouterProviderOnly,
     ),
     streamResponses: parseBoolean(env['AI_STREAM_RESPONSES'], DEFAULT_AI_CONFIG.streamResponses),
     retryOnTimeout: parseBoolean(env['AI_RETRY_ON_TIMEOUT'], DEFAULT_AI_CONFIG.retryOnTimeout),
@@ -888,5 +960,6 @@ export function configForRole(
     maxRetries: profile.maxRetries,
     preferredMaxLatencySeconds: profile.preferredMaxLatencySeconds,
     preferredMinThroughput: profile.preferredMinThroughput,
+    ignoreProviders: [...profile.ignoreProviders],
   };
 }

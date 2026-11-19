@@ -1,11 +1,12 @@
 /**
  * One paid four-player game that seats both tactical modes at the same table (ADR 0039): P1 and
  * P3 play `AI_TACTICAL_MODE=bot` (the bot plays, the strategist sets knobs), P2 and P4 play
- * `AI_TACTICAL_MODE=model` (today's model tactician). Everything else comes from the environment
+ * `AI_TACTICAL_MODE=model` (the model tactician, the default). Everything else comes from the environment
  * (`.env` is read by Bun), so the endpoint, models and key are the same ones the app uses.
  *
  *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]
  *                        [--escalation T1,T2] [--shadow T1,T2] [--opponents model|bot-never|bot-v1]
+ *                        [--offline]
  *
  * ADR 0044's game step: `--escalation` makes triggers live for the bot seats (default `never`),
  * `--shadow` logs others, and `--opponents bot-never` seats the bot-led bot with no escalation in
@@ -21,6 +22,10 @@
  * reaches `--max-calls` (default 1500), no further model call is made and every seat plays the
  * rest of the game on the bot fallback; the report says the cap was hit.
  *
+ * `--offline` plays the same game with no key and no network: the tactician is the bot and the
+ * strategist returns fixed knobs. It checks the decks, seating, report and cost settlement for
+ * free before a paid run; its numbers say nothing about play quality.
+ *
  * `--swap` seats the modes the other way round, for a second game on the same decks. The report
  * counts real model calls, prompt and response tokens and reported cost per mode, and who won.
  * Nothing here prints or stores the API key.
@@ -31,6 +36,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { DecisionRequest, OracleCard, PlayerId } from '@mtg/shared';
 import { Engine, runToCompletionAsync } from '@mtg/engine';
+import { decide as botDecide, Rng } from '@mtg/bot';
 import { buildSupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
 import { parseTriggerList, type LiveEscalationTrigger } from '../ai/config';
@@ -46,6 +52,8 @@ import {
 } from '../ai';
 import type { AiAttemptObserver, AiClient, CostSettlement } from '../ai/client';
 import type { AiPrompt } from '../ai/context';
+import { knowledgeFor } from '../ai/bot-tactician';
+import { localCallMeta } from '../ai/logger';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
 const SEATS: PlayerId[] = ['P1', 'P2', 'P3', 'P4'];
@@ -60,6 +68,8 @@ export interface Tally {
   costKnown: boolean;
   /** Calls that failed after the client's own retries; the seat fell back to the bot. */
   failedCalls: number;
+  /** The tactician share of `failedCalls`: decisions a model seat meant to ask the model about. */
+  failedTacticianCalls: number;
   /** Rejected or timed-out attempts that reported tokens but no price; their cost is not in costUsd. */
   unpricedAttempts: number;
   /** Accepted calls that came back with no price; the cost stays unknown until settled. */
@@ -68,6 +78,8 @@ export interface Tally {
   settledUsd: number;
   /** Unpriced attempts whose billed cost could not be found after the game. */
   unsettledAttempts: number;
+  /** Physical attempts per serving provider, as OpenRouter names it (`provider` in the reply). */
+  providers: Record<string, number>;
 }
 
 export function emptyTally(): Tally {
@@ -79,10 +91,12 @@ export function emptyTally(): Tally {
     costUsd: 0,
     costKnown: true,
     failedCalls: 0,
+    failedTacticianCalls: 0,
     unpricedAttempts: 0,
     unknownCostCalls: 0,
     settledUsd: 0,
     unsettledAttempts: 0,
+    providers: {},
   };
 }
 
@@ -143,6 +157,10 @@ export function counting<M extends string = ModeName>(
   };
   inner.setAttemptObserver(async (attempt) => {
     const mode = modeByRequest.get(attempt.logicalRequestId);
+    if (mode !== undefined && attempt.backend !== undefined) {
+      const providers = tallies[mode].providers;
+      providers[attempt.backend] = (providers[attempt.backend] ?? 0) + 1;
+    }
     if (mode !== undefined && attempt.status !== 'accepted') {
       const { promptTokens, responseTokens, costUsd } = attempt.usage;
       const tally = tallies[mode];
@@ -181,7 +199,12 @@ export function counting<M extends string = ModeName>(
       try {
         result = await inner.requestDecision(prompt, request, signal);
       } catch (error) {
-        tally.failedCalls++;
+        // A call stopped by the duel's own spend cap is not a provider failure, so it stays out of
+        // the fallback share that judges whether the model seats got a fair game.
+        if (!budget.capped) {
+          tally.failedCalls++;
+          if (role === 'tactician') tally.failedTacticianCalls++;
+        }
         throw error;
       } finally {
         modeByRequest.delete(request.requestId);
@@ -230,9 +253,81 @@ export interface CountingClient extends AiClient {
   ): Promise<CostSettlement>;
 }
 
+/** Offline chat clients: the tactician is the bot, the strategist returns fixed knobs. */
+export function offlineChatClient(
+  engine: Engine,
+  role: 'tactician' | 'strategist',
+): CountableClient {
+  const knowledge = knowledgeFor(engine);
+  return {
+    activeModel: `offline-${role}`,
+    setAttemptObserver(_observer: AiAttemptObserver | undefined) {},
+    settleUnknownCosts: () => Promise.resolve({ attempts: [], settledUsd: 0, unresolved: 0 }),
+    requestDecision(_prompt, request: DecisionRequest) {
+      if (role === 'strategist') {
+        return Promise.resolve({
+          response: {
+            requestId: request.requestId,
+            actionId: 0,
+            turnStrategy: { intent: 'offline', plannedActions: [], steering: { aggression: 0.5 } },
+          },
+          meta: { ...localCallMeta(), costUsd: 0 },
+        });
+      }
+      const view = engine.view(request.decidingPlayer);
+      const response = botDecide(request, view, new Rng(request.requestId), { knowledge });
+      return Promise.resolve({ response, meta: { ...localCallMeta(), costUsd: 0 } });
+    },
+  } as CountableClient;
+}
+
+/** Failed tactician calls over all tactician calls attempted (failed ones included). */
+export function fallbackShare(t: Tally): number {
+  const attempted = t.tacticianCalls + t.failedTacticianCalls;
+  return attempted === 0 ? 0 : Number((t.failedTacticianCalls / attempted).toFixed(3));
+}
+
 function arg(argv: string[], name: string): string | undefined {
   const i = argv.indexOf(name);
   return i === -1 ? undefined : argv[i + 1];
+}
+
+/**
+ * Per-seat bookkeeping for the report, so strategist calls can be read per seat turn instead of
+ * per game turn: a side whose seats live longer is asked more often whatever its wake rule. A
+ * seat's own turns are the game turns on which a decision surfaced with it as the active player;
+ * its elimination turn is the first observed turn after which it has lost.
+ */
+export class SeatTracker {
+  private readonly ownTurns = new Map<PlayerId, Set<number>>();
+  private readonly eliminatedOn = new Map<PlayerId, number>();
+
+  observe(request: Pick<DecisionRequest, 'turn' | 'activePlayer'>, lost: Iterable<PlayerId>): void {
+    let turns = this.ownTurns.get(request.activePlayer);
+    if (turns === undefined) {
+      turns = new Set();
+      this.ownTurns.set(request.activePlayer, turns);
+    }
+    turns.add(request.turn);
+    for (const seat of lost) {
+      if (!this.eliminatedOn.has(seat)) this.eliminatedOn.set(seat, request.turn);
+    }
+  }
+
+  /** Seats that lost on the last action of the game are only seen in the final state. */
+  finish(finalTurn: number, lost: Iterable<PlayerId>): void {
+    for (const seat of lost) {
+      if (!this.eliminatedOn.has(seat)) this.eliminatedOn.set(seat, finalTurn);
+    }
+  }
+
+  ownTurnsOf(seat: PlayerId): number {
+    return this.ownTurns.get(seat)?.size ?? 0;
+  }
+
+  eliminationTurnOf(seat: PlayerId): number | null {
+    return this.eliminatedOn.get(seat) ?? null;
+  }
 }
 
 async function main(): Promise<void> {
@@ -241,6 +336,7 @@ async function main(): Promise<void> {
   const turnCap = Number(arg(argv, '--turn-cap') ?? 60);
   const swap = argv.includes('--swap');
   const json = arg(argv, '--json');
+  const offline = argv.includes('--offline');
   const budget: Budget = {
     maxUsd: Number(arg(argv, '--max-usd') ?? 2),
     maxCalls: Number(arg(argv, '--max-calls') ?? 1500),
@@ -250,7 +346,7 @@ async function main(): Promise<void> {
   };
 
   const base = loadAiConfig(process.env);
-  if (!base.apiKey) {
+  if (!offline && !base.apiKey) {
     console.error('No AI API key found in the environment or .env; nothing was played.');
     process.exitCode = 1;
     return;
@@ -310,7 +406,9 @@ async function main(): Promise<void> {
     })),
   });
 
-  console.log(`Seed ${seed}, turn cap ${turnCap}`);
+  console.log(
+    `${offline ? 'OFFLINE (no network, numbers are a wiring check) — ' : ''}Seed ${seed}, turn cap ${turnCap}`,
+  );
   // With `--opponents bot-never` the "model" seats play the bot-led bot that never escalates.
   const label = (mode: ModeName): string =>
     mode === 'model' && opponents !== 'model' ? opponents : mode;
@@ -323,14 +421,18 @@ async function main(): Promise<void> {
 
   const tallies: Record<ModeName, Tally> = { bot: emptyTally(), model: emptyTally() };
   const strategistClient = counting(
-    new OpenAiCompatibleClient(configForRole(base, 'strategist'), budgetedFetch(budget)),
+    offline
+      ? offlineChatClient(engine, 'strategist')
+      : new OpenAiCompatibleClient(configForRole(base, 'strategist'), budgetedFetch(budget)),
     'strategist',
     modeOf,
     tallies,
     budget,
   );
   const tacticianClient = counting(
-    new OpenAiCompatibleClient(configForRole(base, 'tactician'), budgetedFetch(budget)),
+    offline
+      ? offlineChatClient(engine, 'tactician')
+      : new OpenAiCompatibleClient(configForRole(base, 'tactician'), budgetedFetch(budget)),
     'tactician',
     modeOf,
     tallies,
@@ -358,6 +460,12 @@ async function main(): Promise<void> {
   // instead, so the wake rule is what decides how many calls a game makes.
   const awaitStrategist = opponents === 'bot-v1';
   const providers = new Map<PlayerId, { decide: OpenAiDecisionProvider['decide'] }>();
+  const tracker = new SeatTracker();
+  const lostSeats = (): PlayerId[] =>
+    engine
+      .getState()
+      .players.filter((p) => p.hasLost === true)
+      .map((p) => p.id);
   const started = performance.now();
   const result = await runToCompletionAsync(
     engine,
@@ -391,6 +499,7 @@ async function main(): Promise<void> {
     {
       maxDecisions: 20_000,
       onDecision(request) {
+        tracker.observe(request, lostSeats());
         if (request.decidingPlayer === request.activePlayer && request.step === null) {
           process.stderr.write(`\r  turn ${request.turn}  `);
         }
@@ -409,9 +518,11 @@ async function main(): Promise<void> {
     life[player.id] = player.hasLost === true ? 0 : player.life;
   }
   const turns = result.turnCount;
+  tracker.finish(turns, lostSeats());
   const report = {
     seed,
     swap,
+    offline,
     spendCap: {
       maxUsd: budget.maxUsd,
       maxCalls: budget.maxCalls,
@@ -423,7 +534,17 @@ async function main(): Promise<void> {
     winner: result.winnerSeat,
     winnerMode: result.winnerSeat === null ? null : modeOf(result.winnerSeat),
     finishingOrder: result.finishingOrder,
+    halted: result.halted,
+    haltReason: result.haltReason,
+    ...(result.haltSite === undefined ? {} : { haltSite: result.haltSite }),
     life,
+    /** Each seat's own turns played and the game turn it was eliminated on (null: it survived). */
+    seatTurns: Object.fromEntries(
+      SEATS.map((s) => [
+        s,
+        { ownTurns: tracker.ownTurnsOf(s), eliminatedOnTurn: tracker.eliminationTurnOf(s) },
+      ]),
+    ),
     seats: Object.fromEntries(SEATS.map((s) => [s, modeOf(s)])),
     /** What the `model` seats played: the model tactician, or the bot-led bot with no escalation. */
     opponents,
@@ -433,12 +554,26 @@ async function main(): Promise<void> {
       (['bot', 'model'] as const).map((mode) => {
         const t = tallies[mode];
         const calls = t.tacticianCalls + t.strategistCalls;
+        const ownTurns = SEATS.filter((s) => modeOf(s) === mode).reduce(
+          (sum, s) => sum + tracker.ownTurnsOf(s),
+          0,
+        );
         return [
           mode,
           {
             ...t,
+            ownTurns,
+            strategistCallsPerOwnTurn: Number(
+              (t.strategistCalls / Math.max(1, ownTurns)).toFixed(3),
+            ),
+            promptTokensPerOwnTurn: Math.round(t.promptTokens / Math.max(1, ownTurns)),
+            /** Wake reasons of this side's strategist calls, seat dropped (hill-climb S7). */
+            strategistWakes: { ...coordinators[mode].strategistStats.wakes },
             costUsd: t.costKnown ? Number(t.costUsd.toFixed(4)) : null,
             callsPerTurn: Number((calls / Math.max(1, turns)).toFixed(2)),
+            // Share of tactician calls that failed and fell back to the bot. Above 0.05 for the
+            // model seats, the duel is not a fair test of the model tactician (ADR 0039).
+            tacticianFallbackShare: fallbackShare(t),
             promptTokensPerTurn: Math.round(t.promptTokens / Math.max(1, turns)),
           },
         ];

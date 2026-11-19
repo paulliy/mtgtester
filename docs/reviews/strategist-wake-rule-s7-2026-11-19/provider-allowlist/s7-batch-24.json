@@ -1,0 +1,117 @@
+{
+  "seed": "s7-batch-24",
+  "swap": false,
+  "spendCap": {
+    "maxUsd": 1,
+    "maxCalls": 1500,
+    "reached": false,
+    "spentUsd": 0.0075
+  },
+  "turns": 27,
+  "minutes": 0.7,
+  "winner": "P4",
+  "winnerMode": "model",
+  "finishingOrder": ["P2", "P3", "P1", "P4"],
+  "halted": false,
+  "haltReason": null,
+  "life": {
+    "P1": 0,
+    "P2": 0,
+    "P3": 0,
+    "P4": 49
+  },
+  "seatTurns": {
+    "P1": {
+      "ownTurns": 7,
+      "eliminatedOnTurn": 27
+    },
+    "P2": {
+      "ownTurns": 6,
+      "eliminatedOnTurn": 20
+    },
+    "P3": {
+      "ownTurns": 7,
+      "eliminatedOnTurn": 26
+    },
+    "P4": {
+      "ownTurns": 8,
+      "eliminatedOnTurn": null
+    }
+  },
+  "seats": {
+    "P1": "bot",
+    "P2": "model",
+    "P3": "bot",
+    "P4": "model"
+  },
+  "opponents": "bot-v1",
+  "escalation": [],
+  "shadow": [],
+  "perMode": {
+    "bot": {
+      "tacticianCalls": 0,
+      "strategistCalls": 9,
+      "promptTokens": 28833,
+      "responseTokens": 2387,
+      "costUsd": 0.0042,
+      "costKnown": true,
+      "failedCalls": 0,
+      "unpricedAttempts": 0,
+      "unknownCostCalls": 0,
+      "settledUsd": 0,
+      "unsettledAttempts": 0,
+      "providers": {
+        "CoreWeave": 5,
+        "Wafer": 1,
+        "Mistral": 1,
+        "InferenceNet": 1,
+        "Particle AI": 1
+      },
+      "ownTurns": 14,
+      "strategistCallsPerOwnTurn": 0.643,
+      "promptTokensPerOwnTurn": 2060,
+      "strategistWakes": {
+        "first knobs": 2,
+        "life": 3,
+        "reuse limit": 1,
+        "gone": 3,
+        "power": 5,
+        "permanents": 5
+      },
+      "callsPerTurn": 0.33,
+      "promptTokensPerTurn": 1068
+    },
+    "model": {
+      "tacticianCalls": 0,
+      "strategistCalls": 9,
+      "promptTokens": 28255,
+      "responseTokens": 2536,
+      "costUsd": 0.0033,
+      "costKnown": true,
+      "failedCalls": 0,
+      "unpricedAttempts": 0,
+      "unknownCostCalls": 0,
+      "settledUsd": 0,
+      "unsettledAttempts": 0,
+      "providers": {
+        "InferenceNet": 5,
+        "Particle AI": 1,
+        "Together": 1,
+        "Wafer": 2
+      },
+      "ownTurns": 14,
+      "strategistCallsPerOwnTurn": 0.643,
+      "promptTokensPerOwnTurn": 2018,
+      "strategistWakes": {
+        "first knobs": 2,
+        "commander": 5,
+        "life": 3,
+        "power": 2,
+        "permanents": 3,
+        "gone": 2
+      },
+      "callsPerTurn": 0.33,
+      "promptTokensPerTurn": 1046
+    }
+  }
+}

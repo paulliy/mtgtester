@@ -1,0 +1,88 @@
+$ bun run packages/server/src/cli/ai-mode-duel.ts --seed "mode-duel-2" --json "/tmp/claude-0/-home-user-mtgtester/d846ea7f-849f-5d32-a5b4-e599f522ae71/scratchpad/duel/mode-duel-2.json"
+Seed mode-duel-2, turn cap 60
+  P1 [bot]  Neriv, Heart of the Storm
+  P2 [model]  Bess, Soul Nourisher
+  P3 [bot]  Karrthus, Tyrant of Jund
+  P4 [model]  Syr Konrad, the Grim
+  Endpoint: https://openrouter.ai/api/v1
+  Strategist: z-ai/glm-5.3-flash → deepseek/deepseek-v4-flash
+  Tactician: particle-ai/particle-1 → deepseek/deepseek-v4-flash
+
+  turn 29    ⚠ P4 decision mode-duel-mode-duel-2-t30-d164 failed (Request to particle-ai/particle-1 timed out after 10000 ms) — using fallback
+  ⚠ P4 decision mode-duel-mode-duel-2-t30-d164 — using heuristic bot fallback
+
+  turn 35    ⚠ P2 decision mode-duel-mode-duel-2-t35-d203 failed (Request to particle-ai/particle-1 timed out after 10000 ms) — using fallback
+  ⚠ P2 decision mode-duel-mode-duel-2-t35-d203 — using heuristic bot fallback
+
+{
+  "seed": "mode-duel-2",
+  "swap": false,
+  "offline": false,
+  "spendCap": {
+    "maxUsd": 2,
+    "maxCalls": 1500,
+    "reached": false,
+    "spentUsd": 0.1153
+  },
+  "turns": 44,
+  "minutes": 13.8,
+  "winner": "P2",
+  "winnerMode": "model",
+  "finishingOrder": [
+    "P3",
+    "P1",
+    "P4",
+    "P2"
+  ],
+  "life": {
+    "P1": 0,
+    "P2": 27,
+    "P3": 0,
+    "P4": 0
+  },
+  "seats": {
+    "P1": "bot",
+    "P2": "model",
+    "P3": "bot",
+    "P4": "model"
+  },
+  "opponents": "model",
+  "escalation": [],
+  "shadow": [],
+  "perMode": {
+    "bot": {
+      "tacticianCalls": 0,
+      "strategistCalls": 15,
+      "promptTokens": 51474,
+      "responseTokens": 9853,
+      "costUsd": 0.0108,
+      "costKnown": true,
+      "failedCalls": 0,
+      "failedTacticianCalls": 0,
+      "unpricedAttempts": 0,
+      "unknownCostCalls": 0,
+      "settledUsd": 0,
+      "unsettledAttempts": 0,
+      "callsPerTurn": 0.34,
+      "tacticianFallbackShare": 0,
+      "promptTokensPerTurn": 1170
+    },
+    "model": {
+      "tacticianCalls": 180,
+      "strategistCalls": 30,
+      "promptTokens": 803884,
+      "responseTokens": 108300,
+      "costUsd": 0.1045,
+      "costKnown": true,
+      "failedCalls": 3,
+      "failedTacticianCalls": 2,
+      "unpricedAttempts": 1,
+      "unknownCostCalls": 0,
+      "settledUsd": 0.000755508,
+      "unsettledAttempts": 0,
+      "callsPerTurn": 4.77,
+      "tacticianFallbackShare": 0.011,
+      "promptTokensPerTurn": 18270
+    }
+  }
+}

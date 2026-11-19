@@ -5,6 +5,7 @@ import {
   DEFAULT_MODEL_CHAIN,
   PROVIDERS,
   loadAiConfig,
+  parseProviderOnly,
 } from './config';
 
 describe('AI Config', () => {
@@ -142,7 +143,7 @@ describe('AI Config', () => {
     expect(configForRole(config, 'tactician')).toMatchObject({
       models: ['qwen/qwen3.7-flash'],
       reasoningEnabled: false,
-      reasoningEffort: 'none',
+      reasoningEffort: 'low',
       maxOutputTokens: 65,
       requestTimeoutMs: 10000,
       maxRetries: 1,
@@ -174,10 +175,23 @@ describe('AI Config', () => {
     const config = loadAiConfig({ OPENROUTER_API_KEY: 'sk-or-123' });
     expect(config.strategist.models).toEqual(['z-ai/glm-5.3-flash', 'deepseek/deepseek-v4-flash']);
     expect(config.tactician.models).toEqual([
-      'qwen/qwen3.7-flash',
-      'sao10k/l3-lunaris-8b:nitro',
-      'poolside/laguna-s-2.1',
+      'particle-ai/particle-1',
+      'deepseek/deepseek-v4-flash',
     ]);
+    expect(config.tactician.reasoningEnabled).toBe(true);
+    expect(config.tactician.reasoningEffort).toBe('low');
+    expect(config.tactician.ignoreProviders).toEqual(['CoreWeave', 'Modal', 'Cohere']);
+    expect(config.strategist.ignoreProviders).toEqual([]);
+    expect(configForRole(config, 'tactician').ignoreProviders).toEqual([
+      'CoreWeave',
+      'Modal',
+      'Cohere',
+    ]);
+    expect(
+      loadAiConfig({ OPENROUTER_API_KEY: 'k', AI_TACTICIAN_IGNORE_PROVIDERS: 'Foo, Bar' }).tactician
+        .ignoreProviders,
+    ).toEqual(['Foo', 'Bar']);
+    expect(config.archetype.models).toEqual(['qwen/qwen3.7-flash', 'deepseek/deepseek-v4-flash']);
   });
 
   it('keeps Jev pinned and disabled until explicitly configured', () => {
@@ -283,5 +297,22 @@ describe('escalation triggers (ADR 0044)', () => {
 
   it('keeps lethal in shadow', () => {
     expect(() => loadAiConfig({ AI_BOT_ESCALATION: 'lethal' })).toThrow(/shadow-only/);
+  });
+});
+
+describe('AI_OPENROUTER_PROVIDER_ONLY', () => {
+  it('defaults GLM 5.3 Flash to its allowlist and leaves other models open', () => {
+    const config = loadAiConfig({ OPENROUTER_API_KEY: 'k' });
+    expect(config.openRouterProviderOnly['z-ai/glm-5.3-flash']).toContain('wafer');
+    expect(config.openRouterProviderOnly['z-ai/glm-5.3-flash']).not.toContain('cohere');
+    expect(config.openRouterProviderOnly['deepseek/deepseek-v4-flash']).toBeUndefined();
+  });
+
+  it('parses model=slug,slug pairs, off, and rejects a malformed entry', () => {
+    expect(parseProviderOnly('a/b=x, y;c/d=z', {})).toEqual({ 'a/b': ['x', 'y'], 'c/d': ['z'] });
+    expect(parseProviderOnly('off', { 'a/b': ['x'] })).toEqual({});
+    expect(parseProviderOnly(undefined, { 'a/b': ['x'] })).toEqual({ 'a/b': ['x'] });
+    expect(() => parseProviderOnly('a/b=', {})).toThrow(/AI_OPENROUTER_PROVIDER_ONLY/);
+    expect(() => parseProviderOnly('a/b', {})).toThrow(/AI_OPENROUTER_PROVIDER_ONLY/);
   });
 });

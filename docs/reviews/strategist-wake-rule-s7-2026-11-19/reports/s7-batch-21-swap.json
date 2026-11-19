@@ -1,0 +1,100 @@
+{
+  "seed": "s7-batch-21",
+  "swap": true,
+  "spendCap": {
+    "maxUsd": 1,
+    "maxCalls": 1500,
+    "reached": false,
+    "spentUsd": 0.0065
+  },
+  "turns": 18,
+  "minutes": 0.7,
+  "winner": "P2",
+  "winnerMode": "bot",
+  "finishingOrder": ["P4", "P1", "P3", "P2"],
+  "halted": false,
+  "haltReason": null,
+  "life": {
+    "P1": 0,
+    "P2": 33,
+    "P3": 0,
+    "P4": 0
+  },
+  "seatTurns": {
+    "P1": {
+      "ownTurns": 4,
+      "eliminatedOnTurn": 18
+    },
+    "P2": {
+      "ownTurns": 7,
+      "eliminatedOnTurn": null
+    },
+    "P3": {
+      "ownTurns": 5,
+      "eliminatedOnTurn": 18
+    },
+    "P4": {
+      "ownTurns": 3,
+      "eliminatedOnTurn": 14
+    }
+  },
+  "seats": {
+    "P1": "model",
+    "P2": "bot",
+    "P3": "model",
+    "P4": "bot"
+  },
+  "opponents": "bot-v1",
+  "escalation": [],
+  "shadow": [],
+  "perMode": {
+    "bot": {
+      "tacticianCalls": 0,
+      "strategistCalls": 5,
+      "promptTokens": 12683,
+      "responseTokens": 1106,
+      "costUsd": 0.0017,
+      "costKnown": true,
+      "failedCalls": 0,
+      "unpricedAttempts": 0,
+      "unknownCostCalls": 0,
+      "settledUsd": 0,
+      "unsettledAttempts": 0,
+      "ownTurns": 10,
+      "strategistCallsPerOwnTurn": 0.5,
+      "promptTokensPerOwnTurn": 1268,
+      "strategistWakes": {
+        "first knobs": 2,
+        "life": 2,
+        "gone": 2
+      },
+      "callsPerTurn": 0.28,
+      "promptTokensPerTurn": 705
+    },
+    "model": {
+      "tacticianCalls": 0,
+      "strategistCalls": 7,
+      "promptTokens": 20090,
+      "responseTokens": 4947,
+      "costUsd": 0.0048,
+      "costKnown": true,
+      "failedCalls": 0,
+      "unpricedAttempts": 0,
+      "unknownCostCalls": 0,
+      "settledUsd": 0,
+      "unsettledAttempts": 0,
+      "ownTurns": 9,
+      "strategistCallsPerOwnTurn": 0.778,
+      "promptTokensPerOwnTurn": 2232,
+      "strategistWakes": {
+        "first knobs": 2,
+        "commander": 3,
+        "power": 2,
+        "life": 3,
+        "gone": 2
+      },
+      "callsPerTurn": 0.39,
+      "promptTokensPerTurn": 1116
+    }
+  }
+}

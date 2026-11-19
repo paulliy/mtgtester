@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "card": "Arcane Laboratory",
+  "supportCards": [
+    {
+      "name": "Scenario Tonic",
+      "typeLine": "Sorcery",
+      "manaCost": "{G}",
+      "oracleText": "You gain 1 life."
+    },
+    {
+      "name": "Scenario Salve",
+      "typeLine": "Sorcery",
+      "manaCost": "{G}",
+      "oracleText": "You gain 1 life."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "arcane-laboratory-second-spell-blocked",
+      "title": "Arcane Laboratory: a player can't cast a second spell in the same turn",
+      "clauses": [1],
+      "instructions": [
+        "Cast Scenario Tonic, then look for a way to cast Scenario Salve with mana to spare."
+      ],
+      "expectedOutcome": "Scenario Tonic resolves (you gain 1 life) but Scenario Salve can't be cast and stays in your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Tonic", "Scenario Salve"],
+          "battlefield": ["Arcane Laboratory", "Forest", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Tonic/"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 41
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Salve"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Tonic"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "arcane-laboratory-first-spell-and-land-allowed",
+      "title": "Arcane Laboratory: the first spell is castable and a land play is not a spell",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Tonic, then play a Swamp from your hand."],
+      "expectedOutcome": "Both succeed: Arcane Laboratory only limits casting spells, not playing lands.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Tonic", "Swamp"],
+          "battlefield": ["Arcane Laboratory", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Tonic/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Play Swamp/"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 41
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Forest", "Swamp"]
+          }
+        }
+      ]
+    }
+  ]
+}
