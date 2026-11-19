@@ -1,0 +1,38 @@
+{
+  "name": "Titanic Brawl",
+  "oracleId": "e8434c77-10df-4456-af27-acb95d624189",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast if it targets a creature you control with a +1/+1 counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "selfOnly": true,
+        "targetFilter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "hasCounter",
+              "counter": "+1/+1"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

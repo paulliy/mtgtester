@@ -1,0 +1,52 @@
+{
+  "name": "Spawn of Thraxes",
+  "oracleId": "52289774-d292-4028-91fb-8826fa004dc8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, it deals damage to any target equal to the number of Mountains you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "anyTarget"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Mountain"
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "When this creature enters, it deals damage to any target equal to the number of Mountains you control."
+      }
+    ]
+  }
+}

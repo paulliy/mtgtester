@@ -1,0 +1,36 @@
+{
+  "name": "Spider-Suit",
+  "oracleId": "ba08b4cf-9a13-40fd-8522-9504d2ff1a19",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equipped creature gets +2/+2 and is a Spider Hero in addition to its other types."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 4,
+          "addSubtypes": [
+            "Spider",
+            "Hero"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 2
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,2 @@
+Choose two targets: a target creature (no controller restriction), and a target permanent an opponent controls that is a creature or a planeswalker.
+The first target creature deals damage equal to its power to the second target. The first target is the source of the damage.

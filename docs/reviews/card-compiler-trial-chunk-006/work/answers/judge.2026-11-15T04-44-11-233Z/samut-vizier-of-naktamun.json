@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A's trigger applies only to creatures you control; Text B drops 'you control', so a creature an opponent controls that entered this turn and deals combat damage to a player would trigger B but not A."]}

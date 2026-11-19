@@ -1,0 +1,55 @@
+{
+  "name": "Wisecrack",
+  "oracleId": "e9c9a445-4386-4616-ad00-f08064d73dcd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature deals damage equal to its power to itself. If that creature is attacking, ~ deals 2 damage to that creature's controller."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "description": "Target creature deals damage equal to its power to itself. If that creature is attacking, Wisecrack deals 2 damage to that creature's controller.",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamage",
+          "target": 0,
+          "amount": {
+            "kind": "powerOfTarget",
+            "target": 0
+          },
+          "source": 0
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "combatRole",
+              "role": "attacking"
+            }
+          },
+          "checkTarget": 0,
+          "then": [
+            {
+              "op": "dealDamage",
+              "target": {
+                "controllerOf": 0
+              },
+              "amount": {
+                "kind": "const",
+                "n": 2
+              }
+            }
+          ],
+          "else": []
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,1 @@
+Destroy target permanent that is an artifact, an enchantment, or a creature with flying. Then if that permanent's mana value was 3 or less, proliferate.

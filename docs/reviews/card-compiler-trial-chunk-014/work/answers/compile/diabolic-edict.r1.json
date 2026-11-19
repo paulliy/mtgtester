@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"player"}],"effects":[{"op":"sacrificeTargetPlayerCreature","target":0}],"description":"Target player sacrifices a creature of their choice."}}}

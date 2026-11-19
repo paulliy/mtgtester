@@ -1,0 +1,75 @@
+{
+  "name": "Palani's Hatcher",
+  "oracleId": "ce6b6869-e4d7-4156-b66d-57fc224e4b20",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of combat on your turn, if you control one or more Eggs, sacrifice an Egg, then create a 3/3 green Dinosaur creature token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "beginningOfCombat",
+          "player": "you",
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "subtype",
+              "value": "Egg"
+            },
+            "scope": "you",
+            "cmp": ">=",
+            "n": 1
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Egg"
+                }
+              ]
+            },
+            "then": [
+              {
+                "op": "createToken",
+                "spec": {
+                  "name": "Dinosaur",
+                  "typeLine": "Token Creature — Dinosaur",
+                  "types": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Dinosaur"
+                  ],
+                  "colors": [
+                    "G"
+                  ],
+                  "power": 3,
+                  "toughness": 3
+                },
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ],
+        "description": "At the beginning of combat on your turn, if you control one or more Eggs, sacrifice an Egg, then create a 3/3 green Dinosaur creature token."
+      }
+    ]
+  }
+}

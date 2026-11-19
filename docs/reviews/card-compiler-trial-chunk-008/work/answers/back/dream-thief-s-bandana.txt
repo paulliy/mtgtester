@@ -1,0 +1,1 @@
+Whenever equipped creature deals combat damage to a player, look at the top card of that player's library and exile it face down. The rest of that library is put on the bottom in random order. The exiled card may be played, not only cast, and may be of any card type.

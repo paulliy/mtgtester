@@ -1,0 +1,1 @@
+You may cast this spell from your graveyard by paying {5}{U} rather than paying its mana cost. If a spell cast this way would resolve, exile it instead.

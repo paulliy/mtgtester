@@ -1,0 +1,1 @@
+You may cast this spell from a graveyard by discarding a card and paying {1}{U} rather than paying its mana cost. If this spell was cast this way, exile it as it resolves instead of putting it into its owner's graveyard.

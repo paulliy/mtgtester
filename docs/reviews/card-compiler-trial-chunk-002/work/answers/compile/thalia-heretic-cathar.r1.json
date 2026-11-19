@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"otherPermanentsEnterTapped","filter":{"kind":"anyOf","of":[{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"controller","who":"opponents"}]},{"kind":"allOf","of":[{"kind":"type","value":"Land"},{"kind":"not","of":{"kind":"supertype","value":"Basic"}},{"kind":"controller","who":"opponents"}]}]}}]}}

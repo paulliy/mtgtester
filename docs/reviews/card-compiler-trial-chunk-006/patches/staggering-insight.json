@@ -1,0 +1,62 @@
+{
+  "name": "Staggering Insight",
+  "oracleId": "09071f5f-c9cb-43a9-b41d-faf6caf3beff",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature gets +1/+1 and has lifelink and \"Whenever this creature deals combat damage to a player, draw a card.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "lifelink"
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealsCombatDamageToPlayer",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "draw",
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "Whenever this creature deals combat damage to a player, draw a card."
+          }
+        }
+      }
+    ]
+  }
+}

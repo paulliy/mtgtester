@@ -1,0 +1,34 @@
+{
+  "name": "Etali's Favor",
+  "oracleId": "df98b93b-0aa6-4bea-9d8d-798ebc795b0b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Aura enters, discover 3."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "discover",
+            "count": {
+              "kind": "const",
+              "n": 3
+            }
+          }
+        ],
+        "description": "When this Aura enters, discover 3."
+      }
+    ]
+  }
+}

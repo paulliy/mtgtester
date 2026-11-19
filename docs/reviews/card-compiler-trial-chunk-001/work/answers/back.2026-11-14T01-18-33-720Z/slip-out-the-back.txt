@@ -1,0 +1,3 @@
+Target creature (exactly one; any controller).
+Put a +1/+1 counter on that creature.
+Phase out that creature. The data gives no duration for this.

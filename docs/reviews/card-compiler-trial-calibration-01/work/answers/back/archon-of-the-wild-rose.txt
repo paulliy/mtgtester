@@ -1,0 +1,2 @@
+Each other creature you control that is enchanted by an Aura you control has base power and toughness 5/4.
+Each other creature you control that is enchanted by an Aura you control has flying.

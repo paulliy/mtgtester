@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"endStep","player":"you"},"optional":false,"targets":[],"effects":[{"op":"untapEach","selector":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"type","value":"Creature"}]}}],"description":"At the beginning of your end step, untap each creature you control."}]}}

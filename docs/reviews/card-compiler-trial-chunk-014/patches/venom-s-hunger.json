@@ -1,0 +1,31 @@
+{
+  "name": "Venom's Hunger",
+  "oracleId": "8388faa0-f64e-4b01-836e-617f99b808a4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {2} less to cast if you control a Villain."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 2
+        },
+        "selfOnly": true,
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "subtype",
+            "value": "Villain"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 1
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "Shardmage's Rescue",
+  "oracleId": "406247ee-2b86-4068-b5fa-65cdc83a82f4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as this Aura entered this turn, enchanted creature has hexproof."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "hexproof"
+        },
+        "condition": {
+          "kind": "sourceMatches",
+          "selector": {
+            "kind": "enteredThisTurn"
+          }
+        }
+      }
+    ]
+  }
+}

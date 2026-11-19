@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"An alternative cost of {0} that is limited to once each turn and to spells whose mana value is at most this enchantment's time counters has no schema form: alternativeCasts has no per-turn limit and no condition compares the cast spell's mana value to a source counter."}

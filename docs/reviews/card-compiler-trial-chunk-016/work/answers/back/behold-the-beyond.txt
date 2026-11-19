@@ -1,0 +1,2 @@
+Discard your hand.
+Search your library for three cards with no restriction, put them into your hand, then shuffle.

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"player"}],"effects":[{"op":"gainLifeTarget","target":0,"amount":{"kind":"times","of":{"kind":"countPermanents","selector":{"kind":"type","value":"Creature"},"scope":"all"},"n":2}}],"description":"Target player gains 2 life for each creature on the battlefield."}}}

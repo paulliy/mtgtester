@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"\"Target player shuffles their graveyard into their library\" has no schema form: shuffleHandGraveyardIntoLibrary acts on the controller, and shuffleChosenGraveyardCardsIntoLibrary needs a chosen set of cards rather than the whole graveyard."}

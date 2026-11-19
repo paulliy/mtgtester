@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"entersAsCopy":{"selector":{"kind":"type","value":"Creature"},"addTriggers":[{"kind":"triggered","trigger":{"when":"attacks","subject":{"kind":"self"}},"targets":[],"effects":[{"op":"connive"}],"description":"Whenever this creature attacks, it connives."}]}}}

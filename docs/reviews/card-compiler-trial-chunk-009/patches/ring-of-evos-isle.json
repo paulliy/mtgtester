@@ -1,0 +1,55 @@
+{
+  "name": "Ring of Evos Isle",
+  "oracleId": "4548f379-2647-4446-9e56-e7ef0662793a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's blue."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "attachedToSource"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "U"
+                  }
+                ]
+              },
+              "scope": "all",
+              "cmp": ">=",
+              "n": 1
+            },
+            "then": [
+              {
+                "op": "putCounters",
+                "target": "attachedToSource",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's blue."
+      }
+    ]
+  }
+}

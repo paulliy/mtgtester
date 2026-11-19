@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"There is no trigger for this creature dealing combat damage to a creature (dealsCombatDamageToPlayer is the only combat-damage trigger), so the coin flip and destroy of 'that creature' cannot be attached to the right event."}

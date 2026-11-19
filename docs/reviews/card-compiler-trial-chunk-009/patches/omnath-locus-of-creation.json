@@ -1,0 +1,112 @@
+{
+  "name": "Omnath, Locus of Creation",
+  "oracleId": "cd133d30-51ff-4114-a7d7-029345f0f0d7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a land you control enters, you gain 4 life if this is the first time this ability has resolved this turn. If it's the second time, add {R}{G}{W}{U}. If it's the third time, ~ deals 4 damage to each opponent and each planeswalker you don't control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "byResolutionCountThisTurn",
+            "key": "Landfall — Whenever a land you control enters, you gain 4 life if this is the first time this ability has resolved this turn. If it's the second time, add {R}{G}{W}{U}. If it's the third time, Omnath deals 4 damage to each opponent and each planeswalker you don't control.",
+            "cases": [
+              {
+                "n": 1,
+                "effects": [
+                  {
+                    "op": "gainLife",
+                    "amount": {
+                      "kind": "const",
+                      "n": 4
+                    }
+                  }
+                ]
+              },
+              {
+                "n": 2,
+                "effects": [
+                  {
+                    "op": "addMana",
+                    "amount": {
+                      "kind": "const",
+                      "n": 4
+                    },
+                    "colors": [
+                      "R",
+                      "G",
+                      "W",
+                      "U"
+                    ],
+                    "fixedSymbols": [
+                      "R",
+                      "G",
+                      "W",
+                      "U"
+                    ]
+                  }
+                ]
+              },
+              {
+                "n": 3,
+                "effects": [
+                  {
+                    "op": "eachOpponentDamage",
+                    "amount": 4
+                  },
+                  {
+                    "op": "damageEach",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Planeswalker"
+                        },
+                        {
+                          "kind": "controller",
+                          "who": "opponents"
+                        }
+                      ]
+                    },
+                    "amount": {
+                      "kind": "const",
+                      "n": 4
+                    }
+                  }
+                ]
+              }
+            ],
+            "otherwise": []
+          }
+        ],
+        "description": "Landfall — Whenever a land you control enters, you gain 4 life if this is the first time this ability has resolved this turn. If it's the second time, add {R}{G}{W}{U}. If it's the third time, Omnath deals 4 damage to each opponent and each planeswalker you don't control."
+      }
+    ]
+  }
+}

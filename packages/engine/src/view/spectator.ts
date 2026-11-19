@@ -28,7 +28,7 @@ import { COMMANDER_DAMAGE_LETHAL } from '@mtg/shared';
 import { faceDownExileVisibleTo } from './face-down';
 import { computeCharacteristics } from '../effects/continuous';
 import { manaSourcesFor, scryfallIdOf } from '../state/queries';
-import { copyImageFace, playerById } from '../state/objects';
+import { copyImageFace, knownHandOf, playerById } from '../state/objects';
 import { visibleLibraryTops } from './library-top';
 import type {
   EngineCardObject,
@@ -437,6 +437,19 @@ function commanderHidden(ctx: GameContext, commander: SpectatorCommander): boole
   return isExiledFaceDown(exiled);
 }
 
+/** What `playerId` still knows of other hands, as a field only when there is any. */
+function knownHandsField(ctx: GameContext, playerId: string): Pick<PlayerBoardState, 'knownHands'> {
+  const viewer = ctx.state.players.find((player) => player.id === playerId);
+  if (viewer?.knownHandCards === undefined) return {};
+  const knownHands = ctx.state.players.flatMap((owner) => {
+    const cards = knownHandOf(ctx, viewer, owner);
+    return cards.length === 0
+      ? []
+      : [{ player: owner.id, cards: cards.map((card) => cardView(ctx, card)) }];
+  });
+  return knownHands.length === 0 ? {} : { knownHands };
+}
+
 export function buildPlayerBoardState(ctx: GameContext, playerId: string): PlayerBoardState {
   const spectator = buildSpectatorState(ctx);
   // eslint-disable-next-line no-restricted-syntax -- a player projection or its redaction table, not a TokenSpec
@@ -448,6 +461,7 @@ export function buildPlayerBoardState(ctx: GameContext, playerId: string): Playe
       player,
       card: cardView(ctx, card),
     })),
+    ...knownHandsField(ctx, playerId),
     seats: spectator.seats.map((seat) => {
       const own = seat.seat === playerId;
       return {
@@ -679,6 +693,12 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
       return p['revealed'] === true
         ? { ...base, text: `reveals ${str(p, 'name') ?? 'a card'}` }
         : null;
+    // The look is private (CR 402.3): the log says it happened and how many cards, never which.
+    case 'lookAtHand':
+      return {
+        ...base,
+        text: `looks at ${str(p, 'target') ?? 'a player'}'s hand (${num(p, 'count') ?? 0} cards)`,
+      };
     case 'returnSpell':
       return { ...base, text: `${str(p, 'name') ?? 'a spell'} returns to its owner's hand` };
     case 'lifeLoss':

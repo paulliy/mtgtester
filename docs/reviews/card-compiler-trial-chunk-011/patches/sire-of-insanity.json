@@ -1,0 +1,32 @@
+{
+  "name": "Sire of Insanity",
+  "oracleId": "b55d8cd6-037d-4d7c-90ec-51249d34b02e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of each end step, each player discards their hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "each"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "eachPlayerDiscardHandThenDraw",
+            "count": {
+              "kind": "const",
+              "n": 0
+            }
+          }
+        ],
+        "description": "At the beginning of each end step, each player discards their hand."
+      }
+    ]
+  }
+}

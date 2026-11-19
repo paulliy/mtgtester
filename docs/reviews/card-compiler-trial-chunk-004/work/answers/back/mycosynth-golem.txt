@@ -1,0 +1,1 @@
+Artifact creature spells you cast cost less to cast, by an amount equal to the number of artifacts you control.

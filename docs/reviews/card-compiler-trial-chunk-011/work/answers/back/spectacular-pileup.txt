@@ -1,0 +1,2 @@
+Each creature and each Vehicle on the battlefield loses indestructible until end of turn.
+Destroy each creature and each Vehicle on the battlefield.

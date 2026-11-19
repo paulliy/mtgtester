@@ -1,0 +1,58 @@
+{
+  "name": "Taunting Sliver",
+  "oracleId": "fada8f16-85e8-44f1-9d2c-99da1e27851f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sliver creatures you control have \"When this creature enters, goad target creature an opponent controls.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Sliver"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [
+              {
+                "kind": "creature",
+                "controller": "opponent"
+              }
+            ],
+            "effects": [
+              {
+                "op": "goad",
+                "target": 0
+              }
+            ],
+            "description": "When this creature enters, goad target creature an opponent controls."
+          }
+        }
+      }
+    ]
+  }
+}

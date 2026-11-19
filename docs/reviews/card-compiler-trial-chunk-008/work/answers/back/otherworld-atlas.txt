@@ -1,0 +1,1 @@
+{T}: Each player draws a number of cards equal to the number of charge counters on this artifact.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no evasion restriction that stops blocking by creatures with power 2 or less specifically (cantBlockCreatures is keyed to the blocker being weaker than the source's power, and minBlockers is a minimum-blocker rule)."}

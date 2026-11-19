@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Putting X counters on the Fractal token just created has no way to name that token as the target of a following counter placement (createToken has no created-token reference and reflexiveOnCreatedToken fires as a separate trigger, not in sequence)."}

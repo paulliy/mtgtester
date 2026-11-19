@@ -1,0 +1,33 @@
+{
+  "name": "Wrong Turn",
+  "oracleId": "d1cfbbcc-4aee-4400-b5a8-18713829ae72",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target opponent gains control of target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player",
+          "controller": "opponent"
+        },
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 1,
+          "recipient": {
+            "targetPlayer": 0
+          }
+        }
+      ],
+      "description": "Target opponent gains control of target creature."
+    }
+  }
+}

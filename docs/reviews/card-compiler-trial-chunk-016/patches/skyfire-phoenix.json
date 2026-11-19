@@ -1,0 +1,33 @@
+{
+  "name": "Skyfire Phoenix",
+  "oracleId": "8fdb3350-a6ff-4d02-a649-10663436c40f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When you cast your commander, return this card from your graveyard to the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "functionsInGraveyard": true,
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "isCommander"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "returnDepartedSourceToBattlefield",
+            "fromYourGraveyard": true
+          }
+        ],
+        "description": "When you cast your commander, return this card from your graveyard to the battlefield."
+      }
+    ]
+  }
+}

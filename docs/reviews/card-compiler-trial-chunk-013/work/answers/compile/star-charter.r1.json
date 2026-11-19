@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no condition for 'you gained or lost life this turn', and the library search filter 'creature card with power 3 or less' cannot read power outside the battlefield (powerAtMost is event-only)."}

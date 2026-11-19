@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The damage is the event player's hand size minus 4, which can be negative, and the schema has no event-player hand-size value or documented floor at zero for the amount."}

@@ -1,0 +1,2 @@
+When this creature enters, put a hone counter on each permanent you control that has the creature type Equipment.
+Whenever this creature attacks, put a hone counter on each permanent you control that has the creature type Equipment.

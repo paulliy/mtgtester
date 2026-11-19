@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"castsSpell","caster":"you","ordinal":2},"optional":false,"targets":[],"effects":[{"op":"amass","subtype":"Orc","count":{"kind":"const","n":2}}],"description":"Whenever you cast your second spell each turn, amass Orcs 2."}]}}

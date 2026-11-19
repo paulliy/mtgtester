@@ -1,0 +1,12 @@
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/compile/agent-of-the-iron-throne.r2.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/compile/agent-of-the-iron-throne.r2.json
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/compile/return-to-dust.r2.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/compile/return-to-dust.r2.json
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/compile/gleaming-splendor.r2.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/compile/gleaming-splendor.r2.json
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/compile/goldvein-hydra.r2.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/compile/goldvein-hydra.r2.json
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/compile/the-battle-of-bywater.r2.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/compile/the-battle-of-bywater.r2.json
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/compile/ophidian-eye.r2.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/compile/ophidian-eye.r2.json
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/compile/swarmyard-massacre.r2.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/compile/swarmyard-massacre.r2.json
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/compile/wrathful-red-dragon.r2.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/compile/wrathful-red-dragon.r2.json
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/compile/abstergo-entertainment.r2.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/compile/abstergo-entertainment.r2.json
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/compile/juri-master-of-the-revue.r2.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/compile/juri-master-of-the-revue.r2.json
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/compile/crypt-of-agadeem.r2.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/compile/crypt-of-agadeem.r2.json
+docs/reviews/card-compiler-trial-chunk-002/work/prompts/compile/run-away-together.r2.md	docs/reviews/card-compiler-trial-chunk-002/work/answers/compile/run-away-together.r2.json

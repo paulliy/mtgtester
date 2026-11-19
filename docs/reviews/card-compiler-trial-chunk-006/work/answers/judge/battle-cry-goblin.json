@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A checks creatures you attacked with this combat (a past event, including creatures that have since left combat); Text B checks the total power of attacking creatures at the time of resolution, so the condition can differ.","Text A's token is tapped and attacking; Text B's token is only attacking, not tapped."]}

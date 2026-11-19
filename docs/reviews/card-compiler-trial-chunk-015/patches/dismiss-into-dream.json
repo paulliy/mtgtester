@@ -1,0 +1,70 @@
+{
+  "name": "Dismiss into Dream",
+  "oracleId": "b76566a9-f998-4a20-b073-4b60862843c9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each creature your opponents control is an Illusion in addition to its other types and has \"When this creature becomes the target of a spell or ability, sacrifice it.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "opponents"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 4,
+          "addSubtypes": [
+            "Illusion"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "opponents"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "becomesTargeted",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "sacrifice",
+                "target": "source"
+              }
+            ],
+            "description": "When this creature becomes the target of a spell or ability, sacrifice it."
+          }
+        }
+      }
+    ]
+  }
+}

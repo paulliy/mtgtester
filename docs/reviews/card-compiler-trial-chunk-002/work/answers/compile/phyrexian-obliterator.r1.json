@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema does not establish that the event player of a dealtDamage trigger is the damage source's controller, nor that damageDealt is set for it, so \"that source's controller sacrifices that many permanents\" cannot be stated safely."}

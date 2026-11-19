@@ -1,0 +1,5 @@
+Enchant creature (the data shows only an attachment to "the enchanted creature"; no further enchant restriction is listed).
+Enchanted creature's types are set to Creature, and its creature subtypes are set to Frog.
+Enchanted creature is blue (its colors are set to blue).
+Enchanted creature loses all abilities.
+Enchanted creature has base power and toughness 1/1.

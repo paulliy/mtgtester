@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"attachedToSource"},"op":{"layer":6,"addKeyword":"deathtouch"},"condition":{"kind":"yourTurn"}},{"affects":{"kind":"attachedToSource"},"op":{"layer":6,"addKeyword":"reach"},"condition":{"kind":"notYourTurn"}}]}}

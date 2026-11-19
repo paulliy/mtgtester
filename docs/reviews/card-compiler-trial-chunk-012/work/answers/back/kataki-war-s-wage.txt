@@ -1,0 +1,1 @@
+All artifacts have "At the beginning of upkeep of the player who controls this Spirit, unless the artifact's controller pays {1}, sacrifice this artifact."

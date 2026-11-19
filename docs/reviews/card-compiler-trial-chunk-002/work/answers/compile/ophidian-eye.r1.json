@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"dealsDamageToOpponent","subject":{"kind":"permanent","selector":{"kind":"attachedToSource"}}},"optional":true,"targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":1}}],"description":"Whenever enchanted creature deals damage to an opponent, you may draw a card."}]}}

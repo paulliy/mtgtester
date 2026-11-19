@@ -1,0 +1,964 @@
+{
+  "schemaVersion": 1,
+  "retired": [
+    {
+      "name": "Abzan Beastmaster",
+      "oracleId": "aab463bb-e790-403b-a88d-06ef81c7302b",
+      "patchSha256": "fee627d93d40d37d8d31e0a5b4eb2a87b6aba01d33a55e582bcbc0a61c46bc1f",
+      "batch": "chunk-009",
+      "reason": "Its draw condition is an intervening-if on the trigger; the card checks it on resolution (PR review)."
+    },
+    {
+      "name": "Agate Instigator",
+      "oracleId": "e1a2bd31-b800-47cd-8866-1b849a601b09",
+      "patchSha256": "6ed2a6c7afe258454a13e7320edc7892efb455dce21b52e24c6fc76ee6476a91",
+      "batch": "chunk-001",
+      "reason": "Owner review on PR #72, 2026-11-17: offspring has no intervening-if, so the trigger goes on the stack when offspring was not paid."
+    },
+    {
+      "name": "Agent of Erebos",
+      "oracleId": "3fa5e109-4a67-4523-8183-90e48a906400",
+      "patchSha256": "35133aa222081b7b702ea82dff1b214fc64aa5c10c78c8128253714c148a92ef",
+      "batch": "chunk-013",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Andúril, Flame of the West",
+      "oracleId": "e6521404-8474-4727-b2d0-537d15d8a63f",
+      "patchSha256": "1610d6f72276ef9819aa15fa93826126f4b63b3635790dabd3fd547aa7bd9227",
+      "batch": "chunk-004",
+      "reason": "Owner review on PR #72, 2026-11-17: created attacking tokens share one defender choice, limited to players already attacked; each token may attack any legal defender."
+    },
+    {
+      "name": "Angel of Finality",
+      "oracleId": "48d14b5c-711a-4f8a-9de5-55415cb7a79a",
+      "patchSha256": "d8baa9b771a1b923678f8826e34ffe93084ce826c2012cbd44116d700bf3b7a8",
+      "batch": "chunk-005",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Angel of Invention",
+      "oracleId": "28c7f2b6-ba67-4ccf-9e1b-99c89a9d1f72",
+      "patchSha256": "ba4d23e3339c118bc2b393f7b75644074dd026152e347ca30facef173e3e3e43",
+      "batch": "chunk-005",
+      "reason": "Owner review on PR #72, 2026-11-17: fabricate still offers counters it cannot place, yielding no Servos."
+    },
+    {
+      "name": "Anim Pakal, Thousandth Moon",
+      "oracleId": "05551d91-50c6-46d1-86a4-cd3d177d0923",
+      "patchSha256": "705f4eea68ff7eb9eec0cb55f4b5785b1e43ca1192d71c90b46be1f802a1e98c",
+      "batch": "chunk-001",
+      "reason": "Owner review on PR #72, 2026-11-17: created attacking tokens share one defender choice, limited to players already attacked; each token may attack any legal defender."
+    },
+    {
+      "name": "Arcane Laboratory",
+      "oracleId": "f5e3c26c-c28c-455f-a682-2597e4b92d10",
+      "patchSha256": "fb90f85333b3e920306f75264e73a22846a9baded4e2eba4af80e2fee4b8030a",
+      "batch": "chunk-012",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Artifact Mutation",
+      "oracleId": "e77e8768-3ea8-44f9-aba6-1e023e006946",
+      "patchSha256": "7ff9b5b06986797f14fea6153d9d513cf9cd9a31849c450990e95c9cd65a68a6",
+      "batch": "chunk-003",
+      "reason": "Creates the tokens before the destroy (PR review)."
+    },
+    {
+      "name": "Assert Authority",
+      "oracleId": "085bc7be-bd44-40af-8e8f-a1a8006fe22c",
+      "patchSha256": "86a17510e6f8c6f9d240c3a4bc0107539e935cbfab7b8de9e46a4489f340fcaa",
+      "batch": "chunk-015",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Awakening Zone",
+      "oracleId": "f955bc96-d602-4142-a9a2-87009cc7028c",
+      "patchSha256": "d7a50f925801da6385dae2d4d0c2325704a21e31553dae4ba415369885bea056",
+      "batch": "chunk-002",
+      "reason": "Owner review on PR #72, 2026-11-17: its Eldrazi Spawn token has no Spawn subtype."
+    },
+    {
+      "name": "Ayara's Oathsworn",
+      "oracleId": "ff3936bb-3281-4260-84de-1f65dbfbe993",
+      "patchSha256": "60bad2e38e35da2672c50a025f1250afcfb85f7448027c76161fdd1573374327",
+      "batch": "chunk-009",
+      "reason": "Owner review on PR #72, 2026-11-17: the intervening-if is missing from the trigger, so it triggers when the condition is false. With four counters it still tutors."
+    },
+    {
+      "name": "Benefactor's Draught",
+      "oracleId": "85113e73-26f7-4938-b7a7-607e704af0ca",
+      "patchSha256": "9d4b4798fde8fdd43707a7311b86c2e55e8b1e423e6e983e034212525017ee13",
+      "batch": "chunk-009",
+      "reason": "An untargeted delayed blocks trigger ignores its inner subject selector and fires once for the first blocker, so it draws when your own creatures block and only once for several blockers"
+    },
+    {
+      "name": "Benevolent Bodyguard",
+      "oracleId": "c8c38570-0b42-4bfc-896f-f57f9a11ba9d",
+      "patchSha256": "b1966de5d0693fa6fe2e8e26bad31d63a68b029ab89addee79eceb8e247d5657",
+      "batch": "chunk-007",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Blade of the Bloodchief",
+      "oracleId": "8985e545-07c3-45f9-9058-fe3c1f50de04",
+      "patchSha256": "a212953d3b36687fa32f6ef9c34db4c57d1bc611d467fed1052908e26482fde1",
+      "batch": "chunk-003",
+      "reason": "Its Vampire condition selects attachedToSource, which never matches in a condition (chunk 011)."
+    },
+    {
+      "name": "Bounty of the Luxa",
+      "oracleId": "e6b20c30-88c2-4cb0-a5e4-46f1df924a7c",
+      "patchSha256": "5b8aec22d8eda40529b76f83c82dda006599d52d9cb059d67aa4b07d47f95633",
+      "batch": "chunk-016",
+      "reason": "Codex review on PR #72, 2026-11-17: 'If no counters were removed this way' branches on sourceHasCounters, not on counters actually removed; if it leaves in response it adds {C}{G}{U} instead of drawing (the Coalition Relic gap). A scan found only Replicating Ring with a removal shape, whose tokens do not depend on the removal."
+    },
+    {
+      "name": "Captain's Claws",
+      "oracleId": "4cacd7de-83ac-4767-b6f2-f5a89f04a0b9",
+      "patchSha256": "76a4ff5a3e8edfc9b58c2947e3dbabc2df09937194bdb24b746de833323ca496",
+      "batch": "chunk-013",
+      "reason": "Owner review on PR #72, 2026-11-17: created attacking tokens share one defender choice, limited to players already attacked; each token may attack any legal defender."
+    },
+    {
+      "name": "Cartouche of Strength",
+      "oracleId": "cba6563e-96e5-4cd3-bddf-0cf1368f9e15",
+      "patchSha256": "d5981c82626a01d846a23160acae304f34600b2051c3a9b3739641990f349a3f",
+      "batch": "chunk-013",
+      "reason": "Owner review on PR #72, 2026-11-17: removing the Cartouche before its trigger resolves cancels the former host's fight."
+    },
+    {
+      "name": "Catastrophe",
+      "oracleId": "ed68160e-5e3d-44f2-ac7a-3749fda10119",
+      "patchSha256": "ee85358fe901e127d3acff1d88e2aaa75ec282ced4c62bb011dfda695a3ec1d6",
+      "batch": "chunk-016",
+      "reason": "Codex review on PR #72, 2026-11-17: 'Creatures destroyed this way can't be regenerated' covers land creatures in the land branch too, but only the creature branch sets cantRegenerate; splitting the land branch into two destroyEach ops would not destroy simultaneously."
+    },
+    {
+      "name": "Chrome Dome",
+      "oracleId": "3dc71e16-b935-4ad7-b3f7-945ac2c179a7",
+      "patchSha256": "5aa3f47bed6ca8f5f527fec5677fa2eb7ffbad7fbaf51e3d193df64283c48044",
+      "batch": "chunk-008",
+      "reason": "Codex review on PR #72, 2026-11-17: 'That token gains haste' is modelled as createTokenCopyOf addKeywords, which puts haste in the token's copiable values; a copy of the token wrongly gets haste. No op grants a keyword to the token just created."
+    },
+    {
+      "name": "Coalition Relic",
+      "oracleId": "008cb342-79f5-4df6-a6b7-0e9e22ed693f",
+      "patchSha256": "315c03edf87ce9762509f30065f2a84de0746a2a48680c00da81f3dfdaec8485",
+      "batch": "chunk-004",
+      "reason": "Owner review on PR #72, 2026-11-17: the reward follows even when the counter removal fails (source destroyed in response)."
+    },
+    {
+      "name": "Coruscation Mage",
+      "oracleId": "88bb91b5-2ccd-4ce9-8cd4-e54d63c12abf",
+      "patchSha256": "9a0520618aecf202015f8b92d9e73ec328e677ae4f1fd1e6aa402276da1c8032",
+      "batch": "chunk-001",
+      "reason": "Owner review on PR #72, 2026-11-17: offspring has no intervening-if, so the trigger goes on the stack when offspring was not paid."
+    },
+    {
+      "name": "Cyan, Vengeful Samurai",
+      "oracleId": "5a2fa420-c27f-4c14-b285-e0bb2828e053",
+      "patchSha256": "abfbb39d0095cdd85211e4a3f34ff4a1ef296bf8d5e8eab5a137a7df1ee1a619",
+      "batch": "chunk-013",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Devastating Onslaught",
+      "oracleId": "2e17cd4c-ebf0-40d0-b52d-b4d84bbcf7b3",
+      "patchSha256": "9130c00e72c379f1b6ef6be05d8861a5737e578f801f8dfa390c6caca2c6e92a",
+      "batch": "chunk-004",
+      "reason": "Codex review on PR #72, 2026-11-17: 'That token gains haste' is modelled as createTokenCopyOf addKeywords, which puts haste in the token's copiable values; a copy of the token wrongly gets haste. No op grants a keyword to the token just created."
+    },
+    {
+      "name": "Dictate of Karametra",
+      "oracleId": "01cb56d7-f859-46fd-b6c9-40d2c4965b69",
+      "patchSha256": "2499f42f22d8ca9c81bcc4000bd79de3bf759cea5fd049bd005219ad61e7eefa",
+      "batch": "chunk-007",
+      "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
+    },
+    {
+      "name": "Displace",
+      "oracleId": "334e2147-5944-4558-b2bc-2f2bfb96dfa5",
+      "patchSha256": "d9161093ccaed00f04e5e2c2c917fbdb25f50ce108af8179b2f03ba11badb43b",
+      "batch": "chunk-002",
+      "reason": "Owner review on PR #72, 2026-11-17: multi-card blink is sequential, not simultaneous (exile together, return together)."
+    },
+    {
+      "name": "Draconic Lore",
+      "oracleId": "440881ad-48cf-4b82-8bb5-f506d1a51755",
+      "patchSha256": "70c528bcd0ad7832c2b9c39df4e7541fe6be28e1fa9ed5dfa69e02dfcce20d9d",
+      "batch": "chunk-010",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Eidolon of Rhetoric",
+      "oracleId": "33017203-233e-498e-806e-94b1dccf5c35",
+      "patchSha256": "0d0bc82ca5ecdf320db1e6958aa0510065ff0c2b0b22a04184d5a1615c9c2e18",
+      "batch": "chunk-004",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Electroduplicate",
+      "oracleId": "112f2b3f-32e7-40b1-b80e-0b99184a840c",
+      "patchSha256": "d4c3e4f6e4eeee16c56915250a704e567e141b6de439119e5e747a757f80fb50",
+      "batch": "chunk-002",
+      "reason": "Its end-step sacrifice is a delayed trigger on this creation (sacrificeAt), not an ability of the copied token, so later copies keep the token (PR review)."
+    },
+    {
+      "name": "Electrosiphon",
+      "oracleId": "bff9105f-d8d4-4412-88d9-c9697581ebe9",
+      "patchSha256": "0b03be00a44b9b1304eecc016a75a4f0b27634a6031cf78036d9da67e90db4be",
+      "batch": "chunk-007",
+      "reason": "Owner review on PR #72, 2026-11-17: the countered spell's mana value is read after it left the stack, so it gives 0 energy."
+    },
+    {
+      "name": "Emerge Unscathed",
+      "oracleId": "894015d5-ee78-45df-8d37-53df963c59a6",
+      "patchSha256": "dc0f8f263622cac1ef3ec4e3d132fe8507a476700e99becf767c190bcc1a5e2a",
+      "batch": "chunk-010",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Fear of Missing Out",
+      "oracleId": "236ce592-1321-4a7c-b695-fd84496f8924",
+      "patchSha256": "b2671f7fb7b7a495edeae8f42aebe807c5b0b8bb80cc81961279f734b9b3fefb",
+      "batch": "chunk-003",
+      "reason": "Codex review on PR #72, 2026-11-17: the engine checks the trigger condition before recording oncePerTurn, so a first attack without delirium leaves the trigger free to fire on a later attack that turn; the card triggers only on the first attack."
+    },
+    {
+      "name": "Fecundity",
+      "oracleId": "ffa64ac6-fe55-48b8-b015-849982cd7ad8",
+      "patchSha256": "641c1597787ca21eddcca6aaabb0890f7252c756e98217e74ab721b3f3570a3b",
+      "batch": "chunk-006",
+      "reason": "Owner review on PR #72, 2026-11-17: the optional draw belongs to Fecundity's controller instead of the dying creature's controller."
+    },
+    {
+      "name": "Felothar, Dawn of the Abzan",
+      "oracleId": "fd666669-ad23-4e41-b78c-1cd7b82eb8b4",
+      "patchSha256": "0d98151e9e8dfdb16f19e36fbc5074dcbc9dc4883c8d9ffcb390c498b2ab28ae",
+      "batch": "chunk-016",
+      "reason": "Owner review on PR #72, 2026-11-17: omits its reflexive trigger and applies the counters inline."
+    },
+    {
+      "name": "Fertile Ground",
+      "oracleId": "cf14d4e5-5965-45ad-97f7-26facf2884b5",
+      "patchSha256": "04e104d63e81dca6b8ace069582fa77b1eeb1176dca02a6d4f4bb4298358bef3",
+      "batch": "chunk-001",
+      "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
+    },
+    {
+      "name": "Flamehold Grappler",
+      "oracleId": "e2d21635-182f-4ebf-a6f5-d4c1fd7f9705",
+      "patchSha256": "1b747d244e4b6f4f4d14f386150a653501284db1b863c0e3ad3c2cacb76417df",
+      "batch": "chunk-015",
+      "reason": "Owner review on PR #72, 2026-11-17: the copy path has no permanent-spell support; the copy trigger is consumed with no copy."
+    },
+    {
+      "name": "Forth Eorlingas!",
+      "oracleId": "35807c14-4647-482f-9ba1-6d640fd5e8d8",
+      "patchSha256": "74955335ecac13503a9621d48772df609cecbd394daa6ebefae8850b7f62bb03",
+      "batch": "chunk-004",
+      "reason": "Codex review on PR #72, 2026-11-17: the untargeted delayed trigger ignores its 'creatures you control' subject selector; cast on an opponent's turn (e.g. through Mosswort Bridge), an opponent's combat damage makes the caster the monarch."
+    },
+    {
+      "name": "Four Knocks",
+      "oracleId": "64fe83b1-5aae-4433-82c3-a11c8c83137e",
+      "patchSha256": "2cba3158ceebcd798b2785c745b2518e58ac84922a3857535cd9582d7744d952",
+      "batch": "chunk-011",
+      "reason": "Owner review on PR #72, 2026-11-17: vanishing is collapsed into the upkeep trigger; removing the last time counter another way never sacrifices it."
+    },
+    {
+      "name": "Frozen Aether",
+      "oracleId": "32452ccf-88c7-41d6-93e5-15d31f29726d",
+      "patchSha256": "6097d69c35a808eb87b547eaec9ea52ade1979615c2c19f71867cb71785320f0",
+      "batch": "chunk-010",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Gauntlet of Might",
+      "oracleId": "d38ad188-515e-4865-a0ed-5d0fd4c7b453",
+      "patchSha256": "afbf05ed1977e2057188adb0239b1cf9ef44f84735f36b588ed8adf205995a8e",
+      "batch": "chunk-015",
+      "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
+    },
+    {
+      "name": "Generator Servant",
+      "oracleId": "68ac061a-e4a3-46df-9169-62f6a8481584",
+      "patchSha256": "483fd8da44bc9dd7d8c5010242893a793334c8ee9a36fa21cdca5460621e294b",
+      "batch": "chunk-008",
+      "reason": "Owner review on PR #72, 2026-11-17: the haste marker attaches to the first spell found, not the spell its mana paid for."
+    },
+    {
+      "name": "Genesis",
+      "oracleId": "15afdd88-05fc-4335-8a55-c6ee702f3bef",
+      "patchSha256": "2e7e1f34038c4d13614c0580338ad063d0777ced0505b8a56c0a9a5a945a016d",
+      "batch": "chunk-008",
+      "reason": "Its graveyard upkeep trigger never fires: step triggers scan only the battlefield, and it fires from the battlefield instead (PR review)."
+    },
+    {
+      "name": "Ghoultree",
+      "oracleId": "5f2628e3-e29a-4d77-bc27-6e1ce240d192",
+      "patchSha256": "ae4c52acf22a28461588deb6d5764757adb153af3966969daf2da0d08f697842",
+      "batch": "chunk-014",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Giott, King of the Dwarves",
+      "oracleId": "c629fa91-e13c-494b-a95f-a91b7c52035a",
+      "patchSha256": "89b28301247675689460d279f2ee594352d68454b41a08ffa0c4d5af2c75c0eb",
+      "batch": "chunk-012",
+      "reason": "Two independent 'whenever' triggers merged into one anyOf trigger, so an entrant matching both triggers once (PR review)."
+    },
+    {
+      "name": "Gods Willing",
+      "oracleId": "48e603a2-b965-4fbc-ad57-4388bce5ac8b",
+      "patchSha256": "3419eaffd5669d31ddb8902b0cc5cd6e6d5a67c451ef9f8435fb92a25e384ec4",
+      "batch": "chunk-004",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Gogo, Mysterious Mime",
+      "oracleId": "6fdcb563-9279-4365-8a78-26e75fbfd917",
+      "patchSha256": "61125ce7a107fff3b8ec86e86d9220725c4f144218bb1b4f73ca394971ba1d95",
+      "batch": "chunk-003",
+      "reason": "Owner review on PR #72, 2026-11-17: its rider applies even when it fails to become a copy."
+    },
+    {
+      "name": "Groundchuck & Dirtbag",
+      "oracleId": "da344e46-6bdf-4032-8590-bac850d5713d",
+      "patchSha256": "c83141e20bf28ec1b5ab1339c66721a8631cfb77f98431ecc416f1479bfbc4eb",
+      "batch": "chunk-010",
+      "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
+    },
+    {
+      "name": "Gutterbones",
+      "oracleId": "76ae3779-c821-4cd3-8d0f-8c42d1206ce4",
+      "patchSha256": "67cef0a153031b7acadba7ee51c70c1d796ca88cd8a8ca8f5d2eeecf562aabe0",
+      "batch": "chunk-013",
+      "reason": "Owner review on PR #72, 2026-11-17: the graveyard activation's condition (your turn, an opponent lost life) is never evaluated by the graveyard loop in legal.ts."
+    },
+    {
+      "name": "Helm of the Host",
+      "oracleId": "83b43aba-bf9c-4da2-967d-9daa632e97d2",
+      "patchSha256": "2685fbf9022eb22b0363cd31a636f4efbd58b3569e4a70c6aa8c8fe7427da4e3",
+      "batch": "chunk-001",
+      "reason": "Codex review on PR #72, 2026-11-17: 'That token gains haste' is modelled as createTokenCopyOf addKeywords, which puts haste in the token's copiable values; a copy of the token wrongly gets haste. No op grants a keyword to the token just created."
+    },
+    {
+      "name": "High Score",
+      "oracleId": "d81fc181-ecb0-43a5-88e8-c61aca3428d8",
+      "patchSha256": "649e3d5afbc43caca6800f24a89b1606b9537effc8c0caea6ddfd5577d335714",
+      "batch": "chunk-005",
+      "reason": "Its draw condition is an intervening-if on the trigger; the card checks it on resolution (PR review)."
+    },
+    {
+      "name": "Horn of the Mark",
+      "oracleId": "9b836c32-84f0-41ae-b7d9-67b92c743c60",
+      "patchSha256": "1f3d68068140bfe3484f4af33482d06e36f8802a0d3b64d99ae8369b24bf8a47",
+      "batch": "chunk-005",
+      "reason": "Owner review on PR #72, 2026-11-17: combines attackers sent at different players into one trigger."
+    },
+    {
+      "name": "Illusionist's Stratagem",
+      "oracleId": "1225bee2-c829-4a93-9f75-3495277c23bc",
+      "patchSha256": "501135e366c3beb77ffde16988b315c0b072312946c5f58958429e144d0b0530",
+      "batch": "chunk-009",
+      "reason": "Owner review on PR #72, 2026-11-17: multi-card blink is sequential, not simultaneous (exile together, return together)."
+    },
+    {
+      "name": "Imposing Sovereign",
+      "oracleId": "4bba3663-7f3c-4589-88aa-cf0bfe36b171",
+      "patchSha256": "190cc896e4484bb4183b465406bad48b34ea6ddaa52019512b9e80bbc8380d2b",
+      "batch": "chunk-016",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Impostor Syndrome",
+      "oracleId": "7be47440-b627-411e-a28f-d5a92e5e2fb7",
+      "patchSha256": "c12a931fe86cedc61211810d0931981d6e29c3a38c7b8058ffde023fcc6c9047",
+      "batch": "chunk-003",
+      "reason": "Owner review on PR #72, 2026-11-17: the copy reads the event object after it left, so a departed creature yields no copy."
+    },
+    {
+      "name": "Inquisitorial Rosette",
+      "oracleId": "4a3a25ae-61f5-4bcd-ae3d-4b31feaa83d8",
+      "patchSha256": "f7f4128d88d386e529a7b4a4fa459abec4ff4eeb7a838d60885e65aac0a492a2",
+      "batch": "chunk-008",
+      "reason": "createTokenAttacking taps the token; the card makes an untapped attacker (chunk 013)."
+    },
+    {
+      "name": "Inspirit, Flagship Vessel",
+      "oracleId": "554df866-3dbb-4811-8573-6033481591aa",
+      "patchSha256": "489200db238ca390a898ed618a2563f2988d67fac097c7a52016c6c899714d0a",
+      "batch": "chunk-005",
+      "reason": "Owner review on PR #72, 2026-11-17: the station threshold is rechecked on resolution as an intervening-if; removing counters after the trigger cancels it."
+    },
+    {
+      "name": "Jirina, Dauntless General",
+      "oracleId": "fda76032-7e6f-416f-8874-2a0642837522",
+      "patchSha256": "d548e68e8b3c42eb30248a68de95a2b4fb5da8f3d451b7f4e4e48992917b901b",
+      "batch": "chunk-007",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Junk Diver",
+      "oracleId": "08c595da-9305-42a9-b72f-5ccc546edc01",
+      "patchSha256": "a0e10c0f48c9f5921a894155cf11a1cf8d22bde44bf428effba48db9557ffacc",
+      "batch": "chunk-002",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Keep Safe",
+      "oracleId": "5602c14d-cc22-47d7-a1b0-6491749f00dd",
+      "patchSha256": "0e1ee518434b649ed00ddc72798f7e02c59d0437f3994ab0acf960124234e0fd",
+      "batch": "chunk-007",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Kessig Cagebreakers",
+      "oracleId": "d7407920-7596-497a-a135-b9343909a0cb",
+      "patchSha256": "8c56d095a2b27249174d3744ca73ef95349ab930ce96ac5407fa0dae066443ab",
+      "batch": "chunk-013",
+      "reason": "Owner review on PR #72, 2026-11-17: created attacking tokens share one defender choice, limited to players already attacked; each token may attack any legal defender."
+    },
+    {
+      "name": "Kinjalli's Sunwing",
+      "oracleId": "b9243163-b726-432e-830f-86132aa7f34a",
+      "patchSha256": "01e32cc660c4df0a25ca6d70713323c66ad1eb3d70abe48f351aa6a79edf5fd1",
+      "batch": "chunk-004",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Kismet",
+      "oracleId": "81fdd1c4-d43b-4f8b-8712-7c2bf45a3e0b",
+      "patchSha256": "e87dc9f614acefdb52cb5c3297a97c2d446ee24f7164d98ac2a8d9ef4f8fcedf",
+      "batch": "chunk-015",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Krang, Master Mind",
+      "oracleId": "52562194-4a97-40d2-aa73-7827f7834f2f",
+      "patchSha256": "56731a3f8e14c89db6382b2eaac2a853e14d4c518146e0fa5856df260f8d7293",
+      "batch": "chunk-013",
+      "reason": "Owner review on PR #72, 2026-11-17: the intervening-if is missing from the trigger, so it triggers when the condition is false. drawUpTo draws after the hand is emptied in response."
+    },
+    {
+      "name": "Lembas",
+      "oracleId": "f71fcdc3-5e96-416e-a49d-37019806e2e2",
+      "patchSha256": "0afa2a40157ef0b785cd0f0fa14082834b7e2bd92d3bbe74715768503ab567b9",
+      "batch": "chunk-004",
+      "reason": "Owner review on PR #72, 2026-11-17: its graveyard lookup is by card id only and can find a later incarnation."
+    },
+    {
+      "name": "Leonin Warleader",
+      "oracleId": "8b1351e6-165e-4ca3-96d5-4774b3176362",
+      "patchSha256": "1db379469a7f1fd0bc67c5c7efbea44643960be9f668e8a5a3304c287b5d3618",
+      "batch": "chunk-004",
+      "reason": "Owner review on PR #72, 2026-11-17: created attacking tokens share one defender choice, limited to players already attacked; each token may attack any legal defender."
+    },
+    {
+      "name": "Lightmine Field",
+      "oracleId": "20490b29-4f08-48a2-bf54-2ba118e746ac",
+      "patchSha256": "192bbf38bde15131eaa9c2964be6dd19afa760251616e6bbb1b8c1c5245ed69b",
+      "batch": "chunk-014",
+      "reason": "Codex review on PR #72, 2026-11-17: damageEach over attacking creatures also hits creatures put onto the battlefield attacking after the trigger; the card damages only the creatures whose attack triggered it, and no selector reads the attack group."
+    },
+    {
+      "name": "Lily Bowen, Raging Grandma",
+      "oracleId": "6b2d92f5-b0a1-4f30-9140-da490bf01bda",
+      "patchSha256": "bd63817b61e6c72c34079780dd8eca43d4527e1b3ef9578a16e6cbc783786dca",
+      "batch": "chunk-009",
+      "reason": "Owner review on PR #72, 2026-11-17: the reward follows even when the counter removal fails (source destroyed in response)."
+    },
+    {
+      "name": "Lookout's Dispersal",
+      "oracleId": "e2e44d46-9df4-46f8-acf7-5581b2257620",
+      "patchSha256": "4a72941413e8a4eca37cccdc36a8a03e03c769b03ce3d2eaf9ed3530b27c297c",
+      "batch": "chunk-013",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Lotus Field",
+      "oracleId": "134d5b82-7940-4b33-a922-7f9d1f403e50",
+      "patchSha256": "4bebc35edd7d66ca288d949a0b6fbecc5d3459d88be5189372f23d1cea019ebd",
+      "batch": "chunk-001",
+      "reason": "Sacrifices two lands one after the other instead of at once (PR review)."
+    },
+    {
+      "name": "Loxodon Gatekeeper",
+      "oracleId": "861f0b1c-3b37-4d38-9232-e42565247076",
+      "patchSha256": "329e79106db0d04bc7fc8ce84d387786d18d54afb55dfd05d230e647191bc793",
+      "batch": "chunk-015",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Loyal Inventor",
+      "oracleId": "eff22b28-88b8-4251-937f-4c06b6ca7bd2",
+      "patchSha256": "5d57ce07a7c965420e861e722f30ad2af21fee29995d68bc000f7a9b36162b5f",
+      "batch": "chunk-006",
+      "reason": "Owner review on PR #72, 2026-11-17: shuffles before searching; a search to hand or for nothing leaves the library unshuffled."
+    },
+    {
+      "name": "Mana Flare",
+      "oracleId": "97159138-c34b-416e-b079-5c952383a243",
+      "patchSha256": "48c045a9ffb7993ae59f65329ac4fa2e7b11df114a13a925004773e7adbc7eef",
+      "batch": "chunk-004",
+      "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
+    },
+    {
+      "name": "Market Festival",
+      "oracleId": "15c63f9b-d071-4522-b9f0-a1f441a61b81",
+      "patchSha256": "559a0f499678b0d9ad0aadb00e9588f31de5fd66b2e3f610429e62a888a88620",
+      "batch": "chunk-013",
+      "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
+    },
+    {
+      "name": "Mercurial Spelldancer",
+      "oracleId": "5b90f8ed-84b2-4306-9dfa-b5654ea0e4cd",
+      "patchSha256": "665eb52100fe5cd15c5c45a1bda28d3c9c3316a0ecab7f8e8b9a69de73951ade",
+      "batch": "chunk-007",
+      "reason": "Owner review on PR #72, 2026-11-17: the reward follows even when the counter removal fails (source destroyed in response)."
+    },
+    {
+      "name": "Merry, Warden of Isengard",
+      "oracleId": "1b600345-2b89-45bc-98c8-609fdd08a5fd",
+      "patchSha256": "e532de5154546c3546f701086f05664108ab31586dc306473e60e0c2f4e4cca4",
+      "batch": "chunk-007",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Mirrorworks",
+      "oracleId": "fd9c4ebe-cc9c-427c-8105-adb1703c191b",
+      "patchSha256": "fa9f56b61be6a17c28dc79ef7b1022ce148de81e5a205ccea75aeef7894f27e3",
+      "batch": "chunk-003",
+      "reason": "Owner review on PR #72, 2026-11-17: the copy reads the event object after it left, so a departed artifact yields no copy."
+    },
+    {
+      "name": "Molten Duplication",
+      "oracleId": "92b91910-9b65-4421-8eef-a33793161089",
+      "patchSha256": "a9f242f31af05b82887a98cf013a05ea4f6d6363290ad12741d6bf6b16f20204",
+      "batch": "chunk-002",
+      "reason": "Codex review on PR #72, 2026-11-17: 'That token gains haste' is modelled as createTokenCopyOf addKeywords, which puts haste in the token's copiable values; a copy of the token wrongly gets haste. No op grants a keyword to the token just created."
+    },
+    {
+      "name": "Monkey Cage",
+      "oracleId": "33a11c01-89a6-446b-84da-e48fd1f27446",
+      "patchSha256": "3be2d924a86e8842be6482e976d54f1d95aaf91010592c97918f1a1b3d04b189",
+      "batch": "chunk-016",
+      "reason": "Owner review on PR #72, 2026-11-17: token creation is gated on the self-sacrifice and counts entrants wrongly."
+    },
+    {
+      "name": "Necroduality",
+      "oracleId": "d36acdfe-2b1b-4c19-8b81-0b3127e480fe",
+      "patchSha256": "906e386dfc7bbd41d3215797abea9c199bda8a6cb5972e4144cdde304c5e93c6",
+      "batch": "chunk-003",
+      "reason": "Owner review on PR #72, 2026-11-17: the copy reads the event object after it left; a bounced Zombie yields no copy."
+    },
+    {
+      "name": "Noosegraf Mob",
+      "oracleId": "f27fb53f-a983-410a-821b-e48cd8c01f2e",
+      "patchSha256": "5dd3f209195b50f689eebcc4a6c9b4ebef625063ca8db39f71eeecd1aa0f9ab1",
+      "batch": "chunk-014",
+      "reason": "Owner review on PR #72, 2026-11-17: the reward follows even when the counter removal fails (source destroyed in response)."
+    },
+    {
+      "name": "Norin the Wary",
+      "oracleId": "b8b51a29-a2be-4b97-a73c-ea512d3d5622",
+      "patchSha256": "2a354267283de2b485c1576d1f4f266f6a81a6437dd72f37c28b8d0191d026f7",
+      "batch": "chunk-008",
+      "reason": "Owner review on PR #72, 2026-11-17: queues one trigger for several attackers."
+    },
+    {
+      "name": "Ouroboroid",
+      "oracleId": "50d6fd91-23d3-4d32-804f-6233e4386904",
+      "patchSha256": "a52b507f6d127d93b69e6bf2bb574544b567758d7b278f8dcb49f62f9f8f8651",
+      "batch": "chunk-002",
+      "reason": "Owner review on PR #72, 2026-11-17: putCountersEach re-evaluates X per creature, so later creatures get extra counters."
+    },
+    {
+      "name": "Overabundance",
+      "oracleId": "b1ee0503-be92-4a06-89cd-5dfa937930d3",
+      "patchSha256": "8020249e8b728b7e998fe419bba078ac814192913fcca36aa89077c52453d5c9",
+      "batch": "chunk-012",
+      "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification. Its damage also waits as an ordinary trigger instead of resolving with the mana."
+    },
+    {
+      "name": "Overwhelming Remorse",
+      "oracleId": "bb4507c1-1e5d-48b5-8fc0-1d26bd1c9e72",
+      "patchSha256": "5b8aa0ffa08ec0694bcd43bd94a70b80695cbc10edbc74b99b8e73dce9d94dd7",
+      "batch": "chunk-009",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Pearl of Wisdom",
+      "oracleId": "91ddd2bd-2dec-4670-8edb-e89c009b2187",
+      "patchSha256": "96214f37e283c348495400e61c6d3cbf6ee6ab100877c8c39ccb56d42f050767",
+      "batch": "chunk-009",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Phantom Train",
+      "oracleId": "a0c4eb78-bee0-42c6-ab1e-64bacde87960",
+      "patchSha256": "a19a8204a87db252714c576272be03c55d513f0b85cb3fa00fd93f3f398a7f92",
+      "batch": "chunk-015",
+      "reason": "Owner review on PR #72, 2026-11-17: its animation overwrites base P/T and fails to add Artifact."
+    },
+    {
+      "name": "Planar Engineering",
+      "oracleId": "dc48079a-b1c4-4c43-a989-418c78a264ec",
+      "patchSha256": "f4c35966a185b0a465a10290b3be15d1cea8f8c149ad1210bdb520dab09123f1",
+      "batch": "chunk-003",
+      "reason": "Sacrifices two lands one after the other instead of at once (PR review)."
+    },
+    {
+      "name": "Plate Armor",
+      "oracleId": "36082b5e-760b-4245-af59-00d308470d1a",
+      "patchSha256": "efe226a033ada28591fd0d02fcd866843cfb79be54acefb76afc22c0bf1593b8",
+      "batch": "chunk-010",
+      "reason": "A battlefield selfOnly activation cost reduction is never applied (chunk 012)."
+    },
+    {
+      "name": "Primal Empathy",
+      "oracleId": "24645d9e-5e6d-411d-be41-c2bd1659937f",
+      "patchSha256": "3ff574c78c5356cfb8102d7d3f66a3ef39b4ce93ad2f88c93fd78a7be21c3c76",
+      "batch": "chunk-010",
+      "reason": "Owner review on PR #72, 2026-11-17: greatest power starts at zero, so negative powers compare wrongly."
+    },
+    {
+      "name": "Primeval Protector",
+      "oracleId": "a9581345-87dc-4fbd-acc1-bb629f2cf40f",
+      "patchSha256": "41ab344f96ca1ad3d346e400f8048c9372f43ce70f84d12fe04361f81216831a",
+      "batch": "chunk-008",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Promise of Bunrei",
+      "oracleId": "6158ab85-a929-472c-9618-8e76d2d4b228",
+      "patchSha256": "33a238a66a1cfd98c09541b39a19090837d601c1bf0017ddb2329bad9680252f",
+      "batch": "chunk-015",
+      "reason": "Owner review on PR #72, 2026-11-17: 'if you do' is modelled as a separate counterable trigger."
+    },
+    {
+      "name": "Prosperous Bandit",
+      "oracleId": "2a14670b-2ab6-4e1d-9b33-610a87bdb7ce",
+      "patchSha256": "215ac809e61beca415c97bf8beeb9971c21f72b231ec84217f5aa0998235c348",
+      "batch": "chunk-006",
+      "reason": "Owner review on PR #72, 2026-11-17: offspring has no intervening-if, so the trigger goes on the stack when offspring was not paid."
+    },
+    {
+      "name": "Reject Imperfection",
+      "oracleId": "25781dc5-d6ea-4273-9fe3-06a8808b3718",
+      "patchSha256": "9225620ce13e5fef9bd317a55684f35cb7022b0907b3faab563066db41042a8f",
+      "batch": "chunk-005",
+      "reason": "Codex review on PR #72, 2026-11-17: the counter removes the spell from the stack first, so manaValueOfTarget then reads 0 and it always proliferates (the Electrosiphon gap); a scan found no other patch that reads a value after a counter."
+    },
+    {
+      "name": "Relic Vial",
+      "oracleId": "7e86d4a6-e4cd-418a-8bbc-72cdad753e3a",
+      "patchSha256": "caff2946a4c9c8921734fef9f82f8529fad7b74f12c6e140882a486436bcaa53",
+      "batch": "chunk-013",
+      "reason": "Owner review on PR #72, 2026-11-17: the single-object destroy path loses its death trigger."
+    },
+    {
+      "name": "Remorseful Cleric",
+      "oracleId": "c40bc9f6-2b72-4ae1-b912-50075af59628",
+      "patchSha256": "78efd668c9419c007f681a174938c2f931693b1c2ccd4b5a5b8871574b4e2449",
+      "batch": "chunk-006",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Ring of Evos Isle",
+      "oracleId": "4548f379-2647-4446-9e56-e7ef0662793a",
+      "patchSha256": "9e1f41897eb66f7d146767daa852d408f655abfa0e29aeca137f7157de402560",
+      "batch": "chunk-009",
+      "reason": "Its condition selects attachedToSource, which never matches in a condition (chunk 011)."
+    },
+    {
+      "name": "Rocksteady, Mutant Marauder",
+      "oracleId": "506a972d-d226-44dc-95b7-a6e7a63d76cd",
+      "patchSha256": "e3e6360b4a47353fb1e23a3b1a91064c48f3e16a91fabbacce252d8fd0a3d468",
+      "batch": "chunk-012",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Rout",
+      "oracleId": "d69aa624-23d1-406a-b7e0-9140a6f57929",
+      "patchSha256": "f2a04eaaba2ebb6003e3df6553a649166ba5e40583629878a78e53d3037bdcf5",
+      "batch": "chunk-010",
+      "reason": "Owner review on PR #72, 2026-11-17: 'flash if you pay {2} more' is modelled as an alternative cost, which is skipped outside the hand and cannot combine with other alternative costs."
+    },
+    {
+      "name": "Saheeli, the Sun's Brilliance",
+      "oracleId": "5aa76c5d-8046-42ce-b61d-cc9b4806c11a",
+      "patchSha256": "80fbddcb65d8256834c7c9d121fad51ea0812d2f4a39b2a13a116b049ac7463f",
+      "batch": "chunk-006",
+      "reason": "Codex review on PR #72, 2026-11-17: 'That token gains haste' is modelled as createTokenCopyOf addKeywords, which puts haste in the token's copiable values; a copy of the token wrongly gets haste. No op grants a keyword to the token just created."
+    },
+    {
+      "name": "Sanctum of Calm Waters",
+      "oracleId": "1cd1e3a8-e09d-4b61-8244-92b317132d6a",
+      "patchSha256": "8d1cdcabe4c3e5033b14fa948cdb70248971ba0749e74c7d40ed6767424839a8",
+      "batch": "chunk-006",
+      "reason": "Owner review on PR #72, 2026-11-17: 'If you do, discard' still discards after drawing zero."
+    },
+    {
+      "name": "Saproling Symbiosis",
+      "oracleId": "69d22037-fbf7-44d2-81a7-7ce8e32f06ec",
+      "patchSha256": "f1b540dd6b4abd8f47bcbfddc170b501ce2d8bcabe5e59ccf10ba12a91cd53e1",
+      "batch": "chunk-006",
+      "reason": "Owner review on PR #72, 2026-11-17: 'flash if you pay {2} more' is modelled as an alternative cost, which is skipped outside the hand and cannot combine with other alternative costs."
+    },
+    {
+      "name": "Sarkhan, Fireblood",
+      "oracleId": "074cbe14-a0c8-4772-955a-b4052333d6ce",
+      "patchSha256": "4d57b82f13d96a69b8f1d02140cbca2c65c0cda7cdddd8f084cce2b159319e1b",
+      "batch": "chunk-007",
+      "reason": "Owner review on PR #72, 2026-11-17: its retained +1 acts as a mana ability, usable at any time and outside loyalty limits."
+    },
+    {
+      "name": "Saved by the Shell",
+      "oracleId": "7ef5c812-ad7d-4d6c-8ee5-68561e7e4bd7",
+      "patchSha256": "11152a00fd851085c8671752313cff378e9f098caec6d99d606eb7dee2a4659c",
+      "batch": "chunk-013",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Self-Destruct",
+      "oracleId": "98bf6311-bc9b-4bf8-ac83-c041973b86d0",
+      "patchSha256": "2a90a06fe9f16c1521b928a8da8defad838669d84f2c84dc0220bc6efb559b53",
+      "batch": "chunk-008",
+      "reason": "Owner review on PR #72, 2026-11-17: its damage is dealt in two events, not simultaneously."
+    },
+    {
+      "name": "Shelter",
+      "oracleId": "c1909d70-d8f4-4c54-8587-0a910f123238",
+      "patchSha256": "61363c8f7fcdf0fa44fed860d28227ef10c33d9f2c69b33f089a857d3f4af90b",
+      "batch": "chunk-004",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Sigiled Sword of Valeron",
+      "oracleId": "f1c4269a-1d99-4f3b-8107-a005df3468d5",
+      "patchSha256": "63d9136afbad6f437135c4ba62ebb7931cc63fa57b20df372c7db37b3568fde8",
+      "batch": "chunk-011",
+      "reason": "createTokenAttacking taps the token; the card makes an untapped attacker (chunk 013)."
+    },
+    {
+      "name": "Siphon Insight",
+      "oracleId": "aee82122-d13e-4175-b499-9dde718e4da9",
+      "patchSha256": "f83195da336c5a911de92a0359838d9eb7410bcf002ecdbb34239cff22a51b4b",
+      "batch": "chunk-005",
+      "reason": "Owner review on PR #72, 2026-11-17: any-color permission becomes any-type, dropping colorless requirements."
+    },
+    {
+      "name": "Siren's Ruse",
+      "oracleId": "58a55d14-b03b-4648-b168-ad35ff088b19",
+      "patchSha256": "7f6458af7a07c80bbbe7f62395dd0d109933064008a93cfa2e7fcf6a271f992b",
+      "batch": "chunk-007",
+      "reason": "Owner review on PR #72, 2026-11-17: checks the returning incarnation's characteristics, not the exiled object's."
+    },
+    {
+      "name": "Smoke Shroud",
+      "oracleId": "a621c5f6-c1c6-4bc9-88b1-f459efa07a39",
+      "patchSha256": "006b2757e467adb92f6a1cdd1708b53a03374df07b546b200666282708aef6f6",
+      "batch": "chunk-009",
+      "reason": "returnDepartedSourceToBattlefield from a graveyard-functioning trigger looks for leftBattlefieldObjectId equal to the graveyard card's own id, which never matches, so the card never returns"
+    },
+    {
+      "name": "Spectral Denial",
+      "oracleId": "f8536726-993b-4100-918c-e3c7177d4c65",
+      "patchSha256": "13af96a25a640b9fdde1ffb48a37026b085df5c98e3ab57ce0f29b68134d971a",
+      "batch": "chunk-009",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Spider-Woman, Stunning Savior",
+      "oracleId": "be2b9c6d-4ecb-49ec-b276-4aa93c5dfc00",
+      "patchSha256": "34ce8bc2db845c430b0ea625b25ebb857f8a0d29e622efb9c09cf1b54dafe83e",
+      "batch": "chunk-006",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring only)"
+    },
+    {
+      "name": "Spreading Seas",
+      "oracleId": "af32757c-9d3c-4f6c-a6fa-d5729a440382",
+      "patchSha256": "bdc639690c1d06e626f8522446c45c096edca1b2d305105348f7bffb495d061b",
+      "batch": "chunk-015",
+      "reason": "Owner review on PR #72, 2026-11-17: the enchanted land keeps printed nonmana abilities, and an animated land loses its creature subtypes."
+    },
+    {
+      "name": "Spyglass Siren",
+      "oracleId": "4ec9d9eb-14e2-47ea-88a2-d2394e363784",
+      "patchSha256": "0c076ccd072b3aaed4e593f98d2d5b198ac6d94845febad5782b021e0687e616",
+      "batch": "chunk-009",
+      "reason": "Its Map token's explore threw in an activated ability (chunk 009 fuzz)."
+    },
+    {
+      "name": "Steelburr Champion",
+      "oracleId": "d1f3d5ca-cb17-400f-8ed9-3b9a4f151b62",
+      "patchSha256": "aa66a8f4022f4159d1e9cb14014407da5a7d077e469424c0e020b9463d4914a2",
+      "batch": "chunk-008",
+      "reason": "Owner review on PR #72, 2026-11-17: offspring has no intervening-if, so the trigger goes on the stack when offspring was not paid."
+    },
+    {
+      "name": "Stirring Hopesinger",
+      "oracleId": "7244d04a-bb9c-4fbe-a346-4a3f45709da7",
+      "patchSha256": "297bb16f6dfcdd101370f23e95873e3b5938b52203e541e8cbbccf382fa7975b",
+      "batch": "chunk-012",
+      "reason": "Owner review on PR #72, 2026-11-17: cast-target matching ignores countTargets, so a six-target Hex gives no trigger."
+    },
+    {
+      "name": "Sword of War and Peace",
+      "oracleId": "b10ad415-0aae-4d70-82e6-a4055a40cbe4",
+      "patchSha256": "841fc45f7dcdacff45521e1bc82b6849bdf4ffbb57badbf32d819a124a38fa4c",
+      "batch": "chunk-003",
+      "reason": "Owner review on PR #72, 2026-11-17: cardsInTargetHand does not handle eventPlayer, so the damage is always 0."
+    },
+    {
+      "name": "Tale of Katara and Toph",
+      "oracleId": "7c376ea9-d50a-4cc3-ae40-7bac3a926f20",
+      "patchSha256": "f31614c131aeb2662693a97ce62ef4fd2bf112c020f1e37ab4da0baea1c8b9b5",
+      "batch": "chunk-007",
+      "reason": "Owner review on PR #72, 2026-11-17: 'first time each turn' counts successful firings, not events; a later tap can count as the first."
+    },
+    {
+      "name": "Tempestra, Dame of Games",
+      "oracleId": "12401ad1-b5c9-43dc-9389-04aaf5db8b26",
+      "patchSha256": "159af98a5d4b6aeaa9a87fd2343ec6a5488f76f25fad9234aaa32bde8f0db7a2",
+      "batch": "chunk-013",
+      "reason": "Codex review on PR #72, 2026-11-17: 'That token gains haste' is modelled as createTokenCopyOf addKeywords, which puts haste in the token's copiable values; a copy of the token wrongly gets haste. No op grants a keyword to the token just created."
+    },
+    {
+      "name": "Thalia, Heretic Cathar",
+      "oracleId": "13be47e4-9da2-4f9e-baf0-db96f7777ccb",
+      "patchSha256": "3496fb51f3f66b74bb8e9be19472dea6f752920a36b4993a2b92c2993a032bb2",
+      "batch": "chunk-002",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Tormod's Crypt",
+      "oracleId": "1573f7f9-672c-421a-b1ac-3d0d8aea59ca",
+      "patchSha256": "016f09e9bcab6799b8551ed33e985101bc94bda1ec7bea6244b89135dc528485",
+      "batch": "chunk-002",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Trace of Abundance",
+      "oracleId": "530140f1-e992-4b5e-882c-c15bacc328fa",
+      "patchSha256": "46b834ce0653293da4b4028b04410720eaf6aa39b66ed4ca445953b82d8da144",
+      "batch": "chunk-008",
+      "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
+    },
+    {
+      "name": "Turn Aside",
+      "oracleId": "4325ae73-af43-4a7d-a552-9909f0dc77db",
+      "patchSha256": "a223770dcf565d933e199a9cad808f812fdf5331e2824952f803f71960f638b3",
+      "batch": "chunk-008",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Uncover the Moon-Letters",
+      "oracleId": "4c67359d-5590-4eb0-827e-b411967ee238",
+      "patchSha256": "516f543eec9f58e8403d92d2f3b0e83b865bd3ccb6670eb710ebf52179b2ad5c",
+      "batch": "chunk-015",
+      "reason": "Owner review on PR #72, 2026-11-17: 'If you do, discard' still discards after drawing zero."
+    },
+    {
+      "name": "Urabrask the Hidden",
+      "oracleId": "5b2ffb53-86b7-4665-a5c7-b85b035b6c81",
+      "patchSha256": "951b2417b72af0428faba30545e33040b73346ae922380519b420f281706bfb7",
+      "batch": "chunk-002",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Venom's Hunger",
+      "oracleId": "8388faa0-f64e-4b01-836e-617f99b808a4",
+      "patchSha256": "5c1f2619f9b805289e5229a760688362abee2d9dc7afea352a7ce8d5403cb800",
+      "batch": "chunk-014",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Verdant Haven",
+      "oracleId": "09381494-393d-4ddf-b79f-7c0ae5dce912",
+      "patchSha256": "86f563827292939d481075f319e44962cc682b07aec6f65070f7c4220a6e9a93",
+      "batch": "chunk-016",
+      "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
+    },
+    {
+      "name": "Vernal Bloom",
+      "oracleId": "238b270c-152a-48e5-a955-65f5cb80c174",
+      "patchSha256": "a9a3b3e6c69ec1480510e05e187249d9d3f26a2414e25a1e7f3b598d80a0fed5",
+      "batch": "chunk-013",
+      "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
+    },
+    {
+      "name": "Vow of Duty",
+      "oracleId": "1e7bddbd-e448-4aea-9d18-b44bd45837c5",
+      "patchSha256": "685738b2f55d5560ba1c9368b3139c598e0fabcf308e0d28bd1e2fab5808bbc7",
+      "batch": "chunk-009",
+      "reason": "attackRestriction never matches attachedToSource (chunk 013)."
+    },
+    {
+      "name": "Vow of Lightning",
+      "oracleId": "bfed67f3-70d2-49c2-8f25-16e4d10fa5be",
+      "patchSha256": "4f5b1747bc48a5d7dbc5e844d8cefdbc112c0a475f480706048552f0e3e551f4",
+      "batch": "chunk-010",
+      "reason": "attackRestriction never matches attachedToSource (chunk 013)."
+    },
+    {
+      "name": "Vow of Torment",
+      "oracleId": "237b87f4-783b-40ac-9fcf-4ae76a33229d",
+      "patchSha256": "4a12ae4fbc75a9c3b15e8242fde73304dc3264406d55b79dd62293e67720d088",
+      "batch": "chunk-011",
+      "reason": "attackRestriction never matches attachedToSource (chunk 013)."
+    },
+    {
+      "name": "Wand of Orcus",
+      "oracleId": "9fd521d5-baa3-4054-a990-d23265863c71",
+      "patchSha256": "6f0b5c766a03ed2f50162570578d43ce9452a5201932266dd6a611557a81d2f8",
+      "batch": "chunk-005",
+      "reason": "Owner review on PR #72, 2026-11-17: grantKeywordEachUntilEot with attachedToSource never matches (affectedBy passes no attachment), so a non-Zombie equipped creature never gains deathtouch."
+    },
+    {
+      "name": "Weaponcraft Enthusiast",
+      "oracleId": "7c27136a-bf9d-4f42-9c37-abe347fad1bb",
+      "patchSha256": "5db6804524a752378473bd21b5a24cf49090b9edb0c570251b033ad4298fc188",
+      "batch": "chunk-015",
+      "reason": "Owner review on PR #72, 2026-11-17: fabricate still offers counters it cannot place, yielding no Servos."
+    },
+    {
+      "name": "Witch-king, Sky Scourge",
+      "oracleId": "84137013-7a23-4bc8-b855-04889373fdae",
+      "patchSha256": "2d50f4deab3e8b10e4069e845634e609f612c5156e109ad3afa1a7c5620bcb42",
+      "batch": "chunk-016",
+      "reason": "Owner review on PR #72, 2026-11-17: uses current attackers instead of the triggering attack group and LKI."
+    },
+    {
+      "name": "Wizard's Lightning",
+      "oracleId": "2bd81743-84c8-43ec-86f5-68230036827b",
+      "patchSha256": "12e3a896fad83e23f47e33de754b6bfde3e80fb438e58dcf1190439951c6acc2",
+      "batch": "chunk-010",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Wizard's Retort",
+      "oracleId": "b828251c-86a9-454f-9852-d0876d0f5153",
+      "patchSha256": "cb35e1f70dc1d0da86d588ca254c8d9b0489f1445cb2a071b053797537b4a7e1",
+      "batch": "chunk-005",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Workshop Assistant",
+      "oracleId": "319ee221-bace-41e9-b386-6b528bd780c1",
+      "patchSha256": "9e8579a81a5375c7b2c815638799fe66c2912f3ef48462396e0346f86576817a",
+      "batch": "chunk-004",
+      "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Zhur-Taa Ancient",
+      "oracleId": "6543b60c-12b0-4e69-9074-6a2b468c5234",
+      "patchSha256": "2156b5ad05c3431e21cc07c3de4943db5f2bef798907117ecd30b889dfcba1e2",
+      "batch": "chunk-010",
+      "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
+    }
+  ]
+}

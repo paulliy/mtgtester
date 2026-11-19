@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The pay-X damage needs an any-target chosen only when the reflexive payment happens, but mayPayXThenDealDamage announces its target with the trigger, which would force a target on the Treasure branches too."}

@@ -1,0 +1,54 @@
+{
+  "name": "Volrath's Stronghold",
+  "oracleId": "73b8cf90-3c71-4f8b-a29f-61894b7f27c9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{B}, {T}: Put target creature card from your graveyard on top of your library."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "filter": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToLibraryTop",
+              "target": 0
+            }
+          ],
+          "description": "{1}{B}, {T}: Put target creature card from your graveyard on top of your library."
+        }
+      }
+    ]
+  }
+}

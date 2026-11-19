@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"castsSpell","caster":"opponent","filter":{"kind":"not","of":{"kind":"type","value":"Creature"}},"ordinal":1},"optional":false,"targets":[],"effects":[{"op":"recruit"}],"description":"Whenever an opponent casts their first noncreature spell each turn, you recruit."}]}}

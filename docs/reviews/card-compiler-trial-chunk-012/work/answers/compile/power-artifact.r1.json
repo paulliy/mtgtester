@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"costReduction with appliesTo 'activate' has no way to scope the reduction to the enchanted permanent's activated abilities regardless of controller (its filter is a printed-spell filter and graveyardAbilities/boastOnly are fixed categories), so the attached-artifact activation reduction cannot be stated exactly."}

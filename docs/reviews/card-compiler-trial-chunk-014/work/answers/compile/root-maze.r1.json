@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"otherPermanentsEnterTapped","filter":{"kind":"anyOf","of":[{"kind":"type","value":"Artifact"},{"kind":"type","value":"Land"}]}}]}}

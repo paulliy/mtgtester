@@ -1,0 +1,2 @@
+Scry X, where X is the greatest mana value among permanents you control.
+Draw three cards.

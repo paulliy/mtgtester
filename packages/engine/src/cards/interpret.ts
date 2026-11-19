@@ -18,6 +18,7 @@ import { colorsOfManaCost, combinedManaCost, emptyCost, parseManaCost } from '..
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { AbilityCost, ActivatedAbility, AlternativeCast, MdfcLandFace } from './ability';
 import { transformDefinition } from '../testing/definition-transform';
+import { cachedDefinition } from './definition-cache';
 import { SELF_SUBJECT } from './ability';
 import type { Ability, Effect, KeywordAbility, TargetSpec, TokenSpec } from './ability';
 import { parseEntersAsCopy } from './grammar/copy';
@@ -3230,9 +3231,15 @@ function buildPathwayLand(card: OracleCard): {
   };
 }
 
-/** Interpret one oracle card. Never throws â€” unmodeled cards are reported, not errors. */
+/**
+ * Interpret one oracle card. Never throws â€” unmodeled cards are reported, not errors.
+ *
+ * Each distinct card is interpreted once per process (`definition-cache.ts`); the returned
+ * definition is shared, so callers must not mutate it. The test-only transform applies on every
+ * call, after the cache.
+ */
 export function interpretCard(card: OracleCard): CardDefinition {
-  return transformDefinition(interpretOracleCard(card));
+  return transformDefinition(cachedDefinition(card, interpretOracleCard));
 }
 
 /**
@@ -3244,7 +3251,10 @@ export function interpretCardWithDiagnostics(card: OracleCard): {
   definition: CardDefinition;
   failures: SlotFailure[];
 } {
-  const { result, failures } = collectSlotDiagnostics(() => interpretCard(card));
+  // Bypasses the cache: slot failures are recorded only while the grammar actually runs.
+  const { result, failures } = collectSlotDiagnostics(() =>
+    transformDefinition(interpretOracleCard(card)),
+  );
   return { definition: result, failures };
 }
 
@@ -3804,6 +3814,31 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
       lower === '~ can be your commander' ||
       lower === 'sivitri, dragon master can be your commander'
     ) {
+      continue;
+    }
+    // Two-commander pairing keywords are deck construction only (CR 702.124a); deck validation
+    // checks the pairing, and nothing happens in a game.
+    if (
+      lower === 'partner' ||
+      lower === 'choose a background' ||
+      lower === 'friends forever' ||
+      lower === "doctor's companion" ||
+      /^partner\s*—\s*\S/.test(lower)
+    ) {
+      continue;
+    }
+    // "Partner with <name>" is also an enters trigger: target player may search their library
+    // for the named card, reveal it, put it into their hand, then shuffle (CR 702.124j).
+    const partnerWith = /^partner with (.+)$/i.exec(line.replace(/\.$/, ''));
+    if (partnerWith !== null) {
+      const partnerName = (partnerWith[1] as string).trim();
+      triggers.push({
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: SELF_SUBJECT },
+        targets: [{ kind: 'player' }],
+        effects: [{ op: 'targetPlayerMaySearchNamed', target: 0, name: partnerName }],
+        description: `Target player may search their library for a card named ${partnerName}, reveal it, and put it into their hand, then shuffle`,
+      });
       continue;
     }
     if (/^hideaway 4/i.test(lower)) {

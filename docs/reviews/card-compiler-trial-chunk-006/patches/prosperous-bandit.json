@@ -1,0 +1,51 @@
+{
+  "name": "Prosperous Bandit",
+  "oracleId": "2a14670b-2ab6-4e1d-9b33-610a87bdb7ce",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Offspring {1}"
+  ],
+  "compose": "append",
+  "def": {
+    "optionalAdditionalCost": {
+      "mechanic": "offspring",
+      "cost": {
+        "generic": 1,
+        "colored": {
+          "W": 0,
+          "U": 0,
+          "B": 0,
+          "R": 0,
+          "G": 0
+        },
+        "colorless": 0
+      }
+    },
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": "source",
+            "count": {
+              "kind": "optionalCostCount",
+              "mechanic": "offspring"
+            },
+            "powerOverride": 1,
+            "toughnessOverride": 1
+          }
+        ],
+        "description": "Offspring {1}: when this creature enters, create a 1/1 token copy of it."
+      }
+    ]
+  }
+}

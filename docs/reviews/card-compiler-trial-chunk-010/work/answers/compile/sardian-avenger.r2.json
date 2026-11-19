@@ -1,0 +1,1 @@
+{"status": "inexpressible", "reason": "The attack-trigger pump is expressible, but the engine-parsed leavesBattlefield trigger (target eventPlayer without subjectControllerIsEventPlayer) fails validation at triggers[0] and a patch cannot replace it."}

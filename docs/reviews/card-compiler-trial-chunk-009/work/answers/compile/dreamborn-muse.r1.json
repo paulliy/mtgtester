@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Each player mills a number equal to the size of that player's own hand: millTargetPlayer takes a fixed number, and the mill op's count is evaluated for the controller, not for the event player."}

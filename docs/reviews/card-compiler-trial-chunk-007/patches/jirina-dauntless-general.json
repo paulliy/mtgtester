@@ -1,0 +1,35 @@
+{
+  "name": "Jirina, Dauntless General",
+  "oracleId": "fda76032-7e6f-416f-8874-2a0642837522",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ enters, exile target player's graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "player"
+          }
+        ],
+        "effects": [
+          {
+            "op": "exileTargetPlayerGraveyard",
+            "target": 0
+          }
+        ],
+        "description": "When Jirina enters, exile target player's graveyard."
+      }
+    ]
+  }
+}

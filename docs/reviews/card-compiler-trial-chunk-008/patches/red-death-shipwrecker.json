@@ -1,0 +1,57 @@
+{
+  "name": "Red Death, Shipwrecker",
+  "oracleId": "0d40b2c3-9f39-45c6-8b25-12353f300613",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Alluring Eyes — {T}: Goad target creature an opponent controls. That player draws a card. You add {R}."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "opponent"
+            }
+          ],
+          "effects": [
+            {
+              "op": "goad",
+              "target": 0
+            },
+            {
+              "op": "drawTarget",
+              "target": {
+                "controllerOf": 0
+              },
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            },
+            {
+              "op": "addMana",
+              "amount": {
+                "kind": "const",
+                "n": 1
+              },
+              "colors": [
+                "R"
+              ]
+            }
+          ],
+          "description": "Alluring Eyes — {T}: Goad target creature an opponent controls. That player draws a card. You add {R}."
+        }
+      }
+    ]
+  }
+}

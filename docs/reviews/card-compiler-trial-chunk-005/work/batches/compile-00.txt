@@ -1,0 +1,2 @@
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/compile/volcanic-vision.r2.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/compile/volcanic-vision.r2.json
+docs/reviews/card-compiler-trial-chunk-005/work/prompts/compile/zo-zu-the-punisher.r2.md	docs/reviews/card-compiler-trial-chunk-005/work/answers/compile/zo-zu-the-punisher.r2.json

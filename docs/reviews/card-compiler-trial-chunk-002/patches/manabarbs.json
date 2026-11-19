@@ -1,0 +1,40 @@
+{
+  "name": "Manabarbs",
+  "oracleId": "0f1afedd-c60f-454f-b84a-c8117aec0128",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a player taps a land for mana, this enchantment deals 1 damage to that player."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "becomesTapped",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Land"
+            }
+          },
+          "forMana": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a player taps a land for mana, this enchantment deals 1 damage to that player."
+      }
+    ]
+  }
+}

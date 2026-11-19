@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The intervening-if 'an opponent controls three or more creatures' is per opponent, but countPermanents with scope 'opponents' pools every opponent's creatures into one count, so the threshold cannot be checked for a single opponent."}

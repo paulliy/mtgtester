@@ -1,0 +1,95 @@
+{
+  "name": "Jor Kadeen, First Goldwarden",
+  "oracleId": "967897db-a34b-493c-bd48-04e2650902d2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ attacks, it gets +X/+X until end of turn, where X is the number of equipped creatures you control. Then if ~'s power is 4 or greater, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "pumpUntilEot",
+            "target": "source",
+            "power": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "isEquipped"
+                  }
+                ]
+              },
+              "scope": "you"
+            },
+            "toughness": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "isEquipped"
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          },
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "compareValues",
+              "left": {
+                "kind": "powerOfSource"
+              },
+              "cmp": ">=",
+              "right": {
+                "kind": "const",
+                "n": 4
+              }
+            },
+            "then": [
+              {
+                "op": "draw",
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Whenever Jor Kadeen attacks, it gets +X/+X until end of turn, where X is the number of equipped creatures you control. Then if Jor Kadeen's power is 4 or greater, draw a card."
+      }
+    ]
+  }
+}

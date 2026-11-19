@@ -1,0 +1,61 @@
+{
+  "name": "Hellkite Igniter",
+  "oracleId": "12aba1d4-477f-4d36-96bb-c3c7bbd51b75",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{R}: ~ gets +X/+0 until end of turn, where X is the number of artifacts you control."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 1,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "target": "source",
+              "power": {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    }
+                  ]
+                },
+                "scope": "you"
+              },
+              "toughness": 0
+            }
+          ],
+          "description": "{1}{R}: This creature gets +X/+0 until end of turn, where X is the number of artifacts you control."
+        }
+      }
+    ]
+  }
+}

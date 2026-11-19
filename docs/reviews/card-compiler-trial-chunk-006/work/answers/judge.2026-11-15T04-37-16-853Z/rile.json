@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A has one target creature you control: Rile itself deals 1 damage to it, and that same creature gains trample. Text B has two separate targets, and the targeted creature deals the 1 damage to itself (the creature is the damage source), so the damage source differs and the trample creature may be a different creature."]}

@@ -1,0 +1,53 @@
+{
+  "name": "Astrid Peth",
+  "oracleId": "fa55177c-ba65-4113-9c05-2d63318cf7c5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Brand-new Sky — Whenever you sacrifice a Clue or Food, ~ explores."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "sacrificed",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Clue"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Food"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "explore",
+            "target": "source"
+          }
+        ],
+        "description": "Brand-new Sky — Whenever you sacrifice a Clue or Food, Astrid Peth explores."
+      }
+    ]
+  }
+}

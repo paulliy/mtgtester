@@ -1,0 +1,3 @@
+Target player gains 5 life.
+This spell deals 5 damage to any target.
+You draw five cards.

@@ -1,0 +1,34 @@
+{
+  "name": "Homunculus Horde",
+  "oracleId": "b3c69bf4-880f-4198-a67c-87d23d9c3d41",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you draw your second card each turn, create a token that's a copy of this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "drawsCard",
+          "player": "you",
+          "ordinalThisTurn": 2
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": "source",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you draw your second card each turn, create a token that's a copy of this creature."
+      }
+    ]
+  }
+}

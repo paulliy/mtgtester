@@ -149,7 +149,6 @@ packages/engine/tests/control-departure-observer-contract.test.ts
 packages/engine/tests/bounded-choice-spells-contract.test.ts
 packages/engine/tests/bounded-multiplayer-permanents-contract.test.ts
 packages/engine/tests/modal-player-boundary-contract.test.ts
-packages/server/src/cards/pr08-verification-report.test.ts
 packages/engine/tests/pr09
 packages/server/src/cards/pr09
 packages/engine/tests/per-player-targets.test.ts
@@ -177,6 +176,7 @@ packages/engine/tests/pilot-current
 packages/server/src/cards/pilot-current
 packages/engine/tests/grammar-diagnostics.test.ts
 packages/server/src/cards/edhrec-triage.test.ts
+packages/server/src/cards/primitive-backlog.test.ts
 packages/engine/tests/cards/edhrec-staples
 packages/engine/tests/cards/aetherize.test.ts
 packages/engine/tests/cards/craterhoof-behemoth.test.ts
@@ -195,6 +195,9 @@ packages/engine/tests/cards/witch-enchanter.test.ts
 packages/engine/tests/move-all-counters.test.ts
 packages/engine/tests/cards/plea-for-power.test.ts
 packages/server/src/cards/edhrec-pins.test.ts
+packages/server/src/cards/compiled-promotion.test.ts
+packages/server/src/cards/compiled-smoke.test.ts
+packages/server/src/cards/compiled-calibration.test.ts
 packages/engine/tests/cards/nantuko-vigilante.test.ts
 packages/engine/tests/cards/gudul-lurker.test.ts
 packages/engine/tests/cards/hunted-bonebrute.test.ts

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"type","value":"Artifact"}]},"op":{"layer":6,"addKeyword":"shroud"},"condition":{"kind":"countPermanents","selector":{"kind":"type","value":"Artifact"},"scope":"you","cmp":">=","n":3}}]}}

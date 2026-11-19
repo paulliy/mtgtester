@@ -1,0 +1,2 @@
+Equipped creature gets +10/+10 and loses flying.
+The data contains no equip ability, so this Equipment has no way to become attached.

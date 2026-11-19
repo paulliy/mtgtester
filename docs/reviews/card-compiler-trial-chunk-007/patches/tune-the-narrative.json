@@ -1,0 +1,32 @@
+{
+  "name": "Tune the Narrative",
+  "oracleId": "4262a726-d1da-4bdc-ab14-73212aa83f9c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Draw a card. You get {E}{E} ."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        },
+        {
+          "op": "gainEnergy",
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        }
+      ],
+      "description": "Draw a card. You get {E}{E}."
+    }
+  }
+}

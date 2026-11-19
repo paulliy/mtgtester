@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Up to one target creature that player controls' for each opponent needs a per-player variable target slot whose chosen creatures are each gained, and no effect gains control of each chosen target: gainControlTarget takes one target and gainControl takes a selector, not chosen targets."}

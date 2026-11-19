@@ -238,6 +238,15 @@ describe('Context Assembler', () => {
     expect(payload.battlefield[0].keywords).toEqual(['Indestructible']);
   });
 
+  it('passes the names of cards the seat saw in an opponent hand, and nothing otherwise', () => {
+    const plain = JSON.parse(assemblePrompt(fixtureRequest(), fixtureView()).messages[1]!.content);
+    expect('knownHand' in plain.opponents[0]).toBe(false);
+    const view = fixtureView();
+    view.opponents[0]!.knownHand = [{ id: 'h1', name: 'Counterspell' }];
+    const payload = JSON.parse(assemblePrompt(fixtureRequest(), view).messages[1]!.content);
+    expect(payload.opponents[0].knownHand).toEqual(['Counterspell']);
+  });
+
   it('leaves own poison out of the payload when the viewer has none', () => {
     const payload = JSON.parse(
       assemblePrompt(fixtureRequest(), fixtureView()).messages[1]!.content,

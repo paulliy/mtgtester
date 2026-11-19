@@ -1,0 +1,41 @@
+{
+  "name": "Fiery Cannonade",
+  "oracleId": "7e108b31-2ea3-4129-b324-a2d31c78bbe6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals 2 damage to each non-Pirate creature."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "damageEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "subtype",
+                  "value": "Pirate"
+                }
+              }
+            ]
+          },
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        }
+      ],
+      "description": "Fiery Cannonade deals 2 damage to each non-Pirate creature."
+    }
+  }
+}

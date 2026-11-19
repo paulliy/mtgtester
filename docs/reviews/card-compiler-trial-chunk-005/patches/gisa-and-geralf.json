@@ -1,0 +1,32 @@
+{
+  "name": "Gisa and Geralf",
+  "oracleId": "20e94d0f-6887-45f8-a137-877011d786c6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Once during each of your turns, you may cast a Zombie creature spell from your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "playFromZone",
+        "zone": "graveyard",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "subtype",
+              "value": "Zombie"
+            }
+          ]
+        },
+        "yourTurnOnly": true,
+        "permanentTypeBudget": 1
+      }
+    ]
+  }
+}

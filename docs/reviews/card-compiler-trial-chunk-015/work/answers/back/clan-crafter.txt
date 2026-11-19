@@ -1,0 +1,1 @@
+Each creature you own that is a commander has "{2}, Sacrifice an artifact you control (this creature can be sacrificed to pay this cost): Put a +1/+1 counter on this creature. Draw a card."

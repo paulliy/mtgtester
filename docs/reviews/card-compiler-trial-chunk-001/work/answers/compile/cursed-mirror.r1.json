@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"entersAsCopy makes a permanent copy with no until-end-of-turn duration, and the schema has no as-enters choice to become a copy until end of turn; becomeCopyOf is an ability effect, not an as-enters replacement."}

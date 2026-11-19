@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"dies","subject":{"kind":"self"}},"optional":false,"targets":[{"kind":"creature"}],"effects":[{"op":"gainControlTarget","target":0,"duration":"permanent"}],"description":"When ~ dies, gain control of target creature."}]}}

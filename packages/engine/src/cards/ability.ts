@@ -1141,6 +1141,11 @@ export type Effect =
   | { op: 'resolvingSpellShuffleIntoLibrary' }
   | { op: 'exileTargetPlayerGraveyard'; target: EffectRef }
   | { op: 'returnToHandEach'; selector: Selector }
+  /**
+   * "Return all <filter> cards from your graveyard to the battlefield". `scope: 'all'` reads every
+   * player's graveyard and still puts the cards onto the battlefield under the source's controller
+   * (Rise of the Dark Realms); "under their owners' control" is not this op.
+   */
   | { op: 'graveyardToBattlefieldEach'; filter: Selector; scope?: 'you' | 'all' }
   /**
    * "Return a creature card from your graveyard to the battlefield" with no target (Tomb
@@ -1148,6 +1153,7 @@ export type Effect =
    * ability, from the cards then in your graveyard. Mandatory when one matches.
    */
   | { op: 'returnOneFromYourGraveyardToBattlefield'; filter: Selector }
+  /** As above, into hands: `scope: 'all'` returns each card to its owner's hand. */
   | { op: 'graveyardToHandEach'; filter: Selector; scope?: 'you' | 'all' }
   | { op: 'unearth' }
   | { op: 'grantUnearthToArtifactCreaturesInGraveyard'; cost: ParsedManaCost }
@@ -1200,6 +1206,11 @@ export type Effect =
   | { op: 'millAndLoseLifeChosenPlayers'; targetSlot: number; count: Value; amount: Value }
   /** Reveal a player's hand, then the resolving ability's controller chooses a matching discard. */
   | { op: 'revealHandAndDiscard'; target: EffectRef; filter: Selector }
+  /**
+   * "Look at target player's hand" (CR 402.3): only the controller learns the cards, as they are
+   * now. Nothing is revealed, so no other player learns anything (CR 701.20a).
+   */
+  | { op: 'lookAtHand'; target: EffectRef }
   /** Players choose hidden cards in APNAP order before any chosen cards are discarded. */
   | {
       op: 'discardEachPlayer';

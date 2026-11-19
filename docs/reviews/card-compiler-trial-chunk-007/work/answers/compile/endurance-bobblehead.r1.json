@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"\"Up to X target creatures\" with X set to the number of Bobbleheads you control at activation needs a variable target count, but TargetSpec.count takes only fixed min and max numbers."}

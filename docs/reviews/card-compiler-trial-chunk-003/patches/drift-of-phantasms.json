@@ -1,0 +1,68 @@
+{
+  "name": "Drift of Phantasms",
+  "oracleId": "6ee51134-c4ad-4101-8ce2-23dde9359cd4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Transmute {1}{U}{U}"
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 2,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "discardSelf"
+          }
+        ],
+        "timing": "sorcery",
+        "zone": "hand",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "searchLibrary",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "manaValueAtMost",
+                    "n": 3
+                  },
+                  {
+                    "kind": "manaValueAtLeast",
+                    "n": 3
+                  }
+                ]
+              },
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)"
+        }
+      }
+    ]
+  }
+}

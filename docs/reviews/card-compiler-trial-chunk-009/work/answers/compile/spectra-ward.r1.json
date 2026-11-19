@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"attachedToSource"},"op":{"layer":7,"sublayer":"d","power":2,"toughness":2}},{"affects":{"kind":"attachedToSource"},"op":{"layer":6,"addProtection":["W","U","B","R","G"]}}]}}

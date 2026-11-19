@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target restriction 'power 3 or less' would need powerAtMost, which the schema marks event-only and so not a reliable target filter."}

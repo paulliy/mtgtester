@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The upkeep trigger's life check could be written as a compareValues condition, but no effect makes its controller win the game."}

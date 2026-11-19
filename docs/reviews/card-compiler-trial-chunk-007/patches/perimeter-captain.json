@@ -1,0 +1,51 @@
+{
+  "name": "Perimeter Captain",
+  "oracleId": "05608055-d97a-4c8f-833d-47b3dd1ea255",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature you control with defender blocks, you may gain 2 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "blocks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "hasKeyword",
+                  "keyword": "defender"
+                }
+              ]
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 2
+            }
+          }
+        ],
+        "description": "Whenever a creature you control with defender blocks, you may gain 2 life."
+      }
+    ]
+  }
+}

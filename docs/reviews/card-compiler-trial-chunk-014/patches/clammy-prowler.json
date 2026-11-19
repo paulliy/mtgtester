@@ -1,0 +1,47 @@
+{
+  "name": "Clammy Prowler",
+  "oracleId": "afe4a60c-747a-439b-bf61-cd323b8dffe7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, another target attacking creature can't be blocked this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "combatRole",
+                  "role": "attacking"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "cantBeBlockedUntilEot",
+            "target": 0
+          }
+        ],
+        "description": "Whenever this creature attacks, another target attacking creature can't be blocked this turn."
+      }
+    ]
+  }
+}

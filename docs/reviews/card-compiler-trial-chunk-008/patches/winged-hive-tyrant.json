@@ -1,0 +1,63 @@
+{
+  "name": "Winged Hive Tyrant",
+  "oracleId": "6f0d8900-8460-4b31-8b67-eb4e470c3317",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "The Will of the Hive Mind — Other creatures you control with counters on them have flying and haste."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "hasAnyCounter"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "flying"
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "hasAnyCounter"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "haste"
+        }
+      }
+    ]
+  }
+}

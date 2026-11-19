@@ -1,0 +1,1 @@
+Create a 4/4 red Dragon Elemental creature token with flying. That token has "Whenever you cast a spell that isn't a creature spell, this creature gets +1/+1 until end of turn."

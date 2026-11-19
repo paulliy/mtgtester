@@ -1,0 +1,69 @@
+{
+  "name": "Gatebreaker Ram",
+  "oracleId": "3b0a97e2-e125-4f91-8581-307e3fa6b048",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as you control two or more Gates, this creature has vigilance and trample."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "vigilance"
+        },
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "subtype",
+                "value": "Gate"
+              }
+            ]
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 2
+        }
+      },
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "trample"
+        },
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "subtype",
+                "value": "Gate"
+              }
+            ]
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 2
+        }
+      }
+    ]
+  }
+}

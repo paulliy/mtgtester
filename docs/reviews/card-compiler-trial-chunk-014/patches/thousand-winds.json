@@ -1,0 +1,45 @@
+{
+  "name": "Thousand Winds",
+  "oracleId": "81b50d34-d778-4606-80de-0e0780610d1f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature is turned face up, return all other tapped creatures to their owners' hands."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "turnedFaceUp",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "returnToHandEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "tapped"
+                }
+              ]
+            }
+          }
+        ],
+        "description": "When this creature is turned face up, return all other tapped creatures to their owners' hands."
+      }
+    ]
+  }
+}

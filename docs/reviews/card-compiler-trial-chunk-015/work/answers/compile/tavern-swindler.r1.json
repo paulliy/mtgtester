@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"tap"},{"kind":"payLife","amount":3}],"timing":"any","ability":{"kind":"activated","targets":[],"effects":[{"op":"flipCoin","onWin":[{"op":"gainLife","amount":{"kind":"const","n":6}}],"onLose":[]}],"description":"{T}, Pay 3 life: Flip a coin. If you win the flip, you gain 6 life."}}]}}

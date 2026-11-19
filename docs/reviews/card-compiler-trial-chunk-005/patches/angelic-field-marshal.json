@@ -1,0 +1,49 @@
+{
+  "name": "Angelic Field Marshal",
+  "oracleId": "502575f4-7c56-44bc-a77f-ae28d66c8e1f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as you control your commander, this creature gets +2/+2 and creatures you control have vigilance."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 2
+        },
+        "condition": {
+          "kind": "controlsYourCommander"
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "vigilance"
+        },
+        "condition": {
+          "kind": "controlsYourCommander"
+        }
+      }
+    ]
+  }
+}

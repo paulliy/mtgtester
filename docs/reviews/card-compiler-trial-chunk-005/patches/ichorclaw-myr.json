@@ -1,0 +1,33 @@
+{
+  "name": "Ichorclaw Myr",
+  "oracleId": "8462a2fa-944b-4fff-a161-10345690b56f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature becomes blocked, it gets +2/+2 until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "becomesBlocked",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "pumpUntilEot",
+            "target": "source",
+            "power": 2,
+            "toughness": 2
+          }
+        ],
+        "description": "Whenever this creature becomes blocked, it gets +2/+2 until end of turn."
+      }
+    ]
+  }
+}

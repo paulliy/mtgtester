@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The council vote runs one separate effect per vote (a search for each Redhorn Pass vote, a return for each Mines of Moria vote), while councilVote resolves a single majority outcome with more and otherwise branches."}

@@ -1,0 +1,1 @@
+When this creature enters, target creature you control gets +X/+X until end of turn, where X is the number of creatures you control. The target is required (no "up to" and no "you may"). The count includes this creature if it is still on the battlefield. The data does not say when X is counted.

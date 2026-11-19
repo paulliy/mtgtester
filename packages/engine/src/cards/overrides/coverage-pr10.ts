@@ -839,7 +839,6 @@ export function registerPr10CharacteristicsOverrides(): void {
       "+2: During target player's next turn, each creature that player controls attacks if able.",
       '−2: ~ deals 3 damage to each tapped creature target player controls.',
       '−8: Target player gets an emblem with "Whenever you activate an ability that isn\'t a mana ability, copy it. You may choose new targets for the copy."',
-      'Partner with Will Kenrith',
     ],
     {
       activatedAbilities: [

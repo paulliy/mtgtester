@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The untap selector for \"creatures that attacked this turn\" would need attackedThisTurn, which the schema marks event-only and so cannot be trusted when read by a resolving sorcery."}

@@ -1,0 +1,1 @@
+If a source would deal damage, that source deals double that damage instead.

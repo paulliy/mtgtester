@@ -1,0 +1,50 @@
+{
+  "name": "Colossal Plow",
+  "oracleId": "4cdf524a-1a99-4143-823b-d3c5c867c580",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this Vehicle attacks, add {W}{W}{W} and you gain 3 life. Until end of turn, you don't lose this mana as steps and phases end."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "addMana",
+            "amount": {
+              "kind": "const",
+              "n": 3
+            },
+            "colors": [
+              "W"
+            ],
+            "fixedSymbols": [
+              "W",
+              "W",
+              "W"
+            ],
+            "persistent": true
+          },
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 3
+            }
+          }
+        ],
+        "description": "Whenever this Vehicle attacks, add {W}{W}{W} and you gain 3 life. Until end of turn, you don't lose this mana as steps and phases end."
+      }
+    ]
+  }
+}

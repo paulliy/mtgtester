@@ -32,6 +32,8 @@ export function probeTypeLine(line: string, kind: 'land' | 'nonland'): string {
     /^(when|whenever|at the beginning|as long as|[^:]*:)/.test(l) ||
     /\b(you control|creatures|spells you cast) .*(get|have|cost)/.test(l) ||
     /this creature|^~ /.test(l) ||
+    // Two-commander pairing keywords appear only on legendary creatures (CR 702.124).
+    /^(partner\b|choose a background$|friends forever$|doctor's companion$)/.test(l) ||
     /^[a-z]+( \d+| \{[^}]+\})*$/.test(l)
   ) {
     return 'Creature — Human';

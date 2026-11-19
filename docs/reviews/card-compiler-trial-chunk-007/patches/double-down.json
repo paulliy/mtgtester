@@ -1,0 +1,53 @@
+{
+  "name": "Double Down",
+  "oracleId": "60dd4233-ee50-42b8-88f5-ac5d105d83cd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast an outlaw spell, copy that spell."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Assassin"
+              },
+              {
+                "kind": "subtype",
+                "value": "Mercenary"
+              },
+              {
+                "kind": "subtype",
+                "value": "Pirate"
+              },
+              {
+                "kind": "subtype",
+                "value": "Rogue"
+              },
+              {
+                "kind": "subtype",
+                "value": "Warlock"
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "copyCastSpell"
+          }
+        ],
+        "description": "Whenever you cast an outlaw spell, copy that spell."
+      }
+    ]
+  }
+}

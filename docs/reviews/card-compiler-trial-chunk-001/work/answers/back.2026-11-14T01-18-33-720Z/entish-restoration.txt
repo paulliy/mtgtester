@@ -1,0 +1,2 @@
+Sacrifice a land you control.
+Then if the greatest power among creatures you control is 4 or greater, search your library for three basic land cards, put them onto the battlefield tapped, then shuffle. Otherwise, search your library for two basic land cards, put them onto the battlefield tapped, then shuffle.

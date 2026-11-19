@@ -1,0 +1,29 @@
+{
+  "name": "Manglehorn",
+  "oracleId": "b67db32b-30a9-49d2-b4c2-90a9f80c36eb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Artifacts your opponents control enter tapped."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "otherPermanentsEnterTapped",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Artifact"
+            },
+            {
+              "kind": "controller",
+              "who": "opponents"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

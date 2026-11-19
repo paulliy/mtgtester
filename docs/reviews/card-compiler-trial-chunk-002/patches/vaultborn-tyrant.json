@@ -1,0 +1,47 @@
+{
+  "name": "Vaultborn Tyrant",
+  "oracleId": "e8d0accc-b320-4c07-8a71-a09db860351e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature dies, if it's not a token, create a token that's a copy of it, except it's an artifact in addition to its other types."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "sourceMatches",
+            "selector": {
+              "kind": "not",
+              "of": {
+                "kind": "isToken"
+              }
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": "source",
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "addTypes": [
+              "Artifact"
+            ]
+          }
+        ],
+        "description": "When this creature dies, if it's not a token, create a token that's a copy of it, except it's an artifact in addition to its other types."
+      }
+    ]
+  }
+}
