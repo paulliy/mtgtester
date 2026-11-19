@@ -21,7 +21,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { OracleCard, PlayStyle } from '@mtg/shared';
+import type { BotSteering, OracleCard, PlayStyle } from '@mtg/shared';
 import { DEFAULT_POLICY_FIXES, POLICY_FIXES } from '@mtg/bot';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
@@ -82,6 +82,35 @@ export const ARMS: Record<string, LeagueArm> = {
     styleFromDeck: true,
   },
 };
+
+/**
+ * A preset by name, or `steer:<json>`: the production bot with those knobs, for trying a steering
+ * or style variant without adding a preset (`steer:{"style":"control","aggression":0.5}`).
+ */
+export function armFor(name: string): LeagueArm {
+  if (name.startsWith('steer:')) {
+    let steering: unknown;
+    try {
+      steering = JSON.parse(name.slice('steer:'.length));
+    } catch {
+      throw new Error(`arm ${name}: the knobs after steer: are not JSON`);
+    }
+    if (typeof steering !== 'object' || steering === null || Array.isArray(steering))
+      throw new Error(`arm ${name}: the knobs after steer: must be a JSON object`);
+    return {
+      name,
+      knowledge: true,
+      fixes: [...DEFAULT_POLICY_FIXES],
+      steering: steering as BotSteering,
+    };
+  }
+  const arm = ARMS[name];
+  if (arm === undefined)
+    throw new Error(
+      `unknown arm ${name}; choose from ${Object.keys(ARMS).join(', ')} or steer:<json>`,
+    );
+  return arm;
+}
 
 function styleArm(style: PlayStyle): LeagueArm {
   return {
@@ -166,11 +195,7 @@ function parseArgs(argv: string[]): Args {
         throw new Error(`unknown argument ${argv[i]}`);
     }
   }
-  for (const arm of [args.a, args.b]) {
-    if (ARMS[arm] === undefined) {
-      throw new Error(`unknown arm ${arm}; choose from ${Object.keys(ARMS).join(', ')}`);
-    }
-  }
+  for (const arm of [args.a, args.b]) armFor(arm);
   return args;
 }
 
@@ -264,8 +289,8 @@ interface Tally {
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const pool = loadPool();
-  const armA = ARMS[args.a]!;
-  const armB = ARMS[args.b]!;
+  const armA = armFor(args.a);
+  const armB = armFor(args.b);
   const dir = mkdtempSync(join(tmpdir(), 'bot-league-'));
   const tally: Tally = {
     wins: { [armA.name]: 0, [armB.name]: 0 },
