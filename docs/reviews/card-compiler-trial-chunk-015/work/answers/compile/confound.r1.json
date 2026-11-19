@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no target filter for a spell that targets a creature; spellTargetsPermanentYouControl and stackTargetsYouOrCreatureYouControl cover other cases and a Selector cannot read what a spell targets."}

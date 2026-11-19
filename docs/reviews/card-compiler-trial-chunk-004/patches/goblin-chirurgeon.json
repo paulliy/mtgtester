@@ -1,0 +1,50 @@
+{
+  "name": "Goblin Chirurgeon",
+  "oracleId": "ea55db87-a5c3-49f7-b968-77510cdeb469",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice a Goblin: Regenerate target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Goblin"
+                }
+              ]
+            },
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [
+            {
+              "op": "regenerate",
+              "target": 0
+            }
+          ],
+          "description": "Sacrifice a Goblin: Regenerate target creature."
+        }
+      }
+    ]
+  }
+}

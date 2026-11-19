@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Putting any number of land cards from the top twenty onto the battlefield, with the rest staying in the library before a required shuffle, has no schema shape (lookAtTopN takes a fixed pick count and moves the rest to the bottom or top)."}

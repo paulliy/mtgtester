@@ -1,0 +1,72 @@
+{
+  "name": "Sliver Hive",
+  "oracleId": "e7286688-ffbe-4d25-ad55-27990f005368",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 5,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "subtype",
+            "value": "Sliver"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 1
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Sliver",
+                "typeLine": "Token Creature — Sliver",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Sliver"
+                ],
+                "colors": [],
+                "power": 1,
+                "toughness": 1
+              },
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver."
+        }
+      }
+    ]
+  }
+}

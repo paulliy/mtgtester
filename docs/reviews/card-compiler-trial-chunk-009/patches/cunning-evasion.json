@@ -1,0 +1,44 @@
+{
+  "name": "Cunning Evasion",
+  "oracleId": "3e56606d-562e-4c77-9769-213997fea28e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature you control becomes blocked, you may return it to its owner's hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "becomesBlocked",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "returnToHand",
+            "target": "triggerObject"
+          }
+        ],
+        "description": "Whenever a creature you control becomes blocked, you may return it to its owner's hand."
+      }
+    ]
+  }
+}

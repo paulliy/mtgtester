@@ -1,0 +1,61 @@
+{
+  "name": "Patron Wizard",
+  "oracleId": "2d70b4fe-7aaf-4ffd-920c-023b44707e1f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap an untapped Wizard you control: Counter target spell unless its controller pays {1}."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tapOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Wizard"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "spell"
+            }
+          ],
+          "effects": [
+            {
+              "op": "counterUnlessControllerPays",
+              "target": 0,
+              "cost": {
+                "generic": 1,
+                "colored": {
+                  "W": 0,
+                  "U": 0,
+                  "B": 0,
+                  "R": 0,
+                  "G": 0
+                },
+                "colorless": 0
+              }
+            }
+          ],
+          "description": "Tap an untapped Wizard you control: Counter target spell unless its controller pays {1}."
+        }
+      }
+    ]
+  }
+}

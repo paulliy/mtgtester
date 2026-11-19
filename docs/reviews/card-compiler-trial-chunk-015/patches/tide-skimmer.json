@@ -1,0 +1,37 @@
+{
+  "name": "Tide Skimmer",
+  "oracleId": "8d83dfb3-5662-4109-b465-bf5f257e58a5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you attack with two or more creatures with flying, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attackDeclared",
+          "attacker": "you",
+          "minAttackers": 2,
+          "attackerFilter": {
+            "kind": "hasKeyword",
+            "keyword": "flying"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you attack with two or more creatures with flying, draw a card."
+      }
+    ]
+  }
+}

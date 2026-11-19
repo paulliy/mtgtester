@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"self"},"op":{"layer":7,"sublayer":"d","power":1,"toughness":2},"condition":{"kind":"countPermanents","selector":{"kind":"subtype","value":"Forest"},"scope":"you","cmp":">=","n":1}}]}}

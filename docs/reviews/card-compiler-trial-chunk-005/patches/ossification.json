@@ -1,0 +1,26 @@
+{
+  "name": "Ossification",
+  "oracleId": "e29bfd62-286f-4982-813f-7086573c333b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchant basic land you control"
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "land",
+          "controller": "you",
+          "filter": {
+            "kind": "supertype",
+            "value": "Basic"
+          }
+        }
+      ],
+      "effects": [],
+      "description": "Enchant basic land you control"
+    }
+  }
+}

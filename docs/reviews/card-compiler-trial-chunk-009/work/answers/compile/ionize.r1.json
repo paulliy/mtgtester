@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The 2 damage to the countered spell's controller needs a reference to a spell's controller, but the schema's controllerOf EffectRef only names the controller of a permanent in a target slot."}

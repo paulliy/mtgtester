@@ -1,0 +1,36 @@
+{
+  "name": "Howling Mine",
+  "oracleId": "d26b27db-a567-4631-b4b6-7294222fbdd1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of each player's draw step, if this artifact is untapped, that player draws an additional card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "drawStep",
+          "player": "each",
+          "condition": {
+            "kind": "isUntapped"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "player": "eventPlayer"
+          }
+        ],
+        "description": "At the beginning of each player's draw step, if this artifact is untapped, that player draws an additional card."
+      }
+    ]
+  }
+}

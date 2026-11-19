@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Activate only if an opponent controls at least two more lands than you' needs a margin-of-two comparison, but opponentControlsMore only tests for more lands."}

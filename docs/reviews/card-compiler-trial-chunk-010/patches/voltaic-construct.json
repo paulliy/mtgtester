@@ -1,0 +1,51 @@
+{
+  "name": "Voltaic Construct",
+  "oracleId": "f5677831-6ca9-4c7b-b02d-f44079c3f663",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}: Untap target artifact creature."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "filter": {
+                "kind": "type",
+                "value": "Artifact"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "untapTarget",
+              "target": 0
+            }
+          ],
+          "description": "{2}: Untap target artifact creature."
+        }
+      }
+    ]
+  }
+}

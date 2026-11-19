@@ -1,0 +1,85 @@
+{
+  "name": "Thunderous Velocipede",
+  "oracleId": "899007b5-6a07-4491-9104-bb537106b07d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each other Vehicle and creature you control enters with an additional +1/+1 counter on it if its mana value is 4 or less. Otherwise, it enters with three additional +1/+1 counters on it."
+  ],
+  "compose": "append",
+  "def": {
+    "additionalCountersOnEntry": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Vehicle"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            {
+              "kind": "manaValueAtMost",
+              "n": 4
+            }
+          ]
+        },
+        "counter": "+1/+1",
+        "count": {
+          "kind": "const",
+          "n": 1
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Vehicle"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            {
+              "kind": "manaValueAtLeast",
+              "n": 5
+            }
+          ]
+        },
+        "counter": "+1/+1",
+        "count": {
+          "kind": "const",
+          "n": 3
+        }
+      }
+    ]
+  }
+}

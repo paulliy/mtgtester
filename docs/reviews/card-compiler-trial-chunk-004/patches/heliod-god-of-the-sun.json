@@ -1,0 +1,34 @@
+{
+  "name": "Heliod, God of the Sun",
+  "oracleId": "4ea488b2-5ba0-4565-b928-570c8e03b926",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as your devotion to white is less than five, ~ isn't a creature."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 4,
+          "removeCreatureType": true
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "devotionTo",
+            "color": "W"
+          },
+          "cmp": "<=",
+          "right": {
+            "kind": "const",
+            "n": 4
+          }
+        }
+      }
+    ]
+  }
+}

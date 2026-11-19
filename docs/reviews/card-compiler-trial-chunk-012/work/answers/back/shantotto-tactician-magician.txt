@@ -1,0 +1,1 @@
+Whenever you cast a noncreature spell, this creature gets +X/+0 until end of turn, where X is the amount of mana spent to cast that spell. If at least four mana was spent to cast that spell, draw a card.

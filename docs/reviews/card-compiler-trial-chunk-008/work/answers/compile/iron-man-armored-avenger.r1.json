@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Modified' creatures are those with counters, Equipment you control, or Auras you control, but isEquipped does not check who controls the Equipment, so the selector cannot say exactly 'modified'."}

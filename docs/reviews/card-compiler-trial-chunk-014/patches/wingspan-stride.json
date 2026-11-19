@@ -1,0 +1,43 @@
+{
+  "name": "Wingspan Stride",
+  "oracleId": "e75cee5d-ab02-4227-b36e-61c5d2f564a8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{U}: Return this Aura to its owner's hand."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "returnToHand",
+              "target": "source"
+            }
+          ],
+          "description": "{2}{U}: Return this Aura to its owner's hand."
+        }
+      }
+    ]
+  }
+}

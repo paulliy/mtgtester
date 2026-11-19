@@ -1,0 +1,44 @@
+{
+  "name": "Teach by Example",
+  "oracleId": "d85ba214-fa05-44ca-a7f9-ab2c5dc07962",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "nextCastThisTurn",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              }
+            ]
+          },
+          "ability": {
+            "kind": "triggered",
+            "targets": [],
+            "effects": [
+              {
+                "op": "copyCastSpell"
+              }
+            ],
+            "description": "Copy that spell. You may choose new targets for the copy."
+          }
+        }
+      ],
+      "description": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy."
+    }
+  }
+}

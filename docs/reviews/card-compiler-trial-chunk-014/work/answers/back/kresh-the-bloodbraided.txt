@@ -1,0 +1,1 @@
+Whenever another creature dies, you may put a number of +1/+1 counters on this creature equal to that creature's power.

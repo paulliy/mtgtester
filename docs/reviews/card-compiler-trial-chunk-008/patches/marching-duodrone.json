@@ -1,0 +1,109 @@
+{
+  "name": "Marching Duodrone",
+  "oracleId": "939b77f1-d7c4-4e52-b487-5866145ace01",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, each player creates a Treasure token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Treasure",
+              "typeLine": "Artifact — Treasure",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Treasure"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "manaAbilities": [
+                {
+                  "units": [
+                    [
+                      "W",
+                      "U",
+                      "B",
+                      "R",
+                      "G"
+                    ]
+                  ],
+                  "costs": [
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "eachOpponentCreatesTokens",
+            "spec": {
+              "name": "Treasure",
+              "typeLine": "Artifact — Treasure",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Treasure"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "manaAbilities": [
+                {
+                  "units": [
+                    [
+                      "W",
+                      "U",
+                      "B",
+                      "R",
+                      "G"
+                    ]
+                  ],
+                  "costs": [
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever this creature attacks, each player creates a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")"
+      }
+    ]
+  }
+}

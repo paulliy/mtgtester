@@ -2024,8 +2024,32 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
               abilityIndex: index,
             },
           };
-          if (slots.length > 0) option.targets = slots;
-          options.push(option);
+          // Slots that must name different objects ("two target players", "another target
+          // creature") cannot be offered as independent menus: the cross product would include
+          // one object in both slots, which the engine refuses on activation. Offer one action
+          // per legal assignment instead, as a spell's targets are (`legalTargetMenus`).
+          const dependent = activated.ability.targets.some(
+            (spec, slot) =>
+              slotIsActive(activeSlots, slot) &&
+              (spec.differentFromSlots !== undefined ||
+                spec.differentPlayerTargetSlots !== undefined),
+          );
+          if (!dependent) {
+            if (slots.length > 0) option.targets = slots;
+            options.push(option);
+            continue;
+          }
+          for (const menu of legalTargetMenus(
+            ctx,
+            activated.ability,
+            {
+              controllerId: player.id,
+              sourceCardId: perm.cardId,
+              ...targetingSourceFields(abilityOfPermanent(ctx, perm)),
+            },
+            activeSlots,
+          ))
+            options.push({ ...option, ...(menu.length > 0 ? { targets: menu } : {}) });
         }
       }
     }

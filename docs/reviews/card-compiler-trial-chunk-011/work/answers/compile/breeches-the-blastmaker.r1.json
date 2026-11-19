@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The win and lose branches of the coin flip are reflexive triggers that choose their own targets after the flip, but the schema's flipCoin branches cannot hold a target, and a trigger-level 'any target' would be chosen before the flip and could fizzle the copy."}

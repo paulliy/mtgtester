@@ -1,0 +1,74 @@
+{
+  "name": "Lotho, Corrupt Shirriff",
+  "oracleId": "135cc078-1c45-465e-b0b9-7168c89f56f4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a player casts their second spell each turn, you lose 1 life and create a Treasure token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "each",
+          "ordinal": 2
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "loseLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Treasure",
+              "typeLine": "Artifact — Treasure",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Treasure"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "manaAbilities": [
+                {
+                  "units": [
+                    [
+                      "W",
+                      "U",
+                      "B",
+                      "R",
+                      "G"
+                    ]
+                  ],
+                  "costs": [
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a player casts their second spell each turn, you lose 1 life and create a Treasure token."
+      }
+    ]
+  }
+}

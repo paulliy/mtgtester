@@ -1,0 +1,17 @@
+{
+  "name": "Rampaging Ceratops",
+  "oracleId": "91d01119-9b3e-4629-8cf0-bbca2c19a7cc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ can't be blocked except by three or more creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "minBlockers",
+        "minimum": 3
+      }
+    ]
+  }
+}

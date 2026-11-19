@@ -1,0 +1,1 @@
+Whenever a Food you control is sacrificed, create a tapped token (its type line is not given in this data) that is an artifact Treasure with "{T}, Sacrifice this artifact: Add one mana of any color." This trigger is mandatory and has no targets.

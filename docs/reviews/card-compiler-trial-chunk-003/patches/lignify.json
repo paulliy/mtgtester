@@ -1,0 +1,50 @@
+{
+  "name": "Lignify",
+  "oracleId": "63625b26-3a19-4c3c-b18a-91247bb2a40c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature is a Treefolk with base power and toughness 0/4 and loses all abilities."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 4,
+          "setSubtypes": [
+            "Treefolk"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "loseAllAbilities": true
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "const",
+            "n": 0
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 4
+          }
+        }
+      }
+    ]
+  }
+}

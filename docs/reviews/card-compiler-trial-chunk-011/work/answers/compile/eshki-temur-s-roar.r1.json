@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The damage clause 'if that spell's power is 6 or greater, Eshki deals damage equal to its power' needs the cast spell's power as a condition, which no schema value or condition reads, and splitting it into separate triggers would not fix the order in which the counter and the damage happen."}

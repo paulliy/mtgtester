@@ -1,0 +1,55 @@
+{
+  "name": "Lumbering Falls",
+  "oracleId": "c2878f4e-3044-4d60-8ec1-b325edfca397",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{G}{U}: Until end of turn, this land becomes a 3/3 green and blue Elemental creature with hexproof. It's still a land."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "becomeCreatureUntilEot",
+              "target": "source",
+              "subtypes": [
+                "Elemental"
+              ],
+              "power": 3,
+              "toughness": 3,
+              "keywords": [
+                "hexproof"
+              ],
+              "colors": [
+                "G",
+                "U"
+              ]
+            }
+          ],
+          "description": "{2}{G}{U}: Until end of turn, this land becomes a 3/3 green and blue Elemental creature with hexproof. It's still a land."
+        }
+      }
+    ]
+  }
+}

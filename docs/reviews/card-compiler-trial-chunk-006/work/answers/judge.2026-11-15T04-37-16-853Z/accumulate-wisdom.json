@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A puts exactly one card from the top three into hand in the otherwise case; Text B says cards are put into hand 'as required, with no number specified', which allows any number, including zero, instead of exactly one."]}

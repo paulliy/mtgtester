@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Choosing a creature at random without targeting has no effect form (a random TargetSpec makes it a target), and no op gains control of that chosen creature and then destroys all the other creatures."}

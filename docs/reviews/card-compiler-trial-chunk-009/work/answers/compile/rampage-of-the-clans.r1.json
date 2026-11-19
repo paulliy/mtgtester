@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Destroying all artifacts and enchantments and then giving each destroyed permanent's controller a 3/3 Centaur token has no schema form: destroyEach has no per-destroyed-permanent token creation, and destroyAndCreateTokenForController is targeted."}

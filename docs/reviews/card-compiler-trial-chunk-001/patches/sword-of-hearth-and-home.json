@@ -1,0 +1,71 @@
+{
+  "name": "Sword of Hearth and Home",
+  "oracleId": "913e6182-706a-4872-8c8a-e146b0ae0738",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature deals combat damage to a player, exile up to one target creature you own, then search your library for a basic land card. Put both cards onto the battlefield under your control, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "filter": {
+              "kind": "owner",
+              "who": "you"
+            },
+            "count": {
+              "min": 0,
+              "max": 1
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "blinkEachChosen",
+            "targetSlot": 0,
+            "returnUnder": "sourceController"
+          },
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "destinations": [
+              {
+                "zone": "battlefield"
+              }
+            ]
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "Whenever equipped creature deals combat damage to a player, exile up to one target creature you own, then search your library for a basic land card. Put both cards onto the battlefield under your control, then shuffle."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+Target player reveals their hand. Discard a nonland card with mana value 3 or less from it.

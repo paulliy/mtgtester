@@ -1,0 +1,3 @@
+{5}, {T}: Draw two cards.
+This ability costs {1} less to activate for each page counter on this permanent (selfOnly cost reduction applying to activation).
+The data contains no effect that puts page counters on this permanent.

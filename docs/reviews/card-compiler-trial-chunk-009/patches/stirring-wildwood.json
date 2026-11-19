@@ -1,0 +1,55 @@
+{
+  "name": "Stirring Wildwood",
+  "oracleId": "e900f211-dc8b-40f7-a217-1b1462b15c26",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{G}{W}: Until end of turn, this land becomes a 3/4 green and white Elemental creature with reach. It's still a land."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 1,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "becomeCreatureUntilEot",
+              "target": "source",
+              "subtypes": [
+                "Elemental"
+              ],
+              "power": 3,
+              "toughness": 4,
+              "keywords": [
+                "reach"
+              ],
+              "colors": [
+                "G",
+                "W"
+              ]
+            }
+          ],
+          "description": "{1}{G}{W}: Until end of turn, this land becomes a 3/4 green and white Elemental creature with reach. It's still a land."
+        }
+      }
+    ]
+  }
+}

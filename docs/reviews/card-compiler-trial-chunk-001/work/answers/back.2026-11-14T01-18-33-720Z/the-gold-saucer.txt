@@ -1,0 +1,1 @@
+{2}, {T}: Flip a coin. If you win the flip, create a Treasure token (an artifact Treasure with "{T}, Sacrifice this artifact: Add one mana of any color."; its type line is not given in this data). It is not created tapped. If you lose the flip, nothing happens. This ability has no targets.

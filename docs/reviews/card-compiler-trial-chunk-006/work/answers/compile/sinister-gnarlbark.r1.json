@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"endStep","player":"you"},"optional":false,"targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":1}},{"op":"putCountersOnCreatureOfChoice","counter":"-1/-1","count":1}],"description":"At the beginning of your end step, draw a card and blight 1."}]}}

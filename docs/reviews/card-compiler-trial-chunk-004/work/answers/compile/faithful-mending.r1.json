@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"gainLife","amount":{"kind":"const","n":2}},{"op":"draw","count":{"kind":"const","n":2}},{"op":"discard","count":2}],"description":"You gain 2 life, draw two cards, then discard two cards."}}}

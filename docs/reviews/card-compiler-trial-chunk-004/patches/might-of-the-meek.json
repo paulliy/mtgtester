@@ -1,0 +1,65 @@
+{
+  "name": "Might of the Meek",
+  "oracleId": "19b5c94b-b4fa-41a9-b649-51c4e6f03602",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature gains trample until end of turn. It also gets +1/+0 until end of turn if you control a Mouse."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "trample"
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Mouse"
+                }
+              ]
+            },
+            "scope": "you",
+            "cmp": ">=",
+            "n": 1
+          },
+          "then": [
+            {
+              "op": "pumpUntilEot",
+              "target": 0,
+              "power": 1,
+              "toughness": 0
+            }
+          ],
+          "else": []
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Target creature gains trample until end of turn. It also gets +1/+0 until end of turn if you control a Mouse."
+    }
+  }
+}

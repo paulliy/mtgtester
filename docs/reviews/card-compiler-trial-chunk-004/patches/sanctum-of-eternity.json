@@ -1,0 +1,62 @@
+{
+  "name": "Sanctum of Eternity",
+  "oracleId": "c7d9ff27-f1fc-42e4-a47b-d2e6d68e4035",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}, {T}: Return target commander you own from the battlefield to your hand. Activate only during your turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "yourTurn",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "isCommander"
+                  },
+                  {
+                    "kind": "owner",
+                    "who": "you"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "returnToHand",
+              "target": 0
+            }
+          ],
+          "description": "{2}, {T}: Return target commander you own from the battlefield to your hand. Activate only during your turn."
+        }
+      }
+    ]
+  }
+}

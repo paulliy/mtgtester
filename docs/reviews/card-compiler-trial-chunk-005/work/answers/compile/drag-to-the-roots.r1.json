@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"const","n":2},"selfOnly":true,"condition":{"kind":"compareValues","left":{"kind":"cardTypesInYourGraveyard"},"cmp":">=","right":{"kind":"const","n":4}}}]}}

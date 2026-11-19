@@ -1,0 +1,1 @@
+{T}: Create a token that is a copy of target creature you control that isn't legendary. The token has haste. Sacrifice the token at the beginning of the end step.

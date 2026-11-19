@@ -1,0 +1,46 @@
+{
+  "name": "Envoy of the Ancestors",
+  "oracleId": "678ef5e4-800d-4d3a-8761-2abaad70e0c9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Modified creatures you control have lifelink."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "isEquipped"
+                },
+                {
+                  "kind": "enchantedByAuraYouControl"
+                },
+                {
+                  "kind": "hasAnyCounter"
+                }
+              ]
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "lifelink"
+        }
+      }
+    ]
+  }
+}

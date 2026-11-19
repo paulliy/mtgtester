@@ -1,0 +1,1 @@
+Destroy target artifact or enchantment. Create a colorless Artifact — Junk token with no power or toughness. That token has "{T}, Sacrifice this token: Exile the top card of your library. Until end of turn, you may play that card. Activate only as a sorcery."

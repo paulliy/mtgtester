@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema can select an opponent as the controller of the artifact but not as its owner (the owner selector accepts only 'you'), and 'put into an opponent's graveyard' follows ownership, so controller 'opponents' would miss or misfire on stolen artifacts."}

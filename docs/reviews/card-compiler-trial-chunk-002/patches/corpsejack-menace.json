@@ -1,0 +1,32 @@
+{
+  "name": "Corpsejack Menace",
+  "oracleId": "ca0cc02b-b106-4eca-9388-d4b48dd3be49",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on it instead."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "counterPlacementReplacement",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            }
+          ]
+        },
+        "counter": "+1/+1",
+        "multiplier": 2,
+        "addition": 0
+      }
+    ]
+  }
+}

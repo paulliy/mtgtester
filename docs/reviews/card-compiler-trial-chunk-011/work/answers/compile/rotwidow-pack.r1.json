@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The activation cost 'exile a creature card from your graveyard' has no cost component that filters graveyard cards by creature type (exileOtherCardsFromGraveyard takes no selector and exileCardFromHand is hand-only)."}

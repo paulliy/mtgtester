@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"There is no count of creature cards in the targeted opponent's graveyard taken before the exile (countCardsInZone counts all opponents' cards, not the target's), and exileGraveyardCreateTokens has no creature-card filter."}

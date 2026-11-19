@@ -1,0 +1,1 @@
+Activated abilities of creatures can't be activated, by any player, at any time.

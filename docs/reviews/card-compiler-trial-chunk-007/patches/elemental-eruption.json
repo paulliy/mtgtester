@@ -1,0 +1,73 @@
+{
+  "name": "Elemental Eruption",
+  "oracleId": "8629fdef-dbbe-4a97-a7e1-6b1646f4ca0b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Create a 4/4 red Dragon Elemental creature token with flying and prowess."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Dragon Elemental",
+            "typeLine": "Token Creature — Dragon Elemental",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dragon",
+              "Elemental"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 4,
+            "toughness": 4,
+            "keywords": [
+              "flying"
+            ],
+            "triggers": [
+              {
+                "kind": "triggered",
+                "trigger": {
+                  "when": "castsSpell",
+                  "caster": "you",
+                  "filter": {
+                    "kind": "not",
+                    "of": {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  }
+                },
+                "optional": false,
+                "targets": [],
+                "effects": [
+                  {
+                    "op": "pumpEachUntilEot",
+                    "selector": {
+                      "kind": "self"
+                    },
+                    "power": 1,
+                    "toughness": 1
+                  }
+                ],
+                "description": "Prowess"
+              }
+            ]
+          },
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Create a 4/4 red Dragon Elemental creature token with flying and prowess."
+    }
+  }
+}

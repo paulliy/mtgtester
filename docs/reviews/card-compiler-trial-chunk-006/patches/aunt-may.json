@@ -1,0 +1,69 @@
+{
+  "name": "Aunt May",
+  "oracleId": "bdb769b5-c861-4ec1-ad6b-e2a56ca05fd1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another creature you control enters, you gain 1 life. If it's a Spider, put a +1/+1 counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "kind": "subtype",
+                "value": "Spider"
+              }
+            },
+            "then": [
+              {
+                "op": "putCounters",
+                "target": "triggerObject",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Whenever another creature you control enters, you gain 1 life. If it's a Spider, put a +1/+1 counter on it."
+      }
+    ]
+  }
+}

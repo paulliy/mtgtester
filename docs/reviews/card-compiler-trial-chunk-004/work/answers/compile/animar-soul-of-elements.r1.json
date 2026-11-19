@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"countersOnSelf","counter":"+1/+1"},"filter":{"kind":"type","value":"Creature"}}]}}

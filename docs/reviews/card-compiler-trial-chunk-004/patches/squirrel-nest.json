@@ -1,0 +1,58 @@
+{
+  "name": "Squirrel Nest",
+  "oracleId": "2d584333-b25e-4291-a2c9-80c6d9f8732a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted land has \"{T}: Create a 1/1 green Squirrel creature token.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "createToken",
+                  "spec": {
+                    "name": "Squirrel",
+                    "typeLine": "Token Creature — Squirrel",
+                    "types": [
+                      "Creature"
+                    ],
+                    "subtypes": [
+                      "Squirrel"
+                    ],
+                    "colors": [
+                      "G"
+                    ],
+                    "power": 1,
+                    "toughness": 1
+                  },
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "description": "{T}: Create a 1/1 green Squirrel creature token."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

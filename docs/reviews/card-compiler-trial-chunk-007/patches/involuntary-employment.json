@@ -1,0 +1,77 @@
+{
+  "name": "Involuntary Employment",
+  "oracleId": "7e86fb1e-9987-43ba-b59e-0cb03bbdedb6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Treasure token."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "duration": "untilEndOfTurn"
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "haste"
+        },
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Treasure",
+            "typeLine": "Artifact — Treasure",
+            "types": [
+              "Artifact"
+            ],
+            "subtypes": [
+              "Treasure"
+            ],
+            "colors": [],
+            "power": null,
+            "toughness": null,
+            "manaAbilities": [
+              {
+                "units": [
+                  [
+                    "W",
+                    "U",
+                    "B",
+                    "R",
+                    "G"
+                  ]
+                ],
+                "costs": [
+                  {
+                    "kind": "tap"
+                  },
+                  {
+                    "kind": "sacrificeSelf"
+                  }
+                ]
+              }
+            ]
+          },
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")"
+    }
+  }
+}

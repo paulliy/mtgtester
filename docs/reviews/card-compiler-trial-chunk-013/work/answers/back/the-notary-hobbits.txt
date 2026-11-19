@@ -1,0 +1,1 @@
+When this enters, if it isn't a token, create two tokens that are copies of this creature, except they aren't legendary.

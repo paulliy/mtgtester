@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The surveil op takes a fixed number, not a value read from the counters on the creature, so 'surveil X, where X is the number of counters on it' cannot be stated."}

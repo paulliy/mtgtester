@@ -1,0 +1,39 @@
+{
+  "name": "Spell Snare",
+  "oracleId": "38877c68-b69b-4ee1-8e8f-5137a184a8f7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Counter target spell with mana value 2."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "spell",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "manaValueAtLeast",
+                "n": 2
+              },
+              {
+                "kind": "manaValueAtMost",
+                "n": 2
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "counter",
+          "target": 0
+        }
+      ],
+      "description": "Counter target spell with mana value 2."
+    }
+  }
+}

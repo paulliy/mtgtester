@@ -1,0 +1,40 @@
+{
+  "name": "Final Parting",
+  "oracleId": "a5852994-d816-4e62-8a03-254223714544",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Search your library for two cards. Put one into your hand and the other into your graveyard. Then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": []
+          },
+          "destinations": [
+            {
+              "zone": "hand"
+            },
+            {
+              "zone": "graveyard"
+            }
+          ],
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "description": "Search your library for two cards. Put one into your hand and the other into your graveyard. Then shuffle."
+    }
+  }
+}

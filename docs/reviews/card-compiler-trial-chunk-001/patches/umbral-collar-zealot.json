@@ -1,0 +1,54 @@
+{
+  "name": "Umbral Collar Zealot",
+  "oracleId": "12db6263-75c2-442f-a1a5-7af7915f8f9f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice another creature or artifact: Surveil 1."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "surveil",
+              "count": 1
+            }
+          ],
+          "description": "Sacrifice another creature or artifact: Surveil 1."
+        }
+      }
+    ]
+  }
+}

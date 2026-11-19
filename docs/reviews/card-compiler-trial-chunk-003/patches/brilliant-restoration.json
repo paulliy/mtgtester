@@ -1,0 +1,35 @@
+{
+  "name": "Brilliant Restoration",
+  "oracleId": "9584a8ae-2aba-42b8-8983-0467d6bd5698",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return all artifact and enchantment cards from your graveyard to the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "graveyardToBattlefieldEach",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Enchantment"
+              }
+            ]
+          },
+          "scope": "you"
+        }
+      ],
+      "description": "Return all artifact and enchantment cards from your graveyard to the battlefield."
+    }
+  }
+}

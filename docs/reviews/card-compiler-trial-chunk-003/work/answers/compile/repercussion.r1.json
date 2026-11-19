@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema names the damaged creature's controller as the event player only for dies triggers, so \"that creature's controller\" cannot be targeted for a dealt-damage trigger."}

@@ -1,0 +1,105 @@
+{
+  "name": "Layla Hassan",
+  "oracleId": "e27feb69-3120-4e8d-8ee6-0f87b58e2ae3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ enters and whenever one or more Assassins you control deal combat damage to a player, return target historic card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "cardInGraveyard",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Saga"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "graveyardToHand",
+            "target": 0
+          }
+        ],
+        "description": "When Layla Hassan enters and whenever one or more Assassins you control deal combat damage to a player, return target historic card from your graveyard to your hand."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Assassin"
+                }
+              ]
+            }
+          },
+          "aggregate": "byEventPlayer"
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "cardInGraveyard",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Saga"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "graveyardToHand",
+            "target": 0
+          }
+        ],
+        "description": "When Layla Hassan enters and whenever one or more Assassins you control deal combat damage to a player, return target historic card from your graveyard to your hand."
+      }
+    ]
+  }
+}

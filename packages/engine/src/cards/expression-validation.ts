@@ -546,6 +546,7 @@ const effectExpressions = {
   discardChosenPlayers: { count: numberValue },
   millAndLoseLifeChosenPlayers: { count: numberValue, amount: numberValue },
   revealHandAndDiscard: { filter: selector },
+  lookAtHand: {},
   discardEachPlayer: { count: numberValue, opponentsUnableLoseLife: optional(numberValue) },
   mill: { count: numberValue },
   gainEnergy: { amount: numberValue },
@@ -756,6 +757,9 @@ const effectExpressions = {
  */
 const effectExtraFields: Partial<Record<Effect['op'], Record<string, Check>>> = {
   eachPlayerMayPutCountersAndGoad: { counter: text },
+  // The executor reads only 'all'; anything else would silently mean "your graveyard".
+  graveyardToBattlefieldEach: { scope: optional(oneOf('you', 'all')) },
+  graveyardToHandEach: { scope: optional(oneOf('you', 'all')) },
   gainControlTarget: { duration: optional(controlDuration) },
   gainControl: {
     duration: optional(controlDuration),

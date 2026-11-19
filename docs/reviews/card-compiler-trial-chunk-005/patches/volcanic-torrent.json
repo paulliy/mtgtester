@@ -1,0 +1,46 @@
+{
+  "name": "Volcanic Torrent",
+  "oracleId": "ec2968fb-163d-4907-862b-b84a1f167833",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals X damage to each creature and planeswalker your opponents control, where X is the number of spells you've cast this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "damageEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "opponents"
+              },
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              }
+            ]
+          },
+          "amount": {
+            "kind": "spellsCastThisTurn"
+          }
+        }
+      ],
+      "description": "Volcanic Torrent deals X damage to each creature and planeswalker your opponents control, where X is the number of spells you've cast this turn."
+    }
+  }
+}

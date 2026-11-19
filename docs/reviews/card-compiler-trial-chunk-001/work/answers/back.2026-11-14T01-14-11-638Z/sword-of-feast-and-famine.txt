@@ -1,0 +1,2 @@
+Whenever equipped creature deals combat damage to a player, that player discards a card. Then untap each land you control.
+The data contains no static bonus or keyword for the equipped creature, and no equip cost is shown.

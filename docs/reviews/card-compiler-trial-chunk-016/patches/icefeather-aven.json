@@ -1,0 +1,38 @@
+{
+  "name": "Icefeather Aven",
+  "oracleId": "9fb901db-1ff7-4a8d-8233-fe7e3dee7fd1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature is turned face up, you may return another target creature to its owner's hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "turnedFaceUp",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [
+          {
+            "kind": "creature",
+            "filter": {
+              "kind": "other"
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "returnToHand",
+            "target": 0
+          }
+        ],
+        "description": "When this creature is turned face up, you may return another target creature to its owner's hand."
+      }
+    ]
+  }
+}

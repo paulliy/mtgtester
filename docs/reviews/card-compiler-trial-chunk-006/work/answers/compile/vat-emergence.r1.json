@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"cardInGraveyard","filter":{"kind":"type","value":"Creature"},"graveyardOwnerScope":"any"}],"effects":[{"op":"graveyardToBattlefield","target":0},{"op":"proliferate"}],"description":"Put target creature card from a graveyard onto the battlefield under your control. Proliferate."}}}

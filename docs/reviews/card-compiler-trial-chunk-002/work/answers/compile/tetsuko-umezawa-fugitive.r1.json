@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"powerAtMost is event-only and no static selector reads power or toughness 1 or less, so 'power or toughness 1 or less' cannot be stated for a continuous effect."}

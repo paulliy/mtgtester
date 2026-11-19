@@ -1,0 +1,50 @@
+{
+  "name": "Fanatical Devotion",
+  "oracleId": "34e56412-4649-481d-be51-357b331d0b75",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice a creature: Regenerate target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [
+            {
+              "op": "regenerate",
+              "target": 0
+            }
+          ],
+          "description": "Sacrifice a creature: Regenerate target creature."
+        }
+      }
+    ]
+  }
+}

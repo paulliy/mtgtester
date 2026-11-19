@@ -1,0 +1,80 @@
+{
+  "name": "Joo Dee, One of Many",
+  "oracleId": "4601ed7b-716e-4c89-b733-1eeabe8bf5a2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{B}, {T}: Surveil 1. Create a token that's a copy of this creature, then sacrifice an artifact or creature. Activate only as a sorcery."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "surveil",
+              "count": 1
+            },
+            {
+              "op": "createTokenCopyOf",
+              "ref": "source",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            },
+            {
+              "op": "sacrificeOneThen",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Artifact"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "then": []
+            }
+          ],
+          "description": "{B}, {T}: Surveil 1. Create a token that's a copy of this creature, then sacrifice an artifact or creature. Activate only as a sorcery."
+        }
+      }
+    ]
+  }
+}

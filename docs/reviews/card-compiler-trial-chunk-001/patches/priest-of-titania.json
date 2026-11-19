@@ -1,0 +1,28 @@
+{
+  "name": "Priest of Titania",
+  "oracleId": "3a198a16-17b9-481e-b516-5bc945c7e247",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Add {G} for each Elf on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G"
+          ]
+        ],
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "subtype",
+            "value": "Elf"
+          },
+          "scope": "all"
+        }
+      }
+    ]
+  }
+}

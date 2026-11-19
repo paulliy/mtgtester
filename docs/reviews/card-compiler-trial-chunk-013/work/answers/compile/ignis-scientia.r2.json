@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The 'if a creature card was exiled this way' check needs a condition on the exiled graveyard card inside an activated ability, which the engine only supports for trigger objects, and no exile-then-Food primitive exists."}

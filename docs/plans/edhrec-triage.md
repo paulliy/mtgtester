@@ -6,20 +6,20 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 2507 | 11.57% |
-| subject | 1162 | 5.72% |
-| line | 1095 | 6.10% |
+| effect | 2451 | 11.30% |
+| subject | 1162 | 5.71% |
+| line | 1158 | 6.40% |
 | trigger event | 391 | 1.55% |
 | cost | 298 | 1.26% |
 | condition | 154 | 0.69% |
 | amount | 149 | 0.70% |
-| target | 125 | 0.53% |
+| target | 118 | 0.51% |
 | card filter | 25 | 0.07% |
 | spell filter | 11 | 0.09% |
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (2507)
+## effect (2451)
 
 - 39 × `look at the top n cards of your library` (Thassa's Oracle, Loot, Exuberant Explorer, Experimental Augury)
 - 16 × `exile the top card of your library` (Blazing Crescendo, Cori Mountain Monastery, Count on Luck)
@@ -41,7 +41,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 - 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)
-- 19 × `target creature you control` (Sylvan Safekeeper, Zack Fair, Royal Treatment)
+- 14 × `target creature you control` (Sylvan Safekeeper, Zack Fair, Royal Treatment)
 - 14 × `it` (Idolized, Rampaging Brontodon, Biosynthic Burst)
 - 10 × `this creature enters or` (Stitcher's Supplier, Patron of the Arts, Vinereap Mentor)
 - 9 × `shrines you control` (Sanctum of Stone Fangs, Sanctum of Calm Waters, Sanctum of Fruitful Harvest)
@@ -55,7 +55,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 6 × `this artifact enters or` (Ichor Wellspring, Prized Statue, Mycosynth Wellspring)
 - 6 × `cards in your hand` (Castle Locthwain, Alandra, Sky Dreamer, Jolrael, Mwonvuli Recluse)
 
-## line (1095)
+## line (1158)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
 - 10 × `when this land enters, it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
@@ -145,9 +145,8 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 3 × `that creature's power` (Ziatora, the Incinerator, Grisly Spectacle, Infested Thrinax)
 - 3 × `the sacrificed creature's toughness` (Geralf, Visionary Stitcher, Miren, the Moaning Well, Disciple of Griselbrand)
 
-## target (125)
+## target (118)
 
-- 7 × `player's graveyard` (Tormod's Crypt, Angel of Finality, Remorseful Cleric)
 - 5 × `creature card from a graveyard` (Cemetery Reaper, Ardyn, the Usurper, Summoner's Sending)
 - 4 × `instant or sorcery card in your graveyard` (Snapcaster Mage, Flashback, Sphinx of Forgotten Lore)
 - 4 × `creature, then proliferate` (Grim Affliction, Courage in Crisis, Spread the Sickness)
@@ -162,6 +161,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 2 × `creature that was dealt damage this turn` (You Are Already Dead, Mirrodin Avenged)
 - 1 × `noncreature artifact or noncreature enchantment` (Haywire Mite)
 - 1 × `card that's an instant or sorcery from your graveyard` (Mizzix's Mastery)
+- 1 × `artifacts and/or enchantments` (Angel of the Ruins)
 
 ## card filter (25)
 

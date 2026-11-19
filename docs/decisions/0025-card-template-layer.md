@@ -1,6 +1,7 @@
 # 0025 — Card template layer (authoring builders for the ability IR)
 
-Status: accepted — 2026-08-07
+Date: 2026-08-07
+Status: Accepted (2026-08-07)
 Context: reported symptom — "a lot of divergence quality from the new cards … two cards, maybe
 creatures with abilities, but they seem to be working differently."
 

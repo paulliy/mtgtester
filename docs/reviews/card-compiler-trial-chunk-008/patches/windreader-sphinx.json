@@ -1,0 +1,47 @@
+{
+  "name": "Windreader Sphinx",
+  "oracleId": "5e038a3a-fbab-46c2-8773-1327d953da16",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature with flying attacks, you may draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "hasKeyword",
+                  "keyword": "flying"
+                }
+              ]
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature with flying attacks, you may draw a card."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+Whenever you attack, put a shield counter on target attacking creature. That creature gains "Whenever this creature deals combat damage to a player, if it has a shield counter on it, remove a shield counter from it and draw a card." until end of turn.

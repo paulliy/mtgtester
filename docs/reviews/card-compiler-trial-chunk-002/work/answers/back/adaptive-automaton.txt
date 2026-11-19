@@ -1,0 +1,1 @@
+The creature type chosen for this is added to its other creature types.

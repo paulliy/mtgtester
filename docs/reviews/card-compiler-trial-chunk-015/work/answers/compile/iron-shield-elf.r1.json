@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"discardCard","count":1}],"timing":"any","ability":{"kind":"activated","targets":[],"effects":[{"op":"grantKeywordUntilEot","target":"source","keyword":"indestructible"},{"op":"tapTarget","target":"source"}],"description":"Discard a card: This creature gains indestructible until end of turn. Tap it."}}]}}

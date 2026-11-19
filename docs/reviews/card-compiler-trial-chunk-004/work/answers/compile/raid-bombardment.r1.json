@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The attack trigger's defending-player reference (eventPlayer) names only a player, so the damage cannot go to the planeswalker a creature attacks as the line requires."}

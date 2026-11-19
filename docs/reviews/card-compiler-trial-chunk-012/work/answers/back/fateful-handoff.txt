@@ -1,0 +1,3 @@
+Target permanent you control that is an artifact or creature.
+Draw a number of cards equal to the mana value of that permanent.
+Then an opponent you choose gains control of that permanent.

@@ -1,0 +1,2 @@
+{2}, Sacrifice this creature: Activate only as a sorcery.
+Search your library for a card that has both the Spider and Hero subtypes, reveal it, put it into your hand, then shuffle.

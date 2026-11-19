@@ -1,0 +1,50 @@
+{
+  "name": "Honden of Infinite Rage",
+  "oracleId": "0cb76b04-d9c3-46fc-a3f2-5f0cb0d91761",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, ~ deals damage to any target equal to the number of Shrines you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "anyTarget"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Shrine"
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "At the beginning of your upkeep, Honden of Infinite Rage deals damage to any target equal to the number of Shrines you control."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A makes the player lose half their life rounded up; Text B has no rounding instruction, so the amount is unspecified for odd life totals."]}

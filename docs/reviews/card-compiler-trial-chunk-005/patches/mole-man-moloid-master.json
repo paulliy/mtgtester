@@ -1,0 +1,85 @@
+{
+  "name": "Mole Man, Moloid Master",
+  "oracleId": "34994475-b914-44f6-8ca1-c2747b6d5956",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a land you control enters, create a 1/1 green Minion creature token named Moloid with \"Whenever this token attacks, you may mill a card.\""
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Moloid",
+              "typeLine": "Token Creature — Minion",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Minion"
+              ],
+              "colors": [
+                "G"
+              ],
+              "power": 1,
+              "toughness": 1,
+              "triggers": [
+                {
+                  "kind": "triggered",
+                  "trigger": {
+                    "when": "attacks",
+                    "subject": {
+                      "kind": "self"
+                    }
+                  },
+                  "optional": true,
+                  "targets": [],
+                  "effects": [
+                    {
+                      "op": "mill",
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      }
+                    }
+                  ],
+                  "description": "Whenever this token attacks, you may mill a card."
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a land you control enters, create a 1/1 green Minion creature token named Moloid with \"Whenever this token attacks, you may mill a card.\""
+      }
+    ]
+  }
+}

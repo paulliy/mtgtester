@@ -1,0 +1,1 @@
+Whenever a creature you control with power 1 or less, or with toughness less than 2, dies, target opponent loses 2 life and you gain 2 life.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema defines the creature's controller as the event player only for dies triggers (subjectControllerIsEventPlayer), so 'that creature's controller creates a token' on an enters trigger cannot be stated with a documented player reference."}

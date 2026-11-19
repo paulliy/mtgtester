@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Its controller draws a card' after countering a spell cannot be named exactly: the schema's controllerOf reference resolves the controller of a permanent in a target slot, not of a spell that was countered."}

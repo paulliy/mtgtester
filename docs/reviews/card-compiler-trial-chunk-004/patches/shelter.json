@@ -1,0 +1,34 @@
+{
+  "name": "Shelter",
+  "oracleId": "c1909d70-d8f4-4c54-8587-0a910f123238",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control gains protection from the color of your choice until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantChosenColorProtectionUntilEot",
+          "target": 0
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Target creature you control gains protection from the color of your choice until end of turn. Draw a card."
+    }
+  }
+}

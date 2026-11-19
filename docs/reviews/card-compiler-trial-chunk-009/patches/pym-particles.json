@@ -1,0 +1,38 @@
+{
+  "name": "Pym Particles",
+  "oracleId": "636b44dc-f7e4-42d2-abf6-ae49432b6052",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature gains vigilance until end of turn and can't be blocked this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "vigilance"
+        },
+        {
+          "op": "cantBeBlockedUntilEot",
+          "target": 0
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Target creature gains vigilance until end of turn and can't be blocked this turn. Draw a card."
+    }
+  }
+}

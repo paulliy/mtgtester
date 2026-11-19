@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The X>=10 branch grants 'no maximum hand size for the rest of the game', but noMaximumHandSize is an unconditional rule static with no condition, and no effect shuffles only the graveyard into the library."}

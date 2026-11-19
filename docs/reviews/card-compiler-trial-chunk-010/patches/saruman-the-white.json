@@ -1,0 +1,34 @@
+{
+  "name": "Saruman the White",
+  "oracleId": "8ba24644-8dff-4f1e-a96a-7361baf46b5a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast your second spell each turn, amass Orcs 2."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "ordinal": 2
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "amass",
+            "subtype": "Orc",
+            "count": {
+              "kind": "const",
+              "n": 2
+            }
+          }
+        ],
+        "description": "Whenever you cast your second spell each turn, amass Orcs 2."
+      }
+    ]
+  }
+}

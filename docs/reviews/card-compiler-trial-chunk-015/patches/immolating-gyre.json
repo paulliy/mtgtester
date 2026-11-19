@@ -1,0 +1,61 @@
+{
+  "name": "Immolating Gyre",
+  "oracleId": "1888b473-e26a-4882-ae18-5a0a6caee410",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals X damage to each creature and planeswalker you don't control, where X is the number of instant and sorcery cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "damageEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "opponents"
+              },
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              }
+            ]
+          },
+          "amount": {
+            "kind": "countCardsInZone",
+            "zone": "graveyard",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "owner": "you"
+          }
+        }
+      ],
+      "description": "Immolating Gyre deals X damage to each creature and planeswalker you don't control, where X is the number of instant and sorcery cards in your graveyard."
+    }
+  }
+}

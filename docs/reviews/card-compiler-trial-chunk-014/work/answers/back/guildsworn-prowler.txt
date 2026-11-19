@@ -1,0 +1,1 @@
+When this dies, if it wasn't blocking, draw a card.

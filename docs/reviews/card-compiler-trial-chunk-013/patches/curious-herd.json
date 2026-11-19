@@ -1,0 +1,49 @@
+{
+  "name": "Curious Herd",
+  "oracleId": "e6f2e363-e361-4571-af37-6c63da04bdbf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Choose target opponent. You create X 3/3 green Beast creature tokens, where X is the number of artifacts that player controls."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Beast",
+            "typeLine": "Token Creature — Beast",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Beast"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 3,
+            "toughness": 3
+          },
+          "count": {
+            "kind": "countPermanentsControlledByTarget",
+            "target": 0,
+            "selector": {
+              "kind": "type",
+              "value": "Artifact"
+            }
+          }
+        }
+      ],
+      "description": "Choose target opponent. You create X 3/3 green Beast creature tokens, where X is the number of artifacts that player controls."
+    }
+  }
+}

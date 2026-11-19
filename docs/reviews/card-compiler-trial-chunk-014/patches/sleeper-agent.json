@@ -1,0 +1,39 @@
+{
+  "name": "Sleeper Agent",
+  "oracleId": "627c9546-85b0-4b4d-93c6-e2ca8c3adf4f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, target opponent gains control of it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "player",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "gainControlTarget",
+            "target": "source",
+            "recipient": {
+              "targetPlayer": 0
+            }
+          }
+        ],
+        "description": "When this creature enters, target opponent gains control of it."
+      }
+    ]
+  }
+}

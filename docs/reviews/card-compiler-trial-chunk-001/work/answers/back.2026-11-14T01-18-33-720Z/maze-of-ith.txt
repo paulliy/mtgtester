@@ -1,0 +1,1 @@
+{T}: Choose target attacking creature. Untap that creature. Create a damage shield on that creature that covers combat damage dealt to it and combat damage dealt by it.

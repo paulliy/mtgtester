@@ -1,0 +1,15 @@
+{
+  "name": "Sire of Seven Deaths",
+  "oracleId": "a15547d0-bbcb-41ee-a9ae-8325a9e7fe1f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Ward—Pay 7 life."
+  ],
+  "compose": "append",
+  "def": {
+    "ward": {
+      "kind": "life",
+      "amount": 7
+    }
+  }
+}

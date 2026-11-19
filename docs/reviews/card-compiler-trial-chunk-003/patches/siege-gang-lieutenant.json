@@ -1,0 +1,51 @@
+{
+  "name": "Siege-Gang Lieutenant",
+  "oracleId": "9e9d538b-a9e5-4d59-b7c1-208fe18110e3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of combat on your turn, if you control your commander, create two 1/1 red Goblin creature tokens. Those tokens gain haste until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "beginningOfCombat",
+          "player": "you",
+          "condition": {
+            "kind": "controlsYourCommander"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "count": {
+              "kind": "const",
+              "n": 2
+            },
+            "spec": {
+              "name": "Goblin",
+              "typeLine": "Token Creature — Goblin",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Goblin"
+              ],
+              "colors": [
+                "R"
+              ],
+              "power": 1,
+              "toughness": 1,
+              "grantHasteUntilEot": true
+            }
+          }
+        ],
+        "description": "At the beginning of combat on your turn, if you control your commander, create two 1/1 red Goblin creature tokens. Those tokens gain haste until end of turn."
+      }
+    ]
+  }
+}

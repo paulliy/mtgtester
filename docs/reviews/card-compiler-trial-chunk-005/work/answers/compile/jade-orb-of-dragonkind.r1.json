@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The spend-trigger effect 'it enters with an additional +1/+1 counter and gains hexproof until your next turn' has no schema op: grantKeywordUntilEot lasts only until end of turn, and no op gives a spell's permanent a counter on entry from a mana spend."}

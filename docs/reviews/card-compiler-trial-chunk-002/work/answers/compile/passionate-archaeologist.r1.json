@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"castsSpell's castFrom can only say 'graveyard', 'hand' or 'notHand', so 'a spell from exile' cannot be stated exactly (notHand also matches graveyard, library and command zone casts)."}

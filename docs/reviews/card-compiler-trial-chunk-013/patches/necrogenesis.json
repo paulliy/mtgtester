@@ -1,0 +1,74 @@
+{
+  "name": "Necrogenesis",
+  "oracleId": "ad08952a-bcae-41d6-8093-c18535dad7d5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}: Exile target creature card from a graveyard. Create a 1/1 green Saproling creature token."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "graveyardOwnerScope": "any",
+              "filter": {
+                "kind": "type",
+                "value": "Creature"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "exileCard",
+              "target": 0
+            },
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Saproling",
+                "typeLine": "Creature — Saproling",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Saproling"
+                ],
+                "colors": [
+                  "G"
+                ],
+                "power": 1,
+                "toughness": 1
+              },
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "{2}: Exile target creature card from a graveyard. Create a 1/1 green Saproling creature token."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"endStep","player":"each"},"optional":false,"targets":[],"effects":[{"op":"sacrifice","target":"source"}],"description":"At the beginning of the end step, sacrifice this creature."}]}}

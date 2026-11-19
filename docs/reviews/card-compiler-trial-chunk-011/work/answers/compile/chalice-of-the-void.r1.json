@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The counter op only acts on an announced target slot, and there is no way to counter the triggering spell itself (the cast spell that fired the castsSpell trigger) without a chosen target."}

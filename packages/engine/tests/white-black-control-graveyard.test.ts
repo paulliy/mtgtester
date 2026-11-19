@@ -14,7 +14,17 @@ import { computePriorityOptions, type PriorityActionPayload } from '../src/actio
 import { resolveTopOfStack } from '../src/stack/stack';
 import { runPrioritySequence } from '../src/turn/priority';
 import { movePermanentsTogether } from '../src/state/objects';
-import { copies, conjure, gameConfig, oracle, plains, pump, spawn, swamp } from './fixtures';
+import {
+  copies,
+  conjure,
+  gameConfig,
+  oracle,
+  plains,
+  pump,
+  spawn,
+  swamp,
+  editableDef,
+} from './fixtures';
 
 interface PinnedCard {
   sha256: string;
@@ -240,8 +250,7 @@ describe('white-black-control graveyard cards — pinned Oracle', () => {
     const ctx = context('rest-in-peace-lost-abilities');
     const peace = castPinned(ctx, 'Rest in Peace');
     if (peace === undefined) throw new Error('Rest in Peace did not enter');
-    const definition = ctx.defs.get(peace.oracleId);
-    if (definition === undefined) throw new Error('Rest in Peace definition is absent');
+    const definition = editableDef(ctx, peace.oracleId);
     definition.staticEffects.push({
       affects: { kind: 'self' },
       op: { layer: 6, loseAllAbilities: true },

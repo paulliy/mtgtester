@@ -1,0 +1,3 @@
+Tap target creature an opponent controls.
+Put three stun counters on that creature.
+Scry 2.

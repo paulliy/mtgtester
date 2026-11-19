@@ -1,0 +1,40 @@
+{
+  "name": "Vona, Butcher of Magan",
+  "oracleId": "b1c56e23-eae6-47a1-a1cd-3a2d01621768",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Pay 7 life: Destroy target nonland permanent. Activate only during your turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "payLife",
+            "amount": 7
+          }
+        ],
+        "timing": "yourTurn",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "nonlandPermanent"
+            }
+          ],
+          "effects": [
+            {
+              "op": "destroy",
+              "target": 0
+            }
+          ],
+          "description": "{T}, Pay 7 life: Destroy target nonland permanent. Activate only during your turn."
+        }
+      }
+    ]
+  }
+}

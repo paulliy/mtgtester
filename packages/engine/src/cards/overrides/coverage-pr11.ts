@@ -430,7 +430,6 @@ function registerPr11LifecycleOverrides(): void {
     'Gut, True Soul Zealot',
     [
       'unrecognized rules text: "Whenever you attack, you may sacrifice another creature or an artifact. If you do, create a 4/1 black Skeleton creature token with menace that\'s tapped and attacking."',
-      'unrecognized rules text: "Choose a Background"',
     ],
     {
       triggers: [

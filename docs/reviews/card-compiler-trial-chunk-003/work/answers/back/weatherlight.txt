@@ -1,0 +1,1 @@
+Whenever this deals combat damage to a player, look at the top five cards of your library. You may put an artifact card, a Legendary card, or a Saga card from among them into your hand, revealing it. Put the rest on the bottom of your library in a random order.

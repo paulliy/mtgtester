@@ -1,0 +1,1 @@
+{T}, Sacrifice a black or artifact creature you control (this creature may be sacrificed): Add {B}. The amount of black mana added is equal to the mana value of the sacrificed creature.

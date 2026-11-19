@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"countPermanents","selector":{"kind":"allOf","of":[{"kind":"subtype","value":"Sliver"},{"kind":"controller","who":"you"}]},"scope":"all"},"selfOnly":true}]}}

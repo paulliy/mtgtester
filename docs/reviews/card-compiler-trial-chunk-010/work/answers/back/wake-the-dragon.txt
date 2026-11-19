@@ -1,0 +1,1 @@
+Create a 6/6 black and red Dragon creature token with flying and menace. That token has "Whenever this creature deals combat damage to a player, gain control of target artifact that player controls."
