@@ -11,32 +11,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "74a06b4d",
+      "commit": "121f266a",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 59.19,
+      "calibrationMs": 46.28,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.52,
+          "value": 5.32,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.404
+          "spread": 0.206
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.55,
+          "value": 5.59,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.405
+          "spread": 0.125
         },
         "setup.msPerGame": {
-          "value": 0.8,
+          "value": 0.85,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.891
+          "spread": 0.745
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -63,25 +63,25 @@
           "kind": "exact"
         },
         "model.bot.callsPerTurn": {
-          "value": 0.6,
+          "value": 0.4,
           "unit": "calls",
           "better": "lower",
           "kind": "exact"
         },
         "model.bot.promptTokensPerTurn": {
-          "value": 1292,
+          "value": 827,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 4952,
+          "value": 4916,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 60.75,
+          "value": 60.401,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -105,19 +105,19 @@
           "kind": "exact"
         },
         "authoring.poolMutantsLeftPct": {
-          "value": 79.79,
+          "value": 77.28,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 39.44,
+          "value": 42.12,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolCardsFullyScaffolded": {
-          "value": 126,
+          "value": 148,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
@@ -142,8 +142,8 @@
         }
       },
       "fingerprints": {
-        "0": "adb92623e53f84a0",
-        "3": "08bfdde997f36db4",
+        "0": "b7aba2d21b228224",
+        "3": "9a7164d65a2816cf",
         "6": "50ee176a59336fac"
       }
     },
@@ -157,32 +157,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "74a06b4d",
+      "commit": "121f266a",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 61.94,
+      "calibrationMs": 45.77,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 13.43,
+          "value": 10.63,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.091
+          "spread": 0.164
         },
         "engine.medianGameMsPerDecision": {
-          "value": 13.14,
+          "value": 9.97,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.069
+          "spread": 0.172
         },
         "setup.msPerGame": {
-          "value": 0.83,
+          "value": 0.79,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.127
+          "spread": 0.111
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -191,7 +191,7 @@
           "kind": "exact"
         },
         "model.default.promptTokensPerTurn": {
-          "value": 19148,
+          "value": 19149,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -203,31 +203,31 @@
           "kind": "exact"
         },
         "model.model.promptTokensPerTurn": {
-          "value": 19148,
+          "value": 19149,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
         },
         "model.bot.callsPerTurn": {
-          "value": 0.803,
+          "value": 0.605,
           "unit": "calls",
           "better": "lower",
           "kind": "exact"
         },
         "model.bot.promptTokensPerTurn": {
-          "value": 2490,
+          "value": 1898,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 4952,
+          "value": 4916,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 60.75,
+          "value": 60.401,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -257,7 +257,7 @@
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 40.47,
+          "value": 40.57,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -288,10 +288,10 @@
         }
       },
       "fingerprints": {
-        "0": "6884a1092a51c3e7",
-        "3": "c5cecac8a7826537",
+        "0": "e4ce86049c7dfd2c",
+        "3": "57eecd1d8819a122",
         "6": "c3936556f219bda4",
-        "9": "0f9c4a7b48a6d248",
+        "9": "e70d5cb5a1f58dc0",
         "12": "bed50eb926713fb5",
         "15": "c218b56b177b5bbe"
       }
