@@ -142,7 +142,7 @@ describe('AI Config', () => {
     expect(configForRole(config, 'tactician')).toMatchObject({
       models: ['qwen/qwen3.7-flash'],
       reasoningEnabled: false,
-      reasoningEffort: 'none',
+      reasoningEffort: 'low',
       maxOutputTokens: 65,
       requestTimeoutMs: 10000,
       maxRetries: 1,
@@ -173,11 +173,9 @@ describe('AI Config', () => {
   it('keeps role-specific capacity fallbacks in the default OpenRouter chains', () => {
     const config = loadAiConfig({ OPENROUTER_API_KEY: 'sk-or-123' });
     expect(config.strategist.models).toEqual(['z-ai/glm-5.3-flash', 'deepseek/deepseek-v4-flash']);
-    expect(config.tactician.models).toEqual([
-      'qwen/qwen3.7-flash',
-      'deepseek/deepseek-v4-flash',
-      'upstage/solar-mini4',
-    ]);
+    expect(config.tactician.models).toEqual(['particle-ai/particle-1', 'deepseek/deepseek-v4-flash']);
+    expect(config.tactician.reasoningEnabled).toBe(true);
+    expect(config.tactician.reasoningEffort).toBe('low');
     expect(config.archetype.models).toEqual(['qwen/qwen3.7-flash', 'deepseek/deepseek-v4-flash']);
   });
 

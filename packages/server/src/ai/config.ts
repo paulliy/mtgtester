@@ -343,16 +343,14 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
     preferredMinThroughput: 100,
   },
   tactician: {
-    // Checked on OpenRouter 2026-11-14: all three have live endpoints and take `response_format`.
-    // poolside/laguna-s-2.1 has no provider left and sao10k/l3-lunaris-8b rate-limited the
-    // 2026-11-10 duel (ADR 0039), so both left the chain. DeepSeek V4 Flash has 13 providers.
-    models: ['qwen/qwen3.7-flash', 'deepseek/deepseek-v4-flash', 'upstage/solar-mini4'],
-    reasoningEnabled: false,
-    reasoningEffort: 'none',
-    // 85 tokens routinely truncates menu decisions once JSON targets are included. Keep a
-    // larger answer budget so provider output limits do not cut off otherwise valid choices.
+    // Particle-1 first (low reasoning), DeepSeek V4 Flash as the backup. Checked on OpenRouter
+    // 2026-11-19: particle-ai/particle-1 is listed and takes `reasoning_effort`.
+    models: ['particle-ai/particle-1', 'deepseek/deepseek-v4-flash'],
+    reasoningEnabled: true,
+    reasoningEffort: 'low',
+    // 256 tokens of answer, plus headroom for the low-effort thinking that `max_tokens` also caps.
     maxOutputTokens: 256,
-    reasoningTokenHeadroom: 0,
+    reasoningTokenHeadroom: 1024,
     requestTimeoutMs: 10000,
     maxRetries: 1,
     preferredMaxLatencySeconds: 10,
