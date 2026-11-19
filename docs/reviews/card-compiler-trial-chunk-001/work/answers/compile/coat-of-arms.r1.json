@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A count of other creatures sharing a creature type with each affected creature needs a per-affected-object value, and the schema's countPermanents is evaluated once for the source, not for each creature it affects."}

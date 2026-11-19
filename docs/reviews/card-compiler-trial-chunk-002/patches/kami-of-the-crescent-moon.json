@@ -1,0 +1,33 @@
+{
+  "name": "Kami of the Crescent Moon",
+  "oracleId": "38cfe4a0-6ead-435b-9f86-928205c0a52c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of each player's draw step, that player draws an additional card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "drawStep",
+          "player": "each"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "player": "eventPlayer"
+          }
+        ],
+        "description": "At the beginning of each player's draw step, that player draws an additional card."
+      }
+    ]
+  }
+}

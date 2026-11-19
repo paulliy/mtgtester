@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"manaAbilities":[{"units":[["W","U"]],"condition":{"kind":"anyOf","of":[{"kind":"sourceMatches","selector":{"kind":"enteredThisTurn"}},{"kind":"countPermanents","selector":{"kind":"allOf","of":[{"kind":"type","value":"Land"},{"kind":"supertype","value":"Basic"}]},"scope":"you","cmp":">=","n":1}]}}]}}

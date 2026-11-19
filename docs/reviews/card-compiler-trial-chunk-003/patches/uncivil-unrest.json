@@ -1,0 +1,33 @@
+{
+  "name": "Uncivil Unrest",
+  "oracleId": "bd655e8b-f192-4635-9e23-357b6f89ef8f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If a creature you control with a +1/+1 counter on it would deal damage to a permanent or player, it deals double that damage instead."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "damageDoubled",
+        "sourceFilter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "hasCounter",
+              "counter": "+1/+1"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

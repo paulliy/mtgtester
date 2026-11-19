@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No trigger fires on noncombat damage dealt to an opponent by any source you control: dealsDamageToOpponent covers only the source's own damage, and playerDealtDamage covers only damage from opponents' sources."}

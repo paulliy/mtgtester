@@ -1,0 +1,1 @@
+Enchanted creature gets +N/+N, where N is the number of artifacts and enchantments you control. The count is of all matching permanents on the battlefield, and the data does not exclude this Aura from the count.

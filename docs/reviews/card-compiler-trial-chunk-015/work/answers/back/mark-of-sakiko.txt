@@ -1,0 +1,1 @@
+Enchanted creature has "Whenever this creature deals combat damage to a player, add {G} equal to the damage dealt. This mana is persistent."

@@ -1,0 +1,1 @@
+Each commander you own that is a creature has "Whenever this creature attacks, it gains double strike until end of turn."

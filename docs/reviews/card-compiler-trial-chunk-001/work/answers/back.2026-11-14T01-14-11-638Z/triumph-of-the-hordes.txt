@@ -1,0 +1,4 @@
+Sorcery. No targets.
+Creatures you control get +1/+1 until end of turn.
+Creatures you control gain trample until end of turn.
+Creatures you control gain infect until end of turn.

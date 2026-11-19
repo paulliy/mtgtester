@@ -1,0 +1,2 @@
+When this creature enters, create a Lander artifact token.
+{2}, {T}, Sacrifice this artifact: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.

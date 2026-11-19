@@ -1,0 +1,39 @@
+{
+  "name": "Almost Perfect",
+  "oracleId": "617eae63-b5f8-4014-8269-7c66f4388ac7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature has base power and toughness 9/10 and has indestructible."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "const",
+            "n": 9
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 10
+          }
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "indestructible"
+        }
+      }
+    ]
+  }
+}

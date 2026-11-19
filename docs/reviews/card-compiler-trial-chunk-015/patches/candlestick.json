@@ -1,0 +1,50 @@
+{
+  "name": "Candlestick",
+  "oracleId": "2f7b46c1-3d82-4fd9-9882-589315cab47b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equipped creature gets +1/+1 and has \"Whenever this creature attacks, surveil 2.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "attacks",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "surveil",
+                "count": 2
+              }
+            ],
+            "description": "Whenever this creature attacks, surveil 2."
+          }
+        }
+      }
+    ]
+  }
+}

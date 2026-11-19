@@ -1,0 +1,35 @@
+{
+  "name": "Geomancer's Gambit",
+  "oracleId": "33bb4aff-6476-4787-b3fe-028b1b1bd1bc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "land"
+        }
+      ],
+      "effects": [
+        {
+          "op": "removeTargetAndControllerMaySearchBasicLand",
+          "target": 0,
+          "action": "destroy",
+          "entersTapped": false
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield, then shuffle. Draw a card."
+    }
+  }
+}

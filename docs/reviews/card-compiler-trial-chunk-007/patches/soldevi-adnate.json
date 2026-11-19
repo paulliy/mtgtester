@@ -1,0 +1,56 @@
+{
+  "name": "Soldevi Adnate",
+  "oracleId": "e3174070-542f-429e-9149-b572f6614537",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Sacrifice a black or artifact creature: Add an amount of {B} equal to the sacrificed creature's mana value."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "B"
+          ]
+        ],
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "color",
+                      "value": "B"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    }
+                  ]
+                }
+              ]
+            },
+            "allowSelf": true
+          }
+        ],
+        "amountFromSacrificedManaValue": true
+      }
+    ]
+  }
+}

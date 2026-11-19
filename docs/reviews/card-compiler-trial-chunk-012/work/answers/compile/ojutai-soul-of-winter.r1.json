@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The clause 'that permanent doesn't untap during its controller's next untap step' has no exact schema form: the only untap-skip is the card-level doesntUntapDuringUntapStep flag, and a stun counter would only approximate it."}

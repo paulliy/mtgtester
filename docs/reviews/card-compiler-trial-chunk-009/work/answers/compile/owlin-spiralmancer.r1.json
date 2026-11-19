@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The trigger \"your first spell with {X} in its mana cost each turn\" needs a spell filter for an {X} in the mana cost, and no selector or castsSpell field can express that."}

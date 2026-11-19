@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"mayDiscardThenDraw","count":2}],"description":"You may discard a card. If you do, draw two cards."}}}

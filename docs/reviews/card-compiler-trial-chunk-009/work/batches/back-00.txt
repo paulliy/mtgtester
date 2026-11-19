@@ -1,0 +1,2 @@
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/abzan-beastmaster.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/abzan-beastmaster.txt
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/back/host-of-the-hereafter.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/back/host-of-the-hereafter.txt

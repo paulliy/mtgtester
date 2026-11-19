@@ -1,0 +1,1 @@
+{3}, {T}: Target Ninja or Turtle creature can't be blocked this turn.

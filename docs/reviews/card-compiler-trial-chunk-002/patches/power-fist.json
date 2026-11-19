@@ -1,0 +1,54 @@
+{
+  "name": "Power Fist",
+  "oracleId": "bdfcf7df-8c06-4abe-af41-eccabb9fc2c8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equipped creature has trample and \"Whenever this creature deals combat damage to a player, put that many +1/+1 counters on it.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "trample"
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dealsCombatDamageToPlayer",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "putCountersEach",
+                "selector": {
+                  "kind": "self"
+                },
+                "counter": "+1/+1",
+                "count": {
+                  "kind": "damageDealt"
+                }
+              }
+            ],
+            "description": "Whenever this creature deals combat damage to a player, put that many +1/+1 counters on it."
+          }
+        }
+      }
+    ]
+  }
+}

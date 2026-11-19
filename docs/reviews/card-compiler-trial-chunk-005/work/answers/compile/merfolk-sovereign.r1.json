@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"tap"}],"timing":"any","ability":{"kind":"activated","targets":[{"kind":"creature","filter":{"kind":"subtype","value":"Merfolk"}}],"effects":[{"op":"cantBeBlockedUntilEot","target":0}],"description":"{T}: Target Merfolk creature can't be blocked this turn."}}]}}

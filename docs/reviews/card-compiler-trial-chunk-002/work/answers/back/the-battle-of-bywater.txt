@@ -1,0 +1,3 @@
+Destroy each creature with power 3 or greater.
+Create a number of Food tokens equal to the number of creatures you control.
+Each Food token is an artifact with "{2}, {T}, Sacrifice this artifact: You gain 3 life."

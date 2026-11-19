@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Preventing combat damage dealt to this creature while putting a +1/+1 counter on it for each such event is a replacement with a paired counter placement, and the schema has only a bare combat-damage prevention rule (preventCombatDamageToSelf) with no counter addition."}

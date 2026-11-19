@@ -1,0 +1,1 @@
+When this enters, deal damage equal to the number of Goblins you control to target creature an opponent controls.

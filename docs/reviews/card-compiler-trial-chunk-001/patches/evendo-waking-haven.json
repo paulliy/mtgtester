@@ -1,0 +1,65 @@
+{
+  "name": "Evendo, Waking Haven",
+  "oracleId": "83161d59-2520-4741-9328-e2a4a8b5d5bc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "12+ | {G}, {T}: Add {G} for each creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G"
+          ]
+        ],
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "scope": "you"
+        },
+        "condition": {
+          "kind": "hasCounters",
+          "selector": {
+            "kind": "self"
+          },
+          "counter": "charge",
+          "cmp": ">=",
+          "n": 12
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"TargetSpec.count takes only fixed min and max numbers, so 'exile up to that many target cards from their graveyard', where that many is the combat damage dealt, cannot be bounded."}

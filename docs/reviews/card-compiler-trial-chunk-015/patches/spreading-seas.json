@@ -1,0 +1,23 @@
+{
+  "name": "Spreading Seas",
+  "oracleId": "af32757c-9d3c-4f6c-a6fa-d5729a440382",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted land is an Island."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 4,
+          "setLandSubtype": "Island",
+          "loseAbilities": true
+        }
+      }
+    ]
+  }
+}

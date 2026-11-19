@@ -1,0 +1,49 @@
+{
+  "name": "Gimli, Counter of Kills",
+  "oracleId": "96ebcd8b-ae3c-47b0-b895-bfc9848713e5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature an opponent controls dies, ~ deals 1 damage to that creature's controller."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          },
+          "subjectControllerIsEventPlayer": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature an opponent controls dies, Gimli deals 1 damage to that creature's controller."
+      }
+    ]
+  }
+}

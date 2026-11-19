@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target restriction 'Target 1/1 creature' (current power and toughness exactly 1/1) cannot be expressed: powerAtMost and basePowerToughness are event-only selectors and there is no toughness-at-most selector."}

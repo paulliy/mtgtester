@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A triggers on 'one or more' +1/+1 counters being put on another creature you control, so simultaneous counters trigger it once; Text B triggers on each single +1/+1 counter put on such a creature, so one event placing several counters triggers it once per counter."]}

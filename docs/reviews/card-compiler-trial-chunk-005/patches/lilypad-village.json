@@ -1,0 +1,85 @@
+{
+  "name": "Lilypad Village",
+  "oracleId": "5bb06e6f-e3af-4caa-b66d-77248ad46b61",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{U}, {T}: Surveil 2. Activate only if a Bird, Frog, Otter, or Rat entered the battlefield under your control this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Bird"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Frog"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Otter"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Rat"
+                  }
+                ]
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "enteredThisTurn"
+              }
+            ]
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 1
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "surveil",
+              "count": 2
+            }
+          ],
+          "description": "{U}, {T}: Surveil 2. Activate only if a Bird, Frog, Otter, or Rat entered the battlefield under your control this turn."
+        }
+      }
+    ]
+  }
+}

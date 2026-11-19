@@ -1,0 +1,2 @@
+This creature enters tapped unless the announced X is 3 or more.
+This creature enters with a number of stun counters on it equal to 3 minus X.

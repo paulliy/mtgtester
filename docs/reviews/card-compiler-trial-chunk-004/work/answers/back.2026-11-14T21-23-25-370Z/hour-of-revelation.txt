@@ -1,0 +1,1 @@
+This spell costs {3} less to cast as long as there are ten or more nonland permanents, counted across all players.

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"self"},"op":{"layer":7,"sublayer":"d","power":10,"toughness":10},"condition":{"kind":"countPermanents","selector":{"kind":"type","value":"Land"},"scope":"you","cmp":">=","n":10}}]}}

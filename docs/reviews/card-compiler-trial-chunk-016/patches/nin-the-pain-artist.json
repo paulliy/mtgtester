@@ -1,0 +1,63 @@
+{
+  "name": "Nin, the Pain Artist",
+  "oracleId": "ec439630-e18b-45f6-8034-2ecbea27772f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{X}{U}{R}, {T}: ~ deals X damage to target creature. That creature's controller draws X cards."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 0,
+                "R": 1,
+                "G": 0
+              },
+              "colorless": 0,
+              "x": 1
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [
+            {
+              "op": "dealDamage",
+              "target": 0,
+              "amount": {
+                "kind": "xValue"
+              }
+            },
+            {
+              "op": "drawTarget",
+              "target": {
+                "controllerOf": 0
+              },
+              "count": {
+                "kind": "xValue"
+              }
+            }
+          ],
+          "description": "{X}{U}{R}, {T}: Nin deals X damage to target creature. That creature's controller draws X cards."
+        }
+      }
+    ]
+  }
+}

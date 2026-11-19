@@ -1,0 +1,49 @@
+{
+  "name": "Soulcatchers' Aerie",
+  "oracleId": "69565f6e-2e23-4cd8-bd21-1283e06729a3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a Bird is put into your graveyard from the battlefield, put a feather counter on this enchantment."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "leavesBattlefield",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "owner",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Bird"
+                }
+              ]
+            }
+          },
+          "leavesTo": [
+            "graveyard"
+          ]
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "feather",
+            "count": 1
+          }
+        ],
+        "description": "Whenever a Bird is put into your graveyard from the battlefield, put a feather counter on this enchantment."
+      }
+    ]
+  }
+}

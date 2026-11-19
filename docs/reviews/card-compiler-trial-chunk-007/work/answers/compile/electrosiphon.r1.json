@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"spell"}],"effects":[{"op":"counter","target":0},{"op":"gainEnergy","amount":{"kind":"manaValueOfTarget","target":0}}],"description":"Counter target spell. You get an amount of {E} (energy counters) equal to its mana value."}}}

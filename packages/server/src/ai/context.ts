@@ -140,6 +140,10 @@ export function assemblePrompt(
       cmdrDmg: opp.commanderDamageDealtToYou,
       commanders: opp.commanders,
       ...(includePublicZones ? { poison: opp.poisonCounters, graveyard: opp.graveyard } : {}),
+      // Cards this seat saw in that hand (Gitaxian Probe, Peek) and that are still there.
+      ...(opp.knownHand !== undefined && opp.knownHand.length > 0
+        ? { knownHand: opp.knownHand.map((card) => card.name) }
+        : {}),
     })),
     battlefield: view.battlefield.map((perm) =>
       useCardSummaries

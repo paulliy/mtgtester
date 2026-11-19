@@ -1,0 +1,49 @@
+{
+  "name": "Skyknight Vanguard",
+  "oracleId": "9180f77f-c288-4a24-a35d-a16270b3d737",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, create a 1/1 white Soldier creature token that's tapped and attacking."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenAttacking",
+            "spec": {
+              "name": "Soldier",
+              "typeLine": "Token Creature — Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever this creature attacks, create a 1/1 white Soldier creature token that's tapped and attacking."
+      }
+    ]
+  }
+}

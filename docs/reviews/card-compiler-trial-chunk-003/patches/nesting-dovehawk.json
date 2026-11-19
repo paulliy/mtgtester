@@ -1,0 +1,28 @@
+{
+  "name": "Nesting Dovehawk",
+  "oracleId": "fe8fc442-ed17-40b2-8624-69f2eed3f9be",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of combat on your turn, populate."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "beginningOfCombat",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "populate"
+          }
+        ],
+        "description": "At the beginning of combat on your turn, populate."
+      }
+    ]
+  }
+}

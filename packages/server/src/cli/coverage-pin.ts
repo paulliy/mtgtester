@@ -4,7 +4,11 @@
  *   bun run coverage:pin                  # needs data/scryfall-oracle-cards.json: add and refresh pins, then re-ratchet
  *   bun run coverage:pin --bank <file>    # another Scryfall bank
  *   bun run coverage:pin --ratchet        # offline: record which pinned cards model now
- *   bun run coverage:pin --check          # offline: fail on a regressed or unrecorded modeled card
+ *   bun run coverage:pin --check          # offline: fail on a regressed, unrecorded or changed modeled card
+ *   bun run coverage:pin --dump <file>    # offline: every modeled card's definition, one per line
+ *
+ * `--check` names the modeled cards whose definition changed since the ratchet was recorded. To see
+ * what changed, run `--dump` at the base commit and at the head, and diff the two files.
  *
  * See `packages/server/src/cards/edhrec-pins.ts`. Never uses the network.
  */
@@ -14,9 +18,11 @@ import type { EdhrecRanking } from '../cards/edhrec-ranking';
 import {
   MODELED_RATCHET_PATH,
   PINNED_ORACLE_PATH,
+  dumpDefinitions,
   modeledRatchet,
   pinReadyList,
   ratchetDrift,
+  ratchetHolds,
   renderPins,
   type ModeledRatchet,
   type PinnedCard,
@@ -53,15 +59,29 @@ function main(): void {
     const drift = ratchetDrift(recorded, modeledRatchet(readPins()));
     for (const name of drift.regressed) console.error(`regressed: ${name} no longer models`);
     for (const name of drift.newlyModeled) console.error(`unrecorded: ${name} now models`);
+    for (const name of drift.behaviorChanged)
+      console.error(`changed: ${name} still models, with a different definition`);
     if (drift.fixtureChanged)
       console.error(`${PINNED_ORACLE_PATH} changed since the ratchet was recorded`);
-    if (drift.regressed.length > 0 || drift.newlyModeled.length > 0 || drift.fixtureChanged) {
+    if (recorded.fingerprints === undefined)
+      console.error(`${MODELED_RATCHET_PATH} has no definition fingerprints`);
+    if (!ratchetHolds(recorded, drift)) {
+      if (drift.behaviorChanged.length > 0)
+        console.error(
+          'to see each change: bun run coverage:pin --dump <file> at the base commit and here, then diff',
+        );
       console.error('run bun run coverage:pin --ratchet after reviewing the changes');
       process.exit(1);
     }
     console.log(
-      `${recorded.modeled.length}/${recorded.pinned} pinned EDHREC cards model, as recorded.`,
+      `${recorded.modeled.length}/${recorded.pinned} pinned EDHREC cards model, with the definitions recorded.`,
     );
+    return;
+  }
+  const dump = option('--dump');
+  if (dump !== undefined) {
+    writeFileSync(resolve(dump), dumpDefinitions(readPins()));
+    console.log(`wrote every modeled pinned card's definition to ${dump}`);
     return;
   }
   if (process.argv.includes('--ratchet')) {

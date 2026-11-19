@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"There is no effect that returns a random two of the chosen graveyard cards to the battlefield while putting the remaining chosen card on the bottom of the library (reanimateEachChosen returns all chosen cards, not a random subset)."}

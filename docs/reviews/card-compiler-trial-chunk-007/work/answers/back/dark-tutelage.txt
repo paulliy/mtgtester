@@ -1,0 +1,1 @@
+At the beginning of your upkeep, draw a card, reveal the top card of your library, and you lose life equal to that card's mana value.

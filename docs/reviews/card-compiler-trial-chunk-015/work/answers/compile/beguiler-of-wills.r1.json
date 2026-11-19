@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target restriction 'power less than or equal to the number of creatures you control' cannot be stated in the target filter (power bounds are fixed numbers or the source's power), and checking it on resolution would let an illegal target be announced."}

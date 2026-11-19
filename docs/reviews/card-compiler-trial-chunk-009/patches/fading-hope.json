@@ -1,0 +1,48 @@
+{
+  "name": "Fading Hope",
+  "oracleId": "64883ef2-c536-42e2-b52f-cfd1984fcdfd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return target creature to its owner's hand. If its mana value was 3 or less, scry 1."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "manaValueOfTarget",
+              "target": 0
+            },
+            "cmp": "<=",
+            "right": {
+              "kind": "const",
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "scry",
+              "count": 1
+            }
+          ],
+          "else": []
+        },
+        {
+          "op": "returnToHand",
+          "target": 0
+        }
+      ],
+      "description": "Return target creature to its owner's hand. If its mana value was 3 or less, scry 1."
+    }
+  }
+}

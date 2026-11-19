@@ -1,0 +1,40 @@
+{
+  "name": "Bothersome Noisemaker",
+  "oracleId": "978e07fd-8b8c-4eab-850e-e4c0e712251e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a noncreature spell, amass Goblins 1."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "not",
+            "of": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "amass",
+            "subtype": "Goblin",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you cast a noncreature spell, amass Goblins 1."
+      }
+    ]
+  }
+}

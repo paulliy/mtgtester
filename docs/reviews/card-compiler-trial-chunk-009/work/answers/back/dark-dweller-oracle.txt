@@ -1,0 +1,1 @@
+{1}, Sacrifice a creature you control (this creature may be sacrificed): Exile the top card of your library. You may play that card until end of turn.

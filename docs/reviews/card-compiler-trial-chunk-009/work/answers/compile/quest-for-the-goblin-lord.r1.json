@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"type","value":"Creature"}]},"op":{"layer":7,"sublayer":"d","power":2,"toughness":0},"condition":{"kind":"sourceHasCounters","counter":"quest","cmp":">=","n":5}}]}}

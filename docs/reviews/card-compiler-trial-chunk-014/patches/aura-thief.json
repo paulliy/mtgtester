@@ -1,0 +1,35 @@
+{
+  "name": "Aura Thief",
+  "oracleId": "cf0936ea-2741-43a4-ad6a-a1258b54945b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature dies, you gain control of all enchantments."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainControl",
+            "selector": {
+              "kind": "type",
+              "value": "Enchantment"
+            },
+            "duration": "permanent"
+          }
+        ],
+        "description": "When this creature dies, you gain control of all enchantments."
+      }
+    ]
+  }
+}

@@ -1,0 +1,2 @@
+Enchant creature
+Whenever enchanted creature attacks, scry 2.

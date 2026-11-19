@@ -1,0 +1,42 @@
+{
+  "name": "Uncover the Moon-Letters",
+  "oracleId": "4c67359d-5590-4eb0-827e-b411967ee238",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a noncreature spell, you may draw X cards, where X is the amount of mana spent to cast that spell. If you do, discard two cards."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "not",
+            "of": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "manaSpent"
+            }
+          },
+          {
+            "op": "discard",
+            "count": 2
+          }
+        ],
+        "description": "Whenever you cast a noncreature spell, you may draw X cards, where X is the amount of mana spent to cast that spell. If you do, discard two cards."
+      }
+    ]
+  }
+}

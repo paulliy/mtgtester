@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The graveyard-cast permission is conditional on having gained life this turn, and no condition reads that fact; castRestriction would also block casting the card from hand."}

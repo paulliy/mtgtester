@@ -1,0 +1,53 @@
+{
+  "name": "Captain's Claws",
+  "oracleId": "4cacd7de-83ac-4767-b6f2-f5a89f04a0b9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature attacks, create a 1/1 white Kor Ally creature token that's tapped and attacking."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenAttacking",
+            "spec": {
+              "name": "Kor Ally",
+              "typeLine": "Token Creature — Kor Ally",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Kor",
+                "Ally"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever equipped creature attacks, create a 1/1 white Kor Ally creature token that's tapped and attacking."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{T}: Add {C}. If the number of Urza's Mines you control meets a hidden comparison with 1 and the number of Urza's Power-Plants you control meets a hidden comparison with 1 (the comparisons are not shown), add {C}{C}{C} instead.

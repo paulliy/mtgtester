@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema defines the damage recipient 'eventPlayer' from subjectControllerIsEventPlayer only for dies triggers, not for a land entering, so 'that land's controller' is not expressible for an enters trigger."}

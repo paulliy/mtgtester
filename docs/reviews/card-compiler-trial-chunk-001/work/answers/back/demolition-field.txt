@@ -1,0 +1,1 @@
+{2}, {T}, Sacrifice this land: Destroy target nonbasic land an opponent controls. That land's controller may search their library for a basic land card and put it onto the battlefield untapped. Then search your library for a basic land card and put it onto the battlefield untapped. Then shuffle.

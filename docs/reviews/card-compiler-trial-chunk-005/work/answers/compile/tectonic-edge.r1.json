@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The activation condition 'an opponent controls four or more lands' needs a per-opponent count, but countPermanents with scope 'opponents' pools all opponents' lands, which differs in multiplayer."}

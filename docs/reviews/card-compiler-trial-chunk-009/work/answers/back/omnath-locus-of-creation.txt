@@ -1,0 +1,4 @@
+Whenever a land you control enters, check how many times this ability has resolved this turn, counting this resolution.
+If it is the first time, you gain 4 life.
+If it is the second time, add four mana, one each of {R}, {G}, {W}, and {U}.
+If it is the third time, each opponent takes 4 damage, and each planeswalker controlled by an opponent takes 4 damage.

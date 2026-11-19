@@ -11,7 +11,7 @@ import { queueCastTriggers } from '../src/state/objects';
 import { landPlayLimitFor } from '../src/state/queries';
 import { buildPlayerBoardState } from '../src/view/spectator';
 import { buildPlayerView } from '../src/view/view';
-import { conjure, gameConfig, oracle, pump, spawn } from './fixtures';
+import { conjure, gameConfig, oracle, pump, spawn, editableDef } from './fixtures';
 
 const context = () =>
   createGame(gameConfig([{ cards: [] }, { cards: [] }], { seed: 'audit-regressions' }));
@@ -83,7 +83,7 @@ describe('audit: manifest entry and visibility', () => {
       }),
       'library',
     );
-    const def = ctx.defs.get(top.oracleId)!;
+    const def = editableDef(ctx, top.oracleId);
     def.entersTapped = true;
     def.entersWithCounters = { '+1/+1': 3 };
     def.entersChoosingOption = {

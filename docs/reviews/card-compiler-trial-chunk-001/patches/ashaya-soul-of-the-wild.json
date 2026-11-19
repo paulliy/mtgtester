@@ -1,0 +1,43 @@
+{
+  "name": "Ashaya, Soul of the Wild",
+  "oracleId": "162572f2-1757-42e9-bd97-e6bd9a762c0e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Nontoken creatures you control are Forest lands in addition to their other types."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "not",
+              "of": {
+                "kind": "isToken"
+              }
+            }
+          ]
+        },
+        "op": {
+          "layer": 4,
+          "addTypes": [
+            "Land"
+          ],
+          "addSubtypes": [
+            "Forest"
+          ]
+        }
+      }
+    ]
+  }
+}

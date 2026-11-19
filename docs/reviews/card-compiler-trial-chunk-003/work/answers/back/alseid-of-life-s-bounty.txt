@@ -1,0 +1,1 @@
+{1}, Sacrifice this: Target creature or enchantment you control gains protection from the chosen color until end of turn.

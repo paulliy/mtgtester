@@ -1,0 +1,34 @@
+{
+  "name": "Water Wings",
+  "oracleId": "17f8e8cb-cd1b-4d94-9efa-ce268e8e7096",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Until end of turn, target creature you control has base power and toughness 4/4 and gains flying and hexproof."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "becomeCreatureUntilEot",
+          "target": 0,
+          "subtypes": [],
+          "power": 4,
+          "toughness": 4,
+          "keywords": [
+            "flying",
+            "hexproof"
+          ]
+        }
+      ],
+      "description": "Until end of turn, target creature you control has base power and toughness 4/4 and gains flying and hexproof."
+    }
+  }
+}

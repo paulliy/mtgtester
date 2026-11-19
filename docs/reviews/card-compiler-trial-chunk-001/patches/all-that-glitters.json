@@ -1,0 +1,82 @@
+{
+  "name": "All That Glitters",
+  "oracleId": "a4d751e0-41c1-4e90-853d-512f385acd81",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature gets +1/+1 for each artifact and/or enchantment you control."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": {
+            "kind": "times",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Artifact"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Enchantment"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "scope": "you"
+            },
+            "n": 1
+          },
+          "toughness": {
+            "kind": "times",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Artifact"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Enchantment"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "scope": "you"
+            },
+            "n": 1
+          }
+        }
+      }
+    ]
+  }
+}

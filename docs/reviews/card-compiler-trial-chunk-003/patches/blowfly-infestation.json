@@ -1,0 +1,51 @@
+{
+  "name": "Blowfly Infestation",
+  "oracleId": "3859873f-2a0f-463b-8ed9-7f2ab5ed393a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature dies, if it had a -1/-1 counter on it, put a -1/-1 counter on target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          },
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "hasCounter",
+              "counter": "-1/-1"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": 0,
+            "counter": "-1/-1",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature dies, if it had a -1/-1 counter on it, put a -1/-1 counter on target creature."
+      }
+    ]
+  }
+}

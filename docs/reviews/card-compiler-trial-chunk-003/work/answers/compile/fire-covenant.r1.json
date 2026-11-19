@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","count":{"min":0,"max":null}}],"effects":[{"op":"dealDamageDivided","targetSlot":0,"total":{"kind":"xValue"}}],"description":"Fire Covenant deals X damage divided as you choose among any number of target creatures."}}}

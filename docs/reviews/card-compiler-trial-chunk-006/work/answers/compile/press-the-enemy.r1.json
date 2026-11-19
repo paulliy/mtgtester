@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The second sentence (cast an instant or sorcery spell of equal or lesser mana value from hand free) has no schema form, because castOneFromHandFreeUpTo takes a fixed maximum and has no instant or sorcery filter or relation to the returned spell's mana value."}

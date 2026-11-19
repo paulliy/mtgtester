@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"aurasAttachedToSource counts the Auras attached to this Aura itself, not those attached to the enchanted creature, so 'another Aura is attached to enchanted creature' cannot be tested."}

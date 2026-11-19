@@ -1,0 +1,29 @@
+{
+  "name": "Gratuitous Violence",
+  "oracleId": "7c340a39-4ee0-4ba1-bb66-6674f8020fda",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If a creature you control would deal damage to a permanent or player, it deals double that damage instead."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "damageDoubled",
+        "sourceFilter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

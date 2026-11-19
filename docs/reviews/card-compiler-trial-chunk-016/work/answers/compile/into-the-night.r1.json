@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no day/night state op for 'It becomes night', and no variable-count discard-then-draw op for 'Discard any number of cards, then draw that many cards plus one' (discard takes a fixed count and putAnyFromHandOnBottomThenDraw puts cards on the library bottom)."}

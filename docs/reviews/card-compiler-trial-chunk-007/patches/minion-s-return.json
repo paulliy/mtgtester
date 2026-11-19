@@ -1,0 +1,34 @@
+{
+  "name": "Minion's Return",
+  "oracleId": "6cbe76c6-2b64-4389-b5f9-0b221cd92312",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When enchanted creature dies, return that card to the battlefield under your control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "graveyardToBattlefield",
+            "target": "triggerObject"
+          }
+        ],
+        "description": "When enchanted creature dies, return that card to the battlefield under your control."
+      }
+    ]
+  }
+}

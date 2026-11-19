@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Counting the creatures with defender you control needs a hasKeyword selector, which the schema marks event-only, so it cannot count them in a resolving activated ability."}

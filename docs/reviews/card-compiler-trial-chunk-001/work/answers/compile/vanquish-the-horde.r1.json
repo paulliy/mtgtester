@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"countPermanents","selector":{"kind":"type","value":"Creature"},"scope":"all"},"selfOnly":true}]}}

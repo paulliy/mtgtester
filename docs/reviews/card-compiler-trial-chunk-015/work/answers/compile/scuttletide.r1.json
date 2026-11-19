@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"subtype","value":"Crab"}]},"op":{"layer":7,"sublayer":"d","power":1,"toughness":1},"condition":{"kind":"compareValues","left":{"kind":"cardTypesInYourGraveyard"},"cmp":">=","right":{"kind":"const","n":4}}}]}}

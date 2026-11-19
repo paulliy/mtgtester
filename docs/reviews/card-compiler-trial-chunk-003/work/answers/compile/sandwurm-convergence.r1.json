@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The flying restriction needs a static selector for 'creatures with flying', but the schema's hasKeyword selector is event-only, so it cannot filter an attackRestriction."}

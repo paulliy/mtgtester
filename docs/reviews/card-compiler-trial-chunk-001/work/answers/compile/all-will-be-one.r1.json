@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The damage equals the number of counters placed, and no Value reads the count of counters in a countersPut event, while the target 'opponent, creature an opponent controls, or planeswalker an opponent controls' has no single target kind with that controller restriction."}

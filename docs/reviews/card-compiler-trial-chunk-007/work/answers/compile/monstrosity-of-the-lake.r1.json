@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The pay-{5}-then-tap-and-stun half is expressible, but a stun counter has no untap replacement in the schema (a permanent with a stun counter that would untap loses one instead), so the stun would silently do nothing."}

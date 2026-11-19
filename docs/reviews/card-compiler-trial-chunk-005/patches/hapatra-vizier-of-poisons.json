@@ -1,0 +1,58 @@
+{
+  "name": "Hapatra, Vizier of Poisons",
+  "oracleId": "a8ddea1c-8d80-49c1-a5b4-630d5e51d66e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you put one or more -1/-1 counters on a creature, create a 1/1 green Snake creature token with deathtouch."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "countersPut",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          },
+          "counter": "-1/-1",
+          "byYou": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Snake",
+              "typeLine": "Token Creature — Snake",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Snake"
+              ],
+              "colors": [
+                "G"
+              ],
+              "power": 1,
+              "toughness": 1,
+              "keywords": [
+                "deathtouch"
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you put one or more -1/-1 counters on a creature, create a 1/1 green Snake creature token with deathtouch."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Returning up to two chosen graveyard cards to hand has no each-chosen op (graveyardToHand takes a single target), so the variable-count hand half cannot be expressed exactly."}

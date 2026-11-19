@@ -1,0 +1,23 @@
+{
+  "name": "Mana Flare",
+  "oracleId": "97159138-c34b-416e-b079-5c952383a243",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a player taps a land for mana, that player adds one mana of any type that land produced."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "manaActivationRider",
+        "source": {
+          "kind": "type",
+          "value": "Land"
+        },
+        "add": {
+          "kind": "oneOfProducedTypes"
+        }
+      }
+    ]
+  }
+}

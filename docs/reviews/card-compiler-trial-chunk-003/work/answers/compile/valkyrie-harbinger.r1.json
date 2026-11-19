@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The intervening-if asks whether you gained 4 or more life this turn, and no Condition or Value counts life gained this turn (lifeTotal reads current life, not life gained)."}

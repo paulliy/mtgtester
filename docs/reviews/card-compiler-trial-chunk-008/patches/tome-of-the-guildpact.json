@@ -1,0 +1,167 @@
+{
+  "name": "Tome of the Guildpact",
+  "oracleId": "3c7dd86d-25eb-4b24-9358-98b951248e04",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a multicolored spell, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "W"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "U"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "W"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "B"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "W"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "R"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "W"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "G"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "U"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "B"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "U"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "R"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "U"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "G"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "B"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "R"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "B"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "G"
+                  }
+                ]
+              },
+              {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "R"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "G"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you cast a multicolored spell, draw a card."
+      }
+    ]
+  }
+}

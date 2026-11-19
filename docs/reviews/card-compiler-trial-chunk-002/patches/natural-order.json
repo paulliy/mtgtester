@@ -1,0 +1,42 @@
+{
+  "name": "Natural Order",
+  "oracleId": "8c1fe337-375a-4add-93b6-0ac39ed72b4f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Search your library for a green creature card, put it onto the battlefield, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "color",
+                "value": "G"
+              }
+            ]
+          },
+          "destinations": [
+            {
+              "zone": "battlefield"
+            }
+          ]
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "description": "Search your library for a green creature card, put it onto the battlefield, then shuffle."
+    }
+  }
+}

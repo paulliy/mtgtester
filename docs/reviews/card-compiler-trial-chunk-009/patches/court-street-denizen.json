@@ -1,0 +1,56 @@
+{
+  "name": "Court Street Denizen",
+  "oracleId": "34312179-f3f9-47ca-bdf4-5abbd493876e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another white creature you control enters, tap target creature an opponent controls."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "color",
+                  "value": "W"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "tapTarget",
+            "target": 0
+          }
+        ],
+        "description": "Whenever another white creature you control enters, tap target creature an opponent controls."
+      }
+    ]
+  }
+}

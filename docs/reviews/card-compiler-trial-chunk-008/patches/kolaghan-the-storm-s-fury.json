@@ -1,0 +1,29 @@
+{
+  "name": "Kolaghan, the Storm's Fury",
+  "oracleId": "f6e160c1-b29f-4f3d-ab55-43ffe3ab4acf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Dash {3}{B}{R}"
+  ],
+  "compose": "append",
+  "def": {
+    "alternativeCasts": [
+      {
+        "kind": "nonMana",
+        "manaCost": {
+          "generic": 3,
+          "colored": {
+            "W": 0,
+            "U": 0,
+            "B": 1,
+            "R": 1,
+            "G": 0
+          },
+          "colorless": 0
+        },
+        "dashed": true,
+        "description": "Dash {3}{B}{R}"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A's granted upkeep trigger is at the beginning of your upkeep (the artifact's controller); Text B's trigger is at the upkeep of the player who controls the Spirit, which differs when another player controls the artifact."]}

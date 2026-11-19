@@ -1,0 +1,1 @@
+Whenever an opponent draws their second card each turn (ordinalThisTurn 2), return this card from your graveyard to hand. The trigger has no optional flag, so it is mandatory. It functions from the graveyard.

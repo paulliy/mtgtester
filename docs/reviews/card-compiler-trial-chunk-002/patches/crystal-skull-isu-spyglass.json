@@ -1,0 +1,64 @@
+{
+  "name": "Crystal Skull, Isu Spyglass",
+  "oracleId": "b1f8eb7b-7e01-4bf8-a557-64e16a6052af",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may play historic lands and cast historic spells from the top of your library."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "castFromZone",
+        "zone": "libraryTop",
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Artifact"
+            },
+            {
+              "kind": "supertype",
+              "value": "Legendary"
+            },
+            {
+              "kind": "subtype",
+              "value": "Saga"
+            }
+          ]
+        }
+      },
+      {
+        "kind": "playFromZone",
+        "zone": "libraryTop",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Land"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Saga"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

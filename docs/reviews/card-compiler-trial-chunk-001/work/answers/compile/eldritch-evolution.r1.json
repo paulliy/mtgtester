@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The search's mana value limit is X plus the sacrificed creature's mana value, and manaValueAtMost takes only a constant while no value reads the mana value of a sacrificed cost object."}

@@ -1,0 +1,2 @@
+Target creature gets +2/+2 and gains flying until end of turn.
+If the target creature is a Spider, you gain 2 life.

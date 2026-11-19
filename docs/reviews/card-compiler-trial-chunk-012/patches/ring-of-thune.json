@@ -1,0 +1,55 @@
+{
+  "name": "Ring of Thune",
+  "oracleId": "f72e8ccb-a6fb-4161-bfa1-69c94cc5d49a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's white."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "attachedToSource"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "W"
+                  }
+                ]
+              },
+              "scope": "all",
+              "cmp": ">=",
+              "n": 1
+            },
+            "then": [
+              {
+                "op": "putCounters",
+                "target": "attachedToSource",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's white."
+      }
+    ]
+  }
+}

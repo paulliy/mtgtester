@@ -1,0 +1,40 @@
+{
+  "name": "Claim the Firstborn",
+  "oracleId": "9bb82829-05e8-4cdd-91e4-b837a620bfc8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Gain control of target creature with mana value 3 or less until end of turn. Untap that creature. It gains haste until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "filter": {
+            "kind": "manaValueAtMost",
+            "n": 3
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "duration": "untilEndOfTurn"
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "haste"
+        }
+      ],
+      "description": "Gain control of target creature with mana value 3 or less until end of turn. Untap that creature. It gains haste until end of turn."
+    }
+  }
+}

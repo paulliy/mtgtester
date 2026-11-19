@@ -1,0 +1,2 @@
+Whenever this creature attacks, if there are four or more card types among cards in your graveyard, untap target creature. This ability triggers only once each turn.
+After this phase, there is an additional combat phase.

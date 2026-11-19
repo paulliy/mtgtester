@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"manaAbilities":[{"units":[["B"]],"amount":{"kind":"countCardsInZone","zone":"graveyard","selector":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"color","value":"B"}]},"owner":"you"},"costs":[{"kind":"mana","cost":{"generic":2,"colored":{"W":0,"U":0,"B":0,"R":0,"G":0},"colorless":0}},{"kind":"tap"}]}]}}

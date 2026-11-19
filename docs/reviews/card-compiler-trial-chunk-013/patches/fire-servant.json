@@ -1,0 +1,42 @@
+{
+  "name": "Fire Servant",
+  "oracleId": "dbf64afa-ace6-44b9-b47f-750c7e52cc29",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If a red instant or sorcery spell you control would deal damage, it deals double that damage instead."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "damageDoubled",
+        "sourceFilter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "color",
+              "value": "R"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

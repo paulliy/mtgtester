@@ -1,0 +1,37 @@
+{
+  "name": "Cartouche of Strength",
+  "oracleId": "cba6563e-96e5-4cd3-bddf-0cf1368f9e15",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Aura enters, you may have enchanted creature fight target creature an opponent controls."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "fight",
+            "first": "attachedToSource",
+            "second": 0
+          }
+        ],
+        "description": "When this Aura enters, you may have enchanted creature fight target creature an opponent controls."
+      }
+    ]
+  }
+}

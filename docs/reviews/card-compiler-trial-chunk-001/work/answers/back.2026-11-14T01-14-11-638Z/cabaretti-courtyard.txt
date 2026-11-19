@@ -1,0 +1,1 @@
+When this land enters, sacrifice it (mandatory; no optional choice, no targets). When you do, search your library for a basic land card with subtype Mountain, Forest, or Plains; put it onto the battlefield tapped. You may find nothing (fail-to-find is allowed). Then shuffle your library, and you gain 1 life.

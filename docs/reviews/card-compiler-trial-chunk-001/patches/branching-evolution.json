@@ -1,0 +1,32 @@
+{
+  "name": "Branching Evolution",
+  "oracleId": "28fe909b-06e0-424c-9f75-c824a25f5865",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on that creature instead."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "counterPlacementReplacement",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            }
+          ]
+        },
+        "counter": "+1/+1",
+        "multiplier": 2,
+        "addition": 0
+      }
+    ]
+  }
+}

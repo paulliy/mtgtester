@@ -1,0 +1,36 @@
+{
+  "name": "Welding Jar",
+  "oracleId": "e4a6c421-bef1-4360-a2dc-ae9c61d86b2f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice this artifact: Regenerate target artifact."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "artifact"
+            }
+          ],
+          "effects": [
+            {
+              "op": "regenerate",
+              "target": 0
+            }
+          ],
+          "description": "Sacrifice this artifact: Regenerate target artifact."
+        }
+      }
+    ]
+  }
+}

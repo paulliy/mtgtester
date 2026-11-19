@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Selectors have toughnessAtLeast but no toughness-at-most comparison, so 'creature with toughness X or less' where X is the Islands count cannot be selected."}

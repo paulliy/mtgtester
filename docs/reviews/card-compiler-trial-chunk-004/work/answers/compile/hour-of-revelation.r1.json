@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"const","n":3},"selfOnly":true,"condition":{"kind":"countPermanents","selector":{"kind":"not","of":{"kind":"type","value":"Land"}},"scope":"all","cmp":">=","n":10}}]}}

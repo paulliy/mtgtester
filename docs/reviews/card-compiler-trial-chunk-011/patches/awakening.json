@@ -1,0 +1,41 @@
+{
+  "name": "Awakening",
+  "oracleId": "5563427d-ffdc-4bea-ad7d-1605894b8a6c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of each upkeep, untap all creatures and lands."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "each"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "untapEach",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            }
+          }
+        ],
+        "description": "At the beginning of each upkeep, untap all creatures and lands."
+      }
+    ]
+  }
+}

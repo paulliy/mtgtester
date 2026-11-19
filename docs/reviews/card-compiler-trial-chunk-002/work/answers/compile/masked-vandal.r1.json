@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no way to make the artifact/enchantment exile conditional on an optional graveyard exile (\"you may exile a creature card from your graveyard. If you do, ...\"), since the trigger's yes/no gates the whole resolution and there is no exile-then-if-you-did effect."}

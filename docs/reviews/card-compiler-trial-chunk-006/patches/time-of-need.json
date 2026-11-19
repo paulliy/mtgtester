@@ -1,0 +1,43 @@
+{
+  "name": "Time of Need",
+  "oracleId": "4f2adfd0-c8ab-4bcc-ae55-cb0e798aec7f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Search your library for a legendary creature card, reveal it, put it into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "supertype",
+                "value": "Legendary"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "destinations": [
+            {
+              "zone": "hand"
+            }
+          ],
+          "reveal": true
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "description": "Search your library for a legendary creature card, reveal it, put it into your hand, then shuffle."
+    }
+  }
+}

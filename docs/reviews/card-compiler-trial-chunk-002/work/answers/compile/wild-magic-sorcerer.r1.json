@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No op grants cascade to a spell on the stack, and castsSpell castFrom can only say 'notHand', which also covers graveyard, command zone and library casts rather than exile only."}

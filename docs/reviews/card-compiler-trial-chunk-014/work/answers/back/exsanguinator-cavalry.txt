@@ -1,0 +1,1 @@
+Whenever a Knight deals combat damage to a player, put a +1/+1 counter on that Knight and create a token: a colorless Blood artifact token (name and type line hidden in this data) with "{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card."

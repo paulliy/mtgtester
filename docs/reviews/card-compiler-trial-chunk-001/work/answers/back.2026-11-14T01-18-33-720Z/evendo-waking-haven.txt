@@ -1,0 +1,1 @@
+{G}, {T}: Add {G} for each creature you control. This ability can be activated only if this land has twelve or more charge counters on it.

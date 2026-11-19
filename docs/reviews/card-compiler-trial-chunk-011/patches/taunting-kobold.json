@@ -1,0 +1,36 @@
+{
+  "name": "Taunting Kobold",
+  "oracleId": "604c581e-c1ba-417c-b9de-182192cc85cb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, goad target creature an opponent controls."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "goad",
+            "target": 0
+          }
+        ],
+        "description": "Whenever this creature attacks, goad target creature an opponent controls."
+      }
+    ]
+  }
+}

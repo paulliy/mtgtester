@@ -1,0 +1,36 @@
+{
+  "name": "Rocksteady, Mutant Marauder",
+  "oracleId": "506a972d-d226-44dc-95b7-a6e7a63d76cd",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Partner with Bebop, Skull & Crossbones"
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "player"
+          }
+        ],
+        "effects": [
+          {
+            "op": "targetPlayerMaySearchNamed",
+            "target": 0,
+            "name": "Bebop, Skull & Crossbones"
+          }
+        ],
+        "description": "Partner with Bebop, Skull & Crossbones"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Creatures you control with power less than Lena's power' needs a strict source-relative power comparison, but the schema's source-relative power selector (powerAtMostSource) is 'equal or lesser' and event-only."}

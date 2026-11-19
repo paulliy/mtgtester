@@ -1,0 +1,1 @@
+{T}: Add {C}. If you control a permanent with the subtype Urza's and a permanent with the subtype Mine, and you control a permanent with the subtype Urza's and a permanent with the subtype Power-Plant, add {C}{C}{C} instead.

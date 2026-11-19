@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"attacks","subject":{"kind":"permanent","selector":{"kind":"attachedToSource"}}},"optional":false,"targets":[],"effects":[{"op":"scry","count":2}],"description":"Whenever enchanted creature attacks, you scry 2."}]}}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature"}],"effects":[{"op":"putCounters","target":0,"counter":"-1/-1","count":1},{"op":"proliferate"}],"description":"Put a -1/-1 counter on target creature, then proliferate."}}}

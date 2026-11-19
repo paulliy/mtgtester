@@ -1,0 +1,51 @@
+{
+  "name": "Foul-Tongue Shriek",
+  "oracleId": "a4dc1fea-427c-424c-99c8-af2e6d3ad2a9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target opponent loses 1 life for each attacking creature you control. You gain that much life."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "loseLifeTarget",
+          "target": 0,
+          "amount": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "combatRole",
+                  "role": "attacking"
+                }
+              ]
+            },
+            "scope": "you"
+          }
+        },
+        {
+          "op": "gainLifeEqualToLifeLostThisWay"
+        }
+      ],
+      "description": "Target opponent loses 1 life for each attacking creature you control. You gain that much life."
+    }
+  }
+}

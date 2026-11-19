@@ -1,0 +1,52 @@
+{
+  "name": "Tragic Slip",
+  "oracleId": "fa6e2a47-a8cb-4224-ae3e-f61c90477285",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "That creature gets -13/-13 until end of turn instead if a creature died this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "creaturesDiedThisTurn"
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          "then": [
+            {
+              "op": "pumpUntilEot",
+              "target": 0,
+              "power": -13,
+              "toughness": -13
+            }
+          ],
+          "else": [
+            {
+              "op": "pumpUntilEot",
+              "target": 0,
+              "power": -1,
+              "toughness": -1
+            }
+          ]
+        }
+      ],
+      "description": "Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 until end of turn instead if a creature died this turn."
+    }
+  }
+}

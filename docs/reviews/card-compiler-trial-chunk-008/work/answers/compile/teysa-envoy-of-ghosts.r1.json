@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'A creature deals combat damage to you' cannot both restrict the damaged player to you and name the damaging creature as the object to destroy: dealsCombatDamageToPlayer does not name you, and playerDealtDamage gives no damaging object."}

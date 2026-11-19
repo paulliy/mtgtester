@@ -1,0 +1,2 @@
+Search your library for a card, put that card into your hand, then shuffle.
+If there are two or more instant and/or sorcery cards in your graveyard, add {B}{B}{B}.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The only damage-to-player trigger, dealsDamageToOpponent, fires only for opponents, but the line says 'a player', which includes Niv-Mizzet's own controller."}

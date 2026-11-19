@@ -1,0 +1,64 @@
+{
+  "name": "Eaten by Piranhas",
+  "oracleId": "c37eae65-1afe-4242-b677-24dd40e6f401",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature loses all abilities and is a black Skeleton creature with base power and toughness 1/1."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 4,
+          "setTypes": [
+            "Creature"
+          ],
+          "setSubtypes": [
+            "Skeleton"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 5,
+          "setColors": [
+            "B"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "loseAllAbilities": true
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "const",
+            "n": 1
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      }
+    ]
+  }
+}

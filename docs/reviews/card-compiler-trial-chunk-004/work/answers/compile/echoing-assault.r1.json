@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No op creates a copy of a chosen attacking creature that enters tapped and attacking that player: createTokenCopyOf cannot enter attacking, and createTokenAttacking takes a fixed token spec rather than a copy of a chosen creature."}

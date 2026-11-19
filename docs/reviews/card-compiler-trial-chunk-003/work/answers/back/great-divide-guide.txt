@@ -1,0 +1,1 @@
+Lands you control and Allies you control have "{T}: Add one mana of any color."

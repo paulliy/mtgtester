@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"graveyardToBattlefieldEach","filter":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"manaValueAtMost","n":2}]},"scope":"you"}],"description":"Return all creature cards with mana value 2 or less from your graveyard to the battlefield."}}}

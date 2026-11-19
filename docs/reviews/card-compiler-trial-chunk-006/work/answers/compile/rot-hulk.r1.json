@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Up to X target Zombie cards' needs a variable target count equal to the opponent count, but TargetSpec.count takes only fixed min and max numbers."}

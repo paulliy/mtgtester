@@ -1,0 +1,36 @@
+{
+  "name": "Wavebreak Hippocamp",
+  "oracleId": "3405c8a9-a8d6-4b45-9b64-94141076603b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast your first spell during each opponent's turn, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "ordinal": 1,
+          "condition": {
+            "kind": "notYourTurn"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you cast your first spell during each opponent's turn, draw a card."
+      }
+    ]
+  }
+}

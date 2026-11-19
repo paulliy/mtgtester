@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The ETB trigger must return a creature card from the graveyard and then attach this Equipment to that same new object, and no op does both: the attach effects name a permanent target, and the reanimate-and-attach op is specific to Animate Dead."}
