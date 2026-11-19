@@ -1,0 +1,49 @@
+{
+  "name": "Master's Rebuke",
+  "oracleId": "e68ff836-6e51-4c3a-91e5-f0d649297245",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "permanent",
+          "controller": "opponent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Planeswalker"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamage",
+          "target": 1,
+          "amount": {
+            "kind": "powerOfTarget",
+            "target": 0
+          },
+          "source": 0
+        }
+      ],
+      "description": "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
+    }
+  }
+}

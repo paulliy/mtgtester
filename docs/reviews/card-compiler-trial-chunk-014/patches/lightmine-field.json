@@ -1,0 +1,35 @@
+{
+  "name": "Lightmine Field",
+  "oracleId": "20490b29-4f08-48a2-bf54-2ba118e746ac",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attackDeclared",
+          "attacker": "any"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "damageEach",
+            "selector": {
+              "kind": "combatRole",
+              "role": "attacking"
+            },
+            "amount": {
+              "kind": "attackingCreatures"
+            }
+          }
+        ],
+        "description": "Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures."
+      }
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "name": "Pugnacious Hammerskull",
+  "oracleId": "da989677-3647-46b8-aa56-b2cfb60f7a2a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks while you don't control another Dinosaur, put a stun counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          },
+          "eventCondition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Dinosaur"
+                }
+              ]
+            },
+            "scope": "you",
+            "cmp": "<=",
+            "n": 0
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "stun",
+            "count": 1
+          }
+        ],
+        "description": "Whenever this creature attacks while you don't control another Dinosaur, put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)"
+      }
+    ]
+  }
+}

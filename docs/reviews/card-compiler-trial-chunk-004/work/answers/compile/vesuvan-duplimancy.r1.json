@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A castsSpell trigger's targetFilter requires only that at least one target match, with no way to require that the spell targets only one artifact or creature you control, and the copy must reference that spell's target."}

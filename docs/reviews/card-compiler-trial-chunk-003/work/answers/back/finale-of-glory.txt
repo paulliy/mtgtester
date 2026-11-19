@@ -1,0 +1,2 @@
+Create X 2/2 white Soldier creature tokens with vigilance.
+If X is 10 or more, create X 4/4 white Angel creature tokens with flying and vigilance.

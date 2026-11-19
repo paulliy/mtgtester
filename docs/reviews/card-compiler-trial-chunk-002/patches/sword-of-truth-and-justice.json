@@ -1,0 +1,38 @@
+{
+  "name": "Sword of Truth and Justice",
+  "oracleId": "7a8baaf9-e21f-41a0-9f15-80764f6e5e68",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature deals combat damage to a player, put a +1/+1 counter on a creature you control, then proliferate."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersOnCreatureOfChoice",
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "proliferate"
+          }
+        ],
+        "description": "Whenever equipped creature deals combat damage to a player, put a +1/+1 counter on a creature you control, then proliferate."
+      }
+    ]
+  }
+}

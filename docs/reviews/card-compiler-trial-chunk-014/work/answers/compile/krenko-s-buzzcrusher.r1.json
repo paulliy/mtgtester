@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The per-player optional land targets are expanded at runtime, and the destroy-and-search effect references one fixed target slot, so each player's up-to-one destruction with its controller's search cannot be stated exactly."}

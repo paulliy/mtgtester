@@ -1,0 +1,39 @@
+{
+  "name": "Lifeblood Hydra",
+  "oracleId": "b14d05c0-fe10-4079-a90e-0aea1a8fd375",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature dies, you gain life and draw cards equal to its power."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "powerOfSource"
+            }
+          },
+          {
+            "op": "draw",
+            "count": {
+              "kind": "powerOfSource"
+            }
+          }
+        ],
+        "description": "When this creature dies, you gain life and draw cards equal to its power."
+      }
+    ]
+  }
+}

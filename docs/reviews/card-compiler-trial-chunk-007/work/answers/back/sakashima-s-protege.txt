@@ -1,0 +1,1 @@
+This creature enters as a copy of a creature that entered the battlefield this turn.

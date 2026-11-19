@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Any patch makes the interpreter stop stripping the generic ability-word label from the already-parsed 'Coruscating Flames —' line, so that line is reported as unrecognized and no patch can clear it."}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema's graveyard-exile token op (exileGraveyardCreateTokens) does not say that the token is created only when the exiled card is a creature card, and the creature-only buff op is for a different effect."}

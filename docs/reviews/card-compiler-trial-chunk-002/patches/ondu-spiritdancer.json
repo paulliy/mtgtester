@@ -1,0 +1,49 @@
+{
+  "name": "Ondu Spiritdancer",
+  "oracleId": "d2ae893f-52af-4645-8712-d62fb78f901e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an enchantment you control enters, you may create a token that's a copy of it. Do this only once each turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                }
+              ]
+            }
+          },
+          "oncePerTurn": true
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": "triggerObject",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever an enchantment you control enters, you may create a token that's a copy of it. Do this only once each turn."
+      }
+    ]
+  }
+}

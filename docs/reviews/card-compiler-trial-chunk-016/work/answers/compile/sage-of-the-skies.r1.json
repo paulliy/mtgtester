@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The copy of this spell keeps its original targets, but copyCastSpell always offers the copy's controller new targets, and the schema has no copy-this-spell form that omits that choice."}

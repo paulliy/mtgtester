@@ -1,0 +1,23 @@
+{
+  "name": "Naiad of Hidden Coves",
+  "oracleId": "38b4798d-47cc-4ffd-8b0b-e90b5da2ee2d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "During turns other than yours, spells you cast cost {1} less to cast."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "condition": {
+          "kind": "notYourTurn"
+        }
+      }
+    ]
+  }
+}

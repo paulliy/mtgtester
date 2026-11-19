@@ -1,0 +1,86 @@
+{
+  "name": "Haldir, Lórien Lieutenant",
+  "oracleId": "653217b1-1e92-49a7-81d9-fc4d70d4f27f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{5}{G}: Until end of turn, other Elves you control gain vigilance and get +1/+1 for each +1/+1 counter on ~."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 5,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordEachUntilEot",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Elf"
+                  }
+                ]
+              },
+              "keyword": "vigilance"
+            },
+            {
+              "op": "pumpEachUntilEot",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Elf"
+                  }
+                ]
+              },
+              "power": {
+                "kind": "countersOnSelf",
+                "counter": "+1/+1"
+              },
+              "toughness": {
+                "kind": "countersOnSelf",
+                "counter": "+1/+1"
+              }
+            }
+          ],
+          "description": "{5}{G}: Until end of turn, other Elves you control gain vigilance and get +1/+1 for each +1/+1 counter on Haldir."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "Sudden Edict",
+  "oracleId": "b95f704d-96b9-437e-8c49-aba874139e12",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target player sacrifices a creature of their choice."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player"
+        }
+      ],
+      "effects": [
+        {
+          "op": "sacrificeTargetPlayerCreature",
+          "target": 0
+        }
+      ],
+      "description": "Target player sacrifices a creature of their choice."
+    }
+  }
+}

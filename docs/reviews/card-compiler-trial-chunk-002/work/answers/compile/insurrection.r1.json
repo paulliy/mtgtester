@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"gainControl","selector":{"kind":"type","value":"Creature"},"duration":"untilEndOfTurn","untap":true,"grantHaste":true}],"description":"Untap all creatures and gain control of them until end of turn. They gain haste until end of turn."}}}

@@ -1,0 +1,82 @@
+{
+  "name": "Nuka-Cola Vending Machine",
+  "oracleId": "6cfb03e5-aca6-4fe2-a3f1-93e1f0cbf9e1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you sacrifice a Food, create a tapped Treasure token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "sacrificed",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Food"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Treasure",
+              "typeLine": "Artifact — Treasure",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Treasure"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "manaAbilities": [
+                {
+                  "units": [
+                    [
+                      "W",
+                      "U",
+                      "B",
+                      "R",
+                      "G"
+                    ]
+                  ],
+                  "costs": [
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "tapped": true
+          }
+        ],
+        "description": "Whenever you sacrifice a Food, create a tapped Treasure token."
+      }
+    ]
+  }
+}

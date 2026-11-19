@@ -1,0 +1,1 @@
+Once each turn, whenever this creature deals combat damage to a player, untap each attacking creature. After this phase, there is an additional combat phase.

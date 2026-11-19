@@ -1,0 +1,34 @@
+{
+  "name": "Hermes, Overseer of Elpis",
+  "oracleId": "63e2cba7-ec1a-44bf-b915-d2ae75851430",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you attack with one or more Birds, scry 2."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attackDeclared",
+          "attacker": "you",
+          "minAttackers": 1,
+          "attackerFilter": {
+            "kind": "subtype",
+            "value": "Bird"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "scry",
+            "count": 2
+          }
+        ],
+        "description": "Whenever you attack with one or more Birds, scry 2."
+      }
+    ]
+  }
+}

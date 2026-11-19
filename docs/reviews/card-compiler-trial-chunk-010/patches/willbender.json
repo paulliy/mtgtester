@@ -1,0 +1,36 @@
+{
+  "name": "Willbender",
+  "oracleId": "0aae277e-e58e-4115-b5fd-0459451e17ec",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature is turned face up, change the target of target spell or ability with a single target."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "turnedFaceUp",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "stackObject",
+            "spellHasSingleTarget": true
+          }
+        ],
+        "effects": [
+          {
+            "op": "changeSingleTarget",
+            "target": 0
+          }
+        ],
+        "description": "When this creature is turned face up, change the target of target spell or ability with a single target."
+      }
+    ]
+  }
+}

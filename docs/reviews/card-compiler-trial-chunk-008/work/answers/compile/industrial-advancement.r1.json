@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Looking at the top X cards, where X is the sacrificed creature's mana value, needs a dynamic count, but lookAtTopN takes a fixed number and the sacrifice is not optional."}

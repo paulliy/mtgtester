@@ -1,0 +1,2 @@
+{T}, Sacrifice this creature: Add {C}{C}.
+When you spend this mana to cast a creature spell, that spell gains haste.

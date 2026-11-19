@@ -1,0 +1,2 @@
+This creature enters as a copy of a creature on the battlefield.
+At the beginning of your upkeep, if this permanent is not a token, create a token that's a copy of this creature.

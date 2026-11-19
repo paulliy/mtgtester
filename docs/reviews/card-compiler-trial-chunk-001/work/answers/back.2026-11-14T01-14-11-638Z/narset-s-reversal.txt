@@ -1,0 +1,3 @@
+Target spell: an instant spell or sorcery spell (no controller restriction).
+Copy target instant or sorcery spell. The copy gets new targets (new targets are chosen; the data has no "may" for this).
+Then return that same target spell to its owner's hand.

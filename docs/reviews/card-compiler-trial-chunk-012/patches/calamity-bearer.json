@@ -1,0 +1,29 @@
+{
+  "name": "Calamity Bearer",
+  "oracleId": "b3f7c4ac-b788-4307-9bc3-d99ce310e07c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If a Giant source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "damageDoubled",
+        "sourceFilter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Giant"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

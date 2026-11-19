@@ -1,0 +1,63 @@
+{
+  "name": "Trygon Prime",
+  "oracleId": "6b2d1d7b-a4b4-46c3-a50b-df7e60f39ee2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Subterranean Assault — Whenever this creature attacks, put a +1/+1 counter on it and a +1/+1 counter on up to one other target attacking creature. That creature can't be blocked this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "count": {
+              "min": 0,
+              "max": 1
+            },
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "combatRole",
+                  "role": "attacking"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "putCountersEachChosen",
+            "targetSlot": 0,
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "cantBeBlockedEachChosen",
+            "targetSlot": 0
+          }
+        ],
+        "description": "Subterranean Assault — Whenever this creature attacks, put a +1/+1 counter on it and a +1/+1 counter on up to one other target attacking creature. That creature can't be blocked this turn."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"destroyEach","selector":{"kind":"allOf","of":[{"kind":"type","value":"Land"},{"kind":"not","of":{"kind":"supertype","value":"Basic"}}]}}],"description":"Destroy all nonbasic lands."}}}

@@ -1,0 +1,81 @@
+{
+  "name": "Baxter, Fly in the Ointment",
+  "oracleId": "94551fbd-a72c-4a1f-be01-7ba1c7c03eed",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ enters or attacks, each creature you control with a counter on it gains flying until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "hasAnyCounter"
+                }
+              ]
+            },
+            "keyword": "flying"
+          }
+        ],
+        "description": "Whenever Baxter enters or attacks, each creature you control with a counter on it gains flying until end of turn."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "hasAnyCounter"
+                }
+              ]
+            },
+            "keyword": "flying"
+          }
+        ],
+        "description": "Whenever Baxter enters or attacks, each creature you control with a counter on it gains flying until end of turn."
+      }
+    ]
+  }
+}

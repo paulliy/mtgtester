@@ -1,0 +1,80 @@
+{
+  "name": "Provisions Merchant",
+  "oracleId": "2f796869-7350-4886-b210-cb5b9cb3e78a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, you may sacrifice a Food. If you do, attacking creatures get +1/+1 and gain trample until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Food"
+                }
+              ]
+            },
+            "then": [
+              {
+                "op": "pumpEachUntilEot",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "combatRole",
+                      "role": "attacking"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                },
+                "power": 1,
+                "toughness": 1
+              },
+              {
+                "op": "grantKeywordEachUntilEot",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "combatRole",
+                      "role": "attacking"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                },
+                "keyword": "trample"
+              }
+            ]
+          }
+        ],
+        "description": "Whenever this creature attacks, you may sacrifice a Food. If you do, attacking creatures get +1/+1 and gain trample until end of turn."
+      }
+    ]
+  }
+}

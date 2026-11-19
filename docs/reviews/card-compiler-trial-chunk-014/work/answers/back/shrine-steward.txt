@@ -1,0 +1,1 @@
+When this creature enters, you may search your library for an Enchantment with the subtype Aura or an Enchantment with the subtype Shrine, reveal it, put it into your hand, then shuffle.

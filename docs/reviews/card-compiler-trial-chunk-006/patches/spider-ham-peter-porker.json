@@ -1,0 +1,114 @@
+{
+  "name": "Spider-Ham, Peter Porker",
+  "oracleId": "00b50215-e832-417f-9c80-2bc3050b6ebb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Animal May-Ham — Other Spiders, Boars, Bats, Bears, Birds, Cats, Dogs, Frogs, Jackals, Lizards, Mice, Otters, Rabbits, Raccoons, Rats, Squirrels, Turtles, and Wolves you control get +1/+1."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Spider"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Boar"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Bat"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Bear"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Bird"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Cat"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Dog"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Frog"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Jackal"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Lizard"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Mouse"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Otter"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Rabbit"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Raccoon"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Rat"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Squirrel"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Turtle"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Wolf"
+                }
+              ]
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        }
+      }
+    ]
+  }
+}

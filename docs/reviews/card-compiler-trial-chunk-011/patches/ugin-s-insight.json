@@ -1,0 +1,36 @@
+{
+  "name": "Ugin's Insight",
+  "oracleId": "ad7b9db0-e061-4360-9b81-0408d18d971d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Scry X, where X is the greatest mana value among permanents you control, then draw three cards."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "scry",
+          "count": {
+            "kind": "greatestManaValueAmong",
+            "selector": {
+              "kind": "controller",
+              "who": "you"
+            },
+            "scope": "you"
+          }
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 3
+          }
+        }
+      ],
+      "description": "Scry X, where X is the greatest mana value among permanents you control, then draw three cards."
+    }
+  }
+}

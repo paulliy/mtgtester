@@ -993,6 +993,8 @@ function abilityBody(ability: unknown): string {
   const ctx: EffectContext = { targets, self: '~' };
   const used = new Set<number>();
   const phrases = effectPhrases((ability['effects'] as unknown[]) ?? [], ctx, used);
+  // An ability with no effects has no sentence to compare: it goes to the model check.
+  if (phrases.length === 0) throw new Unrendered('ability:no-effects');
   if (used.size !== targets.length) throw new Unrendered('ability:unused-target-slot');
   const text = phrases.map(capitalize).join('. ');
   if (ability['optional'] !== true) return text;

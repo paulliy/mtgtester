@@ -1,0 +1,29 @@
+{
+  "name": "Spellbreaker Behemoth",
+  "oracleId": "cba07472-7212-4411-a9f9-38a48870ad69",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creature spells you control with power 5 or greater can't be countered."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "cantBeCountered",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "powerAtLeast",
+              "n": 5
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

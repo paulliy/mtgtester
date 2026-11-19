@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Becoming a permanent creature with base power and toughness equal to the target's mana value has no schema form: becomeCreatureUntilEot is until end of turn with fixed numbers, and no permanent become-creature op exists."}

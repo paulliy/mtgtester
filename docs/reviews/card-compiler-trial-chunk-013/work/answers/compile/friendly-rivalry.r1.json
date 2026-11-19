@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The optional 'up to one other target legendary creature' has no way to deal damage equal to its own power when that variable-count slot is left empty, since the variable-count damage ops only deal a fixed amount or a shared total."}

@@ -1,0 +1,57 @@
+{
+  "name": "Cabal Ritual",
+  "oracleId": "5b5bf1fa-6502-4790-b66b-f0f8504ebc7c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Add {B}{B}{B}{B}{B} instead if there are seven or more cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "cardsInYourGraveyard",
+            "cmp": ">=",
+            "n": 7
+          },
+          "then": [
+            {
+              "op": "addMana",
+              "amount": {
+                "kind": "const",
+                "n": 5
+              },
+              "colors": [],
+              "fixedSymbols": [
+                "B",
+                "B",
+                "B",
+                "B",
+                "B"
+              ]
+            }
+          ],
+          "else": [
+            {
+              "op": "addMana",
+              "amount": {
+                "kind": "const",
+                "n": 3
+              },
+              "colors": [],
+              "fixedSymbols": [
+                "B",
+                "B",
+                "B"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

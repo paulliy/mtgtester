@@ -1,0 +1,51 @@
+{
+  "name": "Galecaster Colossus",
+  "oracleId": "d8379d8f-df17-4473-938d-7ac198d17980",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap an untapped Wizard you control: Return target nonland permanent you don't control to its owner's hand."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tapOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Wizard"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "nonlandPermanent",
+              "controller": "opponent"
+            }
+          ],
+          "effects": [
+            {
+              "op": "returnToHand",
+              "target": 0
+            }
+          ],
+          "description": "Tap an untapped Wizard you control: Return target nonland permanent you don't control to its owner's hand."
+        }
+      }
+    ]
+  }
+}

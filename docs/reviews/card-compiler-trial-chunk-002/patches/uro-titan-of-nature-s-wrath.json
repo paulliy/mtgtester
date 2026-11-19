@@ -1,0 +1,40 @@
+{
+  "name": "Uro, Titan of Nature's Wrath",
+  "oracleId": "ee302659-59ed-4eef-babe-451b9ccf7f14",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ enters, sacrifice it unless it escaped."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "escaped"
+            },
+            "then": [],
+            "else": [
+              {
+                "op": "sacrifice",
+                "target": "source"
+              }
+            ]
+          }
+        ],
+        "description": "When Uro enters, sacrifice it unless it escaped."
+      }
+    ]
+  }
+}

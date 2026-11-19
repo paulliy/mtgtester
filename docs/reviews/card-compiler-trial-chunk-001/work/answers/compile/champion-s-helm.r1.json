@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"attachedToSource"},{"kind":"supertype","value":"Legendary"}]},"op":{"layer":6,"addKeyword":"hexproof"}}]}}

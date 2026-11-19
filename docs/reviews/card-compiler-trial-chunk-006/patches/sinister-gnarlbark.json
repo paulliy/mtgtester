@@ -1,0 +1,37 @@
+{
+  "name": "Sinister Gnarlbark",
+  "oracleId": "fcd2142e-ba84-4693-9b29-ecc43feba2b8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your end step, draw a card and blight 1."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "putCountersOnCreatureOfChoice",
+            "counter": "-1/-1",
+            "count": 1
+          }
+        ],
+        "description": "At the beginning of your end step, draw a card and blight 1."
+      }
+    ]
+  }
+}

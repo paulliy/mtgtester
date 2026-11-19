@@ -1,0 +1,2 @@
+Whenever a Food you control is sacrificed, create a tapped Treasure token. (This trigger is mandatory; it has no "you may".)
+The Treasure token is an artifact Treasure token with no stated rules text beyond its mana ability and no colors and no power or toughness. Its type line is hidden. It has "{T}, Sacrifice this artifact: Add one mana of any color."

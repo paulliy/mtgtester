@@ -1,0 +1,1 @@
+{1}, Sacrifice this: Choose target artifact or enchantment. This deals 2 damage to that permanent's controller. Destroy that permanent.

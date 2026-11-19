@@ -1,0 +1,78 @@
+{
+  "name": "Seahunter",
+  "oracleId": "59e1899f-a9e8-48aa-b3fb-0b7d9fd6859c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{3}, {T}: Search your library for a Merfolk permanent card, put it onto the battlefield, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 3,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "searchLibrary",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Merfolk"
+                  },
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "anyOf",
+                      "of": [
+                        {
+                          "kind": "type",
+                          "value": "Instant"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Sorcery"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "destinations": [
+                {
+                  "zone": "battlefield"
+                }
+              ]
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "description": "{3}, {T}: Search your library for a Merfolk permanent card, put it onto the battlefield, then shuffle."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "name": "Revenge of Ravens",
+  "oracleId": "dd96f145-73eb-4a6d-bcfd-5d6313fac1f9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life and you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          },
+          "condition": {
+            "kind": "eventObjectDefendingPlayerIsYou"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "loseLifeTarget",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life and you gain 1 life."
+      }
+    ]
+  }
+}

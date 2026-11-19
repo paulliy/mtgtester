@@ -1,0 +1,335 @@
+[
+  {
+    "feature": "Game-state conditions and values",
+    "description": "Add conditions and values for the top card's color, a player with no cards in hand, distinct mana values in a graveyard, cast-from-hand and cast-from-graveyard checks, one land of each basic type with a creature of each color, mana spent on an ability, summed counts, and cards-in-graveyard payment amounts.",
+    "cards": [
+      "Bane of the Living",
+      "Basalt Ravager",
+      "Bring the Ending",
+      "Curse of Surveillance",
+      "Curse of Thirst",
+      "Deepwood Denizen",
+      "Foreboding Fruit",
+      "From Father to Son",
+      "Increasing Savagery",
+      "Investigator's Journal",
+      "Leyline Binding",
+      "Moon-Vigil Adherents",
+      "Neriv, Crackling Vanguard",
+      "Robber of the Rich",
+      "Sheltering Word",
+      "Show of Confidence",
+      "Valduk, Keeper of the Flame",
+      "Valiant Changeling",
+      "Viseling",
+      "War Report",
+      "Whispering Specter"
+    ]
+  },
+  {
+    "feature": "Per-player scope and chooser on effects",
+    "description": "Add player routing and chooser fields so effects can make an opponent, each player, or a targeted player choose, sacrifice, vote, reveal, reselect, or pay, including per-opponent conditions and opponent-chosen objects.",
+    "cards": [
+      "Abstract Performance",
+      "Cutthroat Negotiator",
+      "Dash Hopes",
+      "Depopulate",
+      "Doom Reigns Supreme",
+      "Feed the Infection",
+      "Gisa's Favorite Shovel",
+      "Grave Sifter",
+      "Lich's Relic",
+      "Martyr's Bond",
+      "Pandemonium",
+      "Portal Mage",
+      "Reservoir Kraken",
+      "Strategic Betrayal",
+      "Sycorax Commander"
+    ]
+  },
+  {
+    "feature": "Rule statics and permissions that do not exist yet",
+    "description": "Add rule statics for global or per-player spell cost increases, land-play bans, graveyard cast and activation bans, extra blocking, forced or conditional attack and block restrictions, haste-like attack permission, hexproof-like targeting protection for attached creatures, legend-rule suppression, hand-size reductions, damage-unpreventable turns, damage-prevention scopes, and keyword grants to spells.",
+    "cards": [
+      "Blinding Fog",
+      "Giant Cindermaw",
+      "Knight of Dusk's Shadow",
+      "Patrician Geist",
+      "Safe Passage",
+      "Skullcrack",
+      "Strict Proctor",
+      "Tajuru Preserver",
+      "Taunting Elf",
+      "The Lunar Whale",
+      "Thranduil's Company",
+      "Wakestone Gargoyle",
+      "Watcher in the Web",
+      "Zilortha, Strength Incarnate"
+    ]
+  },
+  {
+    "feature": "Optional choices and if-you-do follow-ups",
+    "description": "Add may-decline forms and follow-up effects gated on whether an optional action, discard, exile, sacrifice, payment or return actually happened, including repeat-while-you-do loops and reflexive triggers with their own targets.",
+    "cards": [
+      "Argentum Masticore",
+      "Atraxa's Skitterfang",
+      "Deadly Precision",
+      "Dimension X Pizzasaur",
+      "Everglades",
+      "Heirloom Epic",
+      "Illuminate History",
+      "Koskun Falls",
+      "Niv-Mizzet, Ghost Counsel",
+      "Reality Smasher",
+      "Sequestered Stash",
+      "Shire Shirriff",
+      "Treva's Ruins",
+      "Wonderscape Sage"
+    ]
+  },
+  {
+    "feature": "Missing keyword mechanics (delve, echo, myriad, decayed, splice)",
+    "description": "Add keyword mechanics and grantable keywords the schema lacks: madness, persist, wither, ninjutsu entry, toxic on tokens, unearth grants to graveyard cards, casualty, web-slinging, mayhem, saddle, protection from colorless, and indefinite keyword grants to returned objects.",
+    "cards": [
+      "Alacrian Armory",
+      "Angelic Intervention",
+      "Basilica Shepherd",
+      "Blazing Rootwalla",
+      "Cauldron Haze",
+      "Corrosive Mentor",
+      "Covert Technician",
+      "Dregscape Sliver",
+      "Fated Return",
+      "Illicit Shipment",
+      "Mukotai Ambusher",
+      "Spider-Man, Web-Slinger",
+      "The Squadron Sinister"
+    ]
+  },
+  {
+    "feature": "Reveal/exile/mill-until loops with leftovers handling",
+    "description": "Add reveal-until, exile-until, mill-and-choose, and look-at-top ops with unrestricted filters, any-number picks, and leftovers sent to hand or library.",
+    "cards": [
+      "Baneful Omen",
+      "Deploy the Gatewatch",
+      "Druidic Satchel",
+      "Galvanic Relay",
+      "Goblin Charbelcher",
+      "Inside Information",
+      "Iron Lad, Diverging Destiny",
+      "Kethek, Crucible Goliath",
+      "N'Yami-Class Mother Ship",
+      "Nashi, Searcher in the Dark",
+      "Retraced Image",
+      "Signal the Clans",
+      "Unexpected Results"
+    ]
+  },
+  {
+    "feature": "Selector predicates in targets and statics",
+    "description": "Add selector and condition predicates for current-state keywords such as flying, exact power and toughness, power equal to energy paid, lesser power, subtype comparisons with an attached creature, unrestricted card filters, any-kind counters, and per-opponent graveyard counts.",
+    "cards": [
+      "Alela, Artful Provocateur",
+      "Burning Sun's Avatar",
+      "Cunning Nightbonder",
+      "Kwende, Pride of Femeref",
+      "Lay Down Arms",
+      "Mirrodin Avenged",
+      "Ride Down",
+      "Scion of Darkness",
+      "Swift Demise",
+      "War Machine, Avenging Arsenal",
+      "You Cannot Pass!"
+    ]
+  },
+  {
+    "feature": "Variable-count target slots and chosen-count value",
+    "description": "Add target slots and selectors that accept an announced X, a chosen number, or any number of objects, including group effects over each chosen creature and X-bounded mana value, power, and search filters.",
+    "cards": [
+      "Death Cloud",
+      "Friendly Rivalry",
+      "Indomitable Creativity",
+      "Quickbeam, Upstart Ent",
+      "Rat Out",
+      "Reap",
+      "Return to the Ranks",
+      "Scholar of the Ages",
+      "Skemfar Elderhall",
+      "Spinning Wheel Kick",
+      "Succumb to the Cold"
+    ]
+  },
+  {
+    "feature": "Amounts produced by the previous effect or event",
+    "description": "Add Values that read amounts and objects from earlier in the resolution or from the event: sacrificed or exiled card power, toughness and mana value, excess damage, life gained, counters on the dying creature, cards drawn this turn, creatures convoked, greatest mana value, Locus counts, per-player land counts, and the found card's mana value.",
+    "cards": [
+      "Body of Research",
+      "Brion Stoutarm",
+      "Ignis Scientia",
+      "Paradox Zone",
+      "Phyrexian Negator",
+      "Play with Fire",
+      "Sensational Spider-Man",
+      "Thief of Blood",
+      "Tuktuk Scrapper"
+    ]
+  },
+  {
+    "feature": "Turn-history conditions",
+    "description": "Add per-turn history tracking and conditions such as cards leaving the graveyard, permanents leaving the battlefield (Revolt), descended, lands entering, creature cards put into a graveyard, first combat phase, once-per-turn limits on triggers, and cast-time checks.",
+    "cards": [
+      "Caller of the Claw",
+      "Dragon Cultist",
+      "Highspire Bell-Ringer",
+      "Lord Jyscal Guado",
+      "Narnam Renegade",
+      "Oath of Liliana",
+      "Potioner's Trove",
+      "Priest of the Crossing",
+      "Star Charter"
+    ]
+  },
+  {
+    "feature": "Trigger events and filters that do not exist yet",
+    "description": "Add trigger events and filters for cycling this card, a creature dealing damage to any object, fully unlocking a Room, becoming the target of an ability you control, once-each-turn limits on cast and attack triggers, and cycling versus discard distinctions.",
+    "cards": [
+      "Bronze Bombshell",
+      "Curator of Sun's Creation",
+      "Flesh Reaver",
+      "Kusari-Gama",
+      "Opaline Sliver",
+      "Panther Habit",
+      "Paranormal Analyst",
+      "Vanguard Seraph"
+    ]
+  },
+  {
+    "feature": "Put onto battlefield tapped and attacking or attached",
+    "description": "Add tapped, tapped-and-attacking, untapped-under-owner, counter, subtype, and attach options for permanents entering from graveyard, hand or exile, including token copies with added subtypes or colors and attaching chosen Equipment.",
+    "cards": [
+      "Arthur, Marigold Knight",
+      "Curse of Shallow Graves",
+      "Deathrender",
+      "Giant Inheritance",
+      "Interceptor, Shadow's Hound",
+      "Phantom Blade"
+    ]
+  },
+  {
+    "feature": "Copy and become-a-copy effects with added types or abilities",
+    "description": "Add become-a-copy and token-copy forms that keep an ability, add types or keywords such as a 1/1 Spirit, or link the exiled card to the copying permanent.",
+    "cards": [
+      "Deceiver of Form",
+      "Donal, Herald of Wings",
+      "Excava, the Risen Past",
+      "Identity Thief",
+      "Protean Thaumaturge",
+      "Vesuvan Drifter"
+    ]
+  },
+  {
+    "feature": "Combat and damage assignment effects",
+    "description": "Add damage forms with per-source amounts, assign-as-though-unblocked, group-scoped combat damage prevention with counters, creature-controller damage targets, delayed triggers bound to damaged creatures, and extra combat phases limited to chosen attackers.",
+    "cards": [
+      "Engulfing Slagwurm",
+      "Hawkeye's Bow",
+      "Impulsive Maneuvers",
+      "Solar Blaze",
+      "Tolsimir, Midnight's Light"
+    ]
+  },
+  {
+    "feature": "Modern keyword actions (venture, ring tempts, suspect, crime)",
+    "description": "Add modern keyword actions and game-state effects: the Ring tempts you, taking the initiative, rolling dice, rad counters, end the turn, controlling another player's turn, and winning the game.",
+    "cards": [
+      "Become Anonymous",
+      "Dungeoneer's Pack",
+      "Lavinia of the Tenth",
+      "Servant of the Stinger",
+      "Uruk-hai Berserker"
+    ]
+  },
+  {
+    "feature": "Library position and graveyard-to-library moves",
+    "description": "Add ops that put a targeted permanent or card at a fixed or chosen library position, move a chosen number of graveyard cards to the top in any order, or shuffle a whole graveyard.",
+    "cards": [
+      "Learn from the Past",
+      "Lost Days",
+      "Lost to Legend",
+      "Stillness in Motion",
+      "The Spot's Portal"
+    ]
+  },
+  {
+    "feature": "Delayed end-step effects on created or returned objects",
+    "description": "Add delayed sacrifice or return-to-battlefield effects at the next end step for created attacking tokens or chosen returned creatures.",
+    "cards": ["Fire Navy Trebuchet", "Skyskipper Duo", "War Effort"]
+  },
+  {
+    "feature": "Random, guessed and hidden-information choices",
+    "description": "Add die rolls with chosen results, planar dice, roll-extra-and-ignore replacements, and conditional random selection among revealed cards.",
+    "cards": ["Arcane Endeavor", "Ichor Elixir", "Pixie Guide"]
+  },
+  {
+    "feature": "Ability cost forms",
+    "description": "Add cost forms: card-type-filtered discards, any-kind counter removal, return-self-to-hand costs, forage, snow mana symbols, and counter removal for library-top casts.",
+    "cards": ["Axebane Ferox", "Mouth of Ronom", "Osgir, the Reconstructor"]
+  },
+  {
+    "feature": "Mana restrictions and snow mana",
+    "description": "Add mana restrictions on casting a specific spell or on nonartifact spells, and a snow mana pip in costs.",
+    "cards": ["Myr Superion", "Stern Lesson", "Thermopod"]
+  },
+  {
+    "feature": "Ability removal and base power/toughness overrides",
+    "description": "Add effects and durations that remove all abilities, set base power and toughness from X or another creature's power, copy until your next turn, grant or remove a chosen keyword on a target, and turn a noncreature permanent into a creature with granted abilities.",
+    "cards": ["Eldrazi Mimic", "Inversion Behemoth"]
+  },
+  {
+    "feature": "Cast a card from other zones with a rider",
+    "description": "Add free casts from graveyards, exile, or hand with mana value filters and exile-instead riders.",
+    "cards": ["Mavinda, Students' Advocate", "Moonstone, Harsh Mistress"]
+  },
+  {
+    "feature": "Skip-untap-step effects",
+    "description": "Add effects that make each opponent or a target player skip their next untap step.",
+    "cards": ["Brine Elemental", "Yosei, the Morning Star"]
+  },
+  {
+    "feature": "Control changes and durations tied to controlling the source",
+    "description": "Add permanent exchange-of-control, durations lasting as long as the source remains, and stolen-object statics.",
+    "cards": ["Confiscate", "Shield Broker"]
+  },
+  {
+    "feature": "Stack, spell copy and spell-targeting effects",
+    "description": "Add stack interaction for exiling or countering all other spells and abilities, countering the triggering spell, targeting the controller of a spell, retargeting a copy to a just-created token, and spell copies that are not legendary.",
+    "cards": ["Echo, Perceptive Prodigy", "Neera, Wild Mage"]
+  },
+  {
+    "feature": "Life totals and game-result effects",
+    "description": "Add set-life-total effects, life-total reads, and clamped life-based amounts.",
+    "cards": ["Doctor Doom, Unrivaled", "Mages' Contest"]
+  },
+  {
+    "feature": "Ability-word label stripping rejected by the validator",
+    "description": "Make the interpreter keep stripping the generic ability-word label ('Exhaust -', 'Coruscating Flames -') from an already-parsed activated line when a patch is applied.",
+    "cards": ["Liliana the Repentant", "Pink Horror"]
+  },
+  {
+    "feature": "Search destinations and graveyard returns",
+    "description": "Add search and return forms with destination chosen by mana value, any number of found cards, name-exclusion filters, untargeted multi-card graveyard returns, finality counters, delayed returns at the next upkeep, and cards exiled from a library with a cast permission.",
+    "cards": ["Dire-Strain Rampage", "Shadow of the Enemy"]
+  },
+  {
+    "feature": "one-off",
+    "description": "Single cards with their own missing feature: a Planechase vote, a library-wide land type change, and other unique effects.",
+    "cards": [
+      "Exchange of Words",
+      "Path of the Animist",
+      "Rootpath Purifier",
+      "Smuggler's Buggy",
+      "Zameck Guildmage",
+      "Zephyr Singer"
+    ]
+  }
+]

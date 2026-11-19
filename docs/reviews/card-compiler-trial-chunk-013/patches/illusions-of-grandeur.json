@@ -1,0 +1,63 @@
+{
+  "name": "Illusions of Grandeur",
+  "oracleId": "d7c81b3e-8082-4aaf-8979-2717d118234c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Cumulative upkeep {2}"
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "age",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "unlessPays",
+            "payer": "controller",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            },
+            "genericValue": {
+              "kind": "times",
+              "of": {
+                "kind": "countersOnSelf",
+                "counter": "age"
+              },
+              "n": 2
+            },
+            "then": [
+              {
+                "op": "sacrifice",
+                "target": "source"
+              }
+            ]
+          }
+        ],
+        "description": "Cumulative upkeep {2}"
+      }
+    ]
+  }
+}

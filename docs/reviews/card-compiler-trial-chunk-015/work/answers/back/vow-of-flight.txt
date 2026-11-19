@@ -1,0 +1,3 @@
+Enchant creature.
+Enchanted creature gets +2/+2 and has flying.
+Enchanted creature has an attack restriction that includes planeswalkers.

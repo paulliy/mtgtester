@@ -1,0 +1,95 @@
+{
+  "name": "Andúril, Flame of the West",
+  "oracleId": "e6521404-8474-4727-b2d0-537d15d8a63f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature attacks, create two tapped 1/1 white Spirit creature tokens with flying. If that creature is legendary, instead create two of those tokens that are tapped and attacking."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "kind": "supertype",
+                "value": "Legendary"
+              }
+            },
+            "then": [
+              {
+                "op": "createTokenAttacking",
+                "spec": {
+                  "name": "Spirit",
+                  "typeLine": "Token Creature — Spirit",
+                  "types": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Spirit"
+                  ],
+                  "colors": [
+                    "W"
+                  ],
+                  "power": 1,
+                  "toughness": 1,
+                  "keywords": [
+                    "flying"
+                  ]
+                },
+                "count": {
+                  "kind": "const",
+                  "n": 2
+                }
+              }
+            ],
+            "else": [
+              {
+                "op": "createToken",
+                "spec": {
+                  "name": "Spirit",
+                  "typeLine": "Token Creature — Spirit",
+                  "types": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Spirit"
+                  ],
+                  "colors": [
+                    "W"
+                  ],
+                  "power": 1,
+                  "toughness": 1,
+                  "keywords": [
+                    "flying"
+                  ]
+                },
+                "count": {
+                  "kind": "const",
+                  "n": 2
+                },
+                "tapped": true
+              }
+            ]
+          }
+        ],
+        "description": "Whenever equipped creature attacks, create two tapped 1/1 white Spirit creature tokens with flying. If that creature is legendary, instead create two of those tokens that are tapped and attacking."
+      }
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "name": "Cauldron Familiar",
+  "oracleId": "a7dc2e62-1c50-4ed7-b71f-2d782a447a5e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice a Food: Return this card from your graveyard to the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Food"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "count": 1
+          }
+        ],
+        "timing": "any",
+        "zone": "graveyard",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "returnDepartedSourceToBattlefield",
+              "fromYourGraveyard": true
+            }
+          ],
+          "description": "Sacrifice a Food: Return this card from your graveyard to the battlefield."
+        }
+      }
+    ]
+  }
+}

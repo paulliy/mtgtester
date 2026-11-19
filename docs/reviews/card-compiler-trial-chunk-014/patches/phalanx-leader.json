@@ -1,0 +1,46 @@
+{
+  "name": "Phalanx Leader",
+  "oracleId": "857db7e0-254a-4920-a71d-9bab6555342f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a spell that targets this creature, put a +1/+1 counter on each creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "targetFilter": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on each creature you control."
+      }
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "name": "Circle of Flame",
+  "oracleId": "c31801e6-2444-4158-8e19-2afe751d7cff",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature without flying attacks you or a planeswalker you control, this enchantment deals 1 damage to that creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "hasKeyword",
+                    "keyword": "flying"
+                  }
+                }
+              ]
+            }
+          },
+          "condition": {
+            "kind": "eventObjectDefendingPlayerIsYou"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": "triggerObject",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature without flying attacks you or a planeswalker you control, this enchantment deals 1 damage to that creature."
+      }
+    ]
+  }
+}

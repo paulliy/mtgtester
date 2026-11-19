@@ -1,0 +1,1 @@
+{"status": "inexpressible", "reason": "Any non-empty patch disables the engine's generic ability-label stripping, so the labeled line \"Murasame \u2014 Equip {5}\" becomes unrecognized and cannot be marked handled."}

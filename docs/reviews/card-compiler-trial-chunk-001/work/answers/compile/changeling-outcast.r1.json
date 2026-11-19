@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"cantBlock":true,"staticEffects":[{"affects":{"kind":"self"},"op":{"layer":6,"setCantBeBlocked":true}}]}}

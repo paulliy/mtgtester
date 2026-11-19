@@ -1,0 +1,29 @@
+{
+  "name": "Sundering Growth",
+  "oracleId": "a2a380d8-4df7-4357-862c-ed3fb795db6c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target artifact or enchantment, then populate."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "artifactOrEnchantment"
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroy",
+          "target": 0
+        },
+        {
+          "op": "populate"
+        }
+      ],
+      "description": "Destroy target artifact or enchantment, then populate."
+    }
+  }
+}

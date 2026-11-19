@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no static that gives the controller (a player, not a permanent) hexproof; controllerHexproofUntilEot is an until-end-of-turn effect only."}

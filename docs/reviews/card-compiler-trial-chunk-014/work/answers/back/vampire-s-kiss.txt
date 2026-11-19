@@ -1,0 +1,1 @@
+Target player loses 2 life. You gain 2 life. Create two Blood tokens. Each Blood token is an Artifact with the subtype Blood and has "{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card."

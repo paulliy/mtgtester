@@ -1,0 +1,1 @@
+{8}, {T}: Search your library for a card that is not an instant card or a sorcery card, put that card onto the battlefield, then shuffle.

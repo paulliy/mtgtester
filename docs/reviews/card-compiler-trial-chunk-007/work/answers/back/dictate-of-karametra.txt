@@ -1,0 +1,1 @@
+Whenever a land is tapped for mana, it also adds one mana of one of the types that land produces.

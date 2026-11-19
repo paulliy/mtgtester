@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"leavesBattlefield","subject":{"kind":"self"},"leavesTo":["graveyard"]},"optional":false,"targets":[],"effects":[{"op":"putDepartedSourceIntoLibrary","fromTop":3}],"description":"When this creature is put into your graveyard from the battlefield, put it into your library third from the top."}]}}

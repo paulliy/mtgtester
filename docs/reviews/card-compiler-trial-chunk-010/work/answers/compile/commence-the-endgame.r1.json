@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":2}},{"op":"amass","subtype":"Zombie","count":{"kind":"countCardsInZone","zone":"hand","selector":{"kind":"allOf","of":[]},"owner":"you"}}],"description":"Draw two cards, then amass Zombies X, where X is the number of cards in your hand."}}}

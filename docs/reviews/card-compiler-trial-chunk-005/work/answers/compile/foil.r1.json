@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The alternative cost 'discard an Island card and another card' cannot name a discard filter: discardCard has no selector, so the Island-only discard cannot be expressed (exileCardFromHand has a selector but exiles rather than discards)."}

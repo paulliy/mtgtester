@@ -1,0 +1,62 @@
+{
+  "name": "Faebloom Trick",
+  "oracleId": "903d114b-1899-4e67-bee3-af0673850388",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Create two 1/1 blue Faerie creature tokens with flying. When you do, tap target creature an opponent controls."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Faerie",
+            "typeLine": "Token Creature — Faerie",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Faerie"
+            ],
+            "colors": [
+              "U"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "flying"
+            ]
+          },
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "reflexiveOnCreatedToken",
+          "then": {
+            "kind": "triggered",
+            "targets": [
+              {
+                "kind": "creature",
+                "controller": "opponent"
+              }
+            ],
+            "effects": [
+              {
+                "op": "tapTarget",
+                "target": 0
+              }
+            ],
+            "description": "When you do, tap target creature an opponent controls."
+          }
+        }
+      ],
+      "description": "Create two 1/1 blue Faerie creature tokens with flying. When you do, tap target creature an opponent controls."
+    }
+  }
+}

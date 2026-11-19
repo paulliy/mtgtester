@@ -15,11 +15,12 @@
  * shrink the measured population. `--strict` restores the old skip-on-invalid behaviour.
  */
 
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve, join, basename } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
 import { coverageInput } from './coverage-input';
 import { measureCoverage, type DeckCards } from '../cards/coverage';
+import { committedHeadlines, DECK_COVERAGE_PATH } from '../cards/deck-coverage';
 import { checkCoverageBaseline } from '../cards/coverage-baseline';
 import { assertCompleteCoverage } from '../cards/coverage-contract';
 import { importDeck } from '../decks/source';
@@ -62,6 +63,13 @@ function readInput(arg: string): string {
 
 const pct = (n: number, of: number): string =>
   of === 0 ? '0.0%' : `${((n / of) * 100).toFixed(1)}%`;
+
+/** One line per population from the committed deck-coverage report, if there is one. */
+function printDeckHeadlines(): void {
+  if (!existsSync(resolve(DECK_COVERAGE_PATH))) return;
+  for (const line of committedHeadlines(readFileSync(resolve(DECK_COVERAGE_PATH), 'utf8')))
+    console.log(line);
+}
 
 async function main(): Promise<void> {
   const input = coverageInput(process.argv.slice(2));
@@ -163,6 +171,8 @@ async function main(): Promise<void> {
   console.log(
     `  modeled:      ${report.modeledCards} (${pct(report.modeledCards, report.uniqueCards)})`,
   );
+  // Whole decks, from the committed report (bun run deck-coverage), beside the card share.
+  if (userInputs.length === 0) printDeckHeadlines();
 
   console.log('\nBlocking mechanics — cards each would unblock, at most');
   console.log('─'.repeat(53));

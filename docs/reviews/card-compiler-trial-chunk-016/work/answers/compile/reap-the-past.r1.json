@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Returning X cards at random from your graveyard to your hand has no schema op: graveyardToHand and returnCardFromGraveyardToHand both take a chosen card, and no graveyard-to-hand effect selects at random."}

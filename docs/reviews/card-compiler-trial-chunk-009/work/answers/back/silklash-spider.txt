@@ -1,0 +1,1 @@
+{X}{G}{G}: Deal X damage to each creature with flying.

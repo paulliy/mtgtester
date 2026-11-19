@@ -1,0 +1,37 @@
+{
+  "name": "Groundchuck & Dirtbag",
+  "oracleId": "da344e46-6bdf-4032-8590-bac850d5713d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you tap a land for mana, add {G}."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "manaActivationRider",
+        "source": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Land"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            }
+          ]
+        },
+        "add": {
+          "kind": "fixed",
+          "units": [
+            [
+              "G"
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}

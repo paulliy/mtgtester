@@ -1,0 +1,1 @@
+When this creature dies, create a number of Treasure tokens equal to this creature's power. They enter tapped. Each of those tokens has "{T}, Sacrifice this artifact: Add one mana of any color."

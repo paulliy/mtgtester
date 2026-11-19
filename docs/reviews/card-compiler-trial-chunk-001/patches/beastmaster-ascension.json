@@ -1,0 +1,40 @@
+{
+  "name": "Beastmaster Ascension",
+  "oracleId": "11b5308d-5bc0-4782-875f-a28be36e665d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as this enchantment has seven or more quest counters on it, creatures you control get +5/+5."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 5,
+          "toughness": 5
+        },
+        "condition": {
+          "kind": "sourceHasCounters",
+          "counter": "quest",
+          "cmp": ">=",
+          "n": 7
+        }
+      }
+    ]
+  }
+}

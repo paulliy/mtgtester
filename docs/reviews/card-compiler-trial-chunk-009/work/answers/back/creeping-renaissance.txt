@@ -1,0 +1,7 @@
+Choose one —
+• Return all artifact cards from your graveyard to your hand.
+• Return all Battle cards from your graveyard to your hand.
+• Return all creature cards from your graveyard to your hand.
+• Return all enchantment cards from your graveyard to your hand.
+• Return all land cards from your graveyard to your hand.
+• Return all planeswalker cards from your graveyard to your hand.

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"playFromZone","zone":"graveyard","filter":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"subtype","value":"Zombie"}]},"yourTurnOnly":true,"permanentTypeBudget":1}]}}

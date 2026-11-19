@@ -1,0 +1,1 @@
+Equipped creature has base power and toughness each equal to your life total.

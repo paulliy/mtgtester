@@ -1,0 +1,1 @@
+As long as your life total is compared to 30 by a comparison operator that is hidden in this data, this creature gets +5/+5 and has flying. The condition is evaluated continuously.

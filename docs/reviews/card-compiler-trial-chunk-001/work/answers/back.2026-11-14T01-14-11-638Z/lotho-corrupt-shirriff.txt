@@ -1,0 +1,1 @@
+Whenever a player casts their second spell each turn, this trigger is mandatory and has no targets. Lose 1 life. (The data names no player for the life loss.) Then create a Treasure token: a colorless artifact token with subtype Treasure, with one mana ability with costs "{T}, Sacrifice this artifact": Add one mana of any color.

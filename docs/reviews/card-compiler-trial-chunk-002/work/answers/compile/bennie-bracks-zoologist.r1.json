@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"endStep","player":"each","condition":{"kind":"createdTokenThisTurn"}},"optional":false,"targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":1}}],"description":"At the beginning of each end step, if you created a token this turn, draw a card."}]}}

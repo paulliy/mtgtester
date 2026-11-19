@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"enters","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"mayDiscardThenDraw","count":2}],"description":"When this enchantment enters, you may discard a card. If you do, draw two cards."}]}}

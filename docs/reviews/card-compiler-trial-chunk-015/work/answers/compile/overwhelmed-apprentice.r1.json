@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"enters","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"millEachPlayer","scope":"opponents","count":{"kind":"const","n":2}},{"op":"scry","count":2}],"description":"When this creature enters, each opponent mills two cards. Then you scry 2."}]}}

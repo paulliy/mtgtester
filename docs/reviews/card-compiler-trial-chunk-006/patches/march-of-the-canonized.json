@@ -1,0 +1,65 @@
+{
+  "name": "March of the Canonized",
+  "oracleId": "9eb427ab-1483-4c40-8cb2-fd463e1e5fe0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, if your devotion to white and black is seven or greater, create a 4/3 white and black Vampire Demon creature token with flying."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "devotionTo",
+              "color": "W",
+              "and": "B"
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 7
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Vampire Demon",
+              "typeLine": "Token Creature — Vampire Demon",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Vampire",
+                "Demon"
+              ],
+              "colors": [
+                "W",
+                "B"
+              ],
+              "power": 4,
+              "toughness": 3,
+              "keywords": [
+                "flying"
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "At the beginning of your upkeep, if your devotion to white and black is seven or greater, create a 4/3 white and black Vampire Demon creature token with flying."
+      }
+    ]
+  }
+}

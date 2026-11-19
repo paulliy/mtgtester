@@ -1,0 +1,46 @@
+{
+  "name": "Delete",
+  "oracleId": "01d0156f-c26a-4668-a3a4-15ee0790d1b6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals X damage to each nonartifact creature and each player."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "damageEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Artifact"
+                }
+              }
+            ]
+          },
+          "amount": {
+            "kind": "xValue"
+          }
+        },
+        {
+          "op": "damageEachPlayer",
+          "amount": {
+            "kind": "xValue"
+          }
+        }
+      ],
+      "description": "Delete deals X damage to each nonartifact creature and each player."
+    }
+  }
+}

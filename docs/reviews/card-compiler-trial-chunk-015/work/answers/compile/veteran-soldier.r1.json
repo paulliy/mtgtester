@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Granting an attack trigger to commander creatures needs an attacks-a-player (not a planeswalker) restriction on the granted trigger, and the schema's 'attacks' head cannot exclude attacks on planeswalkers."}

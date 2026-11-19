@@ -1,0 +1,48 @@
+{
+  "name": "Cryptbreaker",
+  "oracleId": "16f75a65-d067-4f79-81b9-833c373cf4d2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap three untapped Zombies you control: You draw a card and lose 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tapOthers",
+            "selector": {
+              "kind": "subtype",
+              "value": "Zombie"
+            },
+            "count": 3,
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "draw",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            },
+            {
+              "op": "loseLife",
+              "amount": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "Tap three untapped Zombies you control: You draw a card and lose 1 life."
+        }
+      }
+    ]
+  }
+}

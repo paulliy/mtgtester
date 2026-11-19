@@ -1,0 +1,51 @@
+{
+  "name": "Soul of New Phyrexia",
+  "oracleId": "add500e1-8eeb-45d7-a10d-2fae2cc69233",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{5}, Exile this card from your graveyard: Permanents you control gain indestructible until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 5,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "exileSelfFromGraveyard"
+          }
+        ],
+        "timing": "any",
+        "zone": "graveyard",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordEachUntilEot",
+              "selector": {
+                "kind": "controller",
+                "who": "you"
+              },
+              "keyword": "indestructible"
+            }
+          ],
+          "description": "{5}, Exile this card from your graveyard: Permanents you control gain indestructible until end of turn."
+        }
+      }
+    ]
+  }
+}

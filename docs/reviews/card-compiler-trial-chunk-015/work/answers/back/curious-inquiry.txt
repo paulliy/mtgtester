@@ -1,0 +1,2 @@
+Enchanted creature gets +1/+1.
+Enchanted creature has "Whenever this creature deals combat damage to a player, create a colorless Clue artifact token with "{2}, Sacrifice this artifact: Draw a card."

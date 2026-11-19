@@ -1,0 +1,55 @@
+{
+  "name": "Infuse with Vitality",
+  "oracleId": "6799217a-030c-4c1b-9de3-99725c6ef4cf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Until end of turn, target creature gains deathtouch and \"When this creature dies, return it to the battlefield tapped under its owner's control.\""
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "deathtouch"
+        },
+        {
+          "op": "grantAbilityUntilEot",
+          "target": 0,
+          "ability": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dies",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "targets": [],
+            "effects": [
+              {
+                "op": "returnDiedSourceToBattlefield",
+                "tapped": true
+              }
+            ],
+            "description": "When this creature dies, return it to the battlefield tapped under its owner's control."
+          }
+        },
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        }
+      ],
+      "description": "Until end of turn, target creature gains deathtouch and \"When this creature dies, return it to the battlefield tapped under its owner's control.\"\nYou gain 2 life."
+    }
+  }
+}

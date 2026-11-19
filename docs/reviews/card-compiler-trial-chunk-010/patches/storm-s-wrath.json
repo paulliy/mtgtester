@@ -1,0 +1,38 @@
+{
+  "name": "Storm's Wrath",
+  "oracleId": "eeb6f5eb-0e16-468e-9dfe-6ec8d8172f86",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals 4 damage to each creature and each planeswalker."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "damageEach",
+          "selector": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Planeswalker"
+              }
+            ]
+          },
+          "amount": {
+            "kind": "const",
+            "n": 4
+          }
+        }
+      ],
+      "description": "Storm's Wrath deals 4 damage to each creature and each planeswalker."
+    }
+  }
+}

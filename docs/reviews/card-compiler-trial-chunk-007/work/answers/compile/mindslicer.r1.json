@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"dies","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"eachPlayerDiscardHandThenDraw","count":{"kind":"const","n":0}}],"description":"When this creature dies, each player discards their hand."}]}}

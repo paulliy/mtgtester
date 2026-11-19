@@ -1,0 +1,1 @@
+Each creature and planeswalker that opponents control takes damage equal to the number of spells cast this turn.

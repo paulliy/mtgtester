@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":3}},{"op":"additionalLandPlaysThisTurn","count":{"kind":"const","n":1}}],"description":"Draw three cards. You may play an additional land this turn."}}}

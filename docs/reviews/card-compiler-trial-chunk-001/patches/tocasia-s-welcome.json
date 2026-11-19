@@ -1,0 +1,53 @@
+{
+  "name": "Tocasia's Welcome",
+  "oracleId": "25c983e0-a8c9-4784-91a4-8fe04c6df882",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever one or more creatures you control with mana value 3 or less enter, draw a card. This ability triggers only once each turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "manaValueAtMost",
+                  "n": 3
+                }
+              ]
+            }
+          },
+          "aggregate": true,
+          "oncePerTurn": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever one or more creatures you control with mana value 3 or less enter, draw a card. This ability triggers only once each turn."
+      }
+    ]
+  }
+}

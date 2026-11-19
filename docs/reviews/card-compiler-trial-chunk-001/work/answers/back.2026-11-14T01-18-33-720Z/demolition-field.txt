@@ -1,0 +1,1 @@
+{2}, {T}, Sacrifice this land: Destroy target land an opponent controls that isn't a basic land. The controller of that land may search their library for a basic land card and put it onto the battlefield untapped. Then search a library for a basic land card, put it onto the battlefield untapped, and shuffle. The data does not say whose library the second search uses.

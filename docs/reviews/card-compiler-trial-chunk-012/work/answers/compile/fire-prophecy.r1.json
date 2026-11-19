@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'You may put a card from your hand on the bottom of your library, then draw' has no exact op: putAnyFromHandOnBottomThenDraw allows any number of cards, not at most one."}

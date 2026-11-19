@@ -1,0 +1,23 @@
+{
+  "name": "Changeling Outcast",
+  "oracleId": "a61ef0cc-1da9-49f9-b0dc-01cf9f6205be",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ can't block and can't be blocked."
+  ],
+  "compose": "append",
+  "def": {
+    "cantBlock": true,
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "setCantBeBlocked": true
+        }
+      }
+    ]
+  }
+}

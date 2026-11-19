@@ -1,0 +1,329 @@
+[
+  {
+    "feature": "Amounts produced by the previous effect or event",
+    "description": "Add Values and arithmetic for life gained, damage, excess damage, counters placed, discarded counts, trigger-object toughness and power, mana-spent and per-turn tallies, poison counters, distinct names, greater-of counts, and per-creature self-damage amounts.",
+    "cards": [
+      "All-Fates Scroll",
+      "Angelic Chorus",
+      "Cait Sith, Fortune Teller",
+      "Cream of the Crop",
+      "Goblin Negotiation",
+      "Hoard Hauler",
+      "Iridescent Hornbeetle",
+      "Magebane Lizard",
+      "Marauding Mako",
+      "Pantlaza, Sun-Favored",
+      "Phyrexian Swarmlord",
+      "Prize Pig",
+      "Prophet of the Scarab",
+      "Shalai and Hallar",
+      "Wave of Reckoning"
+    ]
+  },
+  {
+    "feature": "Selector predicates in targets and statics",
+    "description": "Add selector predicates for keywords in statics, tapped and power-comparison tests (strictly less than, against a chosen target or hand size), shared creature types, combined power and toughness, cards put into a graveyard from the battlefield this turn, spell-or-creature and legendary-spell target kinds, and attacker-damaged-you selectors.",
+    "cards": [
+      "Auron, Venerated Guardian",
+      "Brought Back",
+      "Continue?",
+      "Cut Down",
+      "Engulf the Shore",
+      "Ensnaring Bridge",
+      "Hindering Light",
+      "Lofty Denial",
+      "Mandate of Abaddon",
+      "Spear of Heliod",
+      "Stalwart Shield-Bearers",
+      "Stoneforge Masterwork",
+      "Tale's End",
+      "The Wandering Rescuer",
+      "Unsubstantiate"
+    ]
+  },
+  {
+    "feature": "Modern keyword actions (venture, ring tempts, suspect, crime)",
+    "description": "Add effects for the Ring tempting you, earthbend, airbend, die rolls, coin-flip replacement, face-down turns and piles, rad counters, and the commit-a-crime trigger.",
+    "cards": [
+      "Bandit's Haul",
+      "Bloatfly Swarm",
+      "Cyber Conversion",
+      "Freestrider Lookout",
+      "Glorious Gale",
+      "Krark's Thumb",
+      "Monk Gyatso",
+      "Rockalanche",
+      "Samwise the Stouthearted",
+      "Sauron's Ransom",
+      "Slip On the Ring",
+      "Strength-Testing Hammer",
+      "Sword of Hours",
+      "The Boulder, Ready to Rumble"
+    ]
+  },
+  {
+    "feature": "Conditional rule statics and permissions",
+    "description": "Add rule statics for life-total locks, can't-attack, forced blocks, nonbasic untap limits, spell-name prohibitions, revealed hands, flash grants, mana-spend zone restrictions, hand-zone ability grants, and condition fields on play-from-zone statics.",
+    "cards": [
+      "Back to Basics",
+      "Breaker of Armies",
+      "Mm'menon, the Right Hand",
+      "Pacifism",
+      "Platinum Emperion",
+      "Praetor's Counsel",
+      "Progenitor's Icon",
+      "Reflector Mage",
+      "Rhet-Tomb Mystic",
+      "Rhonas the Indomitable",
+      "Telepathy",
+      "Verge Rangers",
+      "Wall of Frost"
+    ]
+  },
+  {
+    "feature": "Trigger events and filters that do not exist yet",
+    "description": "Add trigger events and filters for expend, damage to any player, cards leaving the graveyard, playing a land, enchanted-player creature entering, enchanted-creature damage, per-type casts, player-only attacks, spell-only targeting, and blocker-and-blocked pairs.",
+    "cards": [
+      "Agent of the Shadow Thieves",
+      "Alania, Divergent Storm",
+      "Ankh of Mishra",
+      "Armadillo Cloak",
+      "Gargos, Vicious Watcher",
+      "Goblin Lackey",
+      "Kishla Skimmer",
+      "Mirror Shield",
+      "Pain Distributor",
+      "Shanid, Sleepers' Scourge",
+      "Trespasser's Curse",
+      "Vampiric Link",
+      "Wandertale Mentor"
+    ]
+  },
+  {
+    "feature": "Per-player scope and chooser on effects",
+    "description": "Add player-scope and chooser fields so sacrifice, token creation and choice effects can address each player, each opponent, a per-opponent condition, the controller of a dying or damaging creature, or an opponent making the choice.",
+    "cards": [
+      "Anowon, the Ruin Sage",
+      "Bounty Board",
+      "Braids, Cabal Minion",
+      "Bringer of the Last Gift",
+      "Brood Sliver",
+      "Clackbridge Troll",
+      "Fade from History",
+      "Great Unclean One",
+      "Make an Example",
+      "Planetary Annihilation",
+      "Sadistic Shell Game",
+      "Tempt with Mayhem"
+    ]
+  },
+  {
+    "feature": "Alternative-cost keyword mechanics",
+    "description": "Model foretell, miracle, evoke, buyback, suspend, encore and overload as alternative casts or costs with exile, time-counter, return-to-hand and sacrifice riders.",
+    "cards": [
+      "Alrund's Epiphany",
+      "Capsize",
+      "Doomskar",
+      "Entreat the Angels",
+      "Ingot Chewer",
+      "Jubilation",
+      "March of Progress",
+      "Sprout Swarm",
+      "Suspend",
+      "Taigam, Master Opportunist"
+    ]
+  },
+  {
+    "feature": "Missing keyword mechanics (delve, echo, myriad, decayed, splice)",
+    "description": "Add keywords the schema lacks or cannot grant: skulk, landwalk, decayed, myriad, mobilize with sacrifice, reconfigure, protection from creature subtypes, and granted cascade.",
+    "cards": [
+      "Baneslayer Angel",
+      "Behind the Scenes",
+      "Curse of the Restless Dead",
+      "Ghoulish Procession",
+      "Inkwell Leviathan",
+      "Ironwill Forger",
+      "Lord of Atlantis",
+      "Maelstrom Nexus",
+      "Rabbit Battery",
+      "Venerated Stormsinger"
+    ]
+  },
+  {
+    "feature": "Library and graveyard repositioning",
+    "description": "Add shuffle-into-owner's-library for targets, mill-half, positional placement such as third from the top, combined library-and-graveyard searches, partial library exile, and untargeted random returns.",
+    "cards": [
+      "Doomsday",
+      "Doomsday Excruciator",
+      "Fleet Swallower",
+      "Long-Term Plans",
+      "Oblation",
+      "Terisian Mindbreaker",
+      "Tomb Tyrant",
+      "Zoyowa's Justice"
+    ]
+  },
+  {
+    "feature": "Put onto battlefield tapped and attacking or attached",
+    "description": "Add entry options for returned, searched and put-onto-battlefield cards (tapped, attacking, attached, from another player's hand or a graveyard).",
+    "cards": [
+      "Danitha, Benalia's Hope",
+      "Doors of Durin",
+      "Lessons from Life",
+      "Olivia, Crimson Bride",
+      "On the Trail",
+      "Scouring Swarm",
+      "Undergrowth Recon",
+      "Zara, Renegade Recruiter"
+    ]
+  },
+  {
+    "feature": "Turn-history conditions",
+    "description": "Add conditions for what happened this turn (life gained, counters put on this creature, permanents leaving the battlefield, instants or sorceries cast, defendant's land count) and opponent-by-opponent graveyard checks.",
+    "cards": [
+      "Aerial Surveyor",
+      "Aerith, Last Ancient",
+      "Elegy Acolyte",
+      "Faramir, Prince of Ithilien",
+      "Griffin Aerie",
+      "Hall of Oracles",
+      "Into the Story",
+      "Wakka, Devoted Guardian"
+    ]
+  },
+  {
+    "feature": "Variable-count target slots and chosen-count value",
+    "description": "Add any-number, announced-count, optional-zero and total-power target slots, plus counter moves and distribution of any or an exact number of counters.",
+    "cards": [
+      "Agility Bobblehead",
+      "Conjurer's Bauble",
+      "Garnet, Princess of Alexandria",
+      "Gilgamesh, Master-at-Arms",
+      "Reunion of the House",
+      "Rot Hulk",
+      "True Ancestry",
+      "Vastwood Hydra"
+    ]
+  },
+  {
+    "feature": "Cast a card from other zones with a rider",
+    "description": "Add free or alternative casting of cards from graveyards, exile and opponents' libraries, with exile-instead, random choice, copy, once-per-turn and ordering riders.",
+    "cards": [
+      "Danitha, New Benalia's Light",
+      "Mission Briefing",
+      "Press the Enemy",
+      "Ramirez DePietro, Pillager",
+      "Sword of Once and Future",
+      "Triple Triad",
+      "Wondrous Crucible"
+    ]
+  },
+  {
+    "feature": "Reference to the card moved by the previous effect",
+    "description": "Let follow-up effects, reflexive triggers and delayed returns refer to the card or permanent the previous effect moved, searched, exiled or created, including chaining on success and returning under your control.",
+    "cards": [
+      "Academy Rector",
+      "Faerie Artisans",
+      "Grave Betrayal",
+      "Grishnákh, Brash Instigator",
+      "Nemata, Primeval Warden",
+      "Oriq Loremage",
+      "Ruthless Lawbringer"
+    ]
+  },
+  {
+    "feature": "Ability cost forms",
+    "description": "Add cost components (return a permanent to hand, the untap symbol, discard filtered by type, reveal-or-pay choices, return-a-land alternatives to an unless cost) and rule statics that set minimum spell costs.",
+    "cards": [
+      "Karoo",
+      "Pili-Pala",
+      "Scryb Ranger",
+      "Throes of Chaos",
+      "Thunderherd Migration",
+      "Trinisphere"
+    ]
+  },
+  {
+    "feature": "Temporary or permanent characteristic-setting effects",
+    "description": "Add effects that set base power and toughness for a group, make permanent creatures, and add creature subtypes, types and colors to returned or off-battlefield cards.",
+    "cards": [
+      "Biomass Mutation",
+      "Conspiracy",
+      "Grimoire of the Dead",
+      "Mobilizer Mech",
+      "Storm of Souls",
+      "Zur, Eternal Schemer"
+    ]
+  },
+  {
+    "feature": "Announced X where a fixed number is required",
+    "description": "Let selectors, effects and repeats take the announced X or a computed count (mana value X, proliferate X times) instead of a fixed number.",
+    "cards": [
+      "Black Sun's Twilight",
+      "Expand the Sphere",
+      "Expansion Algorithm",
+      "Gaze of Granite",
+      "Stolen by the Fae"
+    ]
+  },
+  {
+    "feature": "Damage prevention and replacement variants",
+    "description": "Add damage redirection, prevention scoped to a group, damage-to-counter conversion, and enter-the-battlefield and sacrifice-instead replacements.",
+    "cards": [
+      "Containment Priest",
+      "Gatta and Luzzu",
+      "Gideon's Sacrifice",
+      "Lake of the Dead",
+      "Pack Leader"
+    ]
+  },
+  {
+    "feature": "Reveal/exile/mill-until loops with leftovers handling",
+    "description": "Add reveal-until, exile-until and mill-then-pick loops, per-type picks and opponent-driven splits that route found and leftover cards to different places.",
+    "cards": [
+      "Atraxa, Grand Unifier",
+      "Cache Grab",
+      "Elemental Teachings",
+      "Old Rutstein",
+      "Possibility Storm"
+    ]
+  },
+  {
+    "feature": "Token copy color, type and cost overrides",
+    "description": "Let token and spell copies carry riders: exile at end step, copy per creature with retargeting, removal of the legendary supertype, extra counters conditional on control, and token creation riders such as self-exile.",
+    "cards": [
+      "Manaform Hellkite",
+      "Shuri, Wakandan Inventor",
+      "Splinter Twin",
+      "Undercover Operative",
+      "Zada, Hedron Grinder"
+    ]
+  },
+  {
+    "feature": "Counterspell variants",
+    "description": "Let counter effects and follow-ups act on the controller of the countered spell, and gain control of or retarget a spell.",
+    "cards": ["Chef's Kiss", "Fear of Impostors", "Glen Elendra Guardian"]
+  },
+  {
+    "feature": "Durations until end of your next turn",
+    "description": "Allow exile-and-play, become-creature and delayed-return effects to last until your next turn or upkeep instead of only this turn or the next end step.",
+    "cards": ["Hugs, Grisly Guardian", "Nahiri's Resolve", "Nissa, Vital Force"]
+  },
+  {
+    "feature": "Sacrificed cost object's power/mana value",
+    "description": "Add Values and conditions that read the power, type or identity of an object sacrificed or discarded as a cost.",
+    "cards": ["Moria Scavenger", "Tend the Pests"]
+  },
+  {
+    "feature": "one-off",
+    "description": "Lines needing a bespoke mechanic found on a single card.",
+    "cards": [
+      "Avatar Roku, Firebender",
+      "Oona, Queen of the Fae",
+      "Perplexing Chimera",
+      "Sanctum of Fruitful Harvest",
+      "Torgal, A Fine Hound",
+      "Wash Out"
+    ]
+  }
+]

@@ -1,0 +1,47 @@
+{
+  "name": "Kresh the Bloodbraided",
+  "oracleId": "6343cf6f-b1e3-49ce-8933-8fe6c9dc83f3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another creature dies, you may put X +1/+1 counters on ~, where X is that creature's power."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "+1/+1",
+            "count": {
+              "kind": "powerOfTriggerObject"
+            }
+          }
+        ],
+        "description": "Whenever another creature dies, you may put X +1/+1 counters on Kresh, where X is that creature's power."
+      }
+    ]
+  }
+}

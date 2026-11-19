@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"An 'enters' trigger provides no event player, so 'that player' (the controller of the entering creature) cannot be referenced for the life loss."}

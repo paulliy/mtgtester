@@ -1,0 +1,2 @@
+Target creature deals damage equal to its power to itself.
+If that creature is attacking, deal 2 damage to that creature's controller.

@@ -4,13 +4,16 @@
  *   bun run scripts/card-compiler/select.ts --out <dir> [--count 50] [--max-lines 1]
  *        [--xmage <rows.json>] [--xmage-share 0.6] [--exclude <targets.json>[,<targets.json>...]]
  *
- * Cards are spread evenly across the EDHREC rank order so the trial is not all staples or all
- * long tail. With `--xmage` (the XMage scan's rows.json), `--xmage-share` of the set is drawn from
+ *        [--order spread|rank] [--exclude-ledger]
+ *
+ * By default cards are spread evenly across the EDHREC rank order so the trial is not all staples
+ * or all long tail. A campaign chunk uses `--order rank --exclude-ledger` instead: the
+ * highest-ranked cards that no trial in the ledger (`run.ts ledger`) has taken yet. With `--xmage` (the XMage scan's rows.json), `--xmage-share` of the set is drawn from
  * cards XMage builds only from library classes already used by cards we model, so the compiler's
  * results can be compared card for card with a translator working from XMage.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { compileTarget, pinnedPool, type CompileTarget } from './lib';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { LEDGER_PATH, compileTarget, pinnedPool, type CompileTarget } from './lib';
 
 function arg(name: string): string | undefined {
   const index = process.argv.indexOf(`--${name}`);
@@ -33,6 +36,15 @@ const excluded = new Set(
     ),
 );
 
+const order = arg('order') ?? 'spread';
+if (order !== 'spread' && order !== 'rank') throw new Error('--order must be spread or rank');
+if (process.argv.includes('--exclude-ledger')) {
+  if (!existsSync(LEDGER_PATH))
+    throw new Error(`${LEDGER_PATH} is missing; run \`run.ts ledger\` first`);
+  const ledger = JSON.parse(readFileSync(LEDGER_PATH, 'utf8')) as { cards: { name: string }[] };
+  for (const row of ledger.cards) excluded.add(row.name);
+}
+
 const candidates: CompileTarget[] = [];
 for (const row of pinnedPool()) {
   if (row.card.layout !== 'normal' || excluded.has(row.card.name)) continue;
@@ -45,6 +57,7 @@ candidates.sort((a, b) => a.rank - b.rank);
 /** `n` cards spread evenly over `pool` (already in rank order). */
 function spread(pool: CompileTarget[], n: number): CompileTarget[] {
   if (pool.length <= n) return pool;
+  if (order === 'rank') return pool.slice(0, n);
   return Array.from(
     { length: n },
     (_, index) => pool[Math.floor(((index + 0.5) * pool.length) / n)]!,

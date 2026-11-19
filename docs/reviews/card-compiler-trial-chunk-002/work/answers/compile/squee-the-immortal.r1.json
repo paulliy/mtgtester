@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The card's own permission to cast from graveyard is expressible (castFromGraveyard), but the permission to cast it from exile has no field in the schema."}

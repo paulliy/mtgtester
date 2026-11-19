@@ -1,0 +1,44 @@
+{
+  "name": "Battlefly Swarm",
+  "oracleId": "1396e7f1-ac91-4778-9f71-493c7a44bd51",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{B}: ~ gains deathtouch until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": "source",
+              "keyword": "deathtouch"
+            }
+          ],
+          "description": "{B}: This creature gains deathtouch until end of turn."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"triggerAdditionalTime doubles triggers from a permanent filter with no condition on the event that caused them, so it cannot be limited to triggers caused by casting or copying an instant or sorcery spell."}

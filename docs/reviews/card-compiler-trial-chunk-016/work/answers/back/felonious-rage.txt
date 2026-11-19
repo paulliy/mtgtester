@@ -1,0 +1,2 @@
+Target creature you control gets +2/+0 until end of turn and gains haste until end of turn.
+When that creature dies, create a 2/2 white and blue Detective creature token. This delayed trigger lasts until the cleanup step.

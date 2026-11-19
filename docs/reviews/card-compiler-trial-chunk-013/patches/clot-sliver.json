@@ -1,0 +1,52 @@
+{
+  "name": "Clot Sliver",
+  "oracleId": "2a885729-0618-4a25-b18d-b0587f14718d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "All Slivers have \"{2}: Regenerate this permanent.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "subtype",
+          "value": "Sliver"
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 2,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 0,
+                    "G": 0
+                  },
+                  "colorless": 0
+                }
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "regenerate",
+                  "target": "source"
+                }
+              ],
+              "description": "{2}: Regenerate this permanent."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

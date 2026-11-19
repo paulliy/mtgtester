@@ -1,0 +1,15 @@
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/thran-turbine.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/thran-turbine.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/pulse-of-murasa.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/pulse-of-murasa.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/exsanguinator-cavalry.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/exsanguinator-cavalry.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/descend-upon-the-sinful.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/descend-upon-the-sinful.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/on-thin-ice.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/on-thin-ice.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/bramble-wurm.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/bramble-wurm.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/hard-hitting-question.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/hard-hitting-question.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/samut-vizier-of-naktamun.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/samut-vizier-of-naktamun.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/wurmwall-sweeper.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/wurmwall-sweeper.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/dualcaster-mage.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/dualcaster-mage.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/diary-of-dreams.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/diary-of-dreams.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/thundering-raiju.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/thundering-raiju.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/scale-the-heights.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/scale-the-heights.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/dogged-detective.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/dogged-detective.txt
+docs/reviews/card-compiler-trial-calibration-01/work/prompts/back/horobi-death-s-wail.md	docs/reviews/card-compiler-trial-calibration-01/work/answers/back/horobi-death-s-wail.txt

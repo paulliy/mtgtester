@@ -1,0 +1,1 @@
+{3}, {T}: Put a number of +1/+1 counters on target creature equal to the number of permanents you control that have the creature type Bobblehead. Activate only as a sorcery.

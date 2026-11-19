@@ -271,13 +271,22 @@ beforeAll(async () => {
   const impact = await runCommand(
     'bun',
     ['run', 'card-capabilities', '--primitive-evidence', runDirectory],
-    // About 32 s alone on four idle cores; a CI runner sharing its cores with the card gate's
-    // other test files took over 60 s and the command was killed.
-    { cwd: root, encoding: 'utf8', timeout: 180_000, maxBuffer: 32 * 1024 * 1024 },
+    {
+      cwd: root,
+      encoding: 'utf8',
+      // About 30 s alone on four idle cores, but the card gate runs it beside every other gate
+      // file, and on a CI runner it then passed 60 s and was killed with no output.
+      timeout: 180_000,
+      maxBuffer: 32 * 1024 * 1024,
+    },
   );
   if (impact.status !== 0)
     throw new Error(
-      `Actual eligibility inventory failed: ${impact.error?.message ?? impact.status}\n${impact.stderr}`,
+      `Actual eligibility inventory failed: ${impact.error?.message ?? impact.status}${
+        (impact.error as { signal?: string } | null)?.signal
+          ? ` (killed by ${(impact.error as { signal?: string }).signal})`
+          : ''
+      }\n${impact.stderr}`,
     );
   actualImpact = JSON.parse(impact.stdout);
 }, 305_000);
@@ -451,7 +460,7 @@ describe('primitive evidence and eligibility', { timeout: 60_000 }, () => {
       manaCost: '{0}',
       oracleText: 'You gain 3 life.',
     });
-    const definition = interpretCard(card);
+    const definition = structuredClone(interpretCard(card));
     if (variant === 'experimental')
       definition.spellAbility!.effects = [{ op: 'mill', count: { kind: 'const', n: 1 } }];
     if (variant === 'outsideScope')

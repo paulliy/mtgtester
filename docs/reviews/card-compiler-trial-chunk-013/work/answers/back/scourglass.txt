@@ -1,0 +1,2 @@
+Activate only during the upkeep step of your turn.
+{T}, Sacrifice this: Destroy each permanent on the battlefield that is neither an artifact nor a land.

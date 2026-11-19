@@ -1,0 +1,1 @@
+Whenever you declare attackers, if you attack with at least two creatures with flying, draw a card.

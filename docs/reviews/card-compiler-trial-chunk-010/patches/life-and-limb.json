@@ -1,0 +1,87 @@
+{
+  "name": "Life and Limb",
+  "oracleId": "d0d7250b-70d2-43f9-ae15-837227061ccb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "All Forests and all Saprolings are 1/1 green Saproling creatures and Forest lands in addition to their other types."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Forest"
+            },
+            {
+              "kind": "subtype",
+              "value": "Saproling"
+            }
+          ]
+        },
+        "op": {
+          "layer": 4,
+          "addTypes": [
+            "Creature",
+            "Land"
+          ],
+          "addSubtypes": [
+            "Saproling",
+            "Forest"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Forest"
+            },
+            {
+              "kind": "subtype",
+              "value": "Saproling"
+            }
+          ]
+        },
+        "op": {
+          "layer": 5,
+          "setColors": [
+            "G"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Forest"
+            },
+            {
+              "kind": "subtype",
+              "value": "Saproling"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "const",
+            "n": 1
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      }
+    ]
+  }
+}

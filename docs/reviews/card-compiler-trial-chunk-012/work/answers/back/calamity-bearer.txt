@@ -1,0 +1,1 @@
+If a source you control with subtype Giant would deal damage, it deals double that damage instead.

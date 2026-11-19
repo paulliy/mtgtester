@@ -1,0 +1,1 @@
+{3}{W}{W}: Return this card from your graveyard to your hand. Activate only during your upkeep and only while this card is in a graveyard.

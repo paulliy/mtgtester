@@ -1,0 +1,1 @@
+When this creature dies, create a token: a legendary 2/1 black Skeleton creature token (type line and name hidden in this data) with "This creature can't block." and "When this token leaves the battlefield, return target card named by this token's hidden name from your graveyard to your hand."

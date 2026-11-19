@@ -12,7 +12,6 @@ import {
   OTHER,
   ofType,
   OPPONENTS,
-  powerAtLeast,
   YOURS,
 } from '../selector';
 import { counterSpellTarget } from '../target-builders';
@@ -70,19 +69,10 @@ export function registerPr10RetargetAndCopyOverrides(): void {
   replaceCard(
     'c20a96f7-aa5a-4c15-b8b1-806685c99b27',
     'Bolt Bend',
-    [
-      'This spell costs {3} less to cast if you control a creature with power 4 or greater.',
-      'Change the target of target spell or ability with a single target.',
-    ],
+    // The cost line ("costs {3} less to cast if you control a creature with power 4 or greater")
+    // is interpreted as a conditional self reduction; only the retarget line is overridden.
+    ['Change the target of target spell or ability with a single target.'],
     {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: constant(3),
-          selfOnly: true,
-          condition: countPermanents(allOf(ofType('Creature'), powerAtLeast(4)), 'you', '>=', 1),
-        },
-      ],
       spellAbility: spell({
         targets: bend.targets,
         effects: [{ op: 'changeSingleTarget', target: bend.slot.object }],
@@ -849,7 +839,6 @@ export function registerPr10CharacteristicsOverrides(): void {
       "+2: During target player's next turn, each creature that player controls attacks if able.",
       '−2: ~ deals 3 damage to each tapped creature target player controls.',
       '−8: Target player gets an emblem with "Whenever you activate an ability that isn\'t a mana ability, copy it. You may choose new targets for the copy."',
-      'Partner with Will Kenrith',
     ],
     {
       activatedAbilities: [

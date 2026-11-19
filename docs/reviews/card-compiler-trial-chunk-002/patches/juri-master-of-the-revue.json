@@ -1,0 +1,38 @@
+{
+  "name": "Juri, Master of the Revue",
+  "oracleId": "3364bad6-6d0a-4141-b410-86e3d9e1916e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ dies, it deals damage equal to its power to any target."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "anyTarget"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "powerOfSource"
+            }
+          }
+        ],
+        "description": "When Juri dies, it deals damage equal to its power to any target."
+      }
+    ]
+  }
+}

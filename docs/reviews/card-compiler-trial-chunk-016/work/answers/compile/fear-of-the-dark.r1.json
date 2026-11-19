@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The condition \"defending player controls no Glimmer creatures\" cannot be expressed: a countPermanents condition with scope opponents pools every opponent's permanents, and no condition reads the attacked player's permanents."}

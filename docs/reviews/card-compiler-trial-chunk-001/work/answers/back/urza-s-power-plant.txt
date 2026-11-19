@@ -1,0 +1,1 @@
+{T}: Add {C}. If you control at least one Urza's Mine and at least one Urza's Tower, add {C}{C} instead.

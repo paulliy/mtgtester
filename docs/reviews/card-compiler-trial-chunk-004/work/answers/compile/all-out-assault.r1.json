@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The second sentence, \"When you next attack this turn, untap each creature you control,\" is a delayed trigger on a future attack by you, and registerDelayedTrigger takes only a bare event name with no attacker filter, so it cannot say \"you next attack.\""}

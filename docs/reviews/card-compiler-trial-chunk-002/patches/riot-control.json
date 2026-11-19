@@ -1,0 +1,33 @@
+{
+  "name": "Riot Control",
+  "oracleId": "a189e20f-1072-4608-9e50-da2a9d7a7ee3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You gain 1 life for each creature your opponents control. Prevent all damage that would be dealt to you this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "scope": "opponents"
+          }
+        },
+        {
+          "op": "createDamageShield",
+          "player": "you"
+        }
+      ],
+      "description": "You gain 1 life for each creature your opponents control. Prevent all damage that would be dealt to you this turn."
+    }
+  }
+}

@@ -1,0 +1,2 @@
+Choose six target nonland permanents.
+Return each of the chosen permanents to its owner's hand.

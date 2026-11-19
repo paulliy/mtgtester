@@ -1,0 +1,1 @@
+At the beginning of your end step, if you control no Food, create a Food artifact token with "{2}, {T}, Sacrifice this artifact: You gain 3 life."

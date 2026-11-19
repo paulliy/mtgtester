@@ -1,0 +1,39 @@
+{
+  "name": "Funeral Rites",
+  "oracleId": "771210f7-0f00-4438-a886-a1f716e3d80e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You draw two cards, lose 2 life, then mill two cards."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "loseLife",
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "mill",
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        }
+      ],
+      "description": "You draw two cards, lose 2 life, then mill two cards."
+    }
+  }
+}
