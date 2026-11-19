@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","controller":"you"}],"effects":[{"op":"becomeCreatureUntilEot","target":0,"subtypes":[],"power":4,"toughness":4,"keywords":["flying","hexproof"]}],"description":"Until end of turn, target creature you control has base power and toughness 4/4 and gains flying and hexproof."}}}

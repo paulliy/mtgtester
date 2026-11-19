@@ -1,0 +1,3 @@
+Choose target creature you control and target creature an opponent controls.
+If the first target is legendary, put a +1/+1 counter on the first target. Otherwise, nothing happens.
+Then those creatures fight each other.

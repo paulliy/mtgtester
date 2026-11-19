@@ -1,0 +1,22 @@
+{
+  "name": "Cursed Totem",
+  "oracleId": "6225a704-430a-4f56-ad87-0e8d87f285f5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Activated abilities of creatures can't be activated."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "cantActivateAbilities",
+        "who": "all",
+        "yourTurnOnly": false,
+        "filter": {
+          "kind": "type",
+          "value": "Creature"
+        }
+      }
+    ]
+  }
+}

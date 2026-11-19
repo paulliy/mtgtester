@@ -1,0 +1,2 @@
+Equipped creature has first strike.
+Equipped creature gets +X/+0, where X is the number of instant and sorcery cards in your graveyard.

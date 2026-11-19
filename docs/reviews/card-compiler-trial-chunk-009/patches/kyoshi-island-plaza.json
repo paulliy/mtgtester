@@ -1,0 +1,70 @@
+{
+  "name": "Kyoshi Island Plaza",
+  "oracleId": "c0cdc333-6c5a-401c-9810-220d2027f2fe",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ enters, search your library for up to X basic land cards, where X is the number of Shrines you control. Put those cards onto the battlefield tapped, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "destinations": [
+              {
+                "zone": "battlefield",
+                "tapped": true
+              }
+            ],
+            "count": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Shrine"
+                  }
+                ]
+              },
+              "scope": "you"
+            },
+            "allowFailToFind": true
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "When Kyoshi Island Plaza enters, search your library for up to X basic land cards, where X is the number of Shrines you control. Put those cards onto the battlefield tapped, then shuffle."
+      }
+    ]
+  }
+}

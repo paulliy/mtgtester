@@ -1,0 +1,1 @@
+Whenever a nontoken Zombie you control enters, create a token that is a copy of it.

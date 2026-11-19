@@ -1,0 +1,1 @@
+Whenever this creature deals combat damage to a player, you draw cards equal to the damage dealt, and that player draws cards equal to the damage dealt.

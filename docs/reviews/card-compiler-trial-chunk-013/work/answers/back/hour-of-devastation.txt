@@ -1,0 +1,2 @@
+Creatures lose indestructible until end of turn.
+This spell deals 5 damage to each creature and each planeswalker that isn't a Bolas.

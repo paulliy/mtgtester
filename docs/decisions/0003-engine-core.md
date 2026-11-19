@@ -1,6 +1,8 @@
 # 0003 — Engine core (Phase 2)
 
-Status: accepted (implementation) — 2026-07-24
+Date: 2026-07-24
+Status: Accepted (2026-07-24)
+Status note: implementation
 Context: brief §5 (rules engine), §6 (hybrid boundary), §14.1 (Phase 2), §12 (testing).
 
 Phase 2 delivers the deterministic rules engine: game state with identity-stable objects,

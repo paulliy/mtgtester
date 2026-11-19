@@ -1,0 +1,40 @@
+{
+  "name": "Empyrial Plate",
+  "oracleId": "e95e100e-4886-4bde-825c-017e878ac825",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equipped creature gets +1/+1 for each card in your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": {
+            "kind": "countCardsInZone",
+            "zone": "hand",
+            "selector": {
+              "kind": "allOf",
+              "of": []
+            },
+            "owner": "you"
+          },
+          "toughness": {
+            "kind": "countCardsInZone",
+            "zone": "hand",
+            "selector": {
+              "kind": "allOf",
+              "of": []
+            },
+            "owner": "you"
+          }
+        }
+      }
+    ]
+  }
+}

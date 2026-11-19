@@ -1,0 +1,4 @@
+When this creature dies, create a legendary white Equipment artifact token with the following abilities.
+Equipped creature gets +2/+0.
+Whenever equipped creature attacks, tap target creature that defending player controls.
+{2}: Attach this Equipment to target creature you control. Activate only as a sorcery.

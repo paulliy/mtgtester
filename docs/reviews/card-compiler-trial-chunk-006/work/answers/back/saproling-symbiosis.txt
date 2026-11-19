@@ -1,0 +1,2 @@
+You may cast this spell for {5}{G} rather than paying its mana cost. You may cast it any time you could cast an instant.
+This spell does nothing.

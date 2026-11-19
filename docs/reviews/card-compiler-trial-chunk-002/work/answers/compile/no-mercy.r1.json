@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema does not say which object a playerDealtDamage trigger exposes for 'destroy it', and it has no filter restricting the damage source to creatures."}

@@ -1,0 +1,95 @@
+{
+  "name": "Sewer-veillance Cam",
+  "oracleId": "25c83d45-581f-48ba-b6bb-feb66e8a65c7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this artifact enters or leaves the battlefield, you may tap or untap target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ],
+        "effects": [
+          {
+            "op": "chooseOne",
+            "options": [
+              {
+                "effects": [
+                  {
+                    "op": "tapTarget",
+                    "target": 0
+                  }
+                ],
+                "description": "Tap target creature."
+              },
+              {
+                "effects": [
+                  {
+                    "op": "untapTarget",
+                    "target": 0
+                  }
+                ],
+                "description": "Untap target creature."
+              }
+            ]
+          }
+        ],
+        "description": "When this artifact enters, you may tap or untap target creature."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "leavesBattlefield",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ],
+        "effects": [
+          {
+            "op": "chooseOne",
+            "options": [
+              {
+                "effects": [
+                  {
+                    "op": "tapTarget",
+                    "target": 0
+                  }
+                ],
+                "description": "Tap target creature."
+              },
+              {
+                "effects": [
+                  {
+                    "op": "untapTarget",
+                    "target": 0
+                  }
+                ],
+                "description": "Untap target creature."
+              }
+            ]
+          }
+        ],
+        "description": "When this artifact leaves the battlefield, you may tap or untap target creature."
+      }
+    ]
+  }
+}

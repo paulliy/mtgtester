@@ -1,0 +1,49 @@
+{
+  "name": "Oblivion's Hunger",
+  "oracleId": "517be4da-9aa0-4a83-a559-962df0450f2c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control gains indestructible until end of turn. Draw a card if that creature has a +1/+1 counter on it."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "description": "Target creature you control gains indestructible until end of turn. Draw a card if that creature has a +1/+1 counter on it.",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "indestructible"
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "hasCounter",
+              "counter": "+1/+1"
+            }
+          },
+          "checkTarget": 0,
+          "then": [
+            {
+              "op": "draw",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "else": []
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"entersAsCopy's addTypes adds card types, and no field adds the Illusion creature subtype; the granted 'becomes the target, sacrifice it' ability has no entersAsCopy form to attach it."}

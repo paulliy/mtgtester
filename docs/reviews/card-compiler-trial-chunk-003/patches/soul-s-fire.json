@@ -1,0 +1,35 @@
+{
+  "name": "Soul's Fire",
+  "oracleId": "62d7ed6e-c386-477e-b155-982c3790f842",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control deals damage equal to its power to any target."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "anyTarget"
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamage",
+          "target": 1,
+          "amount": {
+            "kind": "powerOfTarget",
+            "target": 0
+          },
+          "source": 0
+        }
+      ],
+      "description": "Target creature you control deals damage equal to its power to any target."
+    }
+  }
+}

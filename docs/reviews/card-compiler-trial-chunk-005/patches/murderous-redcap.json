@@ -1,0 +1,38 @@
+{
+  "name": "Murderous Redcap",
+  "oracleId": "a498bc70-36e7-4454-bc44-906893df38b8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, it deals damage equal to its power to any target."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "anyTarget"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "powerOfSource"
+            }
+          }
+        ],
+        "description": "When this creature enters, it deals damage equal to its power to any target."
+      }
+    ]
+  }
+}

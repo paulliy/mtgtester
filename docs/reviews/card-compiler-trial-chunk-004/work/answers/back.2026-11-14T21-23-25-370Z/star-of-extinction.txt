@@ -1,0 +1,2 @@
+Destroy target land.
+This spell deals 20 damage to each creature and each planeswalker.

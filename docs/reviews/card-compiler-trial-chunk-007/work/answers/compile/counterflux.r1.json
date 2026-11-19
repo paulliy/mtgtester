@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"spell","controller":"opponent"}],"effects":[{"op":"counter","target":0}],"description":"Counter target spell you don't control."}}}

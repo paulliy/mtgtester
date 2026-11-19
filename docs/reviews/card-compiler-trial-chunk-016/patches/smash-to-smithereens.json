@@ -1,0 +1,36 @@
+{
+  "name": "Smash to Smithereens",
+  "oracleId": "e0583f29-c344-4b56-b0dc-bef1089a95c7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target artifact. ~ deals 3 damage to that artifact's controller."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "artifact"
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroy",
+          "target": 0
+        },
+        {
+          "op": "dealDamage",
+          "target": {
+            "controllerOf": 0
+          },
+          "amount": {
+            "kind": "const",
+            "n": 3
+          }
+        }
+      ],
+      "description": "Destroy target artifact. Smash to Smithereens deals 3 damage to that artifact's controller."
+    }
+  }
+}

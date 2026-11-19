@@ -1,0 +1,2 @@
+Whenever an opponent casts a spell during your turn, create a green and white Elemental creature token. Its power and toughness are each equal to the number of creatures you control.
+Whenever this creature dies, create a green and white Elemental creature token. Its power and toughness are each equal to the number of creatures you control.

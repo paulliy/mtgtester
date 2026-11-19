@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The library search must happen only if a discard was actually made, and no effect ties a search to a completed discard (mayDiscardThenDraw only draws)."}

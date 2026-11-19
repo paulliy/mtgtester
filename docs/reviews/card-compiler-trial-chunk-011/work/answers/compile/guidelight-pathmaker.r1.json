@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The found artifact's destination depends on its mana value (battlefield if 2 or less, otherwise hand), but searchLibrary fixes its destinations per card before the card is revealed, so no single search can route by mana value."}

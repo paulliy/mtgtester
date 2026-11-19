@@ -1,0 +1,15 @@
+{
+  "name": "Noble's Purse",
+  "oracleId": "f3f10173-fead-48a2-9726-a4e7efec3951",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ enters tapped and with three coin counters on it."
+  ],
+  "compose": "append",
+  "def": {
+    "entersTapped": true,
+    "entersWithCounters": {
+      "coin": 3
+    }
+  }
+}

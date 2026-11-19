@@ -1,0 +1,3 @@
+Gain control of target creature an opponent controls until end of turn.
+Untap that creature.
+That creature gains haste until end of turn.

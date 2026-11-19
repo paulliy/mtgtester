@@ -1,0 +1,1 @@
+When this creature dies, create a token that is a 2/2 red Dragon creature with flying. That token has "{R}: This creature gets +1/+0 until end of turn."

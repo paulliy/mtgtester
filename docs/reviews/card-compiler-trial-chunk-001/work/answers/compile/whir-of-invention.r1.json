@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"searchLibrary's manaValueAtMost takes a fixed number, so it cannot bound the artifact by the announced X, and the X-bounded search that does take a Value (searchLibraryAndOrGraveyardToBattlefield) also allows the graveyard."}

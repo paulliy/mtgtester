@@ -1,0 +1,49 @@
+{
+  "name": "Guardian Idol",
+  "oracleId": "829d2e11-192f-4093-99f8-e13767b321a2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}: ~ becomes a 2/2 Golem artifact creature until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "becomeCreatureUntilEot",
+              "target": "source",
+              "subtypes": [
+                "Golem"
+              ],
+              "power": 2,
+              "toughness": 2,
+              "keywords": []
+            }
+          ],
+          "description": "{2}: This artifact becomes a 2/2 Golem artifact creature until end of turn."
+        }
+      }
+    ]
+  }
+}

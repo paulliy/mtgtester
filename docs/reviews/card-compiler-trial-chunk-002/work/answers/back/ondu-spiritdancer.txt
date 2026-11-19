@@ -1,0 +1,1 @@
+Once each turn, when a permanent you control that is an enchantment enters, you may create a token that is a copy of that permanent.

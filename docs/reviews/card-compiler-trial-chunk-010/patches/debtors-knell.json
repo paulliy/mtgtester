@@ -1,0 +1,38 @@
+{
+  "name": "Debtors' Knell",
+  "oracleId": "a9ff368b-5208-4ada-bb99-eccbf8eaea28",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "cardInGraveyard",
+            "graveyardOwnerScope": "any",
+            "filter": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "graveyardToBattlefield",
+            "target": 0
+          }
+        ],
+        "description": "At the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control."
+      }
+    ]
+  }
+}

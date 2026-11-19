@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A single library search filter cannot require one Aura and one Equipment as separate 'and/or' picks; searchLibrary applies one filter to every destination, so it would allow two of either type."}

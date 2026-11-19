@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"loyalty","delta":-2}],"timing":"sorcery","oncePerTurn":true,"ability":{"kind":"activated","targets":[],"effects":[{"op":"amass","subtype":"Zombie","count":{"kind":"const","n":2}}],"description":"−2: Amass Zombies 2."}}]}}

@@ -1,0 +1,4 @@
+Enchanted creature's card types become Creature and its subtypes become Skeleton.
+Enchanted creature is black.
+Enchanted creature loses all abilities.
+Enchanted creature has base power and toughness 1/1.

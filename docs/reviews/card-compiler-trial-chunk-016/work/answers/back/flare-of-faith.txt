@@ -1,0 +1,2 @@
+Target creature.
+If target creature is a Human creature, it gets +3/+3 until end of turn and gains indestructible until end of turn. Otherwise, it gets +2/+2 until end of turn.

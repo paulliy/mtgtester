@@ -1,0 +1,5 @@
+docs/reviews/card-compiler-trial-chunk-010/work/prompts/compile/mindwhisker.r2.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/compile/mindwhisker.r2.json
+docs/reviews/card-compiler-trial-chunk-010/work/prompts/compile/emergency-eject.r2.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/compile/emergency-eject.r2.json
+docs/reviews/card-compiler-trial-chunk-010/work/prompts/compile/sardian-avenger.r2.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/compile/sardian-avenger.r2.json
+docs/reviews/card-compiler-trial-chunk-010/work/prompts/compile/cling-to-dust.r2.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/compile/cling-to-dust.r2.json
+docs/reviews/card-compiler-trial-chunk-010/work/prompts/compile/mirrorshell-crab.r2.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/compile/mirrorshell-crab.r2.json

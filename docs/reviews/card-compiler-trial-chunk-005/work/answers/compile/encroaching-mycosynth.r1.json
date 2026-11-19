@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The second sentence (permanent spells you control and nonland permanent cards you own outside the battlefield are artifacts too) needs alsoTypesOffBattlefield to match nonland permanents, but its ifType is a single printed type string."}

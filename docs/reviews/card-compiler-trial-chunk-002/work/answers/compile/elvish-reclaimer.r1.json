@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"self"},"op":{"layer":7,"sublayer":"d","power":2,"toughness":2},"condition":{"kind":"compareValues","left":{"kind":"countCardsInZone","zone":"graveyard","selector":{"kind":"type","value":"Land"},"owner":"you"},"cmp":">=","right":{"kind":"const","n":3}}}]}}

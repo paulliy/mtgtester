@@ -1,0 +1,38 @@
+{
+  "name": "Eivor, Battle-Ready",
+  "oracleId": "1b4a07bd-5345-4520-bd05-b5173e08135c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ attacks, it deals damage equal to the number of Equipment you control to each opponent."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "eachOpponentDamage",
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "subtype",
+                "value": "Equipment"
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "Whenever Eivor attacks, it deals damage equal to the number of Equipment you control to each opponent."
+      }
+    ]
+  }
+}

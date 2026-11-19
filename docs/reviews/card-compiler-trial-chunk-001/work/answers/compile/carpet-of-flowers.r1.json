@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The intervening-if 'if you haven't added mana with this ability this turn' has no schema form: oncePerTurn limits trigger firings, not mana added by this ability, so a declined first main phase would wrongly block the second."}

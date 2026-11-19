@@ -62,7 +62,7 @@ function ruleSource(
     power: null,
     toughness: null,
   });
-  const def = interpretCard(printed);
+  const def = structuredClone(interpretCard(printed));
   def.ruleStatics = [{ kind: 'spellCastLimit', category, limit: 1 }];
   ctx.defs.set(def.oracleId, def);
   return spawn(ctx, 'P1', printed);

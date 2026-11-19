@@ -1,0 +1,33 @@
+{
+  "name": "Deathcap Cultivator",
+  "oracleId": "26e555f1-e0ed-4b84-8783-1c0c968f462d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ has deathtouch as long as there are four or more card types among cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "deathtouch"
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "cardTypesInYourGraveyard"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 4
+          }
+        }
+      }
+    ]
+  }
+}

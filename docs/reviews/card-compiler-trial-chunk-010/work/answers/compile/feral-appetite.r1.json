@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no documented op that exiles a target graveyard card and creates a token only when that exiled card is a creature card; exileGraveyardCreateTokens is undocumented about its creature condition, and exileTargetGraveyardAndBuffIfCreature buffs the source instead of creating a token."}

@@ -1,0 +1,1 @@
+This spell costs {2} less to cast if an opponent controls at least one green permanent.

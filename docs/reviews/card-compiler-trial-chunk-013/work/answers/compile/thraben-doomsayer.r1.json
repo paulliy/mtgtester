@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"other"},{"kind":"controller","who":"you"},{"kind":"type","value":"Creature"}]},"op":{"layer":7,"sublayer":"d","power":2,"toughness":2},"condition":{"kind":"compareValues","left":{"kind":"lifeTotal","scope":"you"},"cmp":"<=","right":{"kind":"const","n":5}}}]}}

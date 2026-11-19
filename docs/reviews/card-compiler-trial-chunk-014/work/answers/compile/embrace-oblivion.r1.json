@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"permanent","filter":{"kind":"anyOf","of":[{"kind":"type","value":"Creature"},{"kind":"subtype","value":"Spacecraft"}]}}],"effects":[{"op":"destroy","target":0}],"description":"Destroy target creature or Spacecraft."}}}

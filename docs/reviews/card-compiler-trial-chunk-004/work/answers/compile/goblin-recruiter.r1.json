@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"\"search for any number of Goblin cards ... put those cards on top in any order\" needs an unbounded found-card count (searchLibrary has one destination per card) and a chosen order for the cards placed on top, which no schema field expresses."}

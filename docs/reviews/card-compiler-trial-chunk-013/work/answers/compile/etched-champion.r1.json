@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"self"},"op":{"layer":6,"addProtection":["W","U","B","R","G"]},"condition":{"kind":"countPermanents","selector":{"kind":"type","value":"Artifact"},"scope":"you","cmp":">=","n":3}}]}}

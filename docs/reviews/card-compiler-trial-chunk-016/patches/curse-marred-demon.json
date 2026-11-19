@@ -1,0 +1,49 @@
+{
+  "name": "Curse-Marred Demon",
+  "oracleId": "f30a084c-5705-40f5-8e0d-2083d33973c7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, search your library for a card, put it into your hand, shuffle, then discard a card at random."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "allOf",
+              "of": []
+            },
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ]
+          },
+          {
+            "op": "shuffle"
+          },
+          {
+            "op": "discardAtRandom",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "When this creature enters, search your library for a card, put it into your hand, shuffle, then discard a card at random."
+      }
+    ]
+  }
+}

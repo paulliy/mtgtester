@@ -1,0 +1,43 @@
+{
+  "name": "Bogardan Hellkite",
+  "oracleId": "699bc130-2f1f-4bc8-a25f-9329e40efbb1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, it deals 5 damage divided as you choose among any number of targets."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "anyTarget",
+            "count": {
+              "min": 0,
+              "max": 999
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamageDivided",
+            "targetSlot": 0,
+            "total": {
+              "kind": "const",
+              "n": 5
+            }
+          }
+        ],
+        "description": "When this creature enters, it deals 5 damage divided as you choose among any number of targets."
+      }
+    ]
+  }
+}

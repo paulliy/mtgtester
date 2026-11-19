@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The intervening-if 'that player has another opponent who isn't being attacked' has no Condition kind, since the schema can test attack groups and opponent counts but not whether a different opponent is left unattacked."}

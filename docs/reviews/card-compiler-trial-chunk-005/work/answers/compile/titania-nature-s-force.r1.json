@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"playFromZone","zone":"graveyard","filter":{"kind":"subtype","value":"Forest"}}]}}

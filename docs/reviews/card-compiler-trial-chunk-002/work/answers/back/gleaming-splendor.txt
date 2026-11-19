@@ -1,0 +1,1 @@
+{2}{W}: Choose two target players. The second must be a player other than the first. The first target player draws a card. The second target player draws a card.

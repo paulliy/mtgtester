@@ -1,0 +1,1 @@
+When this leaves the battlefield, exile each token on the battlefield that has the subtype Serf.

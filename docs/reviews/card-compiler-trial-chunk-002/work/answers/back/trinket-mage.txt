@@ -1,0 +1,1 @@
+When this enters, you may search your library for an artifact card with mana value 1 or less, reveal it, and put it into your hand. Then shuffle.

@@ -1,6 +1,7 @@
 # ADR 0027: Modular AI context, plan lifecycle, and fresh-engine replay
 
-Status: accepted for benchmark evaluation; production toggles remain off by default.
+Status: Accepted
+Status note: for benchmark evaluation; production toggles remain off by default. The ADR records no date.
 
 ## Decision
 

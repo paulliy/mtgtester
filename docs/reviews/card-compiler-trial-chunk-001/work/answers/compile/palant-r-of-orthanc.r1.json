@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The influence-counter mill count is dynamic (X = influence counters on the source) and the opponent's refusal costs life equal to the total mana value of the milled cards; opponentMayDrawOrMillThenDamage takes fixed counts and deals damage rather than causing life loss, so the line cannot be modeled exactly."}

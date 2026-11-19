@@ -1,0 +1,1 @@
+Whenever equipped creature deals combat damage to a player, blink up to one target creature you own. Return that creature under the control of this Equipment's controller. Then search a library for a basic land card and put it onto the battlefield. Then shuffle.

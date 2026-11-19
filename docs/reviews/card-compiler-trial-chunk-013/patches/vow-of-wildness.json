@@ -1,0 +1,42 @@
+{
+  "name": "Vow of Wildness",
+  "oracleId": "569a65fb-e35f-4388-ab49-f57be46b4889",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature gets +3/+3, has trample, and can't attack you or planeswalkers you control."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 3,
+          "toughness": 3
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "trample"
+        }
+      }
+    ],
+    "ruleStatics": [
+      {
+        "kind": "attackRestriction",
+        "filter": {
+          "kind": "attachedToSource"
+        },
+        "includePlaneswalkers": true
+      }
+    ]
+  }
+}

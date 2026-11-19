@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Gain life equal to the damage dealt this way' needs the damage actually dealt by an earlier effect of the same spell (it changes under prevention or damage doubling); the schema has no such value, and damageDealt is trigger-only."}

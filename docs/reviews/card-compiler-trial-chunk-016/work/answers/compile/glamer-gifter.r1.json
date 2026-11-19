@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema can set base power and toughness until end of turn (becomeCreatureUntilEot) but cannot grant all creature types until end of turn; addAllCreatureTypes exists only as a static layer-4 op."}

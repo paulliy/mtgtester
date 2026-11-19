@@ -1,0 +1,1 @@
+As long as this enchantment has a quest counter on it, where the number of quest counters meets a hidden comparison with 7 (the comparison is not shown), creatures you control get +5/+5.

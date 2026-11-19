@@ -1,0 +1,2 @@
+Draw a card.
+You get {E}{E}.

@@ -1,0 +1,39 @@
+{
+  "name": "Overwhelmed Apprentice",
+  "oracleId": "e68d6459-2f32-4320-a062-6d33f85348f9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, each opponent mills two cards. Then you scry 2."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "millEachPlayer",
+            "scope": "opponents",
+            "count": {
+              "kind": "const",
+              "n": 2
+            }
+          },
+          {
+            "op": "scry",
+            "count": 2
+          }
+        ],
+        "description": "When this creature enters, each opponent mills two cards. Then you scry 2."
+      }
+    ]
+  }
+}

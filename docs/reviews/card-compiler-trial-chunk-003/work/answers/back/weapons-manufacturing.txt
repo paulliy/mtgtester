@@ -1,0 +1,1 @@
+Whenever an artifact you control that isn't a token enters, create a colorless Munitions artifact token with "When this token leaves the battlefield, it deals 2 damage to any target."

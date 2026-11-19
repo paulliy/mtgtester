@@ -1,0 +1,33 @@
+{
+  "name": "Mr. Orfeo, the Boulder",
+  "oracleId": "58447f16-1df9-4e9a-bb22-b9aad042055a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you attack, double target creature's power until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attackDeclared",
+          "attacker": "you"
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ],
+        "effects": [
+          {
+            "op": "doublePowerTarget",
+            "target": 0
+          }
+        ],
+        "description": "Whenever you attack, double target creature's power until end of turn."
+      }
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "Thraben Doomsayer",
+  "oracleId": "e05e70cd-7af3-428e-82e3-73418914d727",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as you have 5 or less life, other creatures you control get +2/+2."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 2
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "lifeTotal",
+            "scope": "you"
+          },
+          "cmp": "<=",
+          "right": {
+            "kind": "const",
+            "n": 5
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,2 @@
+When this creature enters, create a green and white Elemental creature token. Its power and toughness are each equal to the number of creatures you control.
+Whenever this creature attacks, create a green and white Elemental creature token. Its power and toughness are each equal to the number of creatures you control.

@@ -1,0 +1,2 @@
+This creature can't block.
+This creature can't be blocked.

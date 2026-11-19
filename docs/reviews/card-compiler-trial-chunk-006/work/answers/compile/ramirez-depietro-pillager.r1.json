@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Exiling the top card of the damaged player's library with a cast permission that lasts as long as it stays exiled has no schema form, since exileFaceDownPlayable always exiles face down after a look and the other exile ops grant casting only until end of turn."}

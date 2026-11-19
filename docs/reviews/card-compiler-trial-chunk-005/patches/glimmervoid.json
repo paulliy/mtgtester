@@ -1,0 +1,39 @@
+{
+  "name": "Glimmervoid",
+  "oracleId": "b92e9854-4527-4133-8615-e282a213e7e3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of the end step, if you control no artifacts, sacrifice this land."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "each",
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "type",
+              "value": "Artifact"
+            },
+            "scope": "you",
+            "cmp": "<=",
+            "n": 0
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrifice",
+            "target": "source"
+          }
+        ],
+        "description": "At the beginning of the end step, if you control no artifacts, sacrifice this land."
+      }
+    ]
+  }
+}

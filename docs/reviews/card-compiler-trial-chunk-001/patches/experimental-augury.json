@@ -1,0 +1,36 @@
+{
+  "name": "Experimental Augury",
+  "oracleId": "2ee08dcd-5558-45be-b619-8a550f3865ad",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. Proliferate."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "lookAtTopN",
+          "count": 3,
+          "mayPut": {
+            "filter": {
+              "kind": "allOf",
+              "of": []
+            },
+            "destination": {
+              "zone": "hand"
+            },
+            "required": true
+          },
+          "rest": "bottomAnyOrder"
+        },
+        {
+          "op": "proliferate"
+        }
+      ],
+      "description": "Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. Proliferate."
+    }
+  }
+}

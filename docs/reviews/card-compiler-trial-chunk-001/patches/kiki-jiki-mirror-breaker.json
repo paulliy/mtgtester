@@ -1,0 +1,52 @@
+{
+  "name": "Kiki-Jiki, Mirror Breaker",
+  "oracleId": "a34b7416-cfe3-4a1e-a8c1-a3056b747519",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Create a token that's a copy of target nonlegendary creature you control, except it has haste. Sacrifice it at the beginning of the next end step."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you",
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                }
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "createTokenCopyOf",
+              "ref": 0,
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "addKeywords": [
+                "haste"
+              ],
+              "sacrificeAt": "endStep"
+            }
+          ],
+          "description": "{T}: Create a token that's a copy of target nonlegendary creature you control, except it has haste. Sacrifice it at the beginning of the next end step."
+        }
+      }
+    ]
+  }
+}

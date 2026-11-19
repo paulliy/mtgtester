@@ -1,0 +1,83 @@
+{
+  "name": "Sandstorm Salvager",
+  "oracleId": "ec19a9bc-6fc1-4150-976b-37a47b165016",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}, {T}: Put a +1/+1 counter on each creature token you control. They gain trample until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "isToken"
+                  }
+                ]
+              },
+              "counter": "+1/+1",
+              "count": 1
+            },
+            {
+              "op": "grantKeywordEachUntilEot",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "isToken"
+                  }
+                ]
+              },
+              "keyword": "trample"
+            }
+          ],
+          "description": "{2}, {T}: Put a +1/+1 counter on each creature token you control. They gain trample until end of turn."
+        }
+      }
+    ]
+  }
+}

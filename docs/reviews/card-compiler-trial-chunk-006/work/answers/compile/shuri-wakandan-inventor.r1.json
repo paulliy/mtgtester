@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"becomeCopyOfTarget has no way to strip the Legendary supertype (no removeSupertypes field; only entersAsCopy has one), so 'except it isn't legendary' cannot be expressed."}

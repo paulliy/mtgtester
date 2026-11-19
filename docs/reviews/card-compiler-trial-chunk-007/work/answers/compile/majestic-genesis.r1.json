@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"lookAtTopN takes a fixed numeric count, not a Value, so 'reveal the top X cards, where X is the greatest mana value of a commander you own' cannot be expressed."}

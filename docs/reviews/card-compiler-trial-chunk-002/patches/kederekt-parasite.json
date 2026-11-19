@@ -1,0 +1,43 @@
+{
+  "name": "Kederekt Parasite",
+  "oracleId": "fc7b46af-6c07-455a-99c7-f1bccaa2a5f4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an opponent draws a card, if you control a red permanent, you may have this creature deal 1 damage to that player."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "drawsCard",
+          "player": "opponent",
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "color",
+              "value": "R"
+            },
+            "scope": "you",
+            "cmp": ">=",
+            "n": 1
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever an opponent draws a card, if you control a red permanent, you may have this creature deal 1 damage to that player."
+      }
+    ]
+  }
+}

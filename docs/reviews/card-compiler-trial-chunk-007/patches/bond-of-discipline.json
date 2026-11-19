@@ -1,0 +1,51 @@
+{
+  "name": "Bond of Discipline",
+  "oracleId": "00e9957a-5684-4a07-954e-8161925fefe4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap all creatures your opponents control. Creatures you control gain lifelink until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "tapEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            ]
+          }
+        },
+        {
+          "op": "grantKeywordEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "keyword": "lifelink"
+        }
+      ],
+      "description": "Tap all creatures your opponents control. Creatures you control gain lifelink until end of turn."
+    }
+  }
+}

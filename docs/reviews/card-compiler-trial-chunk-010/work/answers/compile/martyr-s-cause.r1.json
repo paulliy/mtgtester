@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot scope a damage-prevention shield from a chosen source to damage dealt to any target: createDamageShield covers only damage to you (player) or to one object named by a target, so the 'any target' scope has no form."}

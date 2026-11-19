@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A's counter target must be a creature you control; Text B's target is any creature, so it can put the counter on an opponent's creature.","Text A counts only Equipment you control as a modification; Text B counts any equipped creature, so equipment controlled by an opponent would count in B but not in A."]}

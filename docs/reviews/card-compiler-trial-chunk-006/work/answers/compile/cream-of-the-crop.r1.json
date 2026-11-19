@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The look-at-top count must be the entering creature's power, but lookAtTopN takes only a fixed number, so a dynamic count from the trigger object cannot be expressed."}

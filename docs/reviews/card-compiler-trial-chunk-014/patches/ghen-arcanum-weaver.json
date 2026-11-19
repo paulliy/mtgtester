@@ -1,0 +1,70 @@
+{
+  "name": "Ghen, Arcanum Weaver",
+  "oracleId": "6ac59552-9562-492c-aea4-4d64bad58e3e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{R}{W}{B}, {T}, Sacrifice an enchantment: Return target enchantment card from your graveyard to the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 1,
+                "U": 0,
+                "B": 1,
+                "R": 1,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "filter": {
+                "kind": "type",
+                "value": "Enchantment"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToBattlefield",
+              "target": 0
+            }
+          ],
+          "description": "{R}{W}{B}, {T}, Sacrifice an enchantment: Return target enchantment card from your graveyard to the battlefield."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+This spell costs {2} less to cast as long as you control at least one Human creature and at least one creature that isn't a Human.

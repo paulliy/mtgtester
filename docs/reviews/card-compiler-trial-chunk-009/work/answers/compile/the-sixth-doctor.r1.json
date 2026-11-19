@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"copyCastSpell has no way to make the copy not legendary (the \"except the copy isn't legendary\" clause), and only createTokenCopyOf carries that flag."}

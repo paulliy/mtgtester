@@ -1,0 +1,34 @@
+{
+  "name": "Archetype of Courage",
+  "oracleId": "79b48704-480d-4905-b87a-40b127894670",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures your opponents control lose first strike and can't have or gain first strike."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "opponents"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "denyKeywords": [
+            "first strike"
+          ]
+        }
+      }
+    ]
+  }
+}

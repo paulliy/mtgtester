@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target restriction 'creature card with lesser mana value' compares against the sacrificed creature's mana value, and Selector manaValueAtMost takes only a fixed number."}

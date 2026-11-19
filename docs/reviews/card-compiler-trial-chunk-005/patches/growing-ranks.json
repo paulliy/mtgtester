@@ -1,0 +1,28 @@
+{
+  "name": "Growing Ranks",
+  "oracleId": "bec6fb31-60a3-432f-ba36-aebf172f8b27",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, populate."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "populate"
+          }
+        ],
+        "description": "At the beginning of your upkeep, populate."
+      }
+    ]
+  }
+}

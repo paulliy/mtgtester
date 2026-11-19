@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"manaAbilities":[{"units":[["C"],["C"]],"costs":[{"kind":"removeCounters","counter":"+1/+1","count":1}],"restriction":{"purposes":["activateAbility"],"description":"Spend this mana only to activate abilities."}}]}}

@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A draws a card only if you discarded a card (\"If you do, draw a card\"); Text B draws a card whether or not you discard (\"then draw a card\" after the optional discard)."]}

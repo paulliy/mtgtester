@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The condition 'a player who controls more lands than you' compares the damaged player's lands to yours, but opponentControlsMore checks any opponent and countPermanents has no damaged-player scope, and the mandatory return cannot be separated from the optional search within one trigger."}

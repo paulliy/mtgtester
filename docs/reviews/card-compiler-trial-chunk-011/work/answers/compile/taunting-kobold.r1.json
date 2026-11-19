@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"attacks","subject":{"kind":"self"}},"optional":false,"targets":[{"kind":"creature","controller":"opponent"}],"effects":[{"op":"goad","target":0}],"description":"Whenever this creature attacks, goad target creature an opponent controls."}]}}

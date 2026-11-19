@@ -1,0 +1,106 @@
+{
+  "name": "April O'Neil, Human Element",
+  "oracleId": "020963ef-24c0-48cc-8776-bc257df684bc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a player casts an artifact, instant, or sorcery spell, you create a Mutagen token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "each",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Mutagen",
+              "typeLine": "Artifact — Mutagen",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Mutagen"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "activatedAbilities": [
+                {
+                  "costs": [
+                    {
+                      "kind": "mana",
+                      "cost": {
+                        "generic": 1,
+                        "colored": {
+                          "W": 0,
+                          "U": 0,
+                          "B": 0,
+                          "R": 0,
+                          "G": 0
+                        },
+                        "colorless": 0
+                      }
+                    },
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ],
+                  "timing": "sorcery",
+                  "ability": {
+                    "kind": "activated",
+                    "targets": [
+                      {
+                        "kind": "creature"
+                      }
+                    ],
+                    "effects": [
+                      {
+                        "op": "putCounters",
+                        "target": 0,
+                        "counter": "+1/+1",
+                        "count": 1
+                      }
+                    ],
+                    "description": "{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery."
+                  }
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a player casts an artifact, instant, or sorcery spell, you create a Mutagen token."
+      }
+    ]
+  }
+}

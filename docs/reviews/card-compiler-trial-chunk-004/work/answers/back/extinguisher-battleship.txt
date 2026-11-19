@@ -1,0 +1,1 @@
+When this enters, destroy target permanent that isn't a creature. Then 4 damage is dealt to each creature.

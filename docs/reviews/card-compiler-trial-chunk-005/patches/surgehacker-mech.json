@@ -1,0 +1,61 @@
+{
+  "name": "Surgehacker Mech",
+  "oracleId": "bf9421d2-54e2-44d8-8b39-2e41192a6517",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Vehicle enters, it deals damage equal to twice the number of Vehicles you control to target creature or planeswalker an opponent controls."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "permanent",
+            "controller": "opponent",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "times",
+              "of": {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Vehicle"
+                },
+                "scope": "you"
+              },
+              "n": 2
+            }
+          }
+        ],
+        "description": "When this Vehicle enters, it deals damage equal to twice the number of Vehicles you control to target creature or planeswalker an opponent controls."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No op returns the dead enchanted creature tapped under its owner's control: returnDiedTriggerObjectTapped returns it under the ability's controller, and graveyardToBattlefield cannot enter it tapped."}

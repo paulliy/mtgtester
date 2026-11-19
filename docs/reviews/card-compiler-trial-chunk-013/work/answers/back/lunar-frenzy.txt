@@ -1,0 +1,1 @@
+Target creature you control gets +X/+0 until end of turn, where X is the value of X paid for this spell. It gains first strike until end of turn. It gains trample until end of turn.

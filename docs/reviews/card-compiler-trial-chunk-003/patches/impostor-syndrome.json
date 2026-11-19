@@ -1,0 +1,55 @@
+{
+  "name": "Impostor Syndrome",
+  "oracleId": "7be47440-b627-411e-a28f-d5a92e5e2fb7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a nontoken creature you control deals combat damage to a player, create a token that's a copy of it, except it isn't legendary."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "isToken"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": "triggerObject",
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "exceptNonLegendary": true
+          }
+        ],
+        "description": "Whenever a nontoken creature you control deals combat damage to a player, create a token that's a copy of it, except it isn't legendary."
+      }
+    ]
+  }
+}

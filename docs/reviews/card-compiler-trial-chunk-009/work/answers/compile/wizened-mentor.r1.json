@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The activatesAbility trigger only watches abilities its controller activates (player 'you'), and the schema cannot watch an opponent's activations."}

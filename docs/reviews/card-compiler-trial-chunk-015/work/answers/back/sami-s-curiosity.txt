@@ -1,0 +1,2 @@
+You gain 2 life.
+Create a colorless Lander artifact token. It has "{2}, {T}, Sacrifice this artifact: Search for a basic land card, put it onto the battlefield tapped, then shuffle."

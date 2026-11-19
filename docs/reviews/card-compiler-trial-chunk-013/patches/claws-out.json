@@ -1,0 +1,34 @@
+{
+  "name": "Claws Out",
+  "oracleId": "499d76c1-97ff-4006-922c-be1684a7754c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Affinity for Cats"
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Cat"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "scope": "all"
+        },
+        "selfOnly": true
+      }
+    ]
+  }
+}

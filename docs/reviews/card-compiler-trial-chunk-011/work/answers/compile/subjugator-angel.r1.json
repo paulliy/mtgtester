@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"enters","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"tapEach","selector":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"controller","who":"opponents"}]}}],"description":"When this creature enters, tap all creatures your opponents control."}]}}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Target player's life total becomes 1' needs a set-life-total effect; the schema only has loss/gain by amount, and no value reads the target player's own life total to compute the loss."}

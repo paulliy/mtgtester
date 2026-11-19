@@ -1,0 +1,90 @@
+{
+  "name": "Spyglass Siren",
+  "oracleId": "4ec9d9eb-14e2-47ea-88a2-d2394e363784",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, create a Map token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Map",
+              "typeLine": "Artifact — Map",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Map"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "activatedAbilities": [
+                {
+                  "costs": [
+                    {
+                      "kind": "mana",
+                      "cost": {
+                        "generic": 1,
+                        "colored": {
+                          "W": 0,
+                          "U": 0,
+                          "B": 0,
+                          "R": 0,
+                          "G": 0
+                        },
+                        "colorless": 0
+                      }
+                    },
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ],
+                  "timing": "sorcery",
+                  "ability": {
+                    "kind": "activated",
+                    "targets": [
+                      {
+                        "kind": "creature",
+                        "controller": "you"
+                      }
+                    ],
+                    "effects": [
+                      {
+                        "op": "explore",
+                        "target": 0
+                      }
+                    ],
+                    "description": "{1}, {T}, Sacrifice this token: Target creature you control explores. Activate only as a sorcery."
+                  }
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "When this creature enters, create a Map token."
+      }
+    ]
+  }
+}

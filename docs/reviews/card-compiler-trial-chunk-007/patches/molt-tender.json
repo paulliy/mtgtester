@@ -1,0 +1,33 @@
+{
+  "name": "Molt Tender",
+  "oracleId": "9a39ca64-e1a9-42ef-8efd-6aa3edde3d93",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Exile a card from your graveyard: Add one mana of any color."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ],
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "exileOtherCardsFromGraveyard",
+            "count": 1
+          }
+        ]
+      }
+    ]
+  }
+}

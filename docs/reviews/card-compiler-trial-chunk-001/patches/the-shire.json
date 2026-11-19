@@ -1,0 +1,30 @@
+{
+  "name": "The Shire",
+  "oracleId": "9abf9a0e-8e7d-406b-a01d-d4870b30134e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ enters tapped unless you control a legendary creature."
+  ],
+  "compose": "append",
+  "def": {
+    "entersTappedUnless": {
+      "kind": "countPermanents",
+      "selector": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "type",
+            "value": "Creature"
+          },
+          {
+            "kind": "supertype",
+            "value": "Legendary"
+          }
+        ]
+      },
+      "scope": "you",
+      "cmp": ">=",
+      "n": 1
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "name": "The Swarmweaver",
+  "oracleId": "50120e90-2fdf-43c1-93e2-2230ee4e63fc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as there are four or more card types among cards in your graveyard, Insects and Spiders you control get +1/+1 and have deathtouch."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Insect"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Spider"
+                }
+              ]
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "cardTypesInYourGraveyard"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 4
+          }
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Insect"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Spider"
+                }
+              ]
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "deathtouch"
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "cardTypesInYourGraveyard"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 4
+          }
+        }
+      }
+    ]
+  }
+}

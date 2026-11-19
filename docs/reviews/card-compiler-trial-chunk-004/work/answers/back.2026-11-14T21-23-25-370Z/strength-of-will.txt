@@ -1,0 +1,2 @@
+Target creature you control gains indestructible until end of turn.
+That creature gains "Whenever this creature is dealt damage, put a number of +1/+1 counters on it equal to the damage dealt." until end of turn.

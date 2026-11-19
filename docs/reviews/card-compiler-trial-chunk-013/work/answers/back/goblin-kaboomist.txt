@@ -1,0 +1,2 @@
+At the beginning of your upkeep, create a Land Mine token. Then flip a coin. If you lose the flip, 2 damage is dealt to this creature.
+The Land Mine token is a token artifact with "{R}, Sacrifice this artifact: This artifact deals 2 damage to target attacking creature without flying."

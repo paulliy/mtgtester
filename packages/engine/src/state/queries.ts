@@ -1333,7 +1333,7 @@ function manaSources(
  * not competing with the payment. Read only to rank sources (`orderByKeepValue`), never for
  * legality, so a cost missing here costs a worse tap choice and nothing else.
  */
-function otherManaDemand(ctx: GameContext, playerId: PlayerId): ParsedManaCost[] {
+export function otherManaDemand(ctx: GameContext, playerId: PlayerId): ParsedManaCost[] {
   const player = ctx.state.players.find((p) => p.id === playerId);
   if (player === undefined) return [];
   const costs: ParsedManaCost[] = [];

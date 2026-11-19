@@ -1,0 +1,60 @@
+{
+  "name": "Cindervines",
+  "oracleId": "92d95e12-fa51-4360-88e4-9078ccc5d8d3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}, Sacrifice this enchantment: Destroy target artifact or enchantment. ~ deals 2 damage to that permanent's controller."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "artifactOrEnchantment"
+            }
+          ],
+          "effects": [
+            {
+              "op": "dealDamage",
+              "target": {
+                "controllerOf": 0
+              },
+              "amount": {
+                "kind": "const",
+                "n": 2
+              }
+            },
+            {
+              "op": "destroy",
+              "target": 0
+            }
+          ],
+          "description": "{1}, Sacrifice this enchantment: Destroy target artifact or enchantment. This enchantment deals 2 damage to that permanent's controller."
+        }
+      }
+    ]
+  }
+}

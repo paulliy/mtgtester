@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no single op that exiles a target and then creates a token for its controller (destroyAndCreateTokenForController is destroy-only), and composing exile with a token made for \"its controller\" would read the controller of an object that has already left the battlefield."}

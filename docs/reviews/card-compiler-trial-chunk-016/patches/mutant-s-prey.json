@@ -1,0 +1,36 @@
+{
+  "name": "Mutant's Prey",
+  "oracleId": "3836cf33-bd1d-485d-94a2-85ea210ddf7a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control with a +1/+1 counter on it fights target creature an opponent controls."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you",
+          "filter": {
+            "kind": "hasCounter",
+            "counter": "+1/+1"
+          }
+        },
+        {
+          "kind": "creature",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "fight",
+          "first": 0,
+          "second": 1
+        }
+      ],
+      "description": "Target creature you control with a +1/+1 counter on it fights target creature an opponent controls. (Each deals damage equal to its power to the other.)"
+    }
+  }
+}

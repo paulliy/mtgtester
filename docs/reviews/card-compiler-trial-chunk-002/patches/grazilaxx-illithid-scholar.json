@@ -1,0 +1,44 @@
+{
+  "name": "Grazilaxx, Illithid Scholar",
+  "oracleId": "d22ff377-d282-4a28-9dce-96f25913dc96",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature you control becomes blocked, you may return it to its owner's hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "becomesBlocked",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "returnToHand",
+            "target": "triggerObject"
+          }
+        ],
+        "description": "Whenever a creature you control becomes blocked, you may return it to its owner's hand."
+      }
+    ]
+  }
+}

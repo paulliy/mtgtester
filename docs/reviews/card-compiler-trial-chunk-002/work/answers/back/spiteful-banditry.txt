@@ -1,0 +1,1 @@
+Once each turn, whenever one or more creatures your opponents control die, create a Treasure token. That token has "{T}, Sacrifice this artifact: Add one mana of your choice of {W}, {U}, {B}, {R}, or {G}."

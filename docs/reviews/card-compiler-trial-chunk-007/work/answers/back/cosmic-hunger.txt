@@ -1,0 +1,1 @@
+Target creature you control deals damage equal to its power to target permanent other than that creature that is a creature, planeswalker, or battle.

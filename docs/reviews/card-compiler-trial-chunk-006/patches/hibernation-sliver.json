@@ -1,0 +1,42 @@
+{
+  "name": "Hibernation Sliver",
+  "oracleId": "edb8a6d6-9e25-4048-a842-e854eece42c2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "All Slivers have \"Pay 2 life: Return this permanent to its owner's hand.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "subtype",
+          "value": "Sliver"
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "payLife",
+                "amount": 2
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "returnToHand",
+                  "target": "source"
+                }
+              ],
+              "description": "Pay 2 life: Return this permanent to its owner's hand."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

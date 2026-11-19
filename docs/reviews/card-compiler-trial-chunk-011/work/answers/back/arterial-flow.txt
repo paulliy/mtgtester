@@ -1,0 +1,2 @@
+Each opponent discards two cards.
+Then if you control a Vampire, each opponent loses 2 life and you gain 2 life.

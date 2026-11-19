@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The 'up to X target artifacts and/or enchantments' slot needs a target count tied to the announced X, but TargetSpec.count is a fixed {min, max} pair of numbers."}
