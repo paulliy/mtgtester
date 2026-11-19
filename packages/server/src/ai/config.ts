@@ -8,6 +8,8 @@
  * confusing auth failure rather than a misconfiguration.
  */
 
+import { WAKE_RULES, type WakeRule } from './steering';
+
 export interface AiModelProfile {
   models: string[];
   reasoningEnabled: boolean;
@@ -120,6 +122,12 @@ export interface AiConfig {
   strategistDeltaEnabled: boolean;
   /** Delta prompts a seat may get in a row before a full one. Env: `AI_STRATEGIST_DELTA_REFRESH`. Default 3. */
   strategistDeltaRefreshEvery: number;
+  /**
+   * Under `onChange`, which table changes count (see `WakeRule` in `ai/steering.ts`). `table-v2`
+   * ignores changes the seat's knobs already expected: its own board growing and any commander
+   * arriving. Env: `AI_STRATEGIST_WAKE_RULE`. Default: `table-v2`.
+   */
+  strategistWakeRule: WakeRule;
   /**
    * ADR 0045 decision 5: whether the bot-led strategist's primer offers the typed
    * `tacticianRequest` field. `shadow` adds it and logs every request (it is never acted on);
@@ -336,6 +344,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   strategistMaxReuseTurns: 3,
   strategistDeltaEnabled: true,
   strategistDeltaRefreshEvery: 3,
+  strategistWakeRule: 'table-v2',
   strategistTacticianFlag: 'off',
   filterNonCachingProviders: true,
   streamResponses: true,
@@ -757,6 +766,11 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     strategistDeltaRefreshEvery: parseNonNegativeInt(
       env['AI_STRATEGIST_DELTA_REFRESH'],
       DEFAULT_AI_CONFIG.strategistDeltaRefreshEvery,
+    ),
+    strategistWakeRule: parseChoice(
+      env['AI_STRATEGIST_WAKE_RULE'],
+      WAKE_RULES,
+      DEFAULT_AI_CONFIG.strategistWakeRule,
     ),
     filterNonCachingProviders: parseBoolean(
       env['AI_FILTER_NON_CACHING_PROVIDERS'] || env['OPENROUTER_FILTER_NON_CACHING'],
