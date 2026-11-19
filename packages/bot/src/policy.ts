@@ -41,6 +41,8 @@ import {
   type CastCandidate,
   type CombatBody,
 } from './tactics';
+import { lastAnswerKinds, publicLethal, type AnswerKind } from './answers';
+import { roleScale, styleProfile } from './styles';
 import { WEIGHTS } from './weights';
 
 const P = WEIGHTS.policy;
@@ -322,6 +324,23 @@ function optionScore(
     const pending = fixOn(ctx, 'ownStack') ? (pendingDamage(ctx).get(option) ?? 0) : 0;
     const player = ctx.view.opponents.find((o) => o.seat === option);
     if (player !== undefined && pending > 0 && player.life - pending <= 0) return -1;
+    // Damage that leaves the player alive is worth the damage, not a whole player: two points at
+    // someone on 30 life must not outrank killing a creature. Aggression scales it for racing.
+    if (
+      player !== undefined &&
+      damage !== null &&
+      fixOn(ctx, 'faceDamage') &&
+      damage + pending < player.life
+    ) {
+      const aggression = clamp01(ctx.steering?.aggression ?? P.defaultAggression);
+      return (
+        damage *
+          P.faceDamagePerLife *
+          styleProfile(ctx.steering?.style).faceDamage *
+          (0.5 + aggression) +
+        (pressure.get(c.owner) ?? 0) * P.targetPressureWeight
+      );
+    }
     // Damage that leaves a creature alive takes only a sliver of its worth (Bolt on a 10/10).
     const creature = ctx.view.battlefield.find((p) => p.id === option);
     let share = 1;
@@ -996,7 +1015,9 @@ function roleValue(roles: readonly CardRole[], action: LegalAction, ctx: PolicyC
         break;
       case 'removal': {
         const best = bestHostileTargetValue(action, ctx);
-        value += best === null ? P.roles.removal : Math.min(best, 30) * P.removalTargetShare;
+        const scale = roleScale(ctx.steering?.style, 'removal');
+        value +=
+          (best === null ? P.roles.removal : Math.min(best, 30) * P.removalTargetShare) * scale;
         break;
       }
       case 'wipe': {
@@ -1016,7 +1037,7 @@ function roleValue(roles: readonly CardRole[], action: LegalAction, ctx: PolicyC
         break;
       }
       default:
-        value += P.roles[role];
+        value += P.roles[role] * roleScale(ctx.steering?.style, role);
     }
   }
   return value;
@@ -1127,9 +1148,102 @@ export function actionValue(action: LegalAction, ctx: PolicyContext): number | n
   // checks each slot alone, but no choice is legal, so never pick it.
   if (needsDistinctTargets(action) && !distinctAssignmentExists(action)) return P.impossibleTargets;
 
+  // The last answer of its kind is kept for a real threat. Applied before the strategist's knobs,
+  // so a `prioritize` on the card can still spend it.
+  if (
+    action.type === 'castSpell' &&
+    fixOn(ctx, 'scarceAnswer') &&
+    wastesLastAnswer(action, name, ctx)
+  )
+    value = Math.min(value, WEIGHTS.passBaseline - P.scarceAnswer.holdMargin);
+
   if (namedIn(steering?.prioritize, name)) value += P.prioritizeBonus;
   if (namedIn(steering?.hold, name)) value -= P.holdPenalty;
   return value;
+}
+
+// --- Answer discipline (`scarceAnswer`, ADR 0044's `scarce-answer` positions) ------------------
+
+/**
+ * Whether casting `action` spends the last counterspell or hard removal of its kind in hand on
+ * something below its threshold, with no lethal on the public board. Every last-of-its-kind answer
+ * the card would spend must be wasted for it to be held; a target the bot cannot value (an
+ * ability on the stack, an unknown card, a spell with no target) is never held.
+ */
+function wastesLastAnswer(
+  action: LegalAction,
+  name: string | undefined,
+  ctx: PolicyContext,
+): boolean {
+  const { view, request, knowledge } = ctx;
+  if (knowledge === undefined) return false;
+  const castId = action.interaction?.kind === 'source' ? action.interaction.sourceId : undefined;
+  const last = lastAnswerKinds(name, castId, view, knowledge);
+  if (last.length === 0) return false;
+  if (once(ctx, 'publicLethal', () => publicLethal(view, request, knowledge))) return false;
+  return last.every((kind) => {
+    const threat = answerThreat(kind, action, ctx);
+    const style = styleProfile(ctx.steering?.style);
+    const floor =
+      kind === 'counter'
+        ? P.scarceAnswer.minCounterThreat * style.counterThreshold
+        : P.scarceAnswer.minRemovalThreat * style.removalThreshold;
+    return threat !== null && threat < floor;
+  });
+}
+
+/** What an answer of `kind` would hit, on its own scale; null when the bot cannot tell. */
+function answerThreat(kind: AnswerKind, action: LegalAction, ctx: PolicyContext): number | null {
+  const { view } = ctx;
+  if (kind === 'counter') {
+    // A mode that counters nothing (Izzet Charm's damage) is not spending the counter.
+    if (action.data?.['modeLabel'] !== undefined && !targetsStack(view, action)) return null;
+    const theirs = view.stack.filter((item) => item.controller !== view.seat);
+    const options = new Set((action.targets ?? []).flatMap((t) => t.options));
+    const top = view.stack.at(-1);
+    const hits =
+      options.size > 0
+        ? theirs.filter((item) => options.has(item.id))
+        : top !== undefined && top.controller !== view.seat
+          ? [top]
+          : [];
+    if (hits.length === 0) return null;
+    let best = -Infinity;
+    for (const item of hits) {
+      // A spell is shown by its card name; an ability's description is not one.
+      const traits = traitsFor(ctx, item.description);
+      if (traits === undefined) return null;
+      best = Math.max(best, spellThreat(traits));
+    }
+    return best;
+  }
+  if (kind === 'hardRemoval') {
+    let best: number | null = null;
+    for (const slot of action.targets ?? []) {
+      for (const option of slot.options) {
+        const p = view.battlefield.find((x) => x.id === option);
+        if (p === undefined || p.controller === view.seat) continue;
+        const bonus =
+          isCreaturePermanent(p) && fixOn(ctx, 'lethalTargets')
+            ? lethalRemovalBonus(p, ctx, action)
+            : 0;
+        const value = permanentValue(p, ctx) + bonus;
+        best = best === null ? value : Math.max(best, value);
+      }
+    }
+    return best;
+  }
+  // A wipe is already valued by what it removes on each side.
+  return null;
+}
+
+/** A spell's threat: its mana value, plus a bonus for an effect that swings a game at any cost. */
+function spellThreat(traits: CardTraits): number {
+  const big =
+    traits.roles.includes('wipe') ||
+    traits.roles.includes('extraTurn') ||
+    traits.massPump !== undefined;
+  return traits.manaValue + (big ? P.scarceAnswer.bigEffectBonus : 0);
 }
 
 // --- ADR 0043: yielding, lethal spells, casting order, land colours ---------------------------

@@ -261,6 +261,28 @@ export const WEIGHTS = {
     landColorNeedBonus: 0.5,
     /** On a turn no land unlocks anything, the tapped land is free to play. */
     idleTappedLandBonus: 0.25,
+
+    // --- Answer discipline and face damage (`scarceAnswer`, `faceDamage` fixes) ---
+    /**
+     * The last counterspell or hard removal of its kind in hand (ADR 0044's `scarce-answer`) is
+     * kept for a real threat unless lethal is on the public board. Below these thresholds the cast
+     * scores just under passing, so the bot keeps the card; a strategist `prioritize` still lifts it.
+     */
+    scarceAnswer: {
+      /** A countered spell must reach this: its mana value plus `bigEffectBonus` if it has one. */
+      minCounterThreat: 4,
+      /** Hard removal's best target must reach this in LEP, lethal and clear-the-blocker bonuses included. */
+      minRemovalThreat: 9,
+      /** Added for a wipe, an extra turn or a team pump: effects that swing a game whatever their cost. */
+      bigEffectBonus: 3,
+      /** How far below passing a held answer scores. */
+      holdMargin: 1,
+    },
+    /**
+     * Damage at a player that does not kill is worth this per point (times 0.5 + aggression), in
+     * place of the flat value of a player target. Killing damage keeps the flat value.
+     */
+    faceDamagePerLife: 1,
   },
 
   /**
@@ -358,5 +380,44 @@ export const WEIGHTS = {
     breakPenalty: 10,
     /** Propose when one seat's predicted attack could take at least this share of our life. */
     proposePressureShare: 0.25,
+  },
+
+  /**
+   * Play styles (`BotSteering.style`, `styles.ts`). `defaults` fill knobs the strategist left
+   * unset; the scales multiply policy weights. Starting values, not measured ones: the bot league
+   * (`bot-league --a styled ...`) is the gate, as for every other weight here.
+   */
+  styles: {
+    aggro: {
+      defaults: { aggression: 0.85, holdUpMana: 0, avoidOverextending: false },
+      /** Multiplies `policy.faceDamagePerLife`. */
+      faceDamage: 1.5,
+      /** Multiply `policy.scarceAnswer.minCounterThreat` and `minRemovalThreat`. */
+      counterThreshold: 1.25,
+      removalThreshold: 1.25,
+      /** Multiply flat role values in `policy.roles`, and the removal target share. */
+      roles: { pump: 2, burn: 1.5, tokens: 1.3, draw: 0.75, ramp: 0.75 },
+    },
+    midrange: {
+      defaults: {},
+      faceDamage: 1,
+      counterThreshold: 1,
+      removalThreshold: 1,
+      roles: {},
+    },
+    control: {
+      defaults: { aggression: 0.3, holdUpMana: 2, avoidOverextending: true },
+      faceDamage: 0.5,
+      counterThreshold: 0.75,
+      removalThreshold: 0.8,
+      roles: { draw: 1.5, removal: 1.3, recursion: 1.3 },
+    },
+    combo: {
+      defaults: { aggression: 0.2 },
+      faceDamage: 0.5,
+      counterThreshold: 1.25,
+      removalThreshold: 1,
+      roles: { tutor: 2, draw: 1.5, ramp: 1.3 },
+    },
   },
 } as const;

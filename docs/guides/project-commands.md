@@ -61,14 +61,16 @@ bun run snapshot:oracle
 bun run modelled-cards
 bun run combat-sweep [--games N] [--seed S] [--json out.json]
 bun run bot-league [--games N] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N] [--json F]
-                                        # ADR 0039 bot vs bot win rate; arms: legacy, policy, knowledge, aggro, control
+                                        # ADR 0039 bot vs bot win rate; arms: legacy, policy, knowledge, fixed, fix-*,
+                                        # aggro, control, proxy-*; ADR 0050: fixed-0043, style-aggro|control|combo, styled
 bun run ai-call-census [--games N] [--turn-cap N] [--json F]
                                         # ADR 0039 model calls and prompt tokens per turn by tactical mode, offline;
                                         # ADR 0044 would-fire counts per escalation trigger and one mode per live trigger
 bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json F]
-                     [--escalation T,..] [--shadow T,..] [--opponents model|bot-never]
+                     [--escalation T,..] [--shadow T,..] [--opponents model|bot-never|bot-v1] [--trace F.jsonl]
                                         # ADR 0039 one PAID game from .env: P1/P3 bot mode, P2/P4 model tactician;
-                                        # ADR 0044: live triggers for P1/P3, and bot-led `never` opponents
+                                        # ADR 0044: live triggers for P1/P3, and bot-led `never` opponents;
+                                        # ADR 0050 --trace: one JSON line per decision (menu, answer, source, triggers, knobs)
 bun run strategist-capture [--seed S] [--turn-cap N] [--decks F] [--max-usd N] [--no-diplomacy] [--no-flag] [--offline] [--out F]
                                         # ADR 0045 one bot-led game with a strategist every turn, written as a replay
                                         # transcript plus every seat's knobs and deals per turn; PAID unless --offline

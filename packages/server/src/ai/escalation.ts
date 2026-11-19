@@ -19,11 +19,15 @@ import { NO_ATTACK_TARGET, NO_BLOCK_TARGET } from '@mtg/shared';
 import {
   combatBody,
   damageThrough,
+  defensiveLethal,
   incomingDamage,
-  readyAttackers,
+  incomingTotal,
+  lastAnswerKinds,
+  offensiveLethal,
+  publicLethal,
+  stackPumps,
   untappedCreatures,
   type CardKnowledge,
-  type CardTraits,
   type ScoredAction,
 } from '@mtg/bot';
 import {
@@ -96,17 +100,6 @@ function sourceId(action: LegalAction): string | undefined {
   return action.interaction?.kind === 'source' ? action.interaction.sourceId : undefined;
 }
 
-/** The answer roles that make a card scarce when it is the last of its kind in hand. */
-type AnswerKind = 'counter' | 'wipe' | 'hardRemoval';
-
-function answerKinds(traits: CardTraits | undefined): AnswerKind[] {
-  if (traits === undefined) return [];
-  const kinds: AnswerKind[] = [];
-  if (traits.roles.includes('counter')) kinds.push('counter');
-  if (traits.roles.includes('wipe')) kinds.push('wipe');
-  if (traits.roles.includes('removal') && traits.hardRemoval === true) kinds.push('hardRemoval');
-  return kinds;
-}
 
 /**
  * `scarce-answer`: at `priority`, the bot would cast a counterspell, board wipe, or destroy or
@@ -118,14 +111,8 @@ function scarceAnswer(input: TriggerInput): boolean {
   if (request.decisionType !== 'priority') return false;
   const action = chosenAction(input);
   if (action?.type !== 'castSpell') return false;
-  const kinds = answerKinds(knowledge(sourceName(action, view) ?? ''));
-  if (kinds.length === 0) return false;
-  const id = sourceId(action);
-  const others = view.hand.filter((card) => card.id !== id);
-  const last = kinds.some(
-    (kind) => !others.some((card) => answerKinds(knowledge(card.name)).includes(kind)),
-  );
-  return last && !publicLethal(view, request, knowledge);
+  const last = lastAnswerKinds(sourceName(action, view), sourceId(action), view, knowledge);
+  return last.length > 0 && !publicLethal(view, request, knowledge);
 }
 
 /** A noncreature, nonland card the classifier cannot account for, or does not know at all. */
@@ -164,98 +151,11 @@ function unknownCard(input: TriggerInput): boolean {
   return input.firstSightOf?.(top.id) ?? true;
 }
 
-// --- lethal --------------------------------------------------------------------------------------
+// --- lethal (the helpers live in `@mtg/bot`'s answers module) -----------------------------------
 
-/** Constant damage the seat's hand could send at a player: burn spells whose slots deal it. */
-function burnInHand(view: PlayerView, knowledge: CardKnowledge): number {
-  let total = 0;
-  for (const card of view.hand) {
-    const traits = knowledge(card.name);
-    if (traits === undefined || !traits.roles.includes('burn')) continue;
-    const best = Math.max(0, ...(traits.spellDamage ?? []).map((d) => d ?? 0));
-    total += best;
-  }
-  return total;
-}
 
-/** The opponents this seat could kill this turn from its board and the cards it can see. */
-export function offensiveLethal(
-  view: PlayerView,
-  request: DecisionRequest,
-  knowledge: CardKnowledge,
-) {
-  if (request.activePlayer !== view.seat) return [];
-  const combatOver = request.phase === 'postcombatMain' || request.phase === 'ending';
-  const attackers = combatOver ? [] : readyAttackers(view).map((p) => combatBody(p));
-  const burn = burnInHand(view, knowledge);
-  return view.opponents.filter((o) => {
-    if (o.life <= 0) return false;
-    const blockers = untappedCreatures(view, o.seat).map((p) => combatBody(p));
-    return damageThrough(attackers, blockers) + burn >= o.life;
-  });
-}
 
-/**
- * The power each opponent's creatures add from a team pump that opponent has on the stack: the
- * stack is public, so a resolving Overrun is part of the board a seat can read.
- */
-function stackPumps(view: PlayerView, knowledge: CardKnowledge): Map<string, number> {
-  const pumps = new Map<string, number>();
-  for (const item of view.stack) {
-    if (item.controller === view.seat) continue;
-    const pump = knowledge(item.description)?.massPump;
-    if (pump !== undefined)
-      pumps.set(item.controller, (pumps.get(item.controller) ?? 0) + pump.power);
-  }
-  return pumps;
-}
 
-/**
- * Whether the opponents who act before this seat's next turn have lethal on board: their total
- * creature power (plus team pumps they have on the stack) reaches the seat's life, an opponent's
- * commander damage plus its biggest creature reaches 21, or infect and toxic power reaches ten
- * poison counters.
- */
-export function defensiveLethal(view: PlayerView, knowledge: CardKnowledge): boolean {
-  const live = new Set(view.opponents.filter((o) => o.life > 0).map((o) => o.seat));
-  const pumps = stackPumps(view, knowledge);
-  const theirs = view.battlefield.filter(
-    (p) => live.has(p.controller) && p.power !== undefined && p.power !== null,
-  );
-  const powerOf = (p: (typeof theirs)[number]): number =>
-    Math.max(0, (p.power ?? 0) + (pumps.get(p.controller) ?? 0));
-  const power = theirs.reduce((sum, p) => sum + powerOf(p), 0);
-  if (power >= view.life) return true;
-  for (const opponent of view.opponents) {
-    if (!live.has(opponent.seat) || opponent.commanderDamageDealtToYou === 0) continue;
-    const biggest = Math.max(
-      0,
-      ...theirs.filter((p) => p.controller === opponent.seat).map(powerOf),
-    );
-    if (opponent.commanderDamageDealtToYou + biggest >= 21) return true;
-  }
-  const poisonous = theirs
-    .filter((p) => (p.keywords ?? []).some((k) => /^(infect|toxic)/i.test(k)))
-    .reduce((sum, p) => sum + powerOf(p), 0);
-  return poisonous > 0 && (view.poisonCounters ?? 0) + poisonous >= 10;
-}
-
-/** Lethal at stake on the public board, either way (ADR 0044's `scarce-answer` exemption). */
-function publicLethal(
-  view: PlayerView,
-  request: DecisionRequest,
-  knowledge: CardKnowledge,
-): boolean {
-  return (
-    incomingTotal(view) >= view.life ||
-    defensiveLethal(view, knowledge) ||
-    offensiveLethal(view, request, knowledge).length > 0
-  );
-}
-
-function incomingTotal(view: PlayerView): number {
-  return [...incomingDamage(view).values()].reduce((sum, d) => sum + d, 0);
-}
 
 /** Whether the creatures this attack leaves home (and vigilant attackers) hold off the swing. */
 function attackKeepsSafe(

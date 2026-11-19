@@ -77,5 +77,6 @@ To add an ADR, take the next unused number, put a `Status:` line in the form abo
 | [0047](0047-compiled-cards-as-unreviewed-overrides.md)         | Compiled cards enter the pool as unreviewed overrides                                             | Accepted (2026-11-13)  | 2026-11-13 | —                        |
 | [0048](0048-color-aware-auto-pay.md)                           | Color-aware auto-pay                                                                              | Accepted (2026-11-01)  | 2026-11-01 | —                        |
 | [0049](0049-missing-primitives.md)                             | Remaining Card Primitive Backlog                                                                  | Completed (2026-11-14) | 2026-07-29 | —                        |
+| [0050](0050-bot-answer-discipline-and-play-styles.md)          | Bot answer discipline, face damage and play styles                                                | Proposed               | 2026-11-19 | —                        |
 
 <!-- adr-index:end -->

@@ -7,10 +7,11 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { BotSteering, DecisionRequest, OracleCard, PlayerId } from '@mtg/shared';
+import type { BotSteering, DecisionRequest, OracleCard, PlayStyle, PlayerId } from '@mtg/shared';
 import { Engine, runToCompletion, type EnginePlayerConfig } from '@mtg/engine';
 import { HeuristicDecisionProvider, type PolicyFix } from '@mtg/bot';
 import { buildCardKnowledge } from '../ai/card-traits';
+import { styleForDeck } from '../ai/play-style';
 import { ProxyStrategist, type ProxySchedule } from '../ai/proxy-strategist';
 
 /** How one seat's bot is configured. */
@@ -26,6 +27,8 @@ export interface LeagueArm {
   proxy?: ProxySchedule;
   /** ADR 0043's policy fixes. Omitted is none: the bot as it was before them. */
   fixes?: PolicyFix[];
+  /** Add the seat's deck's play style (`play-style.ts`) to whatever knobs the arm sets. */
+  styleFromDeck?: boolean;
 }
 
 export interface LeagueGameRequest {
@@ -48,7 +51,8 @@ export interface LeagueGameReply {
   life: Record<PlayerId, number>;
   ms: number;
   /** Proxy strategist calls and reuses per arm name, for arms with `proxy`. */
-  proxyCalls?: Record<string, { calls: number; reused: number }>;
+  proxyCalls?: Record<string, { calls: number; reused: number }>;  /** The play style each `styleFromDeck` seat was given. */
+  styles?: Record<string, PlayStyle>;
 }
 
 /** The engine reports a turn cap and a simultaneous loss as halts; for the league they are draws. */
@@ -73,6 +77,7 @@ export function playLeagueGame(request: LeagueGameRequest): LeagueGameReply {
   const knowledge = buildCardKnowledge(engine.cardDefinitions());
   const providers = new Map<PlayerId, HeuristicDecisionProvider>();
   const proxies = new Map<PlayerId, ProxyStrategist>();
+  const styles: Record<string, PlayStyle> = {};
   const armOf = (seat: PlayerId): LeagueArm => request.seats[Number(seat.slice(1)) - 1]!;
   const providerFor = (
     seat: PlayerId,
@@ -80,11 +85,22 @@ export function playLeagueGame(request: LeagueGameRequest): LeagueGameReply {
     let provider = providers.get(seat);
     if (provider === undefined) {
       const arm = armOf(seat);
+      let steering: (() => BotSteering | undefined) | undefined =
+        arm.proxy !== undefined
+          ? proxySteering(seat, arm.proxy)
+          : arm.steering === undefined
+            ? undefined
+            : () => arm.steering;
+      if (arm.styleFromDeck === true) {
+        const style = styleForDeck(request.decks[Number(seat.slice(1)) - 1]!);
+        styles[seat] = style;
+        const base = steering;
+        steering = () => ({ ...base?.(), style });
+      }
       provider = new HeuristicDecisionProvider(`${request.seed}-${seat}`, () => engine.view(seat), {
         ...(arm.legacy === true ? { legacy: true } : {}),
         ...(arm.knowledge === true ? { knowledge } : {}),
-        ...(arm.steering === undefined ? {} : { steering: () => arm.steering }),
-        ...(arm.proxy === undefined ? {} : { steering: proxySteering(seat, arm.proxy) }),
+        ...(steering === undefined ? {} : { steering }),
         fixes: arm.fixes ?? [],
       });
       providers.set(seat, provider);
@@ -120,6 +136,7 @@ export function playLeagueGame(request: LeagueGameRequest): LeagueGameReply {
     life,
     ms: Math.round(performance.now() - started),
     ...(proxies.size > 0 ? { proxyCalls } : {}),
+    ...(Object.keys(styles).length > 0 ? { styles } : {}),
   };
 }
 

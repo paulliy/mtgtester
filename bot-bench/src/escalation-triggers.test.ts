@@ -25,9 +25,12 @@ const options: RunOptions = {
 };
 
 const EXPECTED: Record<string, string[]> = {
-  'hold-the-counter': ['scarce-answer'],
-  'hold-the-swords-for-a-threat': ['scarce-answer'],
-  'hold-negate-for-a-threat': ['scarce-answer'],
+  // The bot keeps its last answer here on its own (the `scarceAnswer` policy fix): it would not
+  // spend it, so there is nothing for the trigger to double-check.
+  'hold-the-counter': [],
+  'hold-the-swords-for-a-threat': [],
+  'hold-negate-for-a-threat': [],
+  // The bot still spends its last answer on a real threat, and the trigger asks about it.
   'negate-the-blasphemous-act': ['scarce-answer'],
   'wrath-the-crowded-table': ['scarce-answer'],
   'darkness-the-alpha-strike': ['unknown-card'],
@@ -52,13 +55,17 @@ describe('ADR 0044 triggers on their positions', () => {
 
   it('a live scarce-answer sends the decision to the model, and the model answers it', async () => {
     const calls: FakeTurn[] = [];
-    const pass = (turn: FakeTurn): string =>
-      JSON.stringify({
+    // The model confirms the cast: Negate on the Blasphemous Act is what the answer was for.
+    const negate = (turn: FakeTurn): string => {
+      const cast = turn.legalActions.find((a) => a.type === 'castSpell')!;
+      return JSON.stringify({
         requestId: turn.requestId,
-        actionId: turn.legalActions.find((a) => a.type === 'pass')!.id,
+        actionId: cast.id,
+        targets: (cast.targets ?? []).map((t) => ({ slot: t.slot, choice: t.options[0] })),
       });
+    };
     const results = await runLineup(
-      loadCases().filter((c) => c.id === 'hold-negate-for-a-threat'),
+      loadCases().filter((c) => c.id === 'negate-the-blasphemous-act'),
       parseLineup([
         {
           id: 'scarce',
@@ -68,7 +75,7 @@ describe('ADR 0044 triggers on their positions', () => {
           model: 'fake/m',
         },
       ]),
-      { ...options, env: { OPENROUTER_API_KEY: 'k' }, fetchImpl: fakeProvider(pass, calls) },
+      { ...options, env: { OPENROUTER_API_KEY: 'k' }, fetchImpl: fakeProvider(negate, calls) },
     );
     const run = results[0]!.cases[0]!.run;
     expect(calls).toHaveLength(1);
@@ -81,7 +88,7 @@ describe('ADR 0044 triggers on their positions', () => {
   });
 
   it('a scarce-answer escalation skips active Jev and goes to the model (decision 5.4)', async () => {
-    const opened = openCase(loadCases().find((c) => c.id === 'hold-negate-for-a-threat')!);
+    const opened = openCase(loadCases().find((c) => c.id === 'negate-the-blasphemous-act')!);
     const jevDecide = vi.fn();
     const jev = { mode: 'active', policy: { decide: jevDecide } } as unknown as JevPolicyBinding;
     const passId = opened.request.legalActions.find((a) => a.type === 'pass')!.id;
@@ -120,7 +127,7 @@ describe('ADR 0044 triggers on their positions', () => {
   });
 
   it('a shadow trigger is counted and logged but asks nothing', async () => {
-    const opened = openCase(loadCases().find((c) => c.id === 'hold-negate-for-a-threat')!);
+    const opened = openCase(loadCases().find((c) => c.id === 'negate-the-blasphemous-act')!);
     const client: AiClient = { activeModel: 'm', requestDecision: vi.fn() };
     const provider = new OpenAiDecisionProvider(
       client,
@@ -146,7 +153,7 @@ describe('ADR 0044 triggers on their positions', () => {
   });
 
   it('a cached escalated answer says why it was escalated when it is replayed (decision 5.5)', async () => {
-    const opened = openCase(loadCases().find((c) => c.id === 'hold-negate-for-a-threat')!);
+    const opened = openCase(loadCases().find((c) => c.id === 'negate-the-blasphemous-act')!);
     const passId = opened.request.legalActions.find((a) => a.type === 'pass')!.id;
     const client: AiClient = {
       activeModel: 'm',

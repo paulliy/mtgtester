@@ -677,6 +677,99 @@ describe('steering', () => {
   });
 });
 
+describe('last answer and face damage', () => {
+  const counter: LegalAction = {
+    id: 1,
+    type: 'castSpell',
+    description: 'Cast Counterspell',
+    interaction: { kind: 'source', sourceId: 'c1' },
+    targets: [{ slot: 0, options: ['s1'] }],
+    data: { sourceName: 'Counterspell', manaCost: '{U}{U}', instantSpeed: true },
+  };
+  const k = knowledge({
+    Counterspell: { manaValue: 2, roles: ['counter'], spellTargets: ['hostile'] },
+    'Mind Stone': { manaValue: 2, types: ['Artifact'], roles: ['ramp'] },
+    'Wrath of God': { manaValue: 4, types: ['Sorcery'], roles: ['wipe'] },
+    Shock: {
+      manaValue: 1,
+      roles: ['burn', 'removal'],
+      spellTargets: ['hostile'],
+      spellDamage: [2],
+    },
+  });
+  const facing = (spell: string, extra: Partial<PlayerView> = {}): PlayerView =>
+    view({
+      hand: [card('c1', 'Counterspell', 'Instant', '{U}{U}')],
+      stack: [{ id: 's1', controller: 'P2', description: spell, targets: [] }],
+      ...extra,
+    });
+  const answer = (v: PlayerView, steering?: BotSteering) =>
+    decide(request([PASS, counter], { activePlayer: 'P2' }), v, new Rng('a'), {
+      knowledge: k,
+      ...(steering !== undefined && { steering }),
+    }).actionId;
+
+  it('keeps the only counterspell from a two-mana rock and spends it on a wipe', () => {
+    expect(answer(facing('Mind Stone'))).toBe(0);
+    expect(answer(facing('Wrath of God'))).toBe(1);
+  });
+
+  it('spends it on the rock when another counterspell backs it up', () => {
+    const backed = facing('Mind Stone', {
+      hand: [
+        card('c1', 'Counterspell', 'Instant', '{U}{U}'),
+        card('c2', 'Counterspell', 'Instant', '{U}{U}'),
+      ],
+    });
+    expect(answer(backed)).toBe(1);
+  });
+
+  it('spends it when the strategist prioritizes the card', () => {
+    expect(answer(facing('Mind Stone'), { prioritize: ['Counterspell'] })).toBe(1);
+  });
+
+  it('spends it when lethal is on the public board', () => {
+    const dying = facing('Mind Stone', { life: 5, battlefield: [creature('x', 'P2', 6, 6)] });
+    expect(answer(dying)).toBe(1);
+  });
+
+  it('spends it on the rock without the scarceAnswer fix, as the bot did before', () => {
+    const res = decide(
+      request([PASS, counter], { activePlayer: 'P2' }),
+      facing('Mind Stone'),
+      new Rng('a'),
+      {
+        knowledge: k,
+        fixes: [],
+      },
+    );
+    expect(res.actionId).toBe(1);
+  });
+
+  it('burns a creature it kills rather than two points at a healthy player, but finishes a low one', () => {
+    const shock: LegalAction = {
+      id: 1,
+      type: 'castSpell',
+      description: 'Cast Shock',
+      targets: [{ slot: 0, options: ['P2', 'lions'] }],
+      data: { sourceName: 'Shock', manaCost: '{R}', instantSpeed: true },
+    };
+    const board = [creature('lions', 'P3', 2, 1)];
+    const aim = (p2Life: number) =>
+      decide(
+        request([PASS, shock]),
+        view({
+          battlefield: board,
+          opponents: view().opponents.map((o) => (o.seat === 'P2' ? { ...o, life: p2Life } : o)),
+        }),
+        new Rng('a'),
+        { knowledge: k },
+      ).targets;
+    expect(aim(30)).toEqual([{ slot: 0, choice: 'lions' }]);
+    expect(aim(2)).toEqual([{ slot: 0, choice: 'P2' }]);
+  });
+});
+
 describe('decideScored', () => {
   it('returns the ranking behind the answer', () => {
     const actions = [PASS, { id: 1, type: 'playLand', description: 'Play Forest' }];

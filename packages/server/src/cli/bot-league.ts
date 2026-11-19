@@ -42,6 +42,12 @@ export const ARMS: Record<string, LeagueArm> = {
   policy: { name: 'policy' },
   knowledge: { name: 'knowledge', knowledge: true },
   fixed: { name: 'fixed', knowledge: true, fixes: [...DEFAULT_POLICY_FIXES] },
+  // The production bot as ADR 0043 left it, before `scarceAnswer` and `faceDamage`: their gate.
+  'fixed-0043': {
+    name: 'fixed-0043',
+    knowledge: true,
+    fixes: DEFAULT_POLICY_FIXES.filter((fix) => fix !== 'scarceAnswer' && fix !== 'faceDamage'),
+  },
   ...FIX_ARMS,
   aggro: { name: 'aggro', knowledge: true, steering: { aggression: 0.85 } },
   control: {
@@ -49,11 +55,25 @@ export const ARMS: Record<string, LeagueArm> = {
     knowledge: true,
     steering: { aggression: 0.3, holdUpMana: 2, avoidOverextending: true },
   },
+  // Play styles (`BotSteering.style`): each preset on its own, and the style the deck's archetype
+  // implies, with no strategist and under the proxy strategist.
+  'style-aggro': styleArm('aggro'),
+  'style-control': styleArm('control'),
+  'style-combo': styleArm('combo'),
+  styled: { name: 'styled', knowledge: true, fixes: [...DEFAULT_POLICY_FIXES], styleFromDeck: true },
   // Hill-climb S7: the production bot steered by the proxy strategist, under each wake schedule.
   'proxy-every-turn': proxyArm('proxy-every-turn', 'everyTurn', 'table-v1'),
   'proxy-v1': proxyArm('proxy-v1', 'onChange', 'table-v1'),
   'proxy-v2': proxyArm('proxy-v2', 'onChange', 'table-v2'),
+  'proxy-v2-styled': {
+    ...proxyArm('proxy-v2-styled', 'onChange', 'table-v2'),
+    styleFromDeck: true,
+  },
 };
+
+function styleArm(style: PlayStyle): LeagueArm {
+  return { name: `style-${style}`, knowledge: true, fixes: [...DEFAULT_POLICY_FIXES], steering: { style } };
+}
 
 function proxyArm(name: string, replan: 'everyTurn' | 'onChange', rule: WakeRule): LeagueArm {
   return {
