@@ -1161,3 +1161,90 @@ describe('StrategyCoordinator with the stable-prefix layout', () => {
     for (const key of Object.keys(plainPayload)) expect(merged[key]).toEqual(plainPayload[key]);
   });
 });
+
+describe('StrategyCoordinator — wake rule (hill-climb S7)', () => {
+  const knobs = (): AiClient => ({
+    activeModel: 'm',
+    requestDecision: vi.fn().mockImplementation((_p, r: DecisionRequest) =>
+      Promise.resolve({
+        response: {
+          requestId: r.requestId,
+          actionId: 0,
+          turnStrategy: { intent: 'x', steering: { aggression: 0.5 } },
+        },
+        meta: {
+          model: 'm',
+          promptTokens: 1,
+          responseTokens: 1,
+          latencyMs: 1,
+          wasRetry: false,
+          wasFallback: false,
+          rawResponse: '{}',
+        },
+      }),
+    ),
+  });
+  const creature = (id: string, name: string, power: number) => ({
+    id,
+    controller: 'P1',
+    name,
+    typeLine: 'Creature',
+    power,
+    toughness: power,
+    tapped: false,
+    status: [],
+  });
+  // Turn 1 the seat's commander alone; turn 2 its board grows; turn 3 the commander is gone.
+  const boards = [
+    [creature('c', 'Cmdr', 5)],
+    [creature('c', 'Cmdr', 5), creature('a', 'A', 5), creature('b', 'B', 5)],
+    [creature('a', 'A', 5), creature('b', 'B', 5)],
+  ];
+  const tableView = (turn: number): PlayerView =>
+    ({
+      ...view,
+      commanders: [{ name: 'Cmdr', zone: 'command', castCount: 0 }],
+      battlefield: boards[turn - 1],
+    }) as unknown as PlayerView;
+
+  async function play(rule: 'table-v1' | 'table-v2'): Promise<StrategyCoordinator> {
+    let turn = 1;
+    const e = {
+      view: vi.fn().mockImplementation(() => tableView(turn)),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+    const coordinator = new StrategyCoordinator(
+      knobs(),
+      { enqueue: <T>(fn: () => Promise<T>) => fn() },
+      e,
+      { ...DEFAULT_AI_CONFIG, tacticalMode: 'bot', strategistWakeRule: rule },
+    );
+    for (; turn <= 3; turn++) {
+      coordinator.prepare(request({ turn, requestId: `r${turn}` }));
+      await coordinator.drained();
+    }
+    return coordinator;
+  }
+
+  it('table-v2 reuses knobs while the seat carries them out, and wakes when it loses its commander', async () => {
+    const v2 = await play('table-v2');
+    expect(v2.strategistStats).toEqual({
+      calls: 2,
+      reused: 1,
+      wakes: { 'first knobs': 1, commander: 1 },
+    });
+  });
+
+  it('table-v1 also wakes when the seat’s own board grows', async () => {
+    const v1 = await play('table-v1');
+    expect(v1.strategistStats).toEqual({
+      calls: 3,
+      reused: 0,
+      wakes: { 'first knobs': 1, power: 1, commander: 1 },
+    });
+  });
+
+  it('defaults to table-v2', () => {
+    expect(DEFAULT_AI_CONFIG.strategistWakeRule).toBe('table-v2');
+  });
+});

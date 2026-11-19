@@ -261,8 +261,16 @@ export class StrategyCoordinator {
     PlayerId,
     { steering: BotSteering; table: TableSnapshot; reusedTurns: number }
   >();
-  /** Strategist calls made and skipped because the knobs still fit, for measurement. */
-  readonly strategistStats = { calls: 0, reused: 0 };
+  /**
+   * Strategist calls made and skipped because the knobs still fit, for measurement. `wakes`
+   * counts each call's wake reasons with the seat dropped (`life`, `power`, `first knobs`), so
+   * the census can say which table change drives calls.
+   */
+  readonly strategistStats: { calls: number; reused: number; wakes: Record<string, number> } = {
+    calls: 0,
+    reused: 0,
+    wakes: {},
+  };
   /** Every shadow tactician request this game, in order (ADR 0045). */
   readonly tacticianRequests: TacticianRequestRecord[] = [];
   /**
@@ -385,6 +393,12 @@ export class StrategyCoordinator {
     if (this.reuseSteering(activePlayer)) return;
     const wake = this.wakeReasons(activePlayer);
     this.strategistStats.calls++;
+    for (const reason of wake) {
+      // Table reasons are `<seat> <what>`; 'first knobs' and 'reuse limit' name no seat.
+      const kind =
+        reason === 'first knobs' || reason === 'reuse limit' ? reason : reason.replace(/^\S+ /, '');
+      this.strategistStats.wakes[kind] = (this.strategistStats.wakes[kind] ?? 0) + 1;
+    }
     this.strategistGeneration++;
     const generation = this.strategistGeneration;
     this.activeGeneration = generation;
@@ -616,13 +630,13 @@ export class StrategyCoordinator {
       const current = this.steeringBySeat.get(seat);
       if (current === undefined) return ['first knobs'];
       if (current.reusedTurns >= max) return ['reuse limit'];
-      return tableChangeReasons(current.table, now);
+      return tableChangeReasons(current.table, now, this.wakeOptions(seat));
     }
     const simulated = this.simulatedOnChange.get(seat);
     let reasons: string[];
     if (simulated === undefined) reasons = ['first knobs'];
     else if (simulated.reused >= max) reasons = ['reuse limit'];
-    else reasons = tableChangeReasons(simulated.table, now);
+    else reasons = tableChangeReasons(simulated.table, now, this.wakeOptions(seat));
     this.simulatedOnChange.set(
       seat,
       reasons.length === 0 && simulated !== undefined
@@ -630,6 +644,10 @@ export class StrategyCoordinator {
         : { table: now, reused: 0 },
     );
     return reasons;
+  }
+
+  private wakeOptions(seat: PlayerId): { self: PlayerId; rule: AiConfig['strategistWakeRule'] } {
+    return { self: seat, rule: this.config.strategistWakeRule };
   }
 
   /** `onChange`'s state as it would have been, for `wakeReasons` under `everyTurn`. */
@@ -648,7 +666,8 @@ export class StrategyCoordinator {
     const current = this.steeringBySeat.get(seat);
     if (current === undefined) return false;
     if (current.reusedTurns >= this.config.strategistMaxReuseTurns) return false;
-    if (tableChanged(current.table, tableSnapshot(this.engine.view(seat)))) return false;
+    if (tableChanged(current.table, tableSnapshot(this.engine.view(seat)), this.wakeOptions(seat)))
+      return false;
     current.reusedTurns++;
     this.strategistStats.reused++;
     this.engine.addDebug?.('decision', `strategist knobs reused for ${seat}`, {
