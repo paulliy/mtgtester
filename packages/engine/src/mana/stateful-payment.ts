@@ -28,6 +28,7 @@ import {
 } from '../state/queries';
 import {
   characteristicsFixedDuringPayment,
+  departuresCannotAddCapacity,
   gateCannotOpenDuringPayment,
 } from './payment-stability';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
@@ -270,6 +271,16 @@ export function searchPayment(
     .filter((permanent) => permanent.controllerId === player.id)
     .map(charsOf);
   const ownAbilities = ownCharacteristics.flatMap((chars) => chars.manaAbilities);
+  // A source that sacrifices itself (a Treasure) only leaves: it joins the bound when nothing in
+  // play reads a departure (`departuresCannotAddCapacity`). Without this, one Treasure sent every
+  // unpayable spell on the menu through the full search, about a tenth of a second each.
+  const selfSacrificeBounded =
+    premise &&
+    ownAbilities.some((ability) => ability.costs?.some((cost) => cost.kind === 'sacrificeSelf')) &&
+    departuresCannotAddCapacity(
+      definitionsInPlay(ctx),
+      ownAbilities.some((ability) => ability.condition !== undefined),
+    );
   const fixedCapacity = ownAbilities.every(
     (ability) =>
       ability.amount === undefined &&
@@ -278,7 +289,12 @@ export function searchPayment(
         (gatedBound && gateCannotOpenDuringPayment(ability.condition))) &&
       (ability.costs === undefined ||
         (ability.costs.some((cost) => cost.kind === 'tap') &&
-          ability.costs.every((cost) => cost.kind === 'tap' || cost.kind === 'mana'))) &&
+          ability.costs.every(
+            (cost) =>
+              cost.kind === 'tap' ||
+              cost.kind === 'mana' ||
+              (selfSacrificeBounded && cost.kind === 'sacrificeSelf'),
+          ))) &&
       (ability.onActivate ?? []).every(
         (effect) => effect.op === 'gainLife' || effect.op === 'damageController',
       ),

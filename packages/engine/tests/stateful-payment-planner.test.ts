@@ -9,6 +9,7 @@ import type { Condition } from '../src/cards/condition';
 import { parseManaCost, type ParsedManaCost } from '../src/mana/cost';
 import {
   characteristicsFixedDuringPayment,
+  departuresCannotAddCapacity,
   gateCannotOpenDuringPayment,
 } from '../src/mana/payment-stability';
 import { searchPayment, tapOnlySource } from '../src/mana/stateful-payment';
@@ -222,6 +223,89 @@ describe('payment premise', () => {
         ),
       ]),
     ).toBe(true);
+  });
+});
+
+describe('departures and the capacity bound', () => {
+  const holder = (staticEffects: unknown[], ruleStatics: unknown[] = []) => ({
+    staticEffects,
+    ruleStatics,
+  });
+  const lands = { kind: 'type', value: 'Land' };
+  const artifacts = { kind: 'type', value: 'Artifact' };
+  const perArtifact = {
+    affects: { kind: 'self' },
+    op: {
+      layer: 7,
+      sublayer: 'c',
+      power: { kind: 'countPermanents', selector: artifacts, scope: 'you' },
+      toughness: { kind: 'const', n: 0 },
+    },
+  };
+  it('stateful-planner-departures — a Treasure may join the bound unless a static reads what leaving changes', () => {
+    expect(departuresCannotAddCapacity([holder([])], false)).toBe(true);
+    expect(
+      departuresCannotAddCapacity(
+        [holder([{ affects: lands, op: { layer: 6, loseAllAbilities: true } }])],
+        false,
+      ),
+    ).toBe(true);
+    // "As long as you control three or fewer artifacts, lands lose all abilities": a Treasure
+    // leaving can switch it on or off, so the copying search decides.
+    expect(
+      departuresCannotAddCapacity(
+        [
+          holder([
+            {
+              affects: lands,
+              op: { layer: 6, loseAllAbilities: true },
+              condition: {
+                kind: 'countPermanents',
+                selector: artifacts,
+                scope: 'you',
+                cmp: '<=',
+                n: 3,
+              },
+            },
+          ]),
+        ],
+        false,
+      ),
+    ).toBe(false);
+    // Power from a count reaches a payment only through a gate.
+    expect(departuresCannotAddCapacity([holder([perArtifact])], false)).toBe(true);
+    expect(departuresCannotAddCapacity([holder([perArtifact])], true)).toBe(false);
+    // Threshold-style graveyard counts stay out whatever the gates.
+    expect(
+      departuresCannotAddCapacity(
+        [
+          holder([
+            {
+              affects: lands,
+              op: { layer: 6, loseAllAbilities: true },
+              condition: { kind: 'countCardsInZone', zone: 'graveyard', cmp: '>=', n: 7 },
+            },
+          ]),
+        ],
+        false,
+      ),
+    ).toBe(false);
+  });
+
+  it('stateful-planner-treasure-bound — an unpayable cost with Treasures out is null, not a budget halt', () => {
+    const ctx = board((c) => {
+      for (let i = 0; i < 6; i++) spawn(c, 'P1', forest());
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', painland());
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', treasure());
+    });
+    const cost = parseManaCost('{6}{W}{W}{W}{W}{W}').cost!;
+    const before = JSON.stringify(ctx.state);
+    expect(search(ctx, cost, true)).toEqual({ plan: null });
+    expect(JSON.stringify(ctx.state)).toBe(before);
+    // Payable costs still come out of the copying search, as before.
+    for (const payable of ['{G}', '{3}{G}', '{W}{W}{W}'])
+      expect(search(ctx, parseManaCost(payable).cost!, true)).not.toEqual({ plan: null });
   });
 });
 
