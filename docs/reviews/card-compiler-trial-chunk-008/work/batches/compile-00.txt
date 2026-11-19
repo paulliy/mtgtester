@@ -1,0 +1,7 @@
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/compile/samurai-s-katana.r2.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/compile/samurai-s-katana.r2.json
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/compile/werefox-bodyguard.r2.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/compile/werefox-bodyguard.r2.json
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/compile/termagant-swarm.r2.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/compile/termagant-swarm.r2.json
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/compile/hancock-ghoulish-mayor.r2.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/compile/hancock-ghoulish-mayor.r2.json
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/compile/dreamdew-entrancer.r2.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/compile/dreamdew-entrancer.r2.json
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/compile/jolted-awake.r2.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/compile/jolted-awake.r2.json
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/compile/topiary-lecturer.r2.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/compile/topiary-lecturer.r2.json

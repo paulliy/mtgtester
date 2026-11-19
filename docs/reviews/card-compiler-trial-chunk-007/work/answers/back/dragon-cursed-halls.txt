@@ -1,0 +1,2 @@
+{1}, {T}: Target creature gains "Whenever this creature deals combat damage to a player, create a Treasure token." until end of turn.
+A Treasure token is an artifact with "{T}, Sacrifice this artifact: Add one mana of any color."

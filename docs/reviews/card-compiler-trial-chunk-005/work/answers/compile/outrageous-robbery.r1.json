@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no way to exile a variable number X of cards from the top of the target opponent's library face down: exileFaceDownPlayable takes a fixed look count and sends the rest to the bottom or graveyard, and exileLibraryTop takes no count or target."}

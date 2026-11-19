@@ -1,0 +1,57 @@
+{
+  "name": "Haywire Mite",
+  "oracleId": "749d2994-44e7-40d3-8630-7bebed239e9e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{G}, Sacrifice this creature: Exile target noncreature artifact or noncreature enchantment."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "artifactOrEnchantment",
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "exile",
+              "target": 0
+            }
+          ],
+          "description": "{G}, Sacrifice this creature: Exile target noncreature artifact or noncreature enchantment."
+        }
+      }
+    ]
+  }
+}

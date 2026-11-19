@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'You control enchanted creature' is a control-change effect for as long as the Aura stays attached; ContinuousOp has no control layer, and gainControl durations (permanent, untilEndOfTurn, whileSourceOnBattlefield) do not end when the Aura is unattached."}

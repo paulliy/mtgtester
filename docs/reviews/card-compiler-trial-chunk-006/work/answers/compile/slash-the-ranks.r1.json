@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"destroyEach","selector":{"kind":"allOf","of":[{"kind":"anyOf","of":[{"kind":"type","value":"Creature"},{"kind":"type","value":"Planeswalker"}]},{"kind":"not","of":{"kind":"isCommander"}}]}}],"description":"Destroy all creatures and planeswalkers except for commanders."}}}

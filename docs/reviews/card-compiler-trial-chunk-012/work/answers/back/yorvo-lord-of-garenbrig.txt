@@ -1,0 +1,1 @@
+Whenever another green creature you control enters, put a +1/+1 counter on this creature. Then if that creature's power is greater than or equal to this creature's power plus 1, put a second +1/+1 counter on this creature.

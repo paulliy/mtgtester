@@ -1,0 +1,50 @@
+{
+  "name": "Stone Haven Outfitter",
+  "oracleId": "8e646a6b-77ba-4f7d-8ee9-b0b084453f77",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an equipped creature you control dies, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "isEquipped"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever an equipped creature you control dies, draw a card."
+      }
+    ]
+  }
+}

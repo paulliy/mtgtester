@@ -1,0 +1,1 @@
+Whenever this creature deals combat damage to a player, it deals that much damage to each creature. That damage is dealt as though the source were controlled by the player that was dealt combat damage.

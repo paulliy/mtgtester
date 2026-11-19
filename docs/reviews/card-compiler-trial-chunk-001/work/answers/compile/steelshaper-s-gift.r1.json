@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"searchLibrary","filter":{"kind":"subtype","value":"Equipment"},"destinations":[{"zone":"hand"}],"reveal":true},{"op":"shuffle"}],"description":"Search your library for an Equipment card, reveal that card, put it into your hand, then shuffle."}}}

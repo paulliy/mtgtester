@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Myriad's token copies for each opponent other than the defending player, each an optional choice, exiled at end of combat, have no schema form: createTokenForEachOpponent does not exclude the defender and createTokenCopyOf exiles only at the end step."}

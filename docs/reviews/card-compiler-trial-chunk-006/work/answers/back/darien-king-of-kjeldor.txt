@@ -1,0 +1,1 @@
+Whenever you are dealt damage, you may create a number of 1/1 white Soldier creature tokens equal to the damage dealt.

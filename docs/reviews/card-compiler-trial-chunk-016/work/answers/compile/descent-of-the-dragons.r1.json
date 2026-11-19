@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Each creature destroyed gives a 4/4 flying Dragon to its own controller, but destroyEachChosen creates no tokens and destroyAndCreateTokenForController handles only one fixed target slot, not a variable number of chosen creatures."}

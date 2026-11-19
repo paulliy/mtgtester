@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The alternative cost 'discard a Plains card' needs a discard restricted to cards with the Plains subtype, and the schema's discardCard cost takes only a count with no selector (exileCardFromHand is an exile, not a discard)."}

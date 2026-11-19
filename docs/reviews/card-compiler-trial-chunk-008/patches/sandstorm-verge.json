@@ -1,0 +1,54 @@
+{
+  "name": "Sandstorm Verge",
+  "oracleId": "de417a82-8f03-4d7e-aee7-48f7d7eba61a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{3}, {T}: Target creature can't block this turn. Activate only as a sorcery."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 3,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "count": {
+                "min": 1,
+                "max": 1
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "cantBlockEachChosenThisTurn",
+              "targetSlot": 0
+            }
+          ],
+          "description": "{3}, {T}: Target creature can't block this turn. Activate only as a sorcery."
+        }
+      }
+    ]
+  }
+}

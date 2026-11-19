@@ -1,0 +1,1 @@
+When enchanted creature leaves the battlefield, if it was an artifact, a legendary permanent, or a Saga, draw two cards.

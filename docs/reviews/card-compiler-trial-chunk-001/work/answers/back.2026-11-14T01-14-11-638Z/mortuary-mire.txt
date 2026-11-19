@@ -1,0 +1,1 @@
+When this land enters, you may put target creature card from your graveyard on top of its library. The target is chosen when the trigger is put on the stack, and the data does not state whose library receives the card.

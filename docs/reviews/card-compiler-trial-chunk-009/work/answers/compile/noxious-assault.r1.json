@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The second sentence ('Whenever a creature blocks this turn, its controller gets a poison counter') needs a this-turn delayed blocks trigger whose poison recipient is the blocking creature's controller, and the schema does not document that a blocks trigger's eventPlayer is that controller."}

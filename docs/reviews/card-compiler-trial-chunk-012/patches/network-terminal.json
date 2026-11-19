@@ -1,0 +1,72 @@
+{
+  "name": "Network Terminal",
+  "oracleId": "a0eb1d5b-2c54-44fa-b7ad-bdd4b1147929",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}, {T}, Tap another untapped artifact you control: Draw a card, then discard a card."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "tapOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "draw",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            },
+            {
+              "op": "discard",
+              "count": 1
+            }
+          ],
+          "description": "{1}, {T}, Tap another untapped artifact you control: Draw a card, then discard a card."
+        }
+      }
+    ]
+  }
+}

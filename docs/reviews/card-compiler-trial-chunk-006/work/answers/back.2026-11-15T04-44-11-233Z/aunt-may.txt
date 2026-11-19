@@ -1,0 +1,1 @@
+Whenever another creature you control enters, you gain 1 life. If that creature is a Spider, put a +1/+1 counter on it.

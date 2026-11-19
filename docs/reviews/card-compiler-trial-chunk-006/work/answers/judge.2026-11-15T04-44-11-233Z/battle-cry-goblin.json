@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A checks whether you attacked with creatures of total power 6 or greater this combat (creatures attacked with, even if no longer attacking); Text B checks only the total power of creatures currently attacking.","Text A's Goblin token is created tapped and attacking; Text B's token is created attacking only, not tapped."]}

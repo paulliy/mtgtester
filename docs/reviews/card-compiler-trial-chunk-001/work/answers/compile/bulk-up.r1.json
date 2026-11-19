@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature"}],"effects":[{"op":"doublePowerTarget","target":0}],"description":"Double target creature's power until end of turn."}}}

@@ -1,0 +1,1 @@
+Enchanted creature is a black Dragon in addition to its other types, has base power and toughness 4/2, and has flying, deathtouch, and goad.

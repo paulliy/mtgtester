@@ -1,0 +1,1 @@
+Whenever a creature that entered the battlefield this turn deals combat damage to a player, you draw a card.

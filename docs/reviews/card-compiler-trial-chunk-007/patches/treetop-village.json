@@ -1,0 +1,54 @@
+{
+  "name": "Treetop Village",
+  "oracleId": "b53f216d-1592-4eee-b204-502a805fbc8c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{G}: ~ becomes a 3/3 green Ape creature with trample until end of turn. It's still a land."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "becomeCreatureUntilEot",
+              "target": "source",
+              "subtypes": [
+                "Ape"
+              ],
+              "power": 3,
+              "toughness": 3,
+              "keywords": [
+                "trample"
+              ],
+              "colors": [
+                "G"
+              ]
+            }
+          ],
+          "description": "{1}{G}: This land becomes a 3/3 green Ape creature with trample until end of turn. It's still a land."
+        }
+      }
+    ]
+  }
+}

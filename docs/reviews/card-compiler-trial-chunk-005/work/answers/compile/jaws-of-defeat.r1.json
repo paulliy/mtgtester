@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The life loss equals the trigger creature's power minus its toughness, and the Value schema has no way to subtract a toughness from a power or to read the trigger object's toughness."}

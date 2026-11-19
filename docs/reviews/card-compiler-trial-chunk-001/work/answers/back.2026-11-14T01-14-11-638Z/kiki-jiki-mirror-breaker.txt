@@ -1,0 +1,1 @@
+{T}: Create a token that is a copy of target nonlegendary creature you control, except it has haste. Sacrifice that token at the beginning of the end step.

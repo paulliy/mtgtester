@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature"}],"effects":[{"op":"dealDamage","target":0,"amount":{"kind":"powerOfTarget","target":0},"source":0}],"description":"Target creature deals damage to itself equal to its power."}}}

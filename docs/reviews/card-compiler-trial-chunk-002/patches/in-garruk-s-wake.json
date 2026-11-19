@@ -1,0 +1,43 @@
+{
+  "name": "In Garruk's Wake",
+  "oracleId": "a6899b94-427d-4851-a474-4087e0a0918a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy all creatures you don't control and all planeswalkers you don't control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "destroyEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  }
+                ]
+              },
+              {
+                "kind": "controller",
+                "who": "opponents"
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Destroy all creatures you don't control and all planeswalkers you don't control."
+    }
+  }
+}

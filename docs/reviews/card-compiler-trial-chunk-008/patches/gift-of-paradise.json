@@ -1,0 +1,40 @@
+{
+  "name": "Gift of Paradise",
+  "oracleId": "43a86d36-9653-4498-a533-8b30b919cdbf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted land has \"{T}: Add two mana of any one color.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addManaAbility": {
+            "units": [
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ],
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ]
+            ],
+            "linked": true
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "name": "Swarmyard Massacre",
+  "oracleId": "50e7ae38-2a66-4e32-bfb3-fefbae0caa61",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Create two 1/1 green Squirrel creature tokens. Then each creature that isn't an Insect, Rat, Spider, or Squirrel gets -1/-1 until end of turn for each creature you control that's an Insect, Rat, Spider, or Squirrel."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Squirrel",
+            "typeLine": "Token Creature — Squirrel",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Squirrel"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 1,
+            "toughness": 1
+          },
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "pumpEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Insect"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Rat"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Spider"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Squirrel"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "power": {
+            "kind": "negate",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "subtype",
+                        "value": "Insect"
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Rat"
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Spider"
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Squirrel"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          },
+          "toughness": {
+            "kind": "negate",
+            "of": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "subtype",
+                        "value": "Insect"
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Rat"
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Spider"
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Squirrel"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          }
+        }
+      ],
+      "description": "Create two 1/1 green Squirrel creature tokens. Then each creature that isn't an Insect, Rat, Spider, or Squirrel gets -1/-1 until end of turn for each creature you control that's an Insect, Rat, Spider, or Squirrel."
+    }
+  }
+}

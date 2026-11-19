@@ -1,0 +1,1 @@
+{5}{G}: Other Elves you control gain vigilance until end of turn. Other Elves you control get +X/+X until end of turn, where X is the number of +1/+1 counters on this creature.

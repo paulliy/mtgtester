@@ -1,0 +1,1 @@
+Whenever this creature attacks, target other creature you control gains trample until end of turn and gets +X/+X until end of turn, where X is this creature's power.

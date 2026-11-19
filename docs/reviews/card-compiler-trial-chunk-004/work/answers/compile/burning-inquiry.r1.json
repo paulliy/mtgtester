@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"eachPlayerDraws","scope":"all","count":{"kind":"const","n":3}},{"op":"discardEachPlayer","scope":"all","count":{"kind":"const","n":3},"atRandom":true}],"description":"Each player draws three cards, then discards three cards at random."}}}

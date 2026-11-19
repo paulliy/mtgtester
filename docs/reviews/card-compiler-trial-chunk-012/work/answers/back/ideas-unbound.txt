@@ -1,0 +1,2 @@
+Draw three cards.
+Create a delayed triggered ability. At the beginning of the end step, discard three cards. Then this delayed ability expires.

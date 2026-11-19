@@ -1,0 +1,42 @@
+{
+  "name": "Indomitable Archangel",
+  "oracleId": "0f9269eb-6a6c-4b32-8b3d-73724c12ca6b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Artifacts you control have shroud as long as you control three or more artifacts."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Artifact"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "shroud"
+        },
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "type",
+            "value": "Artifact"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 3
+        }
+      }
+    ]
+  }
+}

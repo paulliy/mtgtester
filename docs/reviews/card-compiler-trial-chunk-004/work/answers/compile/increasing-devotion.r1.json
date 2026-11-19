@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"\"If this spell was cast from a graveyard, create ten of those tokens instead\" needs a condition on the spell's cast zone, and the Condition schema has no such check for a spell's cast from a graveyard."}

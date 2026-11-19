@@ -1,0 +1,39 @@
+{
+  "name": "Spectra Ward",
+  "oracleId": "effb99e6-db1b-4ada-879d-431d9d13d4b7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature gets +2/+2 and has protection from each color. This effect doesn't remove Auras."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 2
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addProtection": [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        }
+      }
+    ]
+  }
+}

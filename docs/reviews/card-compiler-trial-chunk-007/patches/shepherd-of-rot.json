@@ -1,0 +1,39 @@
+{
+  "name": "Shepherd of Rot",
+  "oracleId": "af18e496-fef9-4869-867b-bdac653cafd0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Each player loses 1 life for each Zombie on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "eachPlayerLosesLife",
+              "amount": {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "subtype",
+                  "value": "Zombie"
+                },
+                "scope": "all"
+              }
+            }
+          ],
+          "description": "{T}: Each player loses 1 life for each Zombie on the battlefield."
+        }
+      }
+    ]
+  }
+}

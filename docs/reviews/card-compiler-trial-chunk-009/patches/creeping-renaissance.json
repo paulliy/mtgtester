@@ -1,0 +1,101 @@
+{
+  "name": "Creeping Renaissance",
+  "oracleId": "e2375f13-fd45-4087-abd1-c884acc6c736",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Choose a permanent type. Return all cards of the chosen type from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "chooseOne",
+          "options": [
+            {
+              "effects": [
+                {
+                  "op": "graveyardToHandEach",
+                  "filter": {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  "scope": "you"
+                }
+              ],
+              "description": "Artifact"
+            },
+            {
+              "effects": [
+                {
+                  "op": "graveyardToHandEach",
+                  "filter": {
+                    "kind": "type",
+                    "value": "Battle"
+                  },
+                  "scope": "you"
+                }
+              ],
+              "description": "Battle"
+            },
+            {
+              "effects": [
+                {
+                  "op": "graveyardToHandEach",
+                  "filter": {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  "scope": "you"
+                }
+              ],
+              "description": "Creature"
+            },
+            {
+              "effects": [
+                {
+                  "op": "graveyardToHandEach",
+                  "filter": {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  },
+                  "scope": "you"
+                }
+              ],
+              "description": "Enchantment"
+            },
+            {
+              "effects": [
+                {
+                  "op": "graveyardToHandEach",
+                  "filter": {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  "scope": "you"
+                }
+              ],
+              "description": "Land"
+            },
+            {
+              "effects": [
+                {
+                  "op": "graveyardToHandEach",
+                  "filter": {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  },
+                  "scope": "you"
+                }
+              ],
+              "description": "Planeswalker"
+            }
+          ]
+        }
+      ],
+      "description": "Choose a permanent type. Return all cards of the chosen type from your graveyard to your hand."
+    }
+  }
+}

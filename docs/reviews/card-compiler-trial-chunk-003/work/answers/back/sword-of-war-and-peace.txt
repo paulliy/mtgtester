@@ -1,0 +1,1 @@
+Whenever the equipped creature deals combat damage to a player, this deals damage to that player equal to the number of cards in that player's hand, and you gain life equal to the number of cards in your hand.

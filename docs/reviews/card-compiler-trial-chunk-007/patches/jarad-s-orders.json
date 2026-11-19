@@ -1,0 +1,41 @@
+{
+  "name": "Jarad's Orders",
+  "oracleId": "93036f4e-f553-4cc7-a747-6cd087b0994c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Search your library for up to two creature cards and reveal them. Put one into your hand and the other into your graveyard. Then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          },
+          "destinations": [
+            {
+              "zone": "hand"
+            },
+            {
+              "zone": "graveyard"
+            }
+          ],
+          "count": {
+            "kind": "const",
+            "n": 2
+          },
+          "reveal": true
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "description": "Search your library for up to two creature cards and reveal them. Put one into your hand and the other into your graveyard. Then shuffle."
+    }
+  }
+}

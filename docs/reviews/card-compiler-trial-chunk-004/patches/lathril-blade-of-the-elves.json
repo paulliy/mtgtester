@@ -1,0 +1,56 @@
+{
+  "name": "Lathril, Blade of the Elves",
+  "oracleId": "9b568c34-ba0a-44a7-a0ee-bee3a37b3396",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Tap ten untapped Elves you control: Each opponent loses 10 life and you gain 10 life."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "tapOthers",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Elf"
+                }
+              ]
+            },
+            "count": 10
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "eachOpponentLosesLife",
+              "amount": 10
+            },
+            {
+              "op": "gainLife",
+              "amount": {
+                "kind": "const",
+                "n": 10
+              }
+            }
+          ],
+          "description": "{T}, Tap ten untapped Elves you control: Each opponent loses 10 life and you gain 10 life."
+        }
+      }
+    ]
+  }
+}

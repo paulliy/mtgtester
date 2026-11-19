@@ -1,0 +1,4 @@
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/compile/host-of-the-hereafter.r2.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/compile/host-of-the-hereafter.r2.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/compile/abzan-beastmaster.r2.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/compile/abzan-beastmaster.r2.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/compile/m-o-d-o-k.r2.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/compile/m-o-d-o-k.r2.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/compile/corpse-churn.r2.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/compile/corpse-churn.r2.json

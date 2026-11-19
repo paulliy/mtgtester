@@ -1,0 +1,62 @@
+{
+  "name": "Khalni Heart Expedition",
+  "oracleId": "be6155de-c5b2-415c-ad83-142f9926462a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Remove three quest counters from this enchantment and sacrifice it: Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "removeCounters",
+            "counter": "quest",
+            "count": 3
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "searchLibrary",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              },
+              "destinations": [
+                {
+                  "zone": "battlefield",
+                  "tapped": true
+                }
+              ],
+              "count": {
+                "kind": "const",
+                "n": 2
+              }
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "description": "Remove three quest counters from this enchantment and sacrifice it: Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."
+        }
+      }
+    ]
+  }
+}

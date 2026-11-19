@@ -1,0 +1,3 @@
+Draw three cards.
+Untap up to two lands.
+Discard a card.

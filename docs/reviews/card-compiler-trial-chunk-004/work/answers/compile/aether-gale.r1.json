@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"nonlandPermanent","count":{"min":6,"max":6}}],"effects":[{"op":"returnToHandEachChosen","targetSlot":0}],"description":"Return six target nonland permanents to their owners' hands."}}}

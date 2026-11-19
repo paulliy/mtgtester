@@ -1,0 +1,31 @@
+{
+  "name": "Gimli's Axe",
+  "oracleId": "773b40b1-72f0-48a0-b210-2afa5df5485e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as equipped creature is legendary, it has menace."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "attachedToSource"
+            },
+            {
+              "kind": "supertype",
+              "value": "Legendary"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "menace"
+        }
+      }
+    ]
+  }
+}

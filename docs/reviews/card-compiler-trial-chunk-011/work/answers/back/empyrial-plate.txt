@@ -1,0 +1,1 @@
+Equipped creature gets +X/+X, where X is the number of cards in your hand.

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"tap"}],"timing":"any","ability":{"kind":"activated","targets":[],"effects":[{"op":"eachPlayerLosesLife","amount":{"kind":"countPermanents","selector":{"kind":"subtype","value":"Zombie"},"scope":"all"}}],"description":"{T}: Each player loses 1 life for each Zombie on the battlefield."}}]}}

@@ -1,0 +1,35 @@
+{
+  "name": "Tolarian Terror",
+  "oracleId": "b9d0f2e1-62c2-44fd-ad38-471daf17bb0a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast for each instant and sorcery card in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countCardsInZone",
+          "zone": "graveyard",
+          "selector": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              }
+            ]
+          },
+          "owner": "you"
+        },
+        "selfOnly": true
+      }
+    ]
+  }
+}

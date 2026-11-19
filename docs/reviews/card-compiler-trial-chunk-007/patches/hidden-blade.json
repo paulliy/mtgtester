@@ -1,0 +1,55 @@
+{
+  "name": "Hidden Blade",
+  "oracleId": "37ec9b95-8c9a-4dd5-9ff2-3d6527984126",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Equipment enters, attach it to target creature you control. If that creature is an Assassin, it gains deathtouch until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "op": "attachSelfTo",
+            "target": 0
+          },
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "kind": "subtype",
+                "value": "Assassin"
+              }
+            },
+            "checkTarget": 0,
+            "then": [
+              {
+                "op": "grantKeywordUntilEot",
+                "target": 0,
+                "keyword": "deathtouch"
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "When this Equipment enters, attach it to target creature you control. If that creature is an Assassin, it gains deathtouch until end of turn."
+      }
+    ]
+  }
+}

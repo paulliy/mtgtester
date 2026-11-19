@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A counts artifact and/or creature cards in your graveyard (each card counted once); Text B counts each artifact card and each creature card, so an artifact creature card would be counted twice."]}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no way to limit a per-player \"up to one target\" slot to opponents only (TargetSpec.perPlayer expands over each player, including yourself), so \"for each opponent, exile up to one target nonland permanent that player controls\" cannot be stated exactly."}

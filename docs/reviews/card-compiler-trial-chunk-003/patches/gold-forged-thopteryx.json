@@ -1,0 +1,45 @@
+{
+  "name": "Gold-Forged Thopteryx",
+  "oracleId": "c27e2d6f-498c-42d8-aa1a-ac6402bf3f9a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each legendary permanent you control has ward {2}."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "supertype",
+              "value": "Legendary"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addWard": {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        }
+      }
+    ]
+  }
+}

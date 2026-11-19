@@ -1,0 +1,2 @@
+Target creature gains deathtouch until end of turn.
+That creature also gains "When this creature dies, return that card to the battlefield tapped." until end of turn.

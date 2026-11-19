@@ -1,0 +1,53 @@
+{
+  "name": "Life Finds a Way",
+  "oracleId": "fa4f22b2-7fe4-4f7f-8afd-32add76d740d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a nontoken creature you control with power 4 or greater enters, populate."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "isToken"
+                  }
+                },
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "populate"
+          }
+        ],
+        "description": "Whenever a nontoken creature you control with power 4 or greater enters, populate."
+      }
+    ]
+  }
+}

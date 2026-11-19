@@ -1,0 +1,119 @@
+{
+  "name": "Felothar, Dawn of the Abzan",
+  "oracleId": "fd666669-ad23-4e41-b78c-1cd7b82eb8b4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ enters or attacks, you may sacrifice a nonland permanent. When you do, put a +1/+1 counter on each creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                }
+              ]
+            },
+            "then": [
+              {
+                "op": "putCountersEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                },
+                "counter": "+1/+1",
+                "count": 1
+              }
+            ]
+          }
+        ],
+        "description": "Whenever ~ enters or attacks, you may sacrifice a nonland permanent. When you do, put a +1/+1 counter on each creature you control."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                }
+              ]
+            },
+            "then": [
+              {
+                "op": "putCountersEach",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                },
+                "counter": "+1/+1",
+                "count": 1
+              }
+            ]
+          }
+        ],
+        "description": "Whenever ~ enters or attacks, you may sacrifice a nonland permanent. When you do, put a +1/+1 counter on each creature you control."
+      }
+    ]
+  }
+}

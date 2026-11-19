@@ -1,0 +1,2 @@
+Whenever the equipped creature deals combat damage to a player, this ability does nothing.
+(The data contains no equip ability.)

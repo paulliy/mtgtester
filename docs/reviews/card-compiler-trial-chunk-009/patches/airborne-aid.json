@@ -1,0 +1,29 @@
+{
+  "name": "Airborne Aid",
+  "oracleId": "7f715f72-5444-4ab3-a6ca-3d5bfd0d4851",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Draw a card for each Bird on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "draw",
+          "count": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "subtype",
+              "value": "Bird"
+            },
+            "scope": "all"
+          }
+        }
+      ],
+      "description": "Draw a card for each Bird on the battlefield."
+    }
+  }
+}

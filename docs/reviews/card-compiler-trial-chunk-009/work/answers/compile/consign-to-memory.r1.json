@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A stack-object target cannot be a triggered ability or a colorless spell at once, since stackKind names one kind and no selector tests for colorless."}

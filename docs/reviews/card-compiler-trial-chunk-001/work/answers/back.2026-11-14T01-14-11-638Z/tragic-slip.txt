@@ -1,0 +1,1 @@
+Target creature gets -1/-1 until end of turn. If a comparison hidden in the data (operator hidden, value 1) between the number of creatures that died this turn and 1 holds, that creature gets -13/-13 until end of turn instead.

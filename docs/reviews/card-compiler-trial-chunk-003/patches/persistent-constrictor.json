@@ -1,0 +1,48 @@
+{
+  "name": "Persistent Constrictor",
+  "oracleId": "bf0ee9da-6071-440c-9149-d441f730fcfb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of each opponent's upkeep, they lose 1 life and you put a -1/-1 counter on up to one target creature they control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "opponent"
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "eventPlayer",
+            "count": {
+              "min": 0,
+              "max": 1
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "loseLifeTarget",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "putCountersEachChosen",
+            "targetSlot": 0,
+            "counter": "-1/-1",
+            "count": 1
+          }
+        ],
+        "description": "At the beginning of each opponent's upkeep, they lose 1 life and you put a -1/-1 counter on up to one target creature they control."
+      }
+    ]
+  }
+}

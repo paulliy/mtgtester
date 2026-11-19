@@ -1,0 +1,47 @@
+{
+  "name": "Volcanic Salvo",
+  "oracleId": "9c2fd3a3-96f2-4e84-85a9-77698c2f83aa",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals 6 damage to each of up to two target creatures and/or planeswalkers."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Planeswalker"
+              }
+            ]
+          },
+          "count": {
+            "min": 0,
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamageEachChosen",
+          "targetSlot": 0,
+          "amount": {
+            "kind": "const",
+            "n": 6
+          }
+        }
+      ],
+      "description": "Volcanic Salvo deals 6 damage to each of up to two target creatures and/or planeswalkers."
+    }
+  }
+}

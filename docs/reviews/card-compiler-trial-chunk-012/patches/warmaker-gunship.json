@@ -1,0 +1,44 @@
+{
+  "name": "Warmaker Gunship",
+  "oracleId": "c947171b-ed9e-4b83-af45-bd595a8d84ee",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Spacecraft enters, it deals damage equal to the number of artifacts you control to target creature an opponent controls."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "When this Spacecraft enters, it deals damage equal to the number of artifacts you control to target creature an opponent controls."
+      }
+    ]
+  }
+}

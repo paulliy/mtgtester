@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The rule statics have no restriction that stops opponents casting spells from zones other than their hand; cantCastSpells bans all casting and castFromZone only grants permissions."}

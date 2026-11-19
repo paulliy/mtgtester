@@ -1,0 +1,3 @@
+This creature can't block.
+This creature can't be blocked.
+The data gives no power or toughness for this creature.

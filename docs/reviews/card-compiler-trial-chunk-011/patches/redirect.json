@@ -1,0 +1,26 @@
+{
+  "name": "Redirect",
+  "oracleId": "74a7d880-5a49-412b-af4d-0b4cdb8453ee",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may choose new targets for target spell."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "op": "chooseNewTargets",
+          "target": 0
+        }
+      ],
+      "description": "You may choose new targets for target spell."
+    }
+  }
+}

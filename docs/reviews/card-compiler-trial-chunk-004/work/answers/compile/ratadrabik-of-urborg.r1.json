@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The token copy would have to gain the black color and the Zombie subtype, but createTokenCopyOf can only add card types and override P/T, with no color or subtype addition."}

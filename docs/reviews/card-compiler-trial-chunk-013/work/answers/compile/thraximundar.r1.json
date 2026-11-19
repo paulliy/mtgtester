@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"attacks","subject":{"kind":"self"},"defendingPlayerIsEventPlayer":true},"optional":false,"targets":[],"effects":[{"op":"sacrificeTargetPlayerCreature","target":"eventPlayer"}],"description":"Whenever Thraximundar attacks, defending player sacrifices a creature of their choice."}]}}

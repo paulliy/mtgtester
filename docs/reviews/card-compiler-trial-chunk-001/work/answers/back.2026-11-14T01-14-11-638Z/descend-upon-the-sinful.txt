@@ -1,0 +1,3 @@
+Sorcery. No targets.
+Exile each creature on the battlefield.
+Then, if a comparison hidden in the data (operator hidden, value 3) between the number of card types among cards in your graveyard and 3 holds, create a 4/4 white Angel creature token with flying. Otherwise, nothing happens.

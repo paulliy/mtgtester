@@ -1,0 +1,54 @@
+{
+  "name": "Whelming Wave",
+  "oracleId": "e510eaaf-6497-480f-baa8-f4796b5f1086",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return all creatures to their owners' hands except for Krakens, Leviathans, Octopuses, and Serpents."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "returnToHandEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Kraken"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Leviathan"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Octopus"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Serpent"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Return all creatures to their owners' hands except for Krakens, Leviathans, Octopuses, and Serpents."
+    }
+  }
+}

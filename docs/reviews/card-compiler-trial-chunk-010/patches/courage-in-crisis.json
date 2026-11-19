@@ -1,0 +1,31 @@
+{
+  "name": "Courage in Crisis",
+  "oracleId": "41b929ad-0c44-4e50-84d3-13b318035543",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put a +1/+1 counter on target creature, then proliferate."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "putCounters",
+          "target": 0,
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "op": "proliferate"
+        }
+      ],
+      "description": "Put a +1/+1 counter on target creature, then proliferate."
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "name": "Velomachus Lorehold",
+  "oracleId": "43832745-5d7d-4957-8e30-2072ad012564",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ attacks, look at the top seven cards of your library. You may cast an instant or sorcery spell with mana value less than or equal to ~'s power from among them without paying its mana cost. Put the rest on the bottom of your library in a random order."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "lookAtTopNCastOneFree",
+            "count": 7,
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            "maxManaValue": {
+              "kind": "powerOfSource"
+            }
+          }
+        ],
+        "description": "Whenever Velomachus Lorehold attacks, look at the top seven cards of your library. You may cast an instant or sorcery spell with mana value less than or equal to Velomachus Lorehold's power from among them without paying its mana cost. Put the rest on the bottom of your library in a random order."
+      }
+    ]
+  }
+}

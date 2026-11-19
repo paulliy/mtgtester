@@ -1,0 +1,1 @@
+Destroy each land that isn't a basic land.

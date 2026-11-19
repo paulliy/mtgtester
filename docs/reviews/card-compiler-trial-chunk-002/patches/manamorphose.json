@@ -1,0 +1,33 @@
+{
+  "name": "Manamorphose",
+  "oracleId": "89c83a6d-f6c8-4984-a888-0db62dfb93b1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Add two mana in any combination of colors."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "addMana",
+          "amount": {
+            "kind": "const",
+            "n": 2
+          },
+          "colors": "any"
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Add two mana in any combination of colors. Draw a card."
+    }
+  }
+}

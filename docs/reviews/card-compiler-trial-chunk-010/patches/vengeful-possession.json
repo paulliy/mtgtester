@@ -1,0 +1,40 @@
+{
+  "name": "Vengeful Possession",
+  "oracleId": "1afb9ce6-658e-40e4-a4a2-9a68182a1e73",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Gain control of target creature until end of turn. Untap it. It gains haste until end of turn. You may discard a card. If you do, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "duration": "untilEndOfTurn"
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "haste"
+        },
+        {
+          "op": "mayDiscardThenDraw",
+          "count": 1
+        }
+      ],
+      "description": "Gain control of target creature until end of turn. Untap it. It gains haste until end of turn. You may discard a card. If you do, draw a card."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{T}: Regenerate target permanent that has the Insect, Rat, Spider, or Squirrel subtype. The target may be controlled by any player. This ability is not limited by timing.

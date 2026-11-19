@@ -1,0 +1,1 @@
+Whenever a Food you control is sacrificed, create a tapped Treasure artifact token. That token has "{T}, Sacrifice this artifact: Add one mana of any color."

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no documented trigger for \"whenever you create a token\" (tokenCreated's subject and creator matching are not specified), so the trigger cannot be stated exactly."}

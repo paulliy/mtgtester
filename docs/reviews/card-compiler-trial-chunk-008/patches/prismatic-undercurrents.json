@@ -1,0 +1,56 @@
+{
+  "name": "Prismatic Undercurrents",
+  "oracleId": "27a3aa64-1de7-4b0c-af23-52886e7d258a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Vivid — When this enchantment enters, search your library for up to X basic land cards, where X is the number of colors among permanents you control. Reveal those cards, put them into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Basic"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              ]
+            },
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "count": {
+              "kind": "colorsAmongPermanents"
+            },
+            "allowFailToFind": true,
+            "reveal": true
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "Vivid — When this enchantment enters, search your library for up to X basic land cards, where X is the number of colors among permanents you control. Reveal those cards, put them into your hand, then shuffle."
+      }
+    ]
+  }
+}

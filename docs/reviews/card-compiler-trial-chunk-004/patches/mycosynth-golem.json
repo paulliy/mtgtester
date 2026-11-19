@@ -1,0 +1,37 @@
+{
+  "name": "Mycosynth Golem",
+  "oracleId": "ebcd864a-b7dd-4330-89e1-80576a9437ec",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Artifact creature spells you cast have affinity for artifacts."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "type",
+            "value": "Artifact"
+          },
+          "scope": "you"
+        },
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Artifact"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "Mindsplice Apparatus",
+  "oracleId": "4d0760fb-4e04-4f29-a268-14c13c30232d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Instant and sorcery spells you cast cost {1} less to cast for each oil counter on this artifact."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countersOnSelf",
+          "counter": "oil"
+        },
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Instant"
+            },
+            {
+              "kind": "type",
+              "value": "Sorcery"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

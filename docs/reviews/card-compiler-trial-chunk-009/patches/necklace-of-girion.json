@@ -1,0 +1,78 @@
+{
+  "name": "Necklace of Girion",
+  "oracleId": "9f970385-e7c6-40bf-999e-7015693c2250",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a green spell and whenever a Forest you control enters, put a +1/+1 counter on target creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "color",
+            "value": "G"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": 0,
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever you cast a green spell and whenever a Forest you control enters, put a +1/+1 counter on target creature you control."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Forest"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": 0,
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever you cast a green spell and whenever a Forest you control enters, put a +1/+1 counter on target creature you control."
+      }
+    ]
+  }
+}

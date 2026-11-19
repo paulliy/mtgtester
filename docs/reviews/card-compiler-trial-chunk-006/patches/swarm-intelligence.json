@@ -1,0 +1,42 @@
+{
+  "name": "Swarm Intelligence",
+  "oracleId": "4a7a5ea9-b633-459f-bcd4-40de53afce0e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast an instant or sorcery spell, you may copy that spell. You may choose new targets for the copy."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "copyCastSpell",
+            "optional": true
+          }
+        ],
+        "description": "Whenever you cast an instant or sorcery spell, you may copy that spell. You may choose new targets for the copy."
+      }
+    ]
+  }
+}

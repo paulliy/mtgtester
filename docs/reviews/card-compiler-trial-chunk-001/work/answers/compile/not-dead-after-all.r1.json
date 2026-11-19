@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The granted ability's 'create a Wicked Role token attached to it' refers to the creature returned by the granted return effect, and the schema has no reference to that returned object for createAttachedToken."}

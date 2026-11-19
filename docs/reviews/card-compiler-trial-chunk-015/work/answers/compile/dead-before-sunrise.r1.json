@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect grants an activated ability to every creature matching a selector, since grantAbilityUntilEot takes a single target."}

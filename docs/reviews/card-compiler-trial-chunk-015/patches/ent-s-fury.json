@@ -1,0 +1,62 @@
+{
+  "name": "Ent's Fury",
+  "oracleId": "6bc3c7fd-e371-467f-973c-4c9f0d1ba0bc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put a +1/+1 counter on target creature you control if its power is 4 or greater. Then that creature gets +1/+1 until end of turn and fights target creature you don't control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "creature",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "powerOfTarget",
+              "target": 0
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 4
+            }
+          },
+          "then": [
+            {
+              "op": "putCounters",
+              "target": 0,
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ],
+          "else": []
+        },
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": 1,
+          "toughness": 1
+        },
+        {
+          "op": "fight",
+          "first": 0,
+          "second": 1
+        }
+      ],
+      "description": "Put a +1/+1 counter on target creature you control if its power is 4 or greater. Then that creature gets +1/+1 until end of turn and fights target creature you don't control."
+    }
+  }
+}

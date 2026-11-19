@@ -1,0 +1,34 @@
+{
+  "name": "Pyrokinesis",
+  "oracleId": "d001febc-d511-4e65-a631-91dc9415056b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals 4 damage divided as you choose among any number of target creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "count": {
+            "min": 0,
+            "max": 999
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamageDivided",
+          "targetSlot": 0,
+          "total": {
+            "kind": "const",
+            "n": 4
+          }
+        }
+      ],
+      "description": "Pyrokinesis deals 4 damage divided as you choose among any number of target creatures."
+    }
+  }
+}

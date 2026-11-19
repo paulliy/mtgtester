@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The search's mana value limit is the announced X, but the creature selector's manaValueAtMost takes a fixed number, not a Value, so the search cannot be bounded by X."}

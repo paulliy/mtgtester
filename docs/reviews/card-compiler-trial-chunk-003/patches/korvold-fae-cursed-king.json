@@ -1,0 +1,73 @@
+{
+  "name": "Korvold, Fae-Cursed King",
+  "oracleId": "9ae669dd-7e60-4649-b96e-35da28be641a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ enters or attacks, sacrifice another permanent."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "then": []
+          }
+        ],
+        "description": "Whenever Korvold enters or attacks, sacrifice another permanent."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "then": []
+          }
+        ],
+        "description": "Whenever Korvold enters or attacks, sacrifice another permanent."
+      }
+    ]
+  }
+}

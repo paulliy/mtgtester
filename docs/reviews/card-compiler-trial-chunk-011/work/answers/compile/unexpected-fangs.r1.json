@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A lifelink counter gives the target creature lifelink for as long as it stays there, but the schema only grants counter-based keywords through staticEffects on a permanent, and an instant has no permanent to carry that static."}

@@ -1,0 +1,2 @@
+While this card is in a graveyard, whenever a commander you control enters, you may pay {2}. If you do, return this card from the graveyard to its owner's hand.
+While this card is in a graveyard, whenever a commander you control attacks, you may pay {2}. If you do, return this card from the graveyard to its owner's hand.

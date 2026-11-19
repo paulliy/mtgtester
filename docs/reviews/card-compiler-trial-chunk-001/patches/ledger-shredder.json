@@ -1,0 +1,29 @@
+{
+  "name": "Ledger Shredder",
+  "oracleId": "e9117015-1050-44dd-a46b-e7ffe2085fae",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a player casts their second spell each turn, this creature connives."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "each",
+          "ordinal": 2
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "connive"
+          }
+        ],
+        "description": "Whenever a player casts their second spell each turn, this creature connives."
+      }
+    ]
+  }
+}

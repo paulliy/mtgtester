@@ -1,0 +1,1 @@
+Whenever a creature an opponent controls attacks you, that creature's controller loses 1 life and you gain 1 life.

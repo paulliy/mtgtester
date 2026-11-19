@@ -1,0 +1,87 @@
+{
+  "name": "Titanic Ultimatum",
+  "oracleId": "0cd28580-d718-4d0b-96e3-a836c2911c27",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Until end of turn, creatures you control get +5/+5 and gain first strike, trample, and lifelink."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "pumpEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "power": 5,
+          "toughness": 5
+        },
+        {
+          "op": "grantKeywordEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "keyword": "first strike"
+        },
+        {
+          "op": "grantKeywordEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "keyword": "trample"
+        },
+        {
+          "op": "grantKeywordEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "keyword": "lifelink"
+        }
+      ],
+      "description": "Until end of turn, creatures you control get +5/+5 and gain first strike, trample, and lifelink."
+    }
+  }
+}

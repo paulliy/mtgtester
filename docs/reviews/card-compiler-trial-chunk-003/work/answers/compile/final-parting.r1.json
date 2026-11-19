@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"searchLibrary","filter":{"kind":"allOf","of":[]},"destinations":[{"zone":"hand"},{"zone":"graveyard"}],"count":{"kind":"const","n":2}},{"op":"shuffle"}],"description":"Search your library for two cards. Put one into your hand and the other into your graveyard. Then shuffle."}}}

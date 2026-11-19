@@ -1,0 +1,1 @@
+{1}, {T}, Sacrifice this land: Destroy target nonbasic land an opponent controls. Its controller may search their library for a basic land card and put it onto the battlefield untapped. Create a colorless Treasure artifact token with "{T}, Sacrifice this artifact: Add one mana of any color."

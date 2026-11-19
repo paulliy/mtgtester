@@ -1,0 +1,64 @@
+{
+  "name": "Avacyn, Angel of Horror",
+  "oracleId": "4af61d45-7114-4eb4-a905-9e03caf87454",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ or another nontoken creature you control dies, return that card to the battlefield under your control at the beginning of the next end step."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "isToken"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "registerDelayedTrigger",
+            "when": "endStep",
+            "expiry": "endStep",
+            "target": "triggerObject",
+            "controller": "source",
+            "ability": {
+              "kind": "triggered",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "graveyardToBattlefield",
+                  "target": "triggerObject"
+                }
+              ],
+              "description": "Return that card to the battlefield under your control at the beginning of the next end step."
+            }
+          }
+        ],
+        "description": "Whenever Avacyn or another nontoken creature you control dies, return that card to the battlefield under your control at the beginning of the next end step."
+      }
+    ]
+  }
+}

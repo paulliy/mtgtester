@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"\"For each creature target player controls, create a token that's a copy of that creature\" needs a per-creature copy loop over a targeted player's creatures; createTokenCopyOf copies one referent and no op iterates a chosen player's creatures."}

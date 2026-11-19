@@ -1,0 +1,35 @@
+{
+  "name": "Deathleaper, Terror Weapon",
+  "oracleId": "8e22495d-a921-4c91-ada3-79098851e5d4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Flesh Hooks — Creatures you control that entered this turn have double strike."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "enteredThisTurn"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "double strike"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "Military Intelligence",
+  "oracleId": "464bfcdb-a82b-4573-92a4-c5e463724fbe",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you attack with two or more creatures, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attackDeclared",
+          "attacker": "you",
+          "minAttackers": 2
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever you attack with two or more creatures, draw a card."
+      }
+    ]
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "name": "Skemfar Avenger",
+  "oracleId": "47c67df1-52f5-459f-b83e-6b971be9b294",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another nontoken Elf or Berserker you control dies, you draw a card and you lose 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "isToken"
+                  }
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Elf"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Berserker"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "loseLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever another nontoken Elf or Berserker you control dies, you draw a card and you lose 1 life."
+      }
+    ]
+  }
+}

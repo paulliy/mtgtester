@@ -1,0 +1,58 @@
+{
+  "name": "Samwise Gamgee",
+  "oracleId": "7ce37c26-91ea-493f-bfc3-a890d4538bc1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice three Foods: Return target historic card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "subtype",
+              "value": "Food"
+            },
+            "count": 3
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "cardInGraveyard",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "supertype",
+                    "value": "Legendary"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Saga"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "graveyardToHand",
+              "target": 0
+            }
+          ],
+          "description": "Sacrifice three Foods: Return target historic card from your graveyard to your hand."
+        }
+      }
+    ]
+  }
+}

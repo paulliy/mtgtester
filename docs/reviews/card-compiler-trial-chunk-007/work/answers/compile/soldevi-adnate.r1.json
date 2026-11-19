@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"manaAbilities":[{"units":[["B"]],"costs":[{"kind":"tap"},{"kind":"sacrificeOther","selector":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"type","value":"Creature"},{"kind":"anyOf","of":[{"kind":"color","value":"B"},{"kind":"type","value":"Artifact"}]}]},"allowSelf":true}],"amountFromSacrificedManaValue":true}]}}

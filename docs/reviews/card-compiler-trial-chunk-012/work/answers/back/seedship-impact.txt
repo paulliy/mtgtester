@@ -1,0 +1,2 @@
+Destroy target artifact or enchantment.
+If that permanent's mana value was 2 or less, create a colorless Lander artifact token with the subtype Lander, with no power or toughness, and with the following ability: "{2}, {T}, Sacrifice this token: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."

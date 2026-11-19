@@ -1,0 +1,1 @@
+{U}{R}, Pay X, {T}: This ability deals X damage to target creature. Then the controller of that creature draws X cards.

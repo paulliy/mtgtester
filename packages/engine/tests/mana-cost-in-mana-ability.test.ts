@@ -32,7 +32,17 @@ import { payManaCost } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import { manaSourcesFor } from '../src/state/queries';
 import type { EnginePlayerState, GameContext } from '../src/state/types';
-import { copies, forest, gameConfig, oracle, plains, pump, spawn, swamp } from './fixtures';
+import {
+  copies,
+  forest,
+  gameConfig,
+  oracle,
+  plains,
+  pump,
+  spawn,
+  swamp,
+  editableDef,
+} from './fixtures';
 
 const desolateMire = () =>
   oracle({
@@ -317,7 +327,7 @@ describe('what still fails closed', () => {
     const ctx = pod();
     const player = p1(ctx);
     const perm = spawn(ctx, 'P1', forest());
-    const def = ctx.defs.get(perm.oracleId)!;
+    const def = editableDef(ctx, perm.oracleId);
     (def.manaAbilities as ManaAbilitySpec[]).push({
       costs: [{ kind: 'mana', cost: { ...cost('{0}'), x: 1 } }, { kind: 'tap' }],
       units: [['G'], ['G']],

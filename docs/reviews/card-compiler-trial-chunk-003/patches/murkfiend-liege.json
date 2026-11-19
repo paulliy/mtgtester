@@ -1,0 +1,38 @@
+{
+  "name": "Murkfiend Liege",
+  "oracleId": "61d28182-498f-4bbc-bb7a-c5e1ef872dda",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Untap all green and/or blue creatures you control during each other player's untap step."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "untapDuringOthersUntapSteps",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "color",
+                  "value": "G"
+                },
+                {
+                  "kind": "color",
+                  "value": "U"
+                }
+              ]
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

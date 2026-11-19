@@ -1,0 +1,44 @@
+{
+  "name": "Harmonic Sliver",
+  "oracleId": "1c06c093-18ab-49e6-a82d-38e826d25016",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "All Slivers have \"When this permanent enters, destroy target artifact or enchantment.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "subtype",
+          "value": "Sliver"
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "enters",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "targets": [
+              {
+                "kind": "artifactOrEnchantment"
+              }
+            ],
+            "effects": [
+              {
+                "op": "destroy",
+                "target": 0
+              }
+            ],
+            "optional": false,
+            "description": "When this permanent enters, destroy target artifact or enchantment."
+          }
+        }
+      }
+    ]
+  }
+}

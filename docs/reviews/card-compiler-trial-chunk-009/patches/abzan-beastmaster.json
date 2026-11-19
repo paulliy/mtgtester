@@ -1,0 +1,67 @@
+{
+  "name": "Abzan Beastmaster",
+  "oracleId": "aab463bb-e790-403b-a88d-06ef81c7302b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you",
+          "condition": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                "scope": "you",
+                "cmp": ">=",
+                "n": 1
+              },
+              {
+                "kind": "compareValues",
+                "left": {
+                  "kind": "greatestToughnessAmong",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  "scope": "you"
+                },
+                "cmp": ">=",
+                "right": {
+                  "kind": "greatestToughnessAmong",
+                  "selector": {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  "scope": "all"
+                }
+              }
+            ]
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness."
+      }
+    ]
+  }
+}

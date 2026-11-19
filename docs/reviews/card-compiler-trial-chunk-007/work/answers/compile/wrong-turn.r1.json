@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"player","controller":"opponent"},{"kind":"creature"}],"effects":[{"op":"gainControlTarget","target":1,"recipient":{"targetPlayer":0}}],"description":"Target opponent gains control of target creature."}}}

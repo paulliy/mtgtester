@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No sacrifice effect makes each player sacrifice an untapped land of their own choice: sacrificeEachPlayer filters only to creature or any, and eventPlayerSacrificesPermanents takes no land or untapped restriction."}

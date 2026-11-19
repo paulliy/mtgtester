@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No Value reads the mana value of the card just exiled from the library, so 'target opponent loses life equal to its mana value' cannot be stated, and exileLibraryTop with castFree cannot restrict the free cast to instant or sorcery cards."}

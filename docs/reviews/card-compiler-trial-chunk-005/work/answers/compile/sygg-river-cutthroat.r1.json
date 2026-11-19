@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'An opponent lost 3 or more life this turn' needs a per-opponent life-loss threshold, but opponentsLostLifeThisTurn is an unlabeled total and opponentDealtDamageThisTurn counts damage rather than life loss."}

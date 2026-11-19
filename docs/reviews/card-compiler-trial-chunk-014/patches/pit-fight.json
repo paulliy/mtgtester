@@ -1,0 +1,34 @@
+{
+  "name": "Pit Fight",
+  "oracleId": "ef4b0ced-70a1-41d8-9aed-34e75f979c5f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control fights another target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "creature",
+          "differentFromSlots": [
+            0
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "op": "fight",
+          "first": 0,
+          "second": 1
+        }
+      ],
+      "description": "Target creature you control fights another target creature."
+    }
+  }
+}

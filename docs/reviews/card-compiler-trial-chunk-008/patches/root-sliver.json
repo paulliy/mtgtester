@@ -1,0 +1,20 @@
+{
+  "name": "Root Sliver",
+  "oracleId": "cb752313-dc7f-47fc-9077-9e3298e8f5fb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sliver spells can't be countered."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "cantBeCountered",
+        "filter": {
+          "kind": "subtype",
+          "value": "Sliver"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The counter's mana value bound is the number of Faeries you control, a dynamic value, but the spell target filter manaValueAtMost takes only a fixed number."}

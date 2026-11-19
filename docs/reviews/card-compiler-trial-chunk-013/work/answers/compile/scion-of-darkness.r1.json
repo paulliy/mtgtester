@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The graveyard target must be restricted to the graveyard of the player this creature just dealt combat damage to, and TargetSpec's graveyard owner scopes (controller, opponent, any) cannot name that damaged player exactly."}

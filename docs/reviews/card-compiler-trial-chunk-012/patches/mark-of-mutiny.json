@@ -1,0 +1,42 @@
+{
+  "name": "Mark of Mutiny",
+  "oracleId": "5599ddb6-1404-4884-b6ca-c1852a521079",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Gain control of target creature until end of turn. Put a +1/+1 counter on it and untap it. That creature gains haste until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "duration": "untilEndOfTurn"
+        },
+        {
+          "op": "putCounters",
+          "target": 0,
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "haste"
+        }
+      ],
+      "description": "Gain control of target creature until end of turn. Put a +1/+1 counter on it and untap it. That creature gains haste until end of turn."
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "name": "Dross Scorpion",
+  "oracleId": "132786bb-157c-4e2c-8f82-13df6a667448",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature or another artifact creature dies, you may untap target artifact."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": true,
+        "targets": [
+          {
+            "kind": "artifact"
+          }
+        ],
+        "effects": [
+          {
+            "op": "untapTarget",
+            "target": 0
+          }
+        ],
+        "description": "Whenever this creature or another artifact creature dies, you may untap target artifact."
+      }
+    ]
+  }
+}

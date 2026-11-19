@@ -1,0 +1,37 @@
+{
+  "name": "Helm of the Host",
+  "oracleId": "83b43aba-bf9c-4da2-967d-9daa632e97d2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of combat on your turn, create a token that's a copy of equipped creature, except the token isn't legendary. That token gains haste."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "beginningOfCombat",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenCopyOf",
+            "ref": "attachedToSource",
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "exceptNonLegendary": true,
+            "addKeywords": [
+              "haste"
+            ]
+          }
+        ],
+        "description": "At the beginning of combat on your turn, create a token that's a copy of equipped creature, except the token isn't legendary. That token gains haste."
+      }
+    ]
+  }
+}

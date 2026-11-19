@@ -1,0 +1,1 @@
+At the beginning of your precombat main phase, if this enchantment has no flood counters on it, put a flood counter on it and draw a card. Otherwise, remove all flood counters from this enchantment and add {C}{G}{U}.

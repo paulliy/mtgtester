@@ -28,6 +28,8 @@ import { battlefieldCharacteristics, matchesSelector } from '../effects/continuo
 import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
+import { legalTargetMenus, type TargetMenu } from '../targets/announcement';
+import { targetingSourceFields } from '../targets/context';
 import { expandPerPlayerTargets } from '../targets/per-player';
 import { breakYieldsForStop } from '../turn/stops';
 import {
@@ -761,29 +763,75 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
     // the generic decision panel instead of a dangling, never-matching source id.
     const sourcePermanent = ctx.state.battlefield.find((p) => p.cardId === trigger.sourceCardId);
 
+    // Slots that must name different objects ("another target creature") cannot be offered as
+    // independent menus: the cross product would let one object fill both. Offer one menu per
+    // legal assignment instead, as a spell's targets are, and remove the trigger when there is
+    // no assignment at all (CR 603.3d).
+    // A slot whose target is picked at random is already in `chosen` and not a menu here.
+    const dependent =
+      ordinarySlots.some(({ slot }) => specs[slot]?.differentFromSlots !== undefined) &&
+      !specs.some(
+        (spec, slot) =>
+          spec.count === undefined && spec.random === true && slotIsActive(activeSlots, slot),
+      );
+    const menus: TargetMenu[][] = dependent
+      ? legalTargetMenus(
+          ctx,
+          ability,
+          {
+            controllerId: trigger.controllerId,
+            sourceCardId: trigger.sourceCardId,
+            targeting: true,
+            ...(trigger.sourceFacts === undefined ? {} : { sourceFacts: trigger.sourceFacts }),
+            ...targetingSourceFields(source),
+            ...(trigger.scope?.eventPlayerId === undefined
+              ? {}
+              : { eventPlayerId: trigger.scope.eventPlayerId }),
+          },
+          activeSlots,
+        )
+      : [ordinarySlots];
+    if (menus.length === 0) {
+      emit(
+        ctx,
+        'triggerRemovedNoTargets',
+        { source: trigger.sourceName, kind: 'distinct targets' },
+        trigger.controllerId,
+      );
+      debug(
+        ctx,
+        'stack',
+        `${trigger.sourceName}: no legal assignment of distinct targets — trigger removed (CR 603.3d)`,
+      );
+      return;
+    }
+
     // One decision carrying every ordinary slot. `isForced` auto-resolves it when each slot has
     // a single candidate, so the common "ETB, destroy the only creature" costs no AI call.
     const outcome = yield {
       decisionType: 'chooseTargets',
       player: trigger.controllerId,
       prompt: `Choose targets for ${trigger.sourceName} — ${ability.description ?? ''}`,
-      options: [
-        {
-          type: 'chooseTargets',
-          description: `Targets for ${trigger.sourceName}`,
-          targets: ordinarySlots,
-          // Route through the same "click the permanent, then its targets" UI a cast spell or
-          // activated ability uses. Without this, the option falls back to the generic decision
-          // panel, which has no per-slot picker and would submit with no targets chosen at all.
-          interaction:
-            sourcePermanent !== undefined
-              ? { kind: 'source', sourceId: sourcePermanent.id, targetSlots: ordinarySlots }
-              : { kind: 'choice', targetSlots: ordinarySlots },
-        },
-      ],
+      options: menus.map((menu) => ({
+        type: 'chooseTargets',
+        description: `Targets for ${trigger.sourceName}`,
+        targets: menu,
+        // Route through the same "click the permanent, then its targets" UI a cast spell or
+        // activated ability uses. Without this, the option falls back to the generic decision
+        // panel, which has no per-slot picker and would submit with no targets chosen at all.
+        interaction:
+          sourcePermanent !== undefined
+            ? { kind: 'source' as const, sourceId: sourcePermanent.id, targetSlots: menu }
+            : { kind: 'choice' as const, targetSlots: menu },
+      })),
     };
-    for (const { slot, options } of ordinarySlots) {
-      chosen[slot] = outcome.targets.get(slot) ?? (options[0] as ObjectId);
+    const menu =
+      menus.length === 1 ? menus[0]! : optionAt(menus, outcome, 'sba.pushTriggerOnStack.targets');
+    for (const { slot, options } of menu) {
+      const picked = outcome.targets.get(slot) ?? (options[0] as ObjectId);
+      if (dependent && !options.includes(picked))
+        throw new Error(`illegal target ${picked} for slot ${slot} of ${trigger.sourceName}`);
+      chosen[slot] = picked;
     }
   }
 

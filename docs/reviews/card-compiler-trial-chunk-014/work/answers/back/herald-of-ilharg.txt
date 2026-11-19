@@ -1,0 +1,1 @@
+Whenever you cast a creature spell, put two +1/+1 counters on this creature. If that spell's mana value is 5 or greater, each opponent is dealt damage equal to the number of +1/+1 counters on this creature.

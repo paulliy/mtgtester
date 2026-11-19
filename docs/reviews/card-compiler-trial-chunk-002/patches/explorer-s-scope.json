@@ -1,0 +1,45 @@
+{
+  "name": "Explorer's Scope",
+  "oracleId": "a563ede9-b92f-4285-88f8-abcbdd017742",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "lookAtTopN",
+            "count": 1,
+            "mayPut": {
+              "filter": {
+                "kind": "type",
+                "value": "Land"
+              },
+              "destination": {
+                "zone": "battlefield",
+                "tapped": true
+              }
+            },
+            "rest": "topAnyOrder"
+          }
+        ],
+        "description": "Whenever equipped creature attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped."
+      }
+    ]
+  }
+}

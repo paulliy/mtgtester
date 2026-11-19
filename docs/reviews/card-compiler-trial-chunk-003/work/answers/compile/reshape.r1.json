@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A library search's mana value bound is a fixed number (manaValueAtMost), so it cannot be the announced X; the only X-bounded search (searchLibraryAndOrGraveyardToBattlefield) would also allow searching the graveyard."}

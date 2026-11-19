@@ -1,0 +1,67 @@
+{
+  "name": "Szarel, Genesis Shepherd",
+  "oracleId": "1f3c3365-7dc8-47e1-b304-2a09aa229292",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you sacrifice another nontoken permanent during your turn, put a number of +1/+1 counters equal to ~'s power on up to one other target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "sacrificed",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "isToken"
+                  }
+                }
+              ]
+            }
+          },
+          "condition": {
+            "kind": "yourTurn"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "count": {
+              "min": 0,
+              "max": 1
+            },
+            "filter": {
+              "kind": "other"
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCountersEachChosen",
+            "targetSlot": 0,
+            "counter": "+1/+1",
+            "count": {
+              "kind": "powerOfSource"
+            }
+          }
+        ],
+        "description": "Whenever you sacrifice another nontoken permanent during your turn, put a number of +1/+1 counters equal to Szarel's power on up to one other target creature."
+      }
+    ]
+  }
+}

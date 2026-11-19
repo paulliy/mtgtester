@@ -1,0 +1,1 @@
+{T}: Untap target permanent other than this creature. Activate only as a sorcery.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'That much damage' needs the number of +1/+1 counters put by the event, and no Value reads that count (triggerCount counts triggering objects, not counters)."}

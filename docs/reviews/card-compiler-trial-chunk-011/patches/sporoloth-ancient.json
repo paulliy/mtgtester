@@ -1,0 +1,70 @@
+{
+  "name": "Sporoloth Ancient",
+  "oracleId": "071e15b5-6d21-4695-9ad0-69f40eb8f4ef",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures you control have \"Remove two spore counters from this creature: Create a 1/1 green Saproling creature token.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "removeCounters",
+                "counter": "spore",
+                "count": 2
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "createToken",
+                  "spec": {
+                    "name": "Saproling",
+                    "typeLine": "Creature — Saproling",
+                    "types": [
+                      "Creature"
+                    ],
+                    "subtypes": [
+                      "Saproling"
+                    ],
+                    "colors": [
+                      "G"
+                    ],
+                    "power": 1,
+                    "toughness": 1
+                  },
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "description": "Remove two spore counters from this creature: Create a 1/1 green Saproling creature token."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"manaValueAtMost takes a fixed number, not the announced X, so the creatures with mana value X or less cannot be selected; no effect removes all abilities with a dynamic mana-value filter."}

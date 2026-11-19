@@ -26,7 +26,9 @@
  * 2. `handledLines` entries must be copied from the actual `unmodeledReasons` output, not typed
  *    from the card face — the interpreter rewrites text before reporting it (reminder text
  *    stripped, the card's own name replaced by `~`).
- * 3. Every override gets a *behavioral* test, never a `modeled === true` test.
+ * 3. Every override gets a *behavioral* test, never a `modeled === true` test. The one exception
+ *    is a compiled card (`compiled/`, ADR 0047): it has no test of its own, and stands on the
+ *    per-patch checks and audit that `scripts/card-compiler/run.ts promote` requires instead.
  * 4. `def` merges over the interpreted definition with a shallow spread (`applyOverride` below) —
  *    it does not know which ability arrays are "the same line, read differently." If the override
  *    changes how a line is modeled (e.g. forcing a true mana ability where the generic grammar
@@ -111,6 +113,7 @@ import { registerMiniPilotOverrides } from './mini-pilot';
 import { registerPilotCurrentOverrides } from './pilot-current';
 import { registerPilotNewOverrides } from './pilot-new';
 import { registerEdhrecStapleOverrides } from './edhrec-staples';
+import { registerCompiledOverrides } from './compiled/register';
 
 export interface CardOverride {
   oracleId: OracleId;
@@ -151,6 +154,18 @@ export const APPENDABLE_LISTS = [
  * Every authored override, keyed by oracle id.
  */
 const OVERRIDES = new Map<OracleId, CardOverride>();
+
+/**
+ * Bumped on every change to `OVERRIDES`. The per-process definition cache (`definition-cache.ts`)
+ * drops what it holds when this moves, so a test that registers or unregisters an override at
+ * runtime never reads a definition interpreted before the change.
+ */
+let registryGeneration = 0;
+
+/** The override registry's generation: it changes whenever a registration is added or removed. */
+export function overrideRegistryGeneration(): number {
+  return registryGeneration;
+}
 
 /** Differing duplicate registrations that would otherwise be silently resolved last-write-wins. */
 export const conflictingRegistrations: {
@@ -263,6 +278,9 @@ registerDeck('mini-pilot', registerMiniPilotOverrides);
 registerDeck('pilot-new', registerPilotNewOverrides);
 registerDeck('pilot-current', registerPilotCurrentOverrides);
 registerDeck('edhrec-staples', registerEdhrecStapleOverrides);
+// Compiled cards register last, so a card that also has an authored override shows up as a
+// conflicting registration instead of being replaced quietly by the authored one.
+registerDeck('compiled', registerCompiledOverrides);
 
 /** Register an override. Exported for the per-card modules and for tests. */
 export function registerOverride(override: CardOverride): void {
@@ -287,6 +305,7 @@ export function registerOverride(override: CardOverride): void {
     });
   }
   OVERRIDES.set(override.oracleId, override);
+  registryGeneration++;
 }
 
 /** Exact duplicate data is harmless; any differing second definition needs explicit resolution. */
@@ -398,6 +417,7 @@ export function replaceCard(
     if (OVERRIDES.has(id)) {
       explicitReplacements.push({ oracleId: id, name, reason });
       OVERRIDES.set(id, override);
+      registryGeneration++;
     } else {
       registerOverride(override);
     }
@@ -450,7 +470,7 @@ export function listOverrides(): CardOverride[] {
 
 /** Test seam: drop a registration so a fixture override cannot leak between tests. */
 export function unregisterOverride(oracleId: OracleId): void {
-  OVERRIDES.delete(oracleId);
+  if (OVERRIDES.delete(oracleId)) registryGeneration++;
 }
 
 /** The quoted body of a reason like `unrecognized rules text: "…"`, or null. */

@@ -1,7 +1,7 @@
 # 0016 — Match-scoped strategist and tactical decision tiers
 
 Date: 2026-07-27
-Status: Accepted
+Status: Accepted (2026-07-27)
 
 ## Context
 

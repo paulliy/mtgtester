@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The counter's unless-pays cost is a fixed ParsedManaCost, and the schema cannot express {1} plus {1} for each creature in your party (a dynamic party count)."}

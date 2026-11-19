@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"castRestriction":{"kind":"allOf","of":[{"kind":"not","of":{"kind":"notYourTurn"}},{"kind":"duringStep","step":"end"}]}}}

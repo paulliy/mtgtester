@@ -1,0 +1,81 @@
+{
+  "name": "Planar Engineering",
+  "oracleId": "dc48079a-b1c4-4c43-a989-418c78a264ec",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "sacrificeOneThen",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Land"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "then": []
+        },
+        {
+          "op": "sacrificeOneThen",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Land"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "then": []
+        },
+        {
+          "op": "searchLibrary",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "supertype",
+                "value": "Basic"
+              },
+              {
+                "kind": "type",
+                "value": "Land"
+              }
+            ]
+          },
+          "destinations": [
+            {
+              "zone": "battlefield",
+              "tapped": true
+            }
+          ],
+          "count": {
+            "kind": "const",
+            "n": 4
+          }
+        },
+        {
+          "op": "shuffle"
+        }
+      ],
+      "description": "Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle."
+    }
+  }
+}
