@@ -1195,6 +1195,7 @@ export const VIEWER_CATALOG: readonly CatalogSpec[] = [
   },
   { file: 'card-test-lab.spec.ts', titlePath: ['Blossoming Defense: pump and hexproof'] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Bojuka Bog: exile the targeted graveyard'] },
+  { file: 'card-test-lab.spec.ts', titlePath: ["Peek: look at an opponent's hand"] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Citywide Bust: destroy toughness 4 or greater'] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Defile: -1/-1 per Swamp you control'] },
   { file: 'card-test-lab.spec.ts', titlePath: ['Unleash Fury: double target power'] },

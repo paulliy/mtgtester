@@ -274,9 +274,9 @@ beforeAll(async () => {
     {
       cwd: root,
       encoding: 'utf8',
-      // About 30s alone, but the card gate runs it beside every other gate file, and on a CI
-      // runner it then passed 60s and was killed with no output.
-      timeout: 120_000,
+      // About 30 s alone on four idle cores, but the card gate runs it beside every other gate
+      // file, and on a CI runner it then passed 60 s and was killed with no output.
+      timeout: 180_000,
       maxBuffer: 32 * 1024 * 1024,
     },
   );
@@ -289,7 +289,7 @@ beforeAll(async () => {
       }\n${impact.stderr}`,
     );
   actualImpact = JSON.parse(impact.stdout);
-}, 245_000);
+}, 305_000);
 afterEach(async () => {
   vi.restoreAllMocks();
   await yieldToEventLoop();

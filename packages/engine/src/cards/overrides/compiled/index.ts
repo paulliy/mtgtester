@@ -5913,60 +5913,6 @@ const BATCH_CHUNK_002: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '08c595da-9305-42a9-b72f-5ccc546edc01',
-    name: 'Junk Diver',
-    handledLines: [
-      'When this creature dies, return another target artifact card from your graveyard to your hand.',
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'dies',
-            subject: {
-              kind: 'self',
-            },
-          },
-          optional: false,
-          targets: [
-            {
-              kind: 'cardInGraveyard',
-              filter: {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Artifact',
-                  },
-                  {
-                    kind: 'not',
-                    of: {
-                      kind: 'self',
-                    },
-                  },
-                ],
-              },
-            },
-          ],
-          effects: [
-            {
-              op: 'graveyardToHand',
-              target: 0,
-            },
-          ],
-          description:
-            'When this creature dies, return another target artifact card from your graveyard to your hand.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-002',
-    patchSha256: 'a0e10c0f48c9f5921a894155cf11a1cf8d22bde44bf428effba48db9557ffacc',
-    behaviorSha256: '89032c174f95aeff61dcb22925c9f4136c8ac3f14a24921f5114952b23af4b22',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '3364bad6-6d0a-4141-b410-86e3d9e1916e',
     name: 'Juri, Master of the Revue',
     handledLines: ['When ~ dies, it deals damage equal to its power to any target.'],
@@ -7325,61 +7271,6 @@ const BATCH_CHUNK_002: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '13be47e4-9da2-4f9e-baf0-db96f7777ccb',
-    name: 'Thalia, Heretic Cathar',
-    handledLines: ['Creatures and nonbasic lands your opponents control enter tapped.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'otherPermanentsEnterTapped',
-          filter: {
-            kind: 'anyOf',
-            of: [
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Creature',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Land',
-                  },
-                  {
-                    kind: 'not',
-                    of: {
-                      kind: 'supertype',
-                      value: 'Basic',
-                    },
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-002',
-    patchSha256: '3496fb51f3f66b74bb8e9be19472dea6f752920a36b4993a2b92c2993a032bb2',
-    behaviorSha256: '13f68d6093ab86f416fa0e2bffe30481c1b2f32e2334132ea8167a188654b698',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'a94c191d-a938-458e-bc1b-2f44fd8873a3',
     name: 'The Battle of Bywater',
     handledLines: [
@@ -7561,46 +7452,6 @@ const BATCH_CHUNK_002: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-002',
     patchSha256: '9e046801bb56f53d17cdf544f7d36ec2a2ed781372dcbc50cbc6eb90f71bc5e0',
     behaviorSha256: '1f5ec128385b407634671758164650d4ca90af1249bb67d78c48d3fb8a5ae9d4',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '1573f7f9-672c-421a-b1ac-3d0d8aea59ca',
-    name: "Tormod's Crypt",
-    handledLines: ["{T}, Sacrifice this artifact: Exile target player's graveyard."],
-    def: {
-      activatedAbilities: [
-        {
-          costs: [
-            {
-              kind: 'tap',
-            },
-            {
-              kind: 'sacrificeSelf',
-            },
-          ],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [
-              {
-                kind: 'player',
-              },
-            ],
-            effects: [
-              {
-                op: 'exileTargetPlayerGraveyard',
-                target: 0,
-              },
-            ],
-            description: "{T}, Sacrifice this artifact: Exile target player's graveyard.",
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-002',
-    patchSha256: '016f09e9bcab6799b8551ed33e985101bc94bda1ec7bea6244b89135dc528485',
-    behaviorSha256: '38a190d104dd49bcb7591c364c0744dbd09987e1837eadb491bfdd64c56e0d3e',
     acceptedBy: 'main-thread',
   },
   {
@@ -7859,36 +7710,6 @@ const BATCH_CHUNK_002: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-002',
     patchSha256: 'e0b16deae6fcdfe78b0ce6e81e103871585f172b26368b7bf77ad1ba735173c3',
     behaviorSha256: '9562cedfbe76a51e21a52275800cf7f09999c0c6d6aa9a86ca18a3212a47d1e5',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '5b2ffb53-86b7-4665-a5c7-b85b035b6c81',
-    name: 'Urabrask the Hidden',
-    handledLines: ['Creatures your opponents control enter tapped.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'otherPermanentsEnterTapped',
-          filter: {
-            kind: 'allOf',
-            of: [
-              {
-                kind: 'type',
-                value: 'Creature',
-              },
-              {
-                kind: 'controller',
-                who: 'opponents',
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-002',
-    patchSha256: '951b2417b72af0428faba30545e33040b73346ae922380519b420f281706bfb7',
-    behaviorSha256: '7dcb2cc709765da6e0ee4c0c0f2fa413e0a5766e06477b0e6f96bc743571ae05',
     acceptedBy: 'main-thread',
   },
   {
@@ -12495,25 +12316,6 @@ const BATCH_CHUNK_004: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '33017203-233e-498e-806e-94b1dccf5c35',
-    name: 'Eidolon of Rhetoric',
-    handledLines: ["Each player can't cast more than one spell each turn."],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'spellCastLimit',
-          category: 'any',
-          limit: 1,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-004',
-    patchSha256: '0d0bc82ca5ecdf320db1e6958aa0510065ff0c2b0b22a04184d5a1615c9c2e18',
-    behaviorSha256: '4e99885f9e7bae30fe40445184d17ee5b821d0683890ad79e6f284c37b3c3963',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'cce3dcc3-57bb-4b95-8b70-337c67bb3c4e',
     name: 'Extinguisher Battleship',
     handledLines: [
@@ -12694,41 +12496,6 @@ const BATCH_CHUNK_004: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-004',
     patchSha256: '72b2bd54e8cb4f6d22eab35574093c94af977aca727369e2cb2a8de6d0f27599',
     behaviorSha256: 'c8f9412ac656c7292a6831d87e78a211db0f02110975bc401bd8948335ec5675',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '48e603a2-b965-4fbc-ad57-4388bce5ac8b',
-    name: 'Gods Willing',
-    handledLines: [
-      'Target creature you control gains protection from the color of your choice until end of turn.',
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [
-          {
-            kind: 'creature',
-            controller: 'you',
-          },
-        ],
-        effects: [
-          {
-            op: 'grantChosenColorProtectionUntilEot',
-            target: 0,
-          },
-          {
-            op: 'scry',
-            count: 1,
-          },
-        ],
-        description:
-          'Target creature you control gains protection from the color of your choice until end of turn.',
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-004',
-    patchSha256: '3419eaffd5669d31ddb8902b0cc5cd6e6d5a67c451ef9f8435fb92a25e384ec4',
-    behaviorSha256: 'de36a5fa694bcd093189fbbd8926952da2805d7ff2e4862f463719d61f0fc758',
     acceptedBy: 'main-thread',
   },
   {
@@ -13342,36 +13109,6 @@ const BATCH_CHUNK_004: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-004',
     patchSha256: '78c283845d23caa95a8739757e805bb9ccfd72d3ce5af6ef12928622086e9f8a',
     behaviorSha256: 'c5029bb6174aada8d658d9a95d6ad4a6f11a451fe096c8aaaa6982e00b7916ca',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'b9243163-b726-432e-830f-86132aa7f34a',
-    name: "Kinjalli's Sunwing",
-    handledLines: ['Creatures your opponents control enter tapped.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'otherPermanentsEnterTapped',
-          filter: {
-            kind: 'allOf',
-            of: [
-              {
-                kind: 'type',
-                value: 'Creature',
-              },
-              {
-                kind: 'controller',
-                who: 'opponents',
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-004',
-    patchSha256: '01e32cc660c4df0a25ca6d70713323c66ad1eb3d70abe48f351aa6a79edf5fd1',
-    behaviorSha256: 'b411ac201a767d28802b3cf59c92193c24646bf88867b6a4c2a4b21849e33b54',
     acceptedBy: 'main-thread',
   },
   {
@@ -14326,44 +14063,6 @@ const BATCH_CHUNK_004: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'c1909d70-d8f4-4c54-8587-0a910f123238',
-    name: 'Shelter',
-    handledLines: [
-      'Target creature you control gains protection from the color of your choice until end of turn.',
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [
-          {
-            kind: 'creature',
-            controller: 'you',
-          },
-        ],
-        effects: [
-          {
-            op: 'grantChosenColorProtectionUntilEot',
-            target: 0,
-          },
-          {
-            op: 'draw',
-            count: {
-              kind: 'const',
-              n: 1,
-            },
-          },
-        ],
-        description:
-          'Target creature you control gains protection from the color of your choice until end of turn. Draw a card.',
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-004',
-    patchSha256: '61363c8f7fcdf0fa44fed860d28227ef10c33d9f2c69b33f089a857d3f4af90b',
-    behaviorSha256: 'f052433001f3b2d45d3d9d10e738b98313183b00a9538d8ea86226177645ea59',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '5fe07a76-f261-4f16-8a15-571bed707261',
     name: 'Sigarda, Font of Blessings',
     handledLines: ['You may cast Angel spells and Human spells from the top of your library.'],
@@ -14827,60 +14526,6 @@ const BATCH_CHUNK_004: readonly CompiledCard[] = [
     behaviorSha256: 'a9411beef2b37aa05cfc80ce046dc3e3ae025299e7e24b442a988a4e7d94bc6c',
     acceptedBy: 'main-thread',
   },
-  {
-    oracleId: '319ee221-bace-41e9-b386-6b528bd780c1',
-    name: 'Workshop Assistant',
-    handledLines: [
-      'When this creature dies, return another target artifact card from your graveyard to your hand.',
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'dies',
-            subject: {
-              kind: 'self',
-            },
-          },
-          optional: false,
-          targets: [
-            {
-              kind: 'cardInGraveyard',
-              filter: {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Artifact',
-                  },
-                  {
-                    kind: 'not',
-                    of: {
-                      kind: 'self',
-                    },
-                  },
-                ],
-              },
-            },
-          ],
-          effects: [
-            {
-              op: 'graveyardToHand',
-              target: 0,
-            },
-          ],
-          description:
-            'When this creature dies, return another target artifact card from your graveyard to your hand.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-004',
-    patchSha256: '9e8579a81a5375c7b2c815638799fe66c2912f3ef48462396e0346f86576817a',
-    behaviorSha256: 'e3c5e5b201440fd8273ad77ecbb558391ec0ed8744f7cbc611b1ef38365a2732',
-    acceptedBy: 'main-thread',
-  },
 ];
 
 const BATCH_CHUNK_005: readonly CompiledCard[] = [
@@ -15011,42 +14656,6 @@ const BATCH_CHUNK_005: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-005',
     patchSha256: 'e931ac39b53270cf14f0903052624e9383cf446d73cb394cadc40d3a9628b2c0',
     behaviorSha256: 'df97a64e85514e79b5533f8824dcf8d2283cbf8ee49ed5f23ce5d928f4e6c74a',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '48d14b5c-711a-4f8a-9de5-55415cb7a79a',
-    name: 'Angel of Finality',
-    handledLines: ["When this creature enters, exile target player's graveyard."],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'enters',
-            subject: {
-              kind: 'self',
-            },
-          },
-          optional: false,
-          targets: [
-            {
-              kind: 'player',
-            },
-          ],
-          effects: [
-            {
-              op: 'exileTargetPlayerGraveyard',
-              target: 0,
-            },
-          ],
-          description: "When this creature enters, exile target player's graveyard.",
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-005',
-    patchSha256: 'd8baa9b771a1b923678f8826e34ffe93084ce826c2012cbd44116d700bf3b7a8',
-    behaviorSha256: '0ffacb1a568cd41229c6ca1ae75db6977523df7dfd06f24ad3d4b8aba054a6ec',
     acceptedBy: 'main-thread',
   },
   {
@@ -18343,38 +17952,6 @@ const BATCH_CHUNK_005: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'b828251c-86a9-454f-9852-d0876d0f5153',
-    name: "Wizard's Retort",
-    handledLines: ['This spell costs {1} less to cast if you control a Wizard.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: {
-            kind: 'const',
-            n: 1,
-          },
-          selfOnly: true,
-          condition: {
-            kind: 'countPermanents',
-            selector: {
-              kind: 'subtype',
-              value: 'Wizard',
-            },
-            scope: 'you',
-            cmp: '>=',
-            n: 1,
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-005',
-    patchSha256: 'cb35e1f70dc1d0da86d588ca254c8d9b0489f1445cb2a071b053797537b4a7e1',
-    behaviorSha256: 'd11b8c458122a1b362787b4553dae298e9ee71ed4f8f86be1516bcfb9bc49800',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'd7950018-d744-48a8-81aa-0d8384703f48',
     name: 'Zur the Enchanter',
     handledLines: [
@@ -21392,43 +20969,6 @@ const BATCH_CHUNK_006: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'c40bc9f6-2b72-4ae1-b912-50075af59628',
-    name: 'Remorseful Cleric',
-    handledLines: ["Sacrifice this creature: Exile target player's graveyard."],
-    def: {
-      activatedAbilities: [
-        {
-          costs: [
-            {
-              kind: 'sacrificeSelf',
-            },
-          ],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [
-              {
-                kind: 'player',
-              },
-            ],
-            effects: [
-              {
-                op: 'exileTargetPlayerGraveyard',
-                target: 0,
-              },
-            ],
-            description: "Sacrifice this creature: Exile target player's graveyard.",
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-006',
-    patchSha256: '78efd668c9419c007f681a174938c2f931693b1c2ccd4b5a5b8871574b4e2449',
-    behaviorSha256: '2f6ee87e348e7a230e8e87583049ad5b3b770572f01594bec91235bf1a2f3426',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'b3c7b46f-c9ab-40ca-b50b-a4e0d0bd9be8',
     name: 'Restless Bivouac',
     handledLines: [
@@ -22280,54 +21820,6 @@ const BATCH_CHUNK_006: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-006',
     patchSha256: '42716de69c18e7df2dd5502053110830d5eca597af01a7a692ef934a5525c77e',
     behaviorSha256: '5dcc5a30f6d256bf660ce633dc51da175c7cb6f493b7004a08468f74c0bd948c',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'be2b9c6d-4ecb-49ec-b276-4aa93c5dfc00',
-    name: 'Spider-Woman, Stunning Savior',
-    handledLines: ['Venom Blast — Artifacts and creatures your opponents control enter tapped.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'otherPermanentsEnterTapped',
-          filter: {
-            kind: 'anyOf',
-            of: [
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Artifact',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Creature',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-006',
-    patchSha256: '34ce8bc2db845c430b0ea625b25ebb857f8a0d29e622efb9c09cf1b54dafe83e',
-    behaviorSha256: 'e39acfc9d5fa6d834ac47be9322307af303f533f2e77321cb3676c0fc9b34186',
     acceptedBy: 'main-thread',
   },
   {
@@ -23550,47 +23042,6 @@ const BATCH_CHUNK_007: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-007',
     patchSha256: '5099dd34792276139a11b18d64039d1aea4564412793d89f686bc484276eb375',
     behaviorSha256: 'b6884e44c0caca712a3ddfefca7bcae4945c21a8f89cf02742a665b04a2580dd',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'c8c38570-0b42-4bfc-896f-f57f9a11ba9d',
-    name: 'Benevolent Bodyguard',
-    handledLines: [
-      'Sacrifice this creature: Target creature you control gains protection from the color of your choice until end of turn.',
-    ],
-    def: {
-      activatedAbilities: [
-        {
-          costs: [
-            {
-              kind: 'sacrificeSelf',
-            },
-          ],
-          timing: 'any',
-          ability: {
-            kind: 'activated',
-            targets: [
-              {
-                kind: 'creature',
-                controller: 'you',
-              },
-            ],
-            effects: [
-              {
-                op: 'grantChosenColorProtectionUntilEot',
-                target: 0,
-              },
-            ],
-            description:
-              'Sacrifice this creature: Target creature you control gains protection from the color of your choice until end of turn.',
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-007',
-    patchSha256: 'b1966de5d0693fa6fe2e8e26bad31d63a68b029ab89addee79eceb8e247d5657',
-    behaviorSha256: '8e644cb78ebab9b23ec71f056f7b58e10f01d92a2f61d4858d1f3b91bfc046a8',
     acceptedBy: 'main-thread',
   },
   {
@@ -25797,42 +25248,6 @@ const BATCH_CHUNK_007: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'fda76032-7e6f-416f-8874-2a0642837522',
-    name: 'Jirina, Dauntless General',
-    handledLines: ["When ~ enters, exile target player's graveyard."],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'enters',
-            subject: {
-              kind: 'self',
-            },
-          },
-          optional: false,
-          targets: [
-            {
-              kind: 'player',
-            },
-          ],
-          effects: [
-            {
-              op: 'exileTargetPlayerGraveyard',
-              target: 0,
-            },
-          ],
-          description: "When Jirina enters, exile target player's graveyard.",
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-007',
-    patchSha256: 'd548e68e8b3c42eb30248a68de95a2b4fb5da8f3d451b7f4e4e48992917b901b',
-    behaviorSha256: '095369d953bf1df3509f7f6064cd0c843444b3220e8d43b97962ee2653d8c512',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '4fa826ca-d361-4391-ad0d-989ebcfa4a91',
     name: 'Kavaron, Memorial World',
     handledLines: [
@@ -25953,41 +25368,6 @@ const BATCH_CHUNK_007: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-007',
     patchSha256: 'a94c6eb040989c93dbdaa18362fe260c37728966c22018ccb4855bf0b3e22ab8',
     behaviorSha256: '98034dc61e88b1dfa24eccb438961233f38ed2106a524bfc3ee3ed6b0ede92ef',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '5602c14d-cc22-47d7-a1b0-6491749f00dd',
-    name: 'Keep Safe',
-    handledLines: ['Counter target spell that targets a permanent you control.'],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [
-          {
-            kind: 'spell',
-            spellTargetsPermanentYouControl: true,
-          },
-        ],
-        effects: [
-          {
-            op: 'counter',
-            target: 0,
-          },
-          {
-            op: 'draw',
-            count: {
-              kind: 'const',
-              n: 1,
-            },
-          },
-        ],
-        description: 'Counter target spell that targets a permanent you control.',
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-007',
-    patchSha256: '0e1ee518434b649ed00ddc72798f7e02c59d0437f3994ab0acf960124234e0fd',
-    behaviorSha256: '8bbfd0ec2496241a248dd7041ebb5e70b1d857274f83aa627d98385e52645441',
     acceptedBy: 'main-thread',
   },
   {
@@ -26169,43 +25549,6 @@ const BATCH_CHUNK_007: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-007',
     patchSha256: 'a7c08e80d3cb32d401f59f8121ff4006ad0f01b0e4a6bd70edcb682083a2beaa',
     behaviorSha256: 'dbc105862c38a5a646f23a3fc813540f1799513b0879bdfc339e98b15805bed4',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '1b600345-2b89-45bc-98c8-609fdd08a5fd',
-    name: 'Merry, Warden of Isengard',
-    handledLines: ['Partner with Pippin, Warden of Isengard'],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'enters',
-            subject: {
-              kind: 'self',
-            },
-          },
-          optional: false,
-          targets: [
-            {
-              kind: 'player',
-            },
-          ],
-          effects: [
-            {
-              op: 'targetPlayerMaySearchNamed',
-              target: 0,
-              name: 'Pippin, Warden of Isengard',
-            },
-          ],
-          description: 'Partner with Pippin, Warden of Isengard',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-007',
-    patchSha256: 'e532de5154546c3546f701086f05664108ab31586dc306473e60e0c2f4e4cca4',
-    behaviorSha256: '92cfb1a0c4e83741939c1be6a065ff123c9457e5a350443494deb5d70f5e5c69',
     acceptedBy: 'main-thread',
   },
   {
@@ -29526,32 +28869,6 @@ const BATCH_CHUNK_008: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'a9581345-87dc-4fbd-acc1-bb629f2cf40f',
-    name: 'Primeval Protector',
-    handledLines: ['This spell costs {1} less to cast for each creature your opponents control.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: {
-            kind: 'countPermanents',
-            selector: {
-              kind: 'type',
-              value: 'Creature',
-            },
-            scope: 'opponents',
-          },
-          selfOnly: true,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-008',
-    patchSha256: '41ab344f96ca1ad3d346e400f8048c9372f43ce70f84d12fe04361f81216831a',
-    behaviorSha256: '60b7be4dfbfa675dbb43f3e141ef24b8225a49b622b033d6fcbed1ffe5d9a444',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '27a3aa64-1de7-4b0c-af23-52886e7d258a',
     name: 'Prismatic Undercurrents',
     handledLines: [
@@ -31050,34 +30367,6 @@ const BATCH_CHUNK_008: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-008',
     patchSha256: '08a05f9fd427213fe1f1551a8ae4f9ee4f5edfdc0dd1aac02b3fd90db8520035',
     behaviorSha256: '80fec1647905962b6a6bb03455257dc1d179e70cf2421cb5de3cfc588adbd027',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '4325ae73-af43-4a7d-a552-9909f0dc77db',
-    name: 'Turn Aside',
-    handledLines: ['Counter target spell that targets a permanent you control.'],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [
-          {
-            kind: 'spell',
-            spellTargetsPermanentYouControl: true,
-          },
-        ],
-        effects: [
-          {
-            op: 'counter',
-            target: 0,
-          },
-        ],
-        description: 'Counter target spell that targets a permanent you control.',
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-008',
-    patchSha256: 'a223770dcf565d933e199a9cad808f812fdf5331e2824952f803f71960f638b3',
-    behaviorSha256: '6d553057acbb083896fe37b07a02ea4eed35ceb428485e5abafa0ce26086ecfd',
     acceptedBy: 'main-thread',
   },
   {
@@ -34002,33 +33291,6 @@ const BATCH_CHUNK_009: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'bb4507c1-1e5d-48b5-8fc0-1d26bd1c9e72',
-    name: 'Overwhelming Remorse',
-    handledLines: ['This spell costs {1} less to cast for each creature card in your graveyard.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: {
-            kind: 'countCardsInZone',
-            zone: 'graveyard',
-            selector: {
-              kind: 'type',
-              value: 'Creature',
-            },
-            owner: 'you',
-          },
-          selfOnly: true,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-009',
-    patchSha256: '5b8aa0ffa08ec0694bcd43bd94a70b80695cbc10edbc74b99b8e73dce9d94dd7',
-    behaviorSha256: '93fc9823da4d3f10a1d5265ef6ace3b6549875bf21cfe2000ea789ff7e962c4a',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'ac830812-2f33-4f9e-ba3a-ea665989011c',
     name: 'Paladin Danse, Steel Maverick',
     handledLines: [
@@ -34088,38 +33350,6 @@ const BATCH_CHUNK_009: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-009',
     patchSha256: 'f106f406eeeb3d8e79361ac07f0eb3ef7edd93c6cf2a528e09dc1d25888caa34',
     behaviorSha256: '58001229c38aa8f261413f9a93ef2774d8a7950f63c2ce48b9bd3817d2d9195d',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '91ddd2bd-2dec-4670-8edb-e89c009b2187',
-    name: 'Pearl of Wisdom',
-    handledLines: ['This spell costs {1} less to cast if you control an Otter.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: {
-            kind: 'const',
-            n: 1,
-          },
-          selfOnly: true,
-          condition: {
-            kind: 'countPermanents',
-            selector: {
-              kind: 'subtype',
-              value: 'Otter',
-            },
-            scope: 'you',
-            cmp: '>=',
-            n: 1,
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-009',
-    patchSha256: '96214f37e283c348495400e61c6d3cbf6ee6ab100877c8c39ccb56d42f050767',
-    behaviorSha256: 'a17d5fea9cb0cedd0d87fba72c39894501b5955cbf5f5aeb8717548b4a11bd73',
     acceptedBy: 'main-thread',
   },
   {
@@ -34804,47 +34034,6 @@ const BATCH_CHUNK_009: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-009',
     patchSha256: 'ed28669ad2d093fe6e8578d008f41cbf98b3d6dc72e7f7df5fa11f100dc0f63a',
     behaviorSha256: '474306ae2b8d8c5c9bfed478661f9d17471f1979f20b1127be9bbe4e78c8cddc',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'f8536726-993b-4100-918c-e3c7177d4c65',
-    name: 'Spectral Denial',
-    handledLines: [
-      'This spell costs {1} less to cast for each creature you control with power 4 or greater.',
-    ],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: {
-            kind: 'countPermanents',
-            selector: {
-              kind: 'allOf',
-              of: [
-                {
-                  kind: 'powerAtLeast',
-                  n: 4,
-                },
-                {
-                  kind: 'controller',
-                  who: 'you',
-                },
-                {
-                  kind: 'type',
-                  value: 'Creature',
-                },
-              ],
-            },
-            scope: 'all',
-          },
-          selfOnly: true,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-009',
-    patchSha256: '13af96a25a640b9fdde1ffb48a37026b085df5c98e3ab57ce0f29b68134d971a',
-    behaviorSha256: '02e3d8fb514f67321fd84be1ce1bb3403acc266636e4de2fa249fbaed93e066a',
     acceptedBy: 'main-thread',
   },
   {
@@ -36557,69 +35746,6 @@ const BATCH_CHUNK_010: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '440881ad-48cf-4b82-8bb5-f506d1a51755',
-    name: 'Draconic Lore',
-    handledLines: ['This spell costs {2} less to cast if you control a Dragon.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: {
-            kind: 'const',
-            n: 2,
-          },
-          selfOnly: true,
-          condition: {
-            kind: 'countPermanents',
-            selector: {
-              kind: 'subtype',
-              value: 'Dragon',
-            },
-            scope: 'you',
-            cmp: '>=',
-            n: 1,
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-010',
-    patchSha256: '70c528bcd0ad7832c2b9c39df4e7541fe6be28e1fa9ed5dfa69e02dfcce20d9d',
-    behaviorSha256: '4ee09a2f69819a101457e8f89d95002e6709fe896413b62d80e1fe0473304ce8',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '894015d5-ee78-45df-8d37-53df963c59a6',
-    name: 'Emerge Unscathed',
-    handledLines: [
-      'Target creature you control gains protection from the color of your choice until end of turn.',
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [
-          {
-            kind: 'creature',
-            controller: 'you',
-          },
-        ],
-        effects: [
-          {
-            op: 'grantChosenColorProtectionUntilEot',
-            target: 0,
-          },
-        ],
-        description:
-          'Target creature you control gains protection from the color of your choice until end of turn.',
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-010',
-    patchSha256: 'dc0f8f263622cac1ef3ec4e3d132fe8507a476700e99becf767c190bcc1a5e2a',
-    behaviorSha256: '8c7197db90aaaa5533208cc186eb0ba8b89ceeb85671494bc622c8f5ad7020d5',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'da363da1-aecf-4d49-8e77-8dc56981a741',
     name: 'Emergency Eject',
     handledLines: ['Destroy target nonland permanent. Its controller creates a Lander token.'],
@@ -36902,67 +36028,6 @@ const BATCH_CHUNK_010: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-010',
     patchSha256: '377042cc1a39fd8f1f07b16c368ce2d922a5acde9db8b917e5b6a07823679d7a',
     behaviorSha256: '7284b812caa3b65a249c7f0825f33933b437dfaa46651c1ef2991790c2d8fd41',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '32452ccf-88c7-41d6-93e5-15d31f29726d',
-    name: 'Frozen Aether',
-    handledLines: ['Artifacts, creatures, and lands your opponents control enter tapped.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'otherPermanentsEnterTapped',
-          filter: {
-            kind: 'anyOf',
-            of: [
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Artifact',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Creature',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Land',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-010',
-    patchSha256: '6097d69c35a808eb87b547eaec9ea52ade1979615c2c19f71867cb71785320f0',
-    behaviorSha256: '5a8640c631405b91c84476bfb09dbdce249264f38e990110604ad920ac30c716',
     acceptedBy: 'main-thread',
   },
   {
@@ -39896,38 +38961,6 @@ const BATCH_CHUNK_010: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-010',
     patchSha256: 'e56db5e3f19eb7c35fd5d2cfb3053769ee2c205f1d47b04e5a0e45748448ac5e',
     behaviorSha256: 'b14bec227500d7dea03fbf383bad8597fea6cc6433cc78f96e1b276d0c6568d5',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '2bd81743-84c8-43ec-86f5-68230036827b',
-    name: "Wizard's Lightning",
-    handledLines: ['This spell costs {2} less to cast if you control a Wizard.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: {
-            kind: 'const',
-            n: 2,
-          },
-          selfOnly: true,
-          condition: {
-            kind: 'countPermanents',
-            selector: {
-              kind: 'subtype',
-              value: 'Wizard',
-            },
-            scope: 'you',
-            cmp: '>=',
-            n: 1,
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-010',
-    patchSha256: '12e3a896fad83e23f47e33de754b6bfde3e80fb438e58dcf1190439951c6acc2',
-    behaviorSha256: '2ddef882d9dbad27dc1a01d927e7b4deb774e3af25aab6931dc378c824be21a2',
     acceptedBy: 'main-thread',
   },
 ];
@@ -44259,25 +43292,6 @@ const BATCH_CHUNK_012: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'f5e3c26c-c28c-455f-a682-2597e4b92d10',
-    name: 'Arcane Laboratory',
-    handledLines: ["Each player can't cast more than one spell each turn."],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'spellCastLimit',
-          category: 'any',
-          limit: 1,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-012',
-    patchSha256: 'fb90f85333b3e920306f75264e73a22846a9baded4e2eba4af80e2fee4b8030a',
-    behaviorSha256: '4e99885f9e7bae30fe40445184d17ee5b821d0683890ad79e6f284c37b3c3963',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'b57f06e4-da97-4473-9fbf-f66e9129502a',
     name: 'Argothian Elder',
     handledLines: ['{T}: Untap two target lands.'],
@@ -47168,43 +46182,6 @@ const BATCH_CHUNK_012: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '506a972d-d226-44dc-95b7-a6e7a63d76cd',
-    name: 'Rocksteady, Mutant Marauder',
-    handledLines: ['Partner with Bebop, Skull & Crossbones'],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'enters',
-            subject: {
-              kind: 'self',
-            },
-          },
-          optional: false,
-          targets: [
-            {
-              kind: 'player',
-            },
-          ],
-          effects: [
-            {
-              op: 'targetPlayerMaySearchNamed',
-              target: 0,
-              name: 'Bebop, Skull & Crossbones',
-            },
-          ],
-          description: 'Partner with Bebop, Skull & Crossbones',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-012',
-    patchSha256: 'e3e6360b4a47353fb1e23a3b1a91064c48f3e16a91fabbacce252d8fd0a3d468',
-    behaviorSha256: '00265682207b26f91f228ec9cae0a2fdb127e134ebef2f1e749708936fa2341a',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '2efea460-c3e1-4578-a587-134e13bdf264',
     name: "Runechanter's Pike",
     handledLines: [
@@ -48400,69 +47377,6 @@ const BATCH_CHUNK_012: readonly CompiledCard[] = [
 
 const BATCH_CHUNK_013: readonly CompiledCard[] = [
   {
-    oracleId: '3fa5e109-4a67-4523-8183-90e48a906400',
-    name: 'Agent of Erebos',
-    handledLines: [
-      "Whenever this creature or another enchantment you control enters, exile target player's graveyard.",
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'enters',
-            subject: {
-              kind: 'permanent',
-              selector: {
-                kind: 'anyOf',
-                of: [
-                  {
-                    kind: 'self',
-                  },
-                  {
-                    kind: 'allOf',
-                    of: [
-                      {
-                        kind: 'other',
-                      },
-                      {
-                        kind: 'controller',
-                        who: 'you',
-                      },
-                      {
-                        kind: 'type',
-                        value: 'Enchantment',
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-          },
-          optional: false,
-          targets: [
-            {
-              kind: 'player',
-            },
-          ],
-          effects: [
-            {
-              op: 'exileTargetPlayerGraveyard',
-              target: 0,
-            },
-          ],
-          description:
-            "Constellation — Whenever this creature or another enchantment you control enters, exile target player's graveyard.",
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-013',
-    patchSha256: '35133aa222081b7b702ea82dff1b214fc64aa5c10c78c8128253714c148a92ef',
-    behaviorSha256: '54a350fd955df09d4bd0bd0f5edbd7bfb7839539da3a27182ee0f7420bd6c6f4',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '4a37f4a0-2869-4f81-b51b-4c3e7e0e0671',
     name: "Ajani's Anguish",
     handledLines: ['When this enchantment enters, it deals X damage to any target.'],
@@ -49039,33 +47953,6 @@ const BATCH_CHUNK_013: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-013',
     patchSha256: 'cd81da3a240f68a5af4192a60e2c2224a770ce663d8868e99943f579638a5ee5',
     behaviorSha256: 'c52634440f9c53e50c93db9d8a8a26d7f4734be6329ee317039a56cfebd712fa',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '5a2fa420-c27f-4c14-b285-e0bb2828e053',
-    name: 'Cyan, Vengeful Samurai',
-    handledLines: ['This spell costs {1} less to cast for each creature card in your graveyard.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: {
-            kind: 'countCardsInZone',
-            zone: 'graveyard',
-            selector: {
-              kind: 'type',
-              value: 'Creature',
-            },
-            owner: 'you',
-          },
-          selfOnly: true,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-013',
-    patchSha256: 'abfbb39d0095cdd85211e4a3f34ff4a1ef296bf8d5e8eab5a137a7df1ee1a619',
-    behaviorSha256: '770364289a10bba6bebc20e53761f6738e9e5e8f8666ff6dbc12c87ecc8af93a',
     acceptedBy: 'main-thread',
   },
   {
@@ -50372,38 +49259,6 @@ const BATCH_CHUNK_013: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'e2e44d46-9df4-46f8-acf7-5581b2257620',
-    name: "Lookout's Dispersal",
-    handledLines: ['This spell costs {1} less to cast if you control a Pirate.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: {
-            kind: 'const',
-            n: 1,
-          },
-          selfOnly: true,
-          condition: {
-            kind: 'countPermanents',
-            selector: {
-              kind: 'subtype',
-              value: 'Pirate',
-            },
-            scope: 'you',
-            cmp: '>=',
-            n: 1,
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-013',
-    patchSha256: '4a72941413e8a4eca37cccdc36a8a03e03c769b03ce3d2eaf9ed3530b27c297c',
-    behaviorSha256: '130f0332d60da10f03e40fefb113081c4a7f502c2ff6eb387f60752650155dec',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '720879dc-7593-41c0-ab3d-936069f26930',
     name: 'Lovisa Coldeyes',
     handledLines: [
@@ -51346,38 +50201,6 @@ const BATCH_CHUNK_013: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-013',
     patchSha256: '4a849bcf95fc1757d4c88789b5ff36029bcd3c3d37ec944a7886629af48c6333',
     behaviorSha256: '8a2fa023de4a02f3634e821e7edbc673a664b2c7612485d39f107745975bc23c',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '7ef5c812-ad7d-4d6c-8ee5-68561e7e4bd7',
-    name: 'Saved by the Shell',
-    handledLines: ['This spell costs {1} less to cast if you control a Turtle.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: {
-            kind: 'const',
-            n: 1,
-          },
-          selfOnly: true,
-          condition: {
-            kind: 'countPermanents',
-            selector: {
-              kind: 'subtype',
-              value: 'Turtle',
-            },
-            scope: 'you',
-            cmp: '>=',
-            n: 1,
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-013',
-    patchSha256: '11152a00fd851085c8671752313cff378e9f098caec6d99d606eb7dee2a4659c',
-    behaviorSha256: 'b2c2131474be3567e44b08a0c6f329733dfb8ec0cabcd85d6fa5304f678caf7b',
     acceptedBy: 'main-thread',
   },
   {
@@ -53516,33 +52339,6 @@ const BATCH_CHUNK_014: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-014',
     patchSha256: 'f291720b18f0b526d4e5a8a04870b6c4b243540d669e104f7cef2b6c998951a4',
     behaviorSha256: 'ef70d94eddcef85f474a5468b277f4e0018e1beb02edb9d8b3038ce7d1a30863',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '5f2628e3-e29a-4d77-bc27-6e1ce240d192',
-    name: 'Ghoultree',
-    handledLines: ['This spell costs {1} less to cast for each creature card in your graveyard.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: {
-            kind: 'countCardsInZone',
-            zone: 'graveyard',
-            selector: {
-              kind: 'type',
-              value: 'Creature',
-            },
-            owner: 'you',
-          },
-          selfOnly: true,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-014',
-    patchSha256: 'ae4c52acf22a28461588deb6d5764757adb153af3966969daf2da0d08f697842',
-    behaviorSha256: 'df876d4c40392c43221251c6c6199c367fa633377316fd6655f0335e1120b8d1',
     acceptedBy: 'main-thread',
   },
   {
@@ -56402,38 +55198,6 @@ const BATCH_CHUNK_014: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '8388faa0-f64e-4b01-836e-617f99b808a4',
-    name: "Venom's Hunger",
-    handledLines: ['This spell costs {2} less to cast if you control a Villain.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'costReduction',
-          amount: {
-            kind: 'const',
-            n: 2,
-          },
-          selfOnly: true,
-          condition: {
-            kind: 'countPermanents',
-            selector: {
-              kind: 'subtype',
-              value: 'Villain',
-            },
-            scope: 'you',
-            cmp: '>=',
-            n: 1,
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-014',
-    patchSha256: '5c1f2619f9b805289e5229a760688362abee2d9dc7afea352a7ce8d5403cb800',
-    behaviorSha256: '971f64cd0926d7be745cc5edec05a3baa0176bfe1035184f58d30871d45ae75c',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '54702a84-3125-41a7-a875-fe2ec870836d',
     name: 'War Squeak',
     handledLines: [
@@ -56838,37 +55602,6 @@ const BATCH_CHUNK_015: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-015',
     patchSha256: 'ad4ee892181662048549686cfb853e132ed661f44c784f0abf4fac1b780748fe',
     behaviorSha256: '2230973dd0afad440424bdb95fe1a4b1f8ea5401b81f0c8ac128eac524188a68',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '085bc7be-bd44-40af-8e8f-a1a8006fe22c',
-    name: 'Assert Authority',
-    handledLines: [
-      "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        description:
-          "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
-        targets: [
-          {
-            kind: 'spell',
-          },
-        ],
-        effects: [
-          {
-            op: 'counter',
-            target: 0,
-            exileIfCountered: true,
-          },
-        ],
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-015',
-    patchSha256: '86a17510e6f8c6f9d240c3a4bc0107539e935cbfab7b8de9e46a4489f340fcaa',
-    behaviorSha256: '6fb0577404f984435b4b74687a949dc89d9077dfb56caa0124b0549b3ffdfd9b',
     acceptedBy: 'main-thread',
   },
   {
@@ -58963,67 +57696,6 @@ const BATCH_CHUNK_015: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '81fdd1c4-d43b-4f8b-8712-7c2bf45a3e0b',
-    name: 'Kismet',
-    handledLines: ['Artifacts, creatures, and lands your opponents control enter tapped.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'otherPermanentsEnterTapped',
-          filter: {
-            kind: 'anyOf',
-            of: [
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Artifact',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Creature',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Land',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-015',
-    patchSha256: 'e87dc9f614acefdb52cb5c3297a97c2d446ee24f7164d98ac2a8d9ef4f8fcedf',
-    behaviorSha256: '5a8640c631405b91c84476bfb09dbdce249264f38e990110604ad920ac30c716',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '849e54f9-7662-4186-859c-e4f52afbccac',
     name: 'Kyoshi Battle Fan',
     handledLines: [
@@ -59192,67 +57864,6 @@ const BATCH_CHUNK_015: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-015',
     patchSha256: '380135f1776b3c2169fcac3e2317ca12aa09256176d9e6a22e8d53ce867812da',
     behaviorSha256: '952c13d24b9072f9923f7a0bec95658a2ee060e3a04c4d6c56101fedefc67c7a',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '861f0b1c-3b37-4d38-9232-e42565247076',
-    name: 'Loxodon Gatekeeper',
-    handledLines: ['Artifacts, creatures, and lands your opponents control enter tapped.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'otherPermanentsEnterTapped',
-          filter: {
-            kind: 'anyOf',
-            of: [
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Artifact',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Creature',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-              {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'type',
-                    value: 'Land',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-015',
-    patchSha256: '329e79106db0d04bc7fc8ce84d387786d18d54afb55dfd05d230e647191bc793',
-    behaviorSha256: '5a8640c631405b91c84476bfb09dbdce249264f38e990110604ad920ac30c716',
     acceptedBy: 'main-thread',
   },
   {
@@ -62352,36 +60963,6 @@ const BATCH_CHUNK_016: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-016',
     patchSha256: '3f48dee1fd8b8f41e32422344ecd57334d2e3d87010d4fcc79ff0dd988c53a50',
     behaviorSha256: 'd464fb4fd4ae295bb3c0cbd6227367a6b518665947ceb119eb6d55723b8135ac',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '4bba3663-7f3c-4589-88aa-cf0bfe36b171',
-    name: 'Imposing Sovereign',
-    handledLines: ['Creatures your opponents control enter tapped.'],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'otherPermanentsEnterTapped',
-          filter: {
-            kind: 'allOf',
-            of: [
-              {
-                kind: 'type',
-                value: 'Creature',
-              },
-              {
-                kind: 'controller',
-                who: 'opponents',
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-016',
-    patchSha256: '190cc896e4484bb4183b465406bad48b34ea6ddaa52019512b9e80bbc8380d2b',
-    behaviorSha256: '5883ac3b29173f4ecfed839548821f8495693765553dcc641b1a0eeb2f825cde',
     acceptedBy: 'main-thread',
   },
   {

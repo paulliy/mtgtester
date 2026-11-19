@@ -743,12 +743,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "b3aa8f4a97d12bcd4e77b24a313a22716bf80bdbeb05f15ca24cafb1c8848d46",
-      "description": "Bojuka Bog"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/silverquill-influence.ts",
-      "sha256": "450587c31f628ba24f4253fa06c3b043877263607f64796ba0b2629f16b427cf",
+      "sha256": "dcecde2ad08b8d9f1f6feae1012210068ba4aa19e6b71119f1c7f84f45a9706d",
       "description": "registerSILVERQUILL_INFLUENCEOverrides"
     },
     {
@@ -918,7 +913,7 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/w1-remaining.ts",
-      "sha256": "2da80f4124b15a979d78a77f81483d08048f1d714da2a425c1aa8330a4cc21a9",
+      "sha256": "a6d5d7af2de0282d98857e82a98cb5b29fde5f0d155143089386cf0ee2c2e865",
       "description": "registerW1RemainingOverrides"
     },
     {
