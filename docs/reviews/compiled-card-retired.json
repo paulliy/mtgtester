@@ -86,6 +86,13 @@
       "reason": "Owner review on PR #72, 2026-11-17: the intervening-if is missing from the trigger, so it triggers when the condition is false. With four counters it still tutors."
     },
     {
+      "name": "Battle Cry Goblin",
+      "oracleId": "e74c4001-d958-4d2b-b57d-c3601f01580c",
+      "patchSha256": "7d9703e4366e0c694031f7f929e8ffebfe5fb32adabd16033cf68f95619aca36",
+      "batch": "chunk-006",
+      "reason": "Sweep 2026-11-19 (#95): created attacking tokens share one defender choice, limited to players already attacked (same as Leonin Warleader)."
+    },
+    {
       "name": "Benefactor's Draught",
       "oracleId": "85113e73-26f7-4938-b7a7-607e704af0ca",
       "patchSha256": "9d4b4798fde8fdd43707a7311b86c2e55e8b1e423e6e983e034212525017ee13",
@@ -168,6 +175,20 @@
       "patchSha256": "abfbb39d0095cdd85211e4a3f34ff4a1ef296bf8d5e8eab5a137a7df1ee1a619",
       "batch": "chunk-013",
       "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Dagger Caster",
+      "oracleId": "f1352a81-6fd5-4c4d-ada4-b81d3a9f74c0",
+      "patchSha256": "856f71ca642dca4e9929fc073dc35849b214c597ba9ba48d8757808944d94fd0",
+      "batch": "chunk-015",
+      "reason": "Sweep 2026-11-19 (#95): its two damage amounts are dealt in two events, not simultaneously (same as Self-Destruct)."
+    },
+    {
+      "name": "Dawn's Reflection",
+      "oracleId": "362b7838-3b70-4a00-8c26-1c8b8a3b6acf",
+      "patchSha256": "8ea89e458a2dc26898619a6e8730665c93143b11664954fdd5dfad567d3f5988",
+      "batch": "chunk-011",
+      "reason": "Sweep 2026-11-19 (#95): a land's tapped-for-mana rider also augments its non-tap mana abilities, and attachedToSource never matches in a mana rider (same as Fertile Ground)."
     },
     {
       "name": "Devastating Onslaught",
@@ -289,6 +310,13 @@
       "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
     },
     {
+      "name": "General Kreat, the Boltbringer",
+      "oracleId": "da1c1c70-c2fa-4ba7-89fe-d9af3fb353b9",
+      "patchSha256": "1b3810219531549081571ba8b0d6ee2f6fc1cf9048de8fb1bd31ab57de9ffa5f",
+      "batch": "chunk-002",
+      "reason": "Sweep 2026-11-19 (#95): created attacking tokens share one defender choice, limited to players already attacked (same as Leonin Warleader)."
+    },
+    {
       "name": "Generator Servant",
       "oracleId": "68ac061a-e4a3-46df-9169-62f6a8481584",
       "patchSha256": "483fd8da44bc9dd7d8c5010242893a793334c8ee9a36fa21cdca5460621e294b",
@@ -350,6 +378,13 @@
       "patchSha256": "67cef0a153031b7acadba7ee51c70c1d796ca88cd8a8ca8f5d2eeecf562aabe0",
       "batch": "chunk-013",
       "reason": "Owner review on PR #72, 2026-11-17: the graveyard activation's condition (your turn, an opponent lost life) is never evaluated by the graveyard loop in legal.ts."
+    },
+    {
+      "name": "Heartbeat of Spring",
+      "oracleId": "f15911a5-f597-452e-a015-b115339f28fc",
+      "patchSha256": "97a5b2a79c3466bc94273467ee573470a04d6a4af1fef018dbf2a04a9e429335",
+      "batch": "chunk-005",
+      "reason": "Sweep 2026-11-19 (#95): a land's tapped-for-mana rider also augments its non-tap mana abilities (same as Mana Flare)."
     },
     {
       "name": "Helm of the Host",
@@ -660,6 +695,13 @@
       "reason": "Owner review on PR #72, 2026-11-17: offspring has no intervening-if, so the trigger goes on the stack when offspring was not paid."
     },
     {
+      "name": "Reckless Rage",
+      "oracleId": "d7e2b2ba-cb5e-41f1-ad33-baf56c0b72ed",
+      "patchSha256": "37c6b6e6684fa9eb87273af5cd9562f38e29bb1dea0e7a3dab39342551cecd48",
+      "batch": "chunk-015",
+      "reason": "Sweep 2026-11-19 (#95): its two damage amounts are dealt in two events, not simultaneously (same as Self-Destruct)."
+    },
+    {
       "name": "Reject Imperfection",
       "oracleId": "25781dc5-d6ea-4273-9fe3-06a8808b3718",
       "patchSha256": "9225620ce13e5fef9bd317a55684f35cb7022b0907b3faab563066db41042a8f",
@@ -758,6 +800,13 @@
       "reason": "createTokenAttacking taps the token; the card makes an untapped attacker (chunk 013)."
     },
     {
+      "name": "Sinkhole Surveyor",
+      "oracleId": "83a47724-b8d1-4884-9442-b62aa1510dc3",
+      "patchSha256": "09b72cc6f516e3d590f78f6f6cbbb878200b03d61c7eb53e6f24b02320273798",
+      "batch": "chunk-011",
+      "reason": "Sweep 2026-11-19 (#95): endure still offers counters it cannot place once the creature has left, yielding no Spirit (CR 701.63a; same as Angel of Invention)."
+    },
+    {
       "name": "Siphon Insight",
       "oracleId": "aee82122-d13e-4175-b499-9dde718e4da9",
       "patchSha256": "f83195da336c5a911de92a0359838d9eb7410bcf002ecdbb34239cff22a51b4b",
@@ -770,6 +819,13 @@
       "patchSha256": "7f6458af7a07c80bbbe7f62395dd0d109933064008a93cfa2e7fcf6a271f992b",
       "batch": "chunk-007",
       "reason": "Owner review on PR #72, 2026-11-17: checks the returning incarnation's characteristics, not the exiled object's."
+    },
+    {
+      "name": "Skyknight Vanguard",
+      "oracleId": "9180f77f-c288-4a24-a35d-a16270b3d737",
+      "patchSha256": "207d76c6b513231a84d277cdd7da842a44ec92058e7ad9215ca41b3564cb75eb",
+      "batch": "chunk-005",
+      "reason": "Sweep 2026-11-19 (#95): created attacking tokens share one defender choice, limited to players already attacked (same as Leonin Warleader)."
     },
     {
       "name": "Smoke Shroud",
@@ -819,6 +875,13 @@
       "patchSha256": "297bb16f6dfcdd101370f23e95873e3b5938b52203e541e8cbbccf382fa7975b",
       "batch": "chunk-012",
       "reason": "Owner review on PR #72, 2026-11-17: cast-target matching ignores countTargets, so a six-target Hex gives no trigger."
+    },
+    {
+      "name": "Suki, Kyoshi Warrior",
+      "oracleId": "9223488e-5206-4d43-90ef-387189dcee16",
+      "patchSha256": "298b2d110a1116806a1a41e6670101f5fb9a8d9c7c90c30790b9c30eae99362d",
+      "batch": "chunk-009",
+      "reason": "Sweep 2026-11-19 (#95): created attacking tokens share one defender choice, limited to players already attacked (same as Leonin Warleader)."
     },
     {
       "name": "Sword of War and Peace",
@@ -945,6 +1008,13 @@
       "patchSha256": "5db6804524a752378473bd21b5a24cf49090b9edb0c570251b033ad4298fc188",
       "batch": "chunk-015",
       "reason": "Owner review on PR #72, 2026-11-17: fabricate still offers counters it cannot place, yielding no Servos."
+    },
+    {
+      "name": "Windrider Wizard",
+      "oracleId": "78e65286-204d-43ab-8929-b8e2191b1fce",
+      "patchSha256": "f6ddc645d838c8b5e26106b050f131ecfabcbefd1273d69bae576c2a1214b25a",
+      "batch": "chunk-015",
+      "reason": "Sweep 2026-11-19 (#95): 'If you do, discard' still discards after drawing zero (same as Sanctum of Calm Waters)."
     },
     {
       "name": "Witch-king, Sky Scourge",

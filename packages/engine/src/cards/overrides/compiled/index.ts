@@ -5324,67 +5324,6 @@ const BATCH_CHUNK_002: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'da1c1c70-c2fa-4ba7-89fe-d9af3fb353b9',
-    name: 'General Kreat, the Boltbringer',
-    handledLines: [
-      "Whenever one or more Goblins you control attack, create a 1/1 red Goblin creature token that's tapped and attacking.",
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'attacks',
-            subject: {
-              kind: 'permanent',
-              selector: {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'subtype',
-                    value: 'Goblin',
-                  },
-                  {
-                    kind: 'controller',
-                    who: 'you',
-                  },
-                ],
-              },
-            },
-            aggregate: true,
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'createTokenAttacking',
-              spec: {
-                name: 'Goblin',
-                typeLine: 'Token Creature — Goblin',
-                types: ['Creature'],
-                subtypes: ['Goblin'],
-                colors: ['R'],
-                power: 1,
-                toughness: 1,
-              },
-              count: {
-                kind: 'const',
-                n: 1,
-              },
-            },
-          ],
-          description:
-            "Whenever one or more Goblins you control attack, create a 1/1 red Goblin creature token that's tapped and attacking.",
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-002',
-    patchSha256: '1b3810219531549081571ba8b0d6ee2f6fc1cf9048de8fb1bd31ab57de9ffa5f',
-    behaviorSha256: 'f0a028db25afcf8e1690214b42e842b7bd4a5e12c7def883b164cdcaada6ff4b',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'c01aeaa5-1d3b-4493-9575-30175dcd780d',
     name: 'Gleaming Splendor',
     handledLines: ['{2}{W}: Two target players each draw a card.'],
@@ -15863,32 +15802,6 @@ const BATCH_CHUNK_005: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'f15911a5-f597-452e-a015-b115339f28fc',
-    name: 'Heartbeat of Spring',
-    handledLines: [
-      'Whenever a player taps a land for mana, that player adds one mana of any type that land produced.',
-    ],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'manaActivationRider',
-          source: {
-            kind: 'type',
-            value: 'Land',
-          },
-          add: {
-            kind: 'oneOfProducedTypes',
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-005',
-    patchSha256: '97a5b2a79c3466bc94273467ee573470a04d6a4af1fef018dbf2a04a9e429335',
-    behaviorSha256: 'ef3620b6a042e8f949c6d9b24ccd728c5a1ce24c469a3a590387909acf181b01',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'a1c7cd7a-0795-4135-b787-effeb981d95b',
     name: 'Hidden Volcano',
     handledLines: ['{4}{R}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery.'],
@@ -17039,53 +16952,6 @@ const BATCH_CHUNK_005: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-005',
     patchSha256: '80952143563eb063b7cceb7a5ccf1c08cc0f26a29038c07d561403f5800482be',
     behaviorSha256: '1161a12ca93609865ab1a1da10b43e1c79beb15f9eb7967556f55e6c4cc73013',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '9180f77f-c288-4a24-a35d-a16270b3d737',
-    name: 'Skyknight Vanguard',
-    handledLines: [
-      "Whenever this creature attacks, create a 1/1 white Soldier creature token that's tapped and attacking.",
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'attacks',
-            subject: {
-              kind: 'self',
-            },
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'createTokenAttacking',
-              spec: {
-                name: 'Soldier',
-                typeLine: 'Token Creature — Soldier',
-                types: ['Creature'],
-                subtypes: ['Soldier'],
-                colors: ['W'],
-                power: 1,
-                toughness: 1,
-              },
-              count: {
-                kind: 'const',
-                n: 1,
-              },
-            },
-          ],
-          description:
-            "Whenever this creature attacks, create a 1/1 white Soldier creature token that's tapped and attacking.",
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-005',
-    patchSha256: '207d76c6b513231a84d277cdd7da842a44ec92058e7ad9215ca41b3564cb75eb',
-    behaviorSha256: 'eddee97886a9c108a8af108ab6f1997c07d980b3cbce5f0aca47c601290b16cb',
     acceptedBy: 'main-thread',
   },
   {
@@ -18488,64 +18354,6 @@ const BATCH_CHUNK_006: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-006',
     patchSha256: '61d773365c70ea726d3a1cd20448acbe568f61aaac82fa81f6c2053cec3e010f',
     behaviorSha256: 'ed0bf802794078d5649509f4a790ca5cce7226bfda13ebe3aa7da6d528904755',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'e74c4001-d958-4d2b-b57d-c3601f01580c',
-    name: 'Battle Cry Goblin',
-    handledLines: [
-      "Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, create a 1/1 red Goblin creature token that's tapped and attacking.",
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'attacks',
-            subject: {
-              kind: 'self',
-            },
-            eventCondition: {
-              kind: 'compareValues',
-              left: {
-                kind: 'totalPowerOfAttackers',
-              },
-              cmp: '>=',
-              right: {
-                kind: 'const',
-                n: 6,
-              },
-            },
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'createTokenAttacking',
-              spec: {
-                name: 'Goblin',
-                typeLine: 'Token Creature — Goblin',
-                types: ['Creature'],
-                subtypes: ['Goblin'],
-                colors: ['R'],
-                power: 1,
-                toughness: 1,
-              },
-              count: {
-                kind: 'const',
-                n: 1,
-              },
-            },
-          ],
-          description:
-            "Pack tactics — Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, create a 1/1 red Goblin creature token that's tapped and attacking.",
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-006',
-    patchSha256: '7d9703e4366e0c694031f7f929e8ffebfe5fb32adabd16033cf68f95619aca36',
-    behaviorSha256: '62fb32cfade5280bb52271a6afe4ad0b8a1fdf4d1815914515f9cc58135d3bd0',
     acceptedBy: 'main-thread',
   },
   {
@@ -34328,53 +34136,6 @@ const BATCH_CHUNK_009: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '9223488e-5206-4d43-90ef-387189dcee16',
-    name: 'Suki, Kyoshi Warrior',
-    handledLines: [
-      "Whenever ~ attacks, create a 1/1 white Ally creature token that's tapped and attacking.",
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'attacks',
-            subject: {
-              kind: 'self',
-            },
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'createTokenAttacking',
-              spec: {
-                name: 'Ally',
-                typeLine: 'Token Creature — Ally',
-                types: ['Creature'],
-                subtypes: ['Ally'],
-                colors: ['W'],
-                power: 1,
-                toughness: 1,
-              },
-              count: {
-                kind: 'const',
-                n: 1,
-              },
-            },
-          ],
-          description:
-            "Whenever Suki attacks, create a 1/1 white Ally creature token that's tapped and attacking.",
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-009',
-    patchSha256: '298b2d110a1116806a1a41e6670101f5fb9a8d9c7c90c30790b9c30eae99362d',
-    behaviorSha256: '365c76da34eae9e6ff748122eb16a3d8c847bc3be29e9b190d9f1351a1160ad3',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'd85ba214-fa05-44ca-a7f9-ab2c5dc07962',
     name: 'Teach by Example',
     handledLines: [
@@ -39963,35 +39724,6 @@ const BATCH_CHUNK_011: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '362b7838-3b70-4a00-8c26-1c8b8a3b6acf',
-    name: "Dawn's Reflection",
-    handledLines: [
-      'Whenever enchanted land is tapped for mana, its controller adds an additional two mana in any combination of colors.',
-    ],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'manaActivationRider',
-          source: {
-            kind: 'attachedToSource',
-          },
-          add: {
-            kind: 'fixed',
-            units: [
-              ['W', 'U', 'B', 'R', 'G'],
-              ['W', 'U', 'B', 'R', 'G'],
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-011',
-    patchSha256: '8ea89e458a2dc26898619a6e8730665c93143b11664954fdd5dfad567d3f5988',
-    behaviorSha256: '5c74c7f00c8f1ef6c1cdf5f51a57cf0ce4e4b3d39485e3d15365d3afe36c526f',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '40abba38-533b-4f51-99e9-a2b337d65171',
     name: 'Deadeye Quartermaster',
     handledLines: [
@@ -42165,82 +41897,6 @@ const BATCH_CHUNK_011: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-011',
     patchSha256: '354a49f76f4e978ad9b3fb73f0369f34a0844406319269961ec68f5f6593a944',
     behaviorSha256: 'd258c77dabc0bda9b3a5a836c3ed983888a66ceb3bf4963c084ffa0c25ba0106',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '83a47724-b8d1-4884-9442-b62aa1510dc3',
-    name: 'Sinkhole Surveyor',
-    handledLines: ['Whenever this creature attacks, you lose 1 life and this creature endures 1.'],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'attacks',
-            subject: {
-              kind: 'self',
-            },
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'loseLife',
-              amount: {
-                kind: 'const',
-                n: 1,
-              },
-            },
-            {
-              op: 'chooseOne',
-              options: [
-                {
-                  effects: [
-                    {
-                      op: 'putCounters',
-                      target: 'source',
-                      counter: '+1/+1',
-                      count: {
-                        kind: 'const',
-                        n: 1,
-                      },
-                    },
-                  ],
-                  description: 'Put a +1/+1 counter on it',
-                },
-                {
-                  effects: [
-                    {
-                      op: 'createToken',
-                      spec: {
-                        name: 'Spirit',
-                        typeLine: 'Token Creature — Spirit',
-                        types: ['Creature'],
-                        subtypes: ['Spirit'],
-                        colors: ['W'],
-                        power: 1,
-                        toughness: 1,
-                      },
-                      count: {
-                        kind: 'const',
-                        n: 1,
-                      },
-                    },
-                  ],
-                  description: 'Create a 1/1 white Spirit creature token',
-                },
-              ],
-            },
-          ],
-          description:
-            'Whenever this creature attacks, you lose 1 life and this creature endures 1.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-011',
-    patchSha256: '09b72cc6f516e3d590f78f6f6cbbb878200b03d61c7eb53e6f24b02320273798',
-    behaviorSha256: 'a873cd36c369fe863965e2c3bff9f252bba738a8b614f27284dfe0615113e4ce',
     acceptedBy: 'main-thread',
   },
   {
@@ -56314,64 +55970,6 @@ const BATCH_CHUNK_015: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'f1352a81-6fd5-4c4d-ada4-b81d3a9f74c0',
-    name: 'Dagger Caster',
-    handledLines: [
-      'When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control.',
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'enters',
-            subject: {
-              kind: 'self',
-            },
-          },
-          optional: false,
-          targets: [],
-          effects: [
-            {
-              op: 'eachOpponentDamage',
-              amount: {
-                kind: 'const',
-                n: 1,
-              },
-            },
-            {
-              op: 'damageEach',
-              selector: {
-                kind: 'allOf',
-                of: [
-                  {
-                    kind: 'controller',
-                    who: 'opponents',
-                  },
-                  {
-                    kind: 'type',
-                    value: 'Creature',
-                  },
-                ],
-              },
-              amount: {
-                kind: 'const',
-                n: 1,
-              },
-            },
-          ],
-          description:
-            'When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-015',
-    patchSha256: '856f71ca642dca4e9929fc073dc35849b214c597ba9ba48d8757808944d94fd0',
-    behaviorSha256: '7a8afe555c4718ab334ba9978b1d8c63cf163ff1c296d5b0362c5ece60a3d5fc',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '8e22495d-a921-4c91-ada3-79098851e5d4',
     name: 'Deathleaper, Terror Weapon',
     handledLines: [
@@ -58053,53 +57651,6 @@ const BATCH_CHUNK_015: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'd7e2b2ba-cb5e-41f1-ad33-baf56c0b72ed',
-    name: 'Reckless Rage',
-    handledLines: [
-      "~ deals 4 damage to target creature you don't control and 2 damage to target creature you control.",
-    ],
-    def: {
-      spellAbility: {
-        kind: 'spell',
-        targets: [
-          {
-            kind: 'creature',
-            controller: 'opponent',
-          },
-          {
-            kind: 'creature',
-            controller: 'you',
-          },
-        ],
-        effects: [
-          {
-            op: 'dealDamage',
-            target: 0,
-            amount: {
-              kind: 'const',
-              n: 4,
-            },
-          },
-          {
-            op: 'dealDamage',
-            target: 1,
-            amount: {
-              kind: 'const',
-              n: 2,
-            },
-          },
-        ],
-        description:
-          "Reckless Rage deals 4 damage to target creature you don't control and 2 damage to target creature you control.",
-      },
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-015',
-    patchSha256: '37c6b6e6684fa9eb87273af5cd9562f38e29bb1dea0e7a3dab39342551cecd48',
-    behaviorSha256: '3a6cdb0100bfb06f3aaa58fb185c03660c6ba17d148a0b9882a8be0ccc6c1ee4',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '15f89b06-5025-4c9f-bf51-e25bc5c2dd6b',
     name: 'Saiba Cryptomancer',
     handledLines: ['Backup 1'],
@@ -59239,63 +58790,6 @@ const BATCH_CHUNK_015: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-015',
     patchSha256: '07701d48919dbe79f6b72c84f1b54c166da14bf428543ae7ee3eea64583a63c2',
     behaviorSha256: '38c65b78cfc0f082600b04d677031f4dc6bb7837a034cc55c959452b636169e3',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '78e65286-204d-43ab-8929-b8e2191b1fce',
-    name: 'Windrider Wizard',
-    handledLines: [
-      'Whenever you cast an instant, sorcery, or Wizard spell, you may draw a card. If you do, discard a card.',
-    ],
-    def: {
-      triggers: [
-        {
-          kind: 'triggered',
-          trigger: {
-            when: 'castsSpell',
-            caster: 'you',
-            filter: {
-              kind: 'anyOf',
-              of: [
-                {
-                  kind: 'type',
-                  value: 'Instant',
-                },
-                {
-                  kind: 'type',
-                  value: 'Sorcery',
-                },
-                {
-                  kind: 'subtype',
-                  value: 'Wizard',
-                },
-              ],
-            },
-          },
-          optional: true,
-          targets: [],
-          effects: [
-            {
-              op: 'draw',
-              count: {
-                kind: 'const',
-                n: 1,
-              },
-            },
-            {
-              op: 'discard',
-              count: 1,
-            },
-          ],
-          description:
-            'Whenever you cast an instant, sorcery, or Wizard spell, you may draw a card. If you do, discard a card.',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-015',
-    patchSha256: 'f6ddc645d838c8b5e26106b050f131ecfabcbefd1273d69bae576c2a1214b25a',
-    behaviorSha256: '59a13190909529507fd278e76f9518d81268a47fbb0c55648086bb3bd70b27f5',
     acceptedBy: 'main-thread',
   },
   {

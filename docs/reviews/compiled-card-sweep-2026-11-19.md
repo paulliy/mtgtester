@@ -55,7 +55,9 @@ reason carries over.
 | Savage Thallid                 | 11169 | chunk-014 | `other-on-self-eligible-cost` | owner backlog                   | "Sacrifice a Saproling" on a Fungus that can become a Saproling (changelings, type-setting).                                       |
 | Dark Privilege                 | 11470 | chunk-014 | `other-on-self-eligible-cost` | (new)                           | "Sacrifice a creature: Regenerate enchanted creature" on an Aura that can become a creature.                                       |
 
-The first eleven rows are the same engine gaps that got cards retired in #72's review, so the
+**Retired 2026-11-19, on the owner's decision:** the first ten rows, Dawn's Reflection through Windrider Wizard. They are on `docs/reviews/compiled-card-retired.json` with the reasons above. Avacyn, Ideas Unbound and the `other-on-self-eligible-cost` rows are still live.
+
+The first ten rows are the same engine gaps that got cards retired in #72's review, so the
 evidence for them is already on record. Avacyn and Ideas Unbound are wrong only when the trigger
 is created during an end step. The `other-on-self-eligible-cost` rows are wrong only when the source
 has gained the cost's type, but the owner has already named seven of them as wrong.
