@@ -1,0 +1,47 @@
+{
+  "name": "Boomerang Basics",
+  "oracleId": "acd881eb-f3b4-4174-9fc2-e3c7c213886b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return target nonland permanent to its owner's hand. If you controlled that permanent, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "nonlandPermanent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "controller",
+              "who": "you"
+            }
+          },
+          "checkTarget": 0,
+          "then": [
+            {
+              "op": "draw",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "else": []
+        },
+        {
+          "op": "returnToHand",
+          "target": 0
+        }
+      ],
+      "description": "Return target nonland permanent to its owner's hand. If you controlled that permanent, draw a card."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+During your turn, in the declare blockers step, you may cast this spell by paying {1}{B} and returning an unblocked attacker to its owner's hand, rather than paying its mana cost. This spell can be cast at instant speed. It has no other effect.

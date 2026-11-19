@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"tap"},{"kind":"payLife","amount":7}],"timing":"yourTurn","ability":{"kind":"activated","targets":[{"kind":"nonlandPermanent"}],"effects":[{"op":"destroy","target":0}],"description":"{T}, Pay 7 life: Destroy target nonland permanent. Activate only during your turn."}}]}}

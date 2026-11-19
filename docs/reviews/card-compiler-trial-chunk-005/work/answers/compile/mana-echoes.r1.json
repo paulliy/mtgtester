@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The mana amount counts creatures you control that share a creature type with the entering creature, and no selector or Value compares against the entering object's creature types."}

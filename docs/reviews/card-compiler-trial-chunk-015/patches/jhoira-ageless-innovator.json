@@ -1,0 +1,46 @@
+{
+  "name": "Jhoira, Ageless Innovator",
+  "oracleId": "83b9a734-ee92-44c8-bf47-ca69b6d6405e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Put two ingenuity counters on ~, then you may put an artifact card with mana value X or less from your hand onto the battlefield, where X is the number of ingenuity counters on ~."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "putCounters",
+              "target": "source",
+              "counter": "ingenuity",
+              "count": 2
+            },
+            {
+              "op": "handToBattlefield",
+              "filter": {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              "maxManaValue": {
+                "kind": "countersOnSelf",
+                "counter": "ingenuity"
+              },
+              "count": "one"
+            }
+          ],
+          "description": "{T}: Put two ingenuity counters on ~, then you may put an artifact card with mana value X or less from your hand onto the battlefield, where X is the number of ingenuity counters on ~."
+        }
+      }
+    ]
+  }
+}

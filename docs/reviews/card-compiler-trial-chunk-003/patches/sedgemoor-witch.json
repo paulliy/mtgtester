@@ -1,0 +1,15 @@
+{
+  "name": "Sedgemoor Witch",
+  "oracleId": "25dce517-ac0a-4577-89ed-04296c7c4069",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Ward—Pay 3 life."
+  ],
+  "compose": "append",
+  "def": {
+    "ward": {
+      "kind": "life",
+      "amount": 3
+    }
+  }
+}

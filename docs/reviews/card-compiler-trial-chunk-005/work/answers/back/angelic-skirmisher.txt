@@ -1,0 +1,4 @@
+At the beginning of combat on each turn, choose one of the following:
+• Creatures you control gain first strike until end of turn.
+• Creatures you control gain vigilance until end of turn.
+• Creatures you control gain lifelink until end of turn.

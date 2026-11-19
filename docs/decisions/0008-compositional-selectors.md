@@ -1,7 +1,7 @@
 # 0008 — Compositional selectors, and locked-in affected sets
 
 Date: 2026-07-24
-Status: Accepted
+Status: Accepted (2026-07-24)
 
 ## Context
 

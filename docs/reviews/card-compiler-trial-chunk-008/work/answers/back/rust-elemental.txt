@@ -1,0 +1,1 @@
+At the beginning of your upkeep, if you control one or more other artifacts, sacrifice one other artifact you control. Otherwise, tap this creature and you lose 4 life.

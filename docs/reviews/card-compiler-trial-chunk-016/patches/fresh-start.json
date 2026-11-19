@@ -1,0 +1,33 @@
+{
+  "name": "Fresh Start",
+  "oracleId": "77f1734d-ea0b-4344-8a9e-9d1a34eb6164",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature gets -5/-0 and loses all abilities."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": -5,
+          "toughness": 0
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "loseAllAbilities": true
+        }
+      }
+    ]
+  }
+}

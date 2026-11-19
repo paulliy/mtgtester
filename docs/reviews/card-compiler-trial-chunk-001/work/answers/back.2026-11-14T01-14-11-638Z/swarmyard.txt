@@ -1,0 +1,1 @@
+{T}: Regenerate target permanent that is an Insect, a Rat, a Spider, or a Squirrel. The target may be any permanent controlled by any player, with no controller restriction. The data gives no duration or "can't be regenerated" flag for the regeneration shield. The activation timing is any time you could activate an ability.

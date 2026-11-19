@@ -1,0 +1,2 @@
+Skeletons you control and other Zombies you control get +1/+1 (a layer 7d change that adds to their current power and toughness).
+Skeletons you control and other Zombies you control have deathtouch.

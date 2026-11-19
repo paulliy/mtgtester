@@ -1,0 +1,59 @@
+{
+  "name": "Scrapheap",
+  "oracleId": "dfed42b8-b35e-4c70-9e75-25a4da158e76",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an artifact or enchantment is put into your graveyard from the battlefield, you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "leavesBattlefield",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "owner",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "leavesTo": [
+            "graveyard"
+          ]
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever an artifact or enchantment is put into your graveyard from the battlefield, you gain 1 life."
+      }
+    ]
+  }
+}

@@ -30,7 +30,8 @@
     "../card-test-lab-sample.ts",
     "../card-authoring-metrics.ts",
     "../generate-card-name-slugs.ts",
-    "../run-pr08-verification.ts",
-    "../pr08-verification-report.ts"
+    "../card-evidence.ts",
+    "../card-evidence-sources.ts",
+    "../adr-index.ts"
   ]
 }

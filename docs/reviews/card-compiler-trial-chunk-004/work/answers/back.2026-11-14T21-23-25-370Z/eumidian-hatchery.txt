@@ -1,0 +1,1 @@
+When this leaves the battlefield and goes to a graveyard, create a number of 1/1 black Insect creature tokens with flying equal to the number of hatchling counters on this.

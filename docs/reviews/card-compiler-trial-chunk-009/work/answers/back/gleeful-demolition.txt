@@ -1,0 +1,2 @@
+If the target artifact is controlled by you, create three 1/1 red Phyrexian Goblin creature tokens. Otherwise, nothing happens.
+Destroy target artifact.

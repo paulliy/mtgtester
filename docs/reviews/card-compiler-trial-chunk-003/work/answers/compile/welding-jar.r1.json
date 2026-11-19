@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"sacrificeSelf"}],"timing":"any","ability":{"kind":"activated","targets":[{"kind":"artifact"}],"effects":[{"op":"regenerate","target":0}],"description":"Sacrifice this artifact: Regenerate target artifact."}}]}}

@@ -1,0 +1,1 @@
+Each creature you control that isn't a token has "{T}: Create a token that is a copy of target token you control that entered this turn. Activate this ability any time you have priority."

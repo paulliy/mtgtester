@@ -1,0 +1,1 @@
+Whenever you declare attackers, for each opponent you attack (not counting planeswalkers), create a 1/1 white Enchantment Creature — Glimmer token named Glimmer that is attacking that player.

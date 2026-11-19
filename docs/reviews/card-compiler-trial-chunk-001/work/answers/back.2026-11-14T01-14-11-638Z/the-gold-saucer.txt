@@ -1,0 +1,2 @@
+{2}, {T}: Flip a coin. If you win the flip, create a Treasure token. If you lose the flip, nothing happens.
+The Treasure token is an artifact Treasure token with no colors and no power or toughness and a hidden type line. It has "{T}, Sacrifice this artifact: Add one mana of any color." The token is not created tapped. The activation timing is any time you could activate an ability and it has no targets.

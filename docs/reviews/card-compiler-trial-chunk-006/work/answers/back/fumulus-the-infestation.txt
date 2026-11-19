@@ -1,0 +1,1 @@
+Whenever a creature you control with subtype Insect, Leech, Slug, or Worm attacks, the defending player loses 1 life and you gain 1 life.

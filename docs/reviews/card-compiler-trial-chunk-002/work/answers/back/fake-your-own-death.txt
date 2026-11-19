@@ -1,0 +1,1 @@
+Target creature gets +2/+0 until end of turn and gains "When this creature dies, return it to the battlefield tapped. Create a token that is a Treasure artifact with '{T}, Sacrifice this artifact: Add one mana of any color.'" until end of turn.

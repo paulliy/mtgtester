@@ -1,0 +1,58 @@
+{
+  "name": "Bident of Thassa",
+  "oracleId": "e1afaef7-9fa3-4662-a95f-adfb0da9fd11",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{U}, {T}: Creatures your opponents control attack this turn if able."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "forceAttackEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "opponents"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              }
+            }
+          ],
+          "description": "{1}{U}, {T}: Creatures your opponents control attack this turn if able."
+        }
+      }
+    ]
+  }
+}

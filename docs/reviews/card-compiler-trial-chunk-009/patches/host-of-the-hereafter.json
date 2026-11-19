@@ -1,0 +1,70 @@
+{
+  "name": "Host of the Hereafter",
+  "oracleId": "3431338b-928a-47f2-bc2f-f3c5d8eda8d0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature or another creature you control dies, if it had counters on it, put its counters on up to one target creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "hasAnyCounter"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "count": {
+              "min": 0,
+              "max": 1
+            },
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "op": "transferCountersFromTriggerObjectToChosenCreatures",
+            "targetSlot": 0
+          }
+        ],
+        "description": "Whenever this creature or another creature you control dies, if it had counters on it, put its counters on up to one target creature you control."
+      }
+    ]
+  }
+}

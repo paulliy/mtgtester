@@ -1,0 +1,2 @@
+Choose a creature you control and target permanent. The chosen creature deals damage equal to its power to that permanent, with the creature as the source of the damage.
+If the number of Eldrazi permanents you control is (comparison not shown in the data) 1, you gain 3 life.

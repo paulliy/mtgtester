@@ -1,0 +1,1 @@
+At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it is blue.

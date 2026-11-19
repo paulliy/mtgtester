@@ -1,0 +1,1 @@
+Whenever you cast a noncreature spell, create a 1/1 colorless Hero creature token. If at least four mana was spent to cast that spell, draw two cards. If at least eight mana was spent to cast that spell, sacrifice this creature and each opponent takes damage equal to the mana spent to cast that spell.

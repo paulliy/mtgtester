@@ -1,0 +1,29 @@
+{
+  "name": "Werebear",
+  "oracleId": "96cf3320-c730-4618-8768-28a179f4d9c0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ gets +3/+3 as long as there are seven or more cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 3,
+          "toughness": 3
+        },
+        "condition": {
+          "kind": "cardsInYourGraveyard",
+          "cmp": ">=",
+          "n": 7
+        }
+      }
+    ]
+  }
+}

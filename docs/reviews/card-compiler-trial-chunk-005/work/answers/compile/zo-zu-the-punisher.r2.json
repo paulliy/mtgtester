@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A land entering provides no event player, and EffectRef has no way to name the controller of the entering permanent (controllerOf takes only a target slot; subjectControllerIsEventPlayer is valid only for dies)."}

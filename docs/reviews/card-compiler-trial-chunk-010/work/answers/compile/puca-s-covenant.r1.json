@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The graveyard target's mana value bound is a fixed number, but the line needs the number of counters on the dying creature, and no Value reads that."}

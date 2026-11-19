@@ -1,0 +1,1818 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/edhrec-pinned-oracle.json",
+  "retrievedAt": "2026-11-15",
+  "cards": [
+    {
+      "sha256": "28fed012b05560a54a0c10fe891a3da25721c7c73a857cb1f97e0f02897fbc9e",
+      "card": {
+        "oracleId": "3fa5e109-4a67-4523-8183-90e48a906400",
+        "scryfallId": "1e07a595-5579-4d5a-b07c-84239d690459",
+        "name": "Agent of Erebos",
+        "manaCost": "{3}{B}",
+        "cmc": 4,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Enchantment Creature — Zombie",
+        "supertypes": [],
+        "types": [
+          "Enchantment",
+          "Creature"
+        ],
+        "subtypes": [
+          "Zombie"
+        ],
+        "oracleText": "Constellation — Whenever this creature or another enchantment you control enters, exile target player's graveyard.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Constellation"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7e6beaff3a48d150f539a03a3253ff41402ffd6a944c9776be800c654052d6c1",
+      "card": {
+        "oracleId": "5f981cca-5cd9-49e4-ab1a-bbbf6fc7e737",
+        "scryfallId": "333f6334-f027-4bec-95d7-7af80508c4ca",
+        "name": "Ancient Stone Idol",
+        "manaCost": "{10}",
+        "cmc": 10,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Golem",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Golem"
+        ],
+        "oracleText": "Flash\nThis spell costs {1} less to cast for each attacking creature.\nTrample\nWhen this creature dies, create a 6/12 colorless Construct artifact creature token with trample.",
+        "power": "12",
+        "toughness": "12",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Trample",
+          "Flash"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5b1bb82e38108c9a2dbb9ba3798e0489e5fcf07817d51589f2f3922e44ecce74",
+      "card": {
+        "oracleId": "48d14b5c-711a-4f8a-9de5-55415cb7a79a",
+        "scryfallId": "baaabd52-3aa9-4e2f-9369-d4db8b405ba8",
+        "name": "Angel of Finality",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Angel",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Angel"
+        ],
+        "oracleText": "Flying\nWhen this creature enters, exile target player's graveyard.",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "dfb361cae07b291c9df976d38bfe0df9e754f78712442343b4faf30be561050f",
+      "card": {
+        "oracleId": "fe1556cc-32d0-4e51-bb15-f3fce669a5e1",
+        "scryfallId": "06431793-5dfe-4cbf-990b-4bcc960d1f31",
+        "name": "Arcane Epiphany",
+        "manaCost": "{3}{U}{U}",
+        "cmc": 5,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {1} less to cast if you control a Wizard.\nDraw three cards.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "86d57cc37c5109155b55bf90fc173902d8500b9dd01b5a4d01abb8fbf7e26dc5",
+      "card": {
+        "oracleId": "f5e3c26c-c28c-455f-a682-2597e4b92d10",
+        "scryfallId": "f9e3bcd7-60f8-472a-ada0-c3147cf06588",
+        "name": "Arcane Laboratory",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Each player can't cast more than one spell each turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d260074131864341a1c8d772cced745f86b3a8f6f28f5b4dde19a8551a6871df",
+      "card": {
+        "oracleId": "13ac12db-d04b-4211-90df-886e1c597e8f",
+        "scryfallId": "30e1ec49-ad4f-4623-aeeb-dba07d6e6251",
+        "name": "Arwen's Gift",
+        "manaCost": "{3}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {1} less to cast if you control two or more legendary creatures.\nScry 2, then draw two cards.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Scry"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a9dcec38384919576025d13f44c32994bf74ccd296b89ff2326377e18d73eaa4",
+      "card": {
+        "oracleId": "085bc7be-bd44-40af-8e8f-a1a8006fe22c",
+        "scryfallId": "fc339ed7-e1d4-4fe9-a4c4-b030d3e74c00",
+        "name": "Assert Authority",
+        "manaCost": "{5}{U}{U}",
+        "cmc": 7,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)\nCounter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Affinity"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c85269f756b863d75dd966275bcad60bb4cd43ba37d6b5c445755f13718eb4d3",
+      "card": {
+        "oracleId": "c8c38570-0b42-4bfc-896f-f57f9a11ba9d",
+        "scryfallId": "241e5c4e-0f0b-4a3f-91e0-87387a11e81e",
+        "name": "Benevolent Bodyguard",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Cleric",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Cleric"
+        ],
+        "oracleText": "Sacrifice this creature: Target creature you control gains protection from the color of your choice until end of turn.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "4388b8463ef79cdd4aafac88e2fc4f347ca664a2522d0c374c8d7b78f18276df",
+      "card": {
+        "oracleId": "727f3201-1cfc-4ab2-9dfe-be4f7251f42f",
+        "scryfallId": "d0d484a6-5610-4f1d-95ec-eda273c255e4",
+        "name": "Boggart Trawler // Boggart Bog",
+        "manaCost": "{2}{B}",
+        "cmc": 3,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Goblin",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Goblin"
+        ],
+        "oracleText": "When this creature enters, exile target player's graveyard.",
+        "power": "3",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "modal_dfc",
+        "commanderLegality": "legal",
+        "isBasicLand": false,
+        "backFace": {
+          "name": "Boggart Bog",
+          "typeLine": "Land",
+          "oracleText": "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {B}.",
+          "manaCost": null,
+          "colors": [],
+          "power": null,
+          "toughness": null,
+          "loyalty": null,
+          "defense": null
+        }
+      }
+    },
+    {
+      "sha256": "03edfce112dbfd7478facc46f11aea77df8e45c5b12d0d9b122a76f3fd47739e",
+      "card": {
+        "oracleId": "f1266a1b-bae6-4ded-b4d5-7586a5b6c5d0",
+        "scryfallId": "f892d156-371c-4391-8ae6-25513c5032b0",
+        "name": "Clarion Conqueror",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Dragon",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nActivated abilities of artifacts, creatures, and planeswalkers can't be activated.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "adf8915b56cdb9db74bebc8952af0e336068172e949b16d85b73a6d0d4326fb5",
+      "card": {
+        "oracleId": "0c4bc9ea-a5fd-4f44-96a1-5448eee228c4",
+        "scryfallId": "085107a2-c1ec-473c-81d8-23e5a7197776",
+        "name": "Collector Ouphe",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Ouphe",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Ouphe"
+        ],
+        "oracleText": "Activated abilities of artifacts can't be activated.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d1b738dec444dcddee5feea6a9dec30f7f0a3e71a2cea16096d8168cee71d27c",
+      "card": {
+        "oracleId": "6225a704-430a-4f56-ad87-0e8d87f285f5",
+        "scryfallId": "5dde91a9-7d2d-4a7b-861a-3d1c16ec79d9",
+        "name": "Cursed Totem",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Activated abilities of creatures can't be activated.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "3a8c1c285d5b5be73a5035c6ee893018fe600dd67a35e811f181f785c386f16f",
+      "card": {
+        "oracleId": "5a2fa420-c27f-4c14-b285-e0bb2828e053",
+        "scryfallId": "a1e779b4-32dd-406b-8b68-48f6df458005",
+        "name": "Cyan, Vengeful Samurai",
+        "manaCost": "{6}{W}",
+        "cmc": 7,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Samurai",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Samurai"
+        ],
+        "oracleText": "This spell costs {1} less to cast for each creature card in your graveyard.\nDouble strike\nWhenever one or more creature cards leave your graveyard, put a +1/+1 counter on Cyan.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Double strike"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9adbb9ff7988b12d6f5960c926e5960f47ba9b4d444b29e5dd9d315b310c66b3",
+      "card": {
+        "oracleId": "4b2e9aa9-6f91-41de-84b6-e9a89be06a53",
+        "scryfallId": "4689b3f2-e4b7-448e-b3d4-ab33194aafb2",
+        "name": "Dissipate",
+        "manaCost": "{1}{U}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c67b3df3372cea9727be60c2feb381e3ae2348a993d10b836154af2308ce7006",
+      "card": {
+        "oracleId": "440881ad-48cf-4b82-8bb5-f506d1a51755",
+        "scryfallId": "8b3da929-eb0a-4149-9a0d-8f2b916f0e47",
+        "name": "Draconic Lore",
+        "manaCost": "{5}{U}",
+        "cmc": 6,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {2} less to cast if you control a Dragon.\nDraw three cards.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8612c3df0d9e22ca596dcd3de2aa444dcb4a0e220d2a6fbd1d9171af3e0e32c6",
+      "card": {
+        "oracleId": "33017203-233e-498e-806e-94b1dccf5c35",
+        "scryfallId": "c3bc8b9e-4d22-41ba-b593-d383fd301ef9",
+        "name": "Eidolon of Rhetoric",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment Creature — Spirit",
+        "supertypes": [],
+        "types": [
+          "Enchantment",
+          "Creature"
+        ],
+        "subtypes": [
+          "Spirit"
+        ],
+        "oracleText": "Each player can't cast more than one spell each turn.",
+        "power": "1",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "ecbaf3b019539ee70e73ae8e83a2ceab3f495240fa42281982ffe6beba7fe497",
+      "card": {
+        "oracleId": "894015d5-ee78-45df-8d37-53df963c59a6",
+        "scryfallId": "d016f166-183e-4d9e-9292-9bfb1ca0d72b",
+        "name": "Emerge Unscathed",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature you control gains protection from the color of your choice until end of turn.\nRebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you may cast this card from exile without paying its mana cost.)",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Rebound"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "57592739e4c831bd723f3e2cc2ae2ae8c0c957440b02c03c690447b5483ce2f5",
+      "card": {
+        "oracleId": "32452ccf-88c7-41d6-93e5-15d31f29726d",
+        "scryfallId": "e727bb9e-3510-4c8e-ac49-6d7217667a18",
+        "name": "Frozen Aether",
+        "manaCost": "{3}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Artifacts, creatures, and lands your opponents control enter tapped.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "68ef610c7bd8aa108175000da3e0d4892fdd09b262d2b664ccccae7ce3b4421d",
+      "card": {
+        "oracleId": "5f2628e3-e29a-4d77-bc27-6e1ce240d192",
+        "scryfallId": "9c99fe73-5fe1-4fcb-8099-73c4a6fd0d35",
+        "name": "Ghoultree",
+        "manaCost": "{7}{G}",
+        "cmc": 8,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Zombie Treefolk",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Zombie",
+          "Treefolk"
+        ],
+        "oracleText": "This spell costs {1} less to cast for each creature card in your graveyard.",
+        "power": "10",
+        "toughness": "10",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "9247c04927f45e5ef5088fb38e6b931eaedeb0d266f7e81c63fd4d3689904bd1",
+      "card": {
+        "oracleId": "9d6a9a37-a245-4503-baeb-9488553798ab",
+        "scryfallId": "2cc86e18-ffbc-4c5f-a694-922332b146cc",
+        "name": "Gixian Puppeteer",
+        "manaCost": "{3}{B}",
+        "cmc": 4,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Creature — Phyrexian Warlock",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Phyrexian",
+          "Warlock"
+        ],
+        "oracleText": "Whenever you draw your second card each turn, each opponent loses 2 life and you gain 2 life.\nWhen this creature dies, return another target creature card with mana value 3 or less from your graveyard to the battlefield.",
+        "power": "4",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "681fed502f0568705b4f7550a610f24e7f2b5146559de945e228eea758f73a13",
+      "card": {
+        "oracleId": "48e603a2-b965-4fbc-ad57-4388bce5ac8b",
+        "scryfallId": "138f0e49-71d5-4582-92be-797e753f0f42",
+        "name": "Gods Willing",
+        "manaCost": "{W}",
+        "cmc": 1,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature you control gains protection from the color of your choice until end of turn. (It can't be blocked, targeted, dealt damage, enchanted, or equipped by anything of that color.)\nScry 1.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Scry"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "597acf0259323a6739b6bab144e6822f6d63e83087729ed5069e867ab9774500",
+      "card": {
+        "oracleId": "a0d615b3-7ee3-43d7-ad37-5f7f1544a8db",
+        "scryfallId": "604b8ad4-b606-4be2-b3de-ad9f24b01eac",
+        "name": "Hushwing Gryff",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Hippogriff",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Hippogriff"
+        ],
+        "oracleText": "Flash\nFlying\nCreatures entering don't cause abilities to trigger.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Flash"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7dbe4c1fbf37cd39716acbfa3b57502e3a904155125db8ddbc942fd9d1c6da97",
+      "card": {
+        "oracleId": "4bba3663-7f3c-4589-88aa-cf0bfe36b171",
+        "scryfallId": "0f672328-3361-498e-a9f4-2d8e69a8b072",
+        "name": "Imposing Sovereign",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Human Noble",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Noble"
+        ],
+        "oracleText": "Creatures your opponents control enter tapped.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "af042d16d78aa2020224c58bb9b04ba2f55a070bd4edf421f2516518701ee431",
+      "card": {
+        "oracleId": "fda76032-7e6f-416f-8874-2a0642837522",
+        "scryfallId": "5c0c3860-1dab-4897-8f36-f9be263bba03",
+        "name": "Jirina, Dauntless General",
+        "manaCost": "{W}{B}",
+        "cmc": 2,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Soldier",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Soldier"
+        ],
+        "oracleText": "When Jirina enters, exile target player's graveyard.\nSacrifice Jirina: Humans you control gain hexproof and indestructible until end of turn.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "997bc066733e46a1606f183f40798739c7ba2262e92c2b8cb03416a58c3dcd25",
+      "card": {
+        "oracleId": "08c595da-9305-42a9-b72f-5ccc546edc01",
+        "scryfallId": "6b5d53cb-bf80-43b0-b839-b11a64ff4c1b",
+        "name": "Junk Diver",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Bird",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Bird"
+        ],
+        "oracleText": "Flying\nWhen this creature dies, return another target artifact card from your graveyard to your hand.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "13bd2ba63eaffb53e74c494dba8d88345fba8082a8f54a43047a12bc2b6ce92f",
+      "card": {
+        "oracleId": "5602c14d-cc22-47d7-a1b0-6491749f00dd",
+        "scryfallId": "febfa682-76ae-4979-a40c-c1eae1121f3c",
+        "name": "Keep Safe",
+        "manaCost": "{1}{U}",
+        "cmc": 2,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Counter target spell that targets a permanent you control.\nDraw a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "7e0072c15211ecdaf080f0de36a17bf92e8f464ac0309d6774ee19fc71ac325b",
+      "card": {
+        "oracleId": "b9243163-b726-432e-830f-86132aa7f34a",
+        "scryfallId": "04421508-b5ac-4466-9f77-dfef478d3cc2",
+        "name": "Kinjalli's Sunwing",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Dinosaur",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dinosaur"
+        ],
+        "oracleText": "Flying\nCreatures your opponents control enter tapped.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c24a8186be1b9dd5ec44aa450c12108eb898057ae096d39735c3e56b50408c70",
+      "card": {
+        "oracleId": "81fdd1c4-d43b-4f8b-8712-7c2bf45a3e0b",
+        "scryfallId": "f38cdfb1-0437-4afe-a777-60228b8eba69",
+        "name": "Kismet",
+        "manaCost": "{3}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Artifacts, creatures, and lands your opponents control enter tapped.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "a591476769f7e2ffec875861e21ec8d98a61b3bbf6a96b46b6285951173ac10a",
+      "card": {
+        "oracleId": "e2e44d46-9df4-46f8-acf7-5581b2257620",
+        "scryfallId": "f5751a3c-7695-4c47-9cbd-92fd5b1b7ec9",
+        "name": "Lookout's Dispersal",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {1} less to cast if you control a Pirate.\nCounter target spell unless its controller pays {4}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5f22dd847987e2f077c054c3fc431b1540620f96b11faf689075f1a0fc70726e",
+      "card": {
+        "oracleId": "861f0b1c-3b37-4d38-9232-e42565247076",
+        "scryfallId": "781476a1-73a9-4f43-9f71-d29c97ecc69a",
+        "name": "Loxodon Gatekeeper",
+        "manaCost": "{2}{W}{W}",
+        "cmc": 4,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Elephant Soldier",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elephant",
+          "Soldier"
+        ],
+        "oracleText": "Artifacts, creatures, and lands your opponents control enter tapped.",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b9aecb0b501a552d22f4a0095b8b8989e113c78db57d1324860aee21b71d7b4e",
+      "card": {
+        "oracleId": "b67db32b-30a9-49d2-b4c2-90a9f80c36eb",
+        "scryfallId": "0aa3a844-97e6-4f5d-a36f-56fea4e06932",
+        "name": "Manglehorn",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Beast",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Beast"
+        ],
+        "oracleText": "When this creature enters, you may destroy target artifact.\nArtifacts your opponents control enter tapped.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "501b61c540b40d051ef13a9ab5b44c796a134dfa2078df9672f6efc0df932ac1",
+      "card": {
+        "oracleId": "b2c30683-cc7f-4341-add1-b08cb9b93eeb",
+        "scryfallId": "175c6b1c-8790-41a2-ae15-5031206c410f",
+        "name": "Morcant's Loyalist",
+        "manaCost": "{1}{B}{G}",
+        "cmc": 3,
+        "colors": [
+          "B",
+          "G"
+        ],
+        "colorIdentity": [
+          "B",
+          "G"
+        ],
+        "typeLine": "Creature — Elf Warrior",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Warrior"
+        ],
+        "oracleText": "Other Elves you control get +1/+1.\nWhen this creature dies, return another target Elf card from your graveyard to your hand.",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8e912b69551e796a1a392690cb8855c706ed55d16127ab7bf665b7c7c253d96c",
+      "card": {
+        "oracleId": "d07d3be3-f69d-4484-8467-cffd43871788",
+        "scryfallId": "7f0149d4-0731-474a-a1c3-28c25e486c14",
+        "name": "Myr Retriever",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Myr",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Myr"
+        ],
+        "oracleText": "When this creature dies, return another target artifact card from your graveyard to your hand.",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "968454a3e05d1d6299054630f25494c0637fdcc70e9bcb0a960d2241aec570f8",
+      "card": {
+        "oracleId": "2f83ca86-e23d-40f7-8085-6928d8cfef9b",
+        "scryfallId": "73ac9f52-e6ff-4e6f-9733-fe24a5fb4b4e",
+        "name": "Null Rod",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Activated abilities of artifacts can't be activated.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "f18fed27ab9c89b3a31209ef4a453a05a5f4e951156ac440adac8a503c6bfff9",
+      "card": {
+        "oracleId": "bb4507c1-1e5d-48b5-8fc0-1d26bd1c9e72",
+        "scryfallId": "202cbfa4-3b3d-47fd-84a6-892692c906d6",
+        "name": "Overwhelming Remorse",
+        "manaCost": "{4}{B}",
+        "cmc": 5,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {1} less to cast for each creature card in your graveyard.\nExile target creature or planeswalker.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c6b5b833b23f9f3972ddf75f503e5c977aff6a49248a53c4b93d279c3ae6a2e1",
+      "card": {
+        "oracleId": "91ddd2bd-2dec-4670-8edb-e89c009b2187",
+        "scryfallId": "13cb9575-1138-4f99-8e90-0eaf00bdf4a1",
+        "name": "Pearl of Wisdom",
+        "manaCost": "{2}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {1} less to cast if you control an Otter.\nDraw two cards.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "0223ce204d83004b0bc83992e94652a226599cdc30ef666e87a96718e025fe48",
+      "card": {
+        "oracleId": "a9581345-87dc-4fbd-acc1-bb629f2cf40f",
+        "scryfallId": "15ab4c3b-323a-47c6-b675-447d16def3d5",
+        "name": "Primeval Protector",
+        "manaCost": "{10}{G}",
+        "cmc": 11,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Avatar",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Avatar"
+        ],
+        "oracleText": "This spell costs {1} less to cast for each creature your opponents control.\nWhen this creature enters, put a +1/+1 counter on each other creature you control.",
+        "power": "10",
+        "toughness": "10",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "68ae5c87bf570faba31bb71701d6ec3e0998d2e2d8d6e9cdaf67c58a720c4bbd",
+      "card": {
+        "oracleId": "c40bc9f6-2b72-4ae1-b912-50075af59628",
+        "scryfallId": "665a1bd1-db82-4db9-af7d-af161d31a696",
+        "name": "Remorseful Cleric",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Creature — Spirit Cleric",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Spirit",
+          "Cleric"
+        ],
+        "oracleText": "Flying\nSacrifice this creature: Exile target player's graveyard.",
+        "power": "2",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e9f50d877f8f2078c166b0f1467a68ee61b174162f87d7e1484b92e285882ba1",
+      "card": {
+        "oracleId": "9cfc01a7-e291-4388-bd09-94846d72e291",
+        "scryfallId": "fe1ecd63-075b-4eda-a9f7-d7f282c81d3b",
+        "name": "Rumbleweed",
+        "manaCost": "{10}{G}",
+        "cmc": 11,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Creature — Plant Elemental",
+        "supertypes": [],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Plant",
+          "Elemental"
+        ],
+        "oracleText": "This spell costs {1} less to cast for each land card in your graveyard.\nReach, vigilance, trample\nWhen this creature enters, other creatures you control get +3/+3 and gain trample until end of turn.",
+        "power": "8",
+        "toughness": "8",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Reach",
+          "Vigilance",
+          "Trample"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8c043012644776ca260d4e8c604875db37cd8c088f4a47fedd144dc610d04e16",
+      "card": {
+        "oracleId": "7ef5c812-ad7d-4d6c-8ee5-68561e7e4bd7",
+        "scryfallId": "f6314c7f-41dc-4bbd-99db-3a8a1d2977b2",
+        "name": "Saved by the Shell",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {1} less to cast if you control a Turtle.\nPut a +1/+1 counter on target creature you control. It gains trample, hexproof, and indestructible until end of turn.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "af01fd89905f6b6ea764924f9f64110fe6b307d90ac15cc6f66cf5e0fc9f94fc",
+      "card": {
+        "oracleId": "3dfbf95e-a91b-429c-96e2-95ac777e7027",
+        "scryfallId": "d45b0ed8-8692-4fa7-b32c-30d29028da3d",
+        "name": "Sejiri Steppe",
+        "manaCost": null,
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Land",
+        "supertypes": [],
+        "types": [
+          "Land"
+        ],
+        "subtypes": [],
+        "oracleText": "This land enters tapped.\nWhen this land enters, target creature you control gains protection from the color of your choice until end of turn.\n{T}: Add {W}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "14799a5280885d6ed7133f4a998ddfac02ce857d895b0c3a2d3a8b7a159ab80c",
+      "card": {
+        "oracleId": "c1909d70-d8f4-4c54-8587-0a910f123238",
+        "scryfallId": "1f4fedc9-6dd1-4190-a0c9-e9d10fd91315",
+        "name": "Shelter",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Target creature you control gains protection from the color of your choice until end of turn.\nDraw a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "6861a8434637eec70e73c526d7a19afbabb7766a70a90fc4278703901b7d4d30",
+      "card": {
+        "oracleId": "f8536726-993b-4100-918c-e3c7177d4c65",
+        "scryfallId": "ee4e732a-1ffd-463d-92c2-26187659cfc3",
+        "name": "Spectral Denial",
+        "manaCost": "{X}{U}",
+        "cmc": 1,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {1} less to cast for each creature you control with power 4 or greater.\nCounter target spell unless its controller pays {X}.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b126cf5d0d1085638e81bf320d777fc814bb09f8afe8a3cc440a28d6ff92a0f2",
+      "card": {
+        "oracleId": "be2b9c6d-4ecb-49ec-b276-4aa93c5dfc00",
+        "scryfallId": "bc9b2a76-3cce-4fd0-a4ef-932747cb11b2",
+        "name": "Spider-Woman, Stunning Savior",
+        "manaCost": "{1}{W/U}",
+        "cmc": 2,
+        "colors": [
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Spider Human Hero",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Spider",
+          "Human",
+          "Hero"
+        ],
+        "oracleText": "Flying\nVenom Blast — Artifacts and creatures your opponents control enter tapped.",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Venom Blast"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "4fcdfe22cc952bfe788743c6633dfa74902ba55cb6991df62d323824cadb5c7e",
+      "card": {
+        "oracleId": "6dd5782d-2d1a-4d6b-8381-e15d0d5be24f",
+        "scryfallId": "e9f8146e-ca33-4fa2-8f39-5a44b0db4bd6",
+        "name": "Stoic Rebuttal",
+        "manaCost": "{1}{U}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Metalcraft — This spell costs {1} less to cast if you control three or more artifacts.\nCounter target spell.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Metalcraft"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "1fa26d731fd62bfdb56b0d61a5391e7e87a3659b5cd7fe2ed190de3f0520689b",
+      "card": {
+        "oracleId": "12c63a45-7eb2-4262-b571-3358182f5610",
+        "scryfallId": "8e7faede-f794-4bda-9d64-21390ba19266",
+        "name": "Stony Silence",
+        "manaCost": "{1}{W}",
+        "cmc": 2,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Enchantment",
+        "supertypes": [],
+        "types": [
+          "Enchantment"
+        ],
+        "subtypes": [],
+        "oracleText": "Activated abilities of artifacts can't be activated.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "701561de7044d3cf4b6dc10a2eafcca26e8d390b02f37002f734763d1608d3fb",
+      "card": {
+        "oracleId": "13be47e4-9da2-4f9e-baf0-db96f7777ccb",
+        "scryfallId": "c062937f-d519-4206-99b0-cbea01b85a0d",
+        "name": "Thalia, Heretic Cathar",
+        "manaCost": "{2}{W}",
+        "cmc": 3,
+        "colors": [
+          "W"
+        ],
+        "colorIdentity": [
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Soldier",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Soldier"
+        ],
+        "oracleText": "First strike\nCreatures and nonbasic lands your opponents control enter tapped.",
+        "power": "3",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "First strike"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "579cb45ab4aa8a4f5cb5b5c256ef1616633a43c3695f130f1a6f57dc741bcc81",
+      "card": {
+        "oracleId": "1573f7f9-672c-421a-b1ac-3d0d8aea59ca",
+        "scryfallId": "752bf493-5839-47e8-95f2-6d8201907428",
+        "name": "Tormod's Crypt",
+        "manaCost": "{0}",
+        "cmc": 0,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}, Sacrifice this artifact: Exile target player's graveyard.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d825b05a95d4602d8e43a24bf7026821d981adfcccff7431cf92617a765106db",
+      "card": {
+        "oracleId": "97326cad-b13c-4e52-82ce-850a39e5ff08",
+        "scryfallId": "dbf02a38-d10d-463e-ab99-e7fd848a1bd3",
+        "name": "Torpor Orb",
+        "manaCost": "{2}",
+        "cmc": 2,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "Creatures entering don't cause abilities to trigger.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "5e3730df5ce6b97f18a5ce0016cf35c7f72f4285472d85ebbff6a1eb4ba36350",
+      "card": {
+        "oracleId": "4325ae73-af43-4a7d-a552-9909f0dc77db",
+        "scryfallId": "3b7573c2-484c-4b4e-9c26-0f005bd1daee",
+        "name": "Turn Aside",
+        "manaCost": "{U}",
+        "cmc": 1,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Counter target spell that targets a permanent you control.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c0159c449a3bcb683e8e6427fc24618c8ad318929a2cce94622118028e167c20",
+      "card": {
+        "oracleId": "5b2ffb53-86b7-4665-a5c7-b85b035b6c81",
+        "scryfallId": "93970fae-19f7-41dd-9750-ca428ae1de7a",
+        "name": "Urabrask the Hidden",
+        "manaCost": "{3}{R}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Phyrexian Praetor",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Phyrexian",
+          "Praetor"
+        ],
+        "oracleText": "Creatures you control have haste.\nCreatures your opponents control enter tapped.",
+        "power": "4",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "88d227d43eea2ffa4a7d7ed125dfc36febb7c047420881349ad5001017820124",
+      "card": {
+        "oracleId": "8388faa0-f64e-4b01-836e-617f99b808a4",
+        "scryfallId": "01d276cd-e4ad-488f-8447-004aefad1ebb",
+        "name": "Venom's Hunger",
+        "manaCost": "{4}{B}",
+        "cmc": 5,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {2} less to cast if you control a Villain.\nDestroy target creature. You gain 2 life.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "d25741777bd4739d23821ccf3eb3ba53d9d0daa3947951fea267fea3df8be15a",
+      "card": {
+        "oracleId": "2bd81743-84c8-43ec-86f5-68230036827b",
+        "scryfallId": "59bf371a-164c-4db8-9207-197c2e7c3c10",
+        "name": "Wizard's Lightning",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {2} less to cast if you control a Wizard.\nWizard's Lightning deals 3 damage to any target.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "16107fb20aef022ba24178266e4dc2d5d85df6b6af460420f0163837db33653b",
+      "card": {
+        "oracleId": "b828251c-86a9-454f-9852-d0876d0f5153",
+        "scryfallId": "979cd394-80ce-4559-9f3a-57cd84299182",
+        "name": "Wizard's Retort",
+        "manaCost": "{1}{U}{U}",
+        "cmc": 3,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "This spell costs {1} less to cast if you control a Wizard.\nCounter target spell.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "2afe2bae5887a022e59a81e82723ab0f46e0dac6d395c49d958f33818e8866b2",
+      "card": {
+        "oracleId": "319ee221-bace-41e9-b386-6b528bd780c1",
+        "scryfallId": "e9387e8f-0e72-4212-81c8-e64050700c52",
+        "name": "Workshop Assistant",
+        "manaCost": "{3}",
+        "cmc": 3,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact Creature — Construct",
+        "supertypes": [],
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Construct"
+        ],
+        "oracleText": "When this creature dies, return another target artifact card from your graveyard to your hand.",
+        "power": "1",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

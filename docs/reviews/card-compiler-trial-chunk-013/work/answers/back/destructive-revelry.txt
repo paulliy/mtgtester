@@ -1,0 +1,2 @@
+Destroy target artifact or enchantment.
+This spell deals 2 damage to the controller of that permanent.

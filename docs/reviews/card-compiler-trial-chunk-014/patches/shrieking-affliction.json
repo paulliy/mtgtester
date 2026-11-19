@@ -1,0 +1,38 @@
+{
+  "name": "Shrieking Affliction",
+  "oracleId": "9e3f5d0b-103f-40e2-beb5-26b1fcb136f3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of each opponent's upkeep, if that player has one or fewer cards in hand, they lose 3 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "opponent",
+          "condition": {
+            "kind": "eventPlayerHandSize",
+            "cmp": "<=",
+            "n": 1
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "loseLifeTarget",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 3
+            }
+          }
+        ],
+        "description": "At the beginning of each opponent's upkeep, if that player has one or fewer cards in hand, they lose 3 life."
+      }
+    ]
+  }
+}

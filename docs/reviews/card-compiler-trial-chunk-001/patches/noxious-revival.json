@@ -1,0 +1,27 @@
+{
+  "name": "Noxious Revival",
+  "oracleId": "97cabeda-9fe3-490d-99b4-4c8d87c17157",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put target card from a graveyard on top of its owner's library."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "cardInGraveyard",
+          "graveyardOwnerScope": "any"
+        }
+      ],
+      "effects": [
+        {
+          "op": "graveyardToLibraryTop",
+          "target": 0
+        }
+      ],
+      "description": "Put target card from a graveyard on top of its owner's library."
+    }
+  }
+}

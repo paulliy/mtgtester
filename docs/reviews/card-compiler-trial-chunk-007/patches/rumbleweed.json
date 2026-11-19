@@ -1,0 +1,26 @@
+{
+  "name": "Rumbleweed",
+  "oracleId": "9cfc01a7-e291-4388-bd09-94846d72e291",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast for each land card in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countCardsInZone",
+          "zone": "graveyard",
+          "selector": {
+            "kind": "type",
+            "value": "Land"
+          },
+          "owner": "you"
+        },
+        "selfOnly": true
+      }
+    ]
+  }
+}

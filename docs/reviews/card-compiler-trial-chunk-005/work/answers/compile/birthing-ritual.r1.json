@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The sacrifice-then-put step needs a mana-value cap of 1 plus the sacrificed creature's mana value on the creatures put from the looked-at cards, and lookAtTopN's mayPut filter has no mana-value bound or link to a sacrifice made during resolution."}

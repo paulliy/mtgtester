@@ -1,0 +1,85 @@
+{
+  "name": "Overwhelming Stampede",
+  "oracleId": "e1e96802-fd0c-41f1-aa21-3287d75a0e88",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Until end of turn, creatures you control gain trample and get +X/+X, where X is the greatest power among creatures you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "pumpEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "power": {
+            "kind": "greatestPowerAmong",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "scope": "you"
+          },
+          "toughness": {
+            "kind": "greatestPowerAmong",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "scope": "you"
+          }
+        },
+        {
+          "op": "grantKeywordEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "keyword": "trample"
+        }
+      ],
+      "description": "Until end of turn, creatures you control gain trample and get +X/+X, where X is the greatest power among creatures you control."
+    }
+  }
+}

@@ -1,0 +1,3 @@
+Target card in a graveyard.
+Put that card into its owner's hand.
+You gain 6 life.

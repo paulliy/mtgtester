@@ -1,0 +1,54 @@
+{
+  "name": "Siegfried, Famed Swordsman",
+  "oracleId": "a7cac6c3-cbb1-41f4-905d-2eb581e8e2e0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ enters, mill three cards. Then put X +1/+1 counters on ~, where X is twice the number of creature cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "mill",
+            "count": {
+              "kind": "const",
+              "n": 3
+            }
+          },
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "self"
+            },
+            "counter": "+1/+1",
+            "count": {
+              "kind": "times",
+              "of": {
+                "kind": "countCardsInZone",
+                "zone": "graveyard",
+                "selector": {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                "owner": "you"
+              },
+              "n": 2
+            }
+          }
+        ],
+        "description": "When Siegfried enters, mill three cards. Then put X +1/+1 counters on Siegfried, where X is twice the number of creature cards in your graveyard."
+      }
+    ]
+  }
+}

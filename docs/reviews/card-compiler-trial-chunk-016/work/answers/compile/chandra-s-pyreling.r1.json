@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No trigger watches any source you control dealing noncombat damage to an opponent: dealsDamageToOpponent is self-only, and playerDealtDamage cannot require an opponent damaged by your source."}

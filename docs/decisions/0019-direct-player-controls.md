@@ -2,7 +2,7 @@
 
 Date: 2026-07-28
 
-Status: Accepted
+Status: Accepted (2026-07-28)
 
 Amended by [0032](0032-server-computed-presentation.md): decision 5. Presentation facts for casts and abilities move from `LegalAction.data` to server-built presentation.
 

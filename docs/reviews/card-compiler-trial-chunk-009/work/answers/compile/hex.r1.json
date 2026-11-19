@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","count":{"min":6,"max":6}}],"effects":[{"op":"destroyEachChosen","targetSlot":0}],"description":"Destroy six target creatures."}}}

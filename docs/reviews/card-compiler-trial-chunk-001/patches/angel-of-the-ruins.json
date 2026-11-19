@@ -1,0 +1,39 @@
+{
+  "name": "Angel of the Ruins",
+  "oracleId": "14878a5f-7983-4133-a1a7-9d539531e092",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, exile up to two target artifacts and/or enchantments."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "artifactOrEnchantment",
+            "count": {
+              "min": 0,
+              "max": 2
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "exileEachChosen",
+            "targetSlot": 0
+          }
+        ],
+        "description": "When this creature enters, exile up to two target artifacts and/or enchantments."
+      }
+    ]
+  }
+}

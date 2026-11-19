@@ -1,0 +1,1 @@
+Whenever a land you control is tapped for mana, it adds an additional {G}.

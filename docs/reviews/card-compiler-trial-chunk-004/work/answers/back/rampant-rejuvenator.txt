@@ -1,0 +1,1 @@
+When this creature dies, search your library for a number of basic land cards equal to this creature's power. Put them onto the battlefield. Then shuffle. The search may find fewer cards than that number.

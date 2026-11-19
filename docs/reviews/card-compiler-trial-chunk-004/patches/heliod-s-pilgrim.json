@@ -1,0 +1,52 @@
+{
+  "name": "Heliod's Pilgrim",
+  "oracleId": "0fe01c7d-f435-44c1-82f1-0ec2c47d4704",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, you may search your library for an Aura card, reveal it, put it into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Aura"
+                }
+              ]
+            },
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "reveal": true
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "When this creature enters, you may search your library for an Aura card, reveal it, put it into your hand, then shuffle."
+      }
+    ]
+  }
+}

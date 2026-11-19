@@ -1,0 +1,29 @@
+{
+  "name": "Wanderer's Strike",
+  "oracleId": "d6239ada-c72a-49b2-882c-6dae1dd366e3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Exile target creature, then proliferate."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "exile",
+          "target": 0
+        },
+        {
+          "op": "proliferate"
+        }
+      ],
+      "description": "Exile target creature, then proliferate."
+    }
+  }
+}

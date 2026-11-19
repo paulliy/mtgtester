@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'An opponent has ten or more cards in their graveyard' is per opponent, but the only graveyard count (countCardsInZone with owner opponents) pools all opponents' cards together."}

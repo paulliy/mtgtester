@@ -1,0 +1,31 @@
+{
+  "name": "Gods Willing",
+  "oracleId": "48e603a2-b965-4fbc-ad57-4388bce5ac8b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control gains protection from the color of your choice until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantChosenColorProtectionUntilEot",
+          "target": 0
+        },
+        {
+          "op": "scry",
+          "count": 1
+        }
+      ],
+      "description": "Target creature you control gains protection from the color of your choice until end of turn."
+    }
+  }
+}

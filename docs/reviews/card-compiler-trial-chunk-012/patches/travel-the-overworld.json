@@ -1,0 +1,34 @@
+{
+  "name": "Travel the Overworld",
+  "oracleId": "61e3709e-7ecd-4a59-bca1-019d16795740",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Affinity for Towns"
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "subtype",
+                "value": "Town"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              }
+            ]
+          },
+          "scope": "all"
+        },
+        "selfOnly": true
+      }
+    ]
+  }
+}

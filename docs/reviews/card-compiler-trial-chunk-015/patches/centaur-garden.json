@@ -1,0 +1,60 @@
+{
+  "name": "Centaur Garden",
+  "oracleId": "5cf92fd4-7c0b-4d8e-92f1-53dc2e0476fc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{G}, {T}, Sacrifice this land: Target creature gets +3/+3 until end of turn. Activate only if there are seven or more cards in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "condition": {
+          "kind": "cardsInYourGraveyard",
+          "cmp": ">=",
+          "n": 7
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "target": 0,
+              "power": 3,
+              "toughness": 3
+            }
+          ],
+          "description": "{G}, {T}, Sacrifice this land: Target creature gets +3/+3 until end of turn. Activate only if there are seven or more cards in your graveyard."
+        }
+      }
+    ]
+  }
+}

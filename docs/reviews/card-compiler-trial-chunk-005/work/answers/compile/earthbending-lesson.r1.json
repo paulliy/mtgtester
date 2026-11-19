@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Earthbend makes a target land a permanent 0/0 haste creature with four counters that returns when it dies or is exiled, and the schema has no persistent land-becomes-creature effect with that return clause (becomeCreatureUntilEot lasts only until end of turn)."}

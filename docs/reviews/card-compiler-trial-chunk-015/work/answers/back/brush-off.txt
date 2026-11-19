@@ -1,0 +1,1 @@
+Instant and sorcery spells you cast cost {1} less to cast, and the blue portion of their cost is reduced by {U}. This applies only to spells its controller casts.

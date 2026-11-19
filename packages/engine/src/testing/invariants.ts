@@ -1,6 +1,7 @@
 import { EngineInvariantError } from '../errors';
 import type { EngineCardObject, EnginePermanent, GameContext } from '../state/types';
 import { buildPlayerView } from '../view/view';
+import { knownHandOf } from '../state/objects';
 import { installCheckpointHook, type CheckpointHook } from './checkpoint-hook';
 
 /**
@@ -146,14 +147,30 @@ function privacyViolations(ctx: GameContext): string[] {
   for (const seat of ctx.state.players) {
     const view = buildPlayerView(ctx, seat.id);
     const revealed = strings(view.revealedLibraryTops ?? [], new Set());
+    const known = strings(
+      view.opponents.map((opponent) => opponent.knownHand ?? []),
+      new Set(),
+    );
     const shown = strings(view, new Set());
+    const viewer = ctx.state.players.find((player) => player.id === seat.id)!;
+    for (const opponent of view.opponents) {
+      const owner = ctx.state.players.find((player) => player.id === opponent.seat)!;
+      const live = new Set(knownHandOf(ctx, viewer, owner).map((card) => card.id));
+      for (const card of opponent.knownHand ?? [])
+        if (!live.has(card.id))
+          violations.push(`${seat.id}'s view claims to know ${card.id} in ${owner.id}'s hand`);
+    }
     for (const player of ctx.state.players) {
       const hidden = [
         ...(player.id === seat.id ? [] : player.hand.map((card) => ({ card, zone: 'hand' }))),
         ...player.library.map((card) => ({ card, zone: 'library' })),
       ];
       for (const { card, zone } of hidden)
-        if (shown.has(card.id) && !revealed.has(card.id))
+        if (
+          shown.has(card.id) &&
+          !revealed.has(card.id) &&
+          !(zone === 'hand' && known.has(card.id))
+        )
           violations.push(`${seat.id}'s view shows ${card.id}, a card in ${player.id}'s ${zone}`);
     }
   }

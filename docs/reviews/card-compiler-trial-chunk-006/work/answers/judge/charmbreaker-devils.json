@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A returns a card at random with no target. Text B makes the ability target an instant or sorcery card in the graveyard (chosen at random when put on the stack), so the ability can be responded to and fizzle if that card has left the graveyard."]}

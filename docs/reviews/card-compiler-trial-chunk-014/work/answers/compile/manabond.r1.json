@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"handToBattlefield with count 'any' lets the player choose a subset, but the text puts all land cards from hand onto the battlefield, and no op makes 'discard your hand' depend on that having happened."}

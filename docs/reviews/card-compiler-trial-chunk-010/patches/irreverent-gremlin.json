@@ -1,0 +1,52 @@
+{
+  "name": "Irreverent Gremlin",
+  "oracleId": "44594004-52e7-4ce6-8eb0-61f72fd9c73b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another creature you control with power 2 or less enters, you may discard a card. If you do, draw a card. Do this only once each turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "powerAtMost",
+                  "n": 2
+                }
+              ]
+            }
+          },
+          "oncePerTurn": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "mayDiscardThenDraw",
+            "count": 1
+          }
+        ],
+        "description": "Whenever another creature you control with power 2 or less enters, you may discard a card. If you do, draw a card. Do this only once each turn."
+      }
+    ]
+  }
+}

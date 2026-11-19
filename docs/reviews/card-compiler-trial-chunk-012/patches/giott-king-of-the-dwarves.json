@@ -1,0 +1,62 @@
+{
+  "name": "Giott, King of the Dwarves",
+  "oracleId": "c629fa91-e13c-494b-a95f-a91b7c52035a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ or another Dwarf you control enters and whenever an Equipment you control enters, you may discard a card. If you do, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Dwarf"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Equipment"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "mayDiscardThenDraw",
+            "count": 1
+          }
+        ],
+        "description": "Whenever Giott or another Dwarf you control enters and whenever an Equipment you control enters, you may discard a card. If you do, draw a card."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"castsSpell","caster":"you","targetFilter":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"putCountersEach","selector":{"kind":"self"},"counter":"+1/+1","count":1}],"description":"Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature."}]}}

@@ -1,0 +1,44 @@
+{
+  "name": "Ice-Fang Coatl",
+  "oracleId": "f4b1bbd1-f1b2-4c7d-bafd-9d2857f92a89",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ has deathtouch as long as you control at least three other snow permanents."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "deathtouch"
+        },
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "other"
+              },
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "supertype",
+                "value": "Snow"
+              }
+            ]
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 3
+        }
+      }
+    ]
+  }
+}

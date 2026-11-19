@@ -1,0 +1,1 @@
+Whenever this creature deals combat damage to a player, target creature card in a graveyard. You may pay {2}{B}. If you do, put that card onto the battlefield.

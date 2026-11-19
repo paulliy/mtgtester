@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Attaching any number of targeted Equipment to this creature has no schema shape, since attachSelfTo moves the source and attach moves the source or trigger object, not a chosen Equipment."}

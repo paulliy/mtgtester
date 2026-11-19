@@ -1,0 +1,25 @@
+{
+  "name": "Grow Extra Arms",
+  "oracleId": "52f03e73-3dba-44c2-b256-10e7e208b961",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast if it targets a Spider."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 1
+        },
+        "selfOnly": true,
+        "targetFilter": {
+          "kind": "subtype",
+          "value": "Spider"
+        }
+      }
+    ]
+  }
+}

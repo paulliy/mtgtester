@@ -1,0 +1,26 @@
+{
+  "name": "Brand",
+  "oracleId": "eec7500b-418d-4387-beb2-d53e047c1d22",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Gain control of all permanents you own."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "gainControl",
+          "selector": {
+            "kind": "owner",
+            "who": "you"
+          },
+          "duration": "permanent"
+        }
+      ],
+      "description": "Gain control of all permanents you own."
+    }
+  }
+}

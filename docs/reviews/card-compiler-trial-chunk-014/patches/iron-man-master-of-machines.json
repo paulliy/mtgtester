@@ -1,0 +1,56 @@
+{
+  "name": "Iron Man, Master of Machines",
+  "oracleId": "94bc796d-8c04-4835-8a99-7e5dce9540ee",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ attacks, if an artifact entered the battlefield under your control this turn, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "enteredThisTurn"
+                }
+              ]
+            },
+            "scope": "you",
+            "cmp": ">=",
+            "n": 1
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever Iron Man attacks, if an artifact entered the battlefield under your control this turn, draw a card."
+      }
+    ]
+  }
+}

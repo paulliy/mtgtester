@@ -1,0 +1,1 @@
+At the beginning of each player's end step, each player discards their hand, then draws 0 cards.

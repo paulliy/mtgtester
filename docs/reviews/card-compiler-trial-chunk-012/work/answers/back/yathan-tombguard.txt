@@ -1,0 +1,1 @@
+Whenever a creature you control with one or more counters on it deals combat damage to a player, you draw a card and you lose 1 life.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Firebending's mana must last until end of combat, but addMana's persistent flag only keeps mana until end of turn, and the schema has no end-of-combat mana duration."}

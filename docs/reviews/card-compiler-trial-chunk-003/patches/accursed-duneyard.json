@@ -1,0 +1,83 @@
+{
+  "name": "Accursed Duneyard",
+  "oracleId": "48edc348-93f6-4dce-9cc4-7244d76b6f4a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}, {T}: Regenerate target Shade, Skeleton, Specter, Spirit, Vampire, Wraith, or Zombie."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Shade"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Skeleton"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Specter"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Spirit"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Vampire"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Wraith"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Zombie"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "regenerate",
+              "target": 0
+            }
+          ],
+          "description": "{2}, {T}: Regenerate target Shade, Skeleton, Specter, Spirit, Vampire, Wraith, or Zombie. (The next time it would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)"
+        }
+      }
+    ]
+  }
+}

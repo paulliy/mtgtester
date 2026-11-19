@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The creature-card and land-card tests must read the targeted card's type after it has been exiled from the graveyard, and the schema does not state that a checkTarget condition reads an exiled card."}

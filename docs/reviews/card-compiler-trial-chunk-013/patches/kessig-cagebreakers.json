@@ -1,0 +1,54 @@
+{
+  "name": "Kessig Cagebreakers",
+  "oracleId": "d7407920-7596-497a-a135-b9343909a0cb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks, create a 2/2 green Wolf creature token that's tapped and attacking for each creature card in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createTokenAttacking",
+            "spec": {
+              "name": "Wolf",
+              "typeLine": "Token Creature — Wolf",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Wolf"
+              ],
+              "colors": [
+                "G"
+              ],
+              "power": 2,
+              "toughness": 2
+            },
+            "count": {
+              "kind": "countCardsInZone",
+              "zone": "graveyard",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              },
+              "owner": "you"
+            }
+          }
+        ],
+        "description": "Whenever this creature attacks, create a 2/2 green Wolf creature token that's tapped and attacking for each creature card in your graveyard."
+      }
+    ]
+  }
+}

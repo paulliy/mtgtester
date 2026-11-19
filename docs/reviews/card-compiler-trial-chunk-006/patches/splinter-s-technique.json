@@ -1,0 +1,46 @@
+{
+  "name": "Splinter's Technique",
+  "oracleId": "532ee9c3-391c-44db-8ed5-a1d28fd7f876",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sneak {1}{B}"
+  ],
+  "compose": "append",
+  "def": {
+    "alternativeCasts": [
+      {
+        "kind": "nonMana",
+        "manaCost": {
+          "generic": 1,
+          "colored": {
+            "W": 0,
+            "U": 0,
+            "B": 1,
+            "R": 0,
+            "G": 0
+          },
+          "colorless": 0
+        },
+        "costs": [
+          {
+            "kind": "returnUnblockedAttacker"
+          }
+        ],
+        "instantTiming": true,
+        "condition": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "yourTurn"
+            },
+            {
+              "kind": "duringStep",
+              "step": "declareBlockers"
+            }
+          ]
+        },
+        "description": "Sneak {1}{B} — return an unblocked attacker you control"
+      }
+    ]
+  }
+}

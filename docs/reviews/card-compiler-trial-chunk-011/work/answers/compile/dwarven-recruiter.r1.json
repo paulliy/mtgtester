@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Search for any number of Dwarf cards' with the found cards put on top in any order is not expressible: searchLibrary forces the maximum found and searchLibraryGroup has no unbounded 'any number' maximum and no ordering of the cards put on top."}

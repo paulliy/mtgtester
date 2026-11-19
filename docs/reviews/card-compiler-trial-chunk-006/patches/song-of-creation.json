@@ -1,0 +1,28 @@
+{
+  "name": "Song of Creation",
+  "oracleId": "75b73eb2-dafd-43db-9e96-7e1995d9849f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your end step, discard your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "discardHand"
+          }
+        ],
+        "description": "At the beginning of your end step, discard your hand."
+      }
+    ]
+  }
+}

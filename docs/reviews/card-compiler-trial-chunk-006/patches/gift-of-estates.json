@@ -1,0 +1,52 @@
+{
+  "name": "Gift of Estates",
+  "oracleId": "1bd70be6-752c-4ecb-a3e8-2bacec4b94fc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If an opponent controls more lands than you, search your library for up to three Plains cards, reveal them, put them into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "opponentControlsMore",
+            "selector": {
+              "kind": "type",
+              "value": "Land"
+            }
+          },
+          "then": [
+            {
+              "op": "searchLibrary",
+              "filter": {
+                "kind": "subtype",
+                "value": "Plains"
+              },
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "count": {
+                "kind": "const",
+                "n": 3
+              },
+              "allowFailToFind": true,
+              "reveal": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "else": []
+        }
+      ],
+      "description": "If an opponent controls more lands than you, search your library for up to three Plains cards, reveal them, put them into your hand, then shuffle."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+This spell costs {2} less to cast if its target is an attacking creature. This cost reduction applies only to this spell.

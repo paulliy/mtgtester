@@ -1,0 +1,1 @@
+{2}, {T}: Copy target triggered ability you control on the stack. The copy may have new targets chosen for it.

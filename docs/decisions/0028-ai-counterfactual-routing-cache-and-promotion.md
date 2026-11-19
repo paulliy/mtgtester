@@ -2,7 +2,8 @@
 
 Date: 2026-09-21
 
-Status: accepted for measurement; no production default promotion
+Status: Accepted (2026-09-21)
+Status note: for measurement; no production default promotion
 
 ## Decision
 

@@ -1,0 +1,1 @@
+When this enters, attach this to target creature you control. Then if the object that triggered this ability is an Assassin, that creature gains deathtouch until end of turn.

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"entersTappedUnless":{"kind":"countPermanents","selector":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"supertype","value":"Legendary"}]},"scope":"you","cmp":">=","n":1}}}

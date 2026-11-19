@@ -1,0 +1,1 @@
+Whenever a land you control enters, you may target a creature, artifact, enchantment, planeswalker, or battle card in your graveyard. If you do, and the land that entered is a Plains, return that card to the battlefield. Otherwise, return that card to your hand.

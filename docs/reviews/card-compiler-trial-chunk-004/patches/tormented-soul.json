@@ -1,0 +1,24 @@
+{
+  "name": "Tormented Soul",
+  "oracleId": "ee334bd7-d344-4684-85c8-d0464bbaf2b4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ can't block and can't be blocked."
+  ],
+  "compose": "append",
+  "def": {
+    "keywords": [],
+    "cantBlock": true,
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "setCantBeBlocked": true
+        }
+      }
+    ]
+  }
+}

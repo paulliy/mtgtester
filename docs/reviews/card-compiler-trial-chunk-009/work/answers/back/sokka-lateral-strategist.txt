@@ -1,0 +1,1 @@
+Whenever this creature attacks while at least one other creature is attacking, draw a card.

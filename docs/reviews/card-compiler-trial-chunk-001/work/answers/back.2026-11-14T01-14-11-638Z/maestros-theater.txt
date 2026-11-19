@@ -1,0 +1,2 @@
+When this land enters, sacrifice this land. When you do, search a library for a basic land card with the subtype Island, Swamp, or Mountain (the data does not state whose library; a search is allowed to find nothing). Put that card onto the battlefield tapped, then shuffle that library. Then gain 1 life.
+The sacrifice is mandatory. The reflexive trigger has no stated trigger condition beyond the sacrifice having been done.

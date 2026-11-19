@@ -1,0 +1,56 @@
+{
+  "name": "Rally of Wings",
+  "oracleId": "984336a7-85bd-4549-9771-03a0c2367db0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Untap all creatures you control. Creatures you control with flying get +2/+2 until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "untapEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          }
+        },
+        {
+          "op": "pumpEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "hasKeyword",
+                "keyword": "flying"
+              }
+            ]
+          },
+          "power": 2,
+          "toughness": 2
+        }
+      ],
+      "description": "Untap all creatures you control. Creatures you control with flying get +2/+2 until end of turn."
+    }
+  }
+}

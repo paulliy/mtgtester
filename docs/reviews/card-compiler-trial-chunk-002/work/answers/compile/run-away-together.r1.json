@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature"},{"kind":"creature","differentPlayerTargetSlots":[0,1]}],"effects":[{"op":"returnToHand","target":0},{"op":"returnToHand","target":1}],"description":"Choose two target creatures controlled by different players. Return those creatures to their owners' hands."}}}

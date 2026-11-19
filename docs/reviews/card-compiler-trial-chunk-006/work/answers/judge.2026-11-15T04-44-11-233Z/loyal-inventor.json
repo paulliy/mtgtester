@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A makes the whole search optional (\"you may search\") and shuffles after the search; Text B makes only the shuffle optional and makes the search mandatory, with the shuffle happening before the search.","Text B makes the search and placement steps separate branches, and the shuffle timing differs from Text A."]}

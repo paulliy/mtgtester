@@ -1,0 +1,45 @@
+{
+  "name": "Chocobo Knights",
+  "oracleId": "6cbefcba-0c1c-48fd-9b78-905ed61aae1e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you attack, creatures you control with counters on them gain double strike until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attackDeclared",
+          "attacker": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "hasAnyCounter"
+                }
+              ]
+            },
+            "keyword": "double strike"
+          }
+        ],
+        "description": "Whenever you attack, creatures you control with counters on them gain double strike until end of turn."
+      }
+    ]
+  }
+}

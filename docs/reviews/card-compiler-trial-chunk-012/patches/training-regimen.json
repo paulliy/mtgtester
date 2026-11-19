@@ -1,0 +1,36 @@
+{
+  "name": "Training Regimen",
+  "oracleId": "f44bde8b-43e9-4719-ac60-b8f0cee8df9b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures you control with +1/+1 counters on them have trample."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "hasCounter",
+              "counter": "+1/+1"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "trample"
+        }
+      }
+    ]
+  }
+}

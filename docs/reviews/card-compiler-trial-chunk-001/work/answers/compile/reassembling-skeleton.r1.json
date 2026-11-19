@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Returning the source from the graveyard to the battlefield tapped has no exact op: returnDepartedSourceToBattlefield has no tapped option, and returnDiedSourceToBattlefield's tapped option is defined for a source that died rather than an activated ability's own card."}

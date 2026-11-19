@@ -1,0 +1,32 @@
+{
+  "name": "Mind Control",
+  "oracleId": "5912546a-acc2-448c-b042-64bdac5ec129",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You control enchanted creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainControlTarget",
+            "target": "attachedToSource",
+            "duration": "whileSourceOnBattlefield"
+          }
+        ],
+        "description": "You control enchanted creature."
+      }
+    ]
+  }
+}

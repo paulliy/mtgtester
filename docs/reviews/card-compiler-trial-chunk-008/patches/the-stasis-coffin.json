@@ -1,0 +1,48 @@
+{
+  "name": "The Stasis Coffin",
+  "oracleId": "a46bfaf5-e631-4603-850a-f0074395b2f5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}, {T}, Exile ~: You gain protection from everything until your next turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "exileSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "controllerProtectionFromEverythingUntilNextTurn"
+            }
+          ],
+          "description": "{2}, {T}, Exile The Stasis Coffin: You gain protection from everything until your next turn."
+        }
+      }
+    ]
+  }
+}

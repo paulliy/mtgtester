@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The toughness bound is the number of Islands you control, and the selector can only compare toughness with a fixed toughnessAtLeast n, not toughness at most a counted value."}

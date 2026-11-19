@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Vanishing's 'when the last time counter is removed, sacrifice it' is a trigger on a counter removal, and the schema has no counter-removal trigger event (only countersPut), so it cannot be stated exactly."}

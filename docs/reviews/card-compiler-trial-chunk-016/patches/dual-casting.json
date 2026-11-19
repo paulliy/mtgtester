@@ -1,0 +1,82 @@
+{
+  "name": "Dual Casting",
+  "oracleId": "4d22b01b-63dd-4698-a221-0acaefb2000b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature has \"{R}, {T}: Copy target instant or sorcery spell you control. You may choose new targets for the copy.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "mana",
+                "cost": {
+                  "generic": 0,
+                  "colored": {
+                    "W": 0,
+                    "U": 0,
+                    "B": 0,
+                    "R": 1,
+                    "G": 0
+                  },
+                  "colorless": 0
+                }
+              },
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [
+                {
+                  "kind": "spell",
+                  "controller": "you",
+                  "filter": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "anyOf",
+                        "of": [
+                          {
+                            "kind": "type",
+                            "value": "Instant"
+                          },
+                          {
+                            "kind": "type",
+                            "value": "Sorcery"
+                          }
+                        ]
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "op": "copyTargetSpell",
+                  "target": 0,
+                  "newTargets": true
+                }
+              ],
+              "description": "{R}, {T}: Copy target instant or sorcery spell you control. You may choose new targets for the copy."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

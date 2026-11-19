@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No op makes a chosen creature a Bear in addition to its other types for the rest of the game; layer-4 addSubtypes applies only through a selector, and becomeCreatureUntilEot is until end of turn only."}

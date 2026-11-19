@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"\"For each token you control, create a token that's a copy of that permanent\" needs a per-token copy of each distinct token, and the schema's createTokenCopyOf copies a single fixed reference a counted number of times."}

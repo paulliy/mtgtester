@@ -1,0 +1,54 @@
+{
+  "name": "Kyoshi Battle Fan",
+  "oracleId": "849e54f9-7662-4186-859c-e4f52afbccac",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this Equipment enters, create a 1/1 white Ally creature token, then attach this Equipment to it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Ally",
+              "typeLine": "Token Creature — Ally",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Ally"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "attach",
+            "what": "source",
+            "to": "createdToken"
+          }
+        ],
+        "description": "When this Equipment enters, create a 1/1 white Ally creature token, then attach this Equipment to it."
+      }
+    ]
+  }
+}

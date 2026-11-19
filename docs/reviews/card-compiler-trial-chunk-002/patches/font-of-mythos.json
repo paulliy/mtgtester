@@ -1,0 +1,33 @@
+{
+  "name": "Font of Mythos",
+  "oracleId": "7194a262-5e7a-4c12-b271-2bc5e0799477",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of each player's draw step, that player draws two additional cards."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "drawStep",
+          "player": "each"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 2
+            },
+            "player": "eventPlayer"
+          }
+        ],
+        "description": "At the beginning of each player's draw step, that player draws two additional cards."
+      }
+    ]
+  }
+}

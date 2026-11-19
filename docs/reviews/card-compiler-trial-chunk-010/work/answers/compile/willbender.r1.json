@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"turnedFaceUp","subject":{"kind":"self"}},"optional":false,"targets":[{"kind":"stackObject","spellHasSingleTarget":true}],"effects":[{"op":"changeSingleTarget","target":0}],"description":"When this creature is turned face up, change the target of target spell or ability with a single target."}]}}

@@ -1,0 +1,2 @@
+Target creature gets +3/+2 until end of turn.
+If that creature is legendary, it gains trample until end of turn.

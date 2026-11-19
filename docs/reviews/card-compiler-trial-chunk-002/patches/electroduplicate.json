@@ -1,0 +1,35 @@
+{
+  "name": "Electroduplicate",
+  "oracleId": "112f2b3f-32e7-40b1-b80e-0b99184a840c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\""
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "createTokenCopyOf",
+          "ref": 0,
+          "count": {
+            "kind": "const",
+            "n": 1
+          },
+          "addKeywords": [
+            "haste"
+          ],
+          "sacrificeAt": "endStep"
+        }
+      ],
+      "description": "Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\""
+    }
+  }
+}

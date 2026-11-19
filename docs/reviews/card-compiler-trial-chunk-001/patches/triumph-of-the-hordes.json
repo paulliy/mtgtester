@@ -1,0 +1,70 @@
+{
+  "name": "Triumph of the Hordes",
+  "oracleId": "3ded0c0c-40ce-4d14-a9a6-b023bc19ee0e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Until end of turn, creatures you control get +1/+1 and gain trample and infect."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "pumpEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "power": 1,
+          "toughness": 1
+        },
+        {
+          "op": "grantKeywordEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "keyword": "trample"
+        },
+        {
+          "op": "grantKeywordEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "controller",
+                "who": "you"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "keyword": "infect"
+        }
+      ],
+      "description": "Until end of turn, creatures you control get +1/+1 and gain trample and infect."
+    }
+  }
+}

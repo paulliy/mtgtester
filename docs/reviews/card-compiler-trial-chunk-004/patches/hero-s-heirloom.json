@@ -1,0 +1,49 @@
+{
+  "name": "Hero's Heirloom",
+  "oracleId": "f707dfb5-dfa9-471b-ac29-5435c30069cc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as equipped creature is legendary, it has trample and haste."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "attachedToSource"
+            },
+            {
+              "kind": "supertype",
+              "value": "Legendary"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "trample"
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "attachedToSource"
+            },
+            {
+              "kind": "supertype",
+              "value": "Legendary"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "haste"
+        }
+      }
+    ]
+  }
+}

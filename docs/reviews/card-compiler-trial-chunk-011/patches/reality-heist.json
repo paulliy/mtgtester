@@ -1,0 +1,34 @@
+{
+  "name": "Reality Heist",
+  "oracleId": "569da5d3-6af2-4021-a464-b30ebaaf6fa0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Look at the top seven cards of your library. You may reveal up to two artifact cards from among them and put them into your hand. Put the rest on the bottom of your library in a random order."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "lookAtTopN",
+          "count": 7,
+          "mayPut": {
+            "filter": {
+              "kind": "type",
+              "value": "Artifact"
+            },
+            "destination": {
+              "zone": "hand"
+            },
+            "reveal": true,
+            "count": 2
+          },
+          "rest": "bottomRandom"
+        }
+      ],
+      "description": "Look at the top seven cards of your library. You may reveal up to two artifact cards from among them and put them into your hand. Put the rest on the bottom of your library in a random order."
+    }
+  }
+}

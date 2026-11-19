@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Granting the equipped creature \"prevent all damage that would be dealt to this creature\" has no schema form; the only self-damage prevention static (preventCombatDamageToSelf) covers combat damage on its own permanent, not all damage on another permanent."}

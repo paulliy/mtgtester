@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The search must happen only if the card was actually exiled, and no effect chains a library search on the success of a graveyard exile (exileGraveyardEventCard has no 'if you do' link)."}

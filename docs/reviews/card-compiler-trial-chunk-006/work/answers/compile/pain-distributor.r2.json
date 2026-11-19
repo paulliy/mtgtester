@@ -1,0 +1,1 @@
+{"status": "inexpressible", "reason": "The engine-parsed leavesBattlefield trigger on this card uses an event-player reference that the validator rejects as having no event player scope, and parsed triggers cannot be replaced, so the full card cannot validate (the new castsSpell trigger itself is expressible)."}

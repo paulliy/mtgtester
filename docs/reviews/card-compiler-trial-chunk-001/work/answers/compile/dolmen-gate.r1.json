@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Preventing combat damage dealt to all attacking creatures you control has no schema op: preventCombatDamageAll prevents all combat damage, preventCombatDamageToSelf covers only the source, and createDamageShield covers one object or one player."}

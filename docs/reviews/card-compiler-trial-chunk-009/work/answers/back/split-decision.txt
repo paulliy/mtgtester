@@ -1,0 +1,1 @@
+Each player votes for denial or duplication. If denial gets more votes, counter target instant or sorcery spell. Otherwise, copy target instant or sorcery spell. The copy may have new targets chosen.

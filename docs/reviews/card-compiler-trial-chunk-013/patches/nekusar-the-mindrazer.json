@@ -1,0 +1,33 @@
+{
+  "name": "Nekusar, the Mindrazer",
+  "oracleId": "8a5e3c8e-8e22-49b9-8ee5-4a36361f0da6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of each player's draw step, that player draws an additional card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "drawStep",
+          "player": "each"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "player": "eventPlayer"
+          }
+        ],
+        "description": "At the beginning of each player's draw step, that player draws an additional card."
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "Master of Death",
+  "oracleId": "3a16bdda-8499-47e4-b870-b9576f4c1a83",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, if this card is in your graveyard, you may pay 1 life. If you do, return it to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "mayPayLife",
+              "n": 1
+            },
+            "then": [
+              {
+                "op": "returnSelfFromGraveyardToHand"
+              }
+            ],
+            "else": []
+          }
+        ],
+        "functionsInGraveyard": true,
+        "description": "At the beginning of your upkeep, if this card is in your graveyard, you may pay 1 life. If you do, return it to your hand."
+      }
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Angrath's Marauders",
+  "oracleId": "2d4976d4-649c-4d42-ac5a-ada4b46a480c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If a source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "damageDoubled",
+        "sourceFilter": {
+          "kind": "controller",
+          "who": "you"
+        }
+      }
+    ]
+  }
+}

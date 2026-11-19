@@ -1,0 +1,31 @@
+{
+  "name": "Self-Reflection",
+  "oracleId": "5c68853e-4fb8-465e-b262-e6dbaf972533",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Create a token that's a copy of target creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "createTokenCopyOf",
+          "ref": 0,
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Create a token that's a copy of target creature you control."
+    }
+  }
+}

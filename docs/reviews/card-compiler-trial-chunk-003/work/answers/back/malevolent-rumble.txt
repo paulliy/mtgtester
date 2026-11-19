@@ -1,0 +1,2 @@
+Look at the top four cards of your library. You may put an artifact, creature, enchantment, land, planeswalker, or battle card from among them into your hand and reveal it. Put the rest into your graveyard.
+Create a colorless 0/1 Eldrazi creature token with "Sacrifice this token: Add {C}."

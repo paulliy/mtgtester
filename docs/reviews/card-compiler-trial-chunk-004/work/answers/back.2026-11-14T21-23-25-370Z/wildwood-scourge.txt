@@ -1,0 +1,1 @@
+Whenever one or more +1/+1 counters are put on one or more other creatures you control that aren't Hydras (aggregated: one trigger for all counters put at the same time), put a +1/+1 counter on this creature.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The castsSpell trigger's castFrom can say 'notHand' but not 'from your library'; notHand would also match instants cast from a graveyard or exile, so the library-only restriction cannot be stated exactly."}

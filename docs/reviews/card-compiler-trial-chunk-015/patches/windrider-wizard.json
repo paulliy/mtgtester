@@ -1,0 +1,53 @@
+{
+  "name": "Windrider Wizard",
+  "oracleId": "78e65286-204d-43ab-8929-b8e2191b1fce",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast an instant, sorcery, or Wizard spell, you may draw a card. If you do, discard a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              },
+              {
+                "kind": "subtype",
+                "value": "Wizard"
+              }
+            ]
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "discard",
+            "count": 1
+          }
+        ],
+        "description": "Whenever you cast an instant, sorcery, or Wizard spell, you may draw a card. If you do, discard a card."
+      }
+    ]
+  }
+}

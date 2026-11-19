@@ -1,0 +1,34 @@
+{
+  "name": "Saruman's Trickery",
+  "oracleId": "1b415806-a3e3-4d87-b4c1-ccd11a8ee589",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Amass Orcs 1."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "op": "counter",
+          "target": 0
+        },
+        {
+          "op": "amass",
+          "subtype": "Orc",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Counter target spell. Amass Orcs 1."
+    }
+  }
+}

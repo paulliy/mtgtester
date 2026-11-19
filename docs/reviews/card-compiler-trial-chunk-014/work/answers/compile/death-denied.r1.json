@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"TargetSpec.count is a fixed min/max range, so it cannot express returning X target creature cards where X is the announced value."}

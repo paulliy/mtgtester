@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The 'up to one target creature you don't control gets -2/-2' part has no effect that applies a pump to a variable-count (possibly empty) chosen target slot, because pumpUntilEot takes a single ordinary target."}

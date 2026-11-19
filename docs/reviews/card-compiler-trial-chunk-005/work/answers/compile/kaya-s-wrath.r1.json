@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no value for the number of creatures you controlled that were destroyed by this spell, which is needed for the life gain; creaturesDiedThisTurn counts every creature that died this turn."}

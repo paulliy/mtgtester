@@ -1,0 +1,1 @@
+At the beginning of your end step, each creature you control that did not attack this turn and did not enter this turn gets a +1/+1 counter (one counter each), and then each of those creatures is untapped. The triggers are mandatory.

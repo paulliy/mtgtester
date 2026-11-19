@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The cost reduction and the can't-be-countered rule need a selector for spells with flash, and hasKeyword is event-only so it cannot filter a static."}

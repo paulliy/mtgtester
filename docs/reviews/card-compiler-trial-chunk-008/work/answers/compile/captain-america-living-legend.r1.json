@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A becomesTapped trigger's oncePerTurn is per ability, not per creature, so 'if it's the first time that creature has become tapped this turn' cannot be expressed for each creature."}

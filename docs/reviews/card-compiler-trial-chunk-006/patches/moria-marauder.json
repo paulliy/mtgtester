@@ -1,0 +1,56 @@
+{
+  "name": "Moria Marauder",
+  "oracleId": "9f0027e3-815b-4965-9ef4-3c4814c62cf3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a Goblin or Orc you control deals combat damage to a player, exile the top card of your library. You may play that card this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Goblin"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Orc"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "exileTopNPlayableUntilEot",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a Goblin or Orc you control deals combat damage to a player, exile the top card of your library. You may play that card this turn."
+      }
+    ]
+  }
+}

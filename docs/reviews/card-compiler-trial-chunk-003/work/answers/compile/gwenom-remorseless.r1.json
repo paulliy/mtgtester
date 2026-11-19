@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The look-at-top and play-from-top permission lasts only until end of turn once Gwenom attacks, but the schema grants a top-of-library cast or play permission only as a static ruleStatic that lasts while the source is on the battlefield, and grantAbilityUntilEot cannot carry ruleStatics."}

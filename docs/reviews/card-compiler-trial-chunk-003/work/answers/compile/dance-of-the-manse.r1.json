@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target slot cannot be a variable number bounded by X (up to X targets each with mana value X or less): TargetSpec.count takes fixed min and max numbers, not a value taken from X."}

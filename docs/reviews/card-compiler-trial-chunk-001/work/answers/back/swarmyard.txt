@@ -1,0 +1,1 @@
+{T}: Regenerate target permanent that is an Insect, Rat, Spider, or Squirrel.

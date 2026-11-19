@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"X is the size of your party (at most one each of Cleric, Rogue, Warrior, and Wizard), and no Value in the schema counts that, since countPermanents would count duplicate subtypes."}

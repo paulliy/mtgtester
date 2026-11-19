@@ -1,0 +1,61 @@
+{
+  "name": "Trickster's Elk",
+  "oracleId": "5bca05c1-1c0a-45f4-aa20-69f68b99cd7e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature loses all abilities and is a green Elk creature with base power and toughness 3/3."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 4,
+          "addSubtypes": [
+            "Elk"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 5,
+          "setColors": [
+            "G"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "loseAllAbilities": true
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "const",
+            "n": 3
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 3
+          }
+        }
+      }
+    ]
+  }
+}

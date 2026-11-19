@@ -1,0 +1,49 @@
+{
+  "name": "Loran's Escape",
+  "oracleId": "1a9048d6-f3fa-4f3b-9baa-35318177bc6e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target artifact or creature gains hexproof and indestructible until end of turn. Scry 1."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "hexproof"
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "indestructible"
+        },
+        {
+          "op": "scry",
+          "count": 1
+        }
+      ],
+      "description": "Target artifact or creature gains hexproof and indestructible until end of turn. Scry 1."
+    }
+  }
+}

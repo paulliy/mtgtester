@@ -1,0 +1,58 @@
+{
+  "name": "Return to the Light Realms",
+  "oracleId": "217e76ca-ea94-417c-b5b0-82e2302eeee8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return all nonland permanent cards from your graveyard to the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "graveyardToBattlefieldEach",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "type",
+                  "value": "Land"
+                }
+              },
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Enchantment"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Planeswalker"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Battle"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Return all nonland permanent cards from your graveyard to the battlefield."
+    }
+  }
+}

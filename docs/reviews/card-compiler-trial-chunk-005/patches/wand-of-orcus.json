@@ -1,0 +1,97 @@
+{
+  "name": "Wand of Orcus",
+  "oracleId": "9fd521d5-baa3-4054-a990-d23265863c71",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature attacks or blocks, it and Zombies you control gain deathtouch until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "attachedToSource"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Zombie"
+                    }
+                  ]
+                }
+              ]
+            },
+            "keyword": "deathtouch"
+          }
+        ],
+        "description": "Whenever equipped creature attacks or blocks, it and Zombies you control gain deathtouch until end of turn."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "blocks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "attachedToSource"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Zombie"
+                    }
+                  ]
+                }
+              ]
+            },
+            "keyword": "deathtouch"
+          }
+        ],
+        "description": "Whenever equipped creature attacks or blocks, it and Zombies you control gain deathtouch until end of turn."
+      }
+    ]
+  }
+}

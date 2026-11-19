@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAdditionalCosts":[{"kind":"sacrificeOther","selector":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"not","of":{"kind":"type","value":"Land"}}]}}]}}

@@ -1,0 +1,76 @@
+{
+  "name": "Ghired, Mirror of the Wilds",
+  "oracleId": "34b36022-0d93-48cc-a2cc-90ca4d65dc31",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Nontoken creatures you control have \"{T}: Create a token that's a copy of target token you control that entered this turn.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "not",
+              "of": {
+                "kind": "isToken"
+              }
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [
+                {
+                  "kind": "permanent",
+                  "controller": "you",
+                  "filter": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "isToken"
+                      },
+                      {
+                        "kind": "enteredThisTurn"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "op": "createTokenCopyOf",
+                  "ref": 0,
+                  "count": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "description": "{T}: Create a token that's a copy of target token you control that entered this turn."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

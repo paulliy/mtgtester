@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The reflexive 'you may pay {X}. When you do, put X +1/+1 counters' needs a variable announced payment X feeding the counter count, and the schema's optional payment ops take only a fixed ParsedManaCost."}

@@ -1,0 +1,1 @@
+{T}: Goad target creature an opponent controls. The controller of that creature draws a card. Add {R}.

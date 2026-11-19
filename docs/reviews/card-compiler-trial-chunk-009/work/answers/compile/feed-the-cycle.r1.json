@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The additional cost is a choice between forage (exile three cards from your graveyard or sacrifice a Food) and paying {B}, and the schema has no either-or additional cost (spellAdditionalCosts are all paid together and optionalAdditionalCost is only an announced kicker-style cost)."}

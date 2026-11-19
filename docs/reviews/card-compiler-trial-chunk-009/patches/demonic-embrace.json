@@ -1,0 +1,22 @@
+{
+  "name": "Demonic Embrace",
+  "oracleId": "d185c829-ef12-403a-a071-7520a0293d4a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may cast this card from your graveyard by paying 3 life and discarding a card in addition to paying its other costs."
+  ],
+  "compose": "append",
+  "def": {
+    "castFromGraveyard": true,
+    "castFromGraveyardCosts": [
+      {
+        "kind": "payLife",
+        "amount": 3
+      },
+      {
+        "kind": "discardCard",
+        "count": 1
+      }
+    ]
+  }
+}
