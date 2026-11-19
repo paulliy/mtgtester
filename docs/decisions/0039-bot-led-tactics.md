@@ -60,8 +60,10 @@ against bot; the switch should flip after one comparison against the real tactic
 default tactician. The same change replaced the tactician chain, which still answers escalations
 and every seat that sets `AI_TACTICAL_MODE=model`: `poolside/laguna-s-2.1` had no OpenRouter
 provider left and `sao10k/l3-lunaris-8b` rate-limited the first duel, so the chain is now
-`qwen/qwen3.7-flash`, `deepseek/deepseek-v4-flash`, `upstage/solar-mini4` (all three listed live
-endpoints on 2026-11-14). A fair duel, three seeds each played with seats swapped, is the
+`particle-ai/particle-1` at low reasoning, with `deepseek/deepseek-v4-flash` as the backup (both
+listed on OpenRouter on 2026-11-19; an earlier draft of this change used `qwen/qwen3.7-flash`,
+`deepseek/deepseek-v4-flash`, `upstage/solar-mini4`). The tactician is never routed to CoreWeave,
+Modal or Cohere (`AI_TACTICIAN_IGNORE_PROVIDERS`, sent as OpenRouter `provider.ignore`). A fair duel, three seeds each played with seats swapped, is the
 check against the model tactician; its numbers go under Measurements. The bar, set before the run: bot-led seats win at least 40%
 of games and make under a third of the model seats' calls per turn, and the duel is rerun if model
 seats fell back on more than 5% of tactician calls (`tacticianFallbackShare` in each report).
