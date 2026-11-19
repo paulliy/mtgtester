@@ -11,32 +11,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "dc0eb202",
+      "commit": "653e8717",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 56.48,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 50.89,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 7.32,
+          "value": 5.61,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.238
+          "spread": 0.856
         },
         "engine.medianGameMsPerDecision": {
-          "value": 7.43,
+          "value": 5.38,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.143
+          "spread": 0.588
         },
         "setup.msPerGame": {
-          "value": 74.41,
+          "value": 50.94,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.135
+          "spread": 0.329
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -92,6 +92,18 @@
           "better": "higher",
           "kind": "exact"
         },
+        "coverage.compilerScreenCatches": {
+          "value": 11,
+          "unit": "calls",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "coverage.compilerScreenLosses": {
+          "value": 0,
+          "unit": "cards",
+          "better": "lower",
+          "kind": "exact"
+        },
         "authoring.poolMutantsLeftPct": {
           "value": 76.11,
           "unit": "%",
@@ -145,32 +157,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "dc0eb202",
+      "commit": "653e8717",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 57.12,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 48.74,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 51.68,
+          "value": 41,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.021
+          "spread": 0.06
         },
         "engine.medianGameMsPerDecision": {
-          "value": 13.21,
+          "value": 11.17,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.115
+          "spread": 0.034
         },
         "setup.msPerGame": {
-          "value": 69.81,
+          "value": 54.39,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.094
+          "spread": 0.213
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -224,6 +236,18 @@
           "value": 100,
           "unit": "%",
           "better": "higher",
+          "kind": "exact"
+        },
+        "coverage.compilerScreenCatches": {
+          "value": 11,
+          "unit": "calls",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "coverage.compilerScreenLosses": {
+          "value": 0,
+          "unit": "cards",
+          "better": "lower",
           "kind": "exact"
         },
         "authoring.poolMutantsLeftPct": {
