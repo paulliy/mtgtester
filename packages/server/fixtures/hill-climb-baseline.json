@@ -11,32 +11,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "08f3e49e",
-      "dirty": true,
+      "commit": "87010138",
+      "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 51.14,
+      "calibrationMs": 45.66,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 5.66,
+          "value": 5.74,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.323
+          "spread": 0.486
         },
         "engine.medianGameMsPerDecision": {
-          "value": 5.75,
+          "value": 5.54,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.258
+          "spread": 0.45
         },
         "setup.msPerGame": {
-          "value": 0.82,
+          "value": 0.8,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.664
+          "spread": 0.037
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -157,32 +157,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "08f3e49e",
-      "dirty": true,
+      "commit": "87010138",
+      "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 54.06,
+      "calibrationMs": 52.47,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 11.52,
+          "value": 10.24,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.07
+          "spread": 0.183
         },
         "engine.medianGameMsPerDecision": {
-          "value": 10.83,
+          "value": 10.19,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.048
+          "spread": 0.103
         },
         "setup.msPerGame": {
-          "value": 0.82,
+          "value": 0.6,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.154
+          "spread": 0.21
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
