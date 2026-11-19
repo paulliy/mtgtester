@@ -9,19 +9,19 @@
  * (CR 616.1f), and the rest are re-checked after each one.
  */
 
-import type { ObjectId, PlayerId } from '@mtg/shared';
+import type { ObjectId, OracleId, PlayerId } from '@mtg/shared';
 import type { GameGen } from '../decisions';
 import { optionAt } from '../decisions';
 import { emit } from '../log/log';
 import { cardOption, plainOption, presentedSource } from '../present';
 import { createToken, queuePlayerTriggersForEvent } from '../state/objects';
 import { playerProtectedFromEverything } from '../state/phasing';
-import { gatherRuleStatics, hasProtectionFrom, triggersOf } from '../state/queries';
+import { gatherRuleStatics, hasProtectionFrom, sourceTraitsOf, triggersOf } from '../state/queries';
 import type { ProtectionSource } from '../state/queries';
 import type { EnginePermanent, EnginePlayerState, GameContext } from '../state/types';
-import { computeCharacteristics, matchesSelector } from './continuous';
+import { candidateOf, computeCharacteristics, matchesSelector } from './continuous';
 import type { EffectSource } from './resolve';
-import type { SelectorSource } from '../cards/selector';
+import { selectMatches, type SelectorCandidate, type SelectorSource } from '../cards/selector';
 import { GameOverSignal } from '../signals';
 
 /** One source dealing damage to one recipient (CR 120.1), before any modifier applies. */
@@ -183,6 +183,7 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
   }
 
   const statics = gatherRuleStatics(ctx);
+  let sourceCandidate: SelectorCandidate | undefined;
   const sourcePerm = ctx.state.battlefield.find((p) => p.cardId === event.source.cardId);
   const perCard = new Map<string, number>();
   const idFor = (cardId: string, kind: string): string => {
@@ -251,6 +252,35 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
           apply: (amount) => amount * 2,
         });
       }
+    } else if (entry.static.kind === 'damageReplacement') {
+      const rule = entry.static;
+      if (rule.noncombatOnly === true && event.combat) continue;
+      if (rule.recipient !== 'any') {
+        if (targetControllerId === entry.controllerId) continue;
+        if (rule.recipient === 'opponentPlayers' && recipient.kind !== 'player') continue;
+      }
+      if (rule.excludesSelf === true && sourceIsSelf(ctx, event.source, entry.sourceCardId))
+        continue;
+      if (rule.permanentSource === true && !sourceIsPermanent(ctx, event.source)) continue;
+      if (rule.sourceFilter !== undefined) {
+        const candidate = (sourceCandidate ??= damageSourceCandidate(ctx, event.source));
+        const from: SelectorSource = {
+          cardId: entry.sourceCardId,
+          controllerId: entry.controllerId,
+        };
+        if (!selectMatches(candidate, rule.sourceFilter, from)) continue;
+      }
+      const factor = rule.factor ?? 1;
+      const plus = rule.plus ?? 0;
+      modifiers.push({
+        kind: 'replacement',
+        id: idFor(entry.sourceCardId, entry.static.kind),
+        label:
+          plus > 0
+            ? `${label}: it deals that much damage plus ${plus}`
+            : `${label}: it deals ${factor === 2 ? 'double' : factor === 3 ? 'triple' : `${factor} times`} that damage`,
+        apply: (amount) => amount * factor + plus,
+      });
     } else if (entry.static.kind === 'damageHalvedToYou') {
       if (targetControllerId === entry.controllerId) {
         // Gisela's "prevent half that damage, rounded up" is a prevention (CR 615), so it is
@@ -279,6 +309,71 @@ export function collectDamageModifiers(ctx: GameContext, event: DamageEvent): Da
     );
   }
   return modifiers;
+}
+
+/**
+ * The damage source as it deals the damage, for a replacement's source filter ("a red source you
+ * control", "a Giant source"): a permanent as it is now, else a spell or departed object as it last
+ * existed (CR 113.7a), else its card.
+ */
+function damageSourceCandidate(ctx: GameContext, source: EffectSource): SelectorCandidate {
+  const perm = ctx.state.battlefield.find((p) =>
+    source.id !== undefined ? p.id === source.id : p.cardId === source.cardId,
+  );
+  if (perm !== undefined) return candidateOf(ctx, perm, computeCharacteristics(ctx, perm), true);
+  // Last-known information includes the controller (CR 113.7a): a source stolen and then gone
+  // was last controlled by the thief, whoever controls the ability it left behind.
+  if (source.lastKnownFacts !== undefined) return source.lastKnownFacts.candidate;
+  const spell = source.resolvingStackObject;
+  const def =
+    spell?.kind === 'spell'
+      ? (spell.spellDefinition ?? ctx.defs.get(spell.sourceOracleId as OracleId))
+      : ctx.defs.get(source.oracleId as OracleId);
+  const traits = sourceTraitsOf(ctx, source.cardId, source.oracleId, {
+    ...(source.lastKnownColors === undefined ? {} : { colors: source.lastKnownColors }),
+    ...(source.lastKnownTypes === undefined ? {} : { types: source.lastKnownTypes }),
+  });
+  return {
+    cardId: source.cardId,
+    controllerId: source.controllerId,
+    types: traits.types,
+    supertypes: def?.supertypes ?? [],
+    subtypes: def?.subtypes ?? [],
+    colors:
+      spell?.kind === 'spell' && spell.sourceColors !== undefined
+        ? spell.sourceColors
+        : traits.colors,
+    power: def?.power ?? 0,
+    keywords: def?.keywords ?? [],
+    isToken: false,
+    enteredThisTurn: false,
+  };
+}
+
+/**
+ * Is the damage source a permanent (CR 109.2): on the battlefield, or a permanent that has left,
+ * as it last existed? A resolving spell, or a card dealing damage from a hand or graveyard
+ * (channel), is a source but not a permanent.
+ */
+function sourceIsPermanent(ctx: GameContext, source: EffectSource): boolean {
+  if (source.resolvingStackObject !== undefined) return false;
+  if (
+    ctx.state.battlefield.some((perm) =>
+      source.id !== undefined ? perm.id === source.id : perm.cardId === source.cardId,
+    )
+  )
+    return true;
+  return source.lastKnownFacts !== undefined;
+}
+
+/**
+ * Is the damage source the replacement's own permanent ("another source", Tor Wauki)? Compared by
+ * object (CR 400.7): an earlier incarnation of the same card that left and returned is another
+ * source.
+ */
+function sourceIsSelf(ctx: GameContext, source: EffectSource, cardId: string): boolean {
+  const self = ctx.state.battlefield.find((perm) => perm.cardId === cardId);
+  return self !== undefined && sourceIsObject(ctx, source, self.id);
 }
 
 function recipientKey(event: DamageEvent): string {
