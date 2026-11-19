@@ -1,0 +1,1 @@
+Spells you cast that are Angel spells or Human spells cost {1} less to cast for each +1/+1 counter on this.

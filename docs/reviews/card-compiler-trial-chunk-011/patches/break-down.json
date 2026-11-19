@@ -1,0 +1,73 @@
+{
+  "name": "Break Down",
+  "oracleId": "73094bde-5466-41a4-88f9-a98e67f5ed2e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy target artifact or enchantment. Create a Junk token."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "artifactOrEnchantment"
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroy",
+          "target": 0
+        },
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Junk",
+            "typeLine": "Artifact — Junk",
+            "types": [
+              "Artifact"
+            ],
+            "subtypes": [
+              "Junk"
+            ],
+            "colors": [],
+            "power": null,
+            "toughness": null,
+            "activatedAbilities": [
+              {
+                "costs": [
+                  {
+                    "kind": "tap"
+                  },
+                  {
+                    "kind": "sacrificeSelf"
+                  }
+                ],
+                "timing": "sorcery",
+                "ability": {
+                  "kind": "activated",
+                  "targets": [],
+                  "effects": [
+                    {
+                      "op": "exileTopNPlayableUntilEot",
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      }
+                    }
+                  ],
+                  "description": "{T}, Sacrifice this token: Exile the top card of your library. You may play that card this turn. Activate only as a sorcery."
+                }
+              }
+            ]
+          },
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Destroy target artifact or enchantment. Create a Junk token. (It's an artifact with \"{T}, Sacrifice this token: Exile the top card of your library. You may play that card this turn. Activate only as a sorcery.\")"
+    }
+  }
+}

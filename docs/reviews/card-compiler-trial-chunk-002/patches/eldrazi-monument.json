@@ -1,0 +1,63 @@
+{
+  "name": "Eldrazi Monument",
+  "oracleId": "c7ee1b21-d02e-49ef-95d6-d6dbf2f886ae",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, sacrifice a creature. If you can't, sacrifice this artifact."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "type",
+                "value": "Creature"
+              },
+              "scope": "you",
+              "cmp": ">=",
+              "n": 1
+            },
+            "then": [
+              {
+                "op": "sacrificeOneThen",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    }
+                  ]
+                },
+                "then": []
+              }
+            ],
+            "else": [
+              {
+                "op": "sacrifice",
+                "target": "source"
+              }
+            ]
+          }
+        ],
+        "description": "At the beginning of your upkeep, sacrifice a creature. If you can't, sacrifice this artifact."
+      }
+    ]
+  }
+}

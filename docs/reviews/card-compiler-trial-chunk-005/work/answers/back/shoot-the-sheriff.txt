@@ -1,0 +1,1 @@
+Destroy target creature that isn't an Assassin, Mercenary, Pirate, Rogue, or Warlock.

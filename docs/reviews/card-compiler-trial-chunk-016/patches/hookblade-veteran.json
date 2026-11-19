@@ -1,0 +1,25 @@
+{
+  "name": "Hookblade Veteran",
+  "oracleId": "bad2385b-6981-46fa-a012-d3992c3bc118",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "During your turn, this creature has flying."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "flying"
+        },
+        "condition": {
+          "kind": "yourTurn"
+        }
+      }
+    ]
+  }
+}

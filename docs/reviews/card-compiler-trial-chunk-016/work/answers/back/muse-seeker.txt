@@ -1,0 +1,1 @@
+Whenever you cast an instant or sorcery spell, draw a card. Then if less than five mana was spent to cast that spell, discard a card.

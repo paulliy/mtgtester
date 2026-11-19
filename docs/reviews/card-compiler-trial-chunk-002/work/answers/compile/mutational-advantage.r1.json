@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Preventing all damage dealt this turn to every permanent you control that has counters needs a set-wide damage prevention, but createDamageShield applies only to one named object or to damage dealt to you, and grantKeywordEachUntilEot cannot restrict damage prevention to that set."}

@@ -1,0 +1,1 @@
+{2}{G}{U}: This land becomes a 3/3 Elemental creature with hexproof and the colors green and blue until end of turn.

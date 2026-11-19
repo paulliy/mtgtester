@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The populate trigger for each creature dealt damage this way that dies this turn needs a delayed trigger bound to that damaged set, which the schema cannot express."}

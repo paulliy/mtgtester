@@ -1,0 +1,2 @@
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/abzan-beastmaster.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/abzan-beastmaster.json
+docs/reviews/card-compiler-trial-chunk-009/work/prompts/judge/host-of-the-hereafter.md	docs/reviews/card-compiler-trial-chunk-009/work/answers/judge/host-of-the-hereafter.json

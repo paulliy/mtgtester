@@ -1,0 +1,69 @@
+{
+  "name": "Sojourner's Companion",
+  "oracleId": "1cbfe1f2-776b-429d-9a60-8da32058a927",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Artifact landcycling {2}"
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "discardSelf"
+          }
+        ],
+        "timing": "any",
+        "zone": "hand",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "searchLibrary",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  }
+                ]
+              },
+              "destinations": [
+                {
+                  "zone": "hand"
+                }
+              ],
+              "reveal": true,
+              "allowFailToFind": true
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "description": "Artifact landcycling {2}"
+        }
+      }
+    ]
+  }
+}

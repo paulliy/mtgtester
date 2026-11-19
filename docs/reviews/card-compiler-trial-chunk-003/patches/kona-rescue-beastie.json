@@ -1,0 +1,60 @@
+{
+  "name": "Kona, Rescue Beastie",
+  "oracleId": "76372327-41ec-4516-abff-3b612e073629",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Survival — At the beginning of your second main phase, if ~ is tapped, you may put a permanent card from your hand onto the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "secondMainPhase",
+          "player": "you",
+          "condition": {
+            "kind": "not",
+            "of": {
+              "kind": "isUntapped"
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "handToBattlefield",
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                }
+              ]
+            },
+            "count": "one"
+          }
+        ],
+        "description": "Survival — At the beginning of your second main phase, if Kona is tapped, you may put a permanent card from your hand onto the battlefield."
+      }
+    ]
+  }
+}

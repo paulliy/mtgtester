@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The +X/+X amount is the number of cards in your hand, and no Value counts every card in hand (countCardsInZone needs a selector that matches any card, which the schema does not provide)."}

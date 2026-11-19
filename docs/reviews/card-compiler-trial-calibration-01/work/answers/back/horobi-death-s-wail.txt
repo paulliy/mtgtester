@@ -1,0 +1,1 @@
+Whenever a creature (any creature, not only this creature) becomes targeted, you may destroy that creature.

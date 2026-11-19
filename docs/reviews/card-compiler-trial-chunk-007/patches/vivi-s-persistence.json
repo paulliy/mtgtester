@@ -1,0 +1,111 @@
+{
+  "name": "Vivi's Persistence",
+  "oracleId": "fd4a1f4b-674d-41f3-a9a6-c2b65bf5c1ab",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever your commander enters or attacks, you may pay {2}. If you do, return this card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "isCommander"
+                }
+              ]
+            }
+          }
+        },
+        "functionsInGraveyard": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "mayPayMana",
+              "cost": {
+                "generic": 2,
+                "colored": {
+                  "W": 0,
+                  "U": 0,
+                  "B": 0,
+                  "R": 0,
+                  "G": 0
+                },
+                "colorless": 0
+              }
+            },
+            "then": [
+              {
+                "op": "returnSelfFromGraveyardToHand"
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Whenever your commander enters, you may pay {2}. If you do, return this card from your graveyard to your hand."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "isCommander"
+                }
+              ]
+            }
+          }
+        },
+        "functionsInGraveyard": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "mayPayMana",
+              "cost": {
+                "generic": 2,
+                "colored": {
+                  "W": 0,
+                  "U": 0,
+                  "B": 0,
+                  "R": 0,
+                  "G": 0
+                },
+                "colorless": 0
+              }
+            },
+            "then": [
+              {
+                "op": "returnSelfFromGraveyardToHand"
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Whenever your commander attacks, you may pay {2}. If you do, return this card from your graveyard to your hand."
+      }
+    ]
+  }
+}

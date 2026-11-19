@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Counting creatures you control with defender needs a keyword selector, but hasKeyword is event-only in the schema and cannot be read by a mana ability's amount."}

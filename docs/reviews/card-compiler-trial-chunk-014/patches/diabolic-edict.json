@@ -1,0 +1,26 @@
+{
+  "name": "Diabolic Edict",
+  "oracleId": "058917c1-21ab-488a-9f9c-591c55f3c596",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target player sacrifices a creature of their choice."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player"
+        }
+      ],
+      "effects": [
+        {
+          "op": "sacrificeTargetPlayerCreature",
+          "target": 0
+        }
+      ],
+      "description": "Target player sacrifices a creature of their choice."
+    }
+  }
+}

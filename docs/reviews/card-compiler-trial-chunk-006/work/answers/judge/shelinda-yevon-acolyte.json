@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A checks the power comparison inside the effect on resolution, so the trigger always happens and the Otherwise branch puts a counter on Shelinda when the condition fails; Text B makes the comparison an intervening-if on the trigger, so when the new creature's power is not less the trigger does nothing and Shelinda gets no counter."]}

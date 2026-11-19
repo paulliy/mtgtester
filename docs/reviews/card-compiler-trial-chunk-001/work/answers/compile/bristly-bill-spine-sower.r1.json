@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema's counter-doubling ops (doubleCountersEach and doubleCountersEachChosen) double every kind of counter, and none can double only +1/+1 counters as \"double the number of +1/+1 counters on each creature you control\" requires."}

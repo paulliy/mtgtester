@@ -1,0 +1,294 @@
+[
+  {
+    "feature": "Trigger events and filters that do not exist yet",
+    "description": "Add trigger events and filters for cycling (including the first time each turn), rolling dice, copying or casting a spell, Adventure spells, becoming untapped, unlocking a Room, damage to a battle, noncombat damage to an opponent, damage to the enchanted player, and valiant targeting by your own sources.",
+    "cards": [
+      "Arbiter of the Ideal",
+      "Chancellor of Tales",
+      "Chandra's Pyreling",
+      "Chandra's Spitfire",
+      "Curse of Stalked Prey",
+      "Drannith Stinger",
+      "Fear of Infinity",
+      "Feywild Trickster",
+      "Flourishing Fox",
+      "Mouse Trapper",
+      "Thorin, Company's Leader",
+      "Valiant Rescuer",
+      "Whiskerquill Scribe",
+      "Zaffai, Thunder Conductor"
+    ]
+  },
+  {
+    "feature": "Game-state conditions and values",
+    "description": "Add conditions and values for distinct party classes and distinct powers, per-defender land and creature checks, creature cards in your graveyard, the cast-from-graveyard and committed-a-crime checks, the convoke count, greatest power fixed at cast, and the gap between the most lands and a player's own.",
+    "cards": [
+      "Deadly Alliance",
+      "Fear of the Dark",
+      "Knight-Errant of Eos",
+      "Malakir Blood-Priest",
+      "Mortal Combat",
+      "Priest of the Blessed Graf",
+      "Scholarship Sponsor",
+      "Seize the Secrets",
+      "Sigarda, Champion of Light",
+      "Spoils of Adventure",
+      "The Final Days",
+      "Zodiac Monkey"
+    ]
+  },
+  {
+    "feature": "Per-player scope and chooser on effects",
+    "description": "Add player routing and chooser fields so effects can act for or be chosen by another player: each opponent searching or scrying, per-opponent choices and sacrifices, an opponent choosing a card, friend-or-foe choices, per-owner graveyard shuffles and the active player's optional counter and mana.",
+    "cards": [
+      "Boldwyr Heavyweights",
+      "Cheering Crowd",
+      "Dawnbreak Reclaimer",
+      "From the Ashes",
+      "Myr Custodian",
+      "Nicol Bolas, the Deceiver",
+      "Oath of Lieges",
+      "Tempting Wurm",
+      "The Master, Gallifrey's End",
+      "Turn the Earth",
+      "Virtus's Maneuver",
+      "Wand of Vertebrae"
+    ]
+  },
+  {
+    "feature": "Rule statics and permissions that do not exist yet",
+    "description": "Add rule statics and permissions for blocking and attacking restrictions (greater-power blockers, only haste blockers, at most one blocker, can't attack, skipped combat), untap prevention for enchanted or controlled permanents, protection from a chosen creature type, and cascade grants.",
+    "cards": [
+      "Abaddon the Despoiler",
+      "Abominable Treefolk",
+      "Ant-Man, Elusive Avenger",
+      "Blinding Angel",
+      "Bontu's Last Reckoning",
+      "Faith's Fetters",
+      "Fire of Orthanc",
+      "Patchwork Beastie",
+      "Riders of Gavony",
+      "Run for Your Life",
+      "Sunder Shaman",
+      "Winter's Rest"
+    ]
+  },
+  {
+    "feature": "Ability cost forms",
+    "description": "Add cost forms: variable sacrifice and discard counts, discard costs filtered by card type or subtype, Exert as an activation cost, reveal-a-card or pay alternatives, a chosen-on-resolution tap cost, cycling and retrace cost substitution, and X storage-counter removal paired with mana produced.",
+    "cards": [
+      "Abolish",
+      "Angel of Condemnation",
+      "Artificer's Intuition",
+      "Baba Lysaga, Night Witch",
+      "Caparocti Sunborn",
+      "Flame Jab",
+      "Last-Ditch Effort",
+      "New Perspectives",
+      "Saltcrusted Steppe",
+      "Silvergill Adept",
+      "Springjack Pasture"
+    ]
+  },
+  {
+    "feature": "Missing keyword mechanics (suspend, buyback, myriad, madness, foretell)",
+    "description": "Add keyword mechanics and grantable abilities the schema lacks: madness, echo, delve, freerunning, encore with attack requirements, harmonize, flashback granted to a graveyard card, and fear and landwalk.",
+    "cards": [
+      "Alchemist's Greeting",
+      "Bloodmad Vampire",
+      "Concerted Effort",
+      "Elvish Dreadlord",
+      "Extruder",
+      "Logic Knot",
+      "Lost in Memories",
+      "Merciless Harlequin",
+      "Revolutionist",
+      "Songcrafter Mage"
+    ]
+  },
+  {
+    "feature": "Replacement effects that do not exist yet",
+    "description": "Add replacement effects for exile instead of dying on a single object, damage prevention and redirection, a first-draw replacement, a draw turned into a discard, umbra armor, and reflexive triggers tied to a replacement.",
+    "cards": [
+      "Bandage",
+      "Bleed Dry",
+      "Burn from Within",
+      "Chant of Vitu-Ghazi",
+      "Head of the Hunt",
+      "Heroic Sacrifice",
+      "Mammoth Umbra",
+      "Martyrdom",
+      "Reed Richards, Smartest Man",
+      "Words of Waste"
+    ]
+  },
+  {
+    "feature": "Modern keyword actions (venture, ring tempts, suspect, crime)",
+    "description": "Add modern keyword actions: clash, the Ring tempting you, venture, day and night, collect evidence, opening an Attraction and the clash-gated follow-ups.",
+    "cards": [
+      "Broken Ambitions",
+      "Deadbeat Attendant",
+      "Displacer Beast",
+      "Galadriel, Elven-Queen",
+      "Into the Night",
+      "Izoni, Center of the Web",
+      "Now for Wrath, Now for Ruin!",
+      "Revive the Fallen",
+      "Scattering Stroke",
+      "Whirlpool Whelm"
+    ]
+  },
+  {
+    "feature": "Selector predicates in targets and statics",
+    "description": "Add selector and target kinds for blocked creatures, creatures dealt damage this turn, same name as a chosen target, spells with an Adventure, tokens relative to their controller, creatures put into a graveyard this turn, and sacrifice filters that include lands.",
+    "cards": [
+      "Bile Blight",
+      "Duelist's Flame",
+      "Echoing Courage",
+      "Edgewall Innkeeper",
+      "Fight to the Death",
+      "Grim Return",
+      "Lucy MacLean, Positively Armed",
+      "Rooftop Assassin",
+      "Wildfire"
+    ]
+  },
+  {
+    "feature": "Amounts produced by the previous effect or event",
+    "description": "Add Values and references that read amounts and objects from earlier in the resolution or from the event: life gained by a trigger event, the toughness of a sacrificed or triggering creature, the mana value of an exiled card, the token just created, a chosen creature's own power, and whether a returned permanent was a token.",
+    "cards": [
+      "Band Together",
+      "Consuming Vapors",
+      "Cradle of Vitality",
+      "Fruit of the First Tree",
+      "Spark of Creativity",
+      "Spirit of Resilience",
+      "Sunpearl Kirin",
+      "Zimone, All-Questioning"
+    ]
+  },
+  {
+    "feature": "Variable-count target slots and chosen-count value",
+    "description": "Add target slots, selectors and counts that accept an announced X or a state-derived number, including X on activated abilities, mana value bounds taken from a Value, up-to-one graveyard targets and distributed counters across chosen creatures.",
+    "cards": [
+      "Contagion",
+      "Distorting Wake",
+      "Drana, Kalastria Bloodchief",
+      "Sarulf, Realm Eater",
+      "Storm the Seedcore",
+      "Walk with the Ancestors"
+    ]
+  },
+  {
+    "feature": "Random, guessed and hidden-information choices",
+    "description": "Add voting with a separate effect per vote, random graveyard returns, random hand reveals, life bidding, two-pile separation and looking at hidden cards or face-down creatures.",
+    "cards": [
+      "Brilliant Ultimatum",
+      "Ignite Memories",
+      "Pain's Reward",
+      "Reap the Past",
+      "Spy Network",
+      "Travel Through Caradhras"
+    ]
+  },
+  {
+    "feature": "Reveal/exile/mill-until loops with leftovers handling",
+    "description": "Add reveal-until, look-at-top and mill-until ops with multi-pick battlefield destinations, a distinct destination for each remaining card, historic and mana value filters, and suspend-style exile with counters.",
+    "cards": [
+      "Balustrade Spy",
+      "Collected Company",
+      "Jhoira, Weatherlight Corsair",
+      "Lantern of Revealing",
+      "Moment of Truth",
+      "Sibylline Soothsayer"
+    ]
+  },
+  {
+    "feature": "Optional choices and if-you-do follow-ups",
+    "description": "Add may-decline forms and follow-up effects gated on whether an optional action happened, including optional mill, sacrifice-or-otherwise branches, up-to picks and conditional follow-ups after a look at the top cards.",
+    "cards": [
+      "Contagious Vorrac",
+      "Druidic Ritual",
+      "Pictures of Spider-Man",
+      "Pippin's Bravery",
+      "Stardew Valley"
+    ]
+  },
+  {
+    "feature": "Cast a card from other zones with a rider",
+    "description": "Add cast and play permissions with a rider: exile-play durations beyond end of turn, plays gated on a later sacrifice, free casts bounded by a counted value and mayhem from the graveyard.",
+    "cards": [
+      "Alania's Pathmaker",
+      "Electro's Bolt",
+      "Intet, the Dreamer",
+      "Reno and Rude",
+      "Spectral Arcanist"
+    ]
+  },
+  {
+    "feature": "Put onto battlefield tapped and attacking or attached",
+    "description": "Add token and return forms that enter tapped and attacking or attached: tapped-and-attacking copies, mobilize tokens, an added subtype on returned creatures and optional equipment attachment.",
+    "cards": [
+      "Dragonback Lancer",
+      "Jet, Rebel Leader",
+      "Satya, Aetherflux Genius",
+      "Terror of Towashi",
+      "Unexpected Request"
+    ]
+  },
+  {
+    "feature": "Stack, spell copy and spell-targeting effects",
+    "description": "Add stack interaction: a spell copy that keeps its original targets, putting a countered spell on the bottom of its library and a stack filter for spells together with abilities.",
+    "cards": ["Sage of the Skies", "Sister of Silence", "Spell Crumple"]
+  },
+  {
+    "feature": "Ability removal and base power/toughness overrides",
+    "description": "Add continuous effects that grant all creature types until end of turn and set base power and toughness from a state-derived value.",
+    "cards": ["Glamer Gifter", "Svogthos, the Restless Tomb"]
+  },
+  {
+    "feature": "Delayed end-step effects on created or returned objects",
+    "description": "Add delayed triggers that carry remembered objects or give an object to another player: a return at the next upkeep that remembers the sacrificed card and a gift to an opponent at the next end step.",
+    "cards": ["Endless Whispers", "Rescue from the Underworld"]
+  },
+  {
+    "feature": "Life totals and game-result effects",
+    "description": "Add effects that exchange or set life totals and effects that make a player win the game.",
+    "cards": ["Invincible Hymn", "Soul Conduit"]
+  },
+  {
+    "feature": "Control exchange effects",
+    "description": "Add effects that exchange control of permanents between players, with a chosen count and no end-of-turn limit.",
+    "cards": ["Cultural Exchange", "Vedalken Plotter"]
+  },
+  {
+    "feature": "Turn-history conditions",
+    "description": "Add per-turn history conditions such as an artifact entering the battlefield under your control this turn.",
+    "cards": ["Akal Pakal, First Among Equals"]
+  },
+  {
+    "feature": "Copy and become-a-copy effects with added types or abilities",
+    "description": "Add become-a-copy forms that keep an extra ability of the copying permanent.",
+    "cards": ["Cryptoplasm"]
+  },
+  {
+    "feature": "one-off",
+    "description": "Single cards with their own missing feature: removing any counter kind, one-shot cost reduction, Equipment attachment to a created token, putting a permanent on the library bottom, sacrificing unchosen lands, damage to a player or planeswalker, per-controller token creation, turning a face-down permanent face up, X read at cast, Pilot tokens, mass sacrifice with searches, returning with a finality counter and controlling another player's turn.",
+    "cards": [
+      "Balustrade Wurm",
+      "Cataclysm",
+      "Cloudspire Coordinator",
+      "Cruel Entertainment",
+      "Curse of the Pierced Heart",
+      "Descent of the Dragons",
+      "Ferropede",
+      "Helm of Kaldra",
+      "Monstrous Onslaught",
+      "Peerless Samurai",
+      "Showstopping Surprise",
+      "Tel-Jilad Stylus",
+      "Temporal Cleansing",
+      "Wave of Vitriol"
+    ]
+  }
+]

@@ -1,0 +1,615 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/server/fixtures/edhrec-pinned-oracle.json",
+  "retrievedAt": "2026-11-17",
+  "cards": [
+    {
+      "sha256": "61caf913b061d40968fee45ac9527accf8e6aac1e76a8536bf1e0d45760730a4",
+      "card": {
+        "oracleId": "1d67f5ff-1fce-45e5-b6a1-416c569351e2",
+        "scryfallId": "995486ce-58bb-4753-a812-0ca73ef1a235",
+        "name": "Gitaxian Probe",
+        "manaCost": "{U/P}",
+        "cmc": 1,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Sorcery",
+        "supertypes": [],
+        "types": [
+          "Sorcery"
+        ],
+        "subtypes": [],
+        "oracleText": "({U/P} can be paid with either {U} or 2 life.)\nLook at target player's hand.\nDraw a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "041bbab79dfbf61c8a4e478c21987483d7ee8a55cb2da4239f9261e3a9486152",
+      "card": {
+        "oracleId": "873abbf4-c9b5-4b8f-8cd0-613cf3b9b1d5",
+        "scryfallId": "869a6c06-eae5-418e-9a5c-26598a929416",
+        "name": "Peek",
+        "manaCost": "{U}",
+        "cmc": 1,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Instant",
+        "supertypes": [],
+        "types": [
+          "Instant"
+        ],
+        "subtypes": [],
+        "oracleText": "Look at target player's hand.\nDraw a card.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "145012eb7c41e882cc115a55da81c0d402635d2e98493824566204fbc7fa7848",
+      "card": {
+        "oracleId": "af7fabf4-8d55-4b06-9c21-472f4a5775b4",
+        "scryfallId": "4bd9f45f-30b3-4bff-9fd3-9a71137ac741",
+        "name": "Glasses of Urza",
+        "manaCost": "{1}",
+        "cmc": 1,
+        "colors": [],
+        "colorIdentity": [],
+        "typeLine": "Artifact",
+        "supertypes": [],
+        "types": [
+          "Artifact"
+        ],
+        "subtypes": [],
+        "oracleText": "{T}: Look at target player's hand.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "defense": null,
+        "keywords": [],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "69149b2e7494f1de450dbc38dc6759bac3d8b65f29e6ceabcf01501239df7b54",
+      "card": {
+        "oracleId": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d",
+        "scryfallId": "feb7ad1b-4466-48f7-b46d-cc83d4e22b51",
+        "name": "Jaheira, Friend of the Forest",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Human Elf Druid",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Elf",
+          "Druid"
+        ],
+        "oracleText": "Tokens you control have \"{T}: Add {G}.\"\nChoose a Background (You can have a Background as a second commander.)",
+        "power": "2",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Choose a background"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "e29105d5264b5eba2b2f1625e1024b493d2410d4fd728f24715e9a2190b9a23d",
+      "card": {
+        "oracleId": "a3112971-3af4-46e8-b2d6-a8759b39d0d1",
+        "scryfallId": "9f5bb319-29b2-4a7c-82e9-f8b5e47909a1",
+        "name": "Ganax, Astral Hunter",
+        "manaCost": "{4}{R}",
+        "cmc": 5,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Dragon",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "oracleText": "Flying\nWhenever Ganax or another Dragon you control enters, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")\nChoose a Background (You can have a Background as a second commander.)",
+        "power": "3",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Choose a background",
+          "Treasure"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "bba64fd40066871c5ae8b8d93474ac9a3bf3b970be8c5812b2c254b73387ad6e",
+      "card": {
+        "oracleId": "d2766fd7-5cf9-4037-9f34-9ae3982c613a",
+        "scryfallId": "dfe0daf8-43da-484b-baa1-76f8313c5a0c",
+        "name": "Wilson, Refined Grizzly",
+        "manaCost": "{1}{G}",
+        "cmc": 2,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Bear Warrior",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Bear",
+          "Warrior"
+        ],
+        "oracleText": "This spell can't be countered.\nReach, vigilance, trample\nWard {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)\nChoose a Background (You can have a Background as a second commander.)",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Reach",
+          "Vigilance",
+          "Choose a background",
+          "Trample",
+          "Ward"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "8aa7c1167927299a612342a5c0cc95fc1c81c9fe7582315af18d533cd8376f3b",
+      "card": {
+        "oracleId": "1b76a54d-5a9f-4b1b-a075-4b4c4de8ba0a",
+        "scryfallId": "b6a7d041-957a-4b19-9517-214689dadd45",
+        "name": "Erinis, Gloom Stalker",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Halfling Ranger",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Halfling",
+          "Ranger"
+        ],
+        "oracleText": "Deathtouch\nWhenever Erinis attacks, return target land card from your graveyard to the battlefield.\nChoose a Background (You can have a Background as a second commander.)",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Choose a background",
+          "Deathtouch"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "513dab648b878f856487893a4988ed75c68e4504608e6f22a1bee9c804ae83f7",
+      "card": {
+        "oracleId": "d16783a4-9980-451b-9af0-33866980bc8d",
+        "scryfallId": "65331e86-1ff3-45e4-b789-7afec4ca9bd5",
+        "name": "Alphinaud Leveilleur",
+        "manaCost": "{3}{U}",
+        "cmc": 4,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Elf Wizard",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Elf",
+          "Wizard"
+        ],
+        "oracleText": "Partner with Alisaie Leveilleur (When this creature enters, target player may put Alisaie Leveilleur into their hand from their library, then shuffle.)\nVigilance\nEukrasia — Whenever you cast your second spell each turn, draw a card.",
+        "power": "2",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Partner with",
+          "Vigilance",
+          "Eukrasia",
+          "Partner"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "bd2747cda3f1bcb374523cac35a53f25dda936f0ef9ea0867311e452871bba44",
+      "card": {
+        "oracleId": "1b600345-2b89-45bc-98c8-609fdd08a5fd",
+        "scryfallId": "56a66d3b-3308-4db7-8fc1-97bb85bdcbf3",
+        "name": "Merry, Warden of Isengard",
+        "manaCost": "{1}{G}{W}",
+        "cmc": 3,
+        "colors": [
+          "G",
+          "W"
+        ],
+        "colorIdentity": [
+          "G",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Halfling Advisor",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Halfling",
+          "Advisor"
+        ],
+        "oracleText": "Partner with Pippin, Warden of Isengard (When this creature enters, target player may put Pippin into their hand from their library, then shuffle.)\nWhenever one or more artifacts you control enter, create a 1/1 white Soldier creature token with lifelink. This ability triggers only once each turn.",
+        "power": "1",
+        "toughness": "4",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Partner with",
+          "Partner"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "102f4748129d0a73d4afb6ad99176c9911db67ce3d7a947d695d92b6ee14f154",
+      "card": {
+        "oracleId": "506a972d-d226-44dc-95b7-a6e7a63d76cd",
+        "scryfallId": "ae25d91f-5489-4cd8-8634-42bcd32d4cf1",
+        "name": "Rocksteady, Mutant Marauder",
+        "manaCost": "{2}{G}",
+        "cmc": 3,
+        "colors": [
+          "G"
+        ],
+        "colorIdentity": [
+          "G"
+        ],
+        "typeLine": "Legendary Creature — Rhino Mutant",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Rhino",
+          "Mutant"
+        ],
+        "oracleText": "Partner with Bebop, Skull & Crossbones (When this creature enters, target player may put Bebop into their hand from their library, then shuffle.)\nTrample\nWhenever another nontoken creature you control enters, put a +1/+1 counter on target creature.",
+        "power": "3",
+        "toughness": "3",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Partner with",
+          "Partner",
+          "Trample"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "b10172df57f767bd70e4e629579dc7b77062fa696677fde6b140935d1d633ac9",
+      "card": {
+        "oracleId": "fdcb016e-36e7-46b3-9dff-20b9b9cc421d",
+        "scryfallId": "06c595fa-55ff-46f3-afaf-17edae465864",
+        "name": "Splinter, the Mentor",
+        "manaCost": "{1}{B}",
+        "cmc": 2,
+        "colors": [
+          "B"
+        ],
+        "colorIdentity": [
+          "B"
+        ],
+        "typeLine": "Legendary Creature — Mutant Ninja Rat",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Mutant",
+          "Ninja",
+          "Rat"
+        ],
+        "oracleText": "Menace\nWhenever Splinter or another nontoken creature you control leaves the battlefield, create a Mutagen token.\nPartner—Character select (You can have two commanders if both have this ability.)",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Partner",
+          "Menace"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "971fc9874ed47d8d6f5dd8877e836c23b3316c349031be50d530761bee775018",
+      "card": {
+        "oracleId": "584cee10-f18c-4633-95cc-f2e7a11841ac",
+        "scryfallId": "a4fab67f-00c2-4125-9262-d21a29411797",
+        "name": "Rograkh, Son of Rohgahh",
+        "manaCost": "{0}",
+        "cmc": 0,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Kobold Warrior",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Kobold",
+          "Warrior"
+        ],
+        "oracleText": "First strike, menace, trample\nPartner (You can have two commanders if both have partner.)",
+        "power": "0",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "First strike",
+          "Partner",
+          "Trample",
+          "Menace"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "486e1c68a7fcc94a640c1b3c8d7d0b62f4f53fc40e85fd35ac60679ddc444155",
+      "card": {
+        "oracleId": "1f00edd6-4321-48a1-9053-77c77b922aeb",
+        "scryfallId": "c606f8ea-815b-4308-8f1d-3dad4f45f70e",
+        "name": "Brinelin, the Moon Kraken",
+        "manaCost": "{6}{U}{U}",
+        "cmc": 8,
+        "colors": [
+          "U"
+        ],
+        "colorIdentity": [
+          "U"
+        ],
+        "typeLine": "Legendary Creature — Kraken",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Kraken"
+        ],
+        "oracleText": "When Brinelin enters and whenever you cast a spell with mana value 6 or greater, you may return target nonland permanent to its owner's hand.\nPartner (You can have two commanders if both have partner.)",
+        "power": "6",
+        "toughness": "8",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Partner"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "c566732c37fd806a64528a971b52fd3d7a301dfe01ccc5b99e6944f96b5c125f",
+      "card": {
+        "oracleId": "4aae7102-301a-429d-b169-4f462384d55d",
+        "scryfallId": "2e89ce6a-6bc9-427f-a8b2-c07a9fc3218f",
+        "name": "Ishai, Ojutai Dragonspeaker",
+        "manaCost": "{2}{W}{U}",
+        "cmc": 4,
+        "colors": [
+          "U",
+          "W"
+        ],
+        "colorIdentity": [
+          "U",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Bird Monk",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Bird",
+          "Monk"
+        ],
+        "oracleText": "Flying\nWhenever an opponent casts a spell, put a +1/+1 counter on Ishai.\nPartner (You can have two commanders if both have partner.)",
+        "power": "1",
+        "toughness": "1",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Partner"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "4b16be0409e0c91a98eb623b4e890e8f4379fd557ea881e278054f5f1561a0ca",
+      "card": {
+        "oracleId": "7880576b-8ad9-4382-97c5-7a631106a35e",
+        "scryfallId": "f2725635-8f90-4d17-9568-51218ba663c1",
+        "name": "Ravos, Soultender",
+        "manaCost": "{3}{W}{B}",
+        "cmc": 5,
+        "colors": [
+          "B",
+          "W"
+        ],
+        "colorIdentity": [
+          "B",
+          "W"
+        ],
+        "typeLine": "Legendary Creature — Human Cleric",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Human",
+          "Cleric"
+        ],
+        "oracleText": "Flying\nOther creatures you control get +1/+1.\nAt the beginning of your upkeep, you may return target creature card from your graveyard to your hand.\nPartner (You can have two commanders if both have partner.)",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Flying",
+          "Partner"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    },
+    {
+      "sha256": "57884a8cc2affe2969b44d18992777b721cf770833daba51bcb7f280627563d2",
+      "card": {
+        "oracleId": "60e7130a-d321-4e50-93a4-999013c76054",
+        "scryfallId": "3d8ca18d-9099-4f1e-95c1-f04da58a26bd",
+        "name": "Gut, True Soul Zealot",
+        "manaCost": "{2}{R}",
+        "cmc": 3,
+        "colors": [
+          "R"
+        ],
+        "colorIdentity": [
+          "R"
+        ],
+        "typeLine": "Legendary Creature — Goblin Shaman",
+        "supertypes": [
+          "Legendary"
+        ],
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Goblin",
+          "Shaman"
+        ],
+        "oracleText": "Whenever you attack, you may sacrifice another creature or an artifact. If you do, create a 4/1 black Skeleton creature token with menace that's tapped and attacking. (It can't be blocked except by two or more creatures.)\nChoose a Background (You can have a Background as a second commander.)",
+        "power": "2",
+        "toughness": "2",
+        "loyalty": null,
+        "defense": null,
+        "keywords": [
+          "Choose a background"
+        ],
+        "layout": "normal",
+        "commanderLegality": "legal",
+        "isBasicLand": false
+      }
+    }
+  ]
+}

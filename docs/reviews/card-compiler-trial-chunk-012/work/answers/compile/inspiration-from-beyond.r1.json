@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"mill","count":{"kind":"const","n":3}},{"op":"returnCardFromGraveyardToHand","filter":{"kind":"anyOf","of":[{"kind":"type","value":"Instant"},{"kind":"type","value":"Sorcery"}]}}],"description":"Mill three cards, then return an instant or sorcery card from your graveyard to your hand."}}}

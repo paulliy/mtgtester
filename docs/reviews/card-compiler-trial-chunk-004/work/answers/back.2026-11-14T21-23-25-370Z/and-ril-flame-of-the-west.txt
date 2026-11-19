@@ -1,0 +1,1 @@
+Whenever equipped creature attacks, if the attacking creature is legendary, create two 1/1 white Spirit creature tokens with flying that are attacking. Otherwise, create two 1/1 white Spirit creature tokens with flying that are tapped.

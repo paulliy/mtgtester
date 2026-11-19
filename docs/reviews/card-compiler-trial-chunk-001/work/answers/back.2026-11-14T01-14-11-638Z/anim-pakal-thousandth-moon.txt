@@ -1,0 +1,1 @@
+Whenever you attack with one or more creatures that aren't Gnomes, this trigger is mandatory and has no targets. Put a +1/+1 counter on this creature. Then create a colorless 1/1 Artifact Creature — Gnome token that is attacking, once for each +1/+1 counter on this creature (counted after the counter above is placed).

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature"}],"effects":[{"op":"destroy","target":0},{"op":"proliferate"}],"description":"Destroy target creature, then proliferate."}}}

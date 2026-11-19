@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"anyTarget"}],"effects":[{"op":"dealDamage","target":0,"amount":{"kind":"countPermanents","selector":{"kind":"type","value":"Creature"},"scope":"you"}}],"description":"Massive Raid deals damage to any target equal to the number of creatures you control."}}}

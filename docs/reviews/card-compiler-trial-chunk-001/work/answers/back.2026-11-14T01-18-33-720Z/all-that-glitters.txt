@@ -1,0 +1,1 @@
+Enchanted creature gets +X/+X, where X is the number of artifacts and enchantments you control.

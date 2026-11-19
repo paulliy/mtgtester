@@ -1,0 +1,3 @@
+Target creature gains deathtouch until end of turn.
+Target creature gains "When this creature dies, return it to the battlefield tapped." until end of turn.
+You gain 2 life.

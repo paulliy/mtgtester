@@ -1,0 +1,36 @@
+{
+  "name": "The Queen of Dale",
+  "oracleId": "a2ec1dd0-86c7-423d-b562-ed95b79bf8f7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an opponent casts their first noncreature spell each turn, you recruit."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "opponent",
+          "filter": {
+            "kind": "not",
+            "of": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          },
+          "ordinal": 1
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "recruit"
+          }
+        ],
+        "description": "Whenever an opponent casts their first noncreature spell each turn, you recruit."
+      }
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "name": "Benefactor's Draught",
+  "oracleId": "85113e73-26f7-4938-b7a7-607e704af0ca",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Untap all creatures. Until end of turn, whenever a creature an opponent controls blocks, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "untapEach",
+          "selector": {
+            "kind": "type",
+            "value": "Creature"
+          }
+        },
+        {
+          "op": "registerDelayedTrigger",
+          "when": "blocks",
+          "ability": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "blocks",
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "opponents"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                }
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "draw",
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "Until end of turn, whenever a creature an opponent controls blocks, draw a card."
+          },
+          "expiry": "cleanup"
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Untap all creatures. Until end of turn, whenever a creature an opponent controls blocks, draw a card. Draw a card."
+    }
+  }
+}

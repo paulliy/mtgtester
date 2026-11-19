@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"attacks","subject":{"kind":"self"},"withOtherAttackers":1},"optional":false,"targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":1}}],"description":"Whenever Sokka and at least one other creature attack, draw a card."}]}}

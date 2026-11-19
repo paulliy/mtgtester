@@ -1,0 +1,2 @@
+Create X 2/2 red Human Knight creature tokens with trample and haste.
+Until the cleanup step, whenever creatures you control deal combat damage to a player, you become the monarch.

@@ -1,0 +1,1 @@
+When this creature dies, create a 0/1 red Elemental creature token with "At the beginning of your upkeep, sacrifice this creature, then return target card named Rekindling Phoenix from your graveyard to the battlefield. It gains haste."

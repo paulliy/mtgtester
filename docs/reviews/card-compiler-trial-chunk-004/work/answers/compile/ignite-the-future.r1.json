@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The play permission must last until the end of the controller's next turn, but exileTopNPlayableUntilEot only lasts until end of turn, and the free-cast clause for a spell cast from a graveyard has no representation."}

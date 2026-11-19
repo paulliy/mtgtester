@@ -1,0 +1,39 @@
+{
+  "name": "Hearthborn Battler",
+  "oracleId": "beb02f49-95a6-49bf-b176-4e4b2ab5b651",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a player casts their second spell each turn, this creature deals 2 damage to target opponent."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "each",
+          "ordinal": 2
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "player",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "const",
+              "n": 2
+            }
+          }
+        ],
+        "description": "Whenever a player casts their second spell each turn, this creature deals 2 damage to target opponent."
+      }
+    ]
+  }
+}

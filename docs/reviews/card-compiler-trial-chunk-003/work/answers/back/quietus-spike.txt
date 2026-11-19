@@ -1,0 +1,1 @@
+Whenever the equipped creature deals combat damage to a player, that player loses half their life.

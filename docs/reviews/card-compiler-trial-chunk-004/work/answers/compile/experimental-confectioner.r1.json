@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The Rat token's 'can't block' has no exact TokenSpec form, since the only can't-block fields are on the card and cantBlockMatching has no documented meaning for a token blocking only itself."}

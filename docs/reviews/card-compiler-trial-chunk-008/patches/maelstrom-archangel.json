@@ -1,0 +1,30 @@
+{
+  "name": "Maelstrom Archangel",
+  "oracleId": "ac50ef98-1791-4dd4-9c1f-8cea7db7ade5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "castAnyFromHandFree"
+          }
+        ],
+        "description": "Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost."
+      }
+    ]
+  }
+}

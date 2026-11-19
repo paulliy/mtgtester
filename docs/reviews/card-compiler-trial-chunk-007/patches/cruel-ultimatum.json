@@ -1,0 +1,64 @@
+{
+  "name": "Cruel Ultimatum",
+  "oracleId": "01294ac9-1a06-4ee8-b3b1-db1f07c9d94e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target opponent sacrifices a creature of their choice, discards three cards, then loses 5 life. You return a creature card from your graveyard to your hand, draw three cards, then gain 5 life."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "sacrificeTargetPlayerCreature",
+          "target": 0
+        },
+        {
+          "op": "discardTarget",
+          "target": 0,
+          "count": {
+            "kind": "const",
+            "n": 3
+          }
+        },
+        {
+          "op": "loseLifeTarget",
+          "target": 0,
+          "amount": {
+            "kind": "const",
+            "n": 5
+          }
+        },
+        {
+          "op": "returnCardFromGraveyardToHand",
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          }
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 3
+          }
+        },
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "const",
+            "n": 5
+          }
+        }
+      ],
+      "description": "Target opponent sacrifices a creature of their choice, discards three cards, then loses 5 life. You return a creature card from your graveyard to your hand, draw three cards, then gain 5 life."
+    }
+  }
+}

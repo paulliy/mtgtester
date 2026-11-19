@@ -28,7 +28,7 @@ import {
 } from '../state/queries';
 import { faceDownExileVisibleTo } from './face-down';
 import { computeCharacteristics } from '../effects/continuous';
-import { playerById } from '../state/objects';
+import { knownHandOf, playerById } from '../state/objects';
 import type { EngineCardObject, EnginePlayerState, GameContext } from '../state/types';
 import { visibleLibraryTops } from './library-top';
 
@@ -205,6 +205,16 @@ function visibleEvent(e: GameEvent, viewer: PlayerId): GameEvent | null {
   return e;
 }
 
+/** The viewer's live knowledge of `owner`'s hand, as a field only when there is any. */
+function knownHandField(
+  ctx: GameContext,
+  viewer: EnginePlayerState,
+  owner: EnginePlayerState,
+): { knownHand?: CardView[] } {
+  const known = knownHandOf(ctx, viewer, owner);
+  return known.length === 0 ? {} : { knownHand: known.map((card) => fullCardView(card, ctx)) };
+}
+
 /**
  * Build the view for `playerId`. Contains no hidden state: a test asserts this
  * structurally (brief §12).
@@ -276,6 +286,7 @@ function playerView(ctx: GameContext, playerId: PlayerId): PlayerView {
         (sum, cardId) => sum + (viewer.commanderDamageTaken[cardId] ?? 0),
         0,
       ),
+      ...knownHandField(ctx, viewer, opp),
     }));
 
   const stack: StackObjectView[] = s.stack.map((so) => ({

@@ -1,0 +1,2 @@
+Enchanted creature has trample.
+Enchanted creature has "Whenever this creature deals combat damage to a player, put a +1/+1 counter on this creature for each point of damage dealt."

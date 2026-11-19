@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A adds two mana in any combination of colors (each mana may be a different color); Text B adds two mana of a single color (both mana the same color)."]}

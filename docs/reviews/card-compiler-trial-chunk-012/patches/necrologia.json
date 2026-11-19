@@ -1,0 +1,26 @@
+{
+  "name": "Necrologia",
+  "oracleId": "925f11c3-fd32-4aa7-a130-6554b81ad3eb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Cast this spell only during your end step."
+  ],
+  "compose": "append",
+  "def": {
+    "castRestriction": {
+      "kind": "allOf",
+      "of": [
+        {
+          "kind": "not",
+          "of": {
+            "kind": "notYourTurn"
+          }
+        },
+        {
+          "kind": "duringStep",
+          "step": "end"
+        }
+      ]
+    }
+  }
+}

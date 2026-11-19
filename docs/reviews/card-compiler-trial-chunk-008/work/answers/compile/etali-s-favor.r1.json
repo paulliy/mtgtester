@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"enters","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"discover","count":{"kind":"const","n":3}}],"description":"When this Aura enters, discover 3."}]}}

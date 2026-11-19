@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The copy count is the number of OTHER instant and sorcery spells cast this turn; copyCastSpell makes exactly one copy and no Value counts only instant and sorcery casts."}

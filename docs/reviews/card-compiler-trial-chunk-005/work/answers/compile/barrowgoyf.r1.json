@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The trigger mills a number equal to the damage dealt and then puts a creature card from among those milled cards into hand, but millThenReturnMilledCard takes a fixed count, not a dynamic Value, so the dynamic mill-then-choose sequence cannot be stated exactly."}

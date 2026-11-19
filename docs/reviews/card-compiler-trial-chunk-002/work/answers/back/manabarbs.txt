@@ -1,0 +1,1 @@
+Whenever a land becomes tapped for mana, this deals 1 damage to that player.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no tap-only effect over an up-to-one chosen target slot: tapTarget takes a single target and tapAndGoadEachChosen also goads, so \"tap up to one target creature\" cannot be stated exactly."}

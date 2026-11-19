@@ -1,0 +1,1 @@
+Whenever equipped creature deals combat damage to a player, choose up to one target planeswalker and up to one target artifact. Destroy each of them.

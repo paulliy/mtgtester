@@ -1,0 +1,1 @@
+{W}{W}{G}, {T}, Sacrifice this land: Put a +1/+1 counter on each of up to two target creatures you control. Each of those creatures gains vigilance until end of turn. Each of those creatures gains lifelink until end of turn. Activate only as a sorcery.

@@ -1,0 +1,30 @@
+{
+  "name": "Hex",
+  "oracleId": "89457fa8-b0e2-4277-b6a9-c6601c59b46d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy six target creatures."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "count": {
+            "min": 6,
+            "max": 6
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "destroyEachChosen",
+          "targetSlot": 0
+        }
+      ],
+      "description": "Destroy six target creatures."
+    }
+  }
+}

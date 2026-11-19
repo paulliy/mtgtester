@@ -1,0 +1,49 @@
+{
+  "name": "In the Trenches",
+  "oracleId": "1612a08f-fc1f-45cf-ae03-5f021a46869d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{5}{W}: Exile target nonland permanent you don't control until this enchantment leaves the battlefield. Activate only as a sorcery and only once."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 5,
+              "colored": {
+                "W": 1,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "sorcery",
+        "exhaust": true,
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "nonlandPermanent",
+              "controller": "opponent"
+            }
+          ],
+          "effects": [
+            {
+              "op": "exileUntilSourceLeaves",
+              "targetSlot": 0
+            }
+          ],
+          "description": "{5}{W}: Exile target nonland permanent you don't control until this enchantment leaves the battlefield. Activate only as a sorcery and only once."
+        }
+      }
+    ]
+  }
+}

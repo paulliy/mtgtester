@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No op deals each player damage equal to twice that player's own nonbasic land count: dealDamageNonbasicLands targets a single player and takes no multiplier, and damageEachPlayer uses one amount for every player."}

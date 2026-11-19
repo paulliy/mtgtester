@@ -1,0 +1,1 @@
+docs/reviews/card-compiler-trial-chunk-008/work/prompts/judge/werefox-bodyguard.md	docs/reviews/card-compiler-trial-chunk-008/work/answers/judge/werefox-bodyguard.json

@@ -260,8 +260,22 @@ let spawnCounter = 0;
 
 /** Register (interpret) a card's definition in a live game context. */
 export function registerDef(ctx: GameContext, card: OracleCard): CardDefinition {
-  if (!ctx.defs.has(card.oracleId)) ctx.defs.set(card.oracleId, interpretCard(card));
+  if (!ctx.defs.has(card.oracleId))
+    ctx.defs.set(card.oracleId, structuredClone(interpretCard(card)));
   return ctx.defs.get(card.oracleId) as CardDefinition;
+}
+
+/**
+ * The game's definition for `oracleId`, replaced by a private copy a test may change. Interpreted
+ * definitions are shared across games by the definition cache and frozen under vitest, so a test
+ * that patches one in place must patch this copy instead.
+ */
+export function editableDef(ctx: GameContext, oracleId: string): CardDefinition {
+  const shared = ctx.defs.get(oracleId);
+  if (shared === undefined) throw new Error(`no definition for ${oracleId}`);
+  const copy = structuredClone(shared);
+  ctx.defs.set(oracleId, copy);
+  return copy;
 }
 
 export function registerCustomDef(ctx: GameContext, def: CardDefinition): void {

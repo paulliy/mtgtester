@@ -1,0 +1,2 @@
+Activate this ability only while this card is in your hand.
+{G}{G}, {X}, Discard this card: Put X +1/+1 counters on target creature.

@@ -1,0 +1,59 @@
+{
+  "name": "Stormsurge Kraken",
+  "oracleId": "72bdc7ba-2906-436d-8405-6a8a3335fdae",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature becomes blocked, you may draw two cards.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 2,
+          "toughness": 2
+        },
+        "condition": {
+          "kind": "controlsYourCommander"
+        }
+      },
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "becomesBlocked",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "optional": true,
+            "targets": [],
+            "effects": [
+              {
+                "op": "draw",
+                "count": {
+                  "kind": "const",
+                  "n": 2
+                }
+              }
+            ],
+            "description": "Whenever this creature becomes blocked, you may draw two cards."
+          }
+        },
+        "condition": {
+          "kind": "controlsYourCommander"
+        }
+      }
+    ]
+  }
+}

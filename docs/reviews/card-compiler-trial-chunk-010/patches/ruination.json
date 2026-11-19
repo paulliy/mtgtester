@@ -1,0 +1,37 @@
+{
+  "name": "Ruination",
+  "oracleId": "59dbc873-72d9-4e7b-9442-2c7b8e8523e1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy all nonbasic lands."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "destroyEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Land"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "supertype",
+                  "value": "Basic"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Destroy all nonbasic lands."
+    }
+  }
+}

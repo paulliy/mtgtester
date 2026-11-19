@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect returns the dying creature (the trigger object) to the battlefield with a flying counter on it: returnDiedSourceToBattlefield covers only the ability's own source, and the trigger-object returns are tapped-only or delayed."}

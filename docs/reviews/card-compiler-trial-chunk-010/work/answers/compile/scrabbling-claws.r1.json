@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Target player exiles a card from their graveyard' needs the targeted player to choose one card from their own graveyard to exile; the schema's exileTargetPlayerGraveyard exiles the whole graveyard and no op lets the target player choose."}

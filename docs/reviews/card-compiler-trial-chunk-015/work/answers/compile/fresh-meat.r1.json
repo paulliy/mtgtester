@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"creaturesDiedThisTurn does not say whose creatures it counts, and 'put into your graveyard' is owner-scoped, so the token count cannot be stated exactly."}

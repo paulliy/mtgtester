@@ -1,0 +1,1 @@
+Whenever this creature attacks, if two or more other creatures are attacking, create a 1/1 white Soldier creature token with lifelink.

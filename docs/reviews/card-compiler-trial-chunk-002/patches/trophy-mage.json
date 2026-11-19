@@ -1,0 +1,56 @@
+{
+  "name": "Trophy Mage",
+  "oracleId": "08afc0d7-192f-4ab6-b6a0-c4265cf5e225",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, you may search your library for an artifact card with mana value 3, reveal it, put it into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "manaValueAtLeast",
+                  "n": 3
+                },
+                {
+                  "kind": "manaValueAtMost",
+                  "n": 3
+                }
+              ]
+            },
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "reveal": true
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "When this creature enters, you may search your library for an artifact card with mana value 3, reveal it, put it into your hand, then shuffle."
+      }
+    ]
+  }
+}

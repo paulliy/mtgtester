@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A prevents all combat damage dealt to the creature for the rest of the turn; Text B creates a damage shield that covers only the next combat damage, so later combat damage this turn is not prevented.","Text B's damage shield is a separate effect with its own scope, and Text A's prevention is not described as a shield."]}

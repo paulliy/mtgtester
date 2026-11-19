@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The costReduction static has no documented way to restrict an activated-ability reduction to abilities of creatures you control (its filter is documented only for spells), so the 'creatures you control' scope cannot be stated exactly."}

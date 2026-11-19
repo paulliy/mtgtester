@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"enters","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"destroyEach","selector":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"tapped"}]}}],"description":"When this creature enters, destroy all tapped creatures."}]}}

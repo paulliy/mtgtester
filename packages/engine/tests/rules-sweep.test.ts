@@ -40,6 +40,7 @@ import {
   pump,
   registerDef,
   spawn,
+  editableDef,
 } from './fixtures';
 import { pinStore } from './scenario/pin-store';
 
@@ -857,7 +858,7 @@ describe('review follow-ups (Greptile on PR #12)', () => {
     );
     spawn(ctx, 'P1', mountain());
     const card = conjure(ctx, 'P1', redBolt(), 'hand');
-    const def = ctx.defs.get(card.oracleId)!;
+    const def = editableDef(ctx, card.oracleId);
     def.optionalAdditionalCost = {
       mechanic: 'kicker',
       cost: { generic: 1, colored: { W: 0, U: 0, B: 0, R: 0, G: 0 }, colorless: 0 },

@@ -1,0 +1,1 @@
+Whenever a creature without flying attacks, if the defending player is you, this deals 1 damage to that creature.

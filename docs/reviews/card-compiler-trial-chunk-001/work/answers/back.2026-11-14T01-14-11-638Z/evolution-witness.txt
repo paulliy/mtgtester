@@ -1,0 +1,1 @@
+{1}{G}: If a comparison hidden in the data (operator hidden, value 0) between the number of +1/+1 counters on this creature and 0 holds, put two +1/+1 counters on this creature. Otherwise, nothing happens. Activatable at any time you have priority; no targets.

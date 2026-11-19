@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect puts a +1/+1 counter on each creature in the group that dealt combat damage to the player (the trigger's aggregate group); putCountersEach takes only a static selector, which would also hit attackers that were blocked or attacked a planeswalker."}

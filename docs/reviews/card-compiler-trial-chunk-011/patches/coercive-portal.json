@@ -1,0 +1,57 @@
+{
+  "name": "Coercive Portal",
+  "oracleId": "eea4feef-2595-4ed2-92a0-11ccb3e7d40e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, starting with you, each player votes for carnage or homage. If carnage gets more votes, sacrifice this artifact and destroy all nonland permanents. If homage gets more votes or the vote is tied, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "councilVote",
+            "choices": [
+              "carnage",
+              "homage"
+            ],
+            "more": [
+              {
+                "op": "sacrifice",
+                "target": "source"
+              },
+              {
+                "op": "destroyEach",
+                "selector": {
+                  "kind": "not",
+                  "of": {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                }
+              }
+            ],
+            "otherwise": [
+              {
+                "op": "draw",
+                "count": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ]
+          }
+        ],
+        "description": "At the beginning of your upkeep, starting with you, each player votes for carnage or homage. If carnage gets more votes, sacrifice this artifact and destroy all nonland permanents. If homage gets more votes or the vote is tied, draw a card."
+      }
+    ]
+  }
+}

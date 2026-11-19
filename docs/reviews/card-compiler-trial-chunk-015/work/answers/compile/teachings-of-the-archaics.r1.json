@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no condition comparing an opponent's hand size with yours (eventPlayerHandSize and cardsInTargetHand do not express a per-opponent hand-size difference)."}

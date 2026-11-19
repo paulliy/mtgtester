@@ -1,0 +1,56 @@
+{
+  "name": "Kirol, Attentive First-Year",
+  "oracleId": "3a272fa9-5f28-43a4-95de-10cb511f1b43",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap two untapped creatures you control: Copy target triggered ability you control. You may choose new targets for the copy. Activate only once each turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tapOthers",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "count": 2,
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "oncePerTurn": true,
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "stackObject",
+              "controller": "you",
+              "stackKind": "triggeredAbility"
+            }
+          ],
+          "effects": [
+            {
+              "op": "copyTargetAbility",
+              "target": 0,
+              "count": 1,
+              "newTargets": true
+            }
+          ],
+          "description": "Tap two untapped creatures you control: Copy target triggered ability you control. You may choose new targets for the copy. Activate only once each turn."
+        }
+      }
+    ]
+  }
+}

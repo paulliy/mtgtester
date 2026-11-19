@@ -1,0 +1,37 @@
+{
+  "name": "Hunter's Blowgun",
+  "oracleId": "a0292e0b-7bb3-46d3-a29f-b54bce5b20f0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equipped creature has deathtouch during your turn. Otherwise, it has reach."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "deathtouch"
+        },
+        "condition": {
+          "kind": "yourTurn"
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "reach"
+        },
+        "condition": {
+          "kind": "notYourTurn"
+        }
+      }
+    ]
+  }
+}

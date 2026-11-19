@@ -1,0 +1,2 @@
+Each other permanent you control that is a creature or has the subtype Vehicle, with mana value 4 or less, enters the battlefield with an additional +1/+1 counter on it.
+Each other permanent you control that is a creature or has the subtype Vehicle, with mana value 5 or more, enters the battlefield with three additional +1/+1 counters on it.

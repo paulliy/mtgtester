@@ -1,0 +1,80 @@
+{
+  "name": "Rekindling Phoenix",
+  "oracleId": "f34be4b8-126d-4b5c-8ebb-23b5e5370012",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature dies, create a 0/1 red Elemental creature token with \"At the beginning of your upkeep, sacrifice this token and return target card named ~ from your graveyard to the battlefield. It gains haste until end of turn.\""
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Elemental",
+              "typeLine": "Creature — Elemental",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Elemental"
+              ],
+              "colors": [
+                "R"
+              ],
+              "power": 0,
+              "toughness": 1,
+              "triggers": [
+                {
+                  "kind": "triggered",
+                  "trigger": {
+                    "when": "upkeep",
+                    "player": "you"
+                  },
+                  "optional": false,
+                  "targets": [
+                    {
+                      "kind": "cardInGraveyard",
+                      "filter": {
+                        "kind": "name",
+                        "value": "Rekindling Phoenix"
+                      }
+                    }
+                  ],
+                  "effects": [
+                    {
+                      "op": "sacrifice",
+                      "target": "source"
+                    },
+                    {
+                      "op": "graveyardToBattlefield",
+                      "target": 0,
+                      "gainsHaste": true
+                    }
+                  ],
+                  "description": "At the beginning of your upkeep, sacrifice this token and return target card named Rekindling Phoenix from your graveyard to the battlefield. It gains haste until end of turn."
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "When this creature dies, create a 0/1 red Elemental creature token with \"At the beginning of your upkeep, sacrifice this token and return target card named Rekindling Phoenix from your graveyard to the battlefield. It gains haste until end of turn.\""
+      }
+    ]
+  }
+}

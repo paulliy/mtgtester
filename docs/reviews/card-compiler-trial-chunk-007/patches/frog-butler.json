@@ -1,0 +1,44 @@
+{
+  "name": "Frog Butler",
+  "oracleId": "5b865275-4114-44d0-9832-ae5d3b4efba4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}: ~ gains reach until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": "source",
+              "keyword": "reach"
+            }
+          ],
+          "description": "{2}: This creature gains reach until end of turn."
+        }
+      }
+    ]
+  }
+}

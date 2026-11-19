@@ -25,7 +25,8 @@
  */
 
 import type { Color, ManaCostString } from '@mtg/shared';
-import type { KeywordAbility, ManaAbilitySpec, TokenSpec } from './ability';
+import type { Effect, KeywordAbility, ManaAbilitySpec, TokenSpec } from './ability';
+import type { Value } from './value';
 import type { ParsedManaCost } from '../mana/cost';
 import { parseManaCost } from '../mana/cost';
 
@@ -714,4 +715,33 @@ const BY_KEY = new Map(ALL_TOKENS.map((t) => [tokenLookupKey(t), t]));
  */
 export function canonicalizeToken(spec: TokenSpec): TokenSpec {
   return BY_KEY.get(tokenLookupKey(spec)) ?? spec;
+}
+
+/**
+ * Token-creating ops that change the game before they create the token: destroy, exile, mill or
+ * counter something first. A token power or toughness written as a value is read from the
+ * resolving ability before an op runs (`withTokenCharacteristicsFixed` in effects/resolve.ts),
+ * which for these would see the game before that change, so their specs take fixed values only.
+ */
+export const TOKEN_OPS_ACTING_FIRST: ReadonlySet<Effect['op']> = new Set<Effect['op']>([
+  'destroyAndCreateTokenForController',
+  'destroyAndCreateTokensEqualToManaValue',
+  'exileGraveyardCreateTokens',
+  'millAndCreateTokensForCreatures',
+  'counterAndCreateTokenForController',
+]);
+
+/** Values `evaluateValue` answers with no scope at all, which is how a fixed token spec is read. */
+export function tokenCharacteristicFixed(value: Value): boolean {
+  switch (value.kind) {
+    case 'plus':
+    case 'negate':
+    case 'times':
+      return tokenCharacteristicFixed(value.of);
+    case 'const':
+    case 'cardTypesInAllGraveyards':
+      return true;
+    default:
+      return false;
+  }
 }

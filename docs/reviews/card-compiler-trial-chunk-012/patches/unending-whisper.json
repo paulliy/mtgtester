@@ -1,0 +1,30 @@
+{
+  "name": "Unending Whisper",
+  "oracleId": "c5da5c31-0cf1-4393-8701-eda7880ecebc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Harmonize {5}{U}"
+  ],
+  "compose": "append",
+  "def": {
+    "alternativeCasts": [
+      {
+        "kind": "nonMana",
+        "from": "graveyard",
+        "manaCost": {
+          "generic": 5,
+          "colored": {
+            "W": 0,
+            "U": 1,
+            "B": 0,
+            "R": 0,
+            "G": 0
+          },
+          "colorless": 0
+        },
+        "exileOnResolution": true,
+        "description": "Harmonize {5}{U}"
+      }
+    ]
+  }
+}

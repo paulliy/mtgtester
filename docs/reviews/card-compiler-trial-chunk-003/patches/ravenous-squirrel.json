@@ -1,0 +1,57 @@
+{
+  "name": "Ravenous Squirrel",
+  "oracleId": "8fb48d65-406b-4231-83ea-9cf3bb8dff76",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you sacrifice an artifact or creature, put a +1/+1 counter on this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "sacrificed",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "self"
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever you sacrifice an artifact or creature, put a +1/+1 counter on this creature."
+      }
+    ]
+  }
+}

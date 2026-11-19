@@ -1,0 +1,32 @@
+{
+  "name": "Blightbeetle",
+  "oracleId": "b4cd7e4e-4b63-41a1-bfad-2840a96f84bb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures your opponents control can't have +1/+1 counters put on them."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "counterPlacementReplacement",
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Creature"
+            },
+            {
+              "kind": "controller",
+              "who": "opponents"
+            }
+          ]
+        },
+        "counter": "+1/+1",
+        "multiplier": 0,
+        "addition": 0
+      }
+    ]
+  }
+}

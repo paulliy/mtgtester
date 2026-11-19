@@ -1,0 +1,33 @@
+{
+  "name": "Words of Wisdom",
+  "oracleId": "cff1b9bb-2a4c-4522-94a4-a674f942e376",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You draw two cards, then each other player draws a card."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "eachPlayerDraws",
+          "scope": "opponents",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "You draw two cards, then each other player draws a card."
+    }
+  }
+}

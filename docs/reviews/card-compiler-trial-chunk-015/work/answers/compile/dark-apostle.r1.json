@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema does not say how a delayed 'next noncreature spell you cast this turn has cascade' is carried: nextCastThisTurn's ability kind is unspecified, and the cascade op is not documented for use outside a card's keyword."}

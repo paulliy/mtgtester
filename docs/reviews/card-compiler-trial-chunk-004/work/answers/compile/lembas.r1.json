@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"leavesBattlefield","subject":{"kind":"self"},"leavesTo":["graveyard"]},"optional":false,"targets":[],"effects":[{"op":"shuffleSourceFromGraveyardIntoLibrary"}],"description":"When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library."}]}}

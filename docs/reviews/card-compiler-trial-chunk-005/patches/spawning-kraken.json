@@ -1,0 +1,79 @@
+{
+  "name": "Spawning Kraken",
+  "oracleId": "f0357833-80b5-40ba-874a-bd22ea6e4e46",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a Kraken, Leviathan, Octopus, or Serpent you control deals combat damage to a player, create a 9/9 blue Kraken creature token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Kraken"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Leviathan"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Octopus"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Serpent"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Kraken",
+              "typeLine": "Token Creature — Kraken",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Kraken"
+              ],
+              "colors": [
+                "U"
+              ],
+              "power": 9,
+              "toughness": 9
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a Kraken, Leviathan, Octopus, or Serpent you control deals combat damage to a player, create a 9/9 blue Kraken creature token."
+      }
+    ]
+  }
+}

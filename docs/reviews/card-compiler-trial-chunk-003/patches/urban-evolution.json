@@ -1,0 +1,32 @@
+{
+  "name": "Urban Evolution",
+  "oracleId": "c715e525-fc3a-4cab-94a0-04e0a22a5013",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Draw three cards. You may play an additional land this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 3
+          }
+        },
+        {
+          "op": "additionalLandPlaysThisTurn",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Draw three cards. You may play an additional land this turn."
+    }
+  }
+}

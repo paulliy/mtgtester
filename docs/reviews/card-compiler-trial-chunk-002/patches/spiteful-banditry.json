@@ -1,0 +1,83 @@
+{
+  "name": "Spiteful Banditry",
+  "oracleId": "fde2653f-5270-4b8f-9642-0835dbb076c2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever one or more creatures your opponents control die, you create a Treasure token. This ability triggers only once each turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "opponents"
+                }
+              ]
+            }
+          },
+          "aggregate": true,
+          "oncePerTurn": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Treasure",
+              "typeLine": "Artifact — Treasure",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Treasure"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "manaAbilities": [
+                {
+                  "units": [
+                    [
+                      "W",
+                      "U",
+                      "B",
+                      "R",
+                      "G"
+                    ]
+                  ],
+                  "costs": [
+                    {
+                      "kind": "tap"
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ]
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever one or more creatures your opponents control die, you create a Treasure token. This ability triggers only once each turn."
+      }
+    ]
+  }
+}

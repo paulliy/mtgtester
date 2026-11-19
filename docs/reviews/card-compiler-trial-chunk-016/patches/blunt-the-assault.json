@@ -1,0 +1,32 @@
+{
+  "name": "Blunt the Assault",
+  "oracleId": "dccd0533-fda0-41ff-b540-c4f1bb32fc95",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You gain 1 life for each creature on the battlefield. Prevent all combat damage that would be dealt this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "scope": "all"
+          }
+        },
+        {
+          "op": "preventCombatDamageAll"
+        }
+      ],
+      "description": "You gain 1 life for each creature on the battlefield. Prevent all combat damage that would be dealt this turn."
+    }
+  }
+}

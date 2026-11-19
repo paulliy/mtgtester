@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The Warp Vortex trigger flips a separate coin for each opponent and branches per flip (draw on a win, 3 damage to that player on a loss), and the schema's flipCoin is a single flip with no per-opponent loop."}

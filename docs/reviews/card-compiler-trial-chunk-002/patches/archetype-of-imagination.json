@@ -1,0 +1,34 @@
+{
+  "name": "Archetype of Imagination",
+  "oracleId": "a5458de0-0f61-49a3-a013-d90f92559809",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures your opponents control lose flying and can't have or gain flying."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "opponents"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "denyKeywords": [
+            "flying"
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect exiles the discarded card from the graveyard and gives its controller permission to play it this turn (exileGraveyardEventCard has no play permission, and exileTopNPlayableUntilEot works only from the top of the library)."}

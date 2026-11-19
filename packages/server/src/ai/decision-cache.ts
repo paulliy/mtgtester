@@ -127,6 +127,8 @@ export function digestDecision(
     h = hashNumber(h, opp.librarySize);
     h = hashNumber(h, opp.poisonCounters);
     h = hashNumber(h, opp.commanderDamageDealtToYou);
+    // Absent and empty hash the same, so a seat that never looked keeps the key it always had.
+    for (const card of opp.knownHand ?? []) h = hashString(h, card.id);
   }
 
   return h;

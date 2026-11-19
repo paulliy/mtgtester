@@ -1,0 +1,40 @@
+{
+  "name": "Giada, Font of Hope",
+  "oracleId": "48e6d3d8-2f27-4017-acdd-40bce8cdbc02",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each other Angel you control enters with an additional +1/+1 counter on it for each Angel you already control."
+  ],
+  "compose": "append",
+  "def": {
+    "additionalCountersOnEntry": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "other"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "subtype",
+              "value": "Angel"
+            }
+          ]
+        },
+        "counter": "+1/+1",
+        "count": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "subtype",
+            "value": "Angel"
+          },
+          "scope": "you"
+        }
+      }
+    ]
+  }
+}

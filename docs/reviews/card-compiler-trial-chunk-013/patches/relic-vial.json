@@ -1,0 +1,69 @@
+{
+  "name": "Relic Vial",
+  "oracleId": "7e86d4a6-e4cd-418a-8bbc-72cdad753e3a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as you control a Cleric, this artifact has \"Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addTrigger": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dies",
+              "subject": {
+                "kind": "permanent",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                }
+              }
+            },
+            "optional": false,
+            "targets": [],
+            "effects": [
+              {
+                "op": "eachOpponentLosesLife",
+                "amount": 1
+              },
+              {
+                "op": "gainLife",
+                "amount": {
+                  "kind": "const",
+                  "n": 1
+                }
+              }
+            ],
+            "description": "Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life."
+          }
+        },
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "subtype",
+            "value": "Cleric"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 1
+        }
+      }
+    ]
+  }
+}

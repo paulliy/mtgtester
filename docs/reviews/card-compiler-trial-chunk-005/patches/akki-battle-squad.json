@@ -1,0 +1,89 @@
+{
+  "name": "Akki Battle Squad",
+  "oracleId": "5bd81d2f-46a1-4536-92e7-28c7e1892735",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever one or more modified creatures you control attack, untap all modified creatures you control. After this phase, there is an additional combat phase. This ability triggers only once each turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "isEquipped"
+                    },
+                    {
+                      "kind": "enchantedByAuraYouControl"
+                    },
+                    {
+                      "kind": "hasAnyCounter"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "aggregate": true,
+          "oncePerTurn": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "untapEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "isEquipped"
+                    },
+                    {
+                      "kind": "enchantedByAuraYouControl"
+                    },
+                    {
+                      "kind": "hasAnyCounter"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "op": "extraCombatPhase"
+          }
+        ],
+        "description": "Whenever one or more modified creatures you control attack, untap all modified creatures you control. After this phase, there is an additional combat phase. This ability triggers only once each turn."
+      }
+    ]
+  }
+}

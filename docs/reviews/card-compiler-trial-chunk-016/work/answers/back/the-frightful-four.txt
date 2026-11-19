@@ -1,0 +1,1 @@
+Whenever an opponent casts their first noncreature spell, that player loses life equal to that spell's mana value.

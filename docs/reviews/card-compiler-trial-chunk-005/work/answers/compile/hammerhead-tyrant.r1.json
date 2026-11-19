@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target filter 'mana value less than or equal to that spell's mana value' needs a comparison against the triggering spell's mana value, but manaValueAtMost takes only a fixed constant."}

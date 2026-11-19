@@ -1,0 +1,1 @@
+Destroy target nonland permanent. Its controller creates a Lander token. It is an artifact with "{2}, {T}, Sacrifice this artifact: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."

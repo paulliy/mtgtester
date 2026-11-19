@@ -1,0 +1,20 @@
+{
+  "name": "Ancient Stone Idol",
+  "oracleId": "5f981cca-5cd9-49e4-ab1a-bbbf6fc7e737",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {1} less to cast for each attacking creature."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "attackingCreatures"
+        },
+        "selfOnly": true
+      }
+    ]
+  }
+}

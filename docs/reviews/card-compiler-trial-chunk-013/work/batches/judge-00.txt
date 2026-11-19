@@ -1,0 +1,4 @@
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/judge/relic-vial.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/judge/relic-vial.json
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/judge/iridian-maelstrom.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/judge/iridian-maelstrom.json
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/judge/seedship-agrarian.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/judge/seedship-agrarian.json
+docs/reviews/card-compiler-trial-chunk-013/work/prompts/judge/skirsdag-high-priest.md	docs/reviews/card-compiler-trial-chunk-013/work/answers/judge/skirsdag-high-priest.json

@@ -1,0 +1,41 @@
+{
+  "name": "Inspiration from Beyond",
+  "oracleId": "be87e410-4302-43ee-b880-56eedf2b3648",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Mill three cards, then return an instant or sorcery card from your graveyard to your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "mill",
+          "count": {
+            "kind": "const",
+            "n": 3
+          }
+        },
+        {
+          "op": "returnCardFromGraveyardToHand",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Instant"
+              },
+              {
+                "kind": "type",
+                "value": "Sorcery"
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Mill three cards, then return an instant or sorcery card from your graveyard to your hand."
+    }
+  }
+}

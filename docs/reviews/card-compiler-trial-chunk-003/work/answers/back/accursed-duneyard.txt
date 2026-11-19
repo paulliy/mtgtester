@@ -1,0 +1,1 @@
+{2}, {T}: Regenerate target permanent that is a Shade, Skeleton, Specter, Spirit, Vampire, Wraith, or Zombie.

@@ -1,0 +1,42 @@
+{
+  "name": "Dancing from Dark to Dawn",
+  "oracleId": "5ba482e9-fbb0-4d9f-a3a9-414892bcdfed",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a creature spell, put X +1/+1 counters on target creature you control, where X is that spell's mana value."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you",
+          "filter": {
+            "kind": "type",
+            "value": "Creature"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": 0,
+            "counter": "+1/+1",
+            "count": {
+              "kind": "spellManaValue"
+            }
+          }
+        ],
+        "description": "Whenever you cast a creature spell, put X +1/+1 counters on target creature you control, where X is that spell's mana value."
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Revealing until a creature card, then putting X +1/+1 counters where X is that card's mana value, has no schema form: revealUntilAura is Aura-only and no value reads the found card's mana value."}

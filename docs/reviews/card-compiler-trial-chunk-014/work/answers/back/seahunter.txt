@@ -1,0 +1,1 @@
+{3}, {T}: Search for a Merfolk card that is not an instant or sorcery card. Put that card onto the battlefield. Then shuffle.

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Line 2 is expressible, but any non-empty patch stops the interpreter stripping the generic label from the already-parsed line 1 (\"The Nuka-Cola Challenge —\"), which then reports as unrecognized and the patch cannot claim it."}

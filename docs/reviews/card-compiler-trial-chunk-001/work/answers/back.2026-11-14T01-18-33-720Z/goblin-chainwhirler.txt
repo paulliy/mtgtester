@@ -1,0 +1,1 @@
+When this creature enters, it deals 1 damage to each opponent. Then it deals 1 damage to each creature and each planeswalker that an opponent controls.

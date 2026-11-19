@@ -1,0 +1,69 @@
+{
+  "name": "Planar Bridge",
+  "oracleId": "853c6cc0-ed2b-4d65-add1-2449ade8cf68",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{8}, {T}: Search your library for a permanent card, put it onto the battlefield, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 8,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "searchLibrary",
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Instant"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Sorcery"
+                    }
+                  ]
+                }
+              },
+              "destinations": [
+                {
+                  "zone": "battlefield"
+                }
+              ]
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "description": "{8}, {T}: Search your library for a permanent card, put it onto the battlefield, then shuffle."
+        }
+      }
+    ]
+  }
+}

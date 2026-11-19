@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Moving any number of counters from among creatures you control onto the target has no schema op (moveCounters takes one fixed source and a fixed count, and distributeCountersFromSource draws only from this creature)."}

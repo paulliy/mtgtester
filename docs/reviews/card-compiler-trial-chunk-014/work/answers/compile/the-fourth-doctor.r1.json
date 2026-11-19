@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot limit a combined play-a-historic-land-or-cast-a-historic-spell-from-library permission to once each turn (playFromZone's permanentTypeBudget is per permanent type), so the 'Once each turn' restriction cannot be expressed."}

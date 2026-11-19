@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"self"},"op":{"layer":7,"sublayer":"d","power":2,"toughness":2},"condition":{"kind":"controlsYourCommander"}},{"affects":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"controller","who":"you"}]},"op":{"layer":6,"addKeyword":"vigilance"},"condition":{"kind":"controlsYourCommander"}}]}}

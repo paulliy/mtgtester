@@ -1,0 +1,53 @@
+{
+  "name": "Haazda Marshal",
+  "oracleId": "3a1efa7e-21d5-47a1-bcd8-7d4616be0d58",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature and at least two other creatures attack, create a 1/1 white Soldier creature token with lifelink."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          },
+          "withOtherAttackers": 2
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Soldier",
+              "typeLine": "Token Creature — Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1,
+              "keywords": [
+                "lifelink"
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever this creature and at least two other creatures attack, create a 1/1 white Soldier creature token with lifelink."
+      }
+    ]
+  }
+}

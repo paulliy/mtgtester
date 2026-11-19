@@ -1,7 +1,7 @@
 # 0014 — Playback correctness: two clocks, and boards that mean "after"
 
 Date: 2026-07-27
-Status: Accepted
+Status: Accepted (2026-07-27)
 
 Supersedes parts of [0012](0012-spectator-ui.md) §1 and §2.
 

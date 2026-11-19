@@ -1,0 +1,1 @@
+This creature is the creature type chosen for it in addition to its other types. The data contains no ability that makes the choice, so this has no effect beyond adding whatever subtype was chosen elsewhere; if none was chosen, nothing is added.

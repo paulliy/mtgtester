@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Exiling the chosen nonland card, putting the rest on the bottom in random order, and letting its owner cast the exiled card is not one schema primitive: lookAtTopNCastOneFree casts without an exile-and-keep step, and lookAtTopN's mayPut cannot exile."}

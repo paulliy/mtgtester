@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Target 'activated or triggered ability from a creature source' needs stackKind to name one kind, and no selector restricts a stack ability to a creature source; leaving either open would allow a wrong target."}

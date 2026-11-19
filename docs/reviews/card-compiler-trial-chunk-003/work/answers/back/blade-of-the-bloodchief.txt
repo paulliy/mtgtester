@@ -1,0 +1,1 @@
+Whenever a creature dies, if equipped creature is a Vampire, put two +1/+1 counters on equipped creature. Otherwise, put one +1/+1 counter on equipped creature.

@@ -1,0 +1,2 @@
+As long as you control a commander, this creature gets +2/+2.
+As long as you control a commander, this creature has "Whenever this creature becomes blocked, you may draw two cards."

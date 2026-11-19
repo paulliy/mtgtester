@@ -44,7 +44,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": true
       },
       {
         "ok": true,
@@ -72,7 +73,84 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 21,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 21,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "fizzle",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
       }
     ],
     "backTranslation": "When this enters, target instant or sorcery spell is copied. The copy may have new targets chosen for it.",
@@ -133,6 +211,79 @@
           "untap",
           "zoneChange"
         ]
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Damning Verdict"
+        ],
+        "detail": "game ended",
+        "decisions": 16,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ]
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Damning Verdict"
+        ],
+        "detail": "game ended",
+        "decisions": 15,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ]
       }
     ],
     "backTranslation": "Destroy each creature that has no counters on it.",
@@ -159,8 +310,8 @@
         "abilityResolved": true,
         "resolved": [
           "Bloodforged Battle-Axe",
-          "Bloodforged Battle-Axe \u2014 Equip {2}",
-          "Bloodforged Battle-Axe \u2014 Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
+          "Bloodforged Battle-Axe — Equip {2}",
+          "Bloodforged Battle-Axe — Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
         ],
         "detail": "game ended",
         "decisions": 32,
@@ -190,7 +341,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": true
       },
       {
         "ok": true,
@@ -218,7 +370,93 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Bloodforged Battle-Axe — Equip {2}"
+        ],
+        "detail": "game ended",
+        "decisions": 23,
+        "eventTypes": [
+          "activateAbility",
+          "attach",
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCeased",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Bloodforged Battle-Axe — Equip {2}",
+          "Bloodforged Battle-Axe — Whenever equipped creature deals combat damage to a player, create a token that's a copy of this Equipment."
+        ],
+        "detail": "game ended",
+        "decisions": 19,
+        "eventTypes": [
+          "activateAbility",
+          "attach",
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "triggerOnStack",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
       }
     ],
     "backTranslation": "Whenever the creature this is attached to deals combat damage to a player, create a token that's a copy of this.",
@@ -339,7 +577,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Yavimaya Hollow \u2014 {G}, {T}: Regenerate target creature."
+          "Yavimaya Hollow — {G}, {T}: Regenerate target creature."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -367,7 +605,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": true
       },
       {
         "ok": true,
@@ -375,7 +614,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Yavimaya Hollow \u2014 {G}, {T}: Regenerate target creature."
+          "Yavimaya Hollow — {G}, {T}: Regenerate target creature."
         ],
         "detail": "game ended",
         "decisions": 25,
@@ -402,7 +641,95 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": true
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Yavimaya Hollow — {G}, {T}: Regenerate target creature."
+        ],
+        "detail": "game ended",
+        "decisions": 22,
+        "eventTypes": [
+          "activateAbility",
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "regenerated",
+          "regenerationShield",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tap",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Yavimaya Hollow — {G}, {T}: Regenerate target creature.",
+          "Yavimaya Hollow — {G}, {T}: Regenerate target creature."
+        ],
+        "detail": "game ended",
+        "decisions": 23,
+        "eventTypes": [
+          "activateAbility",
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "regenerationShield",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tap",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
       }
     ],
     "backTranslation": "{G}, {T}: Regenerate target creature.",
@@ -467,7 +794,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
       },
       {
         "ok": true,
@@ -475,7 +803,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Thundering Raiju \u2014 Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
+          "Thundering Raiju — Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
         ],
         "detail": "game ended",
         "decisions": 28,
@@ -501,7 +829,86 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": true
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Thundering Raiju — Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of modified creatures you control other than this creature."
+        ],
+        "detail": "game ended",
+        "decisions": 23,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "triggerOnStack",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 19,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
       }
     ],
     "backTranslation": "Whenever this attacks, put a +1/+1 counter on target creature you control.\nWhenever this attacks, each opponent is dealt damage equal to the number of other creatures you control that have a counter on them, are enchanted by an Aura you control, or are equipped.",
@@ -556,7 +963,7 @@
         "abilityResolved": true,
         "resolved": [
           "Goblin Chainwhirler",
-          "Goblin Chainwhirler \u2014 When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
+          "Goblin Chainwhirler — When this creature enters, it deals 1 damage to each opponent and each creature and planeswalker they control."
         ],
         "detail": "game ended",
         "decisions": 9,
@@ -584,7 +991,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": true
       },
       {
         "ok": true,
@@ -612,7 +1020,83 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 24,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 21,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
       }
     ],
     "backTranslation": "When this enters, each opponent is dealt 1 damage.\nWhen this enters, 1 damage is dealt to each creature and each planeswalker that opponents control.",
@@ -698,7 +1182,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
       },
       {
         "ok": true,
@@ -727,7 +1212,85 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": true
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 20,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCeased",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 20,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
       }
     ],
     "backTranslation": "{T}: Add {C} for each Locus permanent on the battlefield, regardless of controller.",
@@ -844,7 +1407,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
       },
       {
         "ok": true,
@@ -872,7 +1436,82 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 21,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 20,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
       }
     ],
     "backTranslation": "Whenever a creature you control that entered this turn deals combat damage to a player, draw a card.",
@@ -923,7 +1562,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
       },
       {
         "ok": true,
@@ -952,7 +1592,103 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Charmbreaker Devils — Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.",
+          "Charmbreaker Devils — Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.",
+          "Charmbreaker Devils — Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.",
+          "Charmbreaker Devils — Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.",
+          "Charmbreaker Devils — Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.",
+          "Charmbreaker Devils — Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn."
+        ],
+        "detail": "game ended",
+        "decisions": 23,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "pump",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "triggerOnStack",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Charmbreaker Devils — Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.",
+          "Charmbreaker Devils — At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand.",
+          "Charmbreaker Devils — Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.",
+          "Charmbreaker Devils — Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.",
+          "Charmbreaker Devils — Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn.",
+          "Charmbreaker Devils — Whenever you cast an instant or sorcery spell, this creature gets +4/+0 until end of turn."
+        ],
+        "detail": "game ended",
+        "decisions": 38,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "graveyardToHand",
+          "phaseBegin",
+          "playLand",
+          "pump",
+          "randomTarget",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "triggerOnStack",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
       }
     ],
     "backTranslation": "At the beginning of your upkeep, a random instant or sorcery card in your graveyard becomes the target of this ability, chosen at random as the ability is put on the stack. Put that card into your hand.",
@@ -981,7 +1717,7 @@
         "abilityResolved": true,
         "resolved": [
           "Treeguard Duo",
-          "Treeguard Duo \u2014 When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
+          "Treeguard Duo — When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control."
         ],
         "detail": "game ended",
         "decisions": 27,
@@ -1010,7 +1746,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": true
       },
       {
         "ok": true,
@@ -1038,7 +1775,84 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 22,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 20,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCeased",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
       }
     ],
     "backTranslation": "When this enters, target creature you control gains vigilance until end of turn and gets +X/+X until end of turn, where X is the number of creatures you control.",
@@ -1117,7 +1931,7 @@
         "abilityResolved": true,
         "resolved": [
           "Diary of Dreams",
-          "Diary of Dreams \u2014 {5}, {T}: Draw a card"
+          "Diary of Dreams — {5}, {T}: Draw a card"
         ],
         "detail": "game ended",
         "decisions": 29,
@@ -1145,7 +1959,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": true
       },
       {
         "ok": true,
@@ -1153,7 +1968,7 @@
         "exercised": true,
         "abilityResolved": true,
         "resolved": [
-          "Diary of Dreams \u2014 {5}, {T}: Draw a card"
+          "Diary of Dreams — {5}, {T}: Draw a card"
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -1179,7 +1994,100 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": true
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Diary of Dreams — Whenever you cast an instant or sorcery spell, put a page counter on this artifact.",
+          "Diary of Dreams — {5}, {T}: Draw a card",
+          "Diary of Dreams — Whenever you cast an instant or sorcery spell, put a page counter on this artifact.",
+          "Diary of Dreams — Whenever you cast an instant or sorcery spell, put a page counter on this artifact.",
+          "Diary of Dreams — Whenever you cast an instant or sorcery spell, put a page counter on this artifact."
+        ],
+        "detail": "game ended",
+        "decisions": 18,
+        "eventTypes": [
+          "activateAbility",
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tap",
+          "tapForMana",
+          "triggerOnStack",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Diary of Dreams — Whenever you cast an instant or sorcery spell, put a page counter on this artifact.",
+          "Diary of Dreams — {5}, {T}: Draw a card",
+          "Diary of Dreams — {5}, {T}: Draw a card",
+          "Diary of Dreams — Whenever you cast an instant or sorcery spell, put a page counter on this artifact.",
+          "Diary of Dreams — Whenever you cast an instant or sorcery spell, put a page counter on this artifact.",
+          "Diary of Dreams — Whenever you cast an instant or sorcery spell, put a page counter on this artifact.",
+          "Diary of Dreams — Whenever you cast an instant or sorcery spell, put a page counter on this artifact."
+        ],
+        "detail": "game ended",
+        "decisions": 21,
+        "eventTypes": [
+          "activateAbility",
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tap",
+          "tapForMana",
+          "tokenCreated",
+          "triggerOnStack",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
       }
     ],
     "backTranslation": "{5}, {T}: Draw a card.\nThe cost to activate the ability above is reduced by an amount equal to the number of page counters on this.",
@@ -1238,7 +2146,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": true
       },
       {
         "ok": true,
@@ -1267,7 +2176,86 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 21,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaAuraDies",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 20,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaAuraDies",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
       }
     ],
     "backTranslation": "Target land you control that has the supertype Snow.\nThis Aura has no effects.",
@@ -1335,6 +2323,84 @@
           "untap",
           "zoneChange"
         ]
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Hard-Hitting Question"
+        ],
+        "detail": "game ended",
+        "decisions": 22,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ]
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Hard-Hitting Question"
+        ],
+        "detail": "game ended",
+        "decisions": 22,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ]
       }
     ],
     "backTranslation": "Target creature you control and target permanent an opponent controls that is a creature or planeswalker.\nTarget creature you control deals damage equal to its power to target permanent an opponent controls that is a creature or planeswalker.",
@@ -1386,7 +2452,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
       },
       {
         "ok": true,
@@ -1414,7 +2481,85 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 22,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCeased",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 22,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
       }
     ],
     "backTranslation": "Each other creature you control that is enchanted by an Aura you control gets +4/+4 and has flying.",
@@ -1467,7 +2612,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
       },
       {
         "ok": true,
@@ -1495,7 +2641,84 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 20,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": false,
+        "abilityResolved": false,
+        "resolved": [],
+        "detail": "game ended",
+        "decisions": 21,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "triggerDeclined",
+          "triggerOnStack",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
       }
     ],
     "backTranslation": "At the beginning of your upkeep, you may add {C}{C}. Spend this mana only to activate abilities.",
@@ -1546,6 +2769,87 @@
           "startingPlayer",
           "stepBegin",
           "tapForMana",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ]
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Pulse of Murasa"
+        ],
+        "detail": "game ended",
+        "decisions": 20,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "graveyardToHand",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ]
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Pulse of Murasa"
+        ],
+        "detail": "game ended",
+        "decisions": 21,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "graveyardToHand",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCeased",
+          "tokenCreated",
           "turnBegin",
           "turnEnd",
           "untap",
@@ -1610,6 +2914,83 @@
           "startingPlayer",
           "stepBegin",
           "tapForMana",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ]
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Horrific Assault"
+        ],
+        "detail": "game ended",
+        "decisions": 19,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ]
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Horrific Assault"
+        ],
+        "detail": "game ended",
+        "decisions": 22,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
           "turnBegin",
           "turnEnd",
           "untap",
@@ -1692,7 +3073,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
       },
       {
         "ok": true,
@@ -1721,7 +3103,91 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Horobi, Death's Wail — Whenever a creature becomes the target of a spell or ability, destroy that creature.",
+          "Horobi, Death's Wail — Whenever a creature becomes the target of a spell or ability, destroy that creature."
+        ],
+        "detail": "game ended",
+        "decisions": 18,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "fizzle",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "triggerOnStack",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Horobi, Death's Wail — Whenever a creature becomes the target of a spell or ability, destroy that creature."
+        ],
+        "detail": "game ended",
+        "decisions": 20,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "fizzle",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "triggerOnStack",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
       }
     ],
     "backTranslation": "Whenever a creature becomes targeted, destroy that creature. This ability doesn't target.",
@@ -1761,8 +3227,8 @@
         "abilityResolved": true,
         "resolved": [
           "Wurmwall Sweeper",
-          "Wurmwall Sweeper \u2014 When this Spacecraft enters, surveil 2.",
-          "Wurmwall Sweeper \u2014 Station"
+          "Wurmwall Sweeper — When this Spacecraft enters, surveil 2.",
+          "Wurmwall Sweeper — Station"
         ],
         "detail": "game ended",
         "decisions": 26,
@@ -1791,7 +3257,8 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": true
       },
       {
         "ok": true,
@@ -1820,7 +3287,93 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Wurmwall Sweeper — Station",
+          "Wurmwall Sweeper — Station"
+        ],
+        "detail": "game ended",
+        "decisions": 27,
+        "eventTypes": [
+          "activateAbility",
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tap",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": true,
+        "abilityResolved": true,
+        "resolved": [
+          "Wurmwall Sweeper — Station",
+          "Wurmwall Sweeper — Station"
+        ],
+        "detail": "game ended",
+        "decisions": 25,
+        "eventTypes": [
+          "activateAbility",
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "lifeGain",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tap",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": false
       }
     ],
     "backTranslation": "When this enters, surveil 2.",
@@ -1879,7 +3432,85 @@
           "turnEnd",
           "untap",
           "zoneChange"
-        ]
+        ],
+        "changedGame": false
+      },
+      {
+        "ok": true,
+        "scenario": "busy-board",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Descend upon the Sinful"
+        ],
+        "detail": "game ended",
+        "decisions": 15,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "decision",
+          "draw",
+          "fizzle",
+          "gameOver",
+          "gameStart",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
+      },
+      {
+        "ok": true,
+        "scenario": "busy-own-turn",
+        "exercised": true,
+        "abilityResolved": false,
+        "resolved": [
+          "Descend upon the Sinful"
+        ],
+        "detail": "game ended",
+        "decisions": 16,
+        "eventTypes": [
+          "attack",
+          "attackersDeclared",
+          "block",
+          "castSpell",
+          "combatDamageStep",
+          "counters",
+          "damage",
+          "damageAssignmentDivision",
+          "decision",
+          "destroy",
+          "draw",
+          "gameOver",
+          "gameStart",
+          "phaseBegin",
+          "playLand",
+          "resolved",
+          "sbaCreatureDies",
+          "startingPlayer",
+          "stepBegin",
+          "tapForMana",
+          "tokenCreated",
+          "turnBegin",
+          "turnEnd",
+          "untap",
+          "zoneChange"
+        ],
+        "changedGame": true
       }
     ],
     "backTranslation": "Exile each creature.\nIf there are four or more card types among cards in your graveyard, create a 4/4 white Angel creature token with flying.",

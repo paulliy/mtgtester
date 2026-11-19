@@ -1,0 +1,2 @@
+{T}: Create a Treasure token. Activate only if a creature died this turn.
+A Treasure token is a colorless Treasure artifact with "{T}, Sacrifice this artifact: Add one mana of any color."

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The color is chosen by the spell's controller as it resolves, and the schema has no resolution-time color choice that a returnToHandEach selector can read (chosenColor reads only an enters-time chosenOption)."}

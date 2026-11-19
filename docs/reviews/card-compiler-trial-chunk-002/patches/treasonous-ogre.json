@@ -1,0 +1,36 @@
+{
+  "name": "Treasonous Ogre",
+  "oracleId": "826d4279-1576-4898-a1c2-26fd547fb0d0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Dethrone"
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          },
+          "eventCondition": {
+            "kind": "attackingPlayerHasMoreLife"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Dethrone"
+      }
+    ]
+  }
+}

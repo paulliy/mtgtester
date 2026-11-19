@@ -1,0 +1,316 @@
+[
+  {
+    "feature": "Selector predicates in targets and statics",
+    "description": "Add selector predicates for keywords in statics, power-at-most outside events, same-name and shared-type tests, power or mana value compared with another object, attacking-you-only, multicolored, and owner-based selectors.",
+    "cards": [
+      "Assemble the Players",
+      "Cartographer's Hawk",
+      "Dream Fracture",
+      "Everything Comes to Dust",
+      "Fiend Artisan",
+      "Hammerhead Tyrant",
+      "Jackdaw Savior",
+      "Light-Paws, Emperor's Voice",
+      "Mage Slayer",
+      "Mana Echoes",
+      "Prishe's Wanderings",
+      "Ravnica at War",
+      "Turnabout",
+      "Vexilus Praetor",
+      "Viridian Revel",
+      "Vizkopa Guildmage",
+      "Volcanic Vision",
+      "Within Range",
+      "Zo-Zu the Punisher"
+    ]
+  },
+  {
+    "feature": "Amounts produced by the previous effect or event",
+    "description": "Add Values and arithmetic for life gained or lost, damage, excess damage, counters placed, creatures destroyed or exiled by the preceding effect, mana spent, difference, half and power-of-two amounts, and totals such as toughness.",
+    "cards": [
+      "Bottle-Cap Blast",
+      "Coin of Mastery",
+      "Crypt Incursion",
+      "Cryptcaller Chariot",
+      "Demonic Junker",
+      "Elder Brain",
+      "Jaws of Defeat",
+      "Kaya's Wrath",
+      "Knollspine Dragon",
+      "Light of Promise",
+      "Mathemagics",
+      "Neheb, Dreadhorde Champion",
+      "Phyrexian Rebirth",
+      "Search for Glory",
+      "Swashbuckler Extraordinaire",
+      "Tavern Brawler"
+    ]
+  },
+  {
+    "feature": "Token copy color, type and cost overrides",
+    "description": "Let become-copy and enters-as-copy keep an ability or add creature subtypes; let token copies gain colors and creature subtypes, be created per creature or under another player's control, enter attacking, be exiled at end step, or carry crew-power, haste and can't-block riders; token creation ops lack the same riders.",
+    "cards": [
+      "Bone-Cairn Butcher",
+      "Bramble Sovereign",
+      "Cleaver Skaab",
+      "Firion, Wild Rose Warrior",
+      "Malleable Impostor",
+      "Mirrormind Crown",
+      "Naga Fleshcrafter",
+      "Nanogene Conversion",
+      "Nightmare Shepherd",
+      "Preston, the Vanisher",
+      "Stormsplitter",
+      "Ultron, Artificial Malevolence",
+      "Urza, Prince of Kroog"
+    ]
+  },
+  {
+    "feature": "Conditional rule statics and permissions",
+    "description": "Add rule statics for flash grants, spending mana as any type, untap limits, can't-be-blocked exceptions, combat assignment, hand size, life-gain prevention and spell-prohibition scopes.",
+    "cards": [
+      "Indomitable Might",
+      "Labyrinth of Skophos",
+      "Legion Loyalist",
+      "Nerd Rage",
+      "Permission Denied",
+      "Restless Spire",
+      "Scavenged Brawler",
+      "Serpent of Yawning Depths",
+      "Shifting Sliver",
+      "Tidal Barracuda",
+      "Vizier of the Menagerie",
+      "Walking Bulwark"
+    ]
+  },
+  {
+    "feature": "Modern keyword actions (venture, ring tempts, suspect, crime)",
+    "description": "Add effects for the Ring tempting you, earthbend, rad counters, waterbend payments, join forces, villainous choices, incubate and stun counters, plus die rolls and repeated coin flips.",
+    "cards": [
+      "Birthday Escape",
+      "Clown Car",
+      "Collective Voyage",
+      "Earthbending Lesson",
+      "Feral Ghoul",
+      "Haru, Hidden Talent",
+      "Luck Bobblehead",
+      "Mirror March",
+      "Sam's Desperate Rescue",
+      "Vexing Radgull",
+      "Waterbending Lesson",
+      "Wilson, Refined Grizzly"
+    ]
+  },
+  {
+    "feature": "Turn-history conditions",
+    "description": "Add conditions for what happened this turn (attacked, gained or lost life, combat damage by a source type), cast-zone and graveyard-size checks, and player-versus-opponent life, hand and land comparisons.",
+    "cards": [
+      "Beza, the Bounding Spring",
+      "Bloodsoaked Champion",
+      "Children of Korlis",
+      "Eagle Vision",
+      "Fevered Visions",
+      "Indulging Patrician",
+      "Moseo, Vein's New Dean",
+      "Murmuration",
+      "Rug of Smothering",
+      "Shadow of Mortality",
+      "Sygg, River Cutthroat",
+      "Tectonic Edge"
+    ]
+  },
+  {
+    "feature": "Put onto battlefield tapped and attacking or attached",
+    "description": "Add entry options for returned, searched and put-onto-battlefield cards (tapped, attacking, attached, under owner, per player) and library search with split or chosen destinations.",
+    "cards": [
+      "Burning-Rune Demon",
+      "Composer of Spring",
+      "Dina's Guidance",
+      "Helping Hand",
+      "Open the Vaults",
+      "Port of Karfell",
+      "Realms Uncharted",
+      "Scroll of Fate",
+      "Tower Winder",
+      "Unfinished Business",
+      "Unwanted Remake"
+    ]
+  },
+  {
+    "feature": "Trigger events and filters that do not exist yet",
+    "description": "Add trigger events for scry or surveil, cycling, becoming untapped, an opponent searching, expending mana, a creature entering or dying with extra context, and source, subject and payload filters on cast, damage and attack triggers.",
+    "cards": [
+      "Agonasaur Rex",
+      "Bonus Round",
+      "Desolation Twin",
+      "Dissipation Field",
+      "Hordewing Skaab",
+      "Karmic Justice",
+      "Matoya, Archon Elder",
+      "Ob Nixilis, Unshackled",
+      "Rite of Harmony",
+      "Sidisi, Brood Tyrant",
+      "Well Rested"
+    ]
+  },
+  {
+    "feature": "Temporary or permanent characteristic-setting effects",
+    "description": "Add effects that add creature subtypes, types or colors, or set base characteristics, for a duration or permanently.",
+    "cards": [
+      "Cerulean Wisps",
+      "Clavileño, First of the Blessed",
+      "Displaced Dinosaurs",
+      "Encroaching Mycosynth",
+      "Enter the Avatar State",
+      "Katara, Water Tribe's Hope",
+      "Nogi, Draco-Zealot",
+      "Peacewalker Colossus",
+      "Polymorphist's Jest"
+    ]
+  },
+  {
+    "feature": "Ability cost forms",
+    "description": "Add cost components (return a permanent, mill, tap or exile others, pay X life, discard filters, choice between components, once-per-turn mana abilities) and conditional spell cost reductions.",
+    "cards": [
+      "Braid of Fire",
+      "Deranged Assistant",
+      "Foil",
+      "Mechtitan Core",
+      "Nazgûl Battle-Mace",
+      "Radagast of Rhosgobel",
+      "Retraction Helix",
+      "Urban Retreat"
+    ]
+  },
+  {
+    "feature": "Per-player scope and chooser on effects",
+    "description": "Add player-scope and chooser fields so shuffle, sacrifice, draw, exile and create ops can target each player, a chosen player or an opponent, or act for the controller of a countered spell.",
+    "cards": [
+      "Compulsive Research",
+      "Consuming Tide",
+      "Fractured Identity",
+      "Guff Rewrites History",
+      "Heartwood Storyteller",
+      "Indulgent Tormentor",
+      "Snort",
+      "Stolen Strategy"
+    ]
+  },
+  {
+    "feature": "Variable-count target slots and chosen-count value",
+    "description": "Add any-number, per-opponent and chosen-count targets and picks, counter removal or movement of any kind or any number, and unbounded reveal picks.",
+    "cards": [
+      "Blatant Thievery",
+      "Crucible of the Spirit Dragon",
+      "Goblin Ringleader",
+      "Mage-Ring Network",
+      "Mulch",
+      "Outrageous Robbery",
+      "Slippery Bogbonder",
+      "V.A.T.S."
+    ]
+  },
+  {
+    "feature": "Damage prevention and replacement variants",
+    "description": "Add partial or continuous damage prevention, redirection and increase, and replacement effects for life gain, drawing and mana loss.",
+    "cards": [
+      "Alms Collector",
+      "Angel of Suffering",
+      "Boon Reflection",
+      "Horizon Stone",
+      "Invoke Calamity",
+      "Mechanized Warfare",
+      "Moonmist"
+    ]
+  },
+  {
+    "feature": "Missing keyword mechanics (delve, echo, myriad, decayed, splice)",
+    "description": "Add keywords the schema lacks or cannot grant: cipher, myriad, mobilize, undying, persist, exalted, landwalk, plain partner, vanishing, sunburst, forage and cumulative upkeep.",
+    "cards": [
+      "Cauldron of Souls",
+      "Haunted One",
+      "Pentad Prism",
+      "Rammas Echor, Ancient Shield",
+      "Undying Evil",
+      "Wildsear, Scouring Maw",
+      "Zhulodok, Void Gorger"
+    ]
+  },
+  {
+    "feature": "Alternative-cost keyword mechanics",
+    "description": "Model suspend, miracle, warp, impending, madness, freerunning, prowl, mayhem, buyback and encore as alternative casts with exile, time-counter and recast riders.",
+    "cards": [
+      "Bygone Colossus",
+      "Devastation Tide",
+      "Haze of Rage",
+      "Lotus Bloom",
+      "Mox Tantalite",
+      "Restart Sequence"
+    ]
+  },
+  {
+    "feature": "Reveal/exile/mill-until loops with leftovers handling",
+    "description": "Add reveal-until, exile-until and mill-then-pick loops that route the found card and the leftover cards to different places.",
+    "cards": [
+      "Barrowgoyf",
+      "Chaos Wand",
+      "Descendants' Fury",
+      "Sarinth Steelseeker",
+      "Seismic Sense",
+      "Selvala's Stampede"
+    ]
+  },
+  {
+    "feature": "Reference to the card moved by the previous effect",
+    "description": "Let follow-up effects, reflexive triggers and delayed returns refer to the card or permanent the previous effect or a dies trigger moved, sacrificed or exiled, and let control durations survive control changes.",
+    "cards": ["Apprentice Necromancer", "Flood of Tears", "Kitesail Larcenist", "Undead Butler"]
+  },
+  {
+    "feature": "Sacrificed cost object's power/mana value",
+    "description": "Add Values and references that read the power, toughness, mana value, types or identity of an object sacrificed or exiled as a cost.",
+    "cards": ["Birthing Ritual", "Entrapment Maneuver", "Pyre of Heroes", "Riveteers Ascendancy"]
+  },
+  {
+    "feature": "Win/lose-game effects and static",
+    "description": "Add effects that make a player win or lose the game and statics or replacements that stop losing or winning.",
+    "cards": ["Call the Spirit Dragons", "Last Chance", "Liliana's Contract", "The Golden Throne"]
+  },
+  {
+    "feature": "Announced X where a fixed number is required",
+    "description": "Let effects and targets take the announced X (counts, copies, repeats, search bounds) instead of a fixed number.",
+    "cards": ["Back in Town", "Dance with Calamity", "Thrilling Discovery"]
+  },
+  {
+    "feature": "Counterspell variants",
+    "description": "Let counter effects put the spell into its owner's hand or library, compare against a revealed card, charge dynamic amounts, and act on the countered spell's controller or mana value.",
+    "cards": ["Diffusion Sliver", "Remand", "Spell Stutter"]
+  },
+  {
+    "feature": "Extra turns and phases for other players",
+    "description": "Add extra turns, combats and beginning phases for other players, controlling another player's turn, and delayed triggers on the next attack.",
+    "cards": ["Karn's Temporal Sundering", "Mindslaver", "Nahiri's Lithoforming"]
+  },
+  {
+    "feature": "Cast a card from other zones with a rider",
+    "description": "Add free or alternative casting of cards from the command zone, graveyards, opponents' graveyards and exile, with haste, once-per-turn, copy and mana-type riders.",
+    "cards": ["Memory Plunder", "Surge to Victory"]
+  },
+  {
+    "feature": "Durations until end of your next turn",
+    "description": "Allow exile-and-play and restriction effects to last until the end of your next turn or a later end step instead of only this turn.",
+    "cards": ["Jade Orb of Dragonkind", "Rundvelt Hordemaster"]
+  },
+  {
+    "feature": "one-off",
+    "description": "Lines needing a bespoke mechanic found on a single card.",
+    "cards": [
+      "Condemn",
+      "Mind Flayer",
+      "Necrotic Ooze",
+      "Orcrist, Goblin-cleaver",
+      "Peek",
+      "Stifle",
+      "Sunken Palace"
+    ]
+  }
+]

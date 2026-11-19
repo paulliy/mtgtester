@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A puts exactly one of the three looked-at cards into hand in the normal case; Text B says \"any of those cards\" with no count, which allows choosing any number of them (including more than one)."]}

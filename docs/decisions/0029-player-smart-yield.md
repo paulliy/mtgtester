@@ -1,6 +1,6 @@
 # ADR 0029: Player smart yield
 
-Status: Accepted
+Status: Accepted (2026-10-06)
 
 Date: 2026-10-06
 

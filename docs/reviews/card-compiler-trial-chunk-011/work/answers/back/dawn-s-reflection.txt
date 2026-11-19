@@ -1,0 +1,1 @@
+Whenever enchanted creature is tapped for mana, its controller adds two additional mana, each of any one color.

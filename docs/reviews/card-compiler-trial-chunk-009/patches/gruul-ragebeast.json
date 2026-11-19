@@ -1,0 +1,61 @@
+{
+  "name": "Gruul Ragebeast",
+  "oracleId": "e5fa93a3-0b2b-4477-ad3f-4fc1b325ca19",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature or another creature you control enters, that creature fights target creature an opponent controls."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "fight",
+            "first": "triggerObject",
+            "second": 0
+          }
+        ],
+        "description": "Whenever this creature or another creature you control enters, that creature fights target creature an opponent controls."
+      }
+    ]
+  }
+}

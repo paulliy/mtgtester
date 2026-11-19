@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no duration for a targeted creature to skip its controller's next untap steps (the only untap-skip is the permanent-level doesntUntapDuringUntapStep flag, which would also stop the Dragon Turtle itself and cannot be scoped to one turn-cycle)."}

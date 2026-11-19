@@ -1,0 +1,36 @@
+{
+  "name": "Rile",
+  "oracleId": "0c4e0e46-77f1-4ff6-afbc-1a67feceedfb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals 1 damage to target creature you control. That creature gains trample until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamage",
+          "target": 0,
+          "amount": {
+            "kind": "const",
+            "n": 1
+          }
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "trample"
+        }
+      ],
+      "description": "Rile deals 1 damage to target creature you control. That creature gains trample until end of turn."
+    }
+  }
+}

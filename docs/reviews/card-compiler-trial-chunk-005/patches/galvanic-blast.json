@@ -1,0 +1,55 @@
+{
+  "name": "Galvanic Blast",
+  "oracleId": "d211c03a-03cd-40c5-b7c8-ada352fd01a6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals 4 damage instead if you control three or more artifacts."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "anyTarget"
+        }
+      ],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "type",
+              "value": "Artifact"
+            },
+            "scope": "you",
+            "cmp": ">=",
+            "n": 3
+          },
+          "then": [
+            {
+              "op": "dealDamage",
+              "target": 0,
+              "amount": {
+                "kind": "const",
+                "n": 4
+              }
+            }
+          ],
+          "else": [
+            {
+              "op": "dealDamage",
+              "target": 0,
+              "amount": {
+                "kind": "const",
+                "n": 2
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Galvanic Blast deals 2 damage to any target. Metalcraft — Galvanic Blast deals 4 damage instead if you control three or more artifacts."
+    }
+  }
+}

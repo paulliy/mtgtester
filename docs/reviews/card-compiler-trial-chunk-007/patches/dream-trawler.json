@@ -1,0 +1,38 @@
+{
+  "name": "Dream Trawler",
+  "oracleId": "661b2159-4040-4a44-b182-46085416ebd9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Discard a card: ~ gains hexproof until end of turn. Tap it."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "discardCard",
+            "count": 1
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": "source",
+              "keyword": "hexproof"
+            },
+            {
+              "op": "tapTarget",
+              "target": "source"
+            }
+          ],
+          "description": "Discard a card: This creature gains hexproof until end of turn. Tap it."
+        }
+      }
+    ]
+  }
+}

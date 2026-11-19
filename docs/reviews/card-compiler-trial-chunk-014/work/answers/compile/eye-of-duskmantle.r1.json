@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no way to track cards 'you've surveilled this turn' as a play/cast permission over graveyard cards, so the permission and the pay-life-equal-to-mana-value casting are not expressible."}

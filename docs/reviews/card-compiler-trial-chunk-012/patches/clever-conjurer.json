@@ -1,0 +1,43 @@
+{
+  "name": "Clever Conjurer",
+  "oracleId": "628e59e2-3665-40dd-ba4f-11ab5824de22",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Mage Hand — {T}: Untap target permanent not named ~. Activate only as a sorcery."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "filter": {
+                "kind": "not",
+                "of": {
+                  "kind": "name",
+                  "value": "Clever Conjurer"
+                }
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "untapTarget",
+              "target": 0
+            }
+          ],
+          "description": "Mage Hand — {T}: Untap target permanent not named Clever Conjurer. Activate only as a sorcery."
+        }
+      }
+    ]
+  }
+}

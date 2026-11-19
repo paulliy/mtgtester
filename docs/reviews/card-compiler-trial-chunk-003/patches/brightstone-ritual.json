@@ -1,0 +1,32 @@
+{
+  "name": "Brightstone Ritual",
+  "oracleId": "08e90e85-4103-4acb-a8a7-e1329b460aa7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Add {R} for each Goblin on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "addMana",
+          "amount": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "subtype",
+              "value": "Goblin"
+            },
+            "scope": "all"
+          },
+          "colors": [
+            "R"
+          ]
+        }
+      ],
+      "description": "Add {R} for each Goblin on the battlefield."
+    }
+  }
+}

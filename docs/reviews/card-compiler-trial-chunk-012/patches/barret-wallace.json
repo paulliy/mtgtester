@@ -1,0 +1,52 @@
+{
+  "name": "Barret Wallace",
+  "oracleId": "913672bc-cc88-4964-a331-7dbce40f2bda",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ attacks, it deals damage equal to the number of equipped creatures you control to defending player."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          },
+          "defendingPlayerIsEventPlayer": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "isEquipped"
+                  }
+                ]
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "Whenever Barret Wallace attacks, it deals damage equal to the number of equipped creatures you control to defending player."
+      }
+    ]
+  }
+}

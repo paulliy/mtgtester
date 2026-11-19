@@ -1,0 +1,54 @@
+{
+  "name": "Ragged Playmate",
+  "oracleId": "d0732ebf-91ad-4e3c-a09a-f410d20587fc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}, {T}: Target creature with power 2 or less can't be blocked this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "filter": {
+                "kind": "powerAtMost",
+                "n": 2
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "cantBeBlockedUntilEot",
+              "target": 0
+            }
+          ],
+          "description": "{1}, {T}: Target creature with power 2 or less can't be blocked this turn."
+        }
+      }
+    ]
+  }
+}

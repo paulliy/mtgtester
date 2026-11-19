@@ -1,0 +1,75 @@
+{
+  "name": "Daemogoth Titan",
+  "oracleId": "a52e73bb-47cb-4912-9b81-4ae40641eabb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature attacks or blocks, sacrifice a creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "then": []
+          }
+        ],
+        "description": "Whenever this creature attacks or blocks, sacrifice a creature."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "blocks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeOneThen",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            },
+            "then": []
+          }
+        ],
+        "description": "Whenever this creature attacks or blocks, sacrifice a creature."
+      }
+    ]
+  }
+}
