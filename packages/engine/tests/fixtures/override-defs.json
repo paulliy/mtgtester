@@ -2417,73 +2417,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "0826cf7d-7ccc-459b-a92f-29dc169628f8",
-    "name": "Muddle the Mixture",
-    "handledLines": [
-      "Transmute {1}{U}{U}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 2
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 2
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 2,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "08377424-619e-48ae-bc3c-fb199cd77cf9",
     "name": "Llanowar Loamspeaker",
     "handledLines": [
@@ -11407,22 +11340,6 @@
             "player": "you",
             "when": "upkeep"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "222fd9fc-7af4-4269-bbb9-cd7b8ac029bd",
-    "name": "Troll of Khazad-dûm",
-    "handledLines": [
-      "~ can't be blocked except by three or more creatures."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "minBlockers",
-          "minimum": 3
         }
       ]
     },
@@ -33050,34 +32967,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "688a559d-249f-4d03-98e6-581843e7ddc3",
-    "name": "Riders of Rohan",
-    "handledLines": [
-      "Dash {4}{R}{W}"
-    ],
-    "def": {
-      "alternativeCasts": [
-        {
-          "dashed": true,
-          "description": "Dash {4}{R}{W}",
-          "kind": "nonMana",
-          "manaCost": {
-            "colored": {
-              "B": 0,
-              "G": 0,
-              "R": 1,
-              "U": 0,
-              "W": 1
-            },
-            "colorless": 0,
-            "generic": 4
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "698e79ec-c2bc-4973-a095-f3c57b50e39c",
     "name": "Mutilate",
     "handledLines": [
@@ -34735,73 +34624,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "6ee51134-c4ad-4101-8ce2-23dde9359cd4",
-    "name": "Drift of Phantasms",
-    "handledLines": [
-      "Transmute {1}{U}{U}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 3
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 3
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 2,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "6ef46fd7-82db-45d3-b02e-7312384577f3",
@@ -38591,34 +38413,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "7c340a39-4ee0-4ba1-bb66-6674f8020fda",
-    "name": "Gratuitous Violence",
-    "handledLines": [
-      "If a creature you control would deal damage to a permanent or player, it deals double that damage instead."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "damageDoubled",
-          "sourceFilter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "you"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "7d079c78-b2a9-444f-ab54-c61c041baa6d",
     "name": "Selfless Squire",
     "handledLines": [
@@ -38725,73 +38519,6 @@
             }
           ],
           "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "7de04284-dcaa-4b63-a734-fcfe2698f83c",
-    "name": "Dizzy Spell",
-    "handledLines": [
-      "Transmute {1}{U}{U}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 1
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 1
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 2,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
         }
       ]
     },
@@ -44565,22 +44292,6 @@
             },
             "when": "attacks"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "91d01119-9b3e-4629-8cf0-bbca2c19a7cc",
-    "name": "Rampaging Ceratops",
-    "handledLines": [
-      "~ can't be blocked except by three or more creatures."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "minBlockers",
-          "minimum": 3
         }
       ]
     },
@@ -56018,34 +55729,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "b3f7c4ac-b788-4307-9bc3-d99ce310e07c",
-    "name": "Calamity Bearer",
-    "handledLines": [
-      "If a Giant source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "damageDoubled",
-          "sourceFilter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "subtype",
-                "value": "Giant"
-              },
-              {
-                "kind": "controller",
-                "who": "you"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "b3f9da94-c822-49b8-a1fc-be82189206af",
     "name": "Three Dreams",
     "handledLines": [
@@ -59106,38 +58789,6 @@
               }
             },
             "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "bd655e8b-f192-4635-9e23-357b6f89ef8f",
-    "name": "Uncivil Unrest",
-    "handledLines": [
-      "If a creature you control with a +1/+1 counter on it would deal damage to a permanent or player, it deals double that damage instead."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "damageDoubled",
-          "sourceFilter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "you"
-              },
-              {
-                "counter": "+1/+1",
-                "kind": "hasCounter"
-              }
-            ]
           }
         }
       ]
@@ -65980,73 +65631,6 @@
             }
           ],
           "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "d215127b-5f1d-4d3c-935b-c228c9c7f874",
-    "name": "Dimir Infiltrator",
-    "handledLines": [
-      "Transmute {1}{U}{B}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 2
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 2
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 1,
-                  "G": 0,
-                  "R": 0,
-                  "U": 1,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
         }
       ]
     },
@@ -73894,77 +73478,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "e7286688-ffbe-4d25-ad55-27990f005368",
-    "name": "Sliver Hive",
-    "handledLines": [
-      "{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver.",
-            "effects": [
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "createToken",
-                "spec": {
-                  "colors": [],
-                  "name": "Sliver",
-                  "power": 1,
-                  "subtypes": [
-                    "Sliver"
-                  ],
-                  "toughness": 1,
-                  "typeLine": "Token Creature — Sliver",
-                  "types": [
-                    "Creature"
-                  ]
-                }
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Sliver"
-            }
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 5
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "e74c4001-d958-4d2b-b57d-c3601f01580c",
     "name": "Battle Cry Goblin",
     "handledLines": [
@@ -78177,73 +77690,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "f33ce38a-34ec-4b65-a0fc-160484a02007",
-    "name": "Bonders' Enclave",
-    "handledLines": [
-      "{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater.",
-            "effects": [
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "draw"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "powerAtLeast",
-                  "n": 4
-                },
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                }
-              ]
-            }
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 3
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "f36d1d8b-8303-44a9-ab56-531931641ea2",
     "name": "Academy Manufactor",
     "handledLines": [
@@ -79460,34 +78906,6 @@
               }
             },
             "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "f6e160c1-b29f-4f3d-ab55-43ffe3ab4acf",
-    "name": "Kolaghan, the Storm's Fury",
-    "handledLines": [
-      "Dash {3}{B}{R}"
-    ],
-    "def": {
-      "alternativeCasts": [
-        {
-          "dashed": true,
-          "description": "Dash {3}{B}{R}",
-          "kind": "nonMana",
-          "manaCost": {
-            "colored": {
-              "B": 1,
-              "G": 0,
-              "R": 1,
-              "U": 0,
-              "W": 0
-            },
-            "colorless": 0,
-            "generic": 3
           }
         }
       ]
@@ -90617,73 +90035,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-bonders-enclave",
-    "name": "Bonders' Enclave",
-    "handledLines": [
-      "{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater.",
-            "effects": [
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "draw"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "powerAtLeast",
-                  "n": 4
-                },
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                }
-              ]
-            }
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 3
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-boomer-scrapper",
     "name": "Boomer Scrapper",
     "handledLines": [
@@ -92821,34 +92172,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-calamity-bearer",
-    "name": "Calamity Bearer",
-    "handledLines": [
-      "If a Giant source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "damageDoubled",
-          "sourceFilter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "subtype",
-                "value": "Giant"
-              },
-              {
-                "kind": "controller",
-                "who": "you"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "oracle-caldera-pyremaw",
@@ -101036,73 +100359,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-dimir-infiltrator",
-    "name": "Dimir Infiltrator",
-    "handledLines": [
-      "Transmute {1}{U}{B}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 2
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 2
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 1,
-                  "G": 0,
-                  "R": 0,
-                  "U": 1,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-dimir-keyrune",
     "name": "Dimir Keyrune",
     "handledLines": [
@@ -101554,73 +100810,6 @@
             "sublayer": "d",
             "toughness": 4
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-dizzy-spell",
-    "name": "Dizzy Spell",
-    "handledLines": [
-      "Transmute {1}{U}{U}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 1
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 1
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 2,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
         }
       ]
     },
@@ -102870,73 +102059,6 @@
             }
           ],
           "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-drift-of-phantasms",
-    "name": "Drift of Phantasms",
-    "handledLines": [
-      "Transmute {1}{U}{U}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 3
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 3
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 2,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
         }
       ]
     },
@@ -113048,34 +112170,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-gratuitous-violence",
-    "name": "Gratuitous Violence",
-    "handledLines": [
-      "If a creature you control would deal damage to a permanent or player, it deals double that damage instead."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "damageDoubled",
-          "sourceFilter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "you"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-grave-pact",
     "name": "Grave Pact",
     "handledLines": [
@@ -122051,34 +121145,6 @@
     }
   },
   {
-    "oracleId": "oracle-kolaghan-the-storm-s-fury",
-    "name": "Kolaghan, the Storm's Fury",
-    "handledLines": [
-      "Dash {3}{B}{R}"
-    ],
-    "def": {
-      "alternativeCasts": [
-        {
-          "dashed": true,
-          "description": "Dash {3}{B}{R}",
-          "kind": "nonMana",
-          "manaCost": {
-            "colored": {
-              "B": 1,
-              "G": 0,
-              "R": 1,
-              "U": 0,
-              "W": 0
-            },
-            "colorless": 0,
-            "generic": 3
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-kor-haven",
     "name": "Kor Haven",
     "handledLines": [
@@ -129676,73 +128742,6 @@
             "caster": "you",
             "when": "castsSpell"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-muddle-the-mixture",
-    "name": "Muddle the Mixture",
-    "handledLines": [
-      "Transmute {1}{U}{U}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 2
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 2
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 2,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
         }
       ]
     },
@@ -138201,22 +137200,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-rampaging-ceratops",
-    "name": "Rampaging Ceratops",
-    "handledLines": [
-      "~ can't be blocked except by three or more creatures."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "minBlockers",
-          "minimum": 3
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-rampant-rejuvenator",
     "name": "Rampant Rejuvenator",
     "handledLines": [
@@ -139913,34 +138896,6 @@
               }
             },
             "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-riders-of-rohan",
-    "name": "Riders of Rohan",
-    "handledLines": [
-      "Dash {4}{R}{W}"
-    ],
-    "def": {
-      "alternativeCasts": [
-        {
-          "dashed": true,
-          "description": "Dash {4}{R}{W}",
-          "kind": "nonMana",
-          "manaCost": {
-            "colored": {
-              "B": 0,
-              "G": 0,
-              "R": 1,
-              "U": 0,
-              "W": 1
-            },
-            "colorless": 0,
-            "generic": 4
           }
         }
       ]
@@ -146385,77 +145340,6 @@
           }
         ]
       }
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-sliver-hive",
-    "name": "Sliver Hive",
-    "handledLines": [
-      "{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver.",
-            "effects": [
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "createToken",
-                "spec": {
-                  "colors": [],
-                  "name": "Sliver",
-                  "power": 1,
-                  "subtypes": [
-                    "Sliver"
-                  ],
-                  "toughness": 1,
-                  "typeLine": "Token Creature — Sliver",
-                  "types": [
-                    "Creature"
-                  ]
-                }
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Sliver"
-            }
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 5
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
     },
     "compose": "append"
   },
@@ -157307,22 +156191,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-troll-of-khazad-d-m",
-    "name": "Troll of Khazad-dûm",
-    "handledLines": [
-      "~ can't be blocked except by three or more creatures."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "minBlockers",
-          "minimum": 3
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-trollbred-guardian",
     "name": "Trollbred Guardian",
     "handledLines": [
@@ -158548,38 +157416,6 @@
             }
           ],
           "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-uncivil-unrest",
-    "name": "Uncivil Unrest",
-    "handledLines": [
-      "If a creature you control with a +1/+1 counter on it would deal damage to a permanent or player, it deals double that damage instead."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "damageDoubled",
-          "sourceFilter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "you"
-              },
-              {
-                "counter": "+1/+1",
-                "kind": "hasCounter"
-              }
-            ]
-          }
         }
       ]
     },

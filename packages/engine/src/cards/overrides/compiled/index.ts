@@ -512,78 +512,6 @@ const BATCH_CHUNK_001: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'f33ce38a-34ec-4b65-a0fc-160484a02007',
-    name: "Bonders' Enclave",
-    handledLines: [
-      '{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater.',
-    ],
-    def: {
-      activatedAbilities: [
-        {
-          costs: [
-            {
-              kind: 'mana',
-              cost: {
-                generic: 3,
-                colored: {
-                  W: 0,
-                  U: 0,
-                  B: 0,
-                  R: 0,
-                  G: 0,
-                },
-                colorless: 0,
-              },
-            },
-            {
-              kind: 'tap',
-            },
-          ],
-          timing: 'any',
-          condition: {
-            kind: 'countPermanents',
-            selector: {
-              kind: 'allOf',
-              of: [
-                {
-                  kind: 'powerAtLeast',
-                  n: 4,
-                },
-                {
-                  kind: 'type',
-                  value: 'Creature',
-                },
-              ],
-            },
-            scope: 'you',
-            cmp: '>=',
-            n: 1,
-          },
-          ability: {
-            kind: 'activated',
-            targets: [],
-            effects: [
-              {
-                op: 'draw',
-                count: {
-                  kind: 'const',
-                  n: 1,
-                },
-              },
-            ],
-            description:
-              '{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater.',
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-001',
-    patchSha256: '9ea565609c0565fcca03627f4bed7132a9bca373961e5c8aa7673363fb9f34c8',
-    behaviorSha256: '66138bf5153d01904ee9f391a01500d90fb1998bb03ddc3ee6a3405b7ff9f42d',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '28fe909b-06e0-424c-9f75-c824a25f5865',
     name: 'Branching Evolution',
     handledLines: [
@@ -2215,76 +2143,6 @@ const BATCH_CHUNK_001: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-001',
     patchSha256: '4e61bb49c88478555c01e1c12fc7b83f73930d03137f44d1fbbd97c888092e79',
     behaviorSha256: '4eeb6b509486c467eeb586e5ea4d10499f7eb6888bb7f9f4d0dea84811ad2c96',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '0826cf7d-7ccc-459b-a92f-29dc169628f8',
-    name: 'Muddle the Mixture',
-    handledLines: ['Transmute {1}{U}{U}'],
-    def: {
-      activatedAbilities: [
-        {
-          costs: [
-            {
-              kind: 'mana',
-              cost: {
-                generic: 1,
-                colored: {
-                  W: 0,
-                  U: 2,
-                  B: 0,
-                  R: 0,
-                  G: 0,
-                },
-                colorless: 0,
-              },
-            },
-            {
-              kind: 'discardSelf',
-            },
-          ],
-          timing: 'sorcery',
-          zone: 'hand',
-          ability: {
-            kind: 'activated',
-            targets: [],
-            effects: [
-              {
-                op: 'searchLibrary',
-                filter: {
-                  kind: 'allOf',
-                  of: [
-                    {
-                      kind: 'manaValueAtMost',
-                      n: 2,
-                    },
-                    {
-                      kind: 'manaValueAtLeast',
-                      n: 2,
-                    },
-                  ],
-                },
-                destinations: [
-                  {
-                    zone: 'hand',
-                  },
-                ],
-                reveal: true,
-              },
-              {
-                op: 'shuffle',
-              },
-            ],
-            description:
-              'Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)',
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-001',
-    patchSha256: '4d72f25a34683fb8740f05d4e11b19e372c96b73ca97580ea0293b78a3a519b3',
-    behaviorSha256: '451e354173b88a14af43d906f8a73c915b1e29030fdb95024362962a862579da',
     acceptedBy: 'main-thread',
   },
   {
@@ -5509,38 +5367,6 @@ const BATCH_CHUNK_002: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '7c340a39-4ee0-4ba1-bb66-6674f8020fda',
-    name: 'Gratuitous Violence',
-    handledLines: [
-      'If a creature you control would deal damage to a permanent or player, it deals double that damage instead.',
-    ],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'damageDoubled',
-          sourceFilter: {
-            kind: 'allOf',
-            of: [
-              {
-                kind: 'type',
-                value: 'Creature',
-              },
-              {
-                kind: 'controller',
-                who: 'you',
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-002',
-    patchSha256: 'cbfea6a3925f22721cf2ccd77fb1d4fee97e278821e161c4ce7156227b639b05',
-    behaviorSha256: '3aea7087945cda8020bee681946940e5b2a49b0e5a86f40080bf5ab2ab3d901d',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'd22ff377-d282-4a28-9dce-96f25913dc96',
     name: 'Grazilaxx, Illithid Scholar',
     handledLines: [
@@ -8660,76 +8486,6 @@ const BATCH_CHUNK_003: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '6ee51134-c4ad-4101-8ce2-23dde9359cd4',
-    name: 'Drift of Phantasms',
-    handledLines: ['Transmute {1}{U}{U}'],
-    def: {
-      activatedAbilities: [
-        {
-          costs: [
-            {
-              kind: 'mana',
-              cost: {
-                generic: 1,
-                colored: {
-                  W: 0,
-                  U: 2,
-                  B: 0,
-                  R: 0,
-                  G: 0,
-                },
-                colorless: 0,
-              },
-            },
-            {
-              kind: 'discardSelf',
-            },
-          ],
-          timing: 'sorcery',
-          zone: 'hand',
-          ability: {
-            kind: 'activated',
-            targets: [],
-            effects: [
-              {
-                op: 'searchLibrary',
-                filter: {
-                  kind: 'allOf',
-                  of: [
-                    {
-                      kind: 'manaValueAtMost',
-                      n: 3,
-                    },
-                    {
-                      kind: 'manaValueAtLeast',
-                      n: 3,
-                    },
-                  ],
-                },
-                destinations: [
-                  {
-                    zone: 'hand',
-                  },
-                ],
-                reveal: true,
-              },
-              {
-                op: 'shuffle',
-              },
-            ],
-            description:
-              'Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)',
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-003',
-    patchSha256: '704515a6b6f06257800fac945218b57634942d3491cad0da9032a1d5b8c2aad5',
-    behaviorSha256: 'a3bc43f200ade873f0ba528e707c1cf08851ede553a4413d8d83710f03bf45c0',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '678ef5e4-800d-4d3a-8761-2abaad70e0c9',
     name: 'Envoy of the Ancestors',
     handledLines: ['Modified creatures you control have lifelink.'],
@@ -11007,24 +10763,6 @@ const BATCH_CHUNK_003: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: '222fd9fc-7af4-4269-bbb9-cd7b8ac029bd',
-    name: 'Troll of Khazad-dûm',
-    handledLines: ["~ can't be blocked except by three or more creatures."],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'minBlockers',
-          minimum: 3,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-003',
-    patchSha256: '8b05bba3f78380a382a1191f12100dab47c88068aab880f5446b9336a9d98f4a',
-    behaviorSha256: '35c4da0d30ab51ced387f347e6aec8d4a46793859d8ab7bb5720a9d3a213f9e8',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: '63a37c08-7e38-4fe2-9a71-cc4604c4f831',
     name: 'Ulvenwald Tracker',
     handledLines: ['{1}{G}, {T}: Target creature you control fights another target creature.'],
@@ -11079,42 +10817,6 @@ const BATCH_CHUNK_003: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-003',
     patchSha256: '72e9492b0a3499e94330efc9a216daeb2e3fe257a1958417b153112884c2f622',
     behaviorSha256: 'bbb6e91f45a8b3d4c23b852fe22d199149c17012c1f50c54326ebbbb81c339b3',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'bd655e8b-f192-4635-9e23-357b6f89ef8f',
-    name: 'Uncivil Unrest',
-    handledLines: [
-      'If a creature you control with a +1/+1 counter on it would deal damage to a permanent or player, it deals double that damage instead.',
-    ],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'damageDoubled',
-          sourceFilter: {
-            kind: 'allOf',
-            of: [
-              {
-                kind: 'type',
-                value: 'Creature',
-              },
-              {
-                kind: 'controller',
-                who: 'you',
-              },
-              {
-                kind: 'hasCounter',
-                counter: '+1/+1',
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-003',
-    patchSha256: '20b20bb6fb31951916d0fefaaa07bd957c0c0abb46ba86ee4fd1812498daf453',
-    behaviorSha256: '2a7244cdebc593605287c2988c7fc87fb8562efafd6e5e507bcac14e93317fa6',
     acceptedBy: 'main-thread',
   },
   {
@@ -19537,76 +19239,6 @@ const BATCH_CHUNK_006: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'd215127b-5f1d-4d3c-935b-c228c9c7f874',
-    name: 'Dimir Infiltrator',
-    handledLines: ['Transmute {1}{U}{B}'],
-    def: {
-      activatedAbilities: [
-        {
-          costs: [
-            {
-              kind: 'mana',
-              cost: {
-                generic: 1,
-                colored: {
-                  W: 0,
-                  U: 1,
-                  B: 1,
-                  R: 0,
-                  G: 0,
-                },
-                colorless: 0,
-              },
-            },
-            {
-              kind: 'discardSelf',
-            },
-          ],
-          timing: 'sorcery',
-          zone: 'hand',
-          ability: {
-            kind: 'activated',
-            targets: [],
-            effects: [
-              {
-                op: 'searchLibrary',
-                filter: {
-                  kind: 'allOf',
-                  of: [
-                    {
-                      kind: 'manaValueAtMost',
-                      n: 2,
-                    },
-                    {
-                      kind: 'manaValueAtLeast',
-                      n: 2,
-                    },
-                  ],
-                },
-                destinations: [
-                  {
-                    zone: 'hand',
-                  },
-                ],
-                reveal: true,
-              },
-              {
-                op: 'shuffle',
-              },
-            ],
-            description:
-              'Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)',
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-006',
-    patchSha256: '7a75c93cbbedc9023c7a0599b4cc90fda6c242ce62e7e304daf3df3f297ec313',
-    behaviorSha256: 'e3c1ab91f474bd48c555ac988d6d59102ea509029de3d1c519b2b8dca19d99df',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'd1f10cca-8dfa-4ea5-b227-4446cd8514a8',
     name: 'Drannith Ruins',
     handledLines: [
@@ -21431,78 +21063,6 @@ const BATCH_CHUNK_006: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-006',
     patchSha256: '2da034eeb101c868da009123330601417b46bd62848ca79a0a026976c45797d9',
     behaviorSha256: 'db7c750a5d750e6e24688302fa8fda327de334ece8e2d8104e34d406acfb1125',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'e7286688-ffbe-4d25-ad55-27990f005368',
-    name: 'Sliver Hive',
-    handledLines: [
-      '{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver.',
-    ],
-    def: {
-      activatedAbilities: [
-        {
-          costs: [
-            {
-              kind: 'mana',
-              cost: {
-                generic: 5,
-                colored: {
-                  W: 0,
-                  U: 0,
-                  B: 0,
-                  R: 0,
-                  G: 0,
-                },
-                colorless: 0,
-              },
-            },
-            {
-              kind: 'tap',
-            },
-          ],
-          timing: 'any',
-          condition: {
-            kind: 'countPermanents',
-            selector: {
-              kind: 'subtype',
-              value: 'Sliver',
-            },
-            scope: 'you',
-            cmp: '>=',
-            n: 1,
-          },
-          ability: {
-            kind: 'activated',
-            targets: [],
-            effects: [
-              {
-                op: 'createToken',
-                spec: {
-                  name: 'Sliver',
-                  typeLine: 'Token Creature — Sliver',
-                  types: ['Creature'],
-                  subtypes: ['Sliver'],
-                  colors: [],
-                  power: 1,
-                  toughness: 1,
-                },
-                count: {
-                  kind: 'const',
-                  n: 1,
-                },
-              },
-            ],
-            description:
-              '{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver.',
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-006',
-    patchSha256: 'd7cc4722ea1e0bbb0594e6fa0a0b110dc7b2844482079d84089e0a79fd9d1e33',
-    behaviorSha256: 'e9f357f7038082bd421888487e00c51b640880a42bdce520406aa67dd6418b86',
     acceptedBy: 'main-thread',
   },
   {
@@ -23593,76 +23153,6 @@ const BATCH_CHUNK_007: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-007',
     patchSha256: '20baae7b0183d1e7c89070ce26933f05fdf1517cc124aed02cd4c14561454797',
     behaviorSha256: 'a6699f7874ca6ecfd90f6e1c8cac283b3288751df98b600fe4cfdc162eeb1a07',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '7de04284-dcaa-4b63-a734-fcfe2698f83c',
-    name: 'Dizzy Spell',
-    handledLines: ['Transmute {1}{U}{U}'],
-    def: {
-      activatedAbilities: [
-        {
-          costs: [
-            {
-              kind: 'mana',
-              cost: {
-                generic: 1,
-                colored: {
-                  W: 0,
-                  U: 2,
-                  B: 0,
-                  R: 0,
-                  G: 0,
-                },
-                colorless: 0,
-              },
-            },
-            {
-              kind: 'discardSelf',
-            },
-          ],
-          timing: 'sorcery',
-          zone: 'hand',
-          ability: {
-            kind: 'activated',
-            targets: [],
-            effects: [
-              {
-                op: 'searchLibrary',
-                filter: {
-                  kind: 'allOf',
-                  of: [
-                    {
-                      kind: 'manaValueAtMost',
-                      n: 1,
-                    },
-                    {
-                      kind: 'manaValueAtLeast',
-                      n: 1,
-                    },
-                  ],
-                },
-                destinations: [
-                  {
-                    zone: 'hand',
-                  },
-                ],
-                reveal: true,
-              },
-              {
-                op: 'shuffle',
-              },
-            ],
-            description:
-              'Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)',
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-007',
-    patchSha256: 'b127b254fa4c572f0e200d8dfadd4cc4c70ea83194546d78ead6772aa7247edd',
-    behaviorSha256: '071a15c591bae7c2e81d6f7c9aca2169c7fe8c6cca8e428e121d9babd83c9b29',
     acceptedBy: 'main-thread',
   },
   {
@@ -28219,36 +27709,6 @@ const BATCH_CHUNK_008: readonly CompiledCard[] = [
     acceptedBy: 'main-thread',
   },
   {
-    oracleId: 'f6e160c1-b29f-4f3d-ab55-43ffe3ab4acf',
-    name: "Kolaghan, the Storm's Fury",
-    handledLines: ['Dash {3}{B}{R}'],
-    def: {
-      alternativeCasts: [
-        {
-          kind: 'nonMana',
-          manaCost: {
-            generic: 3,
-            colored: {
-              W: 0,
-              U: 0,
-              B: 1,
-              R: 1,
-              G: 0,
-            },
-            colorless: 0,
-          },
-          dashed: true,
-          description: 'Dash {3}{B}{R}',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-008',
-    patchSha256: 'e36e8bfc12dd618e1596df7ae1653259b466d6b6b04ffb86668037aeaeb0f68e',
-    behaviorSha256: '505ebf68774bffdc22088a33cb1c401c0226d3c3a59bed714a510ba2ed61170d',
-    acceptedBy: 'main-thread',
-  },
-  {
     oracleId: 'e27feb69-3120-4e8d-8ee6-0f87b58e2ae3',
     name: 'Layla Hassan',
     handledLines: [
@@ -29020,36 +28480,6 @@ const BATCH_CHUNK_008: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-008',
     patchSha256: '6e57d4e2acad47ebaabedcf4d69ab798212f5ebb136f834513e39e5431cae9f6',
     behaviorSha256: '5a621b8f723909dafdb047092010b9fbc935875b70607332f9150025f7e4db16',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '688a559d-249f-4d03-98e6-581843e7ddc3',
-    name: 'Riders of Rohan',
-    handledLines: ['Dash {4}{R}{W}'],
-    def: {
-      alternativeCasts: [
-        {
-          kind: 'nonMana',
-          manaCost: {
-            generic: 4,
-            colored: {
-              W: 1,
-              U: 0,
-              B: 0,
-              R: 1,
-              G: 0,
-            },
-            colorless: 0,
-          },
-          dashed: true,
-          description: 'Dash {4}{R}{W}',
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-008',
-    patchSha256: 'd0aed02347954f470fecbff4928b34bba1adf2d5875a06872c6f036d0442bab3',
-    behaviorSha256: '482bc708e384cb9237f1e94b44e0bb20d9f6772e6c71f57f16160cd7cb05fdce',
     acceptedBy: 'main-thread',
   },
   {
@@ -43502,38 +42932,6 @@ const BATCH_CHUNK_012: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-012',
     patchSha256: '15747c66177bcd8d2a0bdd1a1c0e093e7ec6f33961c07d711b798cc46aea114c',
     behaviorSha256: '9b405af8949d58c32a1fcf8eb727fedd244acb68eb7b3089092db7dd770d27eb',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: 'b3f7c4ac-b788-4307-9bc3-d99ce310e07c',
-    name: 'Calamity Bearer',
-    handledLines: [
-      'If a Giant source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead.',
-    ],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'damageDoubled',
-          sourceFilter: {
-            kind: 'allOf',
-            of: [
-              {
-                kind: 'subtype',
-                value: 'Giant',
-              },
-              {
-                kind: 'controller',
-                who: 'you',
-              },
-            ],
-          },
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-012',
-    patchSha256: '5607d8e0949d908f144cb6060a15faa4d38f147f92f1d99f3113ad143c99a454',
-    behaviorSha256: '9d0fb7ddac82fb6e1195b87c09e4e9ab2595f678e45668833be5da38ed76c54e',
     acceptedBy: 'main-thread',
   },
   {
@@ -62122,24 +61520,6 @@ const BATCH_CHUNK_016: readonly CompiledCard[] = [
     trial: 'docs/reviews/card-compiler-trial-chunk-016',
     patchSha256: '0f9bf86a0f1414eaf0ba0d63c2ebe967195ff5bb5a6cb53b04d19cdd07a16e54',
     behaviorSha256: '5db4c4537a14a8f10fcc0d0b159eda8691261ab26eab348ba6d6f9ad5fbad4f3',
-    acceptedBy: 'main-thread',
-  },
-  {
-    oracleId: '91d01119-9b3e-4629-8cf0-bbca2c19a7cc',
-    name: 'Rampaging Ceratops',
-    handledLines: ["~ can't be blocked except by three or more creatures."],
-    def: {
-      ruleStatics: [
-        {
-          kind: 'minBlockers',
-          minimum: 3,
-        },
-      ],
-    },
-    source: 'compiler@claude-haiku-5-5',
-    trial: 'docs/reviews/card-compiler-trial-chunk-016',
-    patchSha256: 'e1b26e637a29e4a34e2a3f0b728c9b3ae099f91470eec8e1362c043996f57157',
-    behaviorSha256: '81fd583e816c01321b9a241a0eb2f3354134583c7265b86a594d249a90be40c5',
     acceptedBy: 'main-thread',
   },
   {

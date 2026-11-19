@@ -22953,9 +22953,9 @@
         }
       ],
       "review": {
-        "verdict": "accepted",
-        "by": "main-thread",
-        "note": "Full audit: read against Oracle text and the engine."
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: The engine-features stack (PRs #93, #94, #96) now parses the line this patch claims; the interpreter's own reading replaces it."
       }
     },
     {

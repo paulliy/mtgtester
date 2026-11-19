@@ -882,6 +882,31 @@ describe('life-gain replacements', () => {
     expect(playerById(ctx, 'P1').life).toBe(45);
   });
 
+  it('casting-statics-lifelink-each-opponent — damage to each opponent is one lifelink gain', () => {
+    // A lifelink source deals 1 to each of three opponents at once: one life-gain event of 3
+    // (CR 120.3f, 119.9), which Knight of Dawn's Light makes 4, not three gains of 2.
+    const ctx = pod('casting-statics-lifelink-each-opponent');
+    spawn(ctx, 'P1', pinned("Knight of Dawn's Light"));
+    const pinger = oracle({
+      name: 'Lab Pinger',
+      typeLine: 'Artifact',
+      manaCost: '{1}',
+      oracleText: 'Lifelink\n{T}: Lab Pinger deals 1 damage to each opponent.',
+    });
+    expect(interpretCard(pinger).activatedAbilities[0]?.ability.effects).toEqual([
+      expect.objectContaining({ op: 'eachOpponentDamage' }),
+    ]);
+    spawn(ctx, 'P1', pinger);
+    const activate = computePriorityOptions(ctx, playerById(ctx, 'P1')).find(
+      (option) => option.type === 'activateAbility' && option.description.includes('Lab Pinger'),
+    );
+    expect(activate).toBeDefined();
+    take(ctx, 'P1', activate!.payload as PriorityActionPayload);
+    settle(ctx);
+    for (const id of ['P2', 'P3', 'P4']) expect(playerById(ctx, id).life, id).toBe(39);
+    expect(playerById(ctx, 'P1').life).toBe(44);
+  });
+
   it('casting-statics-life-order — "plus 1" and "twice": the gaining player orders them', () => {
     const run = (first: RegExp) => {
       const ctx = pod('casting-statics-life-order');
