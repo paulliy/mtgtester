@@ -7,7 +7,11 @@
  * few at a time.
  *
  *   bun run bot-league [--games N] [--seed S] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N]
- *                      [--timeout-ms N] [--json out.json]
+ *                      [--timeout-ms N] [--deck NAME] [--json out.json]
+ *
+ * `--deck NAME` seats one premade deck (`fixtures/coverage-decks/NAME.txt`) in all four seats, so
+ * the arms play a mirror and differ only in how they play it: the way to test a play style on a
+ * deck built for it. Without it every seat gets its own generated deck.
  *
  * ARM is one of the presets in `ARMS` below.
  */
@@ -21,6 +25,9 @@ import type { OracleCard, PlayStyle } from '@mtg/shared';
 import { DEFAULT_POLICY_FIXES, POLICY_FIXES } from '@mtg/bot';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
+import { buildOracleIndexFromCards } from '../cards/oracle-index';
+import { resolveDeck } from '../decks/resolve';
+import { importDeck } from '../decks/source';
 import { DEFAULT_AI_CONFIG } from '../ai/config';
 import type { WakeRule } from '../ai/steering';
 // Type-only: the game module runs a game when it is the entry point.
@@ -102,6 +109,7 @@ interface Args {
   turnCap: number;
   jobs: number;
   timeoutMs: number;
+  deck?: string;
   json?: string;
 }
 
@@ -146,6 +154,10 @@ function parseArgs(argv: string[]): Args {
         args.timeoutMs = Number(next);
         i++;
         break;
+      case '--deck':
+        if (next !== undefined) args.deck = next;
+        i++;
+        break;
       case '--json':
         if (next !== undefined) args.json = next;
         i++;
@@ -160,6 +172,33 @@ function parseArgs(argv: string[]): Args {
     }
   }
   return args;
+}
+
+/** A premade coverage deck by file name, for a mirror (`--deck`). One commander only. */
+async function premadeDeck(name: string): Promise<{ commander: OracleCard; cards: OracleCard[] }> {
+  const index = buildOracleIndexFromCards(
+    JSON.parse(readFileSync(resolve(FIXTURE), 'utf8')) as OracleCard[],
+  );
+  const path = resolve('packages/server/fixtures/coverage-decks', `${name}.txt`);
+  const { resolved, unresolvedNames } = resolveDeck(
+    await importDeck(readFileSync(path, 'utf8')),
+    index,
+  );
+  if (resolved === null)
+    throw new Error(`--deck ${name}: unresolved ${unresolvedNames.join(', ')}`);
+  if (resolved.commanders.length !== 1)
+    throw new Error(
+      `--deck ${name}: ${resolved.commanders.length} commanders; the league seats one`,
+    );
+  return {
+    commander: resolved.commanders[0]!,
+    cards: [
+      ...(resolved.companion === null ? [] : [resolved.companion]),
+      ...resolved.cards.flatMap((entry) =>
+        Array.from({ length: entry.quantity }, () => entry.card),
+      ),
+    ],
+  };
 }
 
 function loadPool(): SupportedPool {
@@ -241,12 +280,16 @@ async function main(): Promise<void> {
     proxyCalls: {},
   };
 
+  const mirror = args.deck === undefined ? undefined : await premadeDeck(args.deck);
   const requests: LeagueGameRequest[] = [];
   for (let g = 0; g < args.games; g++) {
     const seed = `${args.seed}-${Math.floor(g / 2)}`;
-    const decks = Array.from({ length: 4 }, (_, i) =>
-      generateCommanderDeck(pool, { seed: `${seed}-seat${i + 1}` }),
-    );
+    const decks =
+      mirror !== undefined
+        ? [mirror, mirror, mirror, mirror]
+        : Array.from({ length: 4 }, (_, i) =>
+            generateCommanderDeck(pool, { seed: `${seed}-seat${i + 1}` }),
+          );
     const swap = g % 2 === 1;
     const first = swap ? armB : armA;
     const second = swap ? armA : armB;
