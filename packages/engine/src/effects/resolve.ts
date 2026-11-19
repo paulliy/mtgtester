@@ -8635,9 +8635,11 @@ function* executeAbilityEffects(
         // the CR 608.2b legality check before handing back an id.
         const t = ref(effect.target);
         if (t === null) break;
+        // "unless its controller pays {X}" (Spectral Denial): X is the value announced for the
+        // resolving spell (CR 107.3a, 601.2b); a cost with no {X} is unchanged.
         yield* counterUnlessPays(ctx, source, t, {
           kind: 'mana',
-          cost: effect.cost,
+          cost: withX(effect.cost, source.resolvingStackObject?.announcedX ?? 0),
         });
         break;
       }

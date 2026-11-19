@@ -4,13 +4,16 @@ import type { DecisionRequest, PlayerView } from '@mtg/shared';
 import type { AiClient } from './client';
 
 type AiCallResult = Awaited<ReturnType<AiClient['requestDecision']>>;
-import { DEFAULT_AI_CONFIG } from './config';
+import { DEFAULT_AI_CONFIG as BASE_AI_CONFIG } from './config';
 import {
   readTacticianRequest,
   StrategyCoordinator,
   TACTICIAN_REQUEST_REASON_LIMIT,
 } from './strategy-coordinator';
 import { assembleStrategistPrompt } from './strategy-context';
+
+// These tests exercise the model tactician; pin it, since bot-led tactics are the default (ADR 0039).
+const DEFAULT_AI_CONFIG = { ...BASE_AI_CONFIG, tacticalMode: 'model' as const };
 
 const view: PlayerView = {
   seat: 'P1',

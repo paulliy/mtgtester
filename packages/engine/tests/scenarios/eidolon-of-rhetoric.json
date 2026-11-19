@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "card": "Eidolon of Rhetoric",
+  "supportCards": [
+    {
+      "name": "Scenario Elk",
+      "typeLine": "Creature — Elk",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Stag",
+      "typeLine": "Creature — Elk",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "eidolon-of-rhetoric-second-spell-refused",
+      "title": "Eidolon of Rhetoric: a player cannot cast a second spell in the same turn",
+      "clauses": [1],
+      "instructions": [
+        "Cast Scenario Elk with Eidolon of Rhetoric on the battlefield.",
+        "Scenario Stag ({G}) cannot also be cast this turn although a Forest is still untapped."
+      ],
+      "expectedOutcome": "Scenario Elk resolves; Scenario Stag stays in your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Elk", "Scenario Stag"],
+          "battlefield": ["Eidolon of Rhetoric", "Forest", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Elk/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Elk"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Stag"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "eidolon-of-rhetoric-two-spells-without-it",
+      "title": "Eidolon of Rhetoric: without it two spells can be cast in a turn",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Elk, then Scenario Stag, with no Eidolon of Rhetoric."],
+      "expectedOutcome": "Both resolve.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Elk", "Scenario Stag"],
+          "battlefield": ["Forest", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Elk/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Stag/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Elk", "Scenario Stag"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "eidolon-of-rhetoric-land-play-is-not-a-spell",
+      "title": "Eidolon of Rhetoric: playing a land is not casting a spell",
+      "clauses": [1],
+      "instructions": ["Cast Scenario Elk, then play a Forest from your hand."],
+      "expectedOutcome": "Both happen: a land is not a spell.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Elk", "Forest"],
+          "battlefield": ["Eidolon of Rhetoric", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Elk/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Play Forest/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Elk", "Forest", "Forest"]
+          }
+        }
+      ]
+    }
+  ]
+}
