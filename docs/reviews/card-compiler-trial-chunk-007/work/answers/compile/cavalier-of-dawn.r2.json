@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The up-to-one target slot is a variable-count slot, and no effect can destroy it and then have its controller create a token, because destroyAndCreateTokenForController accepts only an ordinary single target slot."}

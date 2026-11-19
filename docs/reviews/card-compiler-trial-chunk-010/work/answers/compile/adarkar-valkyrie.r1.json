@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The delayed return must put the card onto the battlefield untapped under your control; returnDiedTriggerObjectTapped is tapped-only and returnDiedTriggerObjectAtNextEndStep returns only under its owner's control."}

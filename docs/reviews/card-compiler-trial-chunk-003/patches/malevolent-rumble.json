@@ -1,0 +1,92 @@
+{
+  "name": "Malevolent Rumble",
+  "oracleId": "d30d8968-ec24-4155-97e2-28efd52c8810",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Reveal the top four cards of your library. You may put a permanent card from among them into your hand. Put the rest into your graveyard. Create a 0/1 colorless Eldrazi Spawn creature token with \"Sacrifice this token: Add {C}.\""
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "lookAtTopN",
+          "count": 4,
+          "mayPut": {
+            "filter": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                },
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                },
+                {
+                  "kind": "type",
+                  "value": "Battle"
+                }
+              ]
+            },
+            "destination": {
+              "zone": "hand"
+            },
+            "reveal": true
+          },
+          "rest": "graveyard"
+        },
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Eldrazi Spawn",
+            "typeLine": "Creature — Eldrazi",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Eldrazi"
+            ],
+            "colors": [],
+            "power": 0,
+            "toughness": 1,
+            "manaAbilities": [
+              {
+                "costs": [
+                  {
+                    "kind": "sacrificeSelf"
+                  }
+                ],
+                "units": [
+                  [
+                    "C"
+                  ]
+                ]
+              }
+            ]
+          },
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Reveal the top four cards of your library. You may put a permanent card from among them into your hand. Put the rest into your graveyard. Create a 0/1 colorless Eldrazi Spawn creature token with \"Sacrifice this token: Add {C}.\""
+    }
+  }
+}

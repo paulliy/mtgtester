@@ -1,0 +1,40 @@
+{
+  "name": "Fecundity",
+  "oracleId": "ffa64ac6-fe55-48b8-b015-849982cd7ad8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature dies, that creature's controller may draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          },
+          "subjectControllerIsEventPlayer": true
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "player": "eventPlayer"
+          }
+        ],
+        "description": "Whenever a creature dies, that creature's controller may draw a card."
+      }
+    ]
+  }
+}

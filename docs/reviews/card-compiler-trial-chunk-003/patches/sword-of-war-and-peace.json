@@ -1,0 +1,50 @@
+{
+  "name": "Sword of War and Peace",
+  "oracleId": "b10ad415-0aae-4d70-82e6-a4055a40cbe4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 life for each card in your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "attachedToSource"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "cardsInTargetHand",
+              "target": "eventPlayer"
+            }
+          },
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "countCardsInZone",
+              "zone": "hand",
+              "selector": {
+                "kind": "allOf",
+                "of": []
+              },
+              "owner": "you"
+            }
+          }
+        ],
+        "description": "Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 life for each card in your hand."
+      }
+    ]
+  }
+}

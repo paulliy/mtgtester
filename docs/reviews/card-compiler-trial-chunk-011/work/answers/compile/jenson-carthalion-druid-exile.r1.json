@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"There is no multicolored spell selector (isMonocolored would also match colorless spells), so 'you cast a multicolored spell' cannot be filtered exactly, and the 'was all colors' check has no verified spell-object form."}

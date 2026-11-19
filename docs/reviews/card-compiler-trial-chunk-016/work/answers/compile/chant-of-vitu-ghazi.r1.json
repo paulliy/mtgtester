@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No prevention effect covers all damage dealt by creatures (createDamageShield's only source filter is youDontControl), and no effect gains life equal to the damage prevented."}

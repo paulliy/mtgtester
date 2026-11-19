@@ -1,0 +1,55 @@
+{
+  "name": "Juniper Order Ranger",
+  "oracleId": "18ca77c9-e7d2-4afc-a72b-98772578fad7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another creature you control enters, put a +1/+1 counter on that creature and a +1/+1 counter on this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "triggerObject",
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever another creature you control enters, put a +1/+1 counter on that creature and a +1/+1 counter on this creature."
+      }
+    ]
+  }
+}

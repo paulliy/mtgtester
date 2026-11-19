@@ -1,0 +1,2 @@
+This spell costs {2} less to cast if there are four or more card types among cards in your graveyard.
+This spell has no effect other than its cost reduction.

@@ -1,0 +1,27 @@
+{
+  "name": "Assert Authority",
+  "oracleId": "085bc7be-bd44-40af-8e8f-a1a8006fe22c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "description": "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+      "targets": [
+        {
+          "kind": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "op": "counter",
+          "target": 0,
+          "exileIfCountered": true
+        }
+      ]
+    }
+  }
+}

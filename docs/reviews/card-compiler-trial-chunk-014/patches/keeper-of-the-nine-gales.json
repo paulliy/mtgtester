@@ -1,0 +1,53 @@
+{
+  "name": "Keeper of the Nine Gales",
+  "oracleId": "39c4357b-6093-486b-8131-041a3f89af75",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Tap two untapped Birds you control: Return target permanent to its owner's hand."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "tapOthers",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Bird"
+                }
+              ]
+            },
+            "count": 2
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent"
+            }
+          ],
+          "effects": [
+            {
+              "op": "returnToHand",
+              "target": 0
+            }
+          ],
+          "description": "{T}, Tap two untapped Birds you control: Return target permanent to its owner's hand."
+        }
+      }
+    ]
+  }
+}

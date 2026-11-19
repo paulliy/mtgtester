@@ -10,7 +10,17 @@ import { ofType } from '../src/cards/selector';
 import { emptyCost, parseManaCost } from '../src/mana/cost';
 import { planSpellPayment } from '../src/mana/spell-payment';
 import { createGame } from '../src/state/game';
-import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import {
+  bear,
+  conjure,
+  copies,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  spawn,
+  editableDef,
+} from './fixtures';
 import { checkContinuations, cloneContractContext } from './helpers/contract-harness';
 
 function setup(costs: AbilityCost[], manaCost = '{0}') {
@@ -115,7 +125,7 @@ describe('independent combined spell-payment contracts', () => {
       'P1',
       oracle({ name: 'Mana sacrifice probe', typeLine: 'Artifact' }),
     );
-    ctx.defs.get(treasure.oracleId)!.manaAbilities = [
+    editableDef(ctx, treasure.oracleId).manaAbilities = [
       {
         costs: [{ kind: 'tap' }, { kind: 'sacrificeSelf' }],
         units: [['G']],

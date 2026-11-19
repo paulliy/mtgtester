@@ -2,7 +2,8 @@
 
 Date: 2026-08-06
 
-Status: Proposed
+Status: Accepted (2026-11-14)
+Status note: accepted in part. Phases 7-pre, 7a, 7b and 7c are built (`packages/bot/src/combat-search.ts` searches block declarations and damage division, and `bun run combat-sweep` measures it). Phase 7d, the attack-declaration search, is not built. It was Proposed until 2026-11-14, although the shipped code already cited it.
 
 ## Context
 

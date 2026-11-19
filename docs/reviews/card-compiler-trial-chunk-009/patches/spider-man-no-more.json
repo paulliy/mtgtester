@@ -1,0 +1,62 @@
+{
+  "name": "Spider-Man No More",
+  "oracleId": "163f1fce-70c8-44e3-a679-f97d52cd1e9a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature is a Citizen with base power and toughness 1/1. It has defender and loses all other abilities."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 4,
+          "setTypes": [
+            "Creature"
+          ],
+          "setSubtypes": [
+            "Citizen"
+          ]
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "loseAllAbilities": true
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "defender"
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "const",
+            "n": 1
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Saproling Symbiosis",
+  "oracleId": "69d22037-fbf7-44d2-81a7-7ce8e32f06ec",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may cast this spell as though it had flash if you pay {2} more to cast it."
+  ],
+  "compose": "append",
+  "def": {
+    "alternativeCasts": [
+      {
+        "kind": "nonMana",
+        "manaCost": {
+          "generic": 5,
+          "colored": {
+            "W": 0,
+            "U": 0,
+            "B": 0,
+            "R": 0,
+            "G": 1
+          },
+          "colorless": 0
+        },
+        "instantTiming": true,
+        "description": "You may cast this spell as though it had flash if you pay {2} more to cast it."
+      }
+    ]
+  }
+}

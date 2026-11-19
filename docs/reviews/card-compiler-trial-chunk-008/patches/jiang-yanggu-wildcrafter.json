@@ -1,0 +1,46 @@
+{
+  "name": "Jiang Yanggu, Wildcrafter",
+  "oracleId": "04f2c320-dfcc-440a-9e24-3c2083d74e7c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each creature you control with a +1/+1 counter on it has \"{T}: Add one mana of any color.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "hasCounter",
+              "counter": "+1/+1"
+            },
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addManaAbility": {
+            "units": [
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ]
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

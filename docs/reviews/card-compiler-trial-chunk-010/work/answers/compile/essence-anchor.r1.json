@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The activation restriction 'only if a card left your graveyard this turn' has no condition in the schema (cardsInYourGraveyard counts cards, it does not track cards leaving)."}

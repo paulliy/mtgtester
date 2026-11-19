@@ -1,0 +1,38 @@
+{
+  "name": "Market Festival",
+  "oracleId": "15c63f9b-d071-4522-b9f0-a1f441a61b81",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever enchanted land is tapped for mana, its controller adds an additional two mana in any combination of colors."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "manaActivationRider",
+        "source": {
+          "kind": "attachedToSource"
+        },
+        "add": {
+          "kind": "fixed",
+          "units": [
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ],
+            [
+              "W",
+              "U",
+              "B",
+              "R",
+              "G"
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -236,7 +236,7 @@ describe('PR08 Alexios and Varchild', () => {
       oracleId: 'test-alexios-sacrifice-activator',
       typeLine: 'Artifact',
     });
-    const def = interpretCard(artifact);
+    const def = structuredClone(interpretCard(artifact));
     def.activatedAbilities = [
       {
         costs: [

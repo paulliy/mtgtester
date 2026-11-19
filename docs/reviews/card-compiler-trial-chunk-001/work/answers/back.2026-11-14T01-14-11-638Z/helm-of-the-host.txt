@@ -1,0 +1,2 @@
+At the beginning of combat on your turn, create a token that is a copy of the equipped creature, except the token is not legendary (the data flag is exceptNonLegendary), and the token gains haste. This trigger is mandatory and has no targets. If nothing is equipped, there is no copied creature.
+The data contains no equip ability or equip cost.

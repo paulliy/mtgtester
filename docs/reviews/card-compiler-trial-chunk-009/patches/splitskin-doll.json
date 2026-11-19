@@ -1,0 +1,70 @@
+{
+  "name": "Splitskin Doll",
+  "oracleId": "934e2634-4b1c-4d92-b4d6-9241620f3770",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, draw a card. Then discard a card unless you control another creature with power 2 or less."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "powerAtMost",
+                    "n": 2
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              },
+              "scope": "you",
+              "cmp": ">=",
+              "n": 1
+            },
+            "then": [],
+            "else": [
+              {
+                "op": "discard",
+                "count": 1
+              }
+            ]
+          }
+        ],
+        "description": "When this creature enters, draw a card. Then discard a card unless you control another creature with power 2 or less."
+      }
+    ]
+  }
+}

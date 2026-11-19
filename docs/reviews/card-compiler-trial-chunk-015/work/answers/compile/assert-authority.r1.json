@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","description":"Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.","targets":[{"kind":"spell"}],"effects":[{"op":"counter","target":0,"exileIfCountered":true}]}}}

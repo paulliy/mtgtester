@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The extra search depends on whether the chosen target opponent controls more lands than you, but opponentControlsMore compares every opponent rather than the targeted one."}

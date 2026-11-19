@@ -1,0 +1,47 @@
+{
+  "name": "Burning Anger",
+  "oracleId": "a2c76ac2-5ab1-450c-b64e-e9a6c4dad1ca",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted creature has \"{T}: ~ deals damage equal to its power to any target.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addActivatedAbility": {
+            "costs": [
+              {
+                "kind": "tap"
+              }
+            ],
+            "timing": "any",
+            "ability": {
+              "kind": "activated",
+              "targets": [
+                {
+                  "kind": "anyTarget"
+                }
+              ],
+              "effects": [
+                {
+                  "op": "dealDamage",
+                  "target": 0,
+                  "amount": {
+                    "kind": "powerOfSource"
+                  }
+                }
+              ],
+              "description": "{T}: This creature deals damage equal to its power to any target."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

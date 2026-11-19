@@ -1,0 +1,68 @@
+{
+  "name": "Sight of the Scalelords",
+  "oracleId": "4f868b9b-42f4-4f74-bce2-3f9c063a572c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of combat on your turn, creatures you control with toughness 4 or greater get +2/+2 and gain vigilance until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "beginningOfCombat",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "pumpEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "toughnessAtLeast",
+                  "n": 4
+                }
+              ]
+            },
+            "power": 2,
+            "toughness": 2
+          },
+          {
+            "op": "grantKeywordEachUntilEot",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "toughnessAtLeast",
+                  "n": 4
+                }
+              ]
+            },
+            "keyword": "vigilance"
+          }
+        ],
+        "description": "At the beginning of combat on your turn, creatures you control with toughness 4 or greater get +2/+2 and gain vigilance until end of turn."
+      }
+    ]
+  }
+}

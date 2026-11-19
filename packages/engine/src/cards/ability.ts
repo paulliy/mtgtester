@@ -1141,6 +1141,11 @@ export type Effect =
   | { op: 'resolvingSpellShuffleIntoLibrary' }
   | { op: 'exileTargetPlayerGraveyard'; target: EffectRef }
   | { op: 'returnToHandEach'; selector: Selector }
+  /**
+   * "Return all <filter> cards from your graveyard to the battlefield". `scope: 'all'` reads every
+   * player's graveyard and still puts the cards onto the battlefield under the source's controller
+   * (Rise of the Dark Realms); "under their owners' control" is not this op.
+   */
   | { op: 'graveyardToBattlefieldEach'; filter: Selector; scope?: 'you' | 'all' }
   /**
    * "Return a creature card from your graveyard to the battlefield" with no target (Tomb
@@ -1148,6 +1153,7 @@ export type Effect =
    * ability, from the cards then in your graveyard. Mandatory when one matches.
    */
   | { op: 'returnOneFromYourGraveyardToBattlefield'; filter: Selector }
+  /** As above, into hands: `scope: 'all'` returns each card to its owner's hand. */
   | { op: 'graveyardToHandEach'; filter: Selector; scope?: 'you' | 'all' }
   | { op: 'unearth' }
   | { op: 'grantUnearthToArtifactCreaturesInGraveyard'; cost: ParsedManaCost }

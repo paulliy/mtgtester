@@ -1,0 +1,39 @@
+{
+  "name": "Mindwhisker",
+  "oracleId": "f823b122-94ac-42ba-b511-9e54d64db112",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as there are seven or more cards in your graveyard, creatures your opponents control get -1/-0."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "opponents"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": -1,
+          "toughness": 0
+        },
+        "condition": {
+          "kind": "cardsInYourGraveyard",
+          "cmp": ">=",
+          "n": 7
+        }
+      }
+    ]
+  }
+}

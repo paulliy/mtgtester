@@ -1,0 +1,53 @@
+{
+  "name": "Kari Zev's Expertise",
+  "oracleId": "e0de0121-6185-45c5-9d88-a415b07347e0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Gain control of target creature or Vehicle until end of turn. Untap it. It gains haste until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "subtype",
+                "value": "Vehicle"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "duration": "untilEndOfTurn"
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "haste"
+        },
+        {
+          "op": "castOneFromHandFreeUpTo",
+          "maxManaValue": 2
+        }
+      ],
+      "description": "Gain control of target creature or Vehicle until end of turn. Untap it. It gains haste until end of turn. You may cast a spell with mana value 2 or less from your hand without paying its mana cost."
+    }
+  }
+}

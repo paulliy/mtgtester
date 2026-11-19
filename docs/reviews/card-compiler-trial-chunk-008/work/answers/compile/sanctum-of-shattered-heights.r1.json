@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The discard cost \"Discard a land card or Shrine card\" has no selector; discardCard takes only a count, so it cannot restrict the discarded card to lands or Shrines."}

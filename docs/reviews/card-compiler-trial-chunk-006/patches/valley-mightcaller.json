@@ -1,0 +1,68 @@
+{
+  "name": "Valley Mightcaller",
+  "oracleId": "16e9c452-6288-4da8-813d-2eb6b7a538c3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever another Frog, Rabbit, Raccoon, or Squirrel you control enters, put a +1/+1 counter on this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Frog"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Rabbit"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Raccoon"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Squirrel"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "self"
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever another Frog, Rabbit, Raccoon, or Squirrel you control enters, put a +1/+1 counter on this creature."
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "Karametra, God of Harvests",
+  "oracleId": "984e763c-5a83-4231-8ec4-1be76846479a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as your devotion to green and white is less than seven, ~ isn't a creature."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 4,
+          "removeCreatureType": true
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "devotionTo",
+            "color": "G",
+            "and": "W"
+          },
+          "cmp": "<=",
+          "right": {
+            "kind": "const",
+            "n": 6
+          }
+        }
+      }
+    ]
+  }
+}

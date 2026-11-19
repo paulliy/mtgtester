@@ -1,0 +1,41 @@
+{
+  "name": "Ghost Quarter",
+  "oracleId": "2ec4288e-34c6-4831-a2c0-ba1ca1d9d1dc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Sacrifice this land: Destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "land"
+            }
+          ],
+          "effects": [
+            {
+              "op": "removeTargetAndControllerMaySearchBasicLand",
+              "target": 0,
+              "action": "destroy",
+              "entersTapped": false
+            }
+          ],
+          "description": "{T}, Sacrifice this land: Destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield, then shuffle."
+        }
+      }
+    ]
+  }
+}

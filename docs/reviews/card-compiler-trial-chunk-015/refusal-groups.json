@@ -1,0 +1,325 @@
+[
+  {
+    "feature": "Game-state conditions and values",
+    "description": "Add conditions and values for alternative-cost and cast-zone checks, per-opponent land and hand comparisons, counters across all players, creature-type counts against each other player, distinct powers, Desert mana spent, cards discarded or drawn this turn, and Auras attached to enchanted creatures.",
+    "cards": [
+      "Aethersnipe",
+      "Cataclysmic Prospecting",
+      "Celebrate the Harvest",
+      "Cerebral Vortex",
+      "Face of Divinity",
+      "Ingenious Mastery",
+      "Living Laser",
+      "Lumbering Megasloth",
+      "Mikey & Don, Party Planners",
+      "Peer Pressure",
+      "Razorlash Transmogrant",
+      "Reckless Crew",
+      "Riftstone Portal",
+      "Teachings of the Archaics",
+      "Verdant Mastery",
+      "Wasitora, Nekoru Queen"
+    ]
+  },
+  {
+    "feature": "Amounts produced by the previous effect or event",
+    "description": "Add Values and references that read amounts and objects from earlier in the resolution or from the event: creatures destroyed or exiled, mill and discard counts, excess damage, the toughness of a triggering or sacrificed creature, the source of damage, the token just created, and the exiled card's mana value or type.",
+    "cards": [
+      "Deathgorge Scavenger",
+      "Disciple of Griselbrand",
+      "Grey Host Reinforcements",
+      "Grisly Spectacle",
+      "Heartwarming Redemption",
+      "Hidetsugu, Devouring Chaos",
+      "Judgment of Alexander",
+      "Malanthrope",
+      "Match the Odds",
+      "Misfortune Teller",
+      "Mogg Infestation",
+      "Orchard Warden",
+      "Overwrite the Multiverse",
+      "Renegade Reaper",
+      "Rhino's Rampage"
+    ]
+  },
+  {
+    "feature": "Variable-count target slots and chosen-count value",
+    "description": "Add target slots, selectors and counts that accept an announced X, a state-derived number or any number of objects, including mana value and power bounds taken from a Value, up-to-that-many targets, dynamic discard and mill counts, and tap or gain-control of several chosen targets.",
+    "cards": [
+      "Beguiler of Wills",
+      "Brightmare",
+      "Cephalid Constable",
+      "Displacement Wave",
+      "Dominating Vampire",
+      "Footbottom Feast",
+      "Hatchery Spider",
+      "Horrid Shadowspinner",
+      "Instrument of the Bards",
+      "Jace, Ingenious Mind-Mage",
+      "Lich Lord of Unx",
+      "Rabid Attack",
+      "Repeal",
+      "Urge to Feed",
+      "Winter Soldier, Reborn Avenger"
+    ]
+  },
+  {
+    "feature": "Ability cost forms",
+    "description": "Add cost forms and mana forms: snow mana and snow spent, blight, non-mana additional-cost alternatives, dynamic unless-pays costs, repeated optional payments, X counter removal on mana abilities, tapping for waterbend and land-only discards.",
+    "cards": [
+      "Blessing of Frost",
+      "Concerted Defense",
+      "Custody Battle",
+      "Dream Halls",
+      "Frost Augur",
+      "Gristle Glutton",
+      "Haruspex",
+      "Primal Adversary",
+      "Rift Elemental",
+      "Spark Harvest",
+      "Tainted Adversary",
+      "Treetop Sentries",
+      "Water Tribe Rallier",
+      "Wild Unraveling",
+      "Worm Harvest"
+    ]
+  },
+  {
+    "feature": "Per-player scope and chooser on effects",
+    "description": "Add player routing and chooser fields so effects can act on another player's library, hand, graveyard or permanents, let an opponent choose or split cards, make each player search or each opponent gain life, and gain control of attached or player-controlled permanents.",
+    "cards": [
+      "Chain Devil",
+      "Curse of Vitality",
+      "Ecological Appreciation",
+      "Epiphany at the Drownyard",
+      "Fumble",
+      "Gilt-Leaf Archdruid",
+      "Guided Passage",
+      "Mathas, Fiend Seeker",
+      "Moonring Island",
+      "Noble Benefactor",
+      "Overburden",
+      "Riddles in the Dark",
+      "The Great Aurora"
+    ]
+  },
+  {
+    "feature": "Rule statics and permissions that do not exist yet",
+    "description": "Add rule statics and permissions for blocking and attacking restrictions (blocked only by given powers or types, extra payments to block, tapped creatures blocking, attack or block only under a condition), reduced maximum hand size, doubled or altered combat damage assignment, untap-step skipping and mana spending restrictions.",
+    "cards": [
+      "Beloved Princess",
+      "Crackdown",
+      "Dragon Turtle",
+      "Gauntlets of Light",
+      "Locust Miser",
+      "Masako the Humorless",
+      "Ox Drover",
+      "Sarinth Greatwurm",
+      "Steel Leaf Champion",
+      "The Lion-Turtle",
+      "Tin Street Dodger",
+      "War Cadence"
+    ]
+  },
+  {
+    "feature": "Missing keyword mechanics (suspend, buyback, myriad, madness, foretell)",
+    "description": "Add keyword mechanics and grantable abilities the schema lacks: scavenge, menace and indestructible counters, fear and landwalk, champion, firebending, partner, echo, flanking, myriad, casualty and madness.",
+    "cards": [
+      "Blood Curdle",
+      "Cairn Wanderer",
+      "Corporeal Projection",
+      "Deranged Hermit",
+      "Eagle of Deliverance",
+      "Fire Nation Cadets",
+      "Kitchen Imp",
+      "Ravos, Soultender",
+      "Sidewinder Sliver",
+      "Silverquill, the Disputant",
+      "Wren's Run Packmaster",
+      "Young Deathclaws"
+    ]
+  },
+  {
+    "feature": "Trigger events and filters that do not exist yet",
+    "description": "Add trigger events and filters for becoming untapped, scrying, expending, voting, combat damage to a battle, combat or noncombat damage received, discarding this card, damage source reference, gaining or losing life once a turn, targeting by an instant or sorcery, and attacking a player but not a planeswalker.",
+    "cards": [
+      "Byway Barterer",
+      "Council's Deliberation",
+      "Deeproot Wayfinder",
+      "Edgar's Awakening",
+      "King Macar, the Gold-Cursed",
+      "Moonstone Harbinger",
+      "Reaper of Sheoldred",
+      "Smaug the Impenetrable",
+      "Veteran Soldier",
+      "Wall of Essence",
+      "Wild Defiance"
+    ]
+  },
+  {
+    "feature": "Replacement effects that do not exist yet",
+    "description": "Add replacement effects for umbra armor, exile instead of dying, extra life gained, discard putting the card onto the battlefield, counter-removing damage prevention, life total damage caps, losing the game, stun counters and partial damage prevention.",
+    "cards": [
+      "Crab Umbra",
+      "Djeru, With Eyes Open",
+      "Exquisite Archangel",
+      "Impede Momentum",
+      "Knight of Dawn's Light",
+      "Red Sun's Zenith",
+      "Scorching Dragonfire",
+      "Terrifying Presence",
+      "Ugin's Conjurant",
+      "Wilt-Leaf Liege",
+      "Worship"
+    ]
+  },
+  {
+    "feature": "Selector predicates in targets and statics",
+    "description": "Add selector and target kinds for producible mana types, what a spell targets, chosen planeswalker or land types, per-branch tapped restrictions, creatures that crewed, flashback cards, and enchanted-player controller forms.",
+    "cards": [
+      "Banishing Slash",
+      "Confound",
+      "Curse of the Nightly Hunt",
+      "Jeskai Revelation",
+      "Leori, Sparktouched Hunter",
+      "Mana Web",
+      "Mindlink Mech",
+      "Mogg Maniac",
+      "Quiet Speculation",
+      "Resplendent Marshal"
+    ]
+  },
+  {
+    "feature": "Random, guessed and hidden-information choices",
+    "description": "Add voting, die rolls, coin flips by each player, guessed values and random sacrifice with repetition.",
+    "cards": [
+      "Ballot Broker",
+      "Brago's Representative",
+      "Choice of Damnations",
+      "Erestor of the Council",
+      "Goblin Assassin",
+      "Pair o' Dice Lost",
+      "The Seventh Doctor",
+      "Tyrant of Discord"
+    ]
+  },
+  {
+    "feature": "Ability removal and base power/toughness overrides",
+    "description": "Add continuous effects that make permanents creatures permanently or in bulk, grant triggered or activated abilities to each creature, and let a chosen object lose abilities while the source remains.",
+    "cards": [
+      "Awakening of Vitu-Ghazi",
+      "Boiling Earth",
+      "Dead Before Sunrise",
+      "Hypnotic Siren",
+      "Natural Affinity",
+      "Root Manipulation",
+      "Start Your Engines",
+      "The Wondrous Wasp"
+    ]
+  },
+  {
+    "feature": "Optional choices and if-you-do follow-ups",
+    "description": "Add may-decline forms and follow-up effects gated on whether an optional action happened, including opponent optional exiles, search only if a counter was removed, else branches for declined returns, and reflexive triggers that target after the choice.",
+    "cards": [
+      "Ainok Wayfarer",
+      "Back for More",
+      "Blanchwood Prowler",
+      "Iroh, Tea Master",
+      "Old Man Willow",
+      "Purestrain Genestealer",
+      "Web of Inertia"
+    ]
+  },
+  {
+    "feature": "Cast a card from other zones with a rider",
+    "description": "Add cast and play permissions from an opponent's hand, the library during a search, exile with extended durations, instants-only free casts and graveyard plays with an exile rider.",
+    "cards": [
+      "Lidless Gaze",
+      "Mindclaw Shaman",
+      "Panglacial Wurm",
+      "Scarlet Witch, Chaotic Avenger",
+      "The Eighth Doctor",
+      "Zaffai and the Tempests"
+    ]
+  },
+  {
+    "feature": "Turn-history conditions",
+    "description": "Add per-turn history conditions such as attacking this turn, descending, nonland permanents leaving or being warped, creatures dying under a given owner, and graveyard cards put there from the battlefield this turn.",
+    "cards": [
+      "Corpses of the Lost",
+      "Fresh Meat",
+      "Gerrard, Weatherlight Hero",
+      "Gutless Plunderer",
+      "Hymn of the Faller"
+    ]
+  },
+  {
+    "feature": "Modern keyword actions (venture, ring tempts, suspect, crime)",
+    "description": "Add modern keyword actions: earthbend, incubate, venture, clash, and skipping your own turns.",
+    "cards": [
+      "Bumi's Feast Lecture",
+      "Compleated Huntmaster",
+      "Eater of Days",
+      "Kick in the Door",
+      "Research the Deep"
+    ]
+  },
+  {
+    "feature": "Copy and become-a-copy effects with added types or abilities",
+    "description": "Add become-a-copy and token-copy forms that add subtypes, copy a chosen card with a granted ability, or let each controller copy their own tokens.",
+    "cards": [
+      "Applied Geometry",
+      "Dollhouse of Horrors",
+      "March from Velis Vel",
+      "Parallel Evolution"
+    ]
+  },
+  {
+    "feature": "Delayed end-step effects on created or returned objects",
+    "description": "Add delayed triggers bound to a chosen or created object or timing: the cleanup step, damaged creatures, and a delayed cascade grant.",
+    "cards": ["Dark Apostle", "Reckless Blaze", "Thawing Glaciers"]
+  },
+  {
+    "feature": "Reveal/exile/mill-until loops with leftovers handling",
+    "description": "Add reveal-until, look-at-top and search ops with a card type or variable count, a free cast or draw instead, and leftovers or two-pile splits handled as the card requires.",
+    "cards": ["Chaotic Transformation", "Yennett, Cryptic Sovereign"]
+  },
+  {
+    "feature": "Life gained or lost this turn",
+    "description": "Add conditions and values that read the life you gained this turn, for intervening-if clauses and mill counts.",
+    "cards": ["Courier Bat", "Hope Estheim"]
+  },
+  {
+    "feature": "Put onto battlefield tapped and attacking or attached",
+    "description": "Add counter and base-stat options for permanents returning from graveyard or hand, including two counters and +0/+1 or +1/+0 counter kinds.",
+    "cards": ["Dwarven Armorer", "Retrofitted Transmogrant"]
+  },
+  {
+    "feature": "Life totals and game-result effects",
+    "description": "Add effects that exchange or redistribute life totals between players.",
+    "cards": ["Magus of the Mirror", "Reverse the Sands"]
+  },
+  {
+    "feature": "Stack, spell copy and spell-targeting effects",
+    "description": "Add stack interaction that copies a spell once per legal target or counters the triggering spell without a target slot.",
+    "cards": ["Dovescape", "Precursor Golem"]
+  },
+  {
+    "feature": "one-off",
+    "description": "Single cards with their own missing feature: bidding, text changing, divided counters, attach to player, extra upkeep steps, and others.",
+    "cards": [
+      "Artificial Evolution",
+      "Bitterheart Witch",
+      "Desperate Gambit",
+      "Diligent Farmhand",
+      "Eyes Everywhere",
+      "Hinder",
+      "Illicit Auction",
+      "Jugan, the Rising Star",
+      "Kemba, Kha Enduring",
+      "Obeka, Splitter of Seconds",
+      "Sinister Waltz",
+      "Whirlpool Rider"
+    ]
+  }
+]

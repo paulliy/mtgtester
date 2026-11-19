@@ -1,0 +1,22 @@
+{
+  "name": "Collector Ouphe",
+  "oracleId": "0c4bc9ea-a5fd-4f44-96a1-5448eee228c4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Activated abilities of artifacts can't be activated."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "cantActivateAbilities",
+        "who": "all",
+        "yourTurnOnly": false,
+        "filter": {
+          "kind": "type",
+          "value": "Artifact"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "Perilous Research",
+  "oracleId": "9243b539-5f9e-4bb3-9973-3d48366aa7cc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Draw two cards, then sacrifice a permanent."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "description": "Draw two cards, then sacrifice a permanent.",
+      "targets": [],
+      "effects": [
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "sacrificeOneThen",
+          "selector": {
+            "kind": "controller",
+            "who": "you"
+          },
+          "then": []
+        }
+      ]
+    }
+  }
+}

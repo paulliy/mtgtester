@@ -1,0 +1,3 @@
+Target creature you control and target permanent.
+The creature you control deals damage equal to its power to that permanent.
+If you control one or more Eldrazi permanents, you gain 3 life.

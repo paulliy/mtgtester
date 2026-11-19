@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No until-end-of-turn effect sets this creature's base power to another creature's power as a value (pump ops adjust by a delta and becomeCreatureUntilEot takes fixed numbers), so the optional base-power set cannot be stated exactly."}

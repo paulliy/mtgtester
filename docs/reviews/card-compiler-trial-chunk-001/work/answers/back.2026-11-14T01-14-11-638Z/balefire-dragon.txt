@@ -1,0 +1,1 @@
+Whenever this creature deals combat damage to a player, each creature takes damage equal to the combat damage that was dealt. This creature is the source of that damage, and the damage is treated as controlled by the player who was dealt combat damage.

@@ -1,0 +1,47 @@
+{
+  "name": "Dragonback Assault",
+  "oracleId": "413fb2db-f1a1-4d22-ac37-a52821d35ca2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this enchantment enters, it deals 3 damage to each creature and each planeswalker."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "damageEach",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "type",
+                  "value": "Planeswalker"
+                }
+              ]
+            },
+            "amount": {
+              "kind": "const",
+              "n": 3
+            }
+          }
+        ],
+        "description": "When this enchantment enters, it deals 3 damage to each creature and each planeswalker."
+      }
+    ]
+  }
+}

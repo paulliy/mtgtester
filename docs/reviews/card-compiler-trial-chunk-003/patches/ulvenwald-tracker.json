@@ -1,0 +1,58 @@
+{
+  "name": "Ulvenwald Tracker",
+  "oracleId": "63a37c08-7e38-4fe2-9a71-cc4604c4f831",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{G}, {T}: Target creature you control fights another target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you"
+            },
+            {
+              "kind": "creature",
+              "differentFromSlots": [
+                0
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "op": "fight",
+              "first": 0,
+              "second": 1
+            }
+          ],
+          "description": "{1}{G}, {T}: Target creature you control fights another target creature."
+        }
+      }
+    ]
+  }
+}

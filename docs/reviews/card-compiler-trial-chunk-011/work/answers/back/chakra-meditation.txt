@@ -1,0 +1,1 @@
+Whenever you cast an instant or sorcery spell, draw a card. Then if there are three or more cards with the subtype Lesson in your graveyard, nothing happens. Otherwise, discard a card.

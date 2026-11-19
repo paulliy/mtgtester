@@ -1,0 +1,1 @@
+When this creature enters, each opponent is dealt 1 damage. Create a Blood token. A Blood token has "{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card."

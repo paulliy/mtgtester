@@ -1,0 +1,1 @@
+This deals 2 damage to each creature that isn't a Pirate.

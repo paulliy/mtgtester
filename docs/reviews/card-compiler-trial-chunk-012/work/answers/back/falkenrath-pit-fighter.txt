@@ -1,0 +1,1 @@
+{1}{R}, Discard a card, Sacrifice a Vampire, which may be this creature: Draw two cards. Activate only if an opponent lost life this turn.

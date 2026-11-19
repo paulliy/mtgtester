@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The losesLife trigger cannot require that each opponent lost exactly 1 life, and exileTopNPlayableUntilEot lasts only until end of turn, not until the controller's next end step."}

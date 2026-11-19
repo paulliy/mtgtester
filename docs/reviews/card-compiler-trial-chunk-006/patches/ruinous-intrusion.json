@@ -1,0 +1,39 @@
+{
+  "name": "Ruinous Intrusion",
+  "oracleId": "4f945baa-40a9-4494-b2f9-f1926f3fec84",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Exile target artifact or enchantment. Put X +1/+1 counters on target creature you control, where X is the mana value of the permanent exiled this way."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "artifactOrEnchantment"
+        },
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "putCounters",
+          "target": 1,
+          "counter": "+1/+1",
+          "count": {
+            "kind": "manaValueOfTarget",
+            "target": 0
+          }
+        },
+        {
+          "op": "exile",
+          "target": 0
+        }
+      ],
+      "description": "Exile target artifact or enchantment. Put X +1/+1 counters on target creature you control, where X is the mana value of the permanent exiled this way."
+    }
+  }
+}

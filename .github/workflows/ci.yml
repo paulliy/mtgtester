@@ -166,6 +166,9 @@ jobs:
       - id: deps
         uses: ./.github/actions/setup-bun-deps
       - run: bun run format:check
+      # The ADR index is generated from the ADR files; this runs on docs-only changes too.
+      - if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        run: bun run adr:index --check
       - if: ${{ !cancelled() && steps.deps.outcome == 'success' && env.CODE == 'true' }}
         run: bun run typecheck
       - if: ${{ !cancelled() && steps.deps.outcome == 'success' && env.CODE == 'true' }}

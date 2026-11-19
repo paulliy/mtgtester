@@ -1,0 +1,2 @@
+This spell costs {1} less to cast for each opponent you have. This cost reduction applies only to spells you cast.
+This spell has no effects other than its cost reduction, so it does nothing when it resolves.

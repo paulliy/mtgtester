@@ -1,0 +1,55 @@
+{
+  "name": "Eternal Dragon",
+  "oracleId": "04d8615c-3883-4251-9790-1d8a4a40e142",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{3}{W}{W}: Return this card from your graveyard to your hand. Activate only during your upkeep."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 3,
+              "colored": {
+                "W": 2,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "zone": "graveyard",
+        "condition": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "yourTurn"
+            },
+            {
+              "kind": "duringStep",
+              "step": "upkeep"
+            }
+          ]
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "returnSelfFromGraveyardToHand"
+            }
+          ],
+          "description": "{3}{W}{W}: Return this card from your graveyard to your hand. Activate only during your upkeep."
+        }
+      }
+    ]
+  }
+}

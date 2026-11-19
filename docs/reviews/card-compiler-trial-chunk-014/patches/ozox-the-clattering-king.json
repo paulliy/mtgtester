@@ -1,0 +1,89 @@
+{
+  "name": "Ozox, the Clattering King",
+  "oracleId": "04e575d1-f843-4330-972f-e77b264073e0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ dies, create Jumblebones, a legendary 2/1 black Skeleton creature token with \"Jumblebones can't block\" and \"When Jumblebones leaves the battlefield, return target card named ~ from your graveyard to your hand.\""
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Jumblebones",
+              "typeLine": "Legendary Creature — Skeleton",
+              "supertypes": [
+                "Legendary"
+              ],
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Skeleton"
+              ],
+              "colors": [
+                "B"
+              ],
+              "power": 2,
+              "toughness": 1,
+              "legendary": true,
+              "ruleStatics": [
+                {
+                  "kind": "cantBlockMatching",
+                  "filter": {
+                    "kind": "self"
+                  }
+                }
+              ],
+              "triggers": [
+                {
+                  "kind": "triggered",
+                  "trigger": {
+                    "when": "leavesBattlefield",
+                    "subject": {
+                      "kind": "self"
+                    }
+                  },
+                  "optional": false,
+                  "targets": [
+                    {
+                      "kind": "cardInGraveyard",
+                      "filter": {
+                        "kind": "name",
+                        "value": "Ozox, the Clattering King"
+                      }
+                    }
+                  ],
+                  "effects": [
+                    {
+                      "op": "graveyardToHand",
+                      "target": 0
+                    }
+                  ],
+                  "description": "When Jumblebones leaves the battlefield, return target card named Ozox, the Clattering King from your graveyard to your hand."
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "When Ozox dies, create Jumblebones, a legendary 2/1 black Skeleton creature token with \"Jumblebones can't block\" and \"When Jumblebones leaves the battlefield, return target card named Ozox, the Clattering King from your graveyard to your hand.\""
+      }
+    ]
+  }
+}

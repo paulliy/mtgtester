@@ -1,0 +1,49 @@
+{
+  "name": "Slaughter Specialist",
+  "oracleId": "ab431f93-73bb-49d9-9321-a0712f096ed7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, each opponent creates a 1/1 white Human creature token."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "eachOpponentCreatesTokens",
+            "spec": {
+              "name": "Human",
+              "typeLine": "Creature — Human",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Human"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "When this creature enters, each opponent creates a 1/1 white Human creature token."
+      }
+    ]
+  }
+}

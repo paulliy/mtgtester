@@ -1,0 +1,2 @@
+{3}{B}, {T}: Put a shadow counter on target creature.
+Each creature that has a shadow counter on it is a Wraith in addition to its other creature types.

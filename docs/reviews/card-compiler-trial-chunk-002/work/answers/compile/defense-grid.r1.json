@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No rule static adds cost to all spells: costReduction only lowers cost, and opponentNonHandSpellCostIncrease covers only opponents' non-hand spells, so spells of the controller and the timing exception cannot be stated."}

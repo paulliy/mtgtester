@@ -1,0 +1,39 @@
+{
+  "name": "Tormod's Crypt",
+  "oracleId": "1573f7f9-672c-421a-b1ac-3d0d8aea59ca",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Sacrifice this artifact: Exile target player's graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "player"
+            }
+          ],
+          "effects": [
+            {
+              "op": "exileTargetPlayerGraveyard",
+              "target": 0
+            }
+          ],
+          "description": "{T}, Sacrifice this artifact: Exile target player's graveyard."
+        }
+      }
+    ]
+  }
+}

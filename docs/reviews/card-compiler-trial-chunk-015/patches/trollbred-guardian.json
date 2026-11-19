@@ -1,0 +1,59 @@
+{
+  "name": "Trollbred Guardian",
+  "oracleId": "e9c756a5-f4d4-4b84-be60-ad4bc0d1acf9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}{G}: Adapt 2."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "conditionalEffect",
+              "condition": {
+                "kind": "sourceHasCounters",
+                "counter": "+1/+1",
+                "cmp": "==",
+                "n": 0
+              },
+              "then": [
+                {
+                  "op": "putCountersEach",
+                  "selector": {
+                    "kind": "self"
+                  },
+                  "counter": "+1/+1",
+                  "count": 2
+                }
+              ],
+              "else": []
+            }
+          ],
+          "description": "{2}{G}: Adapt 2."
+        }
+      }
+    ]
+  }
+}

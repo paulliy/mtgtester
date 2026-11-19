@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target restriction 'creature with power 2 or less' needs powerAtMost, which the schema marks event-only, so it cannot be checked as a target filter."}

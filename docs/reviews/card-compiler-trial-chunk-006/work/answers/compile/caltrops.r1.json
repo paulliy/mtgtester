@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"attacks","subject":{"kind":"permanent","selector":{"kind":"type","value":"Creature"}}},"optional":false,"targets":[],"effects":[{"op":"dealDamage","target":"triggerObject","amount":{"kind":"const","n":1}}],"description":"Whenever a creature attacks, this artifact deals 1 damage to it."}]}}

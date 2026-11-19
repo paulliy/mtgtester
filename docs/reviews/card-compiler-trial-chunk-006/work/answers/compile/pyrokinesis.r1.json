@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature","count":{"min":0,"max":999}}],"effects":[{"op":"dealDamageDivided","targetSlot":0,"total":{"kind":"const","n":4}}],"description":"Pyrokinesis deals 4 damage divided as you choose among any number of target creatures."}}}

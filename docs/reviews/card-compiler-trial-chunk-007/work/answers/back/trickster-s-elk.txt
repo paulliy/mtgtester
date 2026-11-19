@@ -1,0 +1,4 @@
+Enchanted creature is an Elk in addition to its other creature types.
+Enchanted creature is green.
+Enchanted creature loses all abilities.
+Enchanted creature has base power and toughness 3/3.

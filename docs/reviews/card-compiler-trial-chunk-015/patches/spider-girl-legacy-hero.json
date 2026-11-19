@@ -1,0 +1,25 @@
+{
+  "name": "Spider-Girl, Legacy Hero",
+  "oracleId": "d459b3f5-a18c-4c17-a855-dc147f7c2161",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "During your turn, ~ has flying."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "flying"
+        },
+        "condition": {
+          "kind": "yourTurn"
+        }
+      }
+    ]
+  }
+}

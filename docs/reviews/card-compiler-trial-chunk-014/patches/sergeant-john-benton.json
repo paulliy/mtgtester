@@ -1,0 +1,40 @@
+{
+  "name": "Sergeant John Benton",
+  "oracleId": "987a0b61-2ce4-47bd-8f5e-1e7bf01d0869",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Share Intelligence — Whenever ~ deals combat damage to a player, you and that player each draw that many cards."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "damageDealt"
+            }
+          },
+          {
+            "op": "draw",
+            "count": {
+              "kind": "damageDealt"
+            },
+            "player": "eventPlayer"
+          }
+        ],
+        "description": "Share Intelligence — Whenever Sergeant John Benton deals combat damage to a player, you and that player each draw that many cards."
+      }
+    ]
+  }
+}

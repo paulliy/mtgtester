@@ -1,0 +1,48 @@
+{
+  "name": "Captain Lannery Storm",
+  "oracleId": "235bf0ba-658c-463f-b112-7478ba27bd7b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you sacrifice a Treasure, ~ gets +1/+0 until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "sacrificed",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Treasure"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "pumpEachUntilEot",
+            "selector": {
+              "kind": "self"
+            },
+            "power": 1,
+            "toughness": 0
+          }
+        ],
+        "description": "Whenever you sacrifice a Treasure, Captain Lannery Storm gets +1/+0 until end of turn."
+      }
+    ]
+  }
+}

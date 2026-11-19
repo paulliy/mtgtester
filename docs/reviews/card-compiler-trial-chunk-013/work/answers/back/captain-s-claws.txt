@@ -1,0 +1,1 @@
+Whenever equipped creature attacks, create a 1/1 white Kor Ally creature token with Kor and Ally subtypes that is attacking.

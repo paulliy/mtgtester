@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A's mana is kept only until end of turn (it is not lost as steps and phases end, until end of turn); Text B says the mana is persistent with no such until-end-of-turn duration."]}

@@ -1,0 +1,1 @@
+{1}, {T}, Exile this artifact: Exile all graveyards. Draw a card.

@@ -1,0 +1,40 @@
+{
+  "name": "Besmirch",
+  "oracleId": "fc80380c-7d75-4556-aaf2-bf7b2c757e75",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Until end of turn, gain control of target creature and it gains haste. Untap and goad that creature."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "duration": "untilEndOfTurn"
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "haste"
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        },
+        {
+          "op": "goad",
+          "target": 0
+        }
+      ],
+      "description": "Until end of turn, gain control of target creature and it gains haste. Untap and goad that creature."
+    }
+  }
+}

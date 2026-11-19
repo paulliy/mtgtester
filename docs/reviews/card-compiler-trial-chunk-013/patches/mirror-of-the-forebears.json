@@ -1,0 +1,55 @@
+{
+  "name": "Mirror of the Forebears",
+  "oracleId": "9eaeb54b-73a8-43cc-b4d8-ed8b5eb19646",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}: Until end of turn, this artifact becomes a copy of target creature you control of the chosen type, except it's an artifact in addition to its other types."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "controller": "you",
+              "filter": {
+                "kind": "chosenSubtype"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "becomeCopyOf",
+              "ref": 0,
+              "untilEot": true,
+              "addTypes": [
+                "Artifact"
+              ]
+            }
+          ],
+          "description": "{1}: Until end of turn, this artifact becomes a copy of target creature you control of the chosen type, except it's an artifact in addition to its other types."
+        }
+      }
+    ]
+  }
+}

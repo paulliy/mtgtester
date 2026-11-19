@@ -1,0 +1,2 @@
+{5}, {T}: Draw two cards. This ability costs {1} less to activate for each page counter on this artifact.
+This artifact has no ability that puts page counters on it.

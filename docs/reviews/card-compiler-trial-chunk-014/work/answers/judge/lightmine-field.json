@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A triggers whenever one or more creatures attack; Text B triggers whenever a player declares an attack, which can differ in multiplayer when several players attack in one combat.","Text A's damage is dealt by this enchantment as the source; Text B does not name a source for the damage."]}

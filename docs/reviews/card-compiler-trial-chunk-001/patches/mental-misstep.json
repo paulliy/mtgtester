@@ -1,0 +1,39 @@
+{
+  "name": "Mental Misstep",
+  "oracleId": "1a0770e6-b093-4439-baff-6889a50ba12e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Counter target spell with mana value 1."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "spell",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "manaValueAtLeast",
+                "n": 1
+              },
+              {
+                "kind": "manaValueAtMost",
+                "n": 1
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "counter",
+          "target": 0
+        }
+      ],
+      "description": "Counter target spell with mana value 1."
+    }
+  }
+}

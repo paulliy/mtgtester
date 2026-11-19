@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"cantActivateAbilities","who":"opponents","yourTurnOnly":false,"filter":{"kind":"allOf","of":[{"kind":"controller","who":"opponents"},{"kind":"type","value":"Creature"}]}}]}}

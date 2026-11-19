@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"manaAbilities":[{"units":[["C"]],"conditionalUnits":{"condition":{"kind":"allOf","of":[{"kind":"countPermanents","selector":{"kind":"subtype","value":"Urza's Power-Plant"},"scope":"you","cmp":">=","n":1},{"kind":"countPermanents","selector":{"kind":"subtype","value":"Urza's Tower"},"scope":"you","cmp":">=","n":1}]},"units":[["C"],["C"]]}}]}}

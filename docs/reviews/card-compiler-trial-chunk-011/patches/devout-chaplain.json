@@ -1,0 +1,53 @@
+{
+  "name": "Devout Chaplain",
+  "oracleId": "1e575a82-e128-4637-87cd-f075654bc41b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Tap two untapped Humans you control: Exile target artifact or enchantment."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "tapOthers",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Human"
+                }
+              ]
+            },
+            "count": 2
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "artifactOrEnchantment"
+            }
+          ],
+          "effects": [
+            {
+              "op": "exile",
+              "target": 0
+            }
+          ],
+          "description": "{T}, Tap two untapped Humans you control: Exile target artifact or enchantment."
+        }
+      }
+    ]
+  }
+}

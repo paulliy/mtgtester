@@ -1,0 +1,1 @@
+{T}: Add {C}. If you control a permanent named Urza's Mine and a permanent named Urza's Tower, each compared against a count that is hidden in the data (the comparison operator is hidden, the number is 1), add {C}{C} instead of {C}.

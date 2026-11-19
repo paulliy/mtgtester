@@ -1,0 +1,55 @@
+{
+  "name": "Vodalian Wave-Knight",
+  "oracleId": "148145ef-a368-4caf-921d-e3809adf03de",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you draw a card, put a +1/+1 counter on each other Merfolk and/or Knight you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "drawsCard",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Merfolk"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Knight"
+                    }
+                  ]
+                }
+              ]
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever you draw a card, put a +1/+1 counter on each other Merfolk and/or Knight you control."
+      }
+    ]
+  }
+}

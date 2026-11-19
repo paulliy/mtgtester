@@ -1,0 +1,2 @@
+Target creature.
+Double that creature's power. The data gives no duration.

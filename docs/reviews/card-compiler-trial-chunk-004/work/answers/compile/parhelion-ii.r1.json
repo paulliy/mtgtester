@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"createTokenAttacking is documented as making tokens tapped and attacking, but Parhelion II's tokens are only attacking (untapped), and the schema has no untapped-and-attacking form."}

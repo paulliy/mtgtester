@@ -1,0 +1,47 @@
+{
+  "name": "Norin the Wary",
+  "oracleId": "b8b51a29-a2be-4b97-a73c-ea512d3d5622",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When a player casts a spell or a creature attacks, exile ~. Return it to the battlefield under its owner's control at the beginning of the next end step."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "each"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "exileTargetReturnAtNextEndStep",
+            "target": "source",
+            "returnUnder": "owner"
+          }
+        ],
+        "description": "When a player casts a spell or a creature attacks, exile Norin. Return it to the battlefield under its owner's control at the beginning of the next end step."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attackDeclared",
+          "attacker": "any"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "exileTargetReturnAtNextEndStep",
+            "target": "source",
+            "returnUnder": "owner"
+          }
+        ],
+        "description": "When a player casts a spell or a creature attacks, exile Norin. Return it to the battlefield under its owner's control at the beginning of the next end step."
+      }
+    ]
+  }
+}

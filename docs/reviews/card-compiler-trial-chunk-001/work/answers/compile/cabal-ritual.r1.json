@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"conditionalEffect","condition":{"kind":"cardsInYourGraveyard","cmp":">=","n":7},"then":[{"op":"addMana","amount":{"kind":"const","n":5},"colors":[],"fixedSymbols":["B","B","B","B","B"]}],"else":[{"op":"addMana","amount":{"kind":"const","n":3},"colors":[],"fixedSymbols":["B","B","B"]}]}]}}}

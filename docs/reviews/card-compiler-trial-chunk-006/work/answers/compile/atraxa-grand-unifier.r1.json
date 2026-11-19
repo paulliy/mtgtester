@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Atraxa's reveal makes a separate choice for each of eight card types, one card per type, but lookAtTopN's mayPut takes a single filter with a single count, so the per-type picks cannot be expressed."}

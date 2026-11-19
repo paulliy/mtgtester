@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The intervening-if 'if it's not their turn' compares against the caster's turn, but the only turn conditions (yourTurn, notYourTurn) are relative to the source's controller."}

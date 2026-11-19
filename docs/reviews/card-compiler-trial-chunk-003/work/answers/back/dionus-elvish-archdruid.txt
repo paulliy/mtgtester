@@ -1,0 +1,1 @@
+Each Elf you control has "Whenever this creature becomes tapped, untap it and put a +1/+1 counter on it. This ability triggers only once each turn, and only during your turn."

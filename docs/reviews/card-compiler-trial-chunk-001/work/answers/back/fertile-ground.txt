@@ -1,0 +1,1 @@
+Whenever enchanted permanent is tapped for mana, it produces one additional mana of any one color.

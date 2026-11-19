@@ -1,0 +1,5 @@
+During your turn, each artifact you control that isn't an Equipment and each enchantment you control that isn't an Aura, with mana value 4 or greater, is an Elemental creature in addition to its other types.
+During your turn, each of those permanents is a 4/4 creature.
+During your turn, each of those permanents has indestructible.
+During your turn, each of those permanents has haste.
+During your turn, each of those permanents has "Whenever this permanent deals combat damage to a player, draw a card."

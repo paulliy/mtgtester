@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"self"},"op":{"layer":6,"addKeyword":"hexproof"},"condition":{"kind":"isUntapped"}}]}}

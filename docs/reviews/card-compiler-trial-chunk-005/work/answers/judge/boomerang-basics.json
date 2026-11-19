@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Step order differs: Text A returns the target permanent to its owner's hand first and then draws a card if you controlled it; Text B draws a card first (if you control the target) and returns the permanent afterward."]}

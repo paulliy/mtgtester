@@ -1,0 +1,1 @@
+Whenever one or more creatures you control that are equipped, enchanted by an Aura you control, or have a counter on them attack, untap each creature you control that is equipped, enchanted by an Aura you control, or has a counter on it. There is an additional combat phase. This ability triggers only once each turn.

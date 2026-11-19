@@ -1,0 +1,1 @@
+Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. Then if at least five mana was spent to cast that spell, add {R} equal to this creature's power.

@@ -758,6 +758,9 @@ const effectExpressions = {
  */
 const effectExtraFields: Partial<Record<Effect['op'], Record<string, Check>>> = {
   eachPlayerMayPutCountersAndGoad: { counter: text },
+  // The executor reads only 'all'; anything else would silently mean "your graveyard".
+  graveyardToBattlefieldEach: { scope: optional(oneOf('you', 'all')) },
+  graveyardToHandEach: { scope: optional(oneOf('you', 'all')) },
   gainControlTarget: { duration: optional(controlDuration) },
   gainControl: {
     duration: optional(controlDuration),

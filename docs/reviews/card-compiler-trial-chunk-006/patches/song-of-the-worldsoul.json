@@ -1,0 +1,28 @@
+{
+  "name": "Song of the Worldsoul",
+  "oracleId": "fbb70f54-8c33-4de0-b05c-f0bff9ffa6ce",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you cast a spell, populate."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "populate"
+          }
+        ],
+        "description": "Whenever you cast a spell, populate."
+      }
+    ]
+  }
+}

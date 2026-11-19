@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"searchLibrary","filter":{"kind":"not","of":{"kind":"supertype","value":"Legendary"}},"destinations":[{"zone":"graveyard"}]},{"op":"shuffle"}],"description":"Search your library for a nonlegendary card, put that card into your graveyard, then shuffle."}}}

@@ -1,0 +1,58 @@
+{
+  "name": "Galvanic Discharge",
+  "oracleId": "ef0f06f1-3991-4897-bf62-d4cab7ec79a0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Choose target creature or planeswalker. You get {E}{E}{E} , then you may pay any amount of {E}. ~ deals that much damage to that permanent."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Planeswalker"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainEnergy",
+          "amount": {
+            "kind": "const",
+            "n": 3
+          }
+        },
+        {
+          "op": "mayPayEnergyUpTo",
+          "min": 0,
+          "max": {
+            "kind": "energyAvailable"
+          },
+          "then": [
+            {
+              "op": "dealDamage",
+              "target": 0,
+              "amount": {
+                "kind": "energyPaid"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Choose target creature or planeswalker. You get {E}{E}{E}, then you may pay any amount of {E}. Galvanic Discharge deals that much damage to that permanent."
+    }
+  }
+}

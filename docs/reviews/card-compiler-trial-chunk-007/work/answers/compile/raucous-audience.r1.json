@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"manaAbilities":[{"units":[["G"]],"costs":[{"kind":"tap"}],"conditionalUnits":{"condition":{"kind":"countPermanents","selector":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"controller","who":"you"},{"kind":"powerAtLeast","n":4}]},"scope":"you","cmp":">=","n":1},"units":[["G"],["G"]]}}]}}

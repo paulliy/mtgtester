@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"attackDeclared","attacker":"you","minAttackers":1,"attackerFilter":{"kind":"subtype","value":"Bird"}},"optional":false,"targets":[],"effects":[{"op":"scry","count":2}],"description":"Whenever you attack with one or more Birds, scry 2."}]}}

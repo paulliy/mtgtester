@@ -1,0 +1,76 @@
+{
+  "name": "Arnyn, Deathbloom Botanist",
+  "oracleId": "3debd5c7-da3c-4130-8ed9-e156e10034b6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature you control with power or toughness 1 or less dies, target opponent loses 2 life and you gain 2 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "powerAtMost",
+                      "n": 1
+                    },
+                    {
+                      "kind": "not",
+                      "of": {
+                        "kind": "toughnessAtLeast",
+                        "n": 2
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "player",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "loseLifeTarget",
+            "target": 0,
+            "amount": {
+              "kind": "const",
+              "n": 2
+            }
+          },
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 2
+            }
+          }
+        ],
+        "description": "Whenever a creature you control with power or toughness 1 or less dies, target opponent loses 2 life and you gain 2 life."
+      }
+    ]
+  }
+}

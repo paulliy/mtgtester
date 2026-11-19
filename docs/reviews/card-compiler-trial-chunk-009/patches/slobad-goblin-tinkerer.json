@@ -1,0 +1,50 @@
+{
+  "name": "Slobad, Goblin Tinkerer",
+  "oracleId": "1f2d6cf4-b8f4-440f-ac08-ca47ada868ac",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Sacrifice an artifact: Target artifact gains indestructible until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "type",
+                  "value": "Artifact"
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "artifact"
+            }
+          ],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": 0,
+              "keyword": "indestructible"
+            }
+          ],
+          "description": "Sacrifice an artifact: Target artifact gains indestructible until end of turn."
+        }
+      }
+    ]
+  }
+}

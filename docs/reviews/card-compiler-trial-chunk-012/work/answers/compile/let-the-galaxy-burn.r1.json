@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"damageEach","selector":{"kind":"allOf","of":[{"kind":"type","value":"Creature"},{"kind":"not","of":{"kind":"enteredThisTurn"}}]},"amount":{"kind":"plus","of":{"kind":"xValue"},"n":2}}],"description":"Let the Galaxy Burn deals X plus 2 damage to each creature that didn't enter this turn."}}}

@@ -1,0 +1,36 @@
+{
+  "name": "Divinity of Pride",
+  "oracleId": "2c91c236-34d7-4454-a55a-784db7f68bde",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ gets +4/+4 as long as you have 25 or more life."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 4,
+          "toughness": 4
+        },
+        "condition": {
+          "kind": "compareValues",
+          "left": {
+            "kind": "lifeTotal",
+            "scope": "you"
+          },
+          "cmp": ">=",
+          "right": {
+            "kind": "const",
+            "n": 25
+          }
+        }
+      }
+    ]
+  }
+}

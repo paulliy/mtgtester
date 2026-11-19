@@ -1,0 +1,32 @@
+{
+  "name": "Fortified Beachhead",
+  "oracleId": "387fe395-e4a0-4fb2-8d6c-88a1a21d2ed8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As this land enters, you may reveal a Soldier card from your hand. ~ enters tapped unless you revealed a Soldier card this way or you control a Soldier."
+  ],
+  "compose": "append",
+  "def": {
+    "entersTappedUnless": {
+      "kind": "anyOf",
+      "of": [
+        {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "subtype",
+            "value": "Soldier"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 1
+        },
+        {
+          "kind": "mayRevealCardFromHand",
+          "subtypes": [
+            "Soldier"
+          ]
+        }
+      ]
+    }
+  }
+}

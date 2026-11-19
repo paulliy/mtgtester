@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Choosing a creature type as the ability resolves and then creating one Treasure per creature you control of that chosen type has no schema op (chosenSubtype reads a type chosen as the permanent entered, not one chosen on resolution)."}

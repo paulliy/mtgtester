@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No trigger fires when the equipped creature deals damage to a creature; dealtDamage watches the object that is damaged, not the source that deals the damage."}

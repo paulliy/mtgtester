@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"loyalty","delta":1}],"timing":"sorcery","ability":{"kind":"activated","targets":[],"effects":[{"op":"mayDiscardThenDraw","count":1}],"description":"+1: You may discard a card. If you do, draw a card."}}]}}

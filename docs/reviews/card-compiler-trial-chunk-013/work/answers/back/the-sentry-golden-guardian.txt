@@ -1,0 +1,1 @@
+When this enters, target player (opponents only) creates a token. The token is a 5/5 black Legendary Creature — Horror Villain named The Void with flying and indestructible. The token attacks each combat if able.

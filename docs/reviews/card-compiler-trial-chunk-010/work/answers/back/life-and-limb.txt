@@ -1,0 +1,1 @@
+Each Forest and each Saproling is a green creature and land in addition to its other types. It gains the creature types Saproling and Forest, and it has base power and toughness 1/1.

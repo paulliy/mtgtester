@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect reveals cards from the top until a creature card is found, puts that card onto the battlefield, and bottoms the rest; revealUntilAura is Aura-only and lookAtTopN takes a fixed count."}

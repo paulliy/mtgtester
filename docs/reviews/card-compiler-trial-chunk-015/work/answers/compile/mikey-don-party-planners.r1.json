@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The extra +1/+1 counter on creature spells cast from the top of the library has no condition on the cast zone, since entersWithCounters is unconditional."}

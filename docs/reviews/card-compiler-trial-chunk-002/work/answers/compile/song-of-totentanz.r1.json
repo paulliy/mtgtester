@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A token spec has no printed cantBlock characteristic (only the card-level cantBlock field has one), and no documented token ruleStatic states 'this token can't block' exactly."}

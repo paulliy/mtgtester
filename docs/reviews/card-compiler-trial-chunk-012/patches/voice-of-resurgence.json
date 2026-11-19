@@ -1,0 +1,178 @@
+{
+  "name": "Voice of Resurgence",
+  "oracleId": "5cbbb3f3-63a4-4983-81ea-8c405b10e63f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an opponent casts a spell during your turn and when this creature dies, create a green and white Elemental creature token with \"~'s power and toughness are each equal to the number of creatures you control.\""
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "castsSpell",
+          "caster": "opponent",
+          "condition": {
+            "kind": "yourTurn"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "spec": {
+              "name": "Elemental",
+              "typeLine": "Token Creature — Elemental",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Elemental"
+              ],
+              "colors": [
+                "G",
+                "W"
+              ],
+              "power": null,
+              "toughness": null,
+              "staticEffects": [
+                {
+                  "affects": {
+                    "kind": "self"
+                  },
+                  "op": {
+                    "layer": 7,
+                    "sublayer": "a",
+                    "power": {
+                      "kind": "countPermanents",
+                      "selector": {
+                        "kind": "allOf",
+                        "of": [
+                          {
+                            "kind": "controller",
+                            "who": "you"
+                          },
+                          {
+                            "kind": "type",
+                            "value": "Creature"
+                          }
+                        ]
+                      },
+                      "scope": "you"
+                    },
+                    "toughness": {
+                      "kind": "countPermanents",
+                      "selector": {
+                        "kind": "allOf",
+                        "of": [
+                          {
+                            "kind": "controller",
+                            "who": "you"
+                          },
+                          {
+                            "kind": "type",
+                            "value": "Creature"
+                          }
+                        ]
+                      },
+                      "scope": "you"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "description": "Whenever an opponent casts a spell during your turn, create a green and white Elemental creature token with \"This token's power and toughness are each equal to the number of creatures you control.\""
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "count": {
+              "kind": "const",
+              "n": 1
+            },
+            "spec": {
+              "name": "Elemental",
+              "typeLine": "Token Creature — Elemental",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Elemental"
+              ],
+              "colors": [
+                "G",
+                "W"
+              ],
+              "power": null,
+              "toughness": null,
+              "staticEffects": [
+                {
+                  "affects": {
+                    "kind": "self"
+                  },
+                  "op": {
+                    "layer": 7,
+                    "sublayer": "a",
+                    "power": {
+                      "kind": "countPermanents",
+                      "selector": {
+                        "kind": "allOf",
+                        "of": [
+                          {
+                            "kind": "controller",
+                            "who": "you"
+                          },
+                          {
+                            "kind": "type",
+                            "value": "Creature"
+                          }
+                        ]
+                      },
+                      "scope": "you"
+                    },
+                    "toughness": {
+                      "kind": "countPermanents",
+                      "selector": {
+                        "kind": "allOf",
+                        "of": [
+                          {
+                            "kind": "controller",
+                            "who": "you"
+                          },
+                          {
+                            "kind": "type",
+                            "value": "Creature"
+                          }
+                        ]
+                      },
+                      "scope": "you"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "description": "When this creature dies, create a green and white Elemental creature token with \"This token's power and toughness are each equal to the number of creatures you control.\""
+      }
+    ]
+  }
+}

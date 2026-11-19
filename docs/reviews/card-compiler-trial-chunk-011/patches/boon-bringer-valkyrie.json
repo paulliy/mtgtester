@@ -1,0 +1,52 @@
+{
+  "name": "Boon-Bringer Valkyrie",
+  "oracleId": "8652d88f-edca-4235-b942-6e7467608de8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Backup 1"
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature"
+          }
+        ],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": 0,
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "op": "grantKeywordUntilEot",
+            "target": 0,
+            "keyword": "flying"
+          },
+          {
+            "op": "grantKeywordUntilEot",
+            "target": 0,
+            "keyword": "first strike"
+          },
+          {
+            "op": "grantKeywordUntilEot",
+            "target": 0,
+            "keyword": "lifelink"
+          }
+        ],
+        "description": "Backup 1"
+      }
+    ]
+  }
+}

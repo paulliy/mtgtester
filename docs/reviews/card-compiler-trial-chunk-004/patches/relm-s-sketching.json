@@ -1,0 +1,47 @@
+{
+  "name": "Relm's Sketching",
+  "oracleId": "dd6601c6-810d-4883-89d2-5d31419fb1cc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Create a token that's a copy of target artifact, creature, or land."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Land"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "createTokenCopyOf",
+          "ref": 0,
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Create a token that's a copy of target artifact, creature, or land."
+    }
+  }
+}

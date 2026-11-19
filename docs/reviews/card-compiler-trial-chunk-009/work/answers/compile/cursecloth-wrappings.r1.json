@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The embalm cost must equal the targeted card's own mana cost, which is dynamic, and grantAbilityUntilEot cannot grant that embalm ability (exile from graveyard, then a copy token) with a cost read from the target."}

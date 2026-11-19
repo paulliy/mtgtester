@@ -1,0 +1,37 @@
+{
+  "name": "Act of Aggression",
+  "oracleId": "9d7624ea-ffff-470b-928b-bbac66ddbd1c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "duration": "untilEndOfTurn"
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "haste"
+        }
+      ],
+      "description": "Gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until end of turn."
+    }
+  }
+}

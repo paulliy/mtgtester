@@ -1,0 +1,57 @@
+{
+  "name": "Dimir Keyrune",
+  "oracleId": "7685ff3f-6d61-4b1d-a381-49bc6274aa01",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{U}{B}: ~ becomes a 2/2 blue and black Horror artifact creature until end of turn and can't be blocked this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "becomeCreatureUntilEot",
+              "target": "source",
+              "subtypes": [
+                "Horror"
+              ],
+              "power": 2,
+              "toughness": 2,
+              "keywords": [],
+              "colors": [
+                "U",
+                "B"
+              ]
+            },
+            {
+              "op": "cantBeBlockedUntilEot",
+              "target": "source"
+            }
+          ],
+          "description": "{U}{B}: This artifact becomes a 2/2 blue and black Horror artifact creature until end of turn and can't be blocked this turn."
+        }
+      }
+    ]
+  }
+}

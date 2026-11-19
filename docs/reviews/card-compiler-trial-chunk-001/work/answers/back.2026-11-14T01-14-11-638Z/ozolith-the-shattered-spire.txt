@@ -1,0 +1,1 @@
+If one or more +1/+1 counters would be put on an artifact or creature you control, that many +1/+1 counters plus one additional +1/+1 counter are put on it instead. (Replacement effect; the multiplier is 1 and the addition is 1, applied to each such placement.)

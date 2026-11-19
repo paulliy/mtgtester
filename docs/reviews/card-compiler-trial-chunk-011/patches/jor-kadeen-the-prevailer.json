@@ -1,0 +1,44 @@
+{
+  "name": "Jor Kadeen, the Prevailer",
+  "oracleId": "7c4dbaa8-e24f-4126-81fe-3f218f520d8c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Creatures you control get +3/+0 as long as you control three or more artifacts."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "type",
+              "value": "Creature"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 3,
+          "toughness": 0
+        },
+        "condition": {
+          "kind": "countPermanents",
+          "selector": {
+            "kind": "type",
+            "value": "Artifact"
+          },
+          "scope": "you",
+          "cmp": ">=",
+          "n": 3
+        }
+      }
+    ]
+  }
+}

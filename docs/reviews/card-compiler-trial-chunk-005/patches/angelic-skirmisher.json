@@ -1,0 +1,96 @@
+{
+  "name": "Angelic Skirmisher",
+  "oracleId": "29e07d57-0f05-441c-844f-cf1d71102b2d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of each combat, choose first strike, vigilance, or lifelink. Creatures you control gain that ability until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "beginningOfCombat",
+          "player": "each"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "chooseOne",
+            "options": [
+              {
+                "effects": [
+                  {
+                    "op": "grantKeywordEachUntilEot",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "controller",
+                          "who": "you"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        }
+                      ]
+                    },
+                    "keyword": "first strike"
+                  }
+                ],
+                "description": "first strike"
+              },
+              {
+                "effects": [
+                  {
+                    "op": "grantKeywordEachUntilEot",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "controller",
+                          "who": "you"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        }
+                      ]
+                    },
+                    "keyword": "vigilance"
+                  }
+                ],
+                "description": "vigilance"
+              },
+              {
+                "effects": [
+                  {
+                    "op": "grantKeywordEachUntilEot",
+                    "selector": {
+                      "kind": "allOf",
+                      "of": [
+                        {
+                          "kind": "controller",
+                          "who": "you"
+                        },
+                        {
+                          "kind": "type",
+                          "value": "Creature"
+                        }
+                      ]
+                    },
+                    "keyword": "lifelink"
+                  }
+                ],
+                "description": "lifelink"
+              }
+            ]
+          }
+        ],
+        "description": "At the beginning of each combat, choose first strike, vigilance, or lifelink. Creatures you control gain that ability until end of turn."
+      }
+    ]
+  }
+}

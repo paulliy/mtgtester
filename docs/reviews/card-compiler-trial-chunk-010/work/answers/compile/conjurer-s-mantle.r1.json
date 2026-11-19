@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The 'card that shares a creature type with that creature' filter compares against the equipped creature's subtypes, and no selector can reference the attached creature's subtypes."}

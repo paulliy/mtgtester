@@ -1,0 +1,1 @@
+Whenever another creature you control enters, this creature gets +X/+0 until end of turn, where X is this creature's power.

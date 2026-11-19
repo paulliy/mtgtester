@@ -1,0 +1,2 @@
+When this creature dies, create two 2/2 green Ooze creature tokens.
+Each of those tokens has "When this creature dies, create two 1/1 green Ooze creature tokens."

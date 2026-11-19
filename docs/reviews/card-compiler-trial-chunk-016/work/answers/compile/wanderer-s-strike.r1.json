@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature"}],"effects":[{"op":"exile","target":0},{"op":"proliferate"}],"description":"Exile target creature, then proliferate."}}}
