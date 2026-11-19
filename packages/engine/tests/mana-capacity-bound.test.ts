@@ -16,7 +16,7 @@ import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { engineWork, engineWorkSince } from '../src/work-counters';
-import { conjure, copies, forest, gameConfig, oracle, spawn } from './fixtures';
+import { conjure, copies, forest, gameConfig, island, oracle, spawn } from './fixtures';
 
 /** P2 holds priority on P1's turn, in P1's upkeep, with nothing on the battlefield yet. */
 function game(): GameContext {
@@ -169,6 +169,43 @@ describe('the priority menu with the capacity bound', () => {
       }),
     );
     const spell = conjure(ctx, 'P2', instant('Two Drop', '{1}{G}'), 'hand');
+    expect(castable(ctx, spell.id)).toBe(true);
+  });
+
+  it('leaves a board where a tap restores another source to the full check', () => {
+    // Found in review (Codex on #86): while the artifact is untapped, lands P2 controls lose all
+    // abilities, so before any tap only its {G} is visible. Tapping it for {G} gives the Island
+    // back its {U}, and life pays the Phyrexian pip. Counting what is visible now ruled out a
+    // spell the payment search can pay for.
+    const ctx = game();
+    spawn(ctx, 'P2', island());
+    const suppressor = spawn(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Suppressor',
+        typeLine: 'Artifact',
+        oracleText: '{T}: Add {G}. You gain 1 life.',
+      }),
+    );
+    ctx.defs.set(suppressor.oracleId, {
+      ...ctx.defs.get(suppressor.oracleId)!,
+      staticEffects: [
+        {
+          affects: {
+            kind: 'allOf',
+            of: [
+              { kind: 'type', value: 'Land' },
+              { kind: 'controller', who: 'you' },
+            ],
+          },
+          op: { layer: 6, loseAllAbilities: true },
+          condition: { kind: 'isUntapped' },
+        },
+      ],
+    });
+    expect(fixedManaCapacity(ctx, playerById(ctx, 'P2'))).toBeNull();
+    const spell = conjure(ctx, 'P2', instant('Hybrid Drop', '{G}{U}{G/P}'), 'hand');
     expect(castable(ctx, spell.id)).toBe(true);
   });
 });

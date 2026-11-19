@@ -38733,34 +38733,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "7c340a39-4ee0-4ba1-bb66-6674f8020fda",
-    "name": "Gratuitous Violence",
-    "handledLines": [
-      "If a creature you control would deal damage to a permanent or player, it deals double that damage instead."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "damageDoubled",
-          "sourceFilter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "you"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "7d079c78-b2a9-444f-ab54-c61c041baa6d",
     "name": "Selfless Squire",
     "handledLines": [
@@ -56160,34 +56132,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "b3f7c4ac-b788-4307-9bc3-d99ce310e07c",
-    "name": "Calamity Bearer",
-    "handledLines": [
-      "If a Giant source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "damageDoubled",
-          "sourceFilter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "subtype",
-                "value": "Giant"
-              },
-              {
-                "kind": "controller",
-                "who": "you"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "b3f9da94-c822-49b8-a1fc-be82189206af",
     "name": "Three Dreams",
     "handledLines": [
@@ -59248,38 +59192,6 @@
               }
             },
             "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "bd655e8b-f192-4635-9e23-357b6f89ef8f",
-    "name": "Uncivil Unrest",
-    "handledLines": [
-      "If a creature you control with a +1/+1 counter on it would deal damage to a permanent or player, it deals double that damage instead."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "damageDoubled",
-          "sourceFilter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "you"
-              },
-              {
-                "counter": "+1/+1",
-                "kind": "hasCounter"
-              }
-            ]
           }
         }
       ]
@@ -93009,34 +92921,6 @@
     }
   },
   {
-    "oracleId": "oracle-calamity-bearer",
-    "name": "Calamity Bearer",
-    "handledLines": [
-      "If a Giant source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "damageDoubled",
-          "sourceFilter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "subtype",
-                "value": "Giant"
-              },
-              {
-                "kind": "controller",
-                "who": "you"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-caldera-pyremaw",
     "name": "Caldera Pyremaw",
     "handledLines": [
@@ -113228,34 +113112,6 @@
             }
           ],
           "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-gratuitous-violence",
-    "name": "Gratuitous Violence",
-    "handledLines": [
-      "If a creature you control would deal damage to a permanent or player, it deals double that damage instead."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "damageDoubled",
-          "sourceFilter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "you"
-              }
-            ]
-          }
         }
       ]
     },
@@ -158920,38 +158776,6 @@
             }
           ],
           "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-uncivil-unrest",
-    "name": "Uncivil Unrest",
-    "handledLines": [
-      "If a creature you control with a +1/+1 counter on it would deal damage to a permanent or player, it deals double that damage instead."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "damageDoubled",
-          "sourceFilter": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "type",
-                "value": "Creature"
-              },
-              {
-                "kind": "controller",
-                "who": "you"
-              },
-              {
-                "counter": "+1/+1",
-                "kind": "hasCounter"
-              }
-            ]
-          }
         }
       ]
     },

@@ -19,7 +19,7 @@ import { planSpellPayment } from '../mana/spell-payment';
 import {
   getDefByOracleId,
   castingSpellsBlockedFor,
-  nonHandSpellCostIncreaseFor,
+  spellCostIncreaseFor,
   targetingFromDefinition,
 } from '../state/queries';
 import type { EngineCardObject, GameContext } from '../state/types';
@@ -156,7 +156,11 @@ function legalFreeCastSelections(
           card.zone === 'command' ? 2 * (previewPlayer.commanderCastCount[card.cardId] ?? 0) : 0;
         let mana = addGeneric(
           manaPortionOf(costs),
-          commanderTax + nonHandSpellCostIncreaseFor(preview, controllerId, card.zone),
+          commanderTax +
+            spellCostIncreaseFor(preview, controllerId, card.zone, {
+              def: definition,
+              cardId: card.cardId,
+            }),
         );
         if (reduction.colored !== undefined) mana = subtractColored(mana, reduction.colored);
         mana = subtractGeneric(mana, reduction.generic);
