@@ -2078,14 +2078,6 @@
       "reason": "The schema's createTokenCopyOf only copies a permanent on the battlefield, and no op creates a token copy of a creature card in a graveyard (with haste and a delayed sacrifice)."
     },
     {
-      "name": "Ganax, Astral Hunter",
-      "rank": 1609,
-      "decks": 101676,
-      "xmageBucket": "xmage-known-classes",
-      "trial": "docs/reviews/card-compiler-trial-01",
-      "reason": "The schema has no Choose a Background mechanic (no Background choice or commander-zone second-commander relation), and the line is not reminder text."
-    },
-    {
       "name": "Auton Soldier",
       "rank": 2016,
       "decks": 81916,
@@ -2391,6 +2383,11 @@
     }
   ],
   "ungrouped": [],
-  "unblocked": [],
+  "unblocked": [
+    {
+      "name": "Ganax, Astral Hunter",
+      "by": "modeled"
+    }
+  ],
   "unranked": []
 }
