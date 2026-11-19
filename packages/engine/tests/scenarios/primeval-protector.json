@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "card": "Primeval Protector",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "primeval-protector-cost-reduced-per-opponent-creature",
+      "title": "Primeval Protector: costs {1} less for each creature your opponents control",
+      "clauses": [1],
+      "instructions": [
+        "P2 and P3 control three creatures between them; with eight Forests cast Primeval Protector (cost {10}{G} reduced by 3 to {7}{G})."
+      ],
+      "expectedOutcome": "Primeval Protector is cast for {7}{G} and enters the battlefield.",
+      "seats": {
+        "P1": {
+          "hand": ["Primeval Protector"],
+          "battlefield": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        },
+        "P2": {
+          "battlefield": ["Scenario Bear", "Scenario Bear"]
+        },
+        "P3": {
+          "battlefield": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Primeval Protector/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Primeval Protector"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "primeval-protector-own-creatures-do-not-reduce",
+      "title": "Primeval Protector: your own creatures do not reduce the cost",
+      "clauses": [1],
+      "instructions": [
+        "Control three Scenario Bears yourself with eight Forests, opponents control none, and try to cast Primeval Protector."
+      ],
+      "expectedOutcome": "Only creatures your opponents control count, so it still costs {10}{G}: it can't be cast and stays in hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Primeval Protector"],
+          "battlefield": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Scenario Bear",
+            "Scenario Bear",
+            "Scenario Bear"
+          ]
+        },
+        "P2": {}
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Primeval Protector"]
+          }
+        }
+      ]
+    }
+  ]
+}

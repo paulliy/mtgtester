@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "card": "Gixian Puppeteer",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature — Ogre",
+      "manaCost": "{3}{R}",
+      "power": "4",
+      "toughness": "4"
+    },
+    {
+      "name": "Scenario Smite",
+      "typeLine": "Instant",
+      "manaCost": "{B}",
+      "oracleText": "Destroy target creature."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "gixian-puppeteer-returns-another-small-creature",
+      "title": "Gixian Puppeteer: when it dies, another creature card with mana value 3 or less returns",
+      "clauses": [2],
+      "instructions": [
+        "Cast Scenario Smite on your own Gixian Puppeteer.",
+        "Its death trigger targets Scenario Bear (mana value 2) in your graveyard; Scenario Ogre (mana value 4) is not a legal target."
+      ],
+      "expectedOutcome": "Scenario Bear returns to the battlefield; Gixian Puppeteer and Scenario Ogre stay in the graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Smite"],
+          "battlefield": ["Gixian Puppeteer", "Swamp"],
+          "graveyard": ["Scenario Bear", "Scenario Ogre"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Smite/",
+          "targets": ["Gixian Puppeteer"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Gixian Puppeteer", "Scenario Ogre"],
+            "lacks": ["Scenario Bear"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "gixian-puppeteer-cannot-return-itself",
+      "title": "Gixian Puppeteer: \"another\" means it cannot return itself",
+      "clauses": [2],
+      "instructions": [
+        "Cast Scenario Smite on your own Gixian Puppeteer with no other creature card in your graveyard."
+      ],
+      "expectedOutcome": "The trigger has no legal target; Gixian Puppeteer stays in the graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Smite"],
+          "battlefield": ["Gixian Puppeteer", "Swamp"],
+          "graveyard": []
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Smite/",
+          "targets": ["Gixian Puppeteer"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Gixian Puppeteer"],
+            "lacks": []
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": [],
+            "lacks": ["Gixian Puppeteer"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "gixian-puppeteer-mana-value-four-not-returned",
+      "title": "Gixian Puppeteer: a creature card with mana value 4 is not returned",
+      "clauses": [2],
+      "instructions": [
+        "Cast Scenario Smite on your own Gixian Puppeteer with only Scenario Ogre (mana value 4) in your graveyard."
+      ],
+      "expectedOutcome": "The trigger has no legal target; Scenario Ogre and Gixian Puppeteer stay in the graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Smite"],
+          "battlefield": ["Gixian Puppeteer", "Swamp"],
+          "graveyard": ["Scenario Ogre"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Smite/",
+          "targets": ["Gixian Puppeteer"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Gixian Puppeteer", "Scenario Ogre"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": [],
+            "lacks": ["Scenario Ogre"]
+          }
+        }
+      ]
+    }
+  ]
+}

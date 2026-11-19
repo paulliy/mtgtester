@@ -262,3 +262,4 @@ packages/engine/tests/cards/natures-claim.test.ts
 packages/engine/tests/cards/vapor-snag.test.ts
 packages/engine/tests/cards/evasion-blocking
 packages/engine/tests/evasion-blocking.test.ts
+packages/engine/tests/cards/common-lines

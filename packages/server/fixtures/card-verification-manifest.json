@@ -21230,6 +21230,1244 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "3fa5e109-4a67-4523-8183-90e48a906400": {
+      "name": "Agent of Erebos",
+      "oracleSha256": "0d86b7f9e4f8279939f2ddef6000e6998e5b4668d738e6d1778eac6510295e64",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Constellation — Whenever this creature or another enchantment you control enters, exile target player's graveyard.",
+          "implementation": [
+            "Enters-battlefield trigger on this or another enchantment you control with a target-player slot whose effect exiles every card in that player's graveyard (CR 603.2, CR 400.7, CR 701.13)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/agent-of-erebos.test.ts::agent-of-erebos-exiles-target-graveyard",
+            "cards/common-lines/agent-of-erebos.test.ts::agent-of-erebos-nonenchantment-does-not-trigger"
+          ],
+          "viewerScenarioIds": [
+            "agent-of-erebos-exiles-target-graveyard",
+            "agent-of-erebos-nonenchantment-does-not-trigger"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f5e3c26c-c28c-455f-a682-2597e4b92d10": {
+      "name": "Arcane Laboratory",
+      "oracleSha256": "4efc8f981c632c9765053332969080d2e354289645aba3af9cb066d8b76b3ada",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Each player can't cast more than one spell each turn.",
+          "implementation": [
+            "Rule static limiting each player to one spell cast per turn, checked when casting is proposed; land plays are not casts (CR 601.2, CR 305.1)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/arcane-laboratory.test.ts::arcane-laboratory-second-spell-blocked",
+            "cards/common-lines/arcane-laboratory.test.ts::arcane-laboratory-first-spell-and-land-allowed"
+          ],
+          "viewerScenarioIds": [
+            "arcane-laboratory-second-spell-blocked",
+            "arcane-laboratory-first-spell-and-land-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "727f3201-1cfc-4ab2-9dfe-be4f7251f42f": {
+      "name": "Boggart Trawler // Boggart Bog",
+      "oracleSha256": "7b881991e7e7d67cb66a2463008547c7142b34086380f87172ce01e3844ff0d5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, exile target player's graveyard.",
+          "implementation": [
+            "Enters-battlefield trigger with a target-player slot whose effect exiles all cards in that player's graveyard (CR 603.6a, CR 701.13)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/boggart-trawler.test.ts::boggart-trawler-exiles-target-graveyard",
+            "cards/common-lines/boggart-trawler.test.ts::boggart-trawler-leaves-other-graveyards"
+          ],
+          "viewerScenarioIds": [
+            "boggart-trawler-exiles-target-graveyard",
+            "boggart-trawler-leaves-other-graveyards"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5a2fa420-c27f-4c14-b285-e0bb2828e053": {
+      "name": "Cyan, Vengeful Samurai",
+      "oracleSha256": "39282e1eac35522b707c53a36967acea69b0bc24e09ec3781d4a2deef7cdb19a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each creature card in your graveyard.",
+          "implementation": [
+            "Self cost reduction counting creature cards in its controller's graveyard when the total cost is determined (CR 601.2f, CR 118.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/cyan-vengeful-samurai.test.ts::cyan-vengeful-samurai-cost-reduced-per-creature-card",
+            "cards/common-lines/cyan-vengeful-samurai.test.ts::cyan-vengeful-samurai-noncreature-cards-do-not-reduce"
+          ],
+          "viewerScenarioIds": [
+            "cyan-vengeful-samurai-cost-reduced-per-creature-card",
+            "cyan-vengeful-samurai-noncreature-cards-do-not-reduce"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "894015d5-ee78-45df-8d37-53df963c59a6": {
+      "name": "Emerge Unscathed",
+      "oracleSha256": "efbb8d99e99b9258221b43968796f6b13f59b2364c51668355419a5c7ab3cce1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature you control gains protection from the color of your choice until end of turn.",
+          "implementation": [
+            "Spell effect: target creature you control gains protection from a color chosen on resolution until end of turn, so creatures of that color can't block it and it can't be damaged by sources of that color (CR 702.16, CR 611.2a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/emerge-unscathed.test.ts::emerge-unscathed-protection-from-chosen-color",
+            "cards/common-lines/emerge-unscathed.test.ts::emerge-unscathed-other-color-can-be-blocked"
+          ],
+          "viewerScenarioIds": [
+            "emerge-unscathed-protection-from-chosen-color",
+            "emerge-unscathed-other-color-can-be-blocked"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "48e603a2-b965-4fbc-ad57-4388bce5ac8b": {
+      "name": "Gods Willing",
+      "oracleSha256": "52131ace2ac3cd83a8fc87e8061122dfd63e735f6502c41f45238b29658da13c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature you control gains protection from the color of your choice until end of turn. (It can't be blocked, targeted, dealt damage, enchanted, or equipped by anything of that color.)",
+          "implementation": [
+            "Spell effect: target creature you control gains protection from a color chosen on resolution until end of turn, so creatures of that color can't block it (CR 702.16, CR 611.2a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/gods-willing.test.ts::gods-willing-protection-from-chosen-color",
+            "cards/common-lines/gods-willing.test.ts::gods-willing-other-color-can-be-blocked"
+          ],
+          "viewerScenarioIds": [
+            "gods-willing-protection-from-chosen-color",
+            "gods-willing-other-color-can-be-blocked"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "08c595da-9305-42a9-b72f-5ccc546edc01": {
+      "name": "Junk Diver",
+      "oracleSha256": "b1895ad405cdbac57f4d0391e422381e54d4d3e9f3ea624021fc458d4c014697",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, return another target artifact card from your graveyard to your hand.",
+          "implementation": [
+            "Dies trigger with a graveyard target slot filtered to artifact cards other than the source, returning the chosen card to its owner's hand (CR 700.4, CR 603.10a, CR 115.1)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/junk-diver.test.ts::junk-diver-returns-another-artifact-card",
+            "cards/common-lines/junk-diver.test.ts::junk-diver-does-not-return-itself"
+          ],
+          "viewerScenarioIds": [
+            "junk-diver-returns-another-artifact-card",
+            "junk-diver-does-not-return-itself"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e2e44d46-9df4-46f8-acf7-5581b2257620": {
+      "name": "Lookout's Dispersal",
+      "oracleSha256": "d4a62408c6a33d6b644c859e598a7161df5545f7412fb368999f30d0633dba47",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast if you control a Pirate.",
+          "implementation": [
+            "Self cost reduction applied when the spell's total cost is determined, only while its controller controls a Pirate (CR 601.2f, CR 118.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/lookouts-dispersal.test.ts::lookouts-dispersal-cost-reduced-with-pirate",
+            "cards/common-lines/lookouts-dispersal.test.ts::lookouts-dispersal-full-cost-without-pirate"
+          ],
+          "viewerScenarioIds": [
+            "lookouts-dispersal-cost-reduced-with-pirate",
+            "lookouts-dispersal-full-cost-without-pirate"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d07d3be3-f69d-4484-8467-cffd43871788": {
+      "name": "Myr Retriever",
+      "oracleSha256": "d7fe5ce3d562322e8f7e77b37834b85a016ea507daeb77384bb2f827bcb42a82",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, return another target artifact card from your graveyard to your hand.",
+          "implementation": [
+            "Dies trigger with a graveyard target slot filtered to artifact cards other than the source, returning the chosen card to its owner's hand (CR 700.4, CR 603.10a, CR 115.1)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/myr-retriever.test.ts::myr-retriever-returns-another-artifact-card",
+            "cards/common-lines/myr-retriever.test.ts::myr-retriever-does-not-return-itself"
+          ],
+          "viewerScenarioIds": [
+            "myr-retriever-returns-another-artifact-card",
+            "myr-retriever-does-not-return-itself"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a9581345-87dc-4fbd-acc1-bb629f2cf40f": {
+      "name": "Primeval Protector",
+      "oracleSha256": "651be5738f3a1d4a8a7204725ccf709068510eb003e892ee77b186c075cc41fa",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each creature your opponents control.",
+          "implementation": [
+            "Self cost reduction counting creatures controlled by the caster's opponents when the total cost is determined (CR 601.2f, CR 118.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/primeval-protector.test.ts::primeval-protector-cost-reduced-per-opponent-creature",
+            "cards/common-lines/primeval-protector.test.ts::primeval-protector-own-creatures-do-not-reduce"
+          ],
+          "viewerScenarioIds": [
+            "primeval-protector-cost-reduced-per-opponent-creature",
+            "primeval-protector-own-creatures-do-not-reduce"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3dfbf95e-a91b-429c-96e2-95ac777e7027": {
+      "name": "Sejiri Steppe",
+      "oracleSha256": "a34080be07f428f3319185d78cebd4f53a4033baefaad5a0c17516b6029b25a3",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This land enters tapped.",
+          "implementation": [
+            "Replacement effect: this permanent enters the battlefield tapped (CR 614.1d, CR 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/sejiri-steppe.test.ts::sejiri-steppe-protection-from-chosen-color",
+            "cards/common-lines/sejiri-steppe.test.ts::sejiri-steppe-other-color-can-be-blocked"
+          ],
+          "viewerScenarioIds": [
+            "sejiri-steppe-protection-from-chosen-color",
+            "sejiri-steppe-other-color-can-be-blocked"
+          ]
+        },
+        {
+          "oracleText": "When this land enters, target creature you control gains protection from the color of your choice until end of turn.",
+          "implementation": [
+            "Enters-battlefield trigger targeting a creature you control; the effect grants protection from a color chosen on resolution until end of turn (CR 603.6a, CR 702.16, CR 611.2a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/sejiri-steppe.test.ts::sejiri-steppe-protection-from-chosen-color",
+            "cards/common-lines/sejiri-steppe.test.ts::sejiri-steppe-other-color-can-be-blocked"
+          ],
+          "viewerScenarioIds": [
+            "sejiri-steppe-protection-from-chosen-color",
+            "sejiri-steppe-other-color-can-be-blocked"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6dd5782d-2d1a-4d6b-8381-e15d0d5be24f": {
+      "name": "Stoic Rebuttal",
+      "oracleSha256": "890ed1505dda34bd2b3dd0f6dbbcdd0a7462cbb6365a93b49ab4530e7d24409e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Metalcraft — This spell costs {1} less to cast if you control three or more artifacts.",
+          "implementation": [
+            "Self cost reduction applied when the spell's total cost is determined, only while its controller controls three or more artifacts (CR 601.2f, CR 118.7, CR 207.2c)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/stoic-rebuttal.test.ts::stoic-rebuttal-metalcraft-reduces-cost",
+            "cards/common-lines/stoic-rebuttal.test.ts::stoic-rebuttal-full-cost-below-metalcraft"
+          ],
+          "viewerScenarioIds": [
+            "stoic-rebuttal-metalcraft-reduces-cost",
+            "stoic-rebuttal-full-cost-below-metalcraft"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "97326cad-b13c-4e52-82ce-850a39e5ff08": {
+      "name": "Torpor Orb",
+      "oracleSha256": "ab318813ed9d496935acbc084c01aee3756e163d2f7beadaae3451a758f8fff0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures entering don't cause abilities to trigger.",
+          "implementation": [
+            "Rule static suppressing triggered abilities that trigger from a creature entering the battlefield, leaving noncreature entering triggers alone (CR 603.2g, CR 603.6a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/torpor-orb.test.ts::torpor-orb-creature-enters-trigger-suppressed",
+            "cards/common-lines/torpor-orb.test.ts::torpor-orb-noncreature-enters-trigger-works"
+          ],
+          "viewerScenarioIds": [
+            "torpor-orb-creature-enters-trigger-suppressed",
+            "torpor-orb-noncreature-enters-trigger-works"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2bd81743-84c8-43ec-86f5-68230036827b": {
+      "name": "Wizard's Lightning",
+      "oracleSha256": "b79db6c984d0f95c15ac24a169e1ecd5a99e111e55d268361d76ce30e76bc3d7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {2} less to cast if you control a Wizard.",
+          "implementation": [
+            "Self cost reduction applied when the spell's total cost is determined, only while its controller controls a Wizard (CR 601.2f, CR 118.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/wizards-lightning.test.ts::wizards-lightning-cost-reduced-with-wizard",
+            "cards/common-lines/wizards-lightning.test.ts::wizards-lightning-full-cost-without-wizard"
+          ],
+          "viewerScenarioIds": [
+            "wizards-lightning-cost-reduced-with-wizard",
+            "wizards-lightning-full-cost-without-wizard"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5f981cca-5cd9-49e4-ab1a-bbbf6fc7e737": {
+      "name": "Ancient Stone Idol",
+      "oracleSha256": "fd947f301fafab8790c3b7ba73f3869f1ea25031eeb408593121b8cc1914f2e5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each attacking creature.",
+          "implementation": [
+            "self cost reduction counting attacking creatures on the battlefield when the spell is cast, applied by the normal cast path (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/ancient-stone-idol.test.ts::ancient-stone-idol-two-attackers",
+            "cards/common-lines/ancient-stone-idol.test.ts::ancient-stone-idol-non-attackers-uncounted"
+          ],
+          "viewerScenarioIds": [
+            "ancient-stone-idol-two-attackers",
+            "ancient-stone-idol-non-attackers-uncounted"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "13ac12db-d04b-4211-90df-886e1c597e8f": {
+      "name": "Arwen's Gift",
+      "oracleSha256": "4365a712ba5d1ffa79d29df687a7829fac3977873d5eb0a5b2e22a9d01e556da",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast if you control two or more legendary creatures.",
+          "implementation": [
+            "conditional self cost reduction checked on cast against the caster's legendary creature count (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/arwens-gift.test.ts::arwens-gift-two-legends",
+            "cards/common-lines/arwens-gift.test.ts::arwens-gift-one-legend"
+          ],
+          "viewerScenarioIds": ["arwens-gift-two-legends", "arwens-gift-one-legend"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f1266a1b-bae6-4ded-b4d5-7586a5b6c5d0": {
+      "name": "Clarion Conqueror",
+      "oracleSha256": "72891f840071178f2b8f0f16c38e5872791dfee9312e488be8d6d5ca010f2413",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Activated abilities of artifacts, creatures, and planeswalkers can't be activated.",
+          "implementation": [
+            "all-players activation lock on the listed permanent types, consulted when priority options are computed (CR 602.5)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/clarion-conqueror.test.ts::clarion-conqueror-locks-artifact-creature-planeswalker",
+            "cards/common-lines/clarion-conqueror.test.ts::clarion-conqueror-enchantment-ability-allowed"
+          ],
+          "viewerScenarioIds": [
+            "clarion-conqueror-locks-artifact-creature-planeswalker",
+            "clarion-conqueror-enchantment-ability-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4b2e9aa9-6f91-41de-84b6-e9a89be06a53": {
+      "name": "Dissipate",
+      "oracleSha256": "6de4311fd6dcb40d08caf75daef32a90264a59d68db612c0237c869b5fa49812",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+          "implementation": [
+            "counter target spell, exiling it instead of the graveyard only when it was actually countered (CR 701.6, 701.5a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/dissipate.test.ts::dissipate-exiles-countered-spell",
+            "cards/common-lines/dissipate.test.ts::dissipate-uncounterable-resolves"
+          ],
+          "viewerScenarioIds": [
+            "dissipate-exiles-countered-spell",
+            "dissipate-uncounterable-resolves"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "32452ccf-88c7-41d6-93e5-15d31f29726d": {
+      "name": "Frozen Aether",
+      "oracleSha256": "45dd91a6315355c2da39cbdd5bed360cb74687b38f2b5cee898278ad02c8e739",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Artifacts, creatures, and lands your opponents control enter tapped.",
+          "implementation": [
+            "static replacement effect: matching permanents an opponent controls enter the battlefield tapped (CR 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/frozen-aether.test.ts::frozen-aether-opponent-permanents-tapped",
+            "cards/common-lines/frozen-aether.test.ts::frozen-aether-own-permanents-untapped"
+          ],
+          "viewerScenarioIds": [
+            "frozen-aether-opponent-permanents-tapped",
+            "frozen-aether-own-permanents-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a0d615b3-7ee3-43d7-ad37-5f7f1544a8db": {
+      "name": "Hushwing Gryff",
+      "oracleSha256": "f2671d535791d2cb588175ef5afca4dd4346f77c3d14115b04d8499c4d81a896",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures entering don't cause abilities to trigger.",
+          "implementation": [
+            "static rule that suppresses enters-the-battlefield triggers of creatures entering, leaving other permanents' triggers alone (CR 603.2g)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/hushwing-gryff.test.ts::hushwing-gryff-creature-entering-no-trigger",
+            "cards/common-lines/hushwing-gryff.test.ts::hushwing-gryff-noncreature-still-triggers"
+          ],
+          "viewerScenarioIds": [
+            "hushwing-gryff-creature-entering-no-trigger",
+            "hushwing-gryff-noncreature-still-triggers"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5602c14d-cc22-47d7-a1b0-6491749f00dd": {
+      "name": "Keep Safe",
+      "oracleSha256": "257bce63531830993d8d65dc5ea405c889c6f086a741f6ec0ae6f63d2c465da1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell that targets a permanent you control.",
+          "implementation": [
+            "counter target spell, with the target restricted to stack spells that target a permanent the caster controls (CR 701.6, 115.9)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/keep-safe.test.ts::keep-safe-counters-spell-targeting-your-permanent",
+            "cards/common-lines/keep-safe.test.ts::keep-safe-spell-targeting-you-not-counterable"
+          ],
+          "viewerScenarioIds": [
+            "keep-safe-counters-spell-targeting-your-permanent",
+            "keep-safe-spell-targeting-you-not-counterable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "861f0b1c-3b37-4d38-9232-e42565247076": {
+      "name": "Loxodon Gatekeeper",
+      "oracleSha256": "e0ae0e1d7892e87d897d5f4dd4dfe4b2182ed96ac6b17952526943bc61a762c4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Artifacts, creatures, and lands your opponents control enter tapped.",
+          "implementation": [
+            "static replacement effect: matching permanents an opponent controls enter the battlefield tapped (CR 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/loxodon-gatekeeper.test.ts::loxodon-gatekeeper-opponent-permanents-tapped",
+            "cards/common-lines/loxodon-gatekeeper.test.ts::loxodon-gatekeeper-own-permanents-untapped"
+          ],
+          "viewerScenarioIds": [
+            "loxodon-gatekeeper-opponent-permanents-tapped",
+            "loxodon-gatekeeper-own-permanents-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2f83ca86-e23d-40f7-8085-6928d8cfef9b": {
+      "name": "Null Rod",
+      "oracleSha256": "cfbe5ee8708e8a4ba90e5a826f5b49fbcadbdc4e2acffd2adb8f266ba28d5f1b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Activated abilities of artifacts can't be activated.",
+          "implementation": [
+            "all-players activation lock on artifacts, consulted when priority options are computed (CR 602.5)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/null-rod.test.ts::null-rod-locks-artifact-ability",
+            "cards/common-lines/null-rod.test.ts::null-rod-creature-ability-allowed"
+          ],
+          "viewerScenarioIds": [
+            "null-rod-locks-artifact-ability",
+            "null-rod-creature-ability-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c40bc9f6-2b72-4ae1-b912-50075af59628": {
+      "name": "Remorseful Cleric",
+      "oracleSha256": "a5ea55e406ebd298eb27d07e0419b24ccc5d0b57964d456e08eb427c8baaa7ea",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Sacrifice this creature: Exile target player's graveyard.",
+          "implementation": [
+            "sacrifice-self activated ability whose effect exiles every card in the targeted player's graveyard (CR 602.2, 701.13)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/remorseful-cleric.test.ts::remorseful-cleric-exiles-target-graveyard",
+            "cards/common-lines/remorseful-cleric.test.ts::remorseful-cleric-can-exile-itself"
+          ],
+          "viewerScenarioIds": [
+            "remorseful-cleric-exiles-target-graveyard",
+            "remorseful-cleric-can-exile-itself"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c1909d70-d8f4-4c54-8587-0a910f123238": {
+      "name": "Shelter",
+      "oracleSha256": "f9f590659a10934fae819ca6689ad156e70165316b65a66a87b2bd1822f1a72d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature you control gains protection from the color of your choice until end of turn.",
+          "implementation": [
+            "target creature gains protection from a color chosen on resolution until end of turn, so spells and sources of that color can no longer target or damage it (CR 702.16, 611.2a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/shelter.test.ts::shelter-protection-from-chosen-color",
+            "cards/common-lines/shelter.test.ts::shelter-protection-only-from-chosen-color"
+          ],
+          "viewerScenarioIds": [
+            "shelter-protection-from-chosen-color",
+            "shelter-protection-only-from-chosen-color"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "12c63a45-7eb2-4262-b571-3358182f5610": {
+      "name": "Stony Silence",
+      "oracleSha256": "ee5afe060316981c47e74a060a5cb068a4cc6b48eb95eee8a73929605b7976bc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Activated abilities of artifacts can't be activated.",
+          "implementation": [
+            "all-players activation lock on artifacts, consulted when priority options are computed (CR 602.5)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/stony-silence.test.ts::stony-silence-locks-artifact-ability",
+            "cards/common-lines/stony-silence.test.ts::stony-silence-creature-ability-allowed"
+          ],
+          "viewerScenarioIds": [
+            "stony-silence-locks-artifact-ability",
+            "stony-silence-creature-ability-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4325ae73-af43-4a7d-a552-9909f0dc77db": {
+      "name": "Turn Aside",
+      "oracleSha256": "3586ee18736c33528f0feace2e40aca09f603e25cd5390487c5630eab702e575",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell that targets a permanent you control.",
+          "implementation": [
+            "counter target spell, with the target restricted to stack spells that target a permanent the caster controls (CR 701.6, 115.9)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/turn-aside.test.ts::turn-aside-counters-spell-targeting-your-permanent",
+            "cards/common-lines/turn-aside.test.ts::turn-aside-spell-targeting-opponents-permanent-not-counterable"
+          ],
+          "viewerScenarioIds": [
+            "turn-aside-counters-spell-targeting-your-permanent",
+            "turn-aside-spell-targeting-opponents-permanent-not-counterable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b828251c-86a9-454f-9852-d0876d0f5153": {
+      "name": "Wizard's Retort",
+      "oracleSha256": "260eecc0cb297f7cf1401e2e2249b801a24cf8f93647d6201271ad0739e2afe7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast if you control a Wizard.",
+          "implementation": [
+            "conditional self cost reduction checked on cast against the caster's Wizard permanents (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/wizards-retort.test.ts::wizards-retort-with-wizard",
+            "cards/common-lines/wizards-retort.test.ts::wizards-retort-without-wizard"
+          ],
+          "viewerScenarioIds": ["wizards-retort-with-wizard", "wizards-retort-without-wizard"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "48d14b5c-711a-4f8a-9de5-55415cb7a79a": {
+      "name": "Angel of Finality",
+      "oracleSha256": "788c7e800f24c49d52a2d79b839fbac8cbe89c12af07554a995d71e4edd502f9",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, exile target player's graveyard.",
+          "implementation": [
+            "enter trigger targeting a player that exiles every card in that player's graveyard (CR 603.6a, 115.1, 406.3)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/angel-of-finality.test.ts::angel-of-finality-exiles-target-graveyard",
+            "cards/common-lines/angel-of-finality.test.ts::angel-of-finality-leaves-other-graveyards"
+          ],
+          "viewerScenarioIds": [
+            "angel-of-finality-exiles-target-graveyard",
+            "angel-of-finality-leaves-other-graveyards"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "085bc7be-bd44-40af-8e8f-a1a8006fe22c": {
+      "name": "Assert Authority",
+      "oracleSha256": "46d2f482749a44fc224e92e61e8a6022342e0b4a6cf1d8ba508f6c5da21bbe39",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)",
+          "implementation": [
+            "affinity cost reduction counts artifacts the caster controls and lowers the generic part of the cost (CR 702.41a, 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/assert-authority.test.ts::assert-authority-affinity-counts-only-your-artifacts"
+          ],
+          "viewerScenarioIds": ["assert-authority-affinity-counts-only-your-artifacts"]
+        },
+        {
+          "oracleText": "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+          "implementation": [
+            "counter effect that exiles the countered spell instead of putting it into its owner's graveyard (CR 701.6a, 608.2b)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/assert-authority.test.ts::assert-authority-counters-and-exiles"
+          ],
+          "viewerScenarioIds": ["assert-authority-counters-and-exiles"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0c4bc9ea-a5fd-4f44-96a1-5448eee228c4": {
+      "name": "Collector Ouphe",
+      "oracleSha256": "85cbd6dd67d5c09b876ec1c932fd418e9c78414ed3f263612a7499c2817adbf2",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Activated abilities of artifacts can't be activated.",
+          "implementation": [
+            "static rule effect forbidding activation of activated abilities (mana abilities included) of artifacts controlled by any player (CR 602.5, 605.1a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/collector-ouphe.test.ts::collector-ouphe-artifact-cannot-activate",
+            "cards/common-lines/collector-ouphe.test.ts::collector-ouphe-opponent-artifact-cannot-activate",
+            "cards/common-lines/collector-ouphe.test.ts::collector-ouphe-nonartifact-still-activates"
+          ],
+          "viewerScenarioIds": [
+            "collector-ouphe-artifact-cannot-activate",
+            "collector-ouphe-opponent-artifact-cannot-activate",
+            "collector-ouphe-nonartifact-still-activates"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "440881ad-48cf-4b82-8bb5-f506d1a51755": {
+      "name": "Draconic Lore",
+      "oracleSha256": "b13d523144d66dd25d69f868201a60fbc75f9a1b2daf64722438e2aaf0d8d2f3",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {2} less to cast if you control a Dragon.",
+          "implementation": [
+            "conditional self cost reduction applied when the caster controls a Dragon (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/draconic-lore.test.ts::draconic-lore-cheaper-with-dragon",
+            "cards/common-lines/draconic-lore.test.ts::draconic-lore-opponents-dragon-no-discount"
+          ],
+          "viewerScenarioIds": [
+            "draconic-lore-cheaper-with-dragon",
+            "draconic-lore-opponents-dragon-no-discount"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5f2628e3-e29a-4d77-bc27-6e1ce240d192": {
+      "name": "Ghoultree",
+      "oracleSha256": "a2422145a492c43c7e6824692f9f4e0689387f6ad575f437ccbb7f3f0b8f6de1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each creature card in your graveyard.",
+          "implementation": [
+            "self cost reduction of {1} per creature card in the caster's own graveyard (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/ghoultree.test.ts::ghoultree-cheaper-per-creature-card-in-graveyard",
+            "cards/common-lines/ghoultree.test.ts::ghoultree-only-own-creature-cards-count"
+          ],
+          "viewerScenarioIds": [
+            "ghoultree-cheaper-per-creature-card-in-graveyard",
+            "ghoultree-only-own-creature-cards-count"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4bba3663-7f3c-4589-88aa-cf0bfe36b171": {
+      "name": "Imposing Sovereign",
+      "oracleSha256": "adcbacd49fd89bb012b74e6f7bfcfd2ebf9a3b832f07eb6bf8f444f032a1932b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures your opponents control enter tapped.",
+          "implementation": [
+            "replacement effect on opponents' creatures entering the battlefield: they enter tapped (CR 614.1d, 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/imposing-sovereign.test.ts::imposing-sovereign-opponent-creature-enters-tapped",
+            "cards/common-lines/imposing-sovereign.test.ts::imposing-sovereign-own-creature-enters-untapped"
+          ],
+          "viewerScenarioIds": [
+            "imposing-sovereign-opponent-creature-enters-tapped",
+            "imposing-sovereign-own-creature-enters-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b9243163-b726-432e-830f-86132aa7f34a": {
+      "name": "Kinjalli's Sunwing",
+      "oracleSha256": "b8a926d267c638283af92a4c73e210717cb257ea222697c8621878b4f3dbac99",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures your opponents control enter tapped.",
+          "implementation": [
+            "replacement effect on opponents' creatures entering the battlefield: they enter tapped (CR 614.1d, 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/kinjallis-sunwing.test.ts::kinjallis-sunwing-opponent-creature-enters-tapped",
+            "cards/common-lines/kinjallis-sunwing.test.ts::kinjallis-sunwing-opponent-noncreature-enters-untapped"
+          ],
+          "viewerScenarioIds": [
+            "kinjallis-sunwing-opponent-creature-enters-tapped",
+            "kinjallis-sunwing-opponent-noncreature-enters-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b67db32b-30a9-49d2-b4c2-90a9f80c36eb": {
+      "name": "Manglehorn",
+      "oracleSha256": "25735745707fbd60303fbdef1c3a3c1e843eb79757e202c2b3e176f1502938a0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Artifacts your opponents control enter tapped.",
+          "implementation": [
+            "replacement effect on opponents' artifacts entering the battlefield: they enter tapped (CR 614.1d, 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/manglehorn.test.ts::manglehorn-opponent-artifact-enters-tapped",
+            "cards/common-lines/manglehorn.test.ts::manglehorn-opponent-nonartifact-enters-untapped"
+          ],
+          "viewerScenarioIds": [
+            "manglehorn-opponent-artifact-enters-tapped",
+            "manglehorn-opponent-nonartifact-enters-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bb4507c1-1e5d-48b5-8fc0-1d26bd1c9e72": {
+      "name": "Overwhelming Remorse",
+      "oracleSha256": "c68bf6eb8b507928d7d2ec977a5535cd4bb279792b1acf7e8347464297c87c23",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each creature card in your graveyard.",
+          "implementation": [
+            "self cost reduction of {1} per creature card in the caster's own graveyard (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/overwhelming-remorse.test.ts::overwhelming-remorse-cheaper-per-creature-card",
+            "cards/common-lines/overwhelming-remorse.test.ts::overwhelming-remorse-discount-is-per-creature-card"
+          ],
+          "viewerScenarioIds": [
+            "overwhelming-remorse-cheaper-per-creature-card",
+            "overwhelming-remorse-discount-is-per-creature-card"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9cfc01a7-e291-4388-bd09-94846d72e291": {
+      "name": "Rumbleweed",
+      "oracleSha256": "d4a704a36a7d4faa83b7e6277bd333d3a3b2c1431fad9cb92e152a12cb54ca73",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each land card in your graveyard.",
+          "implementation": [
+            "self cost reduction of {1} per land card in the caster's own graveyard (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/rumbleweed.test.ts::rumbleweed-cheaper-per-land-card-in-graveyard",
+            "cards/common-lines/rumbleweed.test.ts::rumbleweed-creature-cards-give-no-discount"
+          ],
+          "viewerScenarioIds": [
+            "rumbleweed-cheaper-per-land-card-in-graveyard",
+            "rumbleweed-creature-cards-give-no-discount"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "13be47e4-9da2-4f9e-baf0-db96f7777ccb": {
+      "name": "Thalia, Heretic Cathar",
+      "oracleSha256": "aabd854909cb6050bae7ef08b311b71829d7c541c343d86cac1f8fc6e0ff947a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures and nonbasic lands your opponents control enter tapped.",
+          "implementation": [
+            "replacement effect on opponents' creatures and nonbasic lands entering the battlefield: they enter tapped (CR 614.1d, 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/thalia-heretic-cathar.test.ts::thalia-opponent-creature-enters-tapped",
+            "cards/common-lines/thalia-heretic-cathar.test.ts::thalia-opponent-nonbasic-land-enters-tapped",
+            "cards/common-lines/thalia-heretic-cathar.test.ts::thalia-opponent-basic-land-enters-untapped"
+          ],
+          "viewerScenarioIds": [
+            "thalia-opponent-creature-enters-tapped",
+            "thalia-opponent-nonbasic-land-enters-tapped",
+            "thalia-opponent-basic-land-enters-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5b2ffb53-86b7-4665-a5c7-b85b035b6c81": {
+      "name": "Urabrask the Hidden",
+      "oracleSha256": "160e18f9c18750116529000fc367caed7de28c31e7f4855c19ed6562eae38993",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures your opponents control enter tapped.",
+          "implementation": [
+            "replacement effect on opponents' creatures entering the battlefield: they enter tapped (CR 614.1d, 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/urabrask-the-hidden.test.ts::urabrask-opponent-creature-enters-tapped",
+            "cards/common-lines/urabrask-the-hidden.test.ts::urabrask-own-creature-enters-untapped"
+          ],
+          "viewerScenarioIds": [
+            "urabrask-opponent-creature-enters-tapped",
+            "urabrask-own-creature-enters-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "319ee221-bace-41e9-b386-6b528bd780c1": {
+      "name": "Workshop Assistant",
+      "oracleSha256": "e33cf0e7cfea2bd2dfcf5aa0d97cd9b9c56bbcbcc9eb93303ad63bf83d4794b5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, return another target artifact card from your graveyard to your hand.",
+          "implementation": [
+            "dies trigger targeting an artifact card in the controller's graveyard other than the source and returning it to hand (CR 603.10a, 115.1, 400.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/workshop-assistant.test.ts::workshop-assistant-returns-another-artifact",
+            "cards/common-lines/workshop-assistant.test.ts::workshop-assistant-cannot-return-itself"
+          ],
+          "viewerScenarioIds": [
+            "workshop-assistant-returns-another-artifact",
+            "workshop-assistant-cannot-return-itself"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f8536726-993b-4100-918c-e3c7177d4c65": {
+      "name": "Spectral Denial",
+      "oracleSha256": "31092345f6d7c0057f9d1d188e781cd77ffc5cf045dd8e52dc092ab5cbe56d7d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each creature you control with power 4 or greater.",
+          "implementation": [
+            "self cost reduction of {1} per creature the caster controls with power 4 or greater, lowering the generic part of the cost including X (CR 601.2f); the counter-unless-pays clause then charges the announced X (CR 107.3f, 701.6a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/spectral-denial.test.ts::spectral-denial-cheaper-with-power-four-creature",
+            "cards/common-lines/spectral-denial.test.ts::spectral-denial-power-three-creature-no-discount"
+          ],
+          "viewerScenarioIds": [
+            "spectral-denial-cheaper-with-power-four-creature",
+            "spectral-denial-power-three-creature-no-discount"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fe1556cc-32d0-4e51-bb15-f3fce669a5e1": {
+      "name": "Arcane Epiphany",
+      "oracleSha256": "b127c3e09a1ad8e37f771f407fb96b0f9bbafef55f6627ab9b7492c9b5db99e3",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast if you control a Wizard.",
+          "implementation": [
+            "self cost reduction applied when the spell is cast while its controller controls a Wizard (CR 601.2f, 117.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/arcane-epiphany.test.ts::arcane-epiphany-cheaper-with-wizard",
+            "cards/common-lines/arcane-epiphany.test.ts::arcane-epiphany-full-price-without-wizard"
+          ],
+          "viewerScenarioIds": [
+            "arcane-epiphany-cheaper-with-wizard",
+            "arcane-epiphany-full-price-without-wizard"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c8c38570-0b42-4bfc-896f-f57f9a11ba9d": {
+      "name": "Benevolent Bodyguard",
+      "oracleSha256": "b6bf4c91cf53e726a3024462419735633f560fbadd8a0a3e8149813efadfcc93",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Sacrifice this creature: Target creature you control gains protection from the color of your choice until end of turn.",
+          "implementation": [
+            "sacrifice-cost activated ability whose resolution asks for a color and grants protection from it until end of turn (CR 702.16, 602.2)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/benevolent-bodyguard.test.ts::benevolent-bodyguard-protects-from-chosen-color",
+            "cards/common-lines/benevolent-bodyguard.test.ts::benevolent-bodyguard-other-color-can-be-blocked"
+          ],
+          "viewerScenarioIds": [
+            "benevolent-bodyguard-protects-from-chosen-color",
+            "benevolent-bodyguard-other-color-can-be-blocked"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6225a704-430a-4f56-ad87-0e8d87f285f5": {
+      "name": "Cursed Totem",
+      "oracleSha256": "7012f43d1e701d6d846e5069d26b041e8093c09d5cdbc9097b781b0ef32d9b4d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Activated abilities of creatures can't be activated.",
+          "implementation": [
+            "rule-static that removes activated abilities of creature sources from the legal action list (CR 602.5)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/cursed-totem.test.ts::cursed-totem-creature-ability-cannot-be-activated",
+            "cards/common-lines/cursed-totem.test.ts::cursed-totem-artifact-ability-still-works",
+            "cards/common-lines/cursed-totem.test.ts::cursed-totem-no-totem-creature-ability-works"
+          ],
+          "viewerScenarioIds": [
+            "cursed-totem-creature-ability-cannot-be-activated",
+            "cursed-totem-artifact-ability-still-works",
+            "cursed-totem-no-totem-creature-ability-works"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "33017203-233e-498e-806e-94b1dccf5c35": {
+      "name": "Eidolon of Rhetoric",
+      "oracleSha256": "04b3df73736dcb9a4a762fe66a170612fa78a1de5e93707948c29f82679ac2b6",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Each player can't cast more than one spell each turn.",
+          "implementation": [
+            "rule-static limiting each player to one cast per turn, counted by spells cast this turn (CR 101.2, 601.2)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/eidolon-of-rhetoric.test.ts::eidolon-of-rhetoric-second-spell-refused",
+            "cards/common-lines/eidolon-of-rhetoric.test.ts::eidolon-of-rhetoric-two-spells-without-it",
+            "cards/common-lines/eidolon-of-rhetoric.test.ts::eidolon-of-rhetoric-land-play-is-not-a-spell"
+          ],
+          "viewerScenarioIds": [
+            "eidolon-of-rhetoric-second-spell-refused",
+            "eidolon-of-rhetoric-two-spells-without-it",
+            "eidolon-of-rhetoric-land-play-is-not-a-spell"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9d6a9a37-a245-4503-baeb-9488553798ab": {
+      "name": "Gixian Puppeteer",
+      "oracleSha256": "b9d0e2f1dca41d03d328c442ac4f640378a0fb496fa2fda7dbcb368ee7544fb1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, return another target creature card with mana value 3 or less from your graveyard to the battlefield.",
+          "implementation": [
+            "dies trigger targeting a creature card with mana value 3 or less in its controller's graveyard other than the source (CR 700.4, 115.1, 400.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/gixian-puppeteer.test.ts::gixian-puppeteer-returns-another-small-creature",
+            "cards/common-lines/gixian-puppeteer.test.ts::gixian-puppeteer-cannot-return-itself",
+            "cards/common-lines/gixian-puppeteer.test.ts::gixian-puppeteer-mana-value-four-not-returned"
+          ],
+          "viewerScenarioIds": [
+            "gixian-puppeteer-returns-another-small-creature",
+            "gixian-puppeteer-cannot-return-itself",
+            "gixian-puppeteer-mana-value-four-not-returned"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fda76032-7e6f-416f-8874-2a0642837522": {
+      "name": "Jirina, Dauntless General",
+      "oracleSha256": "ba3d63061bb61b74964fd9889ed90a487da60ad880d48f0e972305a1d8b1fdb0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When Jirina enters, exile target player's graveyard.",
+          "implementation": [
+            "enters trigger targeting a player and exiling every card in that player's graveyard (CR 603.6a, 115.1)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/jirina-dauntless-general.test.ts::jirina-exiles-target-opponent-graveyard",
+            "cards/common-lines/jirina-dauntless-general.test.ts::jirina-exiles-only-the-targeted-graveyard"
+          ],
+          "viewerScenarioIds": [
+            "jirina-exiles-target-opponent-graveyard",
+            "jirina-exiles-only-the-targeted-graveyard"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "81fdd1c4-d43b-4f8b-8712-7c2bf45a3e0b": {
+      "name": "Kismet",
+      "oracleSha256": "bc3eccefaca6d6791b078c4652cf164d9f3b55be5894552eb6d427662de3da13",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Artifacts, creatures, and lands your opponents control enter tapped.",
+          "implementation": [
+            "rule-static replacement making opponents' artifacts, creatures and lands enter tapped (CR 614.1d)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/kismet.test.ts::kismet-opponent-permanents-enter-tapped",
+            "cards/common-lines/kismet.test.ts::kismet-own-permanents-enter-untapped"
+          ],
+          "viewerScenarioIds": [
+            "kismet-opponent-permanents-enter-tapped",
+            "kismet-own-permanents-enter-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b2c30683-cc7f-4341-add1-b08cb9b93eeb": {
+      "name": "Morcant's Loyalist",
+      "oracleSha256": "0c848b70751346c7e5f1a366ffdef12be6f44fd3513dd4b99aae6680663ee904",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, return another target Elf card from your graveyard to your hand.",
+          "implementation": [
+            "dies trigger targeting an Elf card in its controller's graveyard other than the source and returning it to hand (CR 700.4, 115.1, 400.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/morcants-loyalist.test.ts::morcants-loyalist-returns-another-elf",
+            "cards/common-lines/morcants-loyalist.test.ts::morcants-loyalist-non-elf-and-itself-not-returned"
+          ],
+          "viewerScenarioIds": [
+            "morcants-loyalist-returns-another-elf",
+            "morcants-loyalist-non-elf-and-itself-not-returned"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "91ddd2bd-2dec-4670-8edb-e89c009b2187": {
+      "name": "Pearl of Wisdom",
+      "oracleSha256": "dfaf2fcee17e8a4861575e4f755f488648e2422889da4dab20f4db3361c895d8",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast if you control an Otter.",
+          "implementation": [
+            "self cost reduction applied when the spell is cast while its controller controls an Otter (CR 601.2f, 117.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/pearl-of-wisdom.test.ts::pearl-of-wisdom-cheaper-with-otter",
+            "cards/common-lines/pearl-of-wisdom.test.ts::pearl-of-wisdom-full-price-without-otter"
+          ],
+          "viewerScenarioIds": [
+            "pearl-of-wisdom-cheaper-with-otter",
+            "pearl-of-wisdom-full-price-without-otter"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7ef5c812-ad7d-4d6c-8ee5-68561e7e4bd7": {
+      "name": "Saved by the Shell",
+      "oracleSha256": "c29dcec4da3ac8531cc217f56cea1a882557f49ede9dcc2dddcc9dfcae0b56ef",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast if you control a Turtle.",
+          "implementation": [
+            "self cost reduction applied when the spell is cast while its controller controls a Turtle (CR 601.2f, 117.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/saved-by-the-shell.test.ts::saved-by-the-shell-cheaper-with-turtle",
+            "cards/common-lines/saved-by-the-shell.test.ts::saved-by-the-shell-full-price-without-turtle"
+          ],
+          "viewerScenarioIds": [
+            "saved-by-the-shell-cheaper-with-turtle",
+            "saved-by-the-shell-full-price-without-turtle"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "be2b9c6d-4ecb-49ec-b276-4aa93c5dfc00": {
+      "name": "Spider-Woman, Stunning Savior",
+      "oracleSha256": "5fdf45464730bace4fbc3f9301f5dce5b0eb6b09b158c2a04af8f2782d6b29d8",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Venom Blast — Artifacts and creatures your opponents control enter tapped.",
+          "implementation": [
+            "rule-static replacement making opponents' artifacts and creatures enter tapped (CR 614.1d)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/spider-woman-stunning-savior.test.ts::spider-woman-opponent-creatures-and-artifacts-enter-tapped",
+            "cards/common-lines/spider-woman-stunning-savior.test.ts::spider-woman-opponent-land-enters-untapped",
+            "cards/common-lines/spider-woman-stunning-savior.test.ts::spider-woman-own-permanents-enter-untapped"
+          ],
+          "viewerScenarioIds": [
+            "spider-woman-opponent-creatures-and-artifacts-enter-tapped",
+            "spider-woman-opponent-land-enters-untapped",
+            "spider-woman-own-permanents-enter-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1573f7f9-672c-421a-b1ac-3d0d8aea59ca": {
+      "name": "Tormod's Crypt",
+      "oracleSha256": "562ea7d2ff236eb1cccb71d889d7f27a604d89b64ab9c356072d491f36816561",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}, Sacrifice this artifact: Exile target player's graveyard.",
+          "implementation": [
+            "tap-and-sacrifice cost activated ability targeting a player and exiling that player's graveyard (CR 602.2, 701.13)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/tormods-crypt.test.ts::tormods-crypt-exiles-target-graveyard",
+            "cards/common-lines/tormods-crypt.test.ts::tormods-crypt-only-targeted-graveyard",
+            "cards/common-lines/tormods-crypt.test.ts::tormods-crypt-tapped-cannot-activate"
+          ],
+          "viewerScenarioIds": [
+            "tormods-crypt-exiles-target-graveyard",
+            "tormods-crypt-only-targeted-graveyard",
+            "tormods-crypt-tapped-cannot-activate"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8388faa0-f64e-4b01-836e-617f99b808a4": {
+      "name": "Venom's Hunger",
+      "oracleSha256": "f29bd3a50a9dc352e9b30669e5faf2e12aceeb96b71f521631b3dca298934a01",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {2} less to cast if you control a Villain.",
+          "implementation": [
+            "self cost reduction applied when the spell is cast while its controller controls a Villain (CR 601.2f, 117.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/venoms-hunger.test.ts::venoms-hunger-cheaper-with-villain",
+            "cards/common-lines/venoms-hunger.test.ts::venoms-hunger-full-price-without-villain"
+          ],
+          "viewerScenarioIds": [
+            "venoms-hunger-cheaper-with-villain",
+            "venoms-hunger-full-price-without-villain"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }
