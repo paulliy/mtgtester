@@ -5,6 +5,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { GameTrace } from './game-trace';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { BotSteering, DecisionRequest, OracleCard, PlayStyle, PlayerId } from '@mtg/shared';
@@ -29,6 +30,8 @@ export interface LeagueArm {
   fixes?: PolicyFix[];
   /** Add the seat's deck's play style (`play-style.ts`) to whatever knobs the arm sets. */
   styleFromDeck?: boolean;
+  /** Add this play style to whatever knobs the arm sets (`bot-gauntlet`'s pinned deck styles). */
+  pinnedStyle?: PlayStyle;
 }
 
 export interface LeagueGameRequest {
@@ -37,6 +40,8 @@ export interface LeagueGameRequest {
   /** Arm per seat, in seat order. */
   seats: LeagueArm[];
   decks: { commander: OracleCard; cards: OracleCard[] }[];
+  /** Write a compact game trace for these seats to `path` (`bot-gauntlet --trace-dir`). */
+  trace?: { path: string; seats: PlayerId[] };
 }
 
 export interface LeagueGameReply {
@@ -94,8 +99,8 @@ export function playLeagueGame(request: LeagueGameRequest): LeagueGameReply {
           : arm.steering === undefined
             ? undefined
             : () => arm.steering;
-      if (arm.styleFromDeck === true) {
-        const style = styleForDeck(request.decks[Number(seat.slice(1)) - 1]!);
+      if (arm.styleFromDeck === true || arm.pinnedStyle !== undefined) {
+        const style = arm.pinnedStyle ?? styleForDeck(request.decks[Number(seat.slice(1)) - 1]!);
         styles[seat] = style;
         const base = steering;
         steering = () => ({ ...base?.(), style });
@@ -119,7 +124,19 @@ export function playLeagueGame(request: LeagueGameRequest): LeagueGameReply {
       return proxy.knobsFor(state.turnNumber, active === seat, engine.view(seat));
     };
   }
-  const result = runToCompletion(engine, providerFor);
+  const trace =
+    request.trace === undefined
+      ? undefined
+      : new GameTrace(request.trace.path, request.trace.seats, (seat) => engine.view(seat), {
+          decks: request.decks.map((d) => d.commander.name),
+          arms: request.seats.map((a) => a.name),
+          seed: request.seed,
+        });
+  const result = runToCompletion(
+    engine,
+    providerFor,
+    trace === undefined ? undefined : { onDecision: (req, res) => trace.decision(req, res) },
+  );
   const proxyCalls: Record<string, { calls: number; reused: number }> = {};
   for (const [seat, proxy] of proxies) {
     const entry = (proxyCalls[armOf(seat).name] ??= { calls: 0, reused: 0 });
@@ -130,6 +147,7 @@ export function playLeagueGame(request: LeagueGameRequest): LeagueGameReply {
   for (const player of engine.getState().players) {
     life[player.id] = player.hasLost === true ? 0 : player.life;
   }
+  trace?.end(result.winnerSeat, life, result.turnCount, result.haltReason ?? null);
   return {
     winner: result.winnerSeat,
     winnerArm: result.winnerSeat === null ? null : armOf(result.winnerSeat).name,

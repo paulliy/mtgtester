@@ -64,6 +64,10 @@ bun run bot-league [--games N] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N] [--
                                         # ADR 0039 bot vs bot win rate; arms: legacy, policy, knowledge, fixed, fix-*,
                                         # aggro, control, proxy-*; ADR 0050: fixed-0043, style-aggro|control|combo, styled
                                         # --deck NAME: one coverage deck in all four seats (a mirror)
+bun run bot-gauntlet [--pods N] [--seed S] [--old ARM] [--new ARM,ARM] [--decks a,b] [--trace-dir D] [--json F]
+                                        # ADR 0050 new bot vs old in the field: pods of four different premade decks
+                                        # played by --old, replayed with one seat switched to each --new arm; paired
+                                        # per (pod, seat). Styled arms use fixtures/deck-styles.json
 bun run ai-call-census [--games N] [--turn-cap N] [--json F]
                                         # ADR 0039 model calls and prompt tokens per turn by tactical mode, offline;
                                         # ADR 0044 would-fire counts per escalation trigger and one mode per live trigger

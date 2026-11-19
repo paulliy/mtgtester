@@ -215,7 +215,9 @@ const DECK_SOURCES = [
  * A premade deck by file name, for a mirror (`--deck`): a coverage deck, or an archetype test deck
  * (`fixtures/archetype-decks`, real decks adapted to the modeled pool). One commander only.
  */
-async function premadeDeck(name: string): Promise<{ commander: OracleCard; cards: OracleCard[] }> {
+export async function premadeDeck(
+  name: string,
+): Promise<{ commander: OracleCard; cards: OracleCard[] }> {
   const source = DECK_SOURCES.find((s) => existsSync(resolve(s.dir, `${name}.txt`)));
   if (source === undefined) throw new Error(`--deck: no deck named ${name}`);
   const index = buildOracleIndexFromCards(
@@ -251,12 +253,12 @@ function loadPool(): SupportedPool {
 
 const GAME_RUNNER = fileURLToPath(new URL('./bot-league-game.ts', import.meta.url));
 
-type Outcome =
+export type Outcome =
   | { kind: 'played'; reply: LeagueGameReply }
   | { kind: 'timeout' }
   | { kind: 'error'; message: string };
 
-function runInChild(
+export function runInChild(
   request: LeagueGameRequest,
   timeoutMs: number,
   dir: string,
@@ -423,4 +425,5 @@ async function main(): Promise<void> {
     writeFileSync(args.json, JSON.stringify({ args, summary, errors: tally.errors }, null, 2));
 }
 
-void main();
+const entryPoint = process.argv[1];
+if (entryPoint !== undefined && resolve(entryPoint) === fileURLToPath(import.meta.url)) void main();
