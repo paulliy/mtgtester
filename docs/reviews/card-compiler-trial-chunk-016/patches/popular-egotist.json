@@ -1,0 +1,76 @@
+{
+  "name": "Popular Egotist",
+  "oracleId": "e6377683-1c36-4786-bd8d-c62ff2d25767",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{B}, Sacrifice another creature or enchantment: ~ gains indestructible until end of turn. Tap it."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordUntilEot",
+              "target": "source",
+              "keyword": "indestructible"
+            },
+            {
+              "op": "tapTarget",
+              "target": "source"
+            }
+          ],
+          "description": "{1}{B}, Sacrifice another creature or enchantment: This creature gains indestructible until end of turn. Tap it."
+        }
+      }
+    ]
+  }
+}

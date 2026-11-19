@@ -1,0 +1,1 @@
+At the beginning of your upkeep, destroy target creature that has a -1/-1 counter on it.

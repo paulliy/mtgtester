@@ -1,0 +1,83 @@
+{
+  "name": "Saheeli, the Sun's Brilliance",
+  "oracleId": "5aa76c5d-8046-42ce-b61d-cc9b4806c11a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{U}{R}, {T}: Create a token that's a copy of another target creature or artifact you control, except it's an artifact in addition to its other types. It gains haste. Sacrifice it at the beginning of the next end step."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 0,
+                "R": 1,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "controller": "you",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Artifact"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "createTokenCopyOf",
+              "ref": 0,
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "addTypes": [
+                "Artifact"
+              ],
+              "addKeywords": [
+                "haste"
+              ],
+              "sacrificeAt": "endStep"
+            }
+          ],
+          "description": "{U}{R}, {T}: Create a token that's a copy of another target creature or artifact you control, except it's an artifact in addition to its other types. It gains haste. Sacrifice it at the beginning of the next end step."
+        }
+      }
+    ]
+  }
+}

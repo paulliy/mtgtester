@@ -1,0 +1,2 @@
+The cost of this creature's activated ability is reduced by {1} for each oil counter on this creature.
+{6}{R}, Sacrifice this creature: Discard your hand. Then draw four cards.

@@ -1,0 +1,84 @@
+{
+  "name": "Ethereal Investigator",
+  "oracleId": "24038629-7c12-45ef-8ec4-0d2bb3e2265c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, investigate X times, where X is the number of opponents you have."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Clue",
+              "typeLine": "Artifact — Clue",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Clue"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "activatedAbilities": [
+                {
+                  "costs": [
+                    {
+                      "kind": "mana",
+                      "cost": {
+                        "generic": 2,
+                        "colored": {
+                          "W": 0,
+                          "U": 0,
+                          "B": 0,
+                          "R": 0,
+                          "G": 0
+                        },
+                        "colorless": 0
+                      }
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ],
+                  "timing": "any",
+                  "ability": {
+                    "kind": "activated",
+                    "targets": [],
+                    "effects": [
+                      {
+                        "op": "draw",
+                        "count": {
+                          "kind": "const",
+                          "n": 1
+                        }
+                      }
+                    ],
+                    "description": "{2}, Sacrifice this token: Draw a card."
+                  }
+                }
+              ]
+            },
+            "count": {
+              "kind": "countOpponents"
+            }
+          }
+        ],
+        "description": "When this creature enters, investigate X times, where X is the number of opponents you have."
+      }
+    ]
+  }
+}

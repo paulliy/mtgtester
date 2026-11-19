@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"\"Put X +1/+1 counters ... where X is the power of the creature exiled this way\" needs the exiled creature's last-known power, and powerOfTarget reads current power of a target that has already left the battlefield."}

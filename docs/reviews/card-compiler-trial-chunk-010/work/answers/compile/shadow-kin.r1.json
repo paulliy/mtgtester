@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"A milled creature card cannot be bound and then exiled and copied: mill has no bound result, and millThenReturnMilledCard returns the card to hand, not exile."}

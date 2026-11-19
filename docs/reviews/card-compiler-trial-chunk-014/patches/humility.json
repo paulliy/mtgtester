@@ -1,0 +1,41 @@
+{
+  "name": "Humility",
+  "oracleId": "ed7bdb3e-5c51-4547-9266-76a791e0b2b0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "All creatures lose all abilities and have base power and toughness 1/1."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "type",
+          "value": "Creature"
+        },
+        "op": {
+          "layer": 6,
+          "loseAllAbilities": true
+        }
+      },
+      {
+        "affects": {
+          "kind": "type",
+          "value": "Creature"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "b",
+          "power": {
+            "kind": "const",
+            "n": 1
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      }
+    ]
+  }
+}

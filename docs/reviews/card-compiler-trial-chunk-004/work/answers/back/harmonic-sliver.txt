@@ -1,0 +1,1 @@
+Each Sliver has "When this enters, destroy target artifact or enchantment."

@@ -373,6 +373,10 @@ const HIDEAWAY_CASTING: PinnedOracleFile = JSON.parse(
   readFileSync(resolve('packages/engine/tests/fixtures/hideaway-casting-oracle.json'), 'utf8'),
 ) as PinnedOracleFile;
 
+const PAIRS_AND_HAND_LOOK: PinnedOracleFile = JSON.parse(
+  readFileSync(resolve('packages/engine/tests/fixtures/pairs-and-hand-look-oracle.json'), 'utf8'),
+) as PinnedOracleFile;
+
 function pinnedFrom(file: PinnedOracleFile, name: string): { card: OracleCard; sha256: string } {
   const entry = file.cards.find((candidate) => candidate.card.name === name);
   if (entry === undefined) throw new Error(`No pinned Oracle fixture for ${name}`);
@@ -1037,6 +1041,57 @@ function bogScenario(gameId: GameId): CardTestScenario {
         "P2's Lab Ox is exiled. Your Lab Servo stays in your graveyard because it was not the targeted player.",
       oracleSha256: bog.sha256,
       clauseIds: ['bog-enters-tapped-and-exiles-the-targeted-graveyard'],
+    },
+    seed,
+    seats,
+    engine,
+  };
+}
+
+function peekScenario(gameId: GameId): CardTestScenario {
+  const peek = pinnedFrom(PAIRS_AND_HAND_LOOK, 'Peek');
+  const p1 = player('P1', [peek.card, ISLAND, ISLAND, FOREST]);
+  const p2 = player('P2', [LAB_OX, LAB_SERVO, FOREST, FOREST]);
+  const others = (['P3', 'P4'] as const).map((id) => player(id, [FOREST, FOREST, FOREST]));
+  const seats = [p1.setup, p2.setup, ...others.map(({ setup }) => setup)];
+  const seed = 'card-lab-peek-v1';
+  const engine = new Engine(
+    {
+      gameId,
+      seed,
+      players: [p1.config, p2.config, ...others.map(({ config }) => config)],
+      turnCap: 2,
+    },
+    {
+      preparedScenario: {
+        currentTurnPlayer: 'P1',
+        phase: 'precombatMain',
+        step: null,
+        turnNumber: 1,
+        hand: [
+          { playerId: 'P1', cardNames: ['Peek'] },
+          { playerId: 'P2', cardNames: ['Lab Ox', 'Lab Servo'] },
+        ],
+        battlefield: [{ playerId: 'P1', cardNames: ['Island'] }],
+        graveyard: [],
+      },
+    },
+  );
+  return {
+    metadata: {
+      id: 'peek-viewer-private-hand-look',
+      version: 1,
+      title: "Peek: look at an opponent's hand",
+      instructions: [
+        'Cast Peek from your hand.',
+        'Target opponent P2.',
+        'Pass priority so Peek resolves.',
+        'Pass with the stack empty to finish the scenario.',
+      ],
+      expectedOutcome:
+        "P2's panel shows Lab Ox and Lab Servo under Seen in hand, only to you. The log says you looked at P2's hand without naming the cards, and you draw a card.",
+      oracleSha256: peek.sha256,
+      clauseIds: ['peek-looks-at-target-hand-privately-then-draws'],
     },
     seed,
     seats,
@@ -15195,6 +15250,7 @@ export const CARD_TEST_SCENARIO_IDS = [
   'throat-viewer-destroy-nonartifact',
   'defense-viewer-pump-and-hexproof',
   'bog-viewer-exile-targeted-graveyard',
+  'peek-viewer-private-hand-look',
   'bust-viewer-destroy-toughness-four-or-greater',
   'defile-viewer-minus-one-per-swamp',
   'fury-viewer-double-power',
@@ -16011,6 +16067,7 @@ const SCENARIO_BUILDERS: Record<string, (gameId: GameId) => CardTestScenario> = 
   'throat-viewer-destroy-nonartifact': throatScenario,
   'defense-viewer-pump-and-hexproof': blossomingScenario,
   'bog-viewer-exile-targeted-graveyard': bogScenario,
+  'peek-viewer-private-hand-look': peekScenario,
   'bust-viewer-destroy-toughness-four-or-greater': bustScenario,
   'defile-viewer-minus-one-per-swamp': defileScenario,
   'fury-viewer-double-power': furyScenario,

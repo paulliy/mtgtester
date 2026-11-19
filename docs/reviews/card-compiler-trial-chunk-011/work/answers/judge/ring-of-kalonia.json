@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A checks whether the equipped creature is green only on resolution (\"put a +1/+1 counter ... if it's green\"); Text B makes it an intervening if clause, so the trigger does not trigger at all unless the equipped creature is green, and it is checked again on resolution. The timing of the condition differs."]}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"subtype","value":"Squirrel"},"op":{"layer":7,"sublayer":"d","power":2,"toughness":2},"condition":{"kind":"cardsInYourGraveyard","cmp":">=","n":7}}]}}

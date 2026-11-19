@@ -1,0 +1,1 @@
+Counter target spell with mana value 1.

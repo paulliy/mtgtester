@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"creature"}],"effects":[{"op":"tapTarget","target":0},{"op":"putCounters","target":0,"counter":"stun","count":{"kind":"times","of":{"kind":"xValue"},"n":2}}],"description":"Tap target creature. Put twice X stun counters on it."}}}

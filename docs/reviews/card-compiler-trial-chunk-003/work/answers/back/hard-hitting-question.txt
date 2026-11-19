@@ -1,0 +1,1 @@
+Choose target creature and target creature or planeswalker an opponent controls. The first target creature deals damage equal to its power to the second target.

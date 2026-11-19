@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"self"},"op":{"layer":7,"sublayer":"d","power":4,"toughness":4},"condition":{"kind":"compareValues","left":{"kind":"lifeTotal","scope":"you"},"cmp":">=","right":{"kind":"const","n":25}}}]}}

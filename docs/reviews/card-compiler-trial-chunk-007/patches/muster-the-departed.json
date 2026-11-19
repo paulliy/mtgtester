@@ -1,0 +1,39 @@
+{
+  "name": "Muster the Departed",
+  "oracleId": "f0ba9cca-b946-465c-acae-0b465d7e1622",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your end step, if a creature died this turn, populate."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "endStep",
+          "player": "you",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "creaturesDiedThisTurn"
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "populate"
+          }
+        ],
+        "description": "Morbid — At the beginning of your end step, if a creature died this turn, populate."
+      }
+    ]
+  }
+}

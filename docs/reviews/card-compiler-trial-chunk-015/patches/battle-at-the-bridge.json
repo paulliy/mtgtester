@@ -1,0 +1,44 @@
+{
+  "name": "Battle at the Bridge",
+  "oracleId": "3d63ad3a-4e9f-4968-a576-4be063f4ecbf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature gets -X/-X until end of turn. You gain X life."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "description": "Target creature gets -X/-X until end of turn. You gain X life.",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": {
+            "kind": "negate",
+            "of": {
+              "kind": "xValue"
+            }
+          },
+          "toughness": {
+            "kind": "negate",
+            "of": {
+              "kind": "xValue"
+            }
+          }
+        },
+        {
+          "op": "gainLife",
+          "amount": {
+            "kind": "xValue"
+          }
+        }
+      ]
+    }
+  }
+}

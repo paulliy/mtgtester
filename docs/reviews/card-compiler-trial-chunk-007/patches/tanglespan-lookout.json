@@ -1,0 +1,47 @@
+{
+  "name": "Tanglespan Lookout",
+  "oracleId": "d6a767c2-8bc8-4686-899a-0ba3a525977a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an Aura you control enters, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Aura"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever an Aura you control enters, draw a card."
+      }
+    ]
+  }
+}

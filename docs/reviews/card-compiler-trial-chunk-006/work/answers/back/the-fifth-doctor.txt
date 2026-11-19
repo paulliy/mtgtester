@@ -1,0 +1,1 @@
+At the beginning of your end step, put a +1/+1 counter on each creature you control that hasn't attacked this turn and hasn't entered this turn. Then untap each of those creatures.

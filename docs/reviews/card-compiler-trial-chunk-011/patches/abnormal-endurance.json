@@ -1,0 +1,49 @@
+{
+  "name": "Abnormal Endurance",
+  "oracleId": "edbf1b87-2d1e-47e6-a04e-a2b1646af7d9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Until end of turn, target creature gets +2/+0 and gains \"When this creature dies, return it to the battlefield tapped under its owner's control.\""
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": 2,
+          "toughness": 0
+        },
+        {
+          "op": "grantAbilityUntilEot",
+          "target": 0,
+          "ability": {
+            "kind": "triggered",
+            "trigger": {
+              "when": "dies",
+              "subject": {
+                "kind": "self"
+              }
+            },
+            "targets": [],
+            "effects": [
+              {
+                "op": "returnDiedSourceToBattlefield",
+                "tapped": true
+              }
+            ],
+            "description": "When this creature dies, return it to the battlefield tapped under its owner's control."
+          }
+        }
+      ],
+      "description": "Until end of turn, target creature gets +2/+0 and gains \"When this creature dies, return it to the battlefield tapped under its owner's control.\""
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "Thorn of the Black Rose",
+  "oracleId": "a7894a81-8c0a-4015-8bc1-2698cf5306d1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, you become the monarch."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "becomeMonarch"
+          }
+        ],
+        "description": "When this creature enters, you become the monarch."
+      }
+    ]
+  }
+}

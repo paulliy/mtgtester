@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The mayPayLife condition takes a fixed amount, not the cast spell's mana value, so 'may pay X life where X is that spell's mana value' cannot be said, and a castsSpell trigger has no once-each-turn limit."}

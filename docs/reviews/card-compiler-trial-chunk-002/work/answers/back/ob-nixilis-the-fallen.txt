@@ -1,0 +1,1 @@
+Whenever a land you control enters, you may have target player lose 3 life and put three +1/+1 counters on this.

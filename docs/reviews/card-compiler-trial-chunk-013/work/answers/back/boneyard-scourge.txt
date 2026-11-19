@@ -1,0 +1,2 @@
+Whenever a Dragon you control dies, you may pay {1}{B}. If you do, return this card from your graveyard to the battlefield.
+This ability functions while this card is in your graveyard.

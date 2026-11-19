@@ -1,0 +1,48 @@
+{
+  "name": "Desert",
+  "oracleId": "195107ad-879d-4b02-a44a-a3ba70fedf88",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: ~ deals 1 damage to target attacking creature. Activate only during the end of combat step."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "condition": {
+          "kind": "duringStep",
+          "step": "endCombat"
+        },
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature",
+              "filter": {
+                "kind": "combatRole",
+                "role": "attacking"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "dealDamage",
+              "target": 0,
+              "amount": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "{T}: This land deals 1 damage to target attacking creature. Activate only during the end of combat step."
+        }
+      }
+    ]
+  }
+}

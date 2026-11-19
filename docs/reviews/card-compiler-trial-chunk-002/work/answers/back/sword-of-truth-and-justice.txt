@@ -1,0 +1,1 @@
+Whenever equipped creature deals combat damage to a player, put a +1/+1 counter on a creature of your choice. Then proliferate.

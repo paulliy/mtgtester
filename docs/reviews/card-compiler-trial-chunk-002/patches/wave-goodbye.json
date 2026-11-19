@@ -1,0 +1,37 @@
+{
+  "name": "Wave Goodbye",
+  "oracleId": "06ef46c6-00ba-40e6-b866-d0095ab83749",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return each creature without a +1/+1 counter on it to its owner's hand."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "returnToHandEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "hasCounter",
+                  "counter": "+1/+1"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Return each creature without a +1/+1 counter on it to its owner's hand."
+    }
+  }
+}

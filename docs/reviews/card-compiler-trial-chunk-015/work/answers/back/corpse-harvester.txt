@@ -1,0 +1,1 @@
+{1}{B}, {T}, Sacrifice another creature you control (this creature may be sacrificed): Search your library for a Zombie card, reveal it, and put it into your hand. Then search your library for a Swamp card, reveal it, and put it into your hand. Then shuffle.

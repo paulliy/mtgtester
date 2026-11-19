@@ -1,0 +1,47 @@
+{
+  "name": "Bessie, the Doctor's Roadster",
+  "oracleId": "776aa036-08aa-4fa0-82bd-c09e6e3e2c5e",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ attacks, another target legendary creature can't be blocked this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "other"
+                },
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                }
+              ]
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "cantBeBlockedUntilEot",
+            "target": 0
+          }
+        ],
+        "description": "Whenever Bessie attacks, another target legendary creature can't be blocked this turn."
+      }
+    ]
+  }
+}

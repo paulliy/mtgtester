@@ -1,0 +1,1 @@
+Whenever you cast this spell, create a 1/1 red Soldier creature token (type line hidden in this data) with haste.

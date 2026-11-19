@@ -1,0 +1,1 @@
+Whenever this creature blocks, return the creature blocked by this creature to its owner's hand at end of combat.

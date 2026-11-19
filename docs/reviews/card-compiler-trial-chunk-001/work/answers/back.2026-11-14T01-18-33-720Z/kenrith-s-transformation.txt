@@ -1,0 +1,1 @@
+Enchanted permanent's card types are set to Creature, and its subtypes are set to Elk. Enchanted permanent is the color green, loses all abilities, and has base power and toughness 3/3.

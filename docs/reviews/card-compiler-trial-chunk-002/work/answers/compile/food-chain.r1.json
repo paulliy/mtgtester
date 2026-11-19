@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"There is no activation cost that exiles another creature you control (sacrificeOther only sacrifices), and the mana amount of 1 plus the exiled creature's mana value has no exile-based source (amountFromSacrificedManaValue reads a sacrifice)."}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The token copy's \"At the beginning of the end step, exile this token\" cannot be expressed: createTokenCopyOf's sacrificeAt only sacrifices the token, never exiles it."}

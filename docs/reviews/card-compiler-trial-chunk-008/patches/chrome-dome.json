@@ -1,0 +1,68 @@
+{
+  "name": "Chrome Dome",
+  "oracleId": "3dc71e16-b935-4ad7-b3f7-945ac2c179a7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{5}: Create a token that's a copy of another target artifact you control. That token gains haste. Sacrifice it at the beginning of the next end step."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 5,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "controller": "you",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "other"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "createTokenCopyOf",
+              "ref": 0,
+              "count": {
+                "kind": "const",
+                "n": 1
+              },
+              "addKeywords": [
+                "haste"
+              ],
+              "sacrificeAt": "endStep"
+            }
+          ],
+          "description": "{5}: Create a token that's a copy of another target artifact you control. That token gains haste. Sacrifice it at the beginning of the next end step."
+        }
+      }
+    ]
+  }
+}

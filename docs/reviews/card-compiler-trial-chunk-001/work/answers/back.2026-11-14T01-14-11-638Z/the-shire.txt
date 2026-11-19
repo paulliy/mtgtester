@@ -1,0 +1,2 @@
+This land enters tapped unless a comparison hidden in the data (operator hidden, value 1) between the number of legendary creatures you control and 1 holds.
+This land has no mana ability; it produces no mana.

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"land","controller":"you","filter":{"kind":"supertype","value":"Basic"}}],"effects":[],"description":"Enchant basic land you control"}}}

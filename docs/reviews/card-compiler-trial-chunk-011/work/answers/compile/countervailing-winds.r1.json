@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The counter-unless-pays cost is a number of {1} equal to the cards in your graveyard, but counterUnlessControllerPays takes only a fixed ParsedManaCost and no other op names the spell's controller as payer with a dynamic generic cost."}

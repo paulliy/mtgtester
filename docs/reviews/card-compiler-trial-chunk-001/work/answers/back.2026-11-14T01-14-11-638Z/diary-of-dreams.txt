@@ -1,0 +1,2 @@
+{5}, {T}: Draw two cards. Activate this ability at any time.
+The activation cost of abilities of this permanent is reduced by an amount equal to the number of page counters on this permanent. The data does not say which part of the cost is reduced, and it contains no ability that puts page counters on this permanent.

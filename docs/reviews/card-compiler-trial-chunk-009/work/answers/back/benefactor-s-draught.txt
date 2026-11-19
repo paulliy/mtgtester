@@ -1,0 +1,3 @@
+Untap each creature.
+Until the cleanup step, whenever a creature an opponent controls blocks, you draw a card.
+Draw a card.

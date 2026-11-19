@@ -1,0 +1,33 @@
+{
+  "name": "Diabolic Vision",
+  "oracleId": "6b7b1a71-812d-4ff5-b38b-94d1cf634143",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Look at the top five cards of your library. Put one of them into your hand and the rest on top of your library in any order."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "lookAtTopN",
+          "count": 5,
+          "mayPut": {
+            "filter": {
+              "kind": "allOf",
+              "of": []
+            },
+            "destination": {
+              "zone": "hand"
+            },
+            "required": true
+          },
+          "rest": "topAnyOrder"
+        }
+      ],
+      "description": "Look at the top five cards of your library. Put one of them into your hand and the rest on top of your library in any order."
+    }
+  }
+}

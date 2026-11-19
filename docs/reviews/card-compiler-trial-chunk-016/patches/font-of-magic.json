@@ -1,0 +1,33 @@
+{
+  "name": "Font of Magic",
+  "oracleId": "755230c3-0b89-4123-bed4-2f7729daa859",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Instant and sorcery spells you cast cost {1} less to cast for each time you've cast a commander from the command zone this game."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "commanderCastCount",
+          "player": "you"
+        },
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "type",
+              "value": "Instant"
+            },
+            {
+              "kind": "type",
+              "value": "Sorcery"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

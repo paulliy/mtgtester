@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The clause that makes a non-creature token a 2/2 Robot Villain creature needs a conditional on whether the copy is a creature and an added creature subtype, and createTokenCopyOf can add only card types with no conditional."}

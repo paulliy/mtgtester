@@ -1,0 +1,39 @@
+{
+  "name": "Scourge of Nel Toth",
+  "oracleId": "32972d7a-c7c6-437c-8e7c-6c7d56b130e4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may cast this creature from your graveyard by paying {B}{B} and sacrificing two creatures rather than paying its mana cost."
+  ],
+  "compose": "append",
+  "def": {
+    "alternativeCasts": [
+      {
+        "kind": "nonMana",
+        "from": "graveyard",
+        "manaCost": {
+          "generic": 0,
+          "colored": {
+            "W": 0,
+            "U": 0,
+            "B": 2,
+            "R": 0,
+            "G": 0
+          },
+          "colorless": 0
+        },
+        "costs": [
+          {
+            "kind": "sacrificeOther",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "count": 2
+          }
+        ],
+        "description": "You may cast this creature from your graveyard by paying {B}{B} and sacrificing two creatures rather than paying its mana cost."
+      }
+    ]
+  }
+}

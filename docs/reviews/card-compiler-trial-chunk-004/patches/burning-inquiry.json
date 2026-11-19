@@ -1,0 +1,35 @@
+{
+  "name": "Burning Inquiry",
+  "oracleId": "af98156b-3064-4f16-940e-10039241f2b0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Each player draws three cards, then discards three cards at random."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "eachPlayerDraws",
+          "scope": "all",
+          "count": {
+            "kind": "const",
+            "n": 3
+          }
+        },
+        {
+          "op": "discardEachPlayer",
+          "scope": "all",
+          "count": {
+            "kind": "const",
+            "n": 3
+          },
+          "atRandom": true
+        }
+      ],
+      "description": "Each player draws three cards, then discards three cards at random."
+    }
+  }
+}

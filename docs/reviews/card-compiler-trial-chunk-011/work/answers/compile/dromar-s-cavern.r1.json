@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no ETB choice to return a non-Lair land or else sacrifice this land: returnOneToHand is mandatory, and a chooseOne would let the controller pick sacrifice even when a qualifying land exists, while not forcing the sacrifice when none does."}

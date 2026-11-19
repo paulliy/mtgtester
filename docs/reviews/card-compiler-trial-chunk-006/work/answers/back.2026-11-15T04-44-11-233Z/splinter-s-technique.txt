@@ -1,0 +1,1 @@
+You may cast this spell by paying {1}{B} and returning an unblocked attacker to its owner's hand rather than paying its mana cost. You may cast this spell only during your turn, during the declare blockers step. This spell has no effects and does nothing.

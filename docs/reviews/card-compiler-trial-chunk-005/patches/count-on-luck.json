@@ -1,0 +1,32 @@
+{
+  "name": "Count on Luck",
+  "oracleId": "73ad7bcd-4ffc-442c-b6b5-d935b9ccaaaf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, exile the top card of your library. You may play that card this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "exileTopNPlayableUntilEot",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "At the beginning of your upkeep, exile the top card of your library. You may play that card this turn."
+      }
+    ]
+  }
+}

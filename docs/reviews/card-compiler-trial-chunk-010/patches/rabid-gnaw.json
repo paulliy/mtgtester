@@ -1,0 +1,42 @@
+{
+  "name": "Rabid Gnaw",
+  "oracleId": "077ae62d-ed94-4365-a8b7-97fd99cff028",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control gets +1/+0 until end of turn. Then it deals damage equal to its power to target creature you don't control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "creature",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": 1,
+          "toughness": 0
+        },
+        {
+          "op": "dealDamage",
+          "target": 1,
+          "amount": {
+            "kind": "powerOfTarget",
+            "target": 0
+          },
+          "source": 0
+        }
+      ],
+      "description": "Target creature you control gets +1/+0 until end of turn. Then it deals damage equal to its power to target creature you don't control."
+    }
+  }
+}

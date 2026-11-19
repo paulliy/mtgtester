@@ -1,0 +1,1 @@
+This spell costs {1} less to cast. This cost reduction applies only to this spell and only to spells that match a filter for the Spider creature type.

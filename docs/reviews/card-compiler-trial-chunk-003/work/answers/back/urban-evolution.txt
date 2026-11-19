@@ -1,0 +1,2 @@
+Draw three cards.
+You may play one additional land this turn.

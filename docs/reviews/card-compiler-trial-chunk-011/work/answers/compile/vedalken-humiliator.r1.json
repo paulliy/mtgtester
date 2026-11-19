@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No effect makes opposing creatures lose all abilities and have base power and toughness 1/1 until end of turn: loseKeywordsEachUntilEot removes only named keywords, and no until-end-of-turn base-P/T setter exists."}

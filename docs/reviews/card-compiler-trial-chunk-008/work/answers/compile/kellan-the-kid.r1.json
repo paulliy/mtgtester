@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema cannot express casting a permanent spell from hand with mana value equal to or less than the triggering spell's mana value (castOneFromHandFreeUpTo takes a fixed maxManaValue), combined with the 'if you don't, put a land card onto the battlefield' fallback."}

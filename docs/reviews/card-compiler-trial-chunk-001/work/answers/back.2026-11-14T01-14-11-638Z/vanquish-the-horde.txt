@@ -1,0 +1,2 @@
+This spell costs {1} less to cast for each creature on the battlefield (all players' creatures). This reduction applies only to this card, and only to spells its controller casts.
+This spell has no spell effect other than the cost reduction; it has no targets.

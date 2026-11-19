@@ -1,0 +1,36 @@
+{
+  "name": "Gene Pollinator",
+  "oracleId": "0a356d04-2e86-435b-9766-27b93b468a61",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Tap an untapped permanent you control: Add one mana of any color."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "W",
+            "U",
+            "B",
+            "R",
+            "G"
+          ]
+        ],
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "tapOther",
+            "selector": {
+              "kind": "controller",
+              "who": "you"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The overload half ('for each creature chosen' becoming 'each artifact creature you control') has no all-matching token-copy op, and the parsed overload alternative has no ability of its own, so it would fall back to the single-target spell."}

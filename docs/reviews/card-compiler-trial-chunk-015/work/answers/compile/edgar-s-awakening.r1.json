@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema's discardsCard trigger has no way to say 'when you discard this card' (a discard of the source from hand, then its graveyard-functioning trigger), so the discard trigger cannot be stated exactly."}

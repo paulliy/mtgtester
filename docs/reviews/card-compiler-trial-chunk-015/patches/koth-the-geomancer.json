@@ -1,0 +1,67 @@
+{
+  "name": "Koth, the Geomancer",
+  "oracleId": "3b17da84-ae4d-4fc1-a327-85e54e6156c6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a land you control enters, ~ deals 1 damage to each opponent. If that land is a Mountain, add {R}."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "eachOpponentDamage",
+            "amount": 1
+          },
+          {
+            "op": "conditionalEffect",
+            "condition": {
+              "kind": "triggerObjectMatches",
+              "selector": {
+                "kind": "subtype",
+                "value": "Mountain"
+              }
+            },
+            "then": [
+              {
+                "op": "addMana",
+                "amount": {
+                  "kind": "const",
+                  "n": 1
+                },
+                "colors": [
+                  "R"
+                ]
+              }
+            ],
+            "else": []
+          }
+        ],
+        "description": "Whenever a land you control enters, Koth deals 1 damage to each opponent. If that land is a Mountain, add {R}."
+      }
+    ]
+  }
+}

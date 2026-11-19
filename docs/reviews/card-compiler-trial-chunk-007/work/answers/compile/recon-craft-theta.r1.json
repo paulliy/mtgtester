@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"No EffectRef names the token that createToken just created, and a 0/0 token would die to state-based actions before a reflexive trigger could put its +1/+1 counter on it."}

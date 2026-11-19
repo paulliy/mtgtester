@@ -1,0 +1,63 @@
+{
+  "name": "Aatchik, Emerald Radian",
+  "oracleId": "405c4a7b-dbb3-48a1-9205-7dbe6e2ad363",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ enters, create a 1/1 green Insect creature token for each artifact and/or creature card in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Insect",
+              "typeLine": "Token Creature — Insect",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Insect"
+              ],
+              "colors": [
+                "G"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "count": {
+              "kind": "countCardsInZone",
+              "zone": "graveyard",
+              "selector": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              },
+              "owner": "you"
+            }
+          }
+        ],
+        "description": "When Aatchik enters, create a 1/1 green Insect creature token for each artifact and/or creature card in your graveyard."
+      }
+    ]
+  }
+}

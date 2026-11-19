@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Moving any number of counters chosen by the player onto a target creature cannot be expressed, since moveCounters takes a fixed count and distributeCountersFromSource has no target."}

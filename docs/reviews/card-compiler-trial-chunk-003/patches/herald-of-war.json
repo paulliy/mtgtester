@@ -1,0 +1,33 @@
+{
+  "name": "Herald of War",
+  "oracleId": "1228bd6f-565d-4ad5-bd24-e5aa1ead5dee",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Angel spells and Human spells you cast cost {1} less to cast for each +1/+1 counter on this creature."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "countersOnSelf",
+          "counter": "+1/+1"
+        },
+        "filter": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "subtype",
+              "value": "Angel"
+            },
+            {
+              "kind": "subtype",
+              "value": "Human"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

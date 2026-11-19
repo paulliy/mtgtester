@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"controller","who":"you"},{"kind":"type","value":"Creature"},{"kind":"hasCounter","counter":"+1/+1"}]},"op":{"layer":6,"addKeyword":"trample"}}]}}

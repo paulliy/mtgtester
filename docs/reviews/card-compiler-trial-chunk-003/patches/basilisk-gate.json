@@ -1,0 +1,84 @@
+{
+  "name": "Basilisk Gate",
+  "oracleId": "8733a4fc-4068-4af4-9598-dc3d895e8556",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{2}, {T}: Target creature gets +X/+X until end of turn, where X is the number of Gates you control. Activate only as a sorcery."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 2,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "target": 0,
+              "power": {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Gate"
+                    }
+                  ]
+                },
+                "scope": "you"
+              },
+              "toughness": {
+                "kind": "countPermanents",
+                "selector": {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Gate"
+                    }
+                  ]
+                },
+                "scope": "you"
+              }
+            }
+          ],
+          "description": "{2}, {T}: Target creature gets +X/+X until end of turn, where X is the number of Gates you control. Activate only as a sorcery."
+        }
+      }
+    ]
+  }
+}

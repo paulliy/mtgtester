@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The damage goes to 'that player or a planeswalker that player controls', a choice of recipient the schema cannot state exactly: eventPlayer damage reaches only the player, and a playerOrPlaneswalker target with controller eventPlayer does not say whether the player option is restricted."}

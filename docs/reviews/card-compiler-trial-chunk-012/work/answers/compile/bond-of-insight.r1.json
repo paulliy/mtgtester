@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Each player mills four and then the controller returns up to two instant or sorcery cards from the graveyard, but millAndReturnSpells is fixed at six and controller-only, and no each-player mill-then-return op exists."}

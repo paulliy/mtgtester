@@ -1,0 +1,25 @@
+{
+  "name": "Nullpriest of Oblivion",
+  "oracleId": "c1111228-ef88-4b64-91e0-66ee32a1f5e4",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Kicker {3}{B}"
+  ],
+  "compose": "append",
+  "def": {
+    "optionalAdditionalCost": {
+      "mechanic": "kicker",
+      "cost": {
+        "generic": 3,
+        "colored": {
+          "W": 0,
+          "U": 0,
+          "B": 1,
+          "R": 0,
+          "G": 0
+        },
+        "colorless": 0
+      }
+    }
+  }
+}

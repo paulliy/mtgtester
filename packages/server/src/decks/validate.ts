@@ -28,40 +28,106 @@ export function isLegalSoloCommander(card: OracleCard): boolean {
   return isLegendaryCreature(card) || /can be your commander/i.test(card.oracleText);
 }
 
-function hasPlainPartner(card: OracleCard): boolean {
+/** The pairing ability a card carries for two-commander decks (CR 702.124). */
+type PairAbility =
+  | { kind: 'partner' }
+  | { kind: 'partnerWith'; name: string }
+  | { kind: 'partnerVariant'; variant: string }
+  | { kind: 'friendsForever' }
+  | { kind: 'chooseBackground' }
+  | { kind: 'doctorsCompanion' };
+
+/**
+ * Reads the pairing abilities from oracle text only. Scryfall's `keywords` lists "Partner" for
+ * "Partner with" and "Partner—<variant>" cards too, which would let either pair with any plain
+ * partner (forbidden by CR 702.124f), so it is not consulted.
+ */
+export function pairAbilities(card: OracleCard): PairAbility[] {
+  const found: PairAbility[] = [];
+  for (const rawLine of card.oracleText.split('\n')) {
+    const line = rawLine.replace(/\([^)]*\)/g, '').trim();
+    // The partner's name may hold a comma ("Partner with Pippin, Guard of the Citadel").
+    if (line.toLowerCase().startsWith('partner with ')) {
+      found.push({ kind: 'partnerWith', name: line.slice('partner with '.length).trim() });
+      continue;
+    }
+    for (const rawPart of line.split(/,\s*/)) {
+      const part = rawPart.trim();
+      const lower = part.toLowerCase();
+      if (lower === 'partner') found.push({ kind: 'partner' });
+      else if (lower.startsWith('partner with ')) {
+        found.push({ kind: 'partnerWith', name: part.slice('partner with '.length).trim() });
+      } else if (/^partner\s*[—-]\s*\S/.test(lower)) {
+        found.push({ kind: 'partnerVariant', variant: lower.replace(/^partner\s*[—-]\s*/, '') });
+      } else if (lower === 'friends forever') found.push({ kind: 'friendsForever' });
+      else if (lower === 'choose a background') found.push({ kind: 'chooseBackground' });
+      else if (lower === "doctor's companion") found.push({ kind: 'doctorsCompanion' });
+    }
+  }
+  return found;
+}
+
+const has = (card: OracleCard, kind: PairAbility['kind']): boolean =>
+  pairAbilities(card).some((ability) => ability.kind === kind);
+
+const isBackground = (card: OracleCard): boolean =>
+  card.supertypes.includes('Legendary') &&
+  card.types.includes('Enchantment') &&
+  card.subtypes.includes('Background');
+
+/**
+ * A Time Lord Doctor creature with no other creature types (CR 702.124m). The importer splits
+ * subtypes on whitespace, so "Time Lord" arrives as "Time" and "Lord"; both spellings count.
+ */
+const isPureTimeLordDoctor = (card: OracleCard): boolean => {
+  const subtypes = new Set(card.subtypes);
+  const timeLord = subtypes.has('Time Lord') || (subtypes.has('Time') && subtypes.has('Lord'));
   return (
-    /(^|\n|\band\b )partner\b(?! with)/i.test(card.oracleText) || card.keywords.includes('Partner')
+    isLegendaryCreature(card) &&
+    subtypes.has('Doctor') &&
+    timeLord &&
+    [...subtypes].every((t) => ['Doctor', 'Time Lord', 'Time', 'Lord'].includes(t))
+  );
+};
+
+function partnersWith(a: OracleCard, b: OracleCard): boolean {
+  return pairAbilities(a).some(
+    (ability) => ability.kind === 'partnerWith' && strictKey(ability.name) === strictKey(b.name),
   );
 }
 
-function partnerWithTarget(card: OracleCard): string | null {
-  const match = /partner with ([^\n(.,]+)/i.exec(card.oracleText);
-  return match?.[1]?.trim() ?? null;
+function sameVariant(a: OracleCard, b: OracleCard): boolean {
+  const variants = new Set(
+    pairAbilities(a).flatMap((ability) =>
+      ability.kind === 'partnerVariant' ? [ability.variant] : [],
+    ),
+  );
+  return pairAbilities(b).some(
+    (ability) => ability.kind === 'partnerVariant' && variants.has(ability.variant),
+  );
 }
 
-const isBackground = (card: OracleCard): boolean => card.subtypes.includes('Background');
-const choosesBackground = (card: OracleCard): boolean =>
-  /choose a background/i.test(card.oracleText);
-const isDoctor = (card: OracleCard): boolean => card.subtypes.includes('Doctor');
-const hasDoctorCompanion = (card: OracleCard): boolean =>
-  /doctor's companion/i.test(card.oracleText);
-
-/** Whether two declared commanders form a legal pairing (CR 702.124 / 702.125 / backgrounds). */
+/**
+ * Whether two declared commanders form a legal pairing (CR 702.124). Each kind pairs only with
+ * the same kind: plain Partner with plain Partner, "Partner with X" only with X (and X back),
+ * Partner—variant with the same variant, Friends forever with Friends forever, "Choose a
+ * Background" with a legendary Background enchantment, and Doctor's companion with a Time Lord
+ * Doctor. Every partner-style half must itself be able to be a commander.
+ */
 function isLegalPairing(a: OracleCard, b: OracleCard): boolean {
-  if (hasPlainPartner(a) && hasPlainPartner(b)) return true;
-  const aWith = partnerWithTarget(a);
-  const bWith = partnerWithTarget(b);
-  if (
-    aWith &&
-    bWith &&
-    strictKey(aWith) === strictKey(b.name) &&
-    strictKey(bWith) === strictKey(a.name)
-  ) {
-    return true;
-  }
-  if ((choosesBackground(a) && isBackground(b)) || (choosesBackground(b) && isBackground(a)))
-    return true;
-  if ((hasDoctorCompanion(a) && isDoctor(b)) || (hasDoctorCompanion(b) && isDoctor(a))) return true;
+  if (a.oracleId === b.oracleId) return false;
+  const pair = (x: OracleCard, y: OracleCard): boolean => {
+    if (has(x, 'chooseBackground') && isLegendaryCreature(x) && isBackground(y)) return true;
+    if (has(x, 'doctorsCompanion') && isLegendaryCreature(x) && isPureTimeLordDoctor(y))
+      return true;
+    return false;
+  };
+  if (pair(a, b) || pair(b, a)) return true;
+  if (!isLegalSoloCommander(a) || !isLegalSoloCommander(b)) return false;
+  if (has(a, 'partner') && has(b, 'partner')) return true;
+  if (partnersWith(a, b) && partnersWith(b, a)) return true;
+  if (sameVariant(a, b)) return true;
+  if (has(a, 'friendsForever') && has(b, 'friendsForever')) return true;
   return false;
 }
 

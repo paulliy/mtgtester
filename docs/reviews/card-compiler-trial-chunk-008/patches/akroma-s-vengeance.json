@@ -1,0 +1,38 @@
+{
+  "name": "Akroma's Vengeance",
+  "oracleId": "ae19dce5-c9fc-4fbe-99b5-dc6a12124a68",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Destroy all artifacts, creatures, and enchantments."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "destroyEach",
+          "selector": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Enchantment"
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Destroy all artifacts, creatures, and enchantments."
+    }
+  }
+}

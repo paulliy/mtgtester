@@ -1,0 +1,1 @@
+Search a library for a card that is an Aura enchantment or an Equipment artifact. Reveal that card and put it into hand. Then shuffle.

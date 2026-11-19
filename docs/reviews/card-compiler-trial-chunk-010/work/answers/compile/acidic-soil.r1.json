@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"damageEachPlayer takes one amount Value evaluated for the controller, and countPermanents scopes only to you, opponents or all, so each player's own land count cannot be expressed."}

@@ -1,0 +1,50 @@
+{
+  "name": "Steel Overseer",
+  "oracleId": "986ae327-f433-4c58-93dc-afc544b9bfcb",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Put a +1/+1 counter on each artifact creature you control."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              },
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ],
+          "description": "{T}: Put a +1/+1 counter on each artifact creature you control."
+        }
+      }
+    ]
+  }
+}

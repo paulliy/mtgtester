@@ -1,0 +1,13 @@
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/entish-restoration.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/entish-restoration.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/changeling-outcast.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/changeling-outcast.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/evolution-witness.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/evolution-witness.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/haywire-mite.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/haywire-mite.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/evendo-waking-haven.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/evendo-waking-haven.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/captain-lannery-storm.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/captain-lannery-storm.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/diary-of-dreams.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/diary-of-dreams.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/metallic-mimic.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/metallic-mimic.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/all-that-glitters.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/all-that-glitters.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/colossus-hammer.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/colossus-hammer.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/mental-misstep.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/mental-misstep.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/descent-into-avernus.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/descent-into-avernus.json
+docs/reviews/card-compiler-trial-chunk-001/work/prompts/judge/purphoros-god-of-the-forge.md	docs/reviews/card-compiler-trial-chunk-001/work/answers/judge/purphoros-god-of-the-forge.json

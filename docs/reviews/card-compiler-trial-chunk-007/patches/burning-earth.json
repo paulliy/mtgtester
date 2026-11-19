@@ -1,0 +1,52 @@
+{
+  "name": "Burning Earth",
+  "oracleId": "21b8192e-46a2-4a6a-abd5-3a074efa30a9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a player taps a nonbasic land for mana, this enchantment deals 1 damage to that player."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "becomesTapped",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Land"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  }
+                }
+              ]
+            }
+          },
+          "forMana": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a player taps a nonbasic land for mana, this enchantment deals 1 damage to that player."
+      }
+    ]
+  }
+}

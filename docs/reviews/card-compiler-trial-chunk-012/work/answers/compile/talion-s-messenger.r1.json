@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The second ability ('When you discard a card this way') is a reflexive trigger tied to this ability's own discard, and no effect or trigger expresses that; discardsCard would also fire for discards from other sources."}

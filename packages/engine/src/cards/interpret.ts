@@ -18,6 +18,7 @@ import { colorsOfManaCost, combinedManaCost, emptyCost, parseManaCost } from '..
 import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type { AbilityCost, ActivatedAbility, AlternativeCast, MdfcLandFace } from './ability';
 import { transformDefinition } from '../testing/definition-transform';
+import { cachedDefinition } from './definition-cache';
 import { SELF_SUBJECT } from './ability';
 import type { Ability, Effect, KeywordAbility, TargetSpec, TokenSpec } from './ability';
 import { parseEntersAsCopy } from './grammar/copy';
@@ -71,6 +72,7 @@ import {
   parseTriggerLine,
   splitSentences,
 } from './grammar/effect';
+import { parseForEachCount } from './grammar/amount-forms';
 import { collectSlotDiagnostics, type SlotFailure } from './grammar/diagnostics';
 import type { Condition } from './condition';
 import { countPermanents } from './condition';
@@ -83,6 +85,7 @@ import {
   ENTERED_THIS_TURN,
   IS_COMMANDER,
   NONBASIC_LANDS,
+  OPPONENTS,
   OTHER,
   SELF,
   YOURS,
@@ -1997,8 +2000,34 @@ const COUNTER_COUNT_DOUBLED_RE =
 const PLUS_COUNTER_ADDITION_RE =
   /^if one or more \+1\/\+1 counters would be put on a creature you control, that many plus one \+1\/\+1 counters are put on (?:that creature|it) instead$/;
 
+const PLURAL_PERMANENT_TYPES: Record<string, Selector> = {
+  artifacts: ofType('Artifact'),
+  creatures: ofType('Creature'),
+  enchantments: ofType('Enchantment'),
+  lands: ofType('Land'),
+  planeswalkers: ofType('Planeswalker'),
+  'nonbasic lands': allOf(ofType('Land'), not(ofSupertype('Basic'))),
+};
+
 /**
- * Rule-modifying statics (ADR 0010, Inc 13) â€” cost reduction, "can't be countered", "opponents
+ * A plain list of plural permanent types: "creatures", "artifacts and creatures", "artifacts,
+ * creatures, and lands". Anything else (a controller, a quality, "other") is not read here, so
+ * a caller that adds its own controller clause never silently drops a word.
+ */
+function parsePermanentTypeList(text: string): Selector | null {
+  const words = text.split(/, and | and |, /);
+  const selectors: Selector[] = [];
+  for (const word of words) {
+    const selector = PLURAL_PERMANENT_TYPES[word];
+    if (selector === undefined) return null;
+    selectors.push(selector);
+  }
+  if (selectors.length === 0) return null;
+  return selectors.length === 1 ? selectors[0]! : anyOf(...selectors);
+}
+
+/**
+ * Rule-modifying statics (ADR 0010, Inc 13)â€” cost reduction, "can't be countered", "opponents
  * can't cast spells", casting from a non-hand zone. These have no permanent to apply a layer op
  * to (`rule-statics.ts`), so they are collected separately from `parseStaticLine`.
  */
@@ -2039,6 +2068,35 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
     if (dynamic !== null) {
       const amount = parseDynamicCountValue(dynamic[1] as string, card);
       if (amount !== null) return [{ kind: 'costReduction', amount, selfOnly: true }];
+    }
+    // "This spell costs {1} less to cast for each creature card in your graveyard." (Ghoultree,
+    // Overwhelming Remorse): the same self reduction, counted per noun.
+    const perEach = lower.match(/^(?:this spell|~) costs \{(\d+)\} less to cast for each (.+)$/);
+    if (perEach !== null) {
+      const count = parseForEachCount(perEach[2] as string, card);
+      const per = Number(perEach[1]);
+      if (count !== null && per > 0) {
+        const amount: Value = per === 1 ? count : { kind: 'times', of: count, n: per };
+        return [{ kind: 'costReduction', amount, selfOnly: true }];
+      }
+    }
+    // "This spell costs {1} less to cast if you control a Wizard." (Wizard's Retort): checked as
+    // the total cost is determined (CR 601.2f), like Bolt Bend's override.
+    const ifControl = lower.match(
+      /^(?:this spell|~) costs \{(\d+)\} less to cast if (you control .+)$/,
+    );
+    if (ifControl !== null) {
+      const condition = parseConditionClause(ifControl[2] as string, card);
+      if (condition !== null) {
+        return [
+          {
+            kind: 'costReduction',
+            amount: constant(Number(ifControl[1])),
+            selfOnly: true,
+            condition,
+          },
+        ];
+      }
     }
     const power = lower.match(
       /^(.+ spells?) you cast with power (\d+) or greater cost \{(\d+)\} less to cast$/,
@@ -2302,6 +2360,52 @@ function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | nu
   }
   if (CANT_CAST_SPELLS_RE.test(lower)) {
     return [{ kind: 'cantCastSpells', who: 'opponents', yourTurnOnly: true }];
+  }
+  // "Each player can't cast more than one spell each turn." (Eidolon of Rhetoric, Rule of Law),
+  // "… one noncreature spell …" (Deafening Silence): each player's own cast tally (CR 604.1).
+  {
+    const m = lower.match(/^each player can't cast more than one (noncreature )?spell each turn$/);
+    if (m !== null) {
+      return [
+        { kind: 'spellCastLimit', category: m[1] === undefined ? 'any' : 'noncreature', limit: 1 },
+      ];
+    }
+  }
+  // "Creatures your opponents control enter tapped." (Imposing Sovereign), "Artifacts, creatures,
+  // and lands your opponents control enter tapped." (Kismet): an entry replacement on every
+  // matching permanent an opponent puts onto the battlefield (CR 614.1c, 614.12).
+  {
+    const m = lower.match(/^(.+?) your opponents control enter (?:the battlefield )?tapped$/);
+    const types = m === null ? null : parsePermanentTypeList(m[1] as string);
+    if (types !== null) {
+      const parts = types.kind === 'allOf' ? types.of : [types];
+      return [{ kind: 'otherPermanentsEnterTapped', filter: allOf(...parts, OPPONENTS) }];
+    }
+  }
+  // "Activated abilities of artifacts can't be activated." (Null Rod, Stony Silence): every
+  // player, every artifact on the battlefield, mana abilities included (CR 605.1a).
+  {
+    const m = lower.match(/^activated abilities of (.+?) can't be activated$/);
+    const types = m === null ? null : parsePermanentTypeList(m[1] as string);
+    if (types !== null) {
+      return [{ kind: 'cantActivateAbilities', who: 'all', yourTurnOnly: false, filter: types }];
+    }
+  }
+  // "Creatures entering don't cause abilities to trigger." (Torpor Orb, Hushwing Gryff).
+  {
+    const m = lower.match(
+      /^(.+?) entering (?:the battlefield )?(or dying )?don't cause abilities to trigger$/,
+    );
+    const types = m === null ? null : parsePermanentTypeList(m[1] as string);
+    if (types !== null) {
+      return [
+        {
+          kind: 'suppressObjectTriggers',
+          events: m?.[2] === undefined ? ['enters'] : ['enters', 'dies'],
+          filter: types,
+        },
+      ];
+    }
   }
   {
     const m = lower.match(ADDITIONAL_LAND_DROP_RE);
@@ -2779,9 +2883,15 @@ function buildPathwayLand(card: OracleCard): {
   };
 }
 
-/** Interpret one oracle card. Never throws â€” unmodeled cards are reported, not errors. */
+/**
+ * Interpret one oracle card. Never throws â€” unmodeled cards are reported, not errors.
+ *
+ * Each distinct card is interpreted once per process (`definition-cache.ts`); the returned
+ * definition is shared, so callers must not mutate it. The test-only transform applies on every
+ * call, after the cache.
+ */
 export function interpretCard(card: OracleCard): CardDefinition {
-  return transformDefinition(interpretOracleCard(card));
+  return transformDefinition(cachedDefinition(card, interpretOracleCard));
 }
 
 /**
@@ -2793,7 +2903,10 @@ export function interpretCardWithDiagnostics(card: OracleCard): {
   definition: CardDefinition;
   failures: SlotFailure[];
 } {
-  const { result, failures } = collectSlotDiagnostics(() => interpretCard(card));
+  // Bypasses the cache: slot failures are recorded only while the grammar actually runs.
+  const { result, failures } = collectSlotDiagnostics(() =>
+    transformDefinition(interpretOracleCard(card)),
+  );
   return { definition: result, failures };
 }
 
@@ -3350,6 +3463,31 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
       lower === '~ can be your commander' ||
       lower === 'sivitri, dragon master can be your commander'
     ) {
+      continue;
+    }
+    // Two-commander pairing keywords are deck construction only (CR 702.124a); deck validation
+    // checks the pairing, and nothing happens in a game.
+    if (
+      lower === 'partner' ||
+      lower === 'choose a background' ||
+      lower === 'friends forever' ||
+      lower === "doctor's companion" ||
+      /^partner\s*—\s*\S/.test(lower)
+    ) {
+      continue;
+    }
+    // "Partner with <name>" is also an enters trigger: target player may search their library
+    // for the named card, reveal it, put it into their hand, then shuffle (CR 702.124j).
+    const partnerWith = /^partner with (.+)$/i.exec(line.replace(/\.$/, ''));
+    if (partnerWith !== null) {
+      const partnerName = (partnerWith[1] as string).trim();
+      triggers.push({
+        kind: 'triggered',
+        trigger: { when: 'enters', subject: SELF_SUBJECT },
+        targets: [{ kind: 'player' }],
+        effects: [{ op: 'targetPlayerMaySearchNamed', target: 0, name: partnerName }],
+        description: `Target player may search their library for a card named ${partnerName}, reveal it, and put it into their hand, then shuffle`,
+      });
       continue;
     }
     if (/^hideaway 4/i.test(lower)) {
@@ -4246,12 +4384,28 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         spellEffects.push({ op: 'counter', target, addManaAtNextMainPhase: true });
         continue;
       }
-      if (
-        lower ===
-        "counter target noncreature spell. if that spell is countered this way, exile it instead of putting it into its owner's graveyard"
-      ) {
+      // "Counter target spell that targets a permanent you control." (Keep Safe, Turn Aside,
+      // Rebuff the Wicked): the spell target is legal only while it targets one of your
+      // permanents, re-checked on resolution (CR 608.2b).
+      if (lower === 'counter target spell that targets a permanent you control') {
         const target = spellTargets.length;
-        spellTargets.push(counterSpellTarget('noncreatureSpell'));
+        spellTargets.push({
+          ...counterSpellTarget('spell'),
+          spellTargetsPermanentYouControl: true,
+        });
+        spellEffects.push({ op: 'counter', target });
+        continue;
+      }
+      // Dissipate ("counter target spell") and Lose Focus-style noncreature variants: the same
+      // countered-spell exile replacement, read for either spell target.
+      const counterExile = lower.match(
+        /^counter target (noncreature )?spell\. if that spell is countered this way, exile it instead of putting it into its owner's graveyard$/,
+      );
+      if (counterExile !== null) {
+        const target = spellTargets.length;
+        spellTargets.push(
+          counterSpellTarget(counterExile[1] === undefined ? 'spell' : 'noncreatureSpell'),
+        );
         spellEffects.push({ op: 'counter', target, exileIfCountered: true });
         continue;
       }

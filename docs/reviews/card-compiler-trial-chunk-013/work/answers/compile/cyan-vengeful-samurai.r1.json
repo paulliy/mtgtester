@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"countCardsInZone","zone":"graveyard","selector":{"kind":"type","value":"Creature"},"owner":"you"},"selfOnly":true}]}}

@@ -1,0 +1,29 @@
+{
+  "name": "Rout",
+  "oracleId": "d69aa624-23d1-406a-b7e0-9140a6f57929",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "You may cast this spell as though it had flash if you pay {2} more to cast it."
+  ],
+  "compose": "append",
+  "def": {
+    "alternativeCasts": [
+      {
+        "kind": "nonMana",
+        "manaCost": {
+          "generic": 5,
+          "colored": {
+            "W": 2,
+            "U": 0,
+            "B": 0,
+            "R": 0,
+            "G": 0
+          },
+          "colorless": 0
+        },
+        "instantTiming": true,
+        "description": "You may cast this spell as though it had flash if you pay {2} more to cast it."
+      }
+    ]
+  }
+}

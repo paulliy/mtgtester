@@ -1,0 +1,51 @@
+{
+  "name": "Zur the Enchanter",
+  "oracleId": "d7950018-d744-48a8-81aa-0d8384703f48",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ attacks, you may search your library for an enchantment card with mana value 3 or less, put it onto the battlefield, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Enchantment"
+                },
+                {
+                  "kind": "manaValueAtMost",
+                  "n": 3
+                }
+              ]
+            },
+            "destinations": [
+              {
+                "zone": "battlefield"
+              }
+            ]
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "Whenever Zur attacks, you may search your library for an enchantment card with mana value 3 or less, put it onto the battlefield, then shuffle."
+      }
+    ]
+  }
+}

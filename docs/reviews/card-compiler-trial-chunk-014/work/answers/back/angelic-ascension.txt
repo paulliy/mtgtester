@@ -1,0 +1,1 @@
+The controller of target creature or planeswalker creates a 4/4 white Angel creature token with flying. Then exile that permanent.

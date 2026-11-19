@@ -1,0 +1,92 @@
+{
+  "name": "Search the Premises",
+  "oracleId": "0232418d-1c52-4573-b488-c62345ca1c8d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature attacks you or a planeswalker you control, investigate."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          },
+          "condition": {
+            "kind": "eventObjectDefendingPlayerIsYou"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Clue",
+              "typeLine": "Artifact — Clue",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [
+                "Clue"
+              ],
+              "colors": [],
+              "power": null,
+              "toughness": null,
+              "activatedAbilities": [
+                {
+                  "costs": [
+                    {
+                      "kind": "mana",
+                      "cost": {
+                        "generic": 2,
+                        "colored": {
+                          "W": 0,
+                          "U": 0,
+                          "B": 0,
+                          "R": 0,
+                          "G": 0
+                        },
+                        "colorless": 0
+                      }
+                    },
+                    {
+                      "kind": "sacrificeSelf"
+                    }
+                  ],
+                  "timing": "any",
+                  "ability": {
+                    "kind": "activated",
+                    "targets": [],
+                    "effects": [
+                      {
+                        "op": "draw",
+                        "count": {
+                          "kind": "const",
+                          "n": 1
+                        }
+                      }
+                    ],
+                    "description": "{2}, Sacrifice this token: Draw a card."
+                  }
+                }
+              ]
+            },
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever a creature attacks you or a planeswalker you control, investigate."
+      }
+    ]
+  }
+}

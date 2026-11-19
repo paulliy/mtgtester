@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Any patch disables the interpreter's generic ability-label stripping, so the already-parsed Nosh line becomes unrecognized and cannot be claimed by this patch."}

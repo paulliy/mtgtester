@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A is one triggered ability that fires when a player casts a spell or when a creature attacks, so it triggers once for each attacking creature. Text B splits this into two abilities, and its attack trigger fires once per declared attackers step (on 'an attacker is declared') rather than once for each attacking creature."]}

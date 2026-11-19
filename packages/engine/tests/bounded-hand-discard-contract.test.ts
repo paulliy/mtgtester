@@ -27,7 +27,7 @@ function spellDefinition(): CardDefinition {
     power: null,
     toughness: null,
   });
-  const definition = interpretCard(printed);
+  const definition = structuredClone(interpretCard(printed));
   const opponent = targetSlots({ player: { kind: 'player', controller: 'opponent' } });
   definition.spellAbility = spell({
     targets: opponent.targets,

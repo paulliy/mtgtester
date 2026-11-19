@@ -1,0 +1,23 @@
+{
+  "name": "Heartbeat of Spring",
+  "oracleId": "f15911a5-f597-452e-a015-b115339f28fc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a player taps a land for mana, that player adds one mana of any type that land produced."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "manaActivationRider",
+        "source": {
+          "kind": "type",
+          "value": "Land"
+        },
+        "add": {
+          "kind": "oneOfProducedTypes"
+        }
+      }
+    ]
+  }
+}

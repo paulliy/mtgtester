@@ -1,0 +1,41 @@
+{
+  "name": "Breath Weapon",
+  "oracleId": "f3dd1f6d-f7d7-4358-8139-7495404f29c7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals 2 damage to each non-Dragon creature."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "damageEach",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                }
+              }
+            ]
+          },
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        }
+      ],
+      "description": "Breath Weapon deals 2 damage to each non-Dragon creature."
+    }
+  }
+}

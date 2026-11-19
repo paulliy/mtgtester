@@ -1,0 +1,44 @@
+{
+  "name": "Staff of Compleation",
+  "oracleId": "11c7662f-e688-40a6-98fd-6ae89d231b44",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Pay 1 life: Destroy target permanent you own."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "payLife",
+            "amount": 1
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "filter": {
+                "kind": "owner",
+                "who": "you"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "destroy",
+              "target": 0
+            }
+          ],
+          "description": "{T}, Pay 1 life: Destroy target permanent you own."
+        }
+      }
+    ]
+  }
+}

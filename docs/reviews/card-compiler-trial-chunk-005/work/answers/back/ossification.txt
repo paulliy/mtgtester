@@ -1,0 +1,2 @@
+Target basic land you control.
+This Aura has no effects and does nothing.

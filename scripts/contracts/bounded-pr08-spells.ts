@@ -43,7 +43,7 @@ function synthetic(
     oracleText,
     keywords: [],
   } as Parameters<typeof interpretCard>[0];
-  const definition = interpretCard(raw);
+  const definition = structuredClone(interpretCard(raw));
   definition.manaCost = parsed.cost;
   definition.modeled = true;
   definition.unmodeledReasons = [];

@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A triggers once per event when one or more +1/+1 counters are put on creatures you control, putting one supply counter. Text B triggers once per individual +1/+1 counter, so a single event placing several counters puts several supply counters."]}

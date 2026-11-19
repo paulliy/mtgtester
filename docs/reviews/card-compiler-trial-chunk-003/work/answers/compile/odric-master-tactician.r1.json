@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The controller chooses only the blocks, but chooseAttackersAndBlockers also has the controller choose the attackers, and no op limits the choice to blockers."}

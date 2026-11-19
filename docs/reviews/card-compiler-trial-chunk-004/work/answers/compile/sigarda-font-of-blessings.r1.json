@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"castFromZone","zone":"libraryTop","filter":{"kind":"anyOf","of":[{"kind":"subtype","value":"Angel"},{"kind":"subtype","value":"Human"}]}}]}}

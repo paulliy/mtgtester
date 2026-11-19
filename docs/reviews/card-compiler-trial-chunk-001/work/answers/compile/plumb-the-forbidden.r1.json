@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no optional additional cost that sacrifices a variable number of creatures and then copies the spell once for each creature actually sacrificed (sacrificeOther takes a fixed count, and replicateCopies takes a fixed count)."}

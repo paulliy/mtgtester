@@ -2,7 +2,7 @@
 
 Date: 2026-07-28
 
-Status: Accepted
+Status: Accepted (2026-07-28)
 
 Superseded in part by [0031](0031-multiplayer-tables.md): decision 1 (one human seat), decision 4 (the human is untimed), decision 5 (every bot pauses while the human is away) and the deferral of multiple humans. Decision 7 (replay and debug unlock only after the game ends) still holds; 0031 decision 3 narrows what unlocks.
 

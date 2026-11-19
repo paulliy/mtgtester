@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"self"},"op":{"layer":6,"addKeyword":"indestructible"},"condition":{"kind":"countPermanents","selector":{"kind":"allOf","of":[{"kind":"other"},{"kind":"controller","who":"you"},{"kind":"subtype","value":"Merfolk"}]},"scope":"you","cmp":">=","n":2}}]}}

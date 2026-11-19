@@ -1,0 +1,67 @@
+{
+  "name": "Of One Mind",
+  "oracleId": "5a23c734-cbfb-419a-9bf1-126cb07fe427",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {2} less to cast if you control a Human creature and a non-Human creature."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 2
+        },
+        "selfOnly": true,
+        "condition": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "subtype",
+                    "value": "Human"
+                  }
+                ]
+              },
+              "scope": "you",
+              "cmp": ">=",
+              "n": 1
+            },
+            {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "not",
+                    "of": {
+                      "kind": "subtype",
+                      "value": "Human"
+                    }
+                  }
+                ]
+              },
+              "scope": "you",
+              "cmp": ">=",
+              "n": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

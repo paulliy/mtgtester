@@ -1,0 +1,41 @@
+{
+  "name": "The Scarlet Witch",
+  "oracleId": "d8ae8c38-501e-44ea-9faf-cf9d11ba6616",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Instant and sorcery spells you cast with mana value 4 or greater cost {X} less to cast, where X is ~'s power."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "powerOfSource"
+        },
+        "filter": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Instant"
+                },
+                {
+                  "kind": "type",
+                  "value": "Sorcery"
+                }
+              ]
+            },
+            {
+              "kind": "manaValueAtLeast",
+              "n": 4
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target becomes a 0/0 artifact creature permanently, but the only becomes-creature op (becomeCreatureUntilEot) ends at end of turn, and there is no permanent type-change op."}

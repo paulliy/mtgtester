@@ -1,0 +1,101 @@
+{
+  "name": "Bloody Betrayal",
+  "oracleId": "a2743cb6-564d-43f1-99cc-4ba3ceb2e282",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Blood token."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "duration": "untilEndOfTurn"
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "haste"
+        },
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Blood",
+            "typeLine": "Artifact — Blood",
+            "types": [
+              "Artifact"
+            ],
+            "subtypes": [
+              "Blood"
+            ],
+            "colors": [],
+            "power": null,
+            "toughness": null,
+            "activatedAbilities": [
+              {
+                "costs": [
+                  {
+                    "kind": "mana",
+                    "cost": {
+                      "generic": 1,
+                      "colored": {
+                        "W": 0,
+                        "U": 0,
+                        "B": 0,
+                        "R": 0,
+                        "G": 0
+                      },
+                      "colorless": 0
+                    }
+                  },
+                  {
+                    "kind": "tap"
+                  },
+                  {
+                    "kind": "discardCard",
+                    "count": 1
+                  },
+                  {
+                    "kind": "sacrificeSelf"
+                  }
+                ],
+                "timing": "any",
+                "ability": {
+                  "kind": "activated",
+                  "targets": [],
+                  "effects": [
+                    {
+                      "op": "draw",
+                      "count": {
+                        "kind": "const",
+                        "n": 1
+                      }
+                    }
+                  ],
+                  "description": "{1}, {T}, Discard a card, Sacrifice this token: Draw a card."
+                }
+              }
+            ]
+          },
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Blood token. (It's an artifact with \"{1}, {T}, Discard a card, Sacrifice this token: Draw a card.\")"
+    }
+  }
+}

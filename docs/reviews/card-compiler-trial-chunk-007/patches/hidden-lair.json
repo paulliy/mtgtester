@@ -1,0 +1,51 @@
+{
+  "name": "Hidden Lair",
+  "oracleId": "7069d241-4e66-40bf-afd1-551a4a5457f0",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Add {U} or {B}. Activate only if this land entered this turn or if you control a basic land."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "U",
+            "B"
+          ]
+        ],
+        "condition": {
+          "kind": "anyOf",
+          "of": [
+            {
+              "kind": "sourceMatches",
+              "selector": {
+                "kind": "enteredThisTurn"
+              }
+            },
+            {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  }
+                ]
+              },
+              "scope": "you",
+              "cmp": ">=",
+              "n": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

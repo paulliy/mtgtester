@@ -1,0 +1,1 @@
+Whenever this Vehicle attacks, add {W}{W}{W}. This mana is persistent. You gain 3 life.

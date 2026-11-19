@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A always triggers on any land entering and puts one counter unless the land is a Forest, then two; Text B's intervening \"if that land is a Forest\" means non-Forest lands do not trigger at all, so the \"Otherwise\" one-counter case never happens."]}

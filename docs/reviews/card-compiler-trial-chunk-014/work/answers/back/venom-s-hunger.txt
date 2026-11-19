@@ -1,0 +1,1 @@
+This spell costs {2} less to cast as long as you control a permanent with the creature type Villain.

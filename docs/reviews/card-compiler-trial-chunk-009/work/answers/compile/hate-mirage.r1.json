@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"There is no op that makes one token copy per chosen target of a variable-count slot, and sacrificeAt only sacrifices at the end step: the tokens must be exiled at the beginning of the next end step."}

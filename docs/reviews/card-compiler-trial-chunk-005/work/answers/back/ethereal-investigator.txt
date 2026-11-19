@@ -1,0 +1,1 @@
+When this creature enters, create a colorless Clue artifact token for each opponent. Each of those tokens has "{2}, Sacrifice this artifact: Draw a card."

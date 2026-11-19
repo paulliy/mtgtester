@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The enters trigger's condition is 'you cast it from your hand', and the schema's only cast condition (sourceWasCast) does not check the zone the spell was cast from."}

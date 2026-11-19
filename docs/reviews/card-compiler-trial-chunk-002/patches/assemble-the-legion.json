@@ -1,0 +1,57 @@
+{
+  "name": "Assemble the Legion",
+  "oracleId": "6f81bef3-6ca0-4cf4-aa99-7b2813eeef04",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, put a muster counter on this enchantment. Then create a 1/1 red and white Soldier creature token with haste for each muster counter on this enchantment."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "source",
+            "counter": "muster",
+            "count": 1
+          },
+          {
+            "op": "createToken",
+            "spec": {
+              "name": "Soldier",
+              "typeLine": "Token Creature — Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "R",
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1,
+              "keywords": [
+                "haste"
+              ]
+            },
+            "count": {
+              "kind": "countersOnSelf",
+              "counter": "muster"
+            }
+          }
+        ],
+        "description": "At the beginning of your upkeep, put a muster counter on this enchantment. Then create a 1/1 red and white Soldier creature token with haste for each muster counter on this enchantment."
+      }
+    ]
+  }
+}

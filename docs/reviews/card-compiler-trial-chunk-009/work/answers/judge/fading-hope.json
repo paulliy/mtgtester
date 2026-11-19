@@ -1,0 +1,1 @@
+{"verdict":"different","differences":["Text A returns the target creature to its owner's hand first, then checks its mana value for scry 1; Text B checks the mana value and scries first, then returns the creature. The order of steps differs, and for a token the mana value check after it has left the battlefield relies on last known information."]}

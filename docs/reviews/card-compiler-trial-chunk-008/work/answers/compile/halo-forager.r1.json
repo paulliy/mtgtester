@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The optional payment of a variable {X} cost that sets the mana value of the instant or sorcery cast from a graveyard has no schema shape, since mayPayManaThenReflexive takes only a fixed cost."}

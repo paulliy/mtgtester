@@ -1,0 +1,40 @@
+{
+  "name": "Xyris, the Writhing Storm",
+  "oracleId": "8687948c-456b-495b-9b31-f818c65624b6",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ deals combat damage to a player, you and that player each draw that many cards."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealsCombatDamageToPlayer",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "damageDealt"
+            }
+          },
+          {
+            "op": "draw",
+            "count": {
+              "kind": "damageDealt"
+            },
+            "player": "eventPlayer"
+          }
+        ],
+        "description": "Whenever Xyris deals combat damage to a player, you and that player each draw that many cards."
+      }
+    ]
+  }
+}

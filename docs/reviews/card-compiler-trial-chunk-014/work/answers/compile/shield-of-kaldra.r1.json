@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"allOf","of":[{"kind":"subtype","value":"Equipment"},{"kind":"anyOf","of":[{"kind":"name","value":"Sword of Kaldra"},{"kind":"name","value":"Shield of Kaldra"},{"kind":"name","value":"Helm of Kaldra"}]}]},"op":{"layer":6,"addKeyword":"indestructible"}}]}}

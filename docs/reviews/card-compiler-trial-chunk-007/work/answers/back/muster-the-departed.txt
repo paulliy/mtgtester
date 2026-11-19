@@ -1,0 +1,1 @@
+At the beginning of your end step, if one or more creatures died this turn, populate.

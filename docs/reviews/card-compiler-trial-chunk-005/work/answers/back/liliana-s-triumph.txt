@@ -1,0 +1,2 @@
+Each opponent sacrifices a creature.
+Then if you control a planeswalker with the subtype Liliana, each opponent discards a card.

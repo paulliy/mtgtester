@@ -1,0 +1,2 @@
+Whenever equipped creature attacks, equipped creature and each Zombie you control gain deathtouch until end of turn.
+Whenever equipped creature blocks, equipped creature and each Zombie you control gain deathtouch until end of turn.

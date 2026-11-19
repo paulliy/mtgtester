@@ -37,6 +37,18 @@ Sideboard
     expect(deck.cards).toEqual([{ name: 'Goblin Warrens', quantity: 1 }]);
   });
 
+  it('keeps both commanders of a partner pair, from a section or inline lines', () => {
+    const section = parsePlaintextDeck(
+      `Commanders\n1 Tymna the Weaver\n1 Thrasios, Triton Hero\n\nDeck\n1 Sol Ring`,
+    );
+    expect(section.commanderNames).toEqual(['Tymna the Weaver', 'Thrasios, Triton Hero']);
+    const inline = parsePlaintextDeck(
+      `Commander: Wilson, Refined Grizzly\nCommander: Raised by Giants\n1 Sol Ring`,
+    );
+    expect(inline.commanderNames).toEqual(['Wilson, Refined Grizzly', 'Raised by Giants']);
+    expect(inline.cards).toEqual([{ name: 'Sol Ring', quantity: 1 }]);
+  });
+
   it('merges duplicate lines of the same card', () => {
     const deck = parsePlaintextDeck(`Deck\n1 Forest\n1 Forest`);
     expect(deck.cards).toEqual([{ name: 'Forest', quantity: 2 }]);

@@ -1,0 +1,62 @@
+{
+  "name": "Ondu Cleric",
+  "oracleId": "f4232466-dd6a-49bf-be6c-95905c3ded17",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature or another Ally you control enters, you may gain life equal to the number of Allies you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Ally"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "subtype",
+                "value": "Ally"
+              },
+              "scope": "you"
+            }
+          }
+        ],
+        "description": "Whenever this creature or another Ally you control enters, you may gain life equal to the number of Allies you control."
+      }
+    ]
+  }
+}

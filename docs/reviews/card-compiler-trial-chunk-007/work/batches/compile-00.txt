@@ -1,0 +1,8 @@
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/compile/oni-cult-anvil.r2.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/compile/oni-cult-anvil.r2.json
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/compile/counterflux.r2.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/compile/counterflux.r2.json
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/compile/cavalier-of-dawn.r2.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/compile/cavalier-of-dawn.r2.json
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/compile/aberrant.r2.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/compile/aberrant.r2.json
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/compile/hidden-necropolis.r2.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/compile/hidden-necropolis.r2.json
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/compile/faerie-bladecrafter.r2.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/compile/faerie-bladecrafter.r2.json
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/compile/tervigon.r2.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/compile/tervigon.r2.json
+docs/reviews/card-compiler-trial-chunk-007/work/prompts/compile/undermine.r2.md	docs/reviews/card-compiler-trial-chunk-007/work/answers/compile/undermine.r2.json

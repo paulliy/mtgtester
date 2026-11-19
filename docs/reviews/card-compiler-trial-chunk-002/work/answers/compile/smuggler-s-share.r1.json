@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Each end step needs a per-opponent count of opponents who drew two or more cards this turn and a per-opponent count of those with two or more lands entering this turn, and no value or condition counts opponents by draw or land-entry tallies (drawForOpponentsWithSmallHands only reads hand size)."}
