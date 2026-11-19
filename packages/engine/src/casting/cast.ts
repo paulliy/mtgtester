@@ -48,7 +48,8 @@ import {
   manaSourcesFor,
   spellHasConvoke,
   getDefByOracleId,
-  nonHandSpellCostIncreaseFor,
+  spellCostIncreaseFor,
+  hasInstantTiming,
   playFromZonePermission,
   wardCostOf,
   requireModeled,
@@ -658,10 +659,10 @@ function* proposeCast(
     throw new Error('commander-free alternative is not supported from this zone');
   }
   if (resolutionPermission === undefined) {
+    // A flash permission (Vedalken Orrery, CR 601.3b) changes only when the spell may be cast.
     const instantSpeed =
-      printedSpellDef.types.includes('Instant') ||
-      printedSpellDef.keywords.includes('flash') ||
-      selectedAlternative?.instantTiming === true;
+      selectedAlternative?.instantTiming === true ||
+      hasInstantTiming(ctx, player.id, { def: printedSpellDef, cardId: obj.cardId });
     if (
       (plotCast || !instantSpeed) &&
       (s.currentTurnPlayer !== player.id ||
@@ -939,7 +940,14 @@ function* proposeCast(
   if ((payload.x ?? 0) > 0 && (cost.x ?? 0) === 0 && abilityDef.announcesX !== true)
     throw new Error('this spell does not announce X');
   cost = withX(
-    addGeneric(cost, tax + nonHandSpellCostIncreaseFor(ctx, player.id, obj.zone)),
+    addGeneric(
+      cost,
+      tax +
+        spellCostIncreaseFor(ctx, player.id, obj.zone, {
+          def: printedSpellDef,
+          cardId: obj.cardId,
+        }),
+    ),
     payload.x ?? 0,
   );
   const selectedModes = payload.modes ?? (payload.mode !== undefined ? [payload.mode] : undefined);
@@ -1242,8 +1250,23 @@ function* castFaceDown(
     throw new Error('illegal action: this card cannot be cast face down');
   }
   const faceDownId = faceDownSpellOracleId(ctx);
+  const faceDownDef = getDefByOracleId(ctx, faceDownId, 'face-down spell');
+  // The same timing `computePriorityOptions` offers it at: sorcery speed, or a flash permission
+  // that covers a vanilla colorless creature spell (CR 601.3b, 708.4).
+  const s = ctx.state;
+  if (
+    !hasInstantTiming(ctx, player.id, { def: faceDownDef, cardId: obj.cardId }) &&
+    (s.currentTurnPlayer !== player.id ||
+      s.stack.length > 0 ||
+      !['precombatMain', 'postcombatMain'].includes(s.phase))
+  )
+    throw new Error('casting timing is not legal');
   const reduction = costReductionFor(ctx, player.id, faceDownId, obj.cardId);
-  const base: ParsedManaCost = { ...emptyCost(), generic: 3 };
+  const base: ParsedManaCost = {
+    ...emptyCost(),
+    generic:
+      3 + spellCostIncreaseFor(ctx, player.id, 'hand', { def: faceDownDef, cardId: obj.cardId }),
+  };
   const cost = subtractGeneric(
     reduction.colored === undefined ? base : subtractColored(base, reduction.colored),
     reduction.generic,
