@@ -317,6 +317,11 @@ function exileFor(seat: string) {
   return state.value?.exile.filter((card) => card.owner === seat) ?? [];
 }
 
+/** Cards this viewer saw in `seat`'s hand (Peek, Gitaxian Probe) that are still there. */
+function knownHandFor(seat: string) {
+  return state.value?.knownHands?.find((entry) => entry.player === seat)?.cards ?? [];
+}
+
 /** Only show cards the server explicitly included in this viewer's authorized top reveal. */
 function revealedLibraryTopsFor(seat: string) {
   return (
@@ -1459,6 +1464,11 @@ function abandon(): void {
                 :actionable-ids="zoneSourceIds"
                 @select="chooseTarget"
                 @activate="selectSource"
+              />
+              <ZoneStrip
+                v-if="knownHandFor(opponent.seat).length > 0"
+                label="Seen in hand"
+                :cards="knownHandFor(opponent.seat)"
               />
             </div>
           </article>

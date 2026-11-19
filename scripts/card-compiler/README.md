@@ -98,6 +98,12 @@ command, a batch job, or an agent). `exec` records token usage and cost per call
 
 Valid patches are written to `<trial>/patches/`.
 
+Refusals feed the primitive backlog. `report` appends each `inexpressible` card that
+`packages/server/fixtures/primitive-backlog-groups.json` does not list yet to its `ungrouped`
+list (only for trials under `docs/reviews/`, run from the repo root) and regenerates the
+backlog. Move each one into a feature group, or into `oneOff`, by hand, then run `bun run primitive-backlog` to re-rank the missing
+features by deck slots (`docs/plans/primitive-backlog.md`).
+
 ### Answering with worker agents
 
 Without an API key, Haiku worker agents answer the prompt files instead of `exec`; cost is then
