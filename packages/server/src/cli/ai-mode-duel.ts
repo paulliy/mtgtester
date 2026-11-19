@@ -96,6 +96,8 @@ export interface Tally {
   settledUsd: number;
   /** Unpriced attempts whose billed cost could not be found after the game. */
   unsettledAttempts: number;
+  /** Physical attempts per serving provider, as OpenRouter names it (`provider` in the reply). */
+  providers: Record<string, number>;
 }
 
 export function emptyTally(): Tally {
@@ -112,6 +114,7 @@ export function emptyTally(): Tally {
     unknownCostCalls: 0,
     settledUsd: 0,
     unsettledAttempts: 0,
+    providers: {},
   };
 }
 
@@ -173,6 +176,10 @@ export function counting<M extends string = ModeName>(
   inner.setAttemptObserver(async (attempt) => {
     const mode = modeByRequest.get(attempt.logicalRequestId);
     if (mode !== undefined) tallies[mode].cacheReadTokens += attempt.usage.cacheReadTokens ?? 0;
+    if (mode !== undefined && attempt.backend !== undefined) {
+      const providers = tallies[mode].providers;
+      providers[attempt.backend] = (providers[attempt.backend] ?? 0) + 1;
+    }
     if (mode !== undefined && attempt.status !== 'accepted') {
       const { promptTokens, responseTokens, costUsd } = attempt.usage;
       const tally = tallies[mode];
@@ -263,6 +270,44 @@ export interface CountingClient extends AiClient {
 function arg(argv: string[], name: string): string | undefined {
   const i = argv.indexOf(name);
   return i === -1 ? undefined : argv[i + 1];
+}
+
+/**
+ * Per-seat bookkeeping for the report, so strategist calls can be read per seat turn instead of
+ * per game turn: a side whose seats live longer is asked more often whatever its wake rule. A
+ * seat's own turns are the game turns on which a decision surfaced with it as the active player;
+ * its elimination turn is the first observed turn after which it has lost.
+ */
+export class SeatTracker {
+  private readonly ownTurns = new Map<PlayerId, Set<number>>();
+  private readonly eliminatedOn = new Map<PlayerId, number>();
+
+  observe(request: Pick<DecisionRequest, 'turn' | 'activePlayer'>, lost: Iterable<PlayerId>): void {
+    let turns = this.ownTurns.get(request.activePlayer);
+    if (turns === undefined) {
+      turns = new Set();
+      this.ownTurns.set(request.activePlayer, turns);
+    }
+    turns.add(request.turn);
+    for (const seat of lost) {
+      if (!this.eliminatedOn.has(seat)) this.eliminatedOn.set(seat, request.turn);
+    }
+  }
+
+  /** Seats that lost on the last action of the game are only seen in the final state. */
+  finish(finalTurn: number, lost: Iterable<PlayerId>): void {
+    for (const seat of lost) {
+      if (!this.eliminatedOn.has(seat)) this.eliminatedOn.set(seat, finalTurn);
+    }
+  }
+
+  ownTurnsOf(seat: PlayerId): number {
+    return this.ownTurns.get(seat)?.size ?? 0;
+  }
+
+  eliminationTurnOf(seat: PlayerId): number | null {
+    return this.eliminatedOn.get(seat) ?? null;
+  }
 }
 
 async function main(): Promise<void> {
@@ -393,6 +438,12 @@ async function main(): Promise<void> {
     );
   }
   const providers = new Map<PlayerId, AsyncDecisionProvider>();
+  const tracker = new SeatTracker();
+  const lostSeats = (): PlayerId[] =>
+    engine
+      .getState()
+      .players.filter((p) => p.hasLost === true)
+      .map((p) => p.id);
   const started = performance.now();
   const result = await runToCompletionAsync(
     engine,
@@ -417,6 +468,7 @@ async function main(): Promise<void> {
     {
       maxDecisions: 20_000,
       onDecision(request) {
+        tracker.observe(request, lostSeats());
         if (request.decidingPlayer === request.activePlayer && request.step === null) {
           process.stderr.write(`\r  turn ${request.turn}  `);
         }
@@ -435,6 +487,7 @@ async function main(): Promise<void> {
     life[player.id] = player.hasLost === true ? 0 : player.life;
   }
   const turns = result.turnCount;
+  tracker.finish(turns, lostSeats());
   const report = {
     seed,
     swap,
@@ -449,7 +502,17 @@ async function main(): Promise<void> {
     winner: result.winnerSeat,
     winnerMode: result.winnerSeat === null ? null : modeOf(result.winnerSeat),
     finishingOrder: result.finishingOrder,
+    halted: result.halted,
+    haltReason: result.haltReason,
+    ...(result.haltSite === undefined ? {} : { haltSite: result.haltSite }),
     life,
+    /** Each seat's own turns played and the game turn it was eliminated on (null: it survived). */
+    seatTurns: Object.fromEntries(
+      SEATS.map((s) => [
+        s,
+        { ownTurns: tracker.ownTurnsOf(s), eliminatedOnTurn: tracker.eliminationTurnOf(s) },
+      ]),
+    ),
     seats: Object.fromEntries(SEATS.map((s) => [s, modeOf(s)])),
     /** What the `model` seats played: the model tactician, or the bot-led bot with no escalation. */
     opponents,
@@ -463,10 +526,21 @@ async function main(): Promise<void> {
       (['bot', 'model'] as const).map((mode) => {
         const t = tallies[mode];
         const calls = t.tacticianCalls + t.strategistCalls;
+        const ownTurns = SEATS.filter((s) => modeOf(s) === mode).reduce(
+          (sum, s) => sum + tracker.ownTurnsOf(s),
+          0,
+        );
         return [
           mode,
           {
             ...t,
+            ownTurns,
+            strategistCallsPerOwnTurn: Number(
+              (t.strategistCalls / Math.max(1, ownTurns)).toFixed(3),
+            ),
+            promptTokensPerOwnTurn: Math.round(t.promptTokens / Math.max(1, ownTurns)),
+            /** Wake reasons of this side's strategist calls, seat dropped (hill-climb S7). */
+            strategistWakes: { ...coordinators[mode].strategistStats.wakes },
             costUsd: t.costKnown ? Number(t.costUsd.toFixed(4)) : null,
             callsPerTurn: Number((calls / Math.max(1, turns)).toFixed(2)),
             promptTokensPerTurn: Math.round(t.promptTokens / Math.max(1, turns)),
