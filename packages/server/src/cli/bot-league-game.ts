@@ -11,6 +11,7 @@ import type { BotSteering, DecisionRequest, OracleCard, PlayerId } from '@mtg/sh
 import { Engine, runToCompletion, type EnginePlayerConfig } from '@mtg/engine';
 import { HeuristicDecisionProvider, type PolicyFix } from '@mtg/bot';
 import { buildCardKnowledge } from '../ai/card-traits';
+import { ProxyStrategist, type ProxySchedule } from '../ai/proxy-strategist';
 
 /** How one seat's bot is configured. */
 export interface LeagueArm {
@@ -21,6 +22,8 @@ export interface LeagueArm {
   knowledge?: boolean;
   /** Fixed strategist knobs for the whole game. */
   steering?: BotSteering;
+  /** Knobs from the deterministic proxy strategist, asked on this schedule (hill-climb S7). */
+  proxy?: ProxySchedule;
   /** ADR 0043's policy fixes. Omitted is none: the bot as it was before them. */
   fixes?: PolicyFix[];
 }
@@ -44,6 +47,8 @@ export interface LeagueGameReply {
   /** Life of each seat at the end, 0 for an eliminated seat. */
   life: Record<PlayerId, number>;
   ms: number;
+  /** Proxy strategist calls and reuses per arm name, for arms with `proxy`. */
+  proxyCalls?: Record<string, { calls: number; reused: number }>;
 }
 
 /** The engine reports a turn cap and a simultaneous loss as halts; for the league they are draws. */
@@ -67,6 +72,7 @@ export function playLeagueGame(request: LeagueGameRequest): LeagueGameReply {
   });
   const knowledge = buildCardKnowledge(engine.cardDefinitions());
   const providers = new Map<PlayerId, HeuristicDecisionProvider>();
+  const proxies = new Map<PlayerId, ProxyStrategist>();
   const armOf = (seat: PlayerId): LeagueArm => request.seats[Number(seat.slice(1)) - 1]!;
   const providerFor = (
     seat: PlayerId,
@@ -78,13 +84,29 @@ export function playLeagueGame(request: LeagueGameRequest): LeagueGameReply {
         ...(arm.legacy === true ? { legacy: true } : {}),
         ...(arm.knowledge === true ? { knowledge } : {}),
         ...(arm.steering === undefined ? {} : { steering: () => arm.steering }),
+        ...(arm.proxy === undefined ? {} : { steering: proxySteering(seat, arm.proxy) }),
         fixes: arm.fixes ?? [],
       });
       providers.set(seat, provider);
     }
     return provider;
   };
+  function proxySteering(seat: PlayerId, schedule: ProxySchedule): () => BotSteering | undefined {
+    const proxy = new ProxyStrategist(schedule);
+    proxies.set(seat, proxy);
+    return () => {
+      const state = engine.getState();
+      const active = state.players[state.activePlayerIndex]?.id;
+      return proxy.knobsFor(state.turnNumber, active === seat, engine.view(seat));
+    };
+  }
   const result = runToCompletion(engine, providerFor);
+  const proxyCalls: Record<string, { calls: number; reused: number }> = {};
+  for (const [seat, proxy] of proxies) {
+    const entry = (proxyCalls[armOf(seat).name] ??= { calls: 0, reused: 0 });
+    entry.calls += proxy.calls;
+    entry.reused += proxy.reused;
+  }
   const life: Record<PlayerId, number> = {};
   for (const player of engine.getState().players) {
     life[player.id] = player.hasLost === true ? 0 : player.life;
@@ -97,6 +119,7 @@ export function playLeagueGame(request: LeagueGameRequest): LeagueGameReply {
     ...(result.haltReason ? { haltReason: result.haltReason } : {}),
     life,
     ms: Math.round(performance.now() - started),
+    ...(proxies.size > 0 ? { proxyCalls } : {}),
   };
 }
 

@@ -2231,8 +2231,8 @@ function* executeAbilityEffects(
 
   // Damage one instruction deals to several recipients is dealt at once, and "deals N damage to
   // each creature and each player" is two instructions but one simultaneous damage event. So a
-  // lifelink source's gain is summed across a run of consecutive multi-recipient damage
-  // instructions and gained once (CR 120.3f, 119.9).
+  // lifelink source's gain is summed across a run of consecutive damage instructions that
+  // includes a multi-recipient one, and gained once (CR 120.3f, 119.9).
   let lifelinkBatch: Map<string, { controllerId: PlayerId; amount: number }> | undefined;
   const closeLifelinkBatch = function* (): GameGen<void> {
     if (lifelinkBatch === undefined) return;
@@ -2241,9 +2241,24 @@ function* executeAbilityEffects(
     delete ctx.lifelinkBatch;
     yield* flushLifelinkBatch(ctx, batch);
   };
-  for (const listed of ability.effects ?? []) {
+  const listedEffects = ability.effects ?? [];
+  // A single-target hit joins the run when it is part of the same sentence as a multi-recipient
+  // one ("deals 4 damage to any target and 3 damage to each of up to two other targets").
+  const batchesDamage = (index: number): boolean => {
+    const op = listedEffects[index]?.op;
+    if (op === undefined) return false;
+    if (SIMULTANEOUS_DAMAGE_OPS.has(op)) return true;
+    if (op !== 'dealDamage') return false;
+    const before = listedEffects[index - 1]?.op;
+    const after = listedEffects[index + 1]?.op;
+    return (
+      (before !== undefined && SIMULTANEOUS_DAMAGE_OPS.has(before)) ||
+      (after !== undefined && SIMULTANEOUS_DAMAGE_OPS.has(after))
+    );
+  };
+  for (const [index, listed] of listedEffects.entries()) {
     const effect = withTokenCharacteristicsFixed(ctx, listed, scope);
-    if (SIMULTANEOUS_DAMAGE_OPS.has(effect.op)) {
+    if (batchesDamage(index)) {
       if (lifelinkBatch === undefined && ctx.lifelinkBatch === undefined) {
         lifelinkBatch = new Map();
         ctx.lifelinkBatch = lifelinkBatch;
