@@ -117,6 +117,14 @@ Full tables and commands: [review](../reviews/bot-answer-discipline-2026-11-19.m
   counter or bolting a face now see it hold or hit a creature.
 - ADR 0044's call census numbers for `scarce-answer` were taken with the old bot and overstate how
   often it fires now.
+- Holding an answer costs model calls in model-led mode. A seat that keeps its counterspell has an
+  instant to use in every priority window, so those windows stop being trivial passes and reach
+  the tactician. The hill-climb census (standard profile) rose from 5.675 to 6.125 model calls and
+  from 19,148 to 21,032 prompt tokens per turn in model-led mode, and from 0.605 to 0.613 calls and
+  1,898 to 1,956 tokens in bot-led mode. Turning `scarceAnswer` off restores the old counts;
+  turning `faceDamage` off does not change them. The baseline was rewritten with
+  `--allow-behavior-change` for this reason, with the bench and league results above as the
+  quality evidence.
 - The fallback bot in model mode plays with these fixes too, as with every ADR 0043 fix.
 - The thresholds are starting values chosen from the bench positions, then checked on positions
   written afterwards and in the league; they are tuning candidates like every other weight.
