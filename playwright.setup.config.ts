@@ -41,6 +41,9 @@ export default defineConfig({
   timeout: 120_000,
   use: {
     baseURL: 'http://127.0.0.1:5173',
+    // CI's "Require viewer traces" step needs a trace.zip under test-results/ when only this suite
+    // runs (the `ci:setup` label), and the traces are viewer evidence as for the lab specs.
+    trace: 'on',
     ...(chromiumExecutable === undefined
       ? {}
       : { launchOptions: { executablePath: chromiumExecutable } }),
