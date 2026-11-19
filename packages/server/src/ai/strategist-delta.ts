@@ -153,7 +153,7 @@ export function compactStrategistPayload(payload: Entry): Entry {
   if (Array.isArray(payload['battlefield'])) {
     const rows: Record<string, Entry[]> = {};
     const lands: Record<string, Record<string, number>> = {};
-    const untapped: Record<string, number> = {};
+    const untapped: Record<string, Record<string, number>> = {};
     const landText: Record<string, unknown> = {};
     for (const perm of payload['battlefield']) {
       if (!isRecord(perm)) continue;
@@ -166,7 +166,12 @@ export function compactStrategistPayload(payload: Entry): Entry {
       const name = String(perm['name']);
       const counts = (lands[controller] ??= {});
       counts[name] = (counts[name] ?? 0) + 1;
-      untapped[controller] = (untapped[controller] ?? 0) + (perm['tapped'] === true ? 0 : 1);
+      // Per name, not per player: a tapped Island and an untapped Forest are not the same table as
+      // the reverse, since opponents' colors and utility lands matter for threats and held mana.
+      if (perm['tapped'] !== true) {
+        const open = (untapped[controller] ??= {});
+        open[name] = (open[name] ?? 0) + 1;
+      }
       if (perm['text'] !== undefined) landText[name] ??= perm['text'];
     }
     payload['battlefield'] = rows;
@@ -292,6 +297,6 @@ When the observation has sinceYourLastPlan, you have planned this seat before: i
 intent and knobs, set on that turn, and what changed since. Rules text is left out for cards you
 were shown then (judge them by name and your earlier plan); cards new since then carry their text.
 battlefield lists nonland permanents by controller (untapped unless marked tapped); lands counts
-each player's lands by name, untappedLands says how many are untapped, and landText holds rules
+each player's lands by name, untappedLands counts the untapped ones by name, and landText holds rules
 text for lands that have any. Keep knobs that still fit; change what
 the new state calls for.`;

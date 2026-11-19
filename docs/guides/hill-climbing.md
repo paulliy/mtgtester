@@ -20,6 +20,12 @@ played differently. It uses no network and no paid model.
 | `coverage.edhrecSlotSharePct`                            | Share of all EDHREC deck slots those cards fill.                                                                                                                                                                                                                                            | exact |
 | `coverage.fixtureDeckCardsModeledPct`                    | Share of the coverage decks' cards that model.                                                                                                                                                                                                                                              | exact |
 | `coverage.compilerRefusals`, `coverage.playableDecksPct` | Read from `primitive-backlog.json` and `deck-coverage.json` when those reports exist.                                                                                                                                                                                                       | exact |
+| `authoring.poolMutantsLeftPct`                           | Share of IR mutants of the modeled EDHREC cards that no passing promotion scaffold kills: test work an agent still writes (lower).                                                                                                                                                          | exact |
+| `authoring.poolPartsScaffoldedPct`                       | Share of those cards' parts (abilities, keywords, statics, replacement fields) with a passing scaffold draft.                                                                                                                                                                               | exact |
+| `authoring.poolCardsFullyScaffolded`                     | Cards whose every part has a passing draft, so promotion is review plus negatives.                                                                                                                                                                                                          | exact |
+| `authoring.poolDraftFailures`                            | Drafts built but not passing on pool cards: a generator gap, or a card bug worth a look.                                                                                                                                                                                                    | exact |
+| `authoring.referenceKillsReproducedPct`                  | Of the mutants the committed hand-written scenario files kill, the share the scaffolds kill too.                                                                                                                                                                                            | exact |
+| `authoring.referenceDraftFailures`                       | Drafts that fail on cards with committed scenarios (reviewed cards): generator bugs.                                                                                                                                                                                                        | exact |
 | fingerprints                                             | One hash per benchmark game over every decision request, every answer and the event log.                                                                                                                                                                                                    | exact |
 
 Exact metrics repeat to the last digit on any machine, so any move in the wrong direction fails.
@@ -74,6 +80,24 @@ exact model-call and coverage metrics and fails when one is worse than
 command, not by the suite, because timings are not trustworthy while tests share the machine and
 fingerprints change with every intended rules or card change. If main changed the games after the
 baseline was written, the command says so: compare with `--against` a report from your base commit.
+
+## The authoring probe
+
+Claude time authoring cards is the largest bill, and it cannot be timed offline, so the
+`authoring` probe counts the work it stands for. The completion standard needs tests that kill
+every IR mutant of a card (`bun run mutate-cards`); each mutant no test kills is a test someone
+still writes. The probe drafts every modeled EDHREC card's promotion scaffold
+(`packages/engine/tests/scenario/scaffold.ts`, the same drafts `bun run card:scaffold` writes),
+runs the passing drafts under each mutant in process, and counts what is left. Only an expectation
+failure counts as a kill, as in `mutate-cards`. The quick profile samples every 8th card; the
+standard profile measures all of them. `packages/server/src/hill-climb/authoring.test.ts` gates the
+quick sample in the normal suite. A part counts as scaffolded only when every unit of it has a
+passing draft: a modal spell with one mode drafted and another not does not count.
+
+To climb it, run `bun run hill-climb --only authoring --save <scratch>/before.json` before a
+generator change and `--against` it after. Teaching the generator a new effect or trigger
+shape is the usual step; a draft may only use expectations derived from the IR, never from what
+the engine did.
 
 ## Adding a metric
 

@@ -192,7 +192,10 @@ describe('compactStrategistPayload', () => {
       P1: { Forest: 2, 'Mosswort Bridge': 1 },
       P3: { Plains: 1 },
     });
-    expect(compact['untappedLands']).toEqual({ P1: 2, P3: 1 });
+    expect(compact['untappedLands']).toEqual({
+      P1: { Forest: 1, 'Mosswort Bridge': 1 },
+      P3: { Plains: 1 },
+    });
     expect(compact['landText']).toEqual({ 'Mosswort Bridge': BRIDGE_TEXT });
     expect(compact['you'].manaSources).toEqual([
       { name: 'Forest', symbols: ['G'], count: 2 },
