@@ -46,8 +46,13 @@ export interface Vocabulary {
   keys: Map<string, Map<string, Set<string>>>;
 }
 
-/** The shape a node's keys depend on: its `op`, `kind`, `when` or `layer`. */
-function shapeOf(node: Node): string | null {
+/**
+ * The shape a node's keys depend on: its `op`, `kind`, `when` or `layer`. The definition itself is
+ * the `root` shape, so a patch also gets top-level keys other cards have, such as a scalar that
+ * would replace the parsed card's value.
+ */
+function shapeOf(node: Node, root = false): string | null {
+  if (root) return 'root';
   for (const key of ['op', 'kind', 'when', 'layer'])
     if (typeof node[key] === 'string' || typeof node[key] === 'number')
       return `${key}:${String(node[key])}`;
@@ -59,10 +64,10 @@ const SAMPLES_PER_KEY = 3;
 export function mutationVocabulary(defs: unknown[]): Vocabulary {
   const strings = new Map<string, Set<string>>();
   const keys = new Map<string, Map<string, Set<string>>>();
-  const visit = (value: unknown, key: string | null): void => {
+  const visit = (value: unknown, key: string | null, root = false): void => {
     if (Array.isArray(value)) for (const item of value) visit(item, key);
     else if (isNode(value)) {
-      const shape = shapeOf(value);
+      const shape = shapeOf(value, root);
       if (shape !== null) {
         if (!keys.has(shape)) keys.set(shape, new Map());
         const known = keys.get(shape)!;
@@ -71,6 +76,8 @@ export function mutationVocabulary(defs: unknown[]): Vocabulary {
           if (!known.has(childKey)) known.set(childKey, new Set());
           const samples = known.get(childKey)!;
           if (samples.size < SAMPLES_PER_KEY) samples.add(JSON.stringify(child));
+          // A flag is also tried with its other value: `false` on a patch can clear a parsed `true`.
+          if (typeof child === 'boolean') samples.add(JSON.stringify(!child));
         }
       }
       for (const [childKey, child] of Object.entries(value)) visit(child, childKey);
@@ -79,7 +86,7 @@ export function mutationVocabulary(defs: unknown[]): Vocabulary {
       strings.get(key)!.add(value);
     }
   };
-  for (const def of defs) visit(def, null);
+  for (const def of defs) visit(def, null, true);
   return { strings, keys };
 }
 
@@ -140,7 +147,7 @@ export function patchMutants(
         visit(value[index], [...path, index]);
       });
     } else if (isNode(value)) {
-      const shape = shapeOf(value);
+      const shape = shapeOf(value, path.length === 0);
       for (const [childKey, samples] of shape === null ? [] : (vocabulary.keys.get(shape) ?? []))
         if (!(childKey in value))
           for (const sample of samples)
@@ -251,7 +258,6 @@ export function survivingMutants(cases: MutationCase[], vocabulary: Vocabulary):
     for (const mutant of patchMutants(item.def, vocabulary)) {
       if (textCheck(mutant.def, item.lines, item.name, item.oracleText).verdict !== 'match')
         continue;
-      if (canonicalDefinition(mutant.def) === canonicalDefinition(item.def)) continue;
       const changed = item.interpret(mutant.def);
       if (changed === null || changed === original) continue;
       survivors.push(`${item.name} ${mutant.label}`);

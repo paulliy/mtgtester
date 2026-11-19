@@ -265,6 +265,20 @@ describe('free text check wordings', () => {
     ).toBe('unrendered');
   });
 
+  it('never settles entersTapped: false, which would clear a printed "enters tapped"', () => {
+    const goblinTown = patches.find((patch) => patch.name === 'Goblin-town')!;
+    const check = (def: Partial<CardDefinition>) =>
+      textCheck(def, goblinTown.handledLines, goblinTown.name, goblinTown.oracleText).verdict;
+    expect(check(goblinTown.def)).toBe('match');
+    expect(check({ ...goblinTown.def, entersTapped: false })).toBe('unrendered');
+    expect(
+      patchMutants(
+        goblinTown.def,
+        mutationVocabulary([goblinTown.def, { entersTapped: true }]),
+      ).map((mutant) => mutant.label),
+    ).toContain('.entersTapped: add false');
+  });
+
   it('treats an ability-order or default-only change as the same card', () => {
     expect(canonicalDefinition({ keywords: ['flying', 'haste'] })).toBe(
       canonicalDefinition({ keywords: ['haste', 'flying'] }),

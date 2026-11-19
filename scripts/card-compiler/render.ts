@@ -1243,8 +1243,10 @@ export function renderBehavior(def: Partial<CardDefinition>): string[] {
         for (const keyword of value as string[]) lines.push(capitalize(keyword));
         break;
       case 'entersTapped':
-        if (typeof value !== 'boolean') throw new Unrendered('entersTapped');
-        if (value) lines.push('~ enters tapped.');
+        // A compiled patch is applied over the parsed card, and a scalar field replaces the parsed
+        // value: `false` would silently remove a printed "enters tapped", so it is never settled.
+        if (value !== true) throw new Unrendered('entersTapped');
+        lines.push('~ enters tapped.');
         break;
       case 'staticEffects':
         lines.push(...staticLines(value as unknown[]));
