@@ -86,6 +86,8 @@ export type ScenarioExpectation =
   | { tapped: { card: string; equals: boolean; player?: Seat } }
   /** Keywords the permanent has now, after layers, as its controller's view shows them. */
   | { keywords: { card: string; has?: string[]; lacks?: string[]; player?: Seat } }
+  /** Power and toughness the permanent has now, after layers, as its controller's view shows them. */
+  | { stats: { card: string; power?: number; toughness?: number; player?: Seat } }
   /** An engine event of this type after the position was arranged; `payload` patterns its JSON. */
   | { event: { type: string; payload?: string; count?: number } };
 
@@ -160,6 +162,10 @@ const str = (value: unknown, path: string): void => {
 const int = (value: unknown, path: string): void => {
   if (!Number.isSafeInteger(value) || (value as number) < 0)
     fail(path, 'must be a whole number from 0');
+};
+/** Power and toughness after layers can be negative (a 1/5 under -4/-4 is -3/1). */
+const signedInt = (value: unknown, path: string): void => {
+  if (!Number.isSafeInteger(value)) fail(path, 'must be a whole number');
 };
 const text = (value: unknown, path: string): void => {
   if (typeof value !== 'string') fail(path, 'must be a string');
@@ -243,6 +249,7 @@ const expectation = (value: unknown, path: string): void => {
       ]),
       tapped: shaped({ card: str, equals: bool, player: seat }, ['card', 'equals']),
       keywords: shaped({ card: str, has: list(str), lacks: list(str), player: seat }, ['card']),
+      stats: shaped({ card: str, power: signedInt, toughness: signedInt, player: seat }, ['card']),
       event: shaped({ type: str, payload: str, count: int }, ['type']),
     },
     [],

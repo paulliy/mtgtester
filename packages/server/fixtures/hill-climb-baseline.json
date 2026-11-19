@@ -8,37 +8,38 @@
         "engine",
         "setup",
         "model",
-        "coverage"
+        "coverage",
+        "authoring"
       ],
-      "commit": "9ca168bb",
+      "commit": "5c637f9f",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 56.61,
+      "calibrationMs": 63.63,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.53,
+          "value": 5.98,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.281
+          "spread": 0.525
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.34,
+          "value": 5.97,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.38
+          "spread": 0.257
         },
         "engine.work.layerPasses": {
-          "value": 2665,
+          "value": 2853,
           "unit": "passes",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
         "engine.work.layerCacheHits": {
-          "value": 105711,
+          "value": 105523,
           "unit": "hits",
           "better": "lower",
           "kind": "exact",
@@ -46,7 +47,7 @@
           "informational": true
         },
         "engine.work.layerDigests": {
-          "value": 36054,
+          "value": 36053,
           "unit": "digests",
           "better": "lower",
           "kind": "exact",
@@ -102,11 +103,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 63.28,
+          "value": 69.46,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.108
+          "spread": 0.02
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -161,6 +162,42 @@
           "unit": "%",
           "better": "higher",
           "kind": "exact"
+        },
+        "authoring.poolMutantsLeftPct": {
+          "value": 76.11,
+          "unit": "%",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "authoring.poolPartsScaffoldedPct": {
+          "value": 44.97,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolCardsFullyScaffolded": {
+          "value": 125,
+          "unit": "cards",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolDraftFailures": {
+          "value": 0,
+          "unit": "drafts",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "authoring.referenceKillsReproducedPct": {
+          "value": 16.67,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.referenceDraftFailures": {
+          "value": 0,
+          "unit": "drafts",
+          "better": "lower",
+          "kind": "exact"
         }
       },
       "fingerprints": {
@@ -176,37 +213,38 @@
         "engine",
         "setup",
         "model",
-        "coverage"
+        "coverage",
+        "authoring"
       ],
-      "commit": "9ca168bb",
+      "commit": "5c637f9f",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 53.13,
+      "calibrationMs": 61.82,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 41.3,
+          "value": 45.36,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.027
+          "spread": 0.051
         },
         "engine.medianGameMsPerDecision": {
-          "value": 11.1,
+          "value": 11.92,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.036
+          "spread": 0.104
         },
         "engine.work.layerPasses": {
-          "value": 17860,
+          "value": 38228,
           "unit": "passes",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
         "engine.work.layerCacheHits": {
-          "value": 7033283,
+          "value": 7012915,
           "unit": "hits",
           "better": "lower",
           "kind": "exact",
@@ -214,7 +252,7 @@
           "informational": true
         },
         "engine.work.layerDigests": {
-          "value": 680618,
+          "value": 680609,
           "unit": "digests",
           "better": "lower",
           "kind": "exact",
@@ -270,11 +308,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 59.11,
+          "value": 60.6,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.083
+          "spread": 0.084
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -328,6 +366,42 @@
           "value": 100,
           "unit": "%",
           "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolMutantsLeftPct": {
+          "value": 76.06,
+          "unit": "%",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "authoring.poolPartsScaffoldedPct": {
+          "value": 45.12,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolCardsFullyScaffolded": {
+          "value": 998,
+          "unit": "cards",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.poolDraftFailures": {
+          "value": 0,
+          "unit": "drafts",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "authoring.referenceKillsReproducedPct": {
+          "value": 16.67,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "authoring.referenceDraftFailures": {
+          "value": 0,
+          "unit": "drafts",
+          "better": "lower",
           "kind": "exact"
         }
       },
