@@ -5,7 +5,8 @@
  * (`.env` is read by Bun), so the endpoint, models and key are the same ones the app uses.
  *
  *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]
- *                        [--escalation T1,T2] [--shadow T1,T2] [--opponents model|bot-never|bot-v1] [--offline]
+ *                        [--escalation T1,T2] [--shadow T1,T2] [--opponents model|bot-never|bot-v1]
+ *                        [--offline]
  *
  * ADR 0044's game step: `--escalation` makes triggers live for the bot seats (default `never`),
  * `--shadow` logs others, and `--opponents bot-never` seats the bot-led bot with no escalation in
