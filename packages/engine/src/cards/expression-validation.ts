@@ -546,6 +546,7 @@ const effectExpressions = {
   discardChosenPlayers: { count: numberValue },
   millAndLoseLifeChosenPlayers: { count: numberValue, amount: numberValue },
   revealHandAndDiscard: { filter: selector },
+  lookAtHand: {},
   discardEachPlayer: { count: numberValue, opponentsUnableLoseLife: optional(numberValue) },
   mill: { count: numberValue },
   gainEnergy: { amount: numberValue },

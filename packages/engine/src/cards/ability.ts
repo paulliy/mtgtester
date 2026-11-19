@@ -1192,6 +1192,11 @@ export type Effect =
   | { op: 'millAndLoseLifeChosenPlayers'; targetSlot: number; count: Value; amount: Value }
   /** Reveal a player's hand, then the resolving ability's controller chooses a matching discard. */
   | { op: 'revealHandAndDiscard'; target: EffectRef; filter: Selector }
+  /**
+   * "Look at target player's hand" (CR 402.3): only the controller learns the cards, as they are
+   * now. Nothing is revealed, so no other player learns anything (CR 701.20a).
+   */
+  | { op: 'lookAtHand'; target: EffectRef }
   /** Players choose hidden cards in APNAP order before any chosen cards are discarded. */
   | {
       op: 'discardEachPlayer';

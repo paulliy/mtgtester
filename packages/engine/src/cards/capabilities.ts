@@ -1113,6 +1113,7 @@ const families = {
       discardChosenPlayers: true,
       millAndLoseLifeChosenPlayers: true,
       revealHandAndDiscard: true,
+      lookAtHand: true,
       discardEachPlayer: true,
       mill: true,
       gainEnergy: true,
