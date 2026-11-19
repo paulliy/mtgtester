@@ -60,9 +60,10 @@ bun run pilot:draw [--bank F]          # phase 6 pilot: draw 20 unmodeled cards 
 bun run snapshot:oracle
 bun run modelled-cards
 bun run combat-sweep [--games N] [--seed S] [--json out.json]
-bun run bot-league [--games N] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N] [--json F]
+bun run bot-league [--games N] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N] [--deck NAME] [--json F]
                                         # ADR 0039 bot vs bot win rate; arms: legacy, policy, knowledge, fixed, fix-*,
                                         # aggro, control, proxy-*; ADR 0050: fixed-0043, style-aggro|control|combo, styled
+                                        # --deck NAME: one coverage deck in all four seats (a mirror)
 bun run ai-call-census [--games N] [--turn-cap N] [--json F]
                                         # ADR 0039 model calls and prompt tokens per turn by tactical mode, offline;
                                         # ADR 0044 would-fire counts per escalation trigger and one mode per live trigger

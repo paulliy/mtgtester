@@ -85,12 +85,33 @@ Each preset on its own against the plain production bot, same decks and seeds, s
 
 No errors in either run. `style-combo` and `styled` were not run.
 
-The aggro preset is the one signal: playing these midrange decks more aggressively won more often,
-with an interval that just reaches 50%. The control preset made no measurable difference. Both are
-one run of 100 games, so a repeat on another seed is the next step before either becomes a
-default.
+On generated decks, aggro was the one signal. Those decks are 97% midrange, though: 194 of 200
+seats classified the way match setup does (`play-style.ts`), 6 control, no aggro or combo.
 
-The league's decks are generated from the coverage pool. Classified the way match setup does
-(`play-style.ts`), 194 of 200 seats are midrange and 6 control, with no aggro or combo. So these
-runs measure what each preset does to a midrange deck, not whether matching the style to the deck
-helps, and the `styled` arm (style from the deck) is nearly the plain bot on these decks.
+### Premade mirrors
+
+Each preset was then tested on coverage decks built for that style, with every seat playing the
+same deck (`--deck`), two seats with the preset and two without, seats swapped each seed:
+`bun run bot-league --games 200 --seed mirror --deck <deck> --a <preset> --b fixed --jobs 4 --timeout-ms 300000`.
+Decks were chosen by what they are built to do, from the classifier's features, because the
+classifier calls every coverage deck midrange or ramp:
+
+- aggro: `ruby-the-most-daring-of-trackers` (35 creatures, 16 with aggressive keywords) and
+  `brigid-clachans-heart` (37 creatures, average mana value 2.89, go-wide tokens);
+- control: `white-black-control` (13 instants, average mana value 2.5, 8 spot removal, 4 stax) and
+  `pramikon-sky-rampart` (15 instants, 8 board wipes, 4 counterspells, 8 stax);
+- combo: no coverage deck plays as combo, so that preset is untested.
+
+| Deck                               | Preset          | Wins (preset to plain) | Win rate (95% interval) | Life share | Halted, timed out |
+| ---------------------------------- | --------------- | ---------------------- | ----------------------- | ---------- | ----------------- |
+| `ruby-the-most-daring-of-trackers` | `style-aggro`   | 102 to 98              | 51.0% (44.1 to 57.9%)   | 0.51       | 0, 0              |
+| `brigid-clachans-heart`            | `style-aggro`   | 106 to 85              | 55.5% (48.4 to 62.5%)   | 0.56       | 9, 0              |
+| `white-black-control`              | `style-control` | 104 to 96              | 52.0% (45.1 to 58.9%)   | 0.52       | 0, 0              |
+| `pramikon-sky-rampart`             | `style-control` | 87 to 103              | 45.8% (38.7 to 52.9%)   | 0.46       | 0, 8              |
+| `white-black-control`              | `style-aggro`   | 93 to 107              | 46.5% (39.6 to 53.4%)   | 0.47       | 0, 0              |
+| `ruby-the-most-daring-of-trackers` | `style-control` | 54 to 146              | 27.0% (20.8 to 33.2%)   | 0.27       | 0, 0              |
+
+No errors in any run. The matched presets are within noise of the plain bot on all four decks. The
+mismatched ones lean worse, and the control preset on Ruby, an aggressive deck, loses 146 to 54.
+The style matters for what the deck is about mostly as a way to lose when it is wrong; the presets
+as tuned add nothing measurable when it is right.

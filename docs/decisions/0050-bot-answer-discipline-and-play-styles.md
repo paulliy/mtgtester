@@ -86,9 +86,11 @@ it values, so a "play like control this turn" plan cannot be expressed.
    `styled` arm that takes the style from the deck's archetype (`server/src/ai/play-style.ts`).
 
    The strategist cannot set a style yet: `cleanSteering` drops the field and the bot-led primer
-   does not mention it. Wiring it is one knob in each, plus the deck's archetype as the default
-   when the strategist sets none. That waits for the measurements below to show a preset is worth
-   offering.
+   does not mention it, and it stays that way. The mirror leagues below show that no preset beats
+   the plain bot on a deck built for it, while the wrong preset loses badly (control on an aggro
+   deck won 27% of games). Offering the knob now would hand the strategist a large downside and no
+   measured upside. The deck's archetype cannot pick the style either: the classifier labels every
+   coverage deck midrange or ramp, `white-black-control` included.
 
 ## Measurements
 
@@ -103,13 +105,24 @@ Full tables and commands: [review](../reviews/bot-answer-discipline-2026-11-19.m
   44 wins to 36 (55%, 95% interval 44 to 66%), life share 0.55 to 0.45; 20 games halted on an
   engine payment refusal that also halts games without these fixes. Not a significant gain, and no
   sign of a loss, which is what the gate asks.
-- **Styles**, each preset against the plain bot over 100 league games: `style-aggro` won 54 to 38
-  (58.7%, 95% interval 48.6 to 68.8%, life share 0.59); `style-control` won 42 to 45 (48.3%,
-  interval 37.8 to 58.8%). League decks are generated from the coverage pool and 97% of them
-  classify as midrange (194 of 200 seats; 6 control, no aggro or combo), so these runs measure
-  each preset on a midrange deck, not whether matching style to deck helps. The aggro result
-  suggests the plain bot is too passive with these decks; it needs a repeat on another seed before
-  it changes a default.
+- **Styles on generated decks**, each preset against the plain bot over 100 league games:
+  `style-aggro` won 54 to 38 (58.7%, 95% interval 48.6 to 68.8%); `style-control` 42 to 45. These
+  decks are 97% midrange (194 of 200 seats), so this is each preset on a midrange deck.
+- **Styles on premade decks built for them** (`bot-league --deck`): all four seats play one coverage
+  deck, two with the preset and two without, 200 games per row.
+
+  | Deck                    | Built as | Preset  | Preset's wins | Win rate (95% interval) |
+  | ----------------------- | -------- | ------- | ------------- | ----------------------- |
+  | Ruby, Gruul             | aggro    | aggro   | 102 to 98     | 51.0% (44.1 to 57.9%)   |
+  | Brigid, Selesnya tokens | aggro    | aggro   | 106 to 85     | 55.5% (48.4 to 62.5%)   |
+  | White-black control     | control  | control | 104 to 96     | 52.0% (45.1 to 58.9%)   |
+  | Pramikon, Jeskai        | control  | control | 87 to 103     | 45.8% (38.7 to 52.9%)   |
+  | White-black control     | control  | aggro   | 93 to 107     | 46.5% (39.6 to 53.4%)   |
+  | Ruby, Gruul             | aggro    | control | 54 to 146     | 27.0% (20.8 to 33.2%)   |
+
+  A matched preset is within noise of the plain bot on every deck: the plain bot already plays an
+  aggressive deck aggressively, because its creatures make attacks safe. A mismatched preset is
+  worse, and on Ruby much worse. The control preset, as tuned, does not help control decks.
 
 ## Consequences
 
@@ -128,5 +141,8 @@ Full tables and commands: [review](../reviews/bot-answer-discipline-2026-11-19.m
 - The fallback bot in model mode plays with these fixes too, as with every ADR 0043 fix.
 - The thresholds are starting values chosen from the bench positions, then checked on positions
   written afterwards and in the league; they are tuning candidates like every other weight.
-- Style presets are guesses until the league or a paid duel says otherwise. The league cannot test
-  "style matched to deck" until it plays decks that are not all midrange.
+- Style presets stay a league-only tool. Before the strategist gets the knob, a preset has to beat
+  the plain bot on decks built for it; the control preset in particular needs retuning (it may be
+  too passive to close a game), and combo has no deck in the repo to test it on.
+- A style is mostly a way to lose when it is wrong. Any later wiring needs a guard, for example
+  allowing only a style that matches the deck's profile.
