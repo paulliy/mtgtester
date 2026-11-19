@@ -90,6 +90,35 @@ describe('OpenAiCompatibleClient', () => {
     });
   });
 
+  it('routes a model with a provider allowlist only to those providers, others anywhere', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: JSON.stringify({ actionId: 0 }) } }] }),
+    });
+    const bodyFor = async (model: string): Promise<Record<string, unknown>> => {
+      mockFetch.mockClear();
+      const client = new OpenAiCompatibleClient(
+        {
+          ...DEFAULT_AI_CONFIG,
+          models: [model],
+          filterNonCachingProviders: false,
+          openRouterProviderOnly: { 'z-ai/glm-5.3-flash': ['wafer', 'coreweave'] },
+        },
+        mockFetch as unknown as typeof fetch,
+      );
+      await client.requestDecision(fixturePrompt(), fixtureRequest());
+      const call = mockFetch.mock.calls.find((entry) =>
+        (entry[0] as string).includes('/chat/completions'),
+      )!;
+      return JSON.parse((call[1] as RequestInit).body as string) as Record<string, unknown>;
+    };
+
+    expect((await bodyFor('z-ai/glm-5.3-flash'))['provider']).toEqual({
+      only: ['wafer', 'coreweave'],
+    });
+    expect((await bodyFor('deepseek/deepseek-v4-flash'))['provider']).toBeUndefined();
+  });
+
   it('extracts JSON object from conversational text or markdown codeblocks', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,

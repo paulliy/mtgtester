@@ -5,6 +5,7 @@ import {
   DEFAULT_MODEL_CHAIN,
   PROVIDERS,
   loadAiConfig,
+  parseProviderOnly,
 } from './config';
 
 describe('AI Config', () => {
@@ -296,5 +297,22 @@ describe('escalation triggers (ADR 0044)', () => {
 
   it('keeps lethal in shadow', () => {
     expect(() => loadAiConfig({ AI_BOT_ESCALATION: 'lethal' })).toThrow(/shadow-only/);
+  });
+});
+
+describe('AI_OPENROUTER_PROVIDER_ONLY', () => {
+  it('defaults GLM 5.3 Flash to its allowlist and leaves other models open', () => {
+    const config = loadAiConfig({ OPENROUTER_API_KEY: 'k' });
+    expect(config.openRouterProviderOnly['z-ai/glm-5.3-flash']).toContain('wafer');
+    expect(config.openRouterProviderOnly['z-ai/glm-5.3-flash']).not.toContain('cohere');
+    expect(config.openRouterProviderOnly['deepseek/deepseek-v4-flash']).toBeUndefined();
+  });
+
+  it('parses model=slug,slug pairs, off, and rejects a malformed entry', () => {
+    expect(parseProviderOnly('a/b=x, y;c/d=z', {})).toEqual({ 'a/b': ['x', 'y'], 'c/d': ['z'] });
+    expect(parseProviderOnly('off', { 'a/b': ['x'] })).toEqual({});
+    expect(parseProviderOnly(undefined, { 'a/b': ['x'] })).toEqual({ 'a/b': ['x'] });
+    expect(() => parseProviderOnly('a/b=', {})).toThrow(/AI_OPENROUTER_PROVIDER_ONLY/);
+    expect(() => parseProviderOnly('a/b', {})).toThrow(/AI_OPENROUTER_PROVIDER_ONLY/);
   });
 });

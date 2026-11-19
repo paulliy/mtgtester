@@ -66,10 +66,13 @@ bun run ai-call-census [--games N] [--turn-cap N] [--json F]
                                         # ADR 0039 model calls and prompt tokens per turn by tactical mode, offline;
                                         # ADR 0044 would-fire counts per escalation trigger and one mode per live trigger
 bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json F]
-                     [--escalation T,..] [--shadow T,..] [--opponents model|bot-never] [--offline]
+                     [--escalation T,..] [--shadow T,..] [--opponents model|bot-never|bot-v1] [--offline]
                                         # ADR 0039 one PAID game from .env: P1/P3 bot mode, P2/P4 model tactician;
                                         # --offline: same game, no key or network, a free wiring check;
-                                        # ADR 0044: live triggers for P1/P3, and bot-led `never` opponents
+                                        # ADR 0044: live triggers for P1/P3, and bot-led `never` opponents;
+                                        # S7 `bot-v1`: P2/P4 bot-led under wake rule table-v1. The report has each
+                                        # seat's own turns and elimination turn, strategist calls per own turn,
+                                        # wake reasons per side, and the engine's halt reason
 bun run strategist-capture [--seed S] [--turn-cap N] [--decks F] [--max-usd N] [--no-diplomacy] [--no-flag] [--offline] [--out F]
                                         # ADR 0045 one bot-led game with a strategist every turn, written as a replay
                                         # transcript plus every seat's knobs and deals per turn; PAID unless --offline
