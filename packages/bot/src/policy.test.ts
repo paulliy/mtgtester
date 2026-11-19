@@ -675,7 +675,9 @@ describe('steering', () => {
     expect(res.actionId).toBe(1);
   });
 
-  function attack(subjects: Array<{ id: string; power: number; toughness: number }>): LegalAction {
+  function attack(
+    subjects: Array<{ id: string; power: number; toughness: number; hasTriggers?: boolean }>,
+  ): LegalAction {
     return {
       id: 0,
       type: 'attackDeclaration',
@@ -687,7 +689,7 @@ describe('steering', () => {
           power: s.power,
           toughness: s.toughness,
           mustAttack: false,
-          hasTriggers: false,
+          hasTriggers: s.hasTriggers ?? false,
           defenders: ['P2', 'P3'],
           planeswalkers: [],
         })),
@@ -721,6 +723,7 @@ describe('steering', () => {
   it('only swings into a bad block when aggression is high', () => {
     const board = [
       creature('c1', 'P1', 2, 2),
+      creature('c2', 'P1', 2, 2),
       creature('wall', 'P2', 4, 6),
       creature('wall2', 'P3', 4, 6),
     ];
@@ -735,6 +738,32 @@ describe('steering', () => {
       steering: { aggression: 1 },
     });
     expect(raging.targets![0]!.choice).not.toBe(NO_ATTACK_TARGET);
+  });
+
+  it('riskyAttackValue: a lone creature or a 1-power body without a trigger stays home', () => {
+    const walls = [creature('wall', 'P2', 4, 6), creature('wall2', 'P3', 4, 6)];
+    const swing = (
+      board: PermanentView[],
+      subject: { id: string; power: number; toughness: number; hasTriggers?: boolean },
+    ) =>
+      decide(
+        request([attack([subject])], {
+          decisionType: 'declareAttackers',
+          phase: 'combat',
+          step: 'declareAttackers',
+        }),
+        view({ battlefield: [...board, ...walls] }),
+        new Rng('a'),
+        { steering: { aggression: 1 } },
+      ).targets![0]!.choice;
+    const pair = [creature('c1', 'P1', 1, 1), creature('c2', 'P1', 2, 2)];
+    expect(swing([creature('c1', 'P1', 2, 2)], { id: 'c1', power: 2, toughness: 2 })).toBe(
+      NO_ATTACK_TARGET,
+    );
+    expect(swing(pair, { id: 'c1', power: 1, toughness: 1 })).toBe(NO_ATTACK_TARGET);
+    expect(swing(pair, { id: 'c1', power: 1, toughness: 1, hasTriggers: true })).not.toBe(
+      NO_ATTACK_TARGET,
+    );
   });
 });
 

@@ -211,7 +211,7 @@ export const WEIGHTS = {
     /** Opponent threat: board value share plus life lost share, plus the steering order bonus. */
     threatBoardWeight: 0.1,
     threatLowLifeWeight: 0.15,
-    steeringTargetBonus: 3,
+    steeringTargetBonus: 1,
     /** How much opponent threat counts when choosing among hostile targets. */
     targetPressureWeight: 0.3,
 
@@ -293,6 +293,12 @@ export const WEIGHTS = {
      * place of the flat value of a player target. Killing damage keeps the flat value.
      */
     faceDamagePerLife: 1,
+    /** `commanderValue`: added to a commander's permanent value, on either side of the table. */
+    commanderPermanentBonus: 4,
+    /** `riskyAttackValue`: an unsafe attacker at or below this power needs an attack trigger. */
+    riskyAttackMinPower: 1,
+    /** `holdUpRelief`: from this many cards in hand, cleanup would discard, so the mana is spent. */
+    holdUpFullHand: 7,
   },
 
   /**
@@ -406,7 +412,7 @@ export const WEIGHTS = {
       counterThreshold: 1.25,
       removalThreshold: 1.25,
       /** Multiply flat role values in `policy.roles`, and the removal target share. */
-      roles: { pump: 2, burn: 1.5, tokens: 1.3, draw: 0.75, ramp: 0.75 },
+      roles: { pump: 2, burn: 1.5, tokens: 1.3, draw: 0.75 },
     },
     /** Between aggro and midrange: presses the attack without giving up card value. */
     tempo: {
@@ -414,7 +420,7 @@ export const WEIGHTS = {
       faceDamage: 1.25,
       counterThreshold: 1.1,
       removalThreshold: 1.1,
-      roles: { pump: 1.5, burn: 1.25, tokens: 1.15, draw: 0.9, ramp: 0.9 },
+      roles: { pump: 1.5, burn: 1.25, tokens: 1.15, draw: 0.9 },
     },
     midrange: {
       defaults: {},
@@ -430,12 +436,16 @@ export const WEIGHTS = {
     value: {
       defaults: {},
       faceDamage: 0.75,
-      counterThreshold: 0.875,
-      removalThreshold: 0.9,
+      counterThreshold: 1,
+      removalThreshold: 1,
       roles: { draw: 1.25, removal: 1.15, recursion: 1.15 },
     },
+    /**
+     * No knob defaults: holding up mana and playing passively cost games in the mirrors and in the
+     * gauntlet (`bot-gauntlet`, ADR 0050). Control is how it values cards and answers.
+     */
     control: {
-      defaults: { aggression: 0.3, holdUpMana: 2, avoidOverextending: true },
+      defaults: {},
       faceDamage: 0.5,
       counterThreshold: 0.75,
       removalThreshold: 0.8,
@@ -454,7 +464,7 @@ export const WEIGHTS = {
       faceDamage: 0.5,
       counterThreshold: 1.25,
       removalThreshold: 1,
-      roles: { tutor: 2, draw: 1.5, ramp: 1.3 },
+      roles: { tutor: 2, draw: 1.25, ramp: 1.3 },
     },
   },
 } as const;

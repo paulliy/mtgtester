@@ -7,13 +7,15 @@ import { resolveSteering, roleScale, styleProfile } from './styles';
 
 describe('play styles', () => {
   it('fills only the knobs the strategist left unset', () => {
-    expect(resolveSteering({ style: 'control' })).toEqual({
-      style: 'control',
-      aggression: 0.3,
-      holdUpMana: 2,
-      avoidOverextending: true,
+    expect(resolveSteering({ style: 'aggro' })).toEqual({
+      style: 'aggro',
+      aggression: 0.85,
+      holdUpMana: 0,
+      avoidOverextending: false,
     });
-    expect(resolveSteering({ style: 'control', aggression: 0.9 })?.aggression).toBe(0.9);
+    expect(resolveSteering({ style: 'aggro', aggression: 0.4 })?.aggression).toBe(0.4);
+    // Control sets no knobs: its passive defaults cost games (ADR 0050 gauntlet).
+    expect(resolveSteering({ style: 'control' })).toEqual({ style: 'control' });
     expect(resolveSteering({ aggression: 0.4 })).toEqual({ aggression: 0.4 });
     expect(resolveSteering(undefined)).toBeUndefined();
   });

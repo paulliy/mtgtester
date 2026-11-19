@@ -22,6 +22,12 @@ export const POLICY_FIXES = [
   'scarceAnswer',
   /** Damage at a player that does not kill is worth the damage, not a flat player value. */
   'faceDamage',
+  /** A commander, ours or theirs, is worth more than its body: never fed to a cost, first to answer. */
+  'commanderValue',
+  /** A risky attack needs a reason: no lone commander or 1-power creature without attack triggers. */
+  'riskyAttackValue',
+  /** Holding up mana never stops casting the commander, nor casting from a hand that will discard. */
+  'holdUpRelief',
 ] as const;
 export type PolicyFix = (typeof POLICY_FIXES)[number];
 

@@ -140,6 +140,28 @@ export function traitsFor(ctx: PolicyContext, name: string | undefined): CardTra
 
 /** A permanent's worth in LEP to whoever controls it. */
 export function permanentValue(p: PermanentView, ctx: PolicyContext): number {
+  return (
+    permanentBaseValue(p, ctx) + (isCommanderName(p.name, ctx) ? P.commanderPermanentBonus : 0)
+  );
+}
+
+/**
+ * `commanderValue`: whether `name` is a commander at this table, ours or an opponent's. A body
+ * alone undervalues it: it comes back taxed, and it is what the deck is built around.
+ */
+function isCommanderName(name: string, ctx: PolicyContext): boolean {
+  if (!fixOn(ctx, 'commanderValue')) return false;
+  const names = once(ctx, 'commanderNames', () => {
+    const { view } = ctx;
+    return new Set([
+      ...(view.commanders ?? []).map((c) => c.name),
+      ...view.opponents.flatMap((o) => (o.commanders ?? []).map((c) => c.name)),
+    ]);
+  });
+  return names.has(name);
+}
+
+function permanentBaseValue(p: PermanentView, ctx: PolicyContext): number {
   if (isCreaturePermanent(p)) {
     const w = WEIGHTS.combat;
     return (
@@ -627,6 +649,22 @@ function attackIsSafe(
   });
 }
 
+/**
+ * `riskyAttackValue`: an unsafe attack must be worth losing the creature. One with an attack
+ * trigger is; a lone attacker, the commander, or a 1-power body with nothing on attack is not.
+ */
+function weakRiskyAttacker(
+  attacker: PermanentView | undefined,
+  subject: AttackSubject,
+  ownCreatures: number,
+  ctx: PolicyContext,
+): boolean {
+  if (!fixOn(ctx, 'riskyAttackValue') || subject.hasTriggers) return false;
+  if (ownCreatures <= 1) return true;
+  if (attacker !== undefined && isCommanderName(attacker.name, ctx)) return true;
+  return subject.power <= P.riskyAttackMinPower;
+}
+
 /** Per-slot attack choices, shaped by aggression and target order. */
 export function chooseAttacks(action: LegalAction, ctx: PolicyContext): TargetChoice[] {
   const { view, steering } = ctx;
@@ -680,6 +718,7 @@ export function chooseAttacks(action: LegalAction, ctx: PolicyContext): TargetCh
     const worth = subject.power > 0 || subject.hasTriggers;
     const attack =
       worth &&
+      (safe || !weakRiskyAttacker(attacker, subject, ownCreatures.length, ctx)) &&
       subject.subjectId !== reserve &&
       (safe ? aggression >= P.safeAttackAggression : aggression >= P.riskyAttackAggression);
     return { slot: slot.slot, choice: attack ? best : NO_ATTACK_TARGET };
@@ -1122,6 +1161,11 @@ function manaBase(ctx: PolicyContext): number {
 function holdUpPenalty(mv: number, action: LegalAction, ctx: PolicyContext): number {
   const knob = ctx.steering?.holdUpMana ?? 0;
   if (knob <= 0 || action.data?.['instantSpeed'] === true) return 0;
+  if (fixOn(ctx, 'holdUpRelief')) {
+    // The commander is the deck's plan, and a full hand discards what it does not cast.
+    if (action.data?.['sourceZone'] === 'command') return 0;
+    if (ctx.view.hand.length >= P.holdUpFullHand) return 0;
+  }
   const want = Math.min(
     knob,
     once(ctx, 'heldInteraction', () => heldInteractionCost(ctx)),
@@ -1274,7 +1318,8 @@ function answerThreat(kind: AnswerKind, action: LegalAction, ctx: PolicyContext)
       // A spell is shown by its card name; an ability's description is not one.
       const traits = traitsFor(ctx, item.description);
       if (traits === undefined) return null;
-      best = Math.max(best, spellThreat(traits));
+      const commander = isCommanderName(item.description, ctx) ? P.commanderPermanentBonus : 0;
+      best = Math.max(best, spellThreat(traits) + commander);
     }
     return best;
   }
