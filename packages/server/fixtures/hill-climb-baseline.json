@@ -11,25 +11,25 @@
         "coverage",
         "authoring"
       ],
-      "commit": "80868db4",
+      "commit": "b567e08f",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 53.53,
+      "calibrationMs": 55.15,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.31,
+          "value": 6.44,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.325
+          "spread": 0.298
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.5,
+          "value": 6.45,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.157
+          "spread": 0.332
         },
         "engine.work.layerPasses": {
           "value": 2665,
@@ -47,7 +47,7 @@
           "informational": true
         },
         "engine.work.layerDigests": {
-          "value": 36054,
+          "value": 35986,
           "unit": "digests",
           "better": "lower",
           "kind": "exact",
@@ -103,11 +103,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 1.01,
+          "value": 0.76,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.085
+          "spread": 0.957
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -228,25 +228,25 @@
         "coverage",
         "authoring"
       ],
-      "commit": "80868db4",
+      "commit": "b567e08f",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 62.7,
+      "calibrationMs": 61.94,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 12.63,
+          "value": 12.52,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.092
+          "spread": 0.108
         },
         "engine.medianGameMsPerDecision": {
-          "value": 12.27,
+          "value": 11.89,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.143
+          "spread": 0.052
         },
         "engine.work.layerPasses": {
           "value": 11781,
@@ -264,7 +264,7 @@
           "informational": true
         },
         "engine.work.layerDigests": {
-          "value": 289863,
+          "value": 289308,
           "unit": "digests",
           "better": "lower",
           "kind": "exact",
@@ -320,11 +320,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 0.81,
+          "value": 0.8,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.087
+          "spread": 0.107
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
