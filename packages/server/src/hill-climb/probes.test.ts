@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
+import { engineWork, engineWorkSince } from '@mtg/engine';
 import { PINNED_ORACLE_PATH, type PinnedCard } from '../cards/edhrec-pins';
 import { loadDecks } from '../cli/fuzz-plan';
 import {
@@ -14,6 +15,7 @@ import {
   modelProbe,
   playableDeckPct,
   timed,
+  workMetrics,
 } from './probes';
 import { compareReports, type Baseline, type Report } from './report';
 
@@ -35,6 +37,9 @@ describe('the committed hill-climb baseline', () => {
         ).toBe(true);
       for (const metric of Object.values(report.metrics))
         expect(Number.isFinite(metric.value)).toBe(true);
+      // Without them the work gate below reads every counter as new and checks nothing.
+      for (const id of Object.keys(workMetrics(engineWorkSince(engineWork()))))
+        expect(report.metrics[id], `${name} has no ${id}: rewrite the baseline`).toBeDefined();
     }
   });
 });
@@ -85,6 +90,8 @@ describe('hill-climb gate: exact metrics against the committed baseline', () => 
     expect(comparison.failures).toEqual([]);
     const work = comparison.rows.filter((row) => row.id.startsWith('engine.work.'));
     expect(work.length).toBeGreaterThanOrEqual(8);
+    // Every counter is compared against a baseline value, never passed through as new.
+    expect(work.filter((row) => row.verdict === 'new').map((row) => row.id)).toEqual([]);
     if (comparison.fingerprints.verdict === 'identical')
       expect(work.every((row) => row.verdict !== 'incomparable')).toBe(true);
   }, 120_000);
