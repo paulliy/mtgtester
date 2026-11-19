@@ -1,0 +1,106 @@
+{
+  "seed": "s7-batch-5",
+  "swap": true,
+  "spendCap": {
+    "maxUsd": 1,
+    "maxCalls": 1500,
+    "reached": false,
+    "spentUsd": 0.0159
+  },
+  "turns": 37,
+  "minutes": 1.4,
+  "winner": "P1",
+  "winnerMode": "model",
+  "finishingOrder": ["P2", "P4", "P3", "P1"],
+  "halted": false,
+  "haltReason": null,
+  "life": {
+    "P1": 48,
+    "P2": 0,
+    "P3": 0,
+    "P4": 0
+  },
+  "seatTurns": {
+    "P1": {
+      "ownTurns": 10,
+      "eliminatedOnTurn": null
+    },
+    "P2": {
+      "ownTurns": 8,
+      "eliminatedOnTurn": 32
+    },
+    "P3": {
+      "ownTurns": 10,
+      "eliminatedOnTurn": 37
+    },
+    "P4": {
+      "ownTurns": 10,
+      "eliminatedOnTurn": 35
+    }
+  },
+  "seats": {
+    "P1": "model",
+    "P2": "bot",
+    "P3": "model",
+    "P4": "bot"
+  },
+  "opponents": "bot-v1",
+  "escalation": [],
+  "shadow": [],
+  "perMode": {
+    "bot": {
+      "tacticianCalls": 0,
+      "strategistCalls": 11,
+      "promptTokens": 34942,
+      "responseTokens": 4683,
+      "costUsd": 0.0058,
+      "costKnown": true,
+      "failedCalls": 0,
+      "unpricedAttempts": 0,
+      "unknownCostCalls": 0,
+      "settledUsd": 0,
+      "unsettledAttempts": 0,
+      "ownTurns": 18,
+      "strategistCallsPerOwnTurn": 0.611,
+      "promptTokensPerOwnTurn": 1941,
+      "strategistWakes": {
+        "first knobs": 2,
+        "reuse limit": 2,
+        "permanents": 2,
+        "power": 2,
+        "commander": 2,
+        "life": 6,
+        "gone": 1
+      },
+      "callsPerTurn": 0.3,
+      "promptTokensPerTurn": 944
+    },
+    "model": {
+      "tacticianCalls": 0,
+      "strategistCalls": 17,
+      "promptTokens": 55243,
+      "responseTokens": 8361,
+      "costUsd": 0.01,
+      "costKnown": true,
+      "failedCalls": 0,
+      "unpricedAttempts": 0,
+      "unknownCostCalls": 0,
+      "settledUsd": 0,
+      "unsettledAttempts": 0,
+      "ownTurns": 20,
+      "strategistCallsPerOwnTurn": 0.85,
+      "promptTokensPerOwnTurn": 2762,
+      "strategistWakes": {
+        "first knobs": 2,
+        "permanents": 7,
+        "commander": 13,
+        "reuse limit": 1,
+        "power": 3,
+        "life": 8,
+        "gone": 4
+      },
+      "callsPerTurn": 0.46,
+      "promptTokensPerTurn": 1493
+    }
+  }
+}

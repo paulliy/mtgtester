@@ -1,0 +1,62 @@
+{
+  "seed": "s7-duel-1",
+  "swap": true,
+  "spendCap": {
+    "maxUsd": 1,
+    "maxCalls": 1500,
+    "reached": false,
+    "spentUsd": 0.0265
+  },
+  "turns": 55,
+  "minutes": 2.2,
+  "winner": "P3",
+  "winnerMode": "model",
+  "finishingOrder": ["P1", "P4", "P2", "P3"],
+  "life": {
+    "P1": 0,
+    "P2": 0,
+    "P3": 19,
+    "P4": 0
+  },
+  "seats": {
+    "P1": "model",
+    "P2": "bot",
+    "P3": "model",
+    "P4": "bot"
+  },
+  "opponents": "bot-v1",
+  "escalation": [],
+  "shadow": [],
+  "perMode": {
+    "bot": {
+      "tacticianCalls": 0,
+      "strategistCalls": 19,
+      "promptTokens": 79883,
+      "responseTokens": 10118,
+      "costUsd": 0.0143,
+      "costKnown": true,
+      "failedCalls": 0,
+      "unpricedAttempts": 1,
+      "unknownCostCalls": 0,
+      "settledUsd": 0.000454506,
+      "unsettledAttempts": 0,
+      "callsPerTurn": 0.35,
+      "promptTokensPerTurn": 1452
+    },
+    "model": {
+      "tacticianCalls": 0,
+      "strategistCalls": 19,
+      "promptTokens": 80724,
+      "responseTokens": 5945,
+      "costUsd": 0.0122,
+      "costKnown": true,
+      "failedCalls": 0,
+      "unpricedAttempts": 0,
+      "unknownCostCalls": 0,
+      "settledUsd": 0,
+      "unsettledAttempts": 0,
+      "callsPerTurn": 0.35,
+      "promptTokensPerTurn": 1468
+    }
+  }
+}

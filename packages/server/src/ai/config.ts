@@ -132,6 +132,14 @@ export interface AiConfig {
    */
   filterNonCachingProviders: boolean;
   /**
+   * OpenRouter only: per model, the providers a call may be routed to (sent as
+   * `provider.only`). A model with no entry may go to any provider. Keys are model ids as they
+   * appear in a model chain. Env: `AI_OPENROUTER_PROVIDER_ONLY`, `model=slug,slug;model=slug`,
+   * or `off` for no allowlist. Default: GLM 5.3 Flash on the providers that served it at normal
+   * reasoning length and price in the 2026-11-19 paid duels.
+   */
+  openRouterProviderOnly: Record<string, string[]>;
+  /**
    * Enable/disable reasoning (thinking tokens) for AI requests.
    * Default: false (disabled).
    */
@@ -331,6 +339,20 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   strategistWakeRule: 'table-v2',
   strategistTacticianFlag: 'off',
   filterNonCachingProviders: true,
+  // Cohere and OpenInference spent about 8x the reasoning tokens of the others at effort low,
+  // and Makora none; see docs/reviews/strategist-wake-rule-s7-2026-11-19.md.
+  openRouterProviderOnly: {
+    'z-ai/glm-5.3-flash': [
+      'wafer',
+      'inference-net',
+      'coreweave',
+      'particle-ai',
+      'together',
+      'modal',
+      'mistral',
+      'reka',
+    ],
+  },
   streamResponses: true,
   retryOnTimeout: false,
   reasoningEnabled: false,
@@ -475,6 +497,31 @@ function parseChoice<T extends string>(
   return trimmed !== undefined && (choices as readonly string[]).includes(trimmed)
     ? (trimmed as T)
     : fallback;
+}
+
+/** `model=slug,slug;model=slug`, or `off`; unset keeps the default. */
+export function parseProviderOnly(
+  raw: string | undefined,
+  fallback: Record<string, string[]>,
+): Record<string, string[]> {
+  if (raw === undefined || raw.trim() === '') return fallback;
+  if (raw.trim().toLowerCase() === 'off') return {};
+  const out: Record<string, string[]> = {};
+  for (const entry of raw.split(';')) {
+    if (entry.trim() === '') continue;
+    const [model, list, ...rest] = entry.split('=');
+    const providers = (list ?? '')
+      .split(',')
+      .map((p) => p.trim())
+      .filter((p) => p !== '');
+    if (model === undefined || model.trim() === '' || rest.length > 0 || providers.length === 0) {
+      throw new Error(
+        `AI_OPENROUTER_PROVIDER_ONLY: expected model=slug,slug;... or off, got "${entry}"`,
+      );
+    }
+    out[model.trim()] = providers;
+  }
+  return out;
 }
 
 function parseNumber(val: string | undefined, fallback: number): number {
@@ -751,6 +798,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     filterNonCachingProviders: parseBoolean(
       env['AI_FILTER_NON_CACHING_PROVIDERS'] || env['OPENROUTER_FILTER_NON_CACHING'],
       DEFAULT_AI_CONFIG.filterNonCachingProviders,
+    ),
+    openRouterProviderOnly: parseProviderOnly(
+      env['AI_OPENROUTER_PROVIDER_ONLY'],
+      DEFAULT_AI_CONFIG.openRouterProviderOnly,
     ),
     streamResponses: parseBoolean(env['AI_STREAM_RESPONSES'], DEFAULT_AI_CONFIG.streamResponses),
     retryOnTimeout: parseBoolean(env['AI_RETRY_ON_TIMEOUT'], DEFAULT_AI_CONFIG.retryOnTimeout),

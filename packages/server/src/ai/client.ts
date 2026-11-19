@@ -374,6 +374,8 @@ export class OpenAiCompatibleClient implements AiClient {
             if (isOpenRouter) {
               const provider: Record<string, unknown> = {};
               if (ignoreProviders.length > 0) provider['ignore'] = ignoreProviders;
+              const only = this.config.openRouterProviderOnly?.[currentModel];
+              if (only !== undefined && only.length > 0) provider['only'] = only;
               if (this.config.preferredMaxLatencySeconds > 0) {
                 provider['preferred_max_latency'] = this.config.preferredMaxLatencySeconds;
               }
