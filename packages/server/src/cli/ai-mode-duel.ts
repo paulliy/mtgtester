@@ -1,7 +1,7 @@
 /**
  * One paid four-player game that seats both tactical modes at the same table (ADR 0039): P1 and
  * P3 play `AI_TACTICAL_MODE=bot` (the bot plays, the strategist sets knobs), P2 and P4 play
- * `AI_TACTICAL_MODE=model` (the model tactician, the default before 2026-11-14). Everything else comes from the environment
+ * `AI_TACTICAL_MODE=model` (the model tactician, the default). Everything else comes from the environment
  * (`.env` is read by Bun), so the endpoint, models and key are the same ones the app uses.
  *
  *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]

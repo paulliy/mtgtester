@@ -56,8 +56,10 @@ or object id drifts, which is the expensive half of the tactician's job done bad
 `AI_TACTICAL_MODE` stayed `model` by default in this change. The quality evidence here is bot
 against bot; the switch should flip after one comparison against the real tactician in paid games.
 
-**Update 2026-11-14: the default is now `bot`.** Paul decided on 2026-11-10 that the bot is the
-default tactician. The same change replaced the tactician chain, which still answers escalations
+**Update 2026-11-19: the default stays `model`.** Paul decided on 2026-11-10 that the bot would
+become the default tactician, subject to the duel below. Bot-led seats missed its win bar (1 of 5
+games), so on 2026-11-19 Paul chose to keep `model` as the default for now; `AI_TACTICAL_MODE=bot`
+remains available. The same change replaced the tactician chain, which still answers escalations
 and every seat that sets `AI_TACTICAL_MODE=model`: `poolside/laguna-s-2.1` had no OpenRouter
 provider left and `sao10k/l3-lunaris-8b` rate-limited the first duel, so the chain is now
 `particle-ai/particle-1` at low reasoning, with `deepseek/deepseek-v4-flash` as the backup (both

@@ -91,7 +91,8 @@ export interface AiConfig {
    * Who answers tactical decisions the local plan, heuristics and cache leave (ADR 0039).
    * `model`: the tactician LLM, as before. `bot`: the card-aware heuristic bot, steered by the
    * strategist's knobs, with the model asked only as `botEscalation` allows.
-   * Env: `AI_TACTICAL_MODE`. Default: `bot` (since 2026-11-14; ADR 0039).
+   * Env: `AI_TACTICAL_MODE`. Default: `model`; bot seats missed the win bar in the 2026-11-19 duel
+   * (ADR 0039).
    */
   tacticalMode: 'model' | 'bot';
   /**
@@ -329,7 +330,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   strategistConcurrency: 1,
   heuristicsEnabled: true,
   decisionCacheEnabled: true,
-  tacticalMode: 'bot',
+  tacticalMode: 'model',
   botEscalation: [],
   botEscalationShadow: [],
   botEscalationMargin: 1,
