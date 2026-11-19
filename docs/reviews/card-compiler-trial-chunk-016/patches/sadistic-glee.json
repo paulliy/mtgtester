@@ -1,0 +1,37 @@
+{
+  "name": "Sadistic Glee",
+  "oracleId": "2af22962-8f66-4868-a175-ad5d7f4c9d58",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a creature dies, put a +1/+1 counter on enchanted creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCounters",
+            "target": "attachedToSource",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ],
+        "description": "Whenever a creature dies, put a +1/+1 counter on enchanted creature."
+      }
+    ]
+  }
+}

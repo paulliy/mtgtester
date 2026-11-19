@@ -1,0 +1,39 @@
+{
+  "name": "Fleeting Flight",
+  "oracleId": "6336401f-4e2d-4ebe-8c5b-24aa6f516abf",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put a +1/+1 counter on target creature. It gains flying until end of turn. Prevent all combat damage that would be dealt to it this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature"
+        }
+      ],
+      "effects": [
+        {
+          "op": "putCounters",
+          "target": 0,
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "flying"
+        },
+        {
+          "op": "createDamageShield",
+          "target": 0,
+          "dealtTo": true,
+          "combatOnly": true
+        }
+      ],
+      "description": "Put a +1/+1 counter on target creature. It gains flying until end of turn. Prevent all combat damage that would be dealt to it this turn."
+    }
+  }
+}

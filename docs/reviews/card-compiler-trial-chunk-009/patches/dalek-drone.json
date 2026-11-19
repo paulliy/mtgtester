@@ -1,0 +1,46 @@
+{
+  "name": "Dalek Drone",
+  "oracleId": "95d018f4-7f97-4b2c-abb4-cef69031caa1",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Exterminate! — When this creature enters, destroy target creature an opponent controls. That player loses 3 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "loseLifeTarget",
+            "target": {
+              "controllerOf": 0
+            },
+            "amount": {
+              "kind": "const",
+              "n": 3
+            }
+          },
+          {
+            "op": "destroy",
+            "target": 0
+          }
+        ],
+        "description": "Exterminate! — When this creature enters, destroy target creature an opponent controls. That player loses 3 life."
+      }
+    ]
+  }
+}

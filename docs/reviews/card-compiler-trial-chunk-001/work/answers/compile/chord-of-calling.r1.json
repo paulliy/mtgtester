@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The library search is bounded by mana value X, and the only searchLibrary form takes a constant mana value; the Value-bounded search op (searchLibraryAndOrGraveyardToBattlefield) also allows the graveyard, which the line does not."}

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The ability shuffles up to five chosen graveyard cards into the library, but shuffleChosenGraveyardCardsIntoLibrary requires a player target slot whose graveyard is searched, and the card has no player target (its own graveyard is implied), so the schema cannot express the controller's graveyard without adding a target the card does not have."}

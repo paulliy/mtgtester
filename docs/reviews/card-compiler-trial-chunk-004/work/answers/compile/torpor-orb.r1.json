@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"suppressObjectTriggers","events":["enters"],"filter":{"kind":"type","value":"Creature"}}]}}

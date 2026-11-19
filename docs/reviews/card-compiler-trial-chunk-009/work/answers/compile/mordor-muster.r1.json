@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":1}},{"op":"loseLife","amount":{"kind":"const","n":1}},{"op":"amass","subtype":"Orc","count":{"kind":"const","n":1}}],"description":"You draw a card and you lose 1 life. Amass Orcs 1."}}}

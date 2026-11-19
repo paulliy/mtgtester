@@ -1,0 +1,1 @@
+Whenever a player casts their second spell each turn, lose 1 life and create a Treasure artifact token with "{T}, Sacrifice this artifact: Add one mana of any color."

@@ -11,103 +11,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "5c637f9f",
+      "commit": "9ad1dc1d",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 63.63,
+      "calibrationMs": 42.33,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 5.98,
+          "value": 5.23,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.525
+          "spread": 0.293
         },
         "engine.medianGameMsPerDecision": {
-          "value": 5.97,
+          "value": 5.42,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.257
-        },
-        "engine.work.layerPasses": {
-          "value": 2853,
-          "unit": "passes",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.layerCacheHits": {
-          "value": 105523,
-          "unit": "hits",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true,
-          "informational": true
-        },
-        "engine.work.layerDigests": {
-          "value": 36053,
-          "unit": "digests",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.castCheckpoints": {
-          "value": 57,
-          "unit": "checkpoints",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.castPreviews": {
-          "value": 12682,
-          "unit": "previews",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.manaSourceListings": {
-          "value": 3555,
-          "unit": "listings",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.spellPaymentSearches": {
-          "value": 1024,
-          "unit": "searches",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.manaPlannerSearches": {
-          "value": 0,
-          "unit": "searches",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.manaPlannerStates": {
-          "value": 0,
-          "unit": "states",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.stateCopies": {
-          "value": 0,
-          "unit": "copies",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
+          "spread": 0.287
         },
         "setup.msPerGame": {
-          "value": 69.46,
+          "value": 0.87,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.02
+          "spread": 0.061
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -146,13 +75,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 3718,
+          "value": 4916,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 54.953,
+          "value": 60.401,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -163,20 +92,32 @@
           "better": "higher",
           "kind": "exact"
         },
+        "coverage.compilerRefusals": {
+          "value": 221,
+          "unit": "cards",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "coverage.playableDecksPct": {
+          "value": 100,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
         "authoring.poolMutantsLeftPct": {
-          "value": 76.11,
+          "value": 77.28,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 44.97,
+          "value": 42.12,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolCardsFullyScaffolded": {
-          "value": 125,
+          "value": 148,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
@@ -216,103 +157,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "5c637f9f",
+      "commit": "9ad1dc1d",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 61.82,
+      "calibrationMs": 48.59,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 45.36,
+          "value": 10.77,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.051
+          "spread": 0.117
         },
         "engine.medianGameMsPerDecision": {
-          "value": 11.92,
+          "value": 10.34,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.104
-        },
-        "engine.work.layerPasses": {
-          "value": 38228,
-          "unit": "passes",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.layerCacheHits": {
-          "value": 7012915,
-          "unit": "hits",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true,
-          "informational": true
-        },
-        "engine.work.layerDigests": {
-          "value": 680609,
-          "unit": "digests",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.castCheckpoints": {
-          "value": 275,
-          "unit": "checkpoints",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.castPreviews": {
-          "value": 58244,
-          "unit": "previews",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.manaSourceListings": {
-          "value": 68838,
-          "unit": "listings",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.spellPaymentSearches": {
-          "value": 5377,
-          "unit": "searches",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.manaPlannerSearches": {
-          "value": 1244,
-          "unit": "searches",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.manaPlannerStates": {
-          "value": 25544,
-          "unit": "states",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.stateCopies": {
-          "value": 26597,
-          "unit": "copies",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
+          "spread": 0.184
         },
         "setup.msPerGame": {
-          "value": 60.6,
+          "value": 0.77,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.084
+          "spread": 0.187
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -351,13 +221,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 3718,
+          "value": 4916,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 54.953,
+          "value": 60.401,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -368,26 +238,38 @@
           "better": "higher",
           "kind": "exact"
         },
+        "coverage.compilerRefusals": {
+          "value": 221,
+          "unit": "cards",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "coverage.playableDecksPct": {
+          "value": 100,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
         "authoring.poolMutantsLeftPct": {
-          "value": 76.06,
+          "value": 79.05,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 45.12,
+          "value": 40.57,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolCardsFullyScaffolded": {
-          "value": 998,
+          "value": 1040,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolDraftFailures": {
-          "value": 0,
+          "value": 2,
           "unit": "drafts",
           "better": "lower",
           "kind": "exact"

@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The next-cast copy cannot take the announced X as its number of copies: copyCastSpell copies once, and replicateCopies takes a fixed count rather than X."}

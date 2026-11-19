@@ -1,0 +1,29 @@
+{
+  "name": "Abjure",
+  "oracleId": "dd97e457-07eb-4918-b780-ae7ff42a37e7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As an additional cost to cast this spell, sacrifice a blue permanent."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAdditionalCosts": [
+      {
+        "kind": "sacrificeOther",
+        "selector": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "color",
+              "value": "U"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

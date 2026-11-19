@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target filter 'mana value less than or equal to the number of Plains you control' needs a dynamic bound, and the selector manaValueAtMost takes only a fixed number."}

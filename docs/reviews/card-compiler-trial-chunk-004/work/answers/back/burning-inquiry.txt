@@ -1,0 +1,2 @@
+Each player draws three cards.
+Each player discards three cards at random.

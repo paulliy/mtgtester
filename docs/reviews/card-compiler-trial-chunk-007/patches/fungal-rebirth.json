@@ -1,0 +1,94 @@
+{
+  "name": "Fungal Rebirth",
+  "oracleId": "b917f39a-3176-47ad-afda-08d09b873c02",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return target permanent card from your graveyard to your hand. If a creature died this turn, create two 1/1 green Saproling creature tokens."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "cardInGraveyard",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Enchantment"
+              },
+              {
+                "kind": "type",
+                "value": "Land"
+              },
+              {
+                "kind": "type",
+                "value": "Planeswalker"
+              },
+              {
+                "kind": "type",
+                "value": "Battle"
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "graveyardToHand",
+          "target": 0
+        },
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "compareValues",
+            "left": {
+              "kind": "creaturesDiedThisTurn"
+            },
+            "cmp": ">=",
+            "right": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          "then": [
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Saproling",
+                "typeLine": "Creature — Saproling",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Saproling"
+                ],
+                "colors": [
+                  "G"
+                ],
+                "power": 1,
+                "toughness": 1
+              },
+              "count": {
+                "kind": "const",
+                "n": 2
+              }
+            }
+          ],
+          "else": []
+        }
+      ],
+      "description": "Return target permanent card from your graveyard to your hand. If a creature died this turn, create two 1/1 green Saproling creature tokens."
+    }
+  }
+}

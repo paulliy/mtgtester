@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"Reconfigure's 'while attached, this isn't a creature' and its unattach-from-a-creature mode need a 'this is attached' condition, and no condition or layer op can express that the source is attached."}

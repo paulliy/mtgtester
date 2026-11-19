@@ -1,0 +1,75 @@
+{
+  "name": "Lotus Ring",
+  "oracleId": "ca4d3d27-ea3a-44ac-96e9-b52b563129f8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Equipped creature gets +3/+3 and has vigilance and \"{T}, Sacrifice this creature: Add three mana of any one color.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 3,
+          "toughness": 3
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "vigilance"
+        }
+      },
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addManaAbility": {
+            "units": [
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ],
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ],
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ]
+            ],
+            "linked": true,
+            "costs": [
+              {
+                "kind": "tap"
+              },
+              {
+                "kind": "sacrificeSelf"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,2 @@
+As long as your life total is 30 or more, this creature gets +5/+5. The data gives no base power or toughness.
+As long as your life total is 30 or more, this creature has flying.

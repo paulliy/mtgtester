@@ -1,0 +1,37 @@
+{
+  "name": "Spreading Insurrection",
+  "oracleId": "bc59977f-b3a7-4bc1-9f20-0a1e36d418ae",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Gain control of target creature you don't control until end of turn. Untap that creature. It gains haste until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "gainControlTarget",
+          "target": 0,
+          "duration": "untilEndOfTurn"
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "haste"
+        }
+      ],
+      "description": "Gain control of target creature you don't control until end of turn. Untap that creature. It gains haste until end of turn."
+    }
+  }
+}

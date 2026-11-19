@@ -1,0 +1,27 @@
+{
+  "name": "Misdirection",
+  "oracleId": "c39e5fb0-6de3-4105-ad3c-0ecb8951a1d5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Change the target of target spell with a single target."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "spell",
+          "spellHasSingleTarget": true
+        }
+      ],
+      "effects": [
+        {
+          "op": "changeSingleTarget",
+          "target": 0
+        }
+      ],
+      "description": "Change the target of target spell with a single target."
+    }
+  }
+}

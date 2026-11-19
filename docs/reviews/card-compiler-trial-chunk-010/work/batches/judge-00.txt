@@ -1,0 +1,1 @@
+docs/reviews/card-compiler-trial-chunk-010/work/prompts/judge/might-of-old-krosa.md	docs/reviews/card-compiler-trial-chunk-010/work/answers/judge/might-of-old-krosa.json

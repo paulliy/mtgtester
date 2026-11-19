@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"grantAbilityUntilEot takes an Ability, which has no activation-cost field, so the granted '{T}' cost cannot be expressed."}

@@ -1,0 +1,3 @@
+Whenever equipped creature deals combat damage to a player, do the following. This trigger is mandatory.
+Up to one target creature you own. Exile each chosen creature, then return it to the battlefield under the control of this Equipment's controller.
+Search your library for a basic land card and put it onto the battlefield. Then shuffle. The search has no stated count beyond one card and no tapped setting.

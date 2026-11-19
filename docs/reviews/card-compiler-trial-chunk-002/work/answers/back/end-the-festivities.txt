@@ -1,0 +1,2 @@
+Each opponent takes 1 damage.
+Deal 1 damage to each creature and each planeswalker that opponents control.

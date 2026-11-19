@@ -1,0 +1,70 @@
+{
+  "name": "Psychotic Fury",
+  "oracleId": "1bf982e9-5868-46bf-81e3-f29ada33d169",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target multicolored creature gains double strike until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "filter": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "isMonocolored"
+                }
+              },
+              {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "color",
+                    "value": "W"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "U"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "B"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "R"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "G"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "double strike"
+        },
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        }
+      ],
+      "description": "Target multicolored creature gains double strike until end of turn. Draw a card."
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "Abandoned Air Temple",
+  "oracleId": "9575d7ce-f26d-4b90-87a3-6329e9799572",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ enters tapped unless you control a basic land."
+  ],
+  "compose": "append",
+  "def": {
+    "entersTappedUnless": {
+      "kind": "countPermanents",
+      "selector": {
+        "kind": "allOf",
+        "of": [
+          {
+            "kind": "type",
+            "value": "Land"
+          },
+          {
+            "kind": "supertype",
+            "value": "Basic"
+          }
+        ]
+      },
+      "scope": "you",
+      "cmp": ">=",
+      "n": 1
+    }
+  }
+}

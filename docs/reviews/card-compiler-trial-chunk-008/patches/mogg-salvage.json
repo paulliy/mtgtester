@@ -1,0 +1,54 @@
+{
+  "name": "Mogg Salvage",
+  "oracleId": "0923ad85-2ea4-4463-8f71-b7d0a162b486",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "If an opponent controls an Island and you control a Mountain, you may cast this spell without paying its mana cost."
+  ],
+  "compose": "append",
+  "def": {
+    "alternativeCasts": [
+      {
+        "kind": "nonMana",
+        "manaCost": {
+          "generic": 0,
+          "colored": {
+            "W": 0,
+            "U": 0,
+            "B": 0,
+            "R": 0,
+            "G": 0
+          },
+          "colorless": 0
+        },
+        "costs": [],
+        "condition": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "subtype",
+                "value": "Island"
+              },
+              "scope": "opponents",
+              "cmp": ">=",
+              "n": 1
+            },
+            {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "subtype",
+                "value": "Mountain"
+              },
+              "scope": "you",
+              "cmp": ">=",
+              "n": 1
+            }
+          ]
+        },
+        "description": "If an opponent controls an Island and you control a Mountain, you may cast this spell without paying its mana cost."
+      }
+    ]
+  }
+}

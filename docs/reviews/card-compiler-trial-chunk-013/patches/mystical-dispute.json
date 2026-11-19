@@ -1,0 +1,25 @@
+{
+  "name": "Mystical Dispute",
+  "oracleId": "48390b8d-db41-48a5-9bac-316660ab7252",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "This spell costs {2} less to cast if it targets a blue spell."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "costReduction",
+        "amount": {
+          "kind": "const",
+          "n": 2
+        },
+        "selfOnly": true,
+        "targetFilter": {
+          "kind": "color",
+          "value": "U"
+        }
+      }
+    ]
+  }
+}

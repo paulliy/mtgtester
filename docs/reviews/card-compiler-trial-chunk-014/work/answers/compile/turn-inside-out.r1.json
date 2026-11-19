@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The 'when it dies this turn, manifest dread' delayed trigger must watch the targeted creature, and no delayed-trigger form can bind a dies event to a chosen target (registerDelayedTrigger's dies subject is the ability's own source)."}

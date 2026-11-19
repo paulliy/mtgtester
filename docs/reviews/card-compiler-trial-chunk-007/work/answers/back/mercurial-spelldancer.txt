@@ -1,0 +1,1 @@
+Whenever this creature deals combat damage to a player, you may. If this creature has two or more oil counters on it, remove two oil counters from it. If you do, the next instant or sorcery spell cast this turn gets "When you cast this spell, copy it."

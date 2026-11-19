@@ -1,0 +1,1 @@
+As long as you control at least one Dinosaur, this creature gets +2/+2.

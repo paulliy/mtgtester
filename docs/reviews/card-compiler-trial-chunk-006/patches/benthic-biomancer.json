@@ -1,0 +1,59 @@
+{
+  "name": "Benthic Biomancer",
+  "oracleId": "b9000917-4f09-42f4-ae85-fc1ac7571d93",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{U}: Adapt 1."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "conditionalEffect",
+              "condition": {
+                "kind": "sourceHasCounters",
+                "counter": "+1/+1",
+                "cmp": "==",
+                "n": 0
+              },
+              "then": [
+                {
+                  "op": "putCountersEach",
+                  "selector": {
+                    "kind": "self"
+                  },
+                  "counter": "+1/+1",
+                  "count": 1
+                }
+              ],
+              "else": []
+            }
+          ],
+          "description": "{1}{U}: Adapt 1."
+        }
+      }
+    ]
+  }
+}

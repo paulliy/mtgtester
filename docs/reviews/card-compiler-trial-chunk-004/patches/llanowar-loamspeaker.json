@@ -1,0 +1,45 @@
+{
+  "name": "Llanowar Loamspeaker",
+  "oracleId": "08377424-619e-48ae-bc3c-fb199cd77cf9",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Target land you control becomes a 3/3 Elemental creature with haste until end of turn. It's still a land. Activate only as a sorcery."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "sorcery",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "land",
+              "controller": "you"
+            }
+          ],
+          "effects": [
+            {
+              "op": "becomeCreatureUntilEot",
+              "target": 0,
+              "subtypes": [
+                "Elemental"
+              ],
+              "power": 3,
+              "toughness": 3,
+              "keywords": [
+                "haste"
+              ]
+            }
+          ],
+          "description": "{T}: Target land you control becomes a 3/3 Elemental creature with haste until end of turn. It's still a land. Activate only as a sorcery."
+        }
+      }
+    ]
+  }
+}

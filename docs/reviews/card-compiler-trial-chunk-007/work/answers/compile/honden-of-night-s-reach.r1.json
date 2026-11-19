@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no player target restricted to opponents: TargetSpec.controller is defined for permanents, and the player target kind has no opponent-only form for 'target opponent'."}

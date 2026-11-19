@@ -1,0 +1,47 @@
+{
+  "name": "Baral's Expertise",
+  "oracleId": "a1cdcb8c-1e12-4d39-aa4a-db678a80df9c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Return up to three target artifacts and/or creatures to their owners' hands."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "permanent",
+          "filter": {
+            "kind": "anyOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Artifact"
+              },
+              {
+                "kind": "type",
+                "value": "Creature"
+              }
+            ]
+          },
+          "count": {
+            "min": 0,
+            "max": 3
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "returnToHandEachChosen",
+          "targetSlot": 0
+        },
+        {
+          "op": "castOneFromHandFreeUpTo",
+          "maxManaValue": 4
+        }
+      ],
+      "description": "Return up to three target artifacts and/or creatures to their owners' hands. You may cast a spell with mana value 4 or less from your hand without paying its mana cost."
+    }
+  }
+}

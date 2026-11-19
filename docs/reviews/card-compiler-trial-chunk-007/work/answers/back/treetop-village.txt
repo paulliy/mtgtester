@@ -1,0 +1,1 @@
+{1}{G}: Until end of turn, this land becomes a 3/3 green Ape creature with trample.

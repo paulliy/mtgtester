@@ -1,0 +1,62 @@
+{
+  "name": "Barge In",
+  "oracleId": "32eb5d30-f4e7-48ef-b5f6-051ddddd4175",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target attacking creature gets +2/+2 until end of turn. Each attacking non-Human creature gains trample until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "filter": {
+            "kind": "combatRole",
+            "role": "attacking"
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "pumpUntilEot",
+          "target": 0,
+          "power": {
+            "kind": "const",
+            "n": 2
+          },
+          "toughness": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "grantKeywordEachUntilEot",
+          "selector": {
+            "kind": "allOf",
+            "of": [
+              {
+                "kind": "type",
+                "value": "Creature"
+              },
+              {
+                "kind": "combatRole",
+                "role": "attacking"
+              },
+              {
+                "kind": "not",
+                "of": {
+                  "kind": "subtype",
+                  "value": "Human"
+                }
+              }
+            ]
+          },
+          "keyword": "trample"
+        }
+      ],
+      "description": "Target attacking creature gets +2/+2 until end of turn. Each attacking non-Human creature gains trample until end of turn."
+    }
+  }
+}

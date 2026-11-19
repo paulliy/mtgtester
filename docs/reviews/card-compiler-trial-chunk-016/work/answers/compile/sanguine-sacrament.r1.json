@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"gainLife","amount":{"kind":"times","of":{"kind":"xValue"},"n":2}},{"op":"resolvingSpellToLibraryBottom"}],"description":"You gain twice X life. Put Sanguine Sacrament on the bottom of its owner's library."}}}

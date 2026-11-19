@@ -1,0 +1,1 @@
+Destroy target creature, enchantment, or planeswalker. The controller of that permanent creates two Map tokens. A Map token has "{1}, {T}, Sacrifice this artifact: Target creature you control explores. Activate only as a sorcery."

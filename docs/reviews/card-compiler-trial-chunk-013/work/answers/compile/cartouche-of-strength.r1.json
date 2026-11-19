@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"enters","subject":{"kind":"self"}},"optional":true,"targets":[{"kind":"creature","controller":"opponent"}],"effects":[{"op":"fight","first":"attachedToSource","second":0}],"description":"When this Aura enters, you may have enchanted creature fight target creature an opponent controls."}]}}

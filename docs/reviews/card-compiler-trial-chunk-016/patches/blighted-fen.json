@@ -1,0 +1,54 @@
+{
+  "name": "Blighted Fen",
+  "oracleId": "b8f3da11-7c8f-4846-98a6-204bfd8d572b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{4}{B}, {T}, Sacrifice this land: Target opponent sacrifices a creature of their choice."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 4,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 1,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "sacrificeSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "player",
+              "controller": "opponent"
+            }
+          ],
+          "effects": [
+            {
+              "op": "sacrificeTargetPlayerCreature",
+              "target": 0
+            }
+          ],
+          "description": "{4}{B}, {T}, Sacrifice this land: Target opponent sacrifices a creature of their choice."
+        }
+      }
+    ]
+  }
+}

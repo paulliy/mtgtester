@@ -1,0 +1,53 @@
+{
+  "name": "Volley Veteran",
+  "oracleId": "bf4268e6-170a-445b-b215-718f7494ae28",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, it deals damage to target creature an opponent controls equal to the number of Goblins you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "creature",
+            "controller": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "countPermanents",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Goblin"
+                  },
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  }
+                ]
+              },
+              "scope": "all"
+            }
+          }
+        ],
+        "description": "When this creature enters, it deals damage to target creature an opponent controls equal to the number of Goblins you control."
+      }
+    ]
+  }
+}

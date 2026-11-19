@@ -1,0 +1,25 @@
+{
+  "name": "Goblin Bushwhacker",
+  "oracleId": "878b6808-48af-4047-ac35-bfc58bf92e7d",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Kicker {R}"
+  ],
+  "compose": "append",
+  "def": {
+    "optionalAdditionalCost": {
+      "mechanic": "kicker",
+      "cost": {
+        "generic": 0,
+        "colored": {
+          "W": 0,
+          "U": 0,
+          "B": 0,
+          "R": 1,
+          "G": 0
+        },
+        "colorless": 0
+      }
+    }
+  }
+}

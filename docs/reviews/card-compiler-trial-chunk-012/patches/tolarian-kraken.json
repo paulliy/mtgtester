@@ -1,0 +1,74 @@
+{
+  "name": "Tolarian Kraken",
+  "oracleId": "846887e4-744f-44ce-9110-d09680b11e95",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever you draw a card, you may pay {1}. When you do, you may tap or untap target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "drawsCard",
+          "player": "you"
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "mayPayManaThenReflexive",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            },
+            "then": {
+              "kind": "triggered",
+              "optional": true,
+              "targets": [
+                {
+                  "kind": "creature"
+                }
+              ],
+              "effects": [
+                {
+                  "op": "chooseOne",
+                  "options": [
+                    {
+                      "effects": [
+                        {
+                          "op": "tapTarget",
+                          "target": 0
+                        }
+                      ],
+                      "description": "Tap target creature."
+                    },
+                    {
+                      "effects": [
+                        {
+                          "op": "untapTarget",
+                          "target": 0
+                        }
+                      ],
+                      "description": "Untap target creature."
+                    }
+                  ]
+                }
+              ],
+              "description": "When you do, you may tap or untap target creature."
+            }
+          }
+        ],
+        "description": "Whenever you draw a card, you may pay {1}. When you do, you may tap or untap target creature."
+      }
+    ]
+  }
+}

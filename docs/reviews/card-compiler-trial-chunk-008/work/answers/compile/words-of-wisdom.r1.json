@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":2}},{"op":"eachPlayerDraws","scope":"opponents","count":{"kind":"const","n":1}}],"description":"You draw two cards, then each other player draws a card."}}}

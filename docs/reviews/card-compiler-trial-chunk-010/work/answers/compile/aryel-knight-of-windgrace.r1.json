@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The target restriction 'power X or less', where X is the announced number of Knights tapped, cannot be expressed: the powerAtMost selector takes a fixed n and no selector compares to the activation's X value."}

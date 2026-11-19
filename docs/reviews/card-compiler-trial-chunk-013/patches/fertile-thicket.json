@@ -1,0 +1,51 @@
+{
+  "name": "Fertile Thicket",
+  "oracleId": "7ba580c9-f933-43d9-b03d-a349faa6c641",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this land enters, you may look at the top five cards of your library. If you do, reveal up to one basic land card from among them, then put that card on top of your library and the rest on the bottom in any order."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "lookAtTopN",
+            "count": 5,
+            "mayPut": {
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  },
+                  {
+                    "kind": "supertype",
+                    "value": "Basic"
+                  }
+                ]
+              },
+              "destination": {
+                "zone": "libraryTop"
+              },
+              "reveal": true
+            },
+            "rest": "bottomAnyOrder"
+          }
+        ],
+        "description": "When this land enters, you may look at the top five cards of your library. If you do, reveal up to one basic land card from among them, then put that card on top of your library and the rest on the bottom in any order."
+      }
+    ]
+  }
+}

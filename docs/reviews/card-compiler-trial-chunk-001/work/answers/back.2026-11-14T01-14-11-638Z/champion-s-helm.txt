@@ -1,0 +1,2 @@
+Equipped creature has hexproof as long as it is a legendary creature. (The static effect applies to the equipped creature only when that creature has the supertype Legendary.)
+The data contains no equip ability, no equip cost, and no other abilities.

@@ -1,0 +1,43 @@
+{
+  "name": "Goblin War Strike",
+  "oracleId": "5944d5c7-65ab-425f-a453-ed5871ca3d73",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ deals damage to target player or planeswalker equal to the number of Goblins you control."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "playerOrPlaneswalker"
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamage",
+          "target": 0,
+          "amount": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Goblin"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "scope": "all"
+          }
+        }
+      ],
+      "description": "Goblin War Strike deals damage to target player or planeswalker equal to the number of Goblins you control."
+    }
+  }
+}

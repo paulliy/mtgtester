@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"handToBattlefield always acts for the ability's controller, and the schema has no way to make each opponent, rather than the controller, choose any number of matching cards from their own hand to put onto the battlefield."}

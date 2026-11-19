@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The Powerstone tokens' mana 'can't be spent to cast a nonartifact spell' cannot be stated exactly, since a ManaRestriction filter also constrains abilities, not only the spells the mana is spent on."}

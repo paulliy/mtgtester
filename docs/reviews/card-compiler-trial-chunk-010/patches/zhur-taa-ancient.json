@@ -1,0 +1,23 @@
+{
+  "name": "Zhur-Taa Ancient",
+  "oracleId": "6543b60c-12b0-4e69-9074-6a2b468c5234",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a player taps a land for mana, that player adds one mana of any type that land produced."
+  ],
+  "compose": "append",
+  "def": {
+    "ruleStatics": [
+      {
+        "kind": "manaActivationRider",
+        "source": {
+          "kind": "type",
+          "value": "Land"
+        },
+        "add": {
+          "kind": "oneOfProducedTypes"
+        }
+      }
+    ]
+  }
+}

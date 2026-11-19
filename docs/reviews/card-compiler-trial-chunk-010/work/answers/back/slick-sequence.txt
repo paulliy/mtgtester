@@ -1,0 +1,2 @@
+Slick Sequence deals 2 damage to any target.
+If two or more spells have been cast this turn, draw a card.

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"attachedToSource"},"op":{"layer":7,"sublayer":"d","power":{"kind":"countCardsInZone","zone":"hand","selector":{"kind":"allOf","of":[]},"owner":"you"},"toughness":{"kind":"countCardsInZone","zone":"hand","selector":{"kind":"allOf","of":[]},"owner":"you"}}}}]}}

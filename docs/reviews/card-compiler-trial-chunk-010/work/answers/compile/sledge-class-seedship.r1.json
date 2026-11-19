@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"attacks","subject":{"kind":"self"}},"optional":false,"targets":[],"effects":[{"op":"handToBattlefield","filter":{"kind":"type","value":"Creature"},"count":"one"}],"description":"Whenever this Spacecraft attacks, you may put a creature card from your hand onto the battlefield."}]}}

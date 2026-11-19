@@ -1,0 +1,2 @@
+Counter target spell.
+Create three colorless Clue artifact tokens with the subtype Clue. Each has "{2}, Sacrifice this token: Draw a card."

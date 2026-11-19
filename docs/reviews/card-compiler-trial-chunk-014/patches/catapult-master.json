@@ -1,0 +1,51 @@
+{
+  "name": "Catapult Master",
+  "oracleId": "02da2145-0edb-44be-8622-360182a8c25a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap five untapped Soldiers you control: Exile target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tapOthers",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Soldier"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            },
+            "count": 5,
+            "allowSelf": true
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "creature"
+            }
+          ],
+          "effects": [
+            {
+              "op": "exile",
+              "target": 0
+            }
+          ],
+          "description": "Tap five untapped Soldiers you control: Exile target creature."
+        }
+      }
+    ]
+  }
+}

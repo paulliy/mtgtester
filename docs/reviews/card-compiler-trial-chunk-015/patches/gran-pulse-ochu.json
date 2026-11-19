@@ -1,0 +1,111 @@
+{
+  "name": "Gran Pulse Ochu",
+  "oracleId": "09b71c95-7b5d-4cee-a505-e0dda72715b7",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{8}: Until end of turn, this creature gets +1/+1 for each permanent card in your graveyard."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 8,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "pumpUntilEot",
+              "target": "source",
+              "power": {
+                "kind": "countCardsInZone",
+                "zone": "graveyard",
+                "selector": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Battle"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Planeswalker"
+                    }
+                  ]
+                },
+                "owner": "you"
+              },
+              "toughness": {
+                "kind": "countCardsInZone",
+                "zone": "graveyard",
+                "selector": {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "type",
+                      "value": "Artifact"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Battle"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Creature"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Land"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Planeswalker"
+                    }
+                  ]
+                },
+                "owner": "you"
+              }
+            }
+          ],
+          "description": "{8}: Until end of turn, this creature gets +1/+1 for each permanent card in your graveyard."
+        }
+      }
+    ]
+  }
+}

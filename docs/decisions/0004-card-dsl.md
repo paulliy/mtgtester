@@ -1,6 +1,8 @@
 # 0004 — Data-driven card DSL (ability IR)
 
-Status: accepted (increment 1) — 2026-07-24
+Date: 2026-07-24
+Status: Accepted (2026-07-24)
+Status note: increment 1
 Context: post-Phase-2 review. The regex→`EffectSpec[]`→switch interpreter models a card's
 behavior in three coupled places (a sentence regex, an `EffectSpec` variant, a `resolve`
 switch case) and has no path to hand-author a card the text parser can't read. That is the

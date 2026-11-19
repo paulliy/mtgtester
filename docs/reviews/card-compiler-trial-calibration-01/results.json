@@ -1,0 +1,17 @@
+{
+  "measuredCostUsd": 0,
+  "estimatedCost": {
+    "backUsd": 0.0013860599999999993,
+    "backCalls": 30,
+    "judgeUsd": 0.0014401350000000015,
+    "judgeCalls": 30,
+    "totalUsd": 0.002826195000000001
+  },
+  "calibration": {
+    "cases": 30,
+    "pending": [],
+    "missed": [],
+    "falseAlarms": []
+  },
+  "cards": []
+}

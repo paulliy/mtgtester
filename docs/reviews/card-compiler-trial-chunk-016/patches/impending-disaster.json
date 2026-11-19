@@ -1,0 +1,46 @@
+{
+  "name": "Impending Disaster",
+  "oracleId": "cf0799f3-ef64-4fcc-924a-5265e52c9727",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "At the beginning of your upkeep, if there are seven or more lands on the battlefield, sacrifice this enchantment and destroy all lands."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "upkeep",
+          "player": "you",
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "type",
+              "value": "Land"
+            },
+            "scope": "all",
+            "cmp": ">=",
+            "n": 7
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrifice",
+            "target": "source"
+          },
+          {
+            "op": "destroyEach",
+            "selector": {
+              "kind": "type",
+              "value": "Land"
+            }
+          }
+        ],
+        "description": "At the beginning of your upkeep, if there are seven or more lands on the battlefield, sacrifice this enchantment and destroy all lands."
+      }
+    ]
+  }
+}

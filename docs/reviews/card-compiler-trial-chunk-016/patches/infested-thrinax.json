@@ -1,0 +1,86 @@
+{
+  "name": "Infested Thrinax",
+  "oracleId": "860b5e4c-45bd-4ba1-930a-36a1450ebd37",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, until end of turn, whenever a nontoken creature you control dies, create a number of 1/1 green Saproling creature tokens equal to that creature's power."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "registerDelayedTrigger",
+            "when": "dies",
+            "expiry": "cleanup",
+            "ability": {
+              "kind": "triggered",
+              "trigger": {
+                "when": "dies",
+                "subject": {
+                  "kind": "permanent",
+                  "selector": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "not",
+                        "of": {
+                          "kind": "isToken"
+                        }
+                      },
+                      {
+                        "kind": "controller",
+                        "who": "you"
+                      },
+                      {
+                        "kind": "type",
+                        "value": "Creature"
+                      }
+                    ]
+                  }
+                }
+              },
+              "optional": false,
+              "targets": [],
+              "effects": [
+                {
+                  "op": "createToken",
+                  "spec": {
+                    "name": "Saproling",
+                    "typeLine": "Creature — Saproling",
+                    "types": [
+                      "Creature"
+                    ],
+                    "subtypes": [
+                      "Saproling"
+                    ],
+                    "colors": [
+                      "G"
+                    ],
+                    "power": 1,
+                    "toughness": 1
+                  },
+                  "count": {
+                    "kind": "powerOfTriggerObject"
+                  }
+                }
+              ],
+              "description": "Whenever a nontoken creature you control dies this turn, create a number of 1/1 green Saproling creature tokens equal to that creature's power."
+            }
+          }
+        ],
+        "description": "When this creature enters, until end of turn, whenever a nontoken creature you control dies, create a number of 1/1 green Saproling creature tokens equal to that creature's power."
+      }
+    ]
+  }
+}

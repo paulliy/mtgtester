@@ -1,0 +1,55 @@
+{
+  "name": "Ancient Animus",
+  "oracleId": "4c9a38f8-8fcb-45f9-8b70-e54298c7b485",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put a +1/+1 counter on target creature you control if it's legendary. Then it fights target creature an opponent controls."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "creature",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "conditionalEffect",
+          "condition": {
+            "kind": "triggerObjectMatches",
+            "selector": {
+              "kind": "supertype",
+              "value": "Legendary"
+            }
+          },
+          "checkTarget": 0,
+          "then": [
+            {
+              "op": "putCounters",
+              "target": 0,
+              "counter": "+1/+1",
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "else": []
+        },
+        {
+          "op": "fight",
+          "first": 0,
+          "second": 1
+        }
+      ],
+      "description": "Put a +1/+1 counter on target creature you control if it's legendary. Then it fights target creature an opponent controls."
+    }
+  }
+}

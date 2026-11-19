@@ -1,0 +1,2 @@
+At the beginning of your upkeep, target creature card in your graveyard. You may pay {2}{G}. If you do, return that card to your hand.
+This ability functions while this card is in your graveyard.

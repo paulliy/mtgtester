@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"'Up to X target cards' needs a dynamic maximum equal to the opponent's black permanents counted at cast time, and TargetSpec.count only takes static min and max numbers."}

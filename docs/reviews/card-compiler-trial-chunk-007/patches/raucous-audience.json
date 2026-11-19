@@ -1,0 +1,58 @@
+{
+  "name": "Raucous Audience",
+  "oracleId": "5be6f245-31cf-4294-ace0-ca6ce3463fed",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Add {G}. If you control a creature with power 4 or greater, add {G}{G} instead."
+  ],
+  "compose": "append",
+  "def": {
+    "manaAbilities": [
+      {
+        "units": [
+          [
+            "G"
+          ]
+        ],
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "conditionalUnits": {
+          "condition": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "powerAtLeast",
+                  "n": 4
+                }
+              ]
+            },
+            "scope": "you",
+            "cmp": ">=",
+            "n": 1
+          },
+          "units": [
+            [
+              "G"
+            ],
+            [
+              "G"
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}

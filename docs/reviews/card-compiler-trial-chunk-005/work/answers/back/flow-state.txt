@@ -1,0 +1,1 @@
+Look at the top three cards of your library. If there is at least one instant card and at least one sorcery card in your graveyard, put two of those cards into your hand. Otherwise, put one of those cards into your hand. Put the rest on the bottom of your library in any order.

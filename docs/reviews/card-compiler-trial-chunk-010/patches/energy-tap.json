@@ -1,0 +1,38 @@
+{
+  "name": "Energy Tap",
+  "oracleId": "106ae855-574b-411d-8689-cbb9eeb4f602",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Tap target untapped creature you control. If you do, add an amount of {C} equal to that creature's mana value."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you",
+          "tapState": "untapped"
+        }
+      ],
+      "effects": [
+        {
+          "op": "tapTarget",
+          "target": 0
+        },
+        {
+          "op": "addMana",
+          "amount": {
+            "kind": "manaValueOfTarget",
+            "target": 0
+          },
+          "colors": [
+            "C"
+          ]
+        }
+      ],
+      "description": "Tap target untapped creature you control. If you do, add an amount of {C} equal to that creature's mana value."
+    }
+  }
+}

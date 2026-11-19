@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"staticEffects":[{"affects":{"kind":"subtype","value":"Sliver"},"op":{"layer":6,"addActivatedAbility":{"costs":[{"kind":"tap"}],"timing":"any","ability":{"kind":"activated","targets":[{"kind":"permanent","filter":{"kind":"subtype","value":"Sliver"}}],"effects":[{"op":"regenerate","target":0}],"description":"{T}: Regenerate target Sliver."}}}}]}}

@@ -1,0 +1,25 @@
+{
+  "name": "Paradise Druid",
+  "oracleId": "e119869d-1f66-402b-8251-d351965cf0d3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ has hexproof as long as it's untapped."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 6,
+          "addKeyword": "hexproof"
+        },
+        "condition": {
+          "kind": "isUntapped"
+        }
+      }
+    ]
+  }
+}

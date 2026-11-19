@@ -1,0 +1,1 @@
+Whenever a player declares an attack, deal damage equal to the number of attacking creatures to each attacking creature.

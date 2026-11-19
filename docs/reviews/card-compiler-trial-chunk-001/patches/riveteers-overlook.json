@@ -1,0 +1,83 @@
+{
+  "name": "Riveteers Overlook",
+  "oracleId": "5548ff43-e5f6-4a63-8562-a2b1de06d6f5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this land enters, sacrifice it. When you do, search your library for a basic Swamp, Mountain, or Forest card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "sacrificeSourceThenReflexive",
+            "then": {
+              "kind": "triggered",
+              "targets": [],
+              "effects": [
+                {
+                  "op": "searchLibrary",
+                  "filter": {
+                    "kind": "allOf",
+                    "of": [
+                      {
+                        "kind": "supertype",
+                        "value": "Basic"
+                      },
+                      {
+                        "kind": "anyOf",
+                        "of": [
+                          {
+                            "kind": "subtype",
+                            "value": "Swamp"
+                          },
+                          {
+                            "kind": "subtype",
+                            "value": "Mountain"
+                          },
+                          {
+                            "kind": "subtype",
+                            "value": "Forest"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "destinations": [
+                    {
+                      "zone": "battlefield",
+                      "tapped": true
+                    }
+                  ],
+                  "allowFailToFind": true
+                },
+                {
+                  "op": "shuffle"
+                },
+                {
+                  "op": "gainLife",
+                  "amount": {
+                    "kind": "const",
+                    "n": 1
+                  }
+                }
+              ],
+              "description": "Search for a basic Swamp, Mountain, or Forest, put it onto the battlefield tapped, then shuffle and gain 1 life"
+            }
+          }
+        ],
+        "description": "When this land enters, sacrifice it. When you do, search your library for a basic Swamp, Mountain, or Forest card, put it onto the battlefield tapped, then shuffle and you gain 1 life."
+      }
+    ]
+  }
+}

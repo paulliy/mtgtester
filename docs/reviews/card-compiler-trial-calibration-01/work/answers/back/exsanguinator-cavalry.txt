@@ -1,0 +1,3 @@
+Whenever a Knight deals combat damage to a player, put a +1/+1 counter on that Knight, then create a Blood token. (The trigger has no controller restriction, so it applies to any Knight, not only Knights you control. It is mandatory: no "you may".)
+The Blood token is an Artifact with subtype Blood. Its type line is hidden in the data, so it is not stated here. It has no colors and no power or toughness.
+The Blood token has this ability: {1}, {T}, Discard a card, Sacrifice this artifact: Draw a card. It can be activated at any time.

@@ -1,0 +1,1 @@
+Destroy target artifact. This spell deals 3 damage to that artifact's controller.

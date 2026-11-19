@@ -1,0 +1,2 @@
+When this enters, each opponent takes 1 damage.
+When this enters, create a Blood token. It has "{1}, {T}, Discard a card, Sacrifice this: Draw a card."

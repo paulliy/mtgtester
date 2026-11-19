@@ -1,0 +1,1 @@
+{U}, {T}: Add {U} for each artifact you control. Activate only if this land has twelve or more charge counters on it. This is a mana ability.

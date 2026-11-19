@@ -1,0 +1,38 @@
+{
+  "name": "Fall of the Hammer",
+  "oracleId": "7e3fe8e4-e56a-4109-a314-96c44bbe7d22",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target creature you control deals damage equal to its power to another target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "creature",
+          "differentFromSlots": [
+            0
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "op": "dealDamage",
+          "target": 1,
+          "amount": {
+            "kind": "powerOfTarget",
+            "target": 0
+          },
+          "source": 0
+        }
+      ],
+      "description": "Target creature you control deals damage equal to its power to another target creature."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+When this creature enters, you may search your library for an Instant or Sorcery card with mana value 2 or less, reveal it, and put it into your hand. Then shuffle. This trigger has no targets.

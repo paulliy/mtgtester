@@ -1,0 +1,44 @@
+{
+  "name": "Deploy to the Front",
+  "oracleId": "135cb4af-f4b6-455b-8fea-84fcef78ee03",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Create X 1/1 white Soldier creature tokens, where X is the number of creatures on the battlefield."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "createToken",
+          "spec": {
+            "name": "Soldier",
+            "typeLine": "Creature — Soldier",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Soldier"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          },
+          "count": {
+            "kind": "countPermanents",
+            "selector": {
+              "kind": "type",
+              "value": "Creature"
+            },
+            "scope": "all"
+          }
+        }
+      ],
+      "description": "Create X 1/1 white Soldier creature tokens, where X is the number of creatures on the battlefield."
+    }
+  }
+}

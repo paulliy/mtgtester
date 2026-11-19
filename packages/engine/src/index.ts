@@ -56,6 +56,7 @@ export type {
 
 // Card interpretation (the server will reuse this to pre-flight decks in Phase 3).
 export { interpretCard, interpretCardWithDiagnostics } from './cards/interpret';
+export { clearDefinitionCache, definitionCacheSize } from './cards/definition-cache';
 export type { GrammarSlot, SlotFailure } from './cards/grammar/diagnostics';
 export type {
   CardDefinition,

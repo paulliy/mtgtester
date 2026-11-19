@@ -1,0 +1,1 @@
+Put target card from any graveyard on top of its library. (The data does not name whose library; read it as the card's owner's library.)

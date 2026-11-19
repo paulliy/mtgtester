@@ -1,0 +1,51 @@
+{
+  "name": "Cost of Brilliance",
+  "oracleId": "b45afde2-eaaf-4174-8082-d344efa54c44",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Target player draws two cards and loses 2 life. Put a +1/+1 counter on up to one target creature."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "player"
+        },
+        {
+          "kind": "creature",
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "op": "drawTarget",
+          "target": 0,
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "loseLifeTarget",
+          "target": 0,
+          "amount": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "putCountersEachChosen",
+          "targetSlot": 1,
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "description": "Target player draws two cards and loses 2 life. Put a +1/+1 counter on up to one target creature."
+    }
+  }
+}

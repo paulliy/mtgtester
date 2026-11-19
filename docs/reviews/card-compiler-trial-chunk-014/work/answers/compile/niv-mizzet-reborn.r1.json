@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"lookAtTopN takes one filter and one pick count, so it cannot express a separate 'exactly these two colors' choice for each of the ten color pairs."}

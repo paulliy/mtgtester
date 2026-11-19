@@ -1,0 +1,2 @@
+Choose two targets: target creature, and target creature or planeswalker an opponent controls.
+This spell deals damage to the second target equal to the power of the first target. The first target creature is the source of that damage.

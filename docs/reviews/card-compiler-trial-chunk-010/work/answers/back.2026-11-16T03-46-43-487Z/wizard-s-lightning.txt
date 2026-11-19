@@ -1,0 +1,2 @@
+This spell costs {2} less to cast if you control at least one Wizard.
+This spell has no other effect.

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"artifactOrEnchantment","count":{"min":0,"max":2}}],"effects":[{"op":"destroyEachChosen","targetSlot":0}],"description":"Destroy up to two target artifacts and/or enchantments."}}}

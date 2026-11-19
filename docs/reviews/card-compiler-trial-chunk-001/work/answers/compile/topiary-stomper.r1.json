@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no conditional \"can't attack or block unless you control seven or more lands\" restriction on the creature itself: the attack and block restriction statics take no lands-count condition, and StaticEffect ops have no can't-attack or can't-block form."}

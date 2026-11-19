@@ -1,0 +1,1 @@
+Whenever another nontoken permanent you control is sacrificed, if it's your turn, put a number of +1/+1 counters equal to this creature's power on up to one target creature other than this creature.

@@ -1,0 +1,1 @@
+When this enters, you may pay {2}. When you do, choose target creature you control that is a Dinosaur and target creature other than that creature. The first creature deals damage equal to its power to the second creature.

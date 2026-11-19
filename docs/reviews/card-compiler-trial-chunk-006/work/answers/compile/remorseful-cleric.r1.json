@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"activatedAbilities":[{"costs":[{"kind":"sacrificeSelf"}],"timing":"any","ability":{"kind":"activated","targets":[{"kind":"player"}],"effects":[{"op":"exileTargetPlayerGraveyard","target":0}],"description":"Sacrifice this creature: Exile target player's graveyard."}}]}}

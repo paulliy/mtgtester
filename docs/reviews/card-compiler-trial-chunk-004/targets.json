@@ -1,0 +1,1920 @@
+[
+  {
+    "name": "Rain of Filth",
+    "rank": 3130,
+    "lines": ["Until end of turn, lands you control gain \"Sacrifice this land: Add {B}.\""]
+  },
+  {
+    "name": "Inferno Titan",
+    "rank": 3131,
+    "lines": [
+      "Whenever this creature enters or attacks, it deals 3 damage divided as you choose among one, two, or three targets."
+    ]
+  },
+  {
+    "name": "Windgrace's Judgment",
+    "rank": 3132,
+    "lines": ["For any number of opponents, destroy target nonland permanent that player controls."]
+  },
+  {
+    "name": "Test of Endurance",
+    "rank": 3134,
+    "lines": ["At the beginning of your upkeep, if you have 50 or more life, you win the game."]
+  },
+  {
+    "name": "Forth Eorlingas!",
+    "rank": 3137,
+    "lines": [
+      "Whenever one or more creatures you control deal combat damage to one or more players this turn, you become the monarch."
+    ]
+  },
+  {
+    "name": "Favorable Winds",
+    "rank": 3138,
+    "lines": ["Creatures you control with flying get +1/+1."]
+  },
+  {
+    "name": "Whispering Madness",
+    "rank": 3141,
+    "lines": ["Cipher"]
+  },
+  {
+    "name": "Ratadrabik of Urborg",
+    "rank": 3148,
+    "lines": [
+      "Whenever another legendary creature you control dies, create a token that's a copy of that creature, except it's not legendary and it's a 2/2 black Zombie in addition to its other colors and types."
+    ]
+  },
+  {
+    "name": "Phyrexian Triniform",
+    "rank": 3149,
+    "lines": ["Encore {12}"]
+  },
+  {
+    "name": "Heartless Hidetsugu",
+    "rank": 3150,
+    "lines": [
+      "{T}: ~ deals damage to each player equal to half that player's life total, rounded down."
+    ]
+  },
+  {
+    "name": "Celestial Armor",
+    "rank": 3151,
+    "lines": [
+      "When this Equipment enters, attach it to target creature you control. That creature gains hexproof and indestructible until end of turn."
+    ]
+  },
+  {
+    "name": "Norn's Choirmaster",
+    "rank": 3152,
+    "lines": ["Whenever a commander you control enters or attacks, proliferate."]
+  },
+  {
+    "name": "Geode Golem",
+    "rank": 3156,
+    "lines": [
+      "Whenever this creature deals combat damage to a player, you may cast your commander from the command zone without paying its mana cost."
+    ]
+  },
+  {
+    "name": "Etchings of the Chosen",
+    "rank": 3158,
+    "lines": [
+      "{1}, Sacrifice a creature of the chosen type: Target creature you control gains indestructible until end of turn."
+    ]
+  },
+  {
+    "name": "Planetarium of Wan Shi Tong",
+    "rank": 3160,
+    "lines": [
+      "Whenever you scry or surveil, look at the top card of your library. You may cast that card without paying its mana cost. Do this only once each turn."
+    ]
+  },
+  {
+    "name": "World at War",
+    "rank": 3161,
+    "lines": [
+      "After the second main phase this turn, there's an additional combat phase followed by an additional main phase. At the beginning of that combat, untap all creatures that attacked this turn."
+    ]
+  },
+  {
+    "name": "Master Biomancer",
+    "rank": 3162,
+    "lines": [
+      "Each other creature you control enters with a number of additional +1/+1 counters on it equal to this creature's power and as a Mutant in addition to its other types."
+    ]
+  },
+  {
+    "name": "Memory Lapse",
+    "rank": 3163,
+    "lines": [
+      "Counter target spell. If that spell is countered this way, put it on top of its owner's library instead of into that player's graveyard."
+    ]
+  },
+  {
+    "name": "Strength of Will",
+    "rank": 3168,
+    "lines": [
+      "Until end of turn, target creature you control gains indestructible and \"Whenever this creature is dealt damage, put that many +1/+1 counters on it.\""
+    ]
+  },
+  {
+    "name": "Ingenious Infiltrator",
+    "rank": 3172,
+    "lines": ["Ninjutsu {U}{B}"]
+  },
+  {
+    "name": "Conspicuous Snoop",
+    "rank": 3176,
+    "lines": [
+      "As long as the top card of your library is a Goblin card, this creature has all activated abilities of that card."
+    ]
+  },
+  {
+    "name": "Hermes, Overseer of Elpis",
+    "rank": 3178,
+    "lines": ["Whenever you attack with one or more Birds, scry 2."]
+  },
+  {
+    "name": "Mask of Griselbrand",
+    "rank": 3180,
+    "lines": [
+      "Whenever equipped creature dies, you may pay X life, where X is its power. If you do, draw X cards."
+    ]
+  },
+  {
+    "name": "Fandaniel, Telophoroi Ascian",
+    "rank": 3184,
+    "lines": [
+      "At the beginning of your end step, each opponent may sacrifice a nontoken creature of their choice. Each opponent who doesn't loses 2 life for each instant and sorcery card in your graveyard."
+    ]
+  },
+  {
+    "name": "Gríma, Saruman's Footman",
+    "rank": 3185,
+    "lines": [
+      "Whenever ~ deals combat damage to a player, that player exiles cards from the top of their library until they exile an instant or sorcery card. You may cast that card without paying its mana cost. Then that player puts the exiled cards that weren't cast this way on the bottom of their library in a random order."
+    ]
+  },
+  {
+    "name": "Scytheclaw Raptor",
+    "rank": 3188,
+    "lines": [
+      "Whenever a player casts a spell, if it's not their turn, this creature deals 4 damage to them."
+    ]
+  },
+  {
+    "name": "Titanoth Rex",
+    "rank": 3190,
+    "lines": ["When you cycle this card, put a trample counter on target creature you control."]
+  },
+  {
+    "name": "Yenna, Redtooth Regent",
+    "rank": 3192,
+    "lines": [
+      "{2}, {T}: Choose target enchantment you control that doesn't have the same name as another permanent you control. Create a token that's a copy of it, except it isn't legendary. If the token is an Aura, untap ~, then scry 2. Activate only as a sorcery."
+    ]
+  },
+  {
+    "name": "Ghost Vacuum",
+    "rank": 3200,
+    "lines": [
+      "{6}, {T}, Sacrifice this artifact: Put each creature card exiled with this artifact onto the battlefield under your control with a flying counter on it. Each of them is a 1/1 Spirit in addition to its other types. Activate only as a sorcery."
+    ]
+  },
+  {
+    "name": "Pippin, Guard of the Citadel",
+    "rank": 3202,
+    "lines": [
+      "{T}: Another target creature you control gains protection from the card type of your choice until end of turn."
+    ]
+  },
+  {
+    "name": "Spell Swindle",
+    "rank": 3203,
+    "lines": ["Counter target spell. Create X Treasure tokens, where X is that spell's mana value."]
+  },
+  {
+    "name": "Extract from Darkness",
+    "rank": 3205,
+    "lines": [
+      "Each player mills two cards. Then you put a creature card from a graveyard onto the battlefield under your control."
+    ]
+  },
+  {
+    "name": "Thornvault Forager",
+    "rank": 3208,
+    "lines": ["{T}, Forage: Add two mana in any combination of colors."]
+  },
+  {
+    "name": "Tree of Redemption",
+    "rank": 3209,
+    "lines": ["{T}: Exchange your life total with this creature's toughness."]
+  },
+  {
+    "name": "Ichor Rats",
+    "rank": 3210,
+    "lines": ["When this creature enters, each player gets a poison counter."]
+  },
+  {
+    "name": "Wakening Sun's Avatar",
+    "rank": 3213,
+    "lines": [
+      "When this creature enters, if you cast it from your hand, destroy all non-Dinosaur creatures."
+    ]
+  },
+  {
+    "name": "Shorikai, Genesis Engine",
+    "rank": 3214,
+    "lines": [
+      "{1}, {T}: Draw two cards, then discard a card. Create a 1/1 colorless Pilot creature token with \"~ crews Vehicles as though its power were 2 greater.\""
+    ]
+  },
+  {
+    "name": "Parhelion II",
+    "rank": 3217,
+    "lines": [
+      "Whenever ~ attacks, create two 4/4 white Angel creature tokens with flying and vigilance that are attacking."
+    ]
+  },
+  {
+    "name": "Chain of Smog",
+    "rank": 3222,
+    "lines": [
+      "Target player discards two cards. That player may copy this spell and may choose a new target for that copy."
+    ]
+  },
+  {
+    "name": "Mycosynth Golem",
+    "rank": 3224,
+    "lines": ["Artifact creature spells you cast have affinity for artifacts."]
+  },
+  {
+    "name": "Eiganjo Castle",
+    "rank": 3228,
+    "lines": [
+      "{W}, {T}: Prevent the next 2 damage that would be dealt to target legendary creature this turn."
+    ]
+  },
+  {
+    "name": "Irma, Part-Time Mutant",
+    "rank": 3229,
+    "lines": [
+      "At the beginning of combat on your turn, ~ becomes a copy of up to one other target creature you control, except her name is ~ and she has this ability. Then put a +1/+1 counter on her."
+    ]
+  },
+  {
+    "name": "O'aka, Traveling Merchant",
+    "rank": 3230,
+    "lines": ["{T}, Remove a counter from a nonland permanent you control: Draw a card."]
+  },
+  {
+    "name": "Éowyn, Fearless Knight",
+    "rank": 3233,
+    "lines": [
+      "When Éowyn enters, exile target creature an opponent controls with greater power. Legendary creatures you control gain protection from each of that creature's colors until end of turn."
+    ]
+  },
+  {
+    "name": "Ogre Battledriver",
+    "rank": 3237,
+    "lines": [
+      "Whenever another creature you control enters, that creature gets +2/+0 and gains haste until end of turn."
+    ]
+  },
+  {
+    "name": "Exalted Flamer of Tzeentch",
+    "rank": 3240,
+    "lines": [
+      "Sorcerous Inspiration — At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand."
+    ]
+  },
+  {
+    "name": "Leonin Warleader",
+    "rank": 3243,
+    "lines": [
+      "Whenever this creature attacks, create two 1/1 white Cat creature tokens with lifelink that are tapped and attacking."
+    ]
+  },
+  {
+    "name": "Grove of the Burnwillows",
+    "rank": 3245,
+    "lines": ["{T}: Add {R} or {G}. Each opponent gains 1 life."]
+  },
+  {
+    "name": "Sigil of Sleep",
+    "rank": 3246,
+    "lines": [
+      "Whenever enchanted creature deals damage to a player, return target creature that player controls to its owner's hand."
+    ]
+  },
+  {
+    "name": "Shelter",
+    "rank": 3248,
+    "lines": [
+      "Target creature you control gains protection from the color of your choice until end of turn."
+    ]
+  },
+  {
+    "name": "Rampant Rejuvenator",
+    "rank": 3251,
+    "lines": [
+      "When this creature dies, search your library for up to X basic land cards, where X is this creature's power, put them onto the battlefield, then shuffle."
+    ]
+  },
+  {
+    "name": "Goblin Chirurgeon",
+    "rank": 3255,
+    "lines": ["Sacrifice a Goblin: Regenerate target creature."]
+  },
+  {
+    "name": "Mana Flare",
+    "rank": 3256,
+    "lines": [
+      "Whenever a player taps a land for mana, that player adds one mana of any type that land produced."
+    ]
+  },
+  {
+    "name": "Thundermane Dragon",
+    "rank": 3257,
+    "lines": [
+      "You may cast creature spells with power 4 or greater from the top of your library. If you cast a creature spell this way, it gains haste until end of turn."
+    ]
+  },
+  {
+    "name": "Heat Shimmer",
+    "rank": 3259,
+    "lines": [
+      "Create a token that's a copy of target creature, except it has haste and \"At the beginning of the end step, exile this token.\""
+    ]
+  },
+  {
+    "name": "Serra Paragon",
+    "rank": 3261,
+    "lines": [
+      "Once during each of your turns, you may play a land from your graveyard or cast a permanent spell with mana value 3 or less from your graveyard. If you do, it gains \"When this permanent is put into a graveyard from the battlefield, exile it and you gain 2 life.\""
+    ]
+  },
+  {
+    "name": "Angelic Accord",
+    "rank": 3262,
+    "lines": [
+      "At the beginning of each end step, if you gained 4 or more life this turn, create a 4/4 white Angel creature token with flying."
+    ]
+  },
+  {
+    "name": "Sunfall",
+    "rank": 3263,
+    "lines": [
+      "Exile all creatures. Incubate X, where X is the number of creatures exiled this way."
+    ]
+  },
+  {
+    "name": "Scion of Calamity",
+    "rank": 3266,
+    "lines": ["Myriad"]
+  },
+  {
+    "name": "Arabella, Abandoned Doll",
+    "rank": 3269,
+    "lines": [
+      "Whenever ~ attacks, it deals X damage to each opponent and you gain X life, where X is the number of creatures you control with power 2 or less."
+    ]
+  },
+  {
+    "name": "Basim Ibn Ishaq",
+    "rank": 3272,
+    "lines": [
+      "Whenever you cast a historic spell, draw a card. ~ can't be blocked this turn. This ability triggers only once each turn."
+    ]
+  },
+  {
+    "name": "Bane of Bala Ged",
+    "rank": 3274,
+    "lines": [
+      "Whenever this creature attacks, defending player exiles two permanents they control."
+    ]
+  },
+  {
+    "name": "Goblin Recruiter",
+    "rank": 3275,
+    "lines": [
+      "When this creature enters, search your library for any number of Goblin cards, reveal them, then shuffle and put those cards on top in any order."
+    ]
+  },
+  {
+    "name": "Gods Willing",
+    "rank": 3277,
+    "lines": [
+      "Target creature you control gains protection from the color of your choice until end of turn."
+    ]
+  },
+  {
+    "name": "Mortality Spear",
+    "rank": 3278,
+    "lines": ["This spell costs {2} less to cast if you gained life this turn."]
+  },
+  {
+    "name": "Scurry of Squirrels",
+    "rank": 3279,
+    "lines": ["Myriad, myriad"]
+  },
+  {
+    "name": "Renegade Tactics",
+    "rank": 3280,
+    "lines": ["Target creature can't block this turn."]
+  },
+  {
+    "name": "Evolutionary Leap",
+    "rank": 3282,
+    "lines": [
+      "{G}, Sacrifice a creature: Reveal cards from the top of your library until you reveal a creature card. Put that card into your hand and the rest on the bottom of your library in a random order."
+    ]
+  },
+  {
+    "name": "Kinjalli's Sunwing",
+    "rank": 3284,
+    "lines": ["Creatures your opponents control enter tapped."]
+  },
+  {
+    "name": "Command Bridge",
+    "rank": 3286,
+    "lines": [
+      "When this land enters, sacrifice it unless you tap an untapped permanent you control."
+    ]
+  },
+  {
+    "name": "Monstrous Rage",
+    "rank": 3287,
+    "lines": [
+      "Target creature gets +2/+0 until end of turn. Create a Monster Role token attached to it."
+    ]
+  },
+  {
+    "name": "Devastating Onslaught",
+    "rank": 3290,
+    "lines": [
+      "Create X tokens that are copies of target artifact or creature you control. Those tokens gain haste until end of turn. Sacrifice them at the beginning of the next end step."
+    ]
+  },
+  {
+    "name": "Blazing Crescendo",
+    "rank": 3296,
+    "lines": [
+      "Exile the top card of your library. Until the end of your next turn, you may play that card."
+    ]
+  },
+  {
+    "name": "Goblin King",
+    "rank": 3297,
+    "lines": ["Other Goblins get +1/+1 and have mountainwalk."]
+  },
+  {
+    "name": "Ensnared by the Mara",
+    "rank": 3302,
+    "lines": [
+      "Each opponent faces a villainous choice — They exile cards from the top of their library until they exile a nonland card, then you may cast that card without paying its mana cost, or that player exiles the top four cards of their library and ~ deals damage equal to the total mana value of those exiled cards to that player."
+    ]
+  },
+  {
+    "name": "Soul's Majesty",
+    "rank": 3305,
+    "lines": ["Draw cards equal to the power of target creature you control."]
+  },
+  {
+    "name": "Hope of Ghirapur",
+    "rank": 3306,
+    "lines": [
+      "Sacrifice ~: Until your next turn, target player who was dealt combat damage by ~ this turn can't cast noncreature spells."
+    ]
+  },
+  {
+    "name": "Vorel of the Hull Clade",
+    "rank": 3324,
+    "lines": [
+      "{G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land."
+    ]
+  },
+  {
+    "name": "Stinging Study",
+    "rank": 3326,
+    "lines": [
+      "You draw X cards and you lose X life, where X is the mana value of a commander you own on the battlefield or in the command zone."
+    ]
+  },
+  {
+    "name": "Quest for Renewal",
+    "rank": 3327,
+    "lines": [
+      "As long as there are four or more quest counters on this enchantment, untap all creatures you control during each other player's untap step."
+    ]
+  },
+  {
+    "name": "Coalition Relic",
+    "rank": 3328,
+    "lines": [
+      "At the beginning of your first main phase, remove all charge counters from this artifact. Add one mana of any color for each charge counter removed this way."
+    ]
+  },
+  {
+    "name": "Yeva, Nature's Herald",
+    "rank": 3329,
+    "lines": ["You may cast green creature spells as though they had flash."]
+  },
+  {
+    "name": "Lembas",
+    "rank": 3333,
+    "lines": [
+      "When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library."
+    ]
+  },
+  {
+    "name": "Dire Fleet Daredevil",
+    "rank": 3335,
+    "lines": [
+      "When this creature enters, exile target instant or sorcery card from an opponent's graveyard. You may cast it this turn, and mana of any type can be spent to cast that spell. If that spell would be put into a graveyard, exile it instead."
+    ]
+  },
+  {
+    "name": "Oscorp Industries",
+    "rank": 3336,
+    "lines": ["Mayhem"]
+  },
+  {
+    "name": "Vizier of Tumbling Sands",
+    "rank": 3337,
+    "lines": ["When you cycle this card, untap target permanent."]
+  },
+  {
+    "name": "Ghostway",
+    "rank": 3340,
+    "lines": [
+      "Exile each creature you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step."
+    ]
+  },
+  {
+    "name": "Lord of the Void",
+    "rank": 3341,
+    "lines": [
+      "Whenever this creature deals combat damage to a player, exile the top seven cards of that player's library, then put a creature card from among them onto the battlefield under your control."
+    ]
+  },
+  {
+    "name": "Counterbalance",
+    "rank": 3342,
+    "lines": [
+      "Whenever an opponent casts a spell, you may reveal the top card of your library. If you do, counter that spell if it has the same mana value as the revealed card."
+    ]
+  },
+  {
+    "name": "Squirrel Nest",
+    "rank": 3343,
+    "lines": ["Enchanted land has \"{T}: Create a 1/1 green Squirrel creature token.\""]
+  },
+  {
+    "name": "Inventory Management",
+    "rank": 3346,
+    "lines": [
+      "For each Aura and Equipment you control, you may attach it to a creature you control."
+    ]
+  },
+  {
+    "name": "Blitzball",
+    "rank": 3352,
+    "lines": [
+      "GOOOOAAAALLL! — {T}, Sacrifice this artifact: Draw two cards. Activate only if an opponent was dealt combat damage by a legendary creature this turn."
+    ]
+  },
+  {
+    "name": "Fain, the Broker",
+    "rank": 3354,
+    "lines": ["{T}, Remove a counter from a creature you control: Create a Treasure token."]
+  },
+  {
+    "name": "Lulu, Stern Guardian",
+    "rank": 3356,
+    "lines": [
+      "Whenever an opponent attacks you, choose target creature attacking you. Put a stun counter on that creature."
+    ]
+  },
+  {
+    "name": "Increasing Devotion",
+    "rank": 3357,
+    "lines": [
+      "Create five 1/1 white Human creature tokens. If this spell was cast from a graveyard, create ten of those tokens instead."
+    ]
+  },
+  {
+    "name": "Doubling Cube",
+    "rank": 3358,
+    "lines": ["{3}, {T}: Double the amount of each type of unspent mana you have."]
+  },
+  {
+    "name": "Reckless Endeavor",
+    "rank": 3360,
+    "lines": [
+      "Roll two d12 and choose one result. ~ deals damage equal to that result to each creature. Then create a number of Treasure tokens equal to the other result."
+    ]
+  },
+  {
+    "name": "Winter Orb",
+    "rank": 3368,
+    "lines": [
+      "As long as this artifact is untapped, players can't untap more than one land during their untap steps."
+    ]
+  },
+  {
+    "name": "Cori Mountain Monastery",
+    "rank": 3370,
+    "lines": [
+      "{3}{R}, {T}: Exile the top card of your library. Until the end of your next turn, you may play that card."
+    ]
+  },
+  {
+    "name": "Selective Obliteration",
+    "rank": 3373,
+    "lines": [
+      "Each player chooses a color. Then exile each permanent unless it's colorless or it's only the color its controller chose."
+    ]
+  },
+  {
+    "name": "Speaker of the Heavens",
+    "rank": 3374,
+    "lines": [
+      "{T}: Create a 4/4 white Angel creature token with flying. Activate only if you have at least 7 life more than your starting life total and only as a sorcery."
+    ]
+  },
+  {
+    "name": "Eye of Nidhogg",
+    "rank": 3376,
+    "lines": [
+      "Enchanted creature is a black Dragon with base power and toughness 4/2, has flying and deathtouch, and is goaded."
+    ]
+  },
+  {
+    "name": "Tormented Soul",
+    "rank": 3378,
+    "lines": ["~ can't block and can't be blocked."]
+  },
+  {
+    "name": "Visions of Beyond",
+    "rank": 3384,
+    "lines": [
+      "Draw a card. If a graveyard has twenty or more cards in it, draw three cards instead."
+    ]
+  },
+  {
+    "name": "Deadbridge Chant",
+    "rank": 3385,
+    "lines": [
+      "At the beginning of your upkeep, choose a card at random in your graveyard. If it's a creature card, put it onto the battlefield. Otherwise, put it into your hand."
+    ]
+  },
+  {
+    "name": "Daybreak Coronet",
+    "rank": 3387,
+    "lines": ["Enchant creature with another Aura attached to it"]
+  },
+  {
+    "name": "Nest of Scarabs",
+    "rank": 3392,
+    "lines": [
+      "Whenever you put one or more -1/-1 counters on a creature, create that many 1/1 black Insect creature tokens."
+    ]
+  },
+  {
+    "name": "Ulamog's Dreadsire",
+    "rank": 3397,
+    "lines": ["Ward—Sacrifice a permanent with mana value 1 or greater."]
+  },
+  {
+    "name": "Wirewood Symbiote",
+    "rank": 3399,
+    "lines": [
+      "Return an Elf you control to its owner's hand: Untap target creature. Activate only once each turn."
+    ]
+  },
+  {
+    "name": "Heliod, God of the Sun",
+    "rank": 3400,
+    "lines": ["As long as your devotion to white is less than five, ~ isn't a creature."]
+  },
+  {
+    "name": "General's Enforcer",
+    "rank": 3401,
+    "lines": [
+      "{2}{W}{B}: Exile target card from a graveyard. If it was a creature card, create a 1/1 white Human Soldier creature token."
+    ]
+  },
+  {
+    "name": "Invigorate",
+    "rank": 3402,
+    "lines": [
+      "If you control a Forest, rather than pay this spell's mana cost, you may have an opponent gain 3 life."
+    ]
+  },
+  {
+    "name": "Axgard Armory",
+    "rank": 3405,
+    "lines": [
+      "{1}{R}{R}{W}, {T}, Sacrifice this land: Search your library for an Aura card and/or an Equipment card, reveal them, put them into your hand, then shuffle."
+    ]
+  },
+  {
+    "name": "Necromantic Selection",
+    "rank": 3410,
+    "lines": [
+      "Destroy all creatures, then return a creature card put into a graveyard this way to the battlefield under your control. It's a black Zombie in addition to its other colors and types. Exile ~."
+    ]
+  },
+  {
+    "name": "Nylea, God of the Hunt",
+    "rank": 3412,
+    "lines": ["As long as your devotion to green is less than five, ~ isn't a creature."]
+  },
+  {
+    "name": "Ignite the Future",
+    "rank": 3413,
+    "lines": [
+      "Exile the top three cards of your library. Until the end of your next turn, you may play those cards. If this spell was cast from a graveyard, you may play cards this way without paying their mana costs."
+    ]
+  },
+  {
+    "name": "Ardyn, the Usurper",
+    "rank": 3414,
+    "lines": [
+      "Starscourge — At the beginning of combat on your turn, exile up to one target creature card from a graveyard. If you exiled a card this way, create a token that's a copy of that card, except it's a 5/5 black Demon."
+    ]
+  },
+  {
+    "name": "Lathril, Blade of the Elves",
+    "rank": 3416,
+    "lines": [
+      "{T}, Tap ten untapped Elves you control: Each opponent loses 10 life and you gain 10 life."
+    ]
+  },
+  {
+    "name": "Tempting Contract",
+    "rank": 3417,
+    "lines": [
+      "At the beginning of your upkeep, each opponent may create a Treasure token. For each opponent who does, you create a Treasure token."
+    ]
+  },
+  {
+    "name": "All-Out Assault",
+    "rank": 3418,
+    "lines": [
+      "When this enchantment enters, if it's your main phase, there is an additional combat phase after this phase followed by an additional main phase. When you next attack this turn, untap each creature you control."
+    ]
+  },
+  {
+    "name": "Master of the Pearl Trident",
+    "rank": 3419,
+    "lines": ["Other Merfolk creatures you control get +1/+1 and have islandwalk."]
+  },
+  {
+    "name": "Tifa Lockhart",
+    "rank": 3420,
+    "lines": ["Whenever a land you control enters, double ~'s power until end of turn."]
+  },
+  {
+    "name": "Abandon Attachments",
+    "rank": 3421,
+    "lines": ["You may discard a card. If you do, draw two cards."]
+  },
+  {
+    "name": "Andúril, Flame of the West",
+    "rank": 3428,
+    "lines": [
+      "Whenever equipped creature attacks, create two tapped 1/1 white Spirit creature tokens with flying. If that creature is legendary, instead create two of those tokens that are tapped and attacking."
+    ]
+  },
+  {
+    "name": "Trailtracker Scout",
+    "rank": 3434,
+    "lines": [
+      "Whenever you expend 8, return up to one target permanent card from your graveyard to your hand."
+    ]
+  },
+  {
+    "name": "Devilish Valet",
+    "rank": 3435,
+    "lines": [
+      "Whenever another creature you control enters, double this creature's power until end of turn."
+    ]
+  },
+  {
+    "name": "Species Specialist",
+    "rank": 3437,
+    "lines": ["Whenever a creature of the chosen type dies, you may draw a card."]
+  },
+  {
+    "name": "Burning Inquiry",
+    "rank": 3441,
+    "lines": ["Each player draws three cards, then discards three cards at random."]
+  },
+  {
+    "name": "Gogo, Master of Mimicry",
+    "rank": 3445,
+    "lines": [
+      "{X}{X}, {T}: Copy target activated or triggered ability you control X times. You may choose new targets for the copies. This ability can't be copied and X can't be 0."
+    ]
+  },
+  {
+    "name": "Thryx, the Sudden Storm",
+    "rank": 3448,
+    "lines": [
+      "Spells you cast with mana value 5 or greater cost {1} less to cast and can't be countered."
+    ]
+  },
+  {
+    "name": "Chrome Host Seedshark",
+    "rank": 3449,
+    "lines": [
+      "Whenever you cast a noncreature spell, incubate X, where X is that spell's mana value."
+    ]
+  },
+  {
+    "name": "Smile at Death",
+    "rank": 3453,
+    "lines": [
+      "At the beginning of your upkeep, return up to two target creature cards with power 2 or less from your graveyard to the battlefield. Put a +1/+1 counter on each of those creatures."
+    ]
+  },
+  {
+    "name": "Good-Fortune Unicorn",
+    "rank": 3454,
+    "lines": ["Whenever another creature you control enters, put a +1/+1 counter on that creature."]
+  },
+  {
+    "name": "Countersquall",
+    "rank": 3457,
+    "lines": ["Counter target noncreature spell. Its controller loses 2 life."]
+  },
+  {
+    "name": "Fiendish Duo",
+    "rank": 3460,
+    "lines": [
+      "If a source would deal damage to an opponent, it deals double that damage to that player instead."
+    ]
+  },
+  {
+    "name": "Yedora, Grave Gardener",
+    "rank": 3461,
+    "lines": [
+      "Whenever another nontoken creature you control dies, you may return it to the battlefield face down under its owner's control. It's a Forest land."
+    ]
+  },
+  {
+    "name": "Deep Forest Hermit",
+    "rank": 3465,
+    "lines": ["Vanishing 3"]
+  },
+  {
+    "name": "Eden, Seat of the Sanctum",
+    "rank": 3466,
+    "lines": [
+      "{5}, {T}: Mill two cards. Then you may sacrifice this land. When you do, return another target permanent card from your graveyard to your hand."
+    ]
+  },
+  {
+    "name": "Soul of New Phyrexia",
+    "rank": 3469,
+    "lines": [
+      "{5}, Exile this card from your graveyard: Permanents you control gain indestructible until end of turn."
+    ]
+  },
+  {
+    "name": "Mutable Explorer",
+    "rank": 3471,
+    "lines": ["When this creature enters, create a tapped Mutavault token."]
+  },
+  {
+    "name": "Didn't Say Please",
+    "rank": 3474,
+    "lines": ["Counter target spell. Its controller mills three cards."]
+  },
+  {
+    "name": "Torpor Orb",
+    "rank": 3476,
+    "lines": ["Creatures entering don't cause abilities to trigger."]
+  },
+  {
+    "name": "Eidolon of Rhetoric",
+    "rank": 3477,
+    "lines": ["Each player can't cast more than one spell each turn."]
+  },
+  {
+    "name": "Searslicer Goblin",
+    "rank": 3483,
+    "lines": [
+      "At the beginning of your end step, if you attacked this turn, create a 1/1 red Goblin creature token."
+    ]
+  },
+  {
+    "name": "Nesting Dragon",
+    "rank": 3484,
+    "lines": [
+      "Whenever a land you control enters, create a 0/2 red Dragon Egg creature token with defender and \"When this token dies, create a 2/2 red Dragon creature token with flying and '{R}: ~ gets +1/+0 until end of turn.'\""
+    ]
+  },
+  {
+    "name": "Darksteel Reactor",
+    "rank": 3485,
+    "lines": ["When this artifact has twenty or more charge counters on it, you win the game."]
+  },
+  {
+    "name": "Raid Bombardment",
+    "rank": 3490,
+    "lines": [
+      "Whenever a creature you control with power 2 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking."
+    ]
+  },
+  {
+    "name": "Gishath, Sun's Avatar",
+    "rank": 3491,
+    "lines": [
+      "Whenever ~ deals combat damage to a player, reveal that many cards from the top of your library. Put any number of Dinosaur creature cards from among them onto the battlefield and the rest on the bottom of your library in a random order."
+    ]
+  },
+  {
+    "name": "Wall of Roots",
+    "rank": 3495,
+    "lines": ["Put a -0/-1 counter on this creature: Add {G}. Activate only once each turn."]
+  },
+  {
+    "name": "Winged Words",
+    "rank": 3497,
+    "lines": ["This spell costs {1} less to cast if you control a creature with flying."]
+  },
+  {
+    "name": "Patron of the Vein",
+    "rank": 3498,
+    "lines": [
+      "Whenever a creature an opponent controls dies, exile it and put a +1/+1 counter on each Vampire you control."
+    ]
+  },
+  {
+    "name": "Sphinx's Tutelage",
+    "rank": 3502,
+    "lines": [
+      "Whenever you draw a card, target opponent mills two cards. If two nonland cards that share a color were milled this way, repeat this process."
+    ]
+  },
+  {
+    "name": "Timetwister",
+    "rank": 3504,
+    "lines": [
+      "Each player shuffles their hand and graveyard into their library, then draws seven cards."
+    ]
+  },
+  {
+    "name": "Deceptive Frostkite",
+    "rank": 3511,
+    "lines": [
+      "You may have this creature enter as a copy of a creature you control with power 4 or greater, except it's a Dragon in addition to its other types and it has flying."
+    ]
+  },
+  {
+    "name": "Spellstutter Sprite",
+    "rank": 3513,
+    "lines": [
+      "When this creature enters, counter target spell with mana value X or less, where X is the number of Faeries you control."
+    ]
+  },
+  {
+    "name": "Captivating Crew",
+    "rank": 3514,
+    "lines": [
+      "{3}{R}: Gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until end of turn. Activate only as a sorcery."
+    ]
+  },
+  {
+    "name": "Come Back Wrong",
+    "rank": 3516,
+    "lines": [
+      "Destroy target creature. If a creature card is put into a graveyard this way, return it to the battlefield under your control. Sacrifice it at the beginning of your next end step."
+    ]
+  },
+  {
+    "name": "Gluntch, the Bestower",
+    "rank": 3529,
+    "lines": [
+      "At the beginning of your end step, choose a player. They put two +1/+1 counters on a creature they control. Choose a second player to draw a card. Then choose a third player to create two Treasure tokens."
+    ]
+  },
+  {
+    "name": "Waterbender Ascension",
+    "rank": 3531,
+    "lines": ["Waterbend {4}: Target creature can't be blocked this turn."]
+  },
+  {
+    "name": "Rose Room Treasurer",
+    "rank": 3532,
+    "lines": [
+      "Whenever another creature you control enters, create a Treasure token if this is the first or second time this ability has resolved this turn. Otherwise, you may pay {X}. When you do, this creature deals X damage to any target."
+    ]
+  },
+  {
+    "name": "Shadow in the Warp",
+    "rank": 3533,
+    "lines": ["The first creature spell you cast each turn costs {2} less to cast."]
+  },
+  {
+    "name": "Invigorating Surge",
+    "rank": 3535,
+    "lines": [
+      "Put a +1/+1 counter on target creature you control, then double the number of +1/+1 counters on that creature."
+    ]
+  },
+  {
+    "name": "Guild Artisan",
+    "rank": 3537,
+    "lines": [
+      "Commander creatures you own have \"Whenever this creature attacks a player, if no opponent has more life than that player, you create two Treasure tokens.\""
+    ]
+  },
+  {
+    "name": "Dragonborn Champion",
+    "rank": 3544,
+    "lines": ["Whenever a source you control deals 5 or more damage to a player, draw a card."]
+  },
+  {
+    "name": "Repurposing Bay",
+    "rank": 3546,
+    "lines": [
+      "{2}, {T}, Sacrifice another artifact: Search your library for an artifact card with mana value equal to 1 plus the sacrificed artifact's mana value, put that card onto the battlefield, then shuffle. Activate only as a sorcery."
+    ]
+  },
+  {
+    "name": "Animar, Soul of Elements",
+    "rank": 3548,
+    "lines": ["Creature spells you cast cost {1} less to cast for each +1/+1 counter on ~."]
+  },
+  {
+    "name": "Mind's Desire",
+    "rank": 3551,
+    "lines": [
+      "Shuffle your library. Then exile the top card of your library. Until end of turn, you may play that card without paying its mana cost."
+    ]
+  },
+  {
+    "name": "Idolized",
+    "rank": 3552,
+    "lines": [
+      "Enchanted creature has \"Whenever this creature attacks alone, it gets +X/+X until end of turn, where X is the number of nonland permanents you control.\""
+    ]
+  },
+  {
+    "name": "Magus of the Candelabra",
+    "rank": 3553,
+    "lines": ["{X}, {T}: Untap X target lands."]
+  },
+  {
+    "name": "Clone Legion",
+    "rank": 3554,
+    "lines": [
+      "For each creature target player controls, create a token that's a copy of that creature."
+    ]
+  },
+  {
+    "name": "Prisoner's Dilemma",
+    "rank": 3561,
+    "lines": [
+      "Each opponent secretly chooses silence or snitch, then the choices are revealed. If each opponent chose silence, ~ deals 4 damage to each of them. If each opponent chose snitch, ~ deals 8 damage to each of them. Otherwise, ~ deals 12 damage to each opponent who chose silence."
+    ]
+  },
+  {
+    "name": "Retether",
+    "rank": 3562,
+    "lines": [
+      "Return each Aura card from your graveyard to the battlefield. Only creatures can be enchanted this way."
+    ]
+  },
+  {
+    "name": "Folk Hero",
+    "rank": 3569,
+    "lines": [
+      "Commander creatures you own have \"Whenever you cast a spell that shares a creature type with this creature, draw a card. This ability triggers only once each turn.\""
+    ]
+  },
+  {
+    "name": "Karametra, God of Harvests",
+    "rank": 3571,
+    "lines": ["As long as your devotion to green and white is less than seven, ~ isn't a creature."]
+  },
+  {
+    "name": "Rise and Shine",
+    "rank": 3575,
+    "lines": [
+      "Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on each artifact that became a creature this way."
+    ]
+  },
+  {
+    "name": "Echoing Assault",
+    "rank": 3576,
+    "lines": [
+      "Whenever you attack a player, choose target nontoken creature that's attacking that player. Create a token that's a copy of that creature, except it's 1/1. The token enters tapped and attacking that player. Sacrifice it at the beginning of the next end step."
+    ]
+  },
+  {
+    "name": "Liquimetal Coating",
+    "rank": 3578,
+    "lines": [
+      "{T}: Target permanent becomes an artifact in addition to its other types until end of turn."
+    ]
+  },
+  {
+    "name": "Shadow of the Second Sun",
+    "rank": 3585,
+    "lines": [
+      "At the beginning of each of enchanted player's postcombat main phases, there is an additional beginning phase after this phase."
+    ]
+  },
+  {
+    "name": "Garna, Bloodfist of Keld",
+    "rank": 3597,
+    "lines": [
+      "Whenever another creature you control dies, draw a card if it was attacking. Otherwise, ~ deals 1 damage to each opponent."
+    ]
+  },
+  {
+    "name": "Markov Baron",
+    "rank": 3600,
+    "lines": ["Madness {2}{B}"]
+  },
+  {
+    "name": "Aether Gale",
+    "rank": 3605,
+    "lines": ["Return six target nonland permanents to their owners' hands."]
+  },
+  {
+    "name": "Screaming Nemesis",
+    "rank": 3606,
+    "lines": [
+      "Whenever this creature is dealt damage, it deals that much damage to any other target. If a player is dealt damage this way, they can't gain life for the rest of the game."
+    ]
+  },
+  {
+    "name": "Storm of Saruman",
+    "rank": 3609,
+    "lines": [
+      "Whenever you cast your second spell each turn, copy it, except the copy isn't legendary. You may choose new targets for the copy."
+    ]
+  },
+  {
+    "name": "Victory Chimes",
+    "rank": 3611,
+    "lines": ["{T}: A player of your choice adds {C}."]
+  },
+  {
+    "name": "Greenwarden of Murasa",
+    "rank": 3614,
+    "lines": [
+      "When this creature dies, you may exile it. If you do, return target card from your graveyard to your hand."
+    ]
+  },
+  {
+    "name": "Dread Summons",
+    "rank": 3616,
+    "lines": [
+      "Each player mills X cards. For each creature card put into a graveyard this way, you create a tapped 2/2 black Zombie creature token."
+    ]
+  },
+  {
+    "name": "Brave the Elements",
+    "rank": 3617,
+    "lines": [
+      "Choose a color. White creatures you control gain protection from the chosen color until end of turn."
+    ]
+  },
+  {
+    "name": "Polyraptor",
+    "rank": 3620,
+    "lines": [
+      "Whenever this creature is dealt damage, create a token that's a copy of this creature."
+    ]
+  },
+  {
+    "name": "Kor Haven",
+    "rank": 3622,
+    "lines": [
+      "{1}{W}, {T}: Prevent all combat damage that would be dealt by target attacking creature this turn."
+    ]
+  },
+  {
+    "name": "Rograkh, Son of Rohgahh",
+    "rank": 3628,
+    "lines": ["Partner"]
+  },
+  {
+    "name": "Secrets of the Dead",
+    "rank": 3629,
+    "lines": ["Whenever you cast a spell from your graveyard, draw a card."]
+  },
+  {
+    "name": "Transmute Artifact",
+    "rank": 3630,
+    "lines": [
+      "Sacrifice an artifact. If you do, search your library for an artifact card. If that card's mana value is less than or equal to the sacrificed artifact's mana value, put it onto the battlefield. If it's greater, you may pay {X}, where X is the difference. If you do, put it onto the battlefield. If you don't, put it into its owner's graveyard. Then shuffle."
+    ]
+  },
+  {
+    "name": "Wildwood Scourge",
+    "rank": 3631,
+    "lines": [
+      "Whenever one or more +1/+1 counters are put on another non-Hydra creature you control, put a +1/+1 counter on this creature."
+    ]
+  },
+  {
+    "name": "Treebeard, Gracious Host",
+    "rank": 3633,
+    "lines": [
+      "Whenever you gain life, put that many +1/+1 counters on target Halfling or Treefolk."
+    ]
+  },
+  {
+    "name": "Neyali, Suns' Vanguard",
+    "rank": 3635,
+    "lines": [
+      "Whenever one or more tokens you control attack a player, exile the top card of your library. During any turn you attacked with a token, you may play that card."
+    ]
+  },
+  {
+    "name": "Syncopate",
+    "rank": 3636,
+    "lines": [
+      "Counter target spell unless its controller pays {X}. If that spell is countered this way, exile it instead of putting it into its owner's graveyard."
+    ]
+  },
+  {
+    "name": "Phyresis Outbreak",
+    "rank": 3637,
+    "lines": [
+      "Each opponent gets a poison counter. Then each creature your opponents control gets -1/-1 until end of turn for each poison counter its controller has."
+    ]
+  },
+  {
+    "name": "Fynn, the Fangbearer",
+    "rank": 3639,
+    "lines": [
+      "Whenever a creature you control with deathtouch deals combat damage to a player, that player gets two poison counters."
+    ]
+  },
+  {
+    "name": "Overlord of the Mistmoors",
+    "rank": 3641,
+    "lines": ["Impending 4—{2}{W}{W}"]
+  },
+  {
+    "name": "Sharding Sphinx",
+    "rank": 3643,
+    "lines": [
+      "Whenever an artifact creature you control deals combat damage to a player, you may create a 1/1 blue Thopter artifact creature token with flying."
+    ]
+  },
+  {
+    "name": "Lathiel, the Bounteous Dawn",
+    "rank": 3644,
+    "lines": [
+      "At the beginning of each end step, if you gained life this turn, distribute up to that many +1/+1 counters among any number of other target creatures."
+    ]
+  },
+  {
+    "name": "Breaching Dragonstorm",
+    "rank": 3647,
+    "lines": [
+      "When this enchantment enters, exile cards from the top of your library until you exile a nonland card. You may cast it without paying its mana cost if that spell's mana value is 8 or less. If you don't, put that card into your hand."
+    ]
+  },
+  {
+    "name": "Pack Rat",
+    "rank": 3648,
+    "lines": ["{2}{B}, Discard a card: Create a token that's a copy of this creature."]
+  },
+  {
+    "name": "Minds Aglow",
+    "rank": 3650,
+    "lines": [
+      "Starting with you, each player may pay any amount of mana. Each player draws X cards, where X is the total amount of mana paid this way."
+    ]
+  },
+  {
+    "name": "Thirst for Discovery",
+    "rank": 3654,
+    "lines": ["Draw three cards. Then discard two cards unless you discard a basic land card."]
+  },
+  {
+    "name": "Mnemonic Deluge",
+    "rank": 3659,
+    "lines": [
+      "Exile target instant or sorcery card from a graveyard. Copy that card three times. You may cast the copies without paying their mana costs. Exile ~."
+    ]
+  },
+  {
+    "name": "Florian, Voldaren Scion",
+    "rank": 3660,
+    "lines": [
+      "At the beginning of each of your postcombat main phases, look at the top X cards of your library, where X is the total amount of life your opponents lost this turn. Exile one of those cards and put the rest on the bottom of your library in a random order. You may play the exiled card this turn."
+    ]
+  },
+  {
+    "name": "Sanctum of Eternity",
+    "rank": 3662,
+    "lines": [
+      "{2}, {T}: Return target commander you own from the battlefield to your hand. Activate only during your turn."
+    ]
+  },
+  {
+    "name": "Edric, Spymaster of Trest",
+    "rank": 3665,
+    "lines": [
+      "Whenever a creature deals combat damage to one of your opponents, its controller may draw a card."
+    ]
+  },
+  {
+    "name": "Astarion's Thirst",
+    "rank": 3667,
+    "lines": [
+      "Exile target creature. Put X +1/+1 counters on a commander creature you control, where X is the power of the creature exiled this way."
+    ]
+  },
+  {
+    "name": "Access Denied",
+    "rank": 3670,
+    "lines": [
+      "Counter target spell. Create X 1/1 colorless Thopter artifact creature tokens with flying, where X is that spell's mana value."
+    ]
+  },
+  {
+    "name": "Diluvian Primordial",
+    "rank": 3671,
+    "lines": [
+      "When this creature enters, for each opponent, you may cast up to one target instant or sorcery card from that player's graveyard without paying its mana cost. If a spell cast this way would be put into a graveyard, exile it instead."
+    ]
+  },
+  {
+    "name": "Hidden Nursery",
+    "rank": 3673,
+    "lines": ["{4}{G}, {T}, Sacrifice this land: Discover 4. Activate only as a sorcery."]
+  },
+  {
+    "name": "Stocking the Pantry",
+    "rank": 3676,
+    "lines": [
+      "Whenever you put one or more +1/+1 counters on a creature you control, put a supply counter on this enchantment."
+    ]
+  },
+  {
+    "name": "Coercive Recruiter",
+    "rank": 3677,
+    "lines": [
+      "Whenever this creature or another Pirate you control enters, gain control of target creature until end of turn. Untap that creature. Until end of turn, it gains haste and becomes a Pirate in addition to its other types."
+    ]
+  },
+  {
+    "name": "Dark Petition",
+    "rank": 3678,
+    "lines": [
+      "If there are two or more instant and/or sorcery cards in your graveyard, add {B}{B}{B}."
+    ]
+  },
+  {
+    "name": "Nibelheim Aflame",
+    "rank": 3681,
+    "lines": [
+      "Choose target creature you control. It deals damage equal to its power to each other creature. If this spell was cast from a graveyard, discard your hand and draw four cards."
+    ]
+  },
+  {
+    "name": "Another Round",
+    "rank": 3683,
+    "lines": [
+      "Exile any number of creatures you control, then return them to the battlefield under their owner's control. Then repeat this process X more times."
+    ]
+  },
+  {
+    "name": "Infiltration Lens",
+    "rank": 3690,
+    "lines": ["Whenever equipped creature becomes blocked by a creature, you may draw two cards."]
+  },
+  {
+    "name": "Flourishing Defenses",
+    "rank": 3693,
+    "lines": [
+      "Whenever a -1/-1 counter is put on a creature, you may create a 1/1 green Elf Warrior creature token."
+    ]
+  },
+  {
+    "name": "Faithful Mending",
+    "rank": 3697,
+    "lines": ["You gain 2 life, draw two cards, then discard two cards."]
+  },
+  {
+    "name": "And They Shall Know No Fear",
+    "rank": 3701,
+    "lines": [
+      "Choose a creature type. Creatures you control of the chosen type get +1/+0 and gain indestructible until end of turn."
+    ]
+  },
+  {
+    "name": "Hour of Revelation",
+    "rank": 3703,
+    "lines": [
+      "This spell costs {3} less to cast if there are ten or more nonland permanents on the battlefield."
+    ]
+  },
+  {
+    "name": "Blessed Respite",
+    "rank": 3705,
+    "lines": [
+      "Target player shuffles their graveyard into their library. Prevent all combat damage that would be dealt this turn."
+    ]
+  },
+  {
+    "name": "Selfless Safewright",
+    "rank": 3708,
+    "lines": [
+      "When this creature enters, choose a creature type. Other permanents you control of that type gain hexproof and indestructible until end of turn."
+    ]
+  },
+  {
+    "name": "Haste Magic",
+    "rank": 3710,
+    "lines": [
+      "Target creature gets +3/+1 and gains haste until end of turn. Exile the top card of your library. You may play it until your next end step."
+    ]
+  },
+  {
+    "name": "Reckoner Bankbuster",
+    "rank": 3711,
+    "lines": [
+      "{2}, {T}, Remove a charge counter from this Vehicle: Draw a card. Then if there are no charge counters on this Vehicle, create a Treasure token and a 1/1 colorless Pilot creature token with \"~ crews Vehicles as though its power were 2 greater.\""
+    ]
+  },
+  {
+    "name": "Sunblast Angel",
+    "rank": 3712,
+    "lines": ["When this creature enters, destroy all tapped creatures."]
+  },
+  {
+    "name": "Rhys the Redeemed",
+    "rank": 3713,
+    "lines": [
+      "{4}{G/W}{G/W}, {T}: For each creature token you control, create a token that's a copy of that creature."
+    ]
+  },
+  {
+    "name": "Deadly Tempest",
+    "rank": 3719,
+    "lines": [
+      "Destroy all creatures. Each player loses life equal to the number of creatures they controlled that were destroyed this way."
+    ]
+  },
+  {
+    "name": "Wheel of Fate",
+    "rank": 3721,
+    "lines": ["Suspend 4—{1}{R}"]
+  },
+  {
+    "name": "Cryogen Relic",
+    "rank": 3724,
+    "lines": [
+      "{1}{U}, Sacrifice this artifact: Put a stun counter on up to one target tapped creature."
+    ]
+  },
+  {
+    "name": "Airbending Lesson",
+    "rank": 3726,
+    "lines": ["Airbend target nonland permanent."]
+  },
+  {
+    "name": "Commissar Severina Raine",
+    "rank": 3727,
+    "lines": [
+      "Leading from the Front — Whenever ~ attacks, each opponent loses X life, where X is the number of other attacking creatures."
+    ]
+  },
+  {
+    "name": "Kess, Dissident Mage",
+    "rank": 3728,
+    "lines": [
+      "Once during each of your turns, you may cast an instant or sorcery spell from your graveyard. If a spell cast this way would be put into your graveyard, exile it instead."
+    ]
+  },
+  {
+    "name": "Curse of Verbosity",
+    "rank": 3731,
+    "lines": [
+      "Whenever enchanted player is attacked, you draw a card. Each opponent attacking that player does the same."
+    ]
+  },
+  {
+    "name": "Conformer Shuriken",
+    "rank": 3736,
+    "lines": [
+      "Equipped creature has \"Whenever this creature attacks, tap target creature defending player controls. If that creature has greater power than this creature, put a number of +1/+1 counters on this creature equal to the difference.\""
+    ]
+  },
+  {
+    "name": "Pariah's Shield",
+    "rank": 3743,
+    "lines": ["All damage that would be dealt to you is dealt to equipped creature instead."]
+  },
+  {
+    "name": "Sunfrill Imitator",
+    "rank": 3744,
+    "lines": [
+      "Whenever this creature attacks, you may have it become a copy of another target Dinosaur you control, except its name is ~ and it has this ability."
+    ]
+  },
+  {
+    "name": "Baral's Expertise",
+    "rank": 3751,
+    "lines": ["Return up to three target artifacts and/or creatures to their owners' hands."]
+  },
+  {
+    "name": "Betor, Kin to All",
+    "rank": 3752,
+    "lines": [
+      "At the beginning of your end step, if creatures you control have total toughness 10 or greater, draw a card. Then if creatures you control have total toughness 20 or greater, untap each creature you control. Then if creatures you control have total toughness 40 or greater, each opponent loses half their life, rounded up."
+    ]
+  },
+  {
+    "name": "Might of the Meek",
+    "rank": 3754,
+    "lines": [
+      "Target creature gains trample until end of turn. It also gets +1/+0 until end of turn if you control a Mouse."
+    ]
+  },
+  {
+    "name": "Determined Iteration",
+    "rank": 3755,
+    "lines": [
+      "At the beginning of combat on your turn, populate. The token created this way gains haste. Sacrifice it at the beginning of the next end step."
+    ]
+  },
+  {
+    "name": "Heliod's Pilgrim",
+    "rank": 3759,
+    "lines": [
+      "When this creature enters, you may search your library for an Aura card, reveal it, put it into your hand, then shuffle."
+    ]
+  },
+  {
+    "name": "Metalworker",
+    "rank": 3760,
+    "lines": [
+      "{T}: Reveal any number of artifact cards in your hand. Add {C}{C} for each card revealed this way."
+    ]
+  },
+  {
+    "name": "Star of Extinction",
+    "rank": 3761,
+    "lines": ["Destroy target land. ~ deals 20 damage to each creature and each planeswalker."]
+  },
+  {
+    "name": "Palani's Hatcher",
+    "rank": 3762,
+    "lines": [
+      "At the beginning of combat on your turn, if you control one or more Eggs, sacrifice an Egg, then create a 3/3 green Dinosaur creature token."
+    ]
+  },
+  {
+    "name": "Hide on the Ceiling",
+    "rank": 3763,
+    "lines": [
+      "Exile X target artifacts and/or creatures. Return the exiled cards to the battlefield under their owners' control at the beginning of the next end step."
+    ]
+  },
+  {
+    "name": "Relm's Sketching",
+    "rank": 3765,
+    "lines": ["Create a token that's a copy of target artifact, creature, or land."]
+  },
+  {
+    "name": "Heartstone",
+    "rank": 3766,
+    "lines": [
+      "Activated abilities of creatures cost {1} less to activate. This effect can't reduce the mana in that cost to less than one mana."
+    ]
+  },
+  {
+    "name": "Blossoming Bogbeast",
+    "rank": 3773,
+    "lines": [
+      "Whenever this creature attacks, you gain 2 life. Then creatures you control gain trample and get +X/+X until end of turn, where X is the amount of life you gained this turn."
+    ]
+  },
+  {
+    "name": "Avenger of the Fallen",
+    "rank": 3776,
+    "lines": ["Mobilize X, where X is the number of creature cards in your graveyard."]
+  },
+  {
+    "name": "Maddening Hex",
+    "rank": 3777,
+    "lines": [
+      "Whenever enchanted player casts a noncreature spell, roll a d6. ~ deals damage to that player equal to the result. Then attach this Aura to another one of your opponents chosen at random."
+    ]
+  },
+  {
+    "name": "Rashmi, Eternities Crafter",
+    "rank": 3782,
+    "lines": [
+      "Whenever you cast your first spell each turn, reveal the top card of your library. You may cast it without paying its mana cost if it's a spell with lesser mana value. If you don't cast it, put it into your hand."
+    ]
+  },
+  {
+    "name": "Fanatic of Mogis",
+    "rank": 3788,
+    "lines": [
+      "When this creature enters, it deals damage to each opponent equal to your devotion to red."
+    ]
+  },
+  {
+    "name": "Claim the Precious",
+    "rank": 3791,
+    "lines": ["Destroy target creature. The Ring tempts you."]
+  },
+  {
+    "name": "Divine Reckoning",
+    "rank": 3792,
+    "lines": ["Each player chooses a creature they control. Destroy the rest."]
+  },
+  {
+    "name": "Aboleth Spawn",
+    "rank": 3793,
+    "lines": [
+      "Probing Telepathy — Whenever a creature entering under an opponent's control causes a triggered ability of that creature to trigger, you may copy that ability. You may choose new targets for the copy."
+    ]
+  },
+  {
+    "name": "Reckoner's Bargain",
+    "rank": 3795,
+    "lines": ["You gain life equal to the sacrificed permanent's mana value. Draw two cards."]
+  },
+  {
+    "name": "Squee, Goblin Nabob",
+    "rank": 3797,
+    "lines": [
+      "At the beginning of your upkeep, you may return this card from your graveyard to your hand."
+    ]
+  },
+  {
+    "name": "Herald of Eternal Dawn",
+    "rank": 3804,
+    "lines": ["You can't lose the game and your opponents can't win the game."]
+  },
+  {
+    "name": "Baloth Prime",
+    "rank": 3805,
+    "lines": ["~ enters tapped with six stun counters on it."]
+  },
+  {
+    "name": "Hunting Velociraptor",
+    "rank": 3807,
+    "lines": ["Dinosaur spells you cast have prowl {2}{R}."]
+  },
+  {
+    "name": "Experimental Confectioner",
+    "rank": 3810,
+    "lines": [
+      "Whenever you sacrifice a Food, create a 1/1 black Rat creature token with \"~ can't block.\""
+    ]
+  },
+  {
+    "name": "Stonehewer Giant",
+    "rank": 3811,
+    "lines": [
+      "{1}{W}, {T}: Search your library for an Equipment card, put it onto the battlefield, attach it to a creature you control, then shuffle."
+    ]
+  },
+  {
+    "name": "Roil Elemental",
+    "rank": 3812,
+    "lines": [
+      "Whenever a land you control enters, you may gain control of target creature for as long as you control this creature."
+    ]
+  },
+  {
+    "name": "Windswift Slice",
+    "rank": 3818,
+    "lines": [
+      "Target creature you control deals damage equal to its power to target creature you don't control. Create a number of 1/1 green Elf Warrior creature tokens equal to the amount of excess damage dealt this way."
+    ]
+  },
+  {
+    "name": "Inherited Envelope",
+    "rank": 3823,
+    "lines": ["When this artifact enters, the Ring tempts you."]
+  },
+  {
+    "name": "Exhume",
+    "rank": 3827,
+    "lines": ["Each player puts a creature card from their graveyard onto the battlefield."]
+  },
+  {
+    "name": "Noble Heritage",
+    "rank": 3832,
+    "lines": [
+      "Commander creatures you own have \"When this creature enters and at the beginning of your upkeep, each player may put two +1/+1 counters on a creature they control. For each opponent who does, you gain protection from that player until your next turn.\""
+    ]
+  },
+  {
+    "name": "Papalymo Totolymo",
+    "rank": 3836,
+    "lines": [
+      "{4}, {T}, Sacrifice ~: Each opponent who lost life this turn sacrifices a creature with the greatest power among creatures they control."
+    ]
+  },
+  {
+    "name": "Arbaaz Mir",
+    "rank": 3837,
+    "lines": [
+      "Whenever ~ or another nontoken historic permanent you control enters, ~ deals 1 damage to each opponent and you gain 1 life."
+    ]
+  },
+  {
+    "name": "Harmonic Sliver",
+    "rank": 3838,
+    "lines": [
+      "All Slivers have \"When this permanent enters, destroy target artifact or enchantment.\""
+    ]
+  },
+  {
+    "name": "Hero's Heirloom",
+    "rank": 3842,
+    "lines": ["As long as equipped creature is legendary, it has trample and haste."]
+  },
+  {
+    "name": "Rite of Oblivion",
+    "rank": 3843,
+    "lines": ["As an additional cost to cast this spell, sacrifice a nonland permanent."]
+  },
+  {
+    "name": "Druid's Deliverance",
+    "rank": 3844,
+    "lines": ["Prevent all combat damage that would be dealt to you this turn. Populate."]
+  },
+  {
+    "name": "Ziatora, the Incinerator",
+    "rank": 3850,
+    "lines": [
+      "At the beginning of your end step, you may sacrifice another creature. When you do, ~ deals damage equal to that creature's power to any target and you create three Treasure tokens."
+    ]
+  },
+  {
+    "name": "Tromell, Seymour's Butler",
+    "rank": 3853,
+    "lines": [
+      "{1}, {T}: Proliferate X times, where X is the number of nontoken creatures you control that entered this turn."
+    ]
+  },
+  {
+    "name": "Oubliette",
+    "rank": 3854,
+    "lines": [
+      "When this enchantment enters, target creature phases out until this enchantment leaves the battlefield. Tap that creature as it phases in this way."
+    ]
+  },
+  {
+    "name": "Commune with Lava",
+    "rank": 3856,
+    "lines": [
+      "Exile the top X cards of your library. Until the end of your next turn, you may play those cards."
+    ]
+  },
+  {
+    "name": "Sigarda, Font of Blessings",
+    "rank": 3857,
+    "lines": ["You may cast Angel spells and Human spells from the top of your library."]
+  },
+  {
+    "name": "Unsettled Mariner",
+    "rank": 3860,
+    "lines": [
+      "Whenever you or a permanent you control becomes the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays {1}."
+    ]
+  },
+  {
+    "name": "Eumidian Hatchery",
+    "rank": 3865,
+    "lines": [
+      "When this land is put into a graveyard from the battlefield, for each hatchling counter on it, create a 1/1 black Insect creature token with flying."
+    ]
+  },
+  {
+    "name": "Roadside Reliquary",
+    "rank": 3867,
+    "lines": [
+      "{2}, {T}, Sacrifice this land: Draw a card if you control an artifact. Draw a card if you control an enchantment."
+    ]
+  },
+  {
+    "name": "Empowered Autogenerator",
+    "rank": 3871,
+    "lines": [
+      "{T}: Put a charge counter on this artifact. Add X mana of any one color, where X is the number of charge counters on this artifact."
+    ]
+  },
+  {
+    "name": "Eaten by Piranhas",
+    "rank": 3872,
+    "lines": [
+      "Enchanted creature loses all abilities and is a black Skeleton creature with base power and toughness 1/1."
+    ]
+  },
+  {
+    "name": "Extinguisher Battleship",
+    "rank": 3874,
+    "lines": [
+      "When this Spacecraft enters, destroy target noncreature permanent. Then this Spacecraft deals 4 damage to each creature."
+    ]
+  },
+  {
+    "name": "Calix, Guided by Fate",
+    "rank": 3875,
+    "lines": [
+      "Whenever ~ or an enchanted creature you control deals combat damage to a player, you may create a token that's a copy of a nonlegendary enchantment you control. Do this only once each turn."
+    ]
+  },
+  {
+    "name": "Llanowar Loamspeaker",
+    "rank": 3876,
+    "lines": [
+      "{T}: Target land you control becomes a 3/3 Elemental creature with haste until end of turn. It's still a land. Activate only as a sorcery."
+    ]
+  },
+  {
+    "name": "Cactus Preserve",
+    "rank": 3879,
+    "lines": [
+      "{3}: Until end of turn, this land becomes an X/X green Plant creature with reach, where X is the greatest mana value among your commanders. It's still a land."
+    ]
+  },
+  {
+    "name": "Workshop Assistant",
+    "rank": 3880,
+    "lines": [
+      "When this creature dies, return another target artifact card from your graveyard to your hand."
+    ]
+  },
+  {
+    "name": "Honor-Worn Shaku",
+    "rank": 3881,
+    "lines": ["Tap an untapped legendary permanent you control: Untap this artifact."]
+  },
+  {
+    "name": "The Irencrag",
+    "rank": 3885,
+    "lines": [
+      "Whenever a legendary creature you control enters, you may have ~ become a legendary Equipment artifact named Everflame, Heroes' Legacy. If you do, it gains equip {3} and \"Equipped creature gets +3/+3\" and loses all other abilities."
+    ]
+  },
+  {
+    "name": "Crested Sunmare",
+    "rank": 3887,
+    "lines": [
+      "At the beginning of each end step, if you gained life this turn, create a 5/5 white Horse creature token."
+    ]
+  },
+  {
+    "name": "Svyelun of Sea and Sky",
+    "rank": 3889,
+    "lines": ["~ has indestructible as long as you control at least two other Merfolk."]
+  },
+  {
+    "name": "Rampaging Brontodon",
+    "rank": 3894,
+    "lines": [
+      "Whenever this creature attacks, it gets +1/+1 until end of turn for each land you control."
+    ]
+  },
+  {
+    "name": "Grim Servant",
+    "rank": 3896,
+    "lines": [
+      "When this creature enters, search your library for a card with mana value less than or equal to your devotion to black, reveal it, put it into your hand, then shuffle. You lose 3 life."
+    ]
+  },
+  {
+    "name": "Alphinaud Leveilleur",
+    "rank": 3898,
+    "lines": ["Partner with Alisaie Leveilleur"]
+  },
+  {
+    "name": "Arcane Adaptation",
+    "rank": 3903,
+    "lines": [
+      "Creatures you control are the chosen type in addition to their other types. The same is true for creature spells you control and creature cards you own that aren't on the battlefield."
+    ]
+  },
+  {
+    "name": "Vesuvan Duplimancy",
+    "rank": 3904,
+    "lines": [
+      "Whenever you cast a spell that targets only a single artifact or creature you control, create a token that's a copy of that artifact or creature, except it's not legendary."
+    ]
+  }
+]

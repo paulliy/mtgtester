@@ -1,0 +1,1 @@
+Enchanted creature has "{T}: Add {W}, {U}, {B}, {R}, or {G}."

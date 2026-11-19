@@ -1,0 +1,67 @@
+{
+  "name": "Vorel of the Hull Clade",
+  "oracleId": "3001f971-c4db-4176-89b5-e7f4a8890c0f",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 0,
+              "colored": {
+                "W": 0,
+                "U": 1,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [
+            {
+              "kind": "permanent",
+              "filter": {
+                "kind": "anyOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Artifact"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Land"
+                  }
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "op": "doubleCountersTarget",
+              "target": 0
+            }
+          ],
+          "description": "{G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land."
+        }
+      }
+    ]
+  }
+}

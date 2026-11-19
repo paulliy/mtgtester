@@ -1,0 +1,51 @@
+{
+  "name": "Biosynthic Burst",
+  "oracleId": "3abd2342-f783-4871-ac78-1a54b35722c2",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put a +1/+1 counter on target creature you control. It gains reach, trample, and indestructible until end of turn. Untap it."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "op": "putCounters",
+          "target": 0,
+          "counter": "+1/+1",
+          "count": {
+            "kind": "const",
+            "n": 1
+          }
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "reach"
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "trample"
+        },
+        {
+          "op": "grantKeywordUntilEot",
+          "target": 0,
+          "keyword": "indestructible"
+        },
+        {
+          "op": "untapTarget",
+          "target": 0
+        }
+      ],
+      "description": "Put a +1/+1 counter on target creature you control. It gains reach, trample, and indestructible until end of turn. Untap it."
+    }
+  }
+}

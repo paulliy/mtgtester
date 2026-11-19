@@ -1,0 +1,1 @@
+Whenever a land you control enters, create a 0/2 red Dragon Egg creature token with defender. It has "When this creature dies, create a 2/2 red Dragon creature token with flying. It has '{R}: This creature gets +1/+0 until end of turn.'"

@@ -1,0 +1,40 @@
+{
+  "name": "New Horizons",
+  "oracleId": "8834d3c9-cdb5-423b-bc78-94a94add5e74",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Enchanted land has \"{T}: Add two mana of any one color.\""
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "attachedToSource"
+        },
+        "op": {
+          "layer": 6,
+          "addManaAbility": {
+            "units": [
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ],
+              [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ]
+            ],
+            "linked": true
+          }
+        }
+      }
+    ]
+  }
+}

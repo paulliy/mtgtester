@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The schema has no way to sacrifice the token created by this trigger at the beginning of the next end step: createToken has no sacrifice-at-end-step option (only createTokenCopyOf has sacrificeAt), and a delayed sacrifice of the created token has no op that names it."}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"ruleStatics":[{"kind":"costReduction","amount":{"kind":"const","n":2},"selfOnly":true,"condition":{"kind":"countPermanents","selector":{"kind":"subtype","value":"Wizard"},"scope":"you","cmp":">=","n":1}}]}}

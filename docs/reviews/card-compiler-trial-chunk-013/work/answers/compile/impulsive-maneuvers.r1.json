@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The heads-win branch doubles the attacking creature's next combat damage this turn, and the schema has no one-shot damage-doubling effect (createDamageShield only prevents, and damageDoubled is a static on sources, not a per-object next-damage shield)."}

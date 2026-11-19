@@ -1,0 +1,2 @@
+Whenever you cast your second spell, create a 1/1 white Monk creature token with "Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn."
+You may attach this to that token.

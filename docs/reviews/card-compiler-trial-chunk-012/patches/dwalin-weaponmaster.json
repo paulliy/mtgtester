@@ -1,0 +1,77 @@
+{
+  "name": "Dwalin, Weaponmaster",
+  "oracleId": "cee583b7-7cc3-40ea-a227-b760839ec291",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever ~ enters or attacks, put a hone counter on each Equipment you control."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Equipment"
+                }
+              ]
+            },
+            "counter": "hone",
+            "count": 1
+          }
+        ],
+        "description": "Whenever Dwalin enters or attacks, put a hone counter on each Equipment you control."
+      },
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "putCountersEach",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Equipment"
+                }
+              ]
+            },
+            "counter": "hone",
+            "count": 1
+          }
+        ],
+        "description": "Whenever Dwalin enters or attacks, put a hone counter on each Equipment you control."
+      }
+    ]
+  }
+}

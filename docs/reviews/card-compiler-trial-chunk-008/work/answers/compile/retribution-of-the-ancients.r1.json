@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The cost 'remove X +1/+1 counters from among creatures you control' needs an announced X paid as a cost, but removeCountersFromAmong takes a fixed count and activation has no X announcement."}

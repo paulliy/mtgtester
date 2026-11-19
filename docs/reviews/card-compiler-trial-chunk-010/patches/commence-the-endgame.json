@@ -1,0 +1,38 @@
+{
+  "name": "Commence the Endgame",
+  "oracleId": "fedb1947-9fa5-4655-8d02-b370fa63dd16",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Draw two cards, then amass Zombies X, where X is the number of cards in your hand."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "op": "draw",
+          "count": {
+            "kind": "const",
+            "n": 2
+          }
+        },
+        {
+          "op": "amass",
+          "subtype": "Zombie",
+          "count": {
+            "kind": "countCardsInZone",
+            "zone": "hand",
+            "selector": {
+              "kind": "allOf",
+              "of": []
+            },
+            "owner": "you"
+          }
+        }
+      ],
+      "description": "Draw two cards, then amass Zombies X, where X is the number of cards in your hand."
+    }
+  }
+}

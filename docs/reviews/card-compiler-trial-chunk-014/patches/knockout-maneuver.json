@@ -1,0 +1,42 @@
+{
+  "name": "Knockout Maneuver",
+  "oracleId": "7e4931f4-f518-4200-aad4-4ac8acf202e5",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Put a +1/+1 counter on target creature you control, then it deals damage equal to its power to target creature an opponent controls."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAbility": {
+      "kind": "spell",
+      "targets": [
+        {
+          "kind": "creature",
+          "controller": "you"
+        },
+        {
+          "kind": "creature",
+          "controller": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "op": "putCounters",
+          "target": 0,
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "op": "dealDamage",
+          "target": 1,
+          "amount": {
+            "kind": "powerOfTarget",
+            "target": 0
+          },
+          "source": 0
+        }
+      ],
+      "description": "Put a +1/+1 counter on target creature you control, then it deals damage equal to its power to target creature an opponent controls."
+    }
+  }
+}

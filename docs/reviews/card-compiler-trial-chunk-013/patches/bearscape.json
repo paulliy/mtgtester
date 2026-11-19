@@ -1,0 +1,65 @@
+{
+  "name": "Bearscape",
+  "oracleId": "7e481e22-4122-4259-8978-4727eb307195",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{1}{G}, Exile two cards from your graveyard: Create a 2/2 green Bear creature token."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 1
+              },
+              "colorless": 0
+            }
+          },
+          {
+            "kind": "exileOtherCardsFromGraveyard",
+            "count": 2
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "createToken",
+              "spec": {
+                "name": "Bear",
+                "typeLine": "Token Creature — Bear",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Bear"
+                ],
+                "colors": [
+                  "G"
+                ],
+                "power": 2,
+                "toughness": 2
+              },
+              "count": {
+                "kind": "const",
+                "n": 1
+              }
+            }
+          ],
+          "description": "{1}{G}, Exile two cards from your graveyard: Create a 2/2 green Bear creature token."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[{"kind":"anyTarget","count":{"min":1,"max":2}}],"effects":[{"op":"dealDamageDivided","targetSlot":0,"total":{"kind":"const","n":2}},{"op":"draw","count":{"kind":"const","n":1}}],"description":"Electrolyze deals 2 damage divided as you choose among one or two targets. Draw a card."}}}

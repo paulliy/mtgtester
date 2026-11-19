@@ -1,0 +1,49 @@
+{
+  "name": "Oran-Rief, the Vastwood",
+  "oracleId": "e88027a6-24cc-4a8b-86db-734f26149ea8",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}: Put a +1/+1 counter on each green creature that entered this turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "putCountersEach",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "color",
+                    "value": "G"
+                  },
+                  {
+                    "kind": "enteredThisTurn"
+                  }
+                ]
+              },
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ],
+          "description": "{T}: Put a +1/+1 counter on each green creature that entered this turn."
+        }
+      }
+    ]
+  }
+}

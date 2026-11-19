@@ -1,0 +1,69 @@
+{
+  "name": "Myr Turbine",
+  "oracleId": "b9043dcd-234f-4144-80db-1cb903c009ea",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "{T}, Tap five untapped Myr you control: Search your library for a Myr creature card, put it onto the battlefield, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "tap"
+          },
+          {
+            "kind": "tapOthers",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "subtype",
+                  "value": "Myr"
+                }
+              ]
+            },
+            "count": 5
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "searchLibrary",
+              "filter": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "subtype",
+                    "value": "Myr"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  }
+                ]
+              },
+              "destinations": [
+                {
+                  "zone": "battlefield"
+                }
+              ]
+            },
+            {
+              "op": "shuffle"
+            }
+          ],
+          "description": "{T}, Tap five untapped Myr you control: Search your library for a Myr creature card, put it onto the battlefield, then shuffle."
+        }
+      }
+    ]
+  }
+}

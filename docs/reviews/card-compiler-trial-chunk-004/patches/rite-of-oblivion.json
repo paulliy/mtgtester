@@ -1,0 +1,32 @@
+{
+  "name": "Rite of Oblivion",
+  "oracleId": "99957aa7-b654-41b5-9b96-7bce47545d25",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As an additional cost to cast this spell, sacrifice a nonland permanent."
+  ],
+  "compose": "append",
+  "def": {
+    "spellAdditionalCosts": [
+      {
+        "kind": "sacrificeOther",
+        "selector": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "controller",
+              "who": "you"
+            },
+            {
+              "kind": "not",
+              "of": {
+                "kind": "type",
+                "value": "Land"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

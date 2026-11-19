@@ -1,0 +1,1 @@
+Whenever this creature deals combat damage to a player, this creature deals that much damage to each creature. This damage is dealt from this creature, treated as controlled by the player it dealt combat damage to.

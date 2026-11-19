@@ -1,0 +1,44 @@
+{
+  "name": "Guildsworn Prowler",
+  "oracleId": "72e2aa4f-b4b4-42ab-adc0-d0ac09cd5f92",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature dies, if it wasn't blocking, draw a card."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dies",
+          "subject": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "not",
+            "of": {
+              "kind": "sourceMatches",
+              "selector": {
+                "kind": "combatRole",
+                "role": "blocking"
+              }
+            }
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "draw",
+            "count": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "When this creature dies, if it wasn't blocking, draw a card."
+      }
+    ]
+  }
+}

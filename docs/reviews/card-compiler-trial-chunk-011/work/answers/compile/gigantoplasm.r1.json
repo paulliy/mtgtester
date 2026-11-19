@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The granted '{X}: this creature has base power and toughness X/X' ability needs a permanent base power and toughness set from X, and the schema's P/T-setting effect (becomeCreatureUntilEot) lasts only until end of turn."}

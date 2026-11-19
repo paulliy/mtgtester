@@ -1,0 +1,1 @@
+Whenever a player casts their second spell each turn, this trigger is mandatory and has no targets. Connive. (The data gives no subject and no count for the connive; read it as a single connive.)

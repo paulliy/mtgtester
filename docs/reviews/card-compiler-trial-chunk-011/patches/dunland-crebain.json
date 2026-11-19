@@ -1,0 +1,35 @@
+{
+  "name": "Dunland Crebain",
+  "oracleId": "9dd755a5-0bef-4bde-92fa-14ef2a1a1410",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, amass Orcs 2."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "amass",
+            "subtype": "Orc",
+            "count": {
+              "kind": "const",
+              "n": 2
+            }
+          }
+        ],
+        "description": "When this creature enters, amass Orcs 2."
+      }
+    ]
+  }
+}

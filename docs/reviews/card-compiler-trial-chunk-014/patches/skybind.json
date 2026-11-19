@@ -1,0 +1,67 @@
+{
+  "name": "Skybind",
+  "oracleId": "13d34f21-f0ce-4e59-ac3e-6635bf7292d3",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this enchantment or another enchantment you control enters, exile target nonenchantment permanent. Return that card to the battlefield under its owner's control at the beginning of the next end step."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "anyOf",
+              "of": [
+                {
+                  "kind": "self"
+                },
+                {
+                  "kind": "allOf",
+                  "of": [
+                    {
+                      "kind": "other"
+                    },
+                    {
+                      "kind": "controller",
+                      "who": "you"
+                    },
+                    {
+                      "kind": "type",
+                      "value": "Enchantment"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "permanent",
+            "filter": {
+              "kind": "not",
+              "of": {
+                "kind": "type",
+                "value": "Enchantment"
+              }
+            }
+          }
+        ],
+        "effects": [
+          {
+            "op": "exileTargetReturnAtNextEndStep",
+            "target": 0,
+            "returnUnder": "owner"
+          }
+        ],
+        "description": "Whenever this enchantment or another enchantment you control enters, exile target nonenchantment permanent. Return that card to the battlefield under its owner's control at the beginning of the next end step."
+      }
+    ]
+  }
+}

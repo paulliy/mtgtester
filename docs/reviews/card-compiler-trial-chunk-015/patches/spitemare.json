@@ -1,0 +1,38 @@
+{
+  "name": "Spitemare",
+  "oracleId": "cf4d8b19-fd11-4200-9871-896772019f4c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever this creature is dealt damage, it deals that much damage to any target."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "dealtDamage",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [
+          {
+            "kind": "anyTarget"
+          }
+        ],
+        "effects": [
+          {
+            "op": "dealDamage",
+            "target": 0,
+            "amount": {
+              "kind": "damageDealt"
+            }
+          }
+        ],
+        "description": "Whenever this creature is dealt damage, it deals that much damage to any target."
+      }
+    ]
+  }
+}

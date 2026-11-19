@@ -1,0 +1,49 @@
+{
+  "name": "Hero's Blade",
+  "oracleId": "e6bcd25d-39b6-4619-8a27-9f3d87f4a17b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever a legendary creature you control enters, you may attach this Equipment to it."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "supertype",
+                  "value": "Legendary"
+                },
+                {
+                  "kind": "type",
+                  "value": "Creature"
+                },
+                {
+                  "kind": "controller",
+                  "who": "you"
+                }
+              ]
+            }
+          }
+        },
+        "optional": true,
+        "targets": [],
+        "effects": [
+          {
+            "op": "attach",
+            "what": "source",
+            "to": "triggerObject"
+          }
+        ],
+        "description": "Whenever a legendary creature you control enters, you may attach this Equipment to it."
+      }
+    ]
+  }
+}

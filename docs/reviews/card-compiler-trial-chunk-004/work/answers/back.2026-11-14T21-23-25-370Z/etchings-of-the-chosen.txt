@@ -1,0 +1,1 @@
+{1}, Sacrifice another creature of the chosen type you control: Target creature you control gains indestructible until end of turn.

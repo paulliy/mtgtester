@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"castsSpell","caster":"you","condition":{"kind":"notYourTurn"}},"optional":false,"targets":[],"effects":[{"op":"surveil","count":2}],"description":"Whenever you cast a spell during an opponent's turn, surveil 2."}]}}

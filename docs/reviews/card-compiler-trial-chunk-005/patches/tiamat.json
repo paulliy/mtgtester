@@ -1,0 +1,63 @@
+{
+  "name": "Tiamat",
+  "oracleId": "f00e4df1-13fb-4514-8abb-92954068689a",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When ~ enters, if you cast it, search your library for up to five Dragon cards not named ~ that each have different names, reveal them, put them into your hand, then shuffle."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          },
+          "condition": {
+            "kind": "sourceWasCast"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "searchLibrary",
+            "filter": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "subtype",
+                  "value": "Dragon"
+                },
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "name",
+                    "value": "Tiamat"
+                  }
+                }
+              ]
+            },
+            "destinations": [
+              {
+                "zone": "hand"
+              }
+            ],
+            "count": {
+              "kind": "const",
+              "n": 5
+            },
+            "differentNames": true,
+            "reveal": true
+          },
+          {
+            "op": "shuffle"
+          }
+        ],
+        "description": "When Tiamat enters, if you cast it, search your library for up to five Dragon cards not named Tiamat that each have different names, reveal them, put them into your hand, then shuffle."
+      }
+    ]
+  }
+}

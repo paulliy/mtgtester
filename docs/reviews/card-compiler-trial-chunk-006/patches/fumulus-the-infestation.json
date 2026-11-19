@@ -1,0 +1,73 @@
+{
+  "name": "Fumulus, the Infestation",
+  "oracleId": "c75f8365-71f1-415f-8bbc-9bacb8ddba0b",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Whenever an Insect, Leech, Slug, or Worm you control attacks, defending player loses 1 life and you gain 1 life."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "attacks",
+          "subject": {
+            "kind": "permanent",
+            "selector": {
+              "kind": "allOf",
+              "of": [
+                {
+                  "kind": "controller",
+                  "who": "you"
+                },
+                {
+                  "kind": "anyOf",
+                  "of": [
+                    {
+                      "kind": "subtype",
+                      "value": "Insect"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Leech"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Slug"
+                    },
+                    {
+                      "kind": "subtype",
+                      "value": "Worm"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "defendingPlayerIsEventPlayer": true
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "loseLifeTarget",
+            "target": "eventPlayer",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          },
+          {
+            "op": "gainLife",
+            "amount": {
+              "kind": "const",
+              "n": 1
+            }
+          }
+        ],
+        "description": "Whenever an Insect, Leech, Slug, or Worm you control attacks, defending player loses 1 life and you gain 1 life."
+      }
+    ]
+  }
+}

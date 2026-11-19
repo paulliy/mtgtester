@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The mill-then-optional-payment-then-pick sequence cannot be expressed: millThenReturnMilledCard mills and returns in one mandatory op with no payment gate, and mill has no binding for choosing a card from the milled cards after a \"you may pay {1} and 3 life\" decision."}

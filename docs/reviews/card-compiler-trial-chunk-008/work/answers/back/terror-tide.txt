@@ -1,0 +1,1 @@
+Each creature gets -X/-X until end of turn, where X is the number of cards in your graveyard that are artifacts, Battles, creatures, enchantments, lands, or planeswalkers.

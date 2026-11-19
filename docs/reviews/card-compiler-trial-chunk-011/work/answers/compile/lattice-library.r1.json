@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"The 'first spell with {X} in its mana cost each turn' trigger needs a selector for an {X} mana cost, and manaCostIs only matches fixed printed cost strings."}

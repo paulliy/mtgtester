@@ -1,0 +1,2 @@
+Each creature your opponents control is an Illusion in addition to its other creature types.
+Each creature your opponents control has "Whenever this creature becomes the target of a spell or ability, sacrifice this creature."

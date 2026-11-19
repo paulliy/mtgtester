@@ -176,6 +176,13 @@ export default tseslint.config(
     },
   },
   {
+    // The generated module of compiled cards (ADR 0047) is data written by `run.ts promote`, not
+    // authored code, so the builder rules do not apply. Its definitions pass the engine validator,
+    // and `promote` refuses a token that differs from the catalog (`tokenDrift`).
+    files: ['packages/engine/src/cards/overrides/compiled/index.ts'],
+    rules: { 'no-restricted-syntax': 'off', 'card-authoring/guard-legacy-builders': 'off' },
+  },
+  {
     files: ['**/*.test.ts', '**/*.spec.ts'],
     rules: {
       'no-restricted-syntax': [

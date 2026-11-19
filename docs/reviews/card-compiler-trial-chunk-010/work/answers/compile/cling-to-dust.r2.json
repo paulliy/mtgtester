@@ -1,0 +1,1 @@
+{"status": "inexpressible", "reason": "The schema has no condition that checks whether a targeted graveyard card was a creature card in a spell (triggerObjectMatches needs a permanent event scope)."}

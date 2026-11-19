@@ -1,0 +1,1 @@
+{"status":"inexpressible","reason":"copyCastSpell makes a copy of the spell with no way to say 'the copy isn't legendary' and the copy becomes a token, which the copy op cannot express for an artifact spell."}

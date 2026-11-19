@@ -1,0 +1,30 @@
+{
+  "name": "Armored Scrapgorger",
+  "oracleId": "0d3a4db2-df79-4946-8f87-b174cf9c293c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "~ gets +3/+0 as long as it has three or more oil counters on it."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "self"
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 3,
+          "toughness": 0
+        },
+        "condition": {
+          "kind": "sourceHasCounters",
+          "counter": "oil",
+          "cmp": ">=",
+          "n": 3
+        }
+      }
+    ]
+  }
+}

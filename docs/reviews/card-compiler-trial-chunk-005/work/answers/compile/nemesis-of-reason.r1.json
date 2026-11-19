@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"attacks","subject":{"kind":"self"},"defendingPlayerIsEventPlayer":true},"optional":false,"targets":[],"effects":[{"op":"millTargetPlayer","target":"eventPlayer","count":10}],"description":"Whenever this creature attacks, defending player mills ten cards."}]}}

@@ -1,0 +1,64 @@
+{
+  "name": "Combat Research",
+  "oracleId": "fbfd7f38-be9a-49bf-8769-79e1e7e8dfdc",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "As long as enchanted creature is legendary, it gets +1/+1 and has ward {1}."
+  ],
+  "compose": "append",
+  "def": {
+    "staticEffects": [
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "attachedToSource"
+            },
+            {
+              "kind": "supertype",
+              "value": "Legendary"
+            }
+          ]
+        },
+        "op": {
+          "layer": 7,
+          "sublayer": "d",
+          "power": 1,
+          "toughness": 1
+        }
+      },
+      {
+        "affects": {
+          "kind": "allOf",
+          "of": [
+            {
+              "kind": "attachedToSource"
+            },
+            {
+              "kind": "supertype",
+              "value": "Legendary"
+            }
+          ]
+        },
+        "op": {
+          "layer": 6,
+          "addWard": {
+            "kind": "mana",
+            "cost": {
+              "generic": 1,
+              "colored": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 0,
+                "G": 0
+              },
+              "colorless": 0
+            }
+          }
+        }
+      }
+    ]
+  }
+}

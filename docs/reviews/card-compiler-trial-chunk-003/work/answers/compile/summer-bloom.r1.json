@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"spellAbility":{"kind":"spell","targets":[],"effects":[{"op":"additionalLandPlaysThisTurn","count":{"kind":"const","n":3}}],"description":"You may play up to three additional lands this turn."}}}

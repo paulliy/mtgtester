@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"dies","subject":{"kind":"permanent","selector":{"kind":"attachedToSource"}}},"optional":false,"targets":[],"effects":[{"op":"graveyardToBattlefield","target":"triggerObject"}],"description":"When enchanted creature dies, return that card to the battlefield under your control."}]}}

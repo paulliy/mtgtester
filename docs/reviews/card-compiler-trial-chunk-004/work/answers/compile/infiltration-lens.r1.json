@@ -1,0 +1,1 @@
+{"status":"compiled","def":{"triggers":[{"kind":"triggered","trigger":{"when":"becomesBlocked","subject":{"kind":"permanent","selector":{"kind":"attachedToSource"}}},"optional":true,"targets":[],"effects":[{"op":"draw","count":{"kind":"const","n":2}}],"description":"Whenever equipped creature becomes blocked by a creature, you may draw two cards."}]}}

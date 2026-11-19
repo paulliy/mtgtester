@@ -1,0 +1,58 @@
+{
+  "name": "Paladin Danse, Steel Maverick",
+  "oracleId": "ac830812-2f33-4f9e-ba3a-ea665989011c",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "Exile ~: Each creature you control that's an artifact or Human gains indestructible until end of turn."
+  ],
+  "compose": "append",
+  "def": {
+    "activatedAbilities": [
+      {
+        "costs": [
+          {
+            "kind": "exileSelf"
+          }
+        ],
+        "timing": "any",
+        "ability": {
+          "kind": "activated",
+          "targets": [],
+          "effects": [
+            {
+              "op": "grantKeywordEachUntilEot",
+              "selector": {
+                "kind": "allOf",
+                "of": [
+                  {
+                    "kind": "controller",
+                    "who": "you"
+                  },
+                  {
+                    "kind": "type",
+                    "value": "Creature"
+                  },
+                  {
+                    "kind": "anyOf",
+                    "of": [
+                      {
+                        "kind": "type",
+                        "value": "Artifact"
+                      },
+                      {
+                        "kind": "subtype",
+                        "value": "Human"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "keyword": "indestructible"
+            }
+          ],
+          "description": "Exile Paladin Danse: Each creature you control that's an artifact or Human gains indestructible until end of turn."
+        }
+      }
+    ]
+  }
+}

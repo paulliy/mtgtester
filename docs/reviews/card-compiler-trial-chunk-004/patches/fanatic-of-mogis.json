@@ -1,0 +1,34 @@
+{
+  "name": "Fanatic of Mogis",
+  "oracleId": "f19d06af-6caf-41d8-8d0a-d5d50bd67900",
+  "source": "compiler@claude-haiku-5-5",
+  "handledLines": [
+    "When this creature enters, it deals damage to each opponent equal to your devotion to red."
+  ],
+  "compose": "append",
+  "def": {
+    "triggers": [
+      {
+        "kind": "triggered",
+        "trigger": {
+          "when": "enters",
+          "subject": {
+            "kind": "self"
+          }
+        },
+        "optional": false,
+        "targets": [],
+        "effects": [
+          {
+            "op": "eachOpponentDamage",
+            "amount": {
+              "kind": "devotionTo",
+              "color": "R"
+            }
+          }
+        ],
+        "description": "When this creature enters, it deals damage to each opponent equal to your devotion to red."
+      }
+    ]
+  }
+}
