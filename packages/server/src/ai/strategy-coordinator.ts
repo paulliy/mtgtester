@@ -26,6 +26,7 @@ import { TurnPlanManager, type AcceptedPlanAction } from './turn-plan';
 import { AI_VERSIONS } from './versions';
 import type { SeatDiplomacyContext } from './diplomacy-context';
 import { preparePromptForCaching } from './prompt-cache';
+import { deltaBaseFrom, type StrategistDeltaBase } from './strategist-delta';
 import {
   cleanSteering,
   tableChangeReasons,
@@ -261,8 +262,22 @@ export class StrategyCoordinator {
     PlayerId,
     { steering: BotSteering; table: TableSnapshot; reusedTurns: number }
   >();
-  /** Strategist calls made and skipped because the knobs still fit, for measurement. */
-  readonly strategistStats = { calls: 0, reused: 0 };
+  /**
+   * Hill-climb S6: what each seat's last installed knobs were drawn from, and how many delta
+   * prompts in a row it has had since its last full one.
+   */
+  private readonly deltaBySeat = new Map<PlayerId, { base: StrategistDeltaBase; inRow: number }>();
+  /**
+   * Strategist calls made, skipped because the knobs still fit, and sent as deltas, for
+   * measurement. `wakes` counts each call's wake reasons with the seat dropped (`life`, `power`,
+   * `first knobs`), so the census can say which table change drives calls.
+   */
+  readonly strategistStats: {
+    calls: number;
+    reused: number;
+    delta: number;
+    wakes: Record<string, number>;
+  } = { calls: 0, reused: 0, delta: 0, wakes: {} };
   /** Every shadow tactician request this game, in order (ADR 0045). */
   readonly tacticianRequests: TacticianRequestRecord[] = [];
   /**
@@ -385,6 +400,12 @@ export class StrategyCoordinator {
     if (this.reuseSteering(activePlayer)) return;
     const wake = this.wakeReasons(activePlayer);
     this.strategistStats.calls++;
+    for (const reason of wake) {
+      // Table reasons are `<seat> <what>`; 'first knobs' and 'reuse limit' name no seat.
+      const kind =
+        reason === 'first knobs' || reason === 'reuse limit' ? reason : reason.replace(/^\S+ /, '');
+      this.strategistStats.wakes[kind] = (this.strategistStats.wakes[kind] ?? 0) + 1;
+    }
     this.strategistGeneration++;
     const generation = this.strategistGeneration;
     this.activeGeneration = generation;
@@ -442,6 +463,13 @@ export class StrategyCoordinator {
     const recent = this.recentFor(activePlayer);
     const diplomacy = this.diplomacyFor?.(activePlayer, 'strategist') ?? null;
     const dealsKey = this.dealsKey(activePlayer);
+    const deltaOn = this.botLed() && this.config.strategistDeltaEnabled;
+    const deltaState = deltaOn ? this.deltaBySeat.get(activePlayer) : undefined;
+    const delta =
+      deltaState !== undefined && deltaState.inRow < this.config.strategistDeltaRefreshEvery
+        ? { base: deltaState.base, wake }
+        : undefined;
+    if (delta !== undefined) this.strategistStats.delta++;
     const assembledPrompt = assembleStrategistPrompt(
       strategyRequest,
       view,
@@ -456,6 +484,7 @@ export class StrategyCoordinator {
         ...(this.botLed() && this.config.strategistTacticianFlag === 'shadow'
           ? { tacticianFlag: true }
           : {}),
+        ...(deltaOn ? { delta: delta ?? true } : {}),
         context: {
           includeMemory: this.config.contextMemoryEnabled,
           includeFeatures: this.config.contextFeaturesEnabled,
@@ -471,12 +500,13 @@ export class StrategyCoordinator {
         },
       },
     );
-    const profile = this.deckProfiles?.get(activePlayer);
+    // The profile (or the legacy archetype tag standing in for one) and the task text are fixed
+    // for this seat all game, so they belong in the cacheable prefix, not after the observation.
     const prompt = this.config.providerPromptCacheLayoutEnabled
       ? preparePromptForCaching(assembledPrompt, {
           role: 'strategist',
-          ...(profile === undefined ? {} : { staticContext: { yourStrategyProfile: profile } }),
-          removeDynamicKeys: ['yourStrategyProfile'],
+          staticKeys: ['strategyTask', 'yourStrategyProfile'],
+          ...(deltaOn ? { splitCommanders: false } : {}),
         })
       : assembledPrompt;
 
@@ -526,6 +556,12 @@ export class StrategyCoordinator {
           table: tableSnapshot(view),
           reusedTurns: 0,
         });
+        if (deltaOn) {
+          this.deltaBySeat.set(activePlayer, {
+            base: deltaBaseFrom(view, strategyRequest.turn, strategy.intent, strategy.steering),
+            inRow: delta === undefined ? 0 : (deltaState?.inRow ?? 0) + 1,
+          });
+        }
       }
       // A turn/player change (or a fresh re-plan) may have superseded this call while it was
       // in flight; don't install a stale plan over what the board now needs.
@@ -616,13 +652,13 @@ export class StrategyCoordinator {
       const current = this.steeringBySeat.get(seat);
       if (current === undefined) return ['first knobs'];
       if (current.reusedTurns >= max) return ['reuse limit'];
-      return tableChangeReasons(current.table, now);
+      return tableChangeReasons(current.table, now, this.wakeOptions(seat));
     }
     const simulated = this.simulatedOnChange.get(seat);
     let reasons: string[];
     if (simulated === undefined) reasons = ['first knobs'];
     else if (simulated.reused >= max) reasons = ['reuse limit'];
-    else reasons = tableChangeReasons(simulated.table, now);
+    else reasons = tableChangeReasons(simulated.table, now, this.wakeOptions(seat));
     this.simulatedOnChange.set(
       seat,
       reasons.length === 0 && simulated !== undefined
@@ -630,6 +666,10 @@ export class StrategyCoordinator {
         : { table: now, reused: 0 },
     );
     return reasons;
+  }
+
+  private wakeOptions(seat: PlayerId): { self: PlayerId; rule: AiConfig['strategistWakeRule'] } {
+    return { self: seat, rule: this.config.strategistWakeRule };
   }
 
   /** `onChange`'s state as it would have been, for `wakeReasons` under `everyTurn`. */
@@ -648,7 +688,8 @@ export class StrategyCoordinator {
     const current = this.steeringBySeat.get(seat);
     if (current === undefined) return false;
     if (current.reusedTurns >= this.config.strategistMaxReuseTurns) return false;
-    if (tableChanged(current.table, tableSnapshot(this.engine.view(seat)))) return false;
+    if (tableChanged(current.table, tableSnapshot(this.engine.view(seat)), this.wakeOptions(seat)))
+      return false;
     current.reusedTurns++;
     this.strategistStats.reused++;
     this.engine.addDebug?.('decision', `strategist knobs reused for ${seat}`, {

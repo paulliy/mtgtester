@@ -5,11 +5,25 @@
  * (`.env` is read by Bun), so the endpoint, models and key are the same ones the app uses.
  *
  *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]
- *                        [--escalation T1,T2] [--shadow T1,T2] [--opponents model|bot-never]
+ *                        [--escalation T1,T2] [--shadow T1,T2] [--opponents model|bot-never|bot-v1]
+ *                        [--delta] [--await-strategist]
  *
  * ADR 0044's game step: `--escalation` makes triggers live for the bot seats (default `never`),
  * `--shadow` logs others, and `--opponents bot-never` seats the bot-led bot with no escalation in
  * P2 and P4 instead of the model tactician, so a trigger is played against `never`.
+ *
+ * `--delta` gives the `bot` seats strategist delta prompts (hill-climb S6) and turns them off for
+ * the others, so with `--opponents bot-never` the two sides differ only in the strategist prompt.
+ * Without it every seat uses the configured default (delta prompts on since 2026-11-18).
+ *
+ * Hill-climb S7: `--opponents bot-v1` seats the same bot-led setup in P2 and P4 but waking the
+ * strategist under `table-v1`, while P1 and P3 use `table-v2`, so the wake rule is the only
+ * difference. The strategist calls per mode are the saving; the winner is the strength check.
+ *
+ * `--await-strategist` makes every decision wait for the seat's in-flight strategist call first.
+ * It is on by default with `--opponents bot-never` and `bot-v1`: four bot-led seats finish a game
+ * in seconds, long before a strategist answers, so every call would be cancelled at game end and
+ * the game would measure nothing (2026-11-16: 46 turns, 0 answered calls).
  *
  * Spend caps: once the provider-reported cost reaches `--max-usd` (default 2) or the call count
  * reaches `--max-calls` (default 1500), no further model call is made and every seat plays the
@@ -40,16 +54,36 @@ import {
 } from '../ai';
 import type { AiAttemptObserver, AiClient, CostSettlement } from '../ai/client';
 import type { AiPrompt } from '../ai/context';
+import type { AsyncDecisionProvider } from '@mtg/engine';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
 const SEATS: PlayerId[] = ['P1', 'P2', 'P3', 'P4'];
 export type ModeName = 'bot' | 'model';
+
+/**
+ * A provider that lets the seat's strategist call land before each decision. `prepare` starts the
+ * call if this turn has none yet (it is idempotent per turn), and `settled` waits for the newest.
+ */
+export function awaitingStrategist(
+  provider: AsyncDecisionProvider,
+  coordinator: Pick<StrategyCoordinator, 'prepare' | 'settled'>,
+): AsyncDecisionProvider {
+  return {
+    async decide(request) {
+      coordinator.prepare(request);
+      await coordinator.settled();
+      return provider.decide(request);
+    },
+  };
+}
 
 export interface Tally {
   tacticianCalls: number;
   strategistCalls: number;
   promptTokens: number;
   responseTokens: number;
+  /** Prompt tokens the provider reported serving from its prompt cache, over every attempt. */
+  cacheReadTokens: number;
   costUsd: number;
   costKnown: boolean;
   /** Calls that failed after the client's own retries; the seat fell back to the bot. */
@@ -62,6 +96,8 @@ export interface Tally {
   settledUsd: number;
   /** Unpriced attempts whose billed cost could not be found after the game. */
   unsettledAttempts: number;
+  /** Physical attempts per serving provider, as OpenRouter names it (`provider` in the reply). */
+  providers: Record<string, number>;
 }
 
 export function emptyTally(): Tally {
@@ -70,6 +106,7 @@ export function emptyTally(): Tally {
     strategistCalls: 0,
     promptTokens: 0,
     responseTokens: 0,
+    cacheReadTokens: 0,
     costUsd: 0,
     costKnown: true,
     failedCalls: 0,
@@ -77,6 +114,7 @@ export function emptyTally(): Tally {
     unknownCostCalls: 0,
     settledUsd: 0,
     unsettledAttempts: 0,
+    providers: {},
   };
 }
 
@@ -137,6 +175,11 @@ export function counting<M extends string = ModeName>(
   };
   inner.setAttemptObserver(async (attempt) => {
     const mode = modeByRequest.get(attempt.logicalRequestId);
+    if (mode !== undefined) tallies[mode].cacheReadTokens += attempt.usage.cacheReadTokens ?? 0;
+    if (mode !== undefined && attempt.backend !== undefined) {
+      const providers = tallies[mode].providers;
+      providers[attempt.backend] = (providers[attempt.backend] ?? 0) + 1;
+    }
     if (mode !== undefined && attempt.status !== 'accepted') {
       const { promptTokens, responseTokens, costUsd } = attempt.usage;
       const tally = tallies[mode];
@@ -229,6 +272,44 @@ function arg(argv: string[], name: string): string | undefined {
   return i === -1 ? undefined : argv[i + 1];
 }
 
+/**
+ * Per-seat bookkeeping for the report, so strategist calls can be read per seat turn instead of
+ * per game turn: a side whose seats live longer is asked more often whatever its wake rule. A
+ * seat's own turns are the game turns on which a decision surfaced with it as the active player;
+ * its elimination turn is the first observed turn after which it has lost.
+ */
+export class SeatTracker {
+  private readonly ownTurns = new Map<PlayerId, Set<number>>();
+  private readonly eliminatedOn = new Map<PlayerId, number>();
+
+  observe(request: Pick<DecisionRequest, 'turn' | 'activePlayer'>, lost: Iterable<PlayerId>): void {
+    let turns = this.ownTurns.get(request.activePlayer);
+    if (turns === undefined) {
+      turns = new Set();
+      this.ownTurns.set(request.activePlayer, turns);
+    }
+    turns.add(request.turn);
+    for (const seat of lost) {
+      if (!this.eliminatedOn.has(seat)) this.eliminatedOn.set(seat, request.turn);
+    }
+  }
+
+  /** Seats that lost on the last action of the game are only seen in the final state. */
+  finish(finalTurn: number, lost: Iterable<PlayerId>): void {
+    for (const seat of lost) {
+      if (!this.eliminatedOn.has(seat)) this.eliminatedOn.set(seat, finalTurn);
+    }
+  }
+
+  ownTurnsOf(seat: PlayerId): number {
+    return this.ownTurns.get(seat)?.size ?? 0;
+  }
+
+  eliminationTurnOf(seat: PlayerId): number | null {
+    return this.eliminatedOn.get(seat) ?? null;
+  }
+}
+
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const seed = arg(argv, '--seed') ?? 'mode-duel';
@@ -256,26 +337,41 @@ async function main(): Promise<void> {
     throw new Error('--escalation: lethal is shadow-only (ADR 0044)');
   const shadow = parseTriggerList(arg(argv, '--shadow'), '--shadow');
   const opponents = arg(argv, '--opponents') ?? 'model';
-  if (opponents !== 'model' && opponents !== 'bot-never')
-    throw new Error('--opponents must be model or bot-never');
+  if (opponents !== 'model' && opponents !== 'bot-never' && opponents !== 'bot-v1')
+    throw new Error('--opponents must be model, bot-never or bot-v1');
+  const delta = argv.includes('--delta');
+  const awaitStrategist = argv.includes('--await-strategist') || opponents !== 'model';
   const configs: Record<ModeName, AiConfig> = {
     bot: {
       ...base,
+      ...(delta ? { strategistDeltaEnabled: true } : {}),
       tacticalMode: 'bot',
       botEscalation: escalation as LiveEscalationTrigger[],
       botEscalationShadow: shadow,
       strategistReplan: 'onChange',
+      ...(opponents === 'bot-v1' ? { strategistWakeRule: 'table-v2' as const } : {}),
     },
     model:
       opponents === 'model'
-        ? { ...base, tacticalMode: 'model' }
-        : {
-            ...base,
-            tacticalMode: 'bot',
-            botEscalation: [],
-            botEscalationShadow: shadow,
-            strategistReplan: 'onChange',
-          },
+        ? { ...base, tacticalMode: 'model', ...(delta ? { strategistDeltaEnabled: false } : {}) }
+        : opponents === 'bot-v1'
+          ? {
+              ...base,
+              ...(delta ? { strategistDeltaEnabled: false } : {}),
+              tacticalMode: 'bot',
+              botEscalation: escalation as LiveEscalationTrigger[],
+              botEscalationShadow: shadow,
+              strategistReplan: 'onChange',
+              strategistWakeRule: 'table-v1',
+            }
+          : {
+              ...base,
+              ...(delta ? { strategistDeltaEnabled: false } : {}),
+              tacticalMode: 'bot',
+              botEscalation: [],
+              botEscalationShadow: shadow,
+              strategistReplan: 'onChange',
+            },
   };
 
   const pool = buildSupportedPool(
@@ -297,7 +393,11 @@ async function main(): Promise<void> {
   console.log(`Seed ${seed}, turn cap ${turnCap}`);
   // With `--opponents bot-never` the "model" seats play the bot-led bot that never escalates.
   const label = (mode: ModeName): string =>
-    mode === 'model' && opponents === 'bot-never' ? 'bot-never' : mode;
+    mode === 'model' && opponents !== 'model'
+      ? opponents
+      : mode === 'bot' && delta
+        ? 'bot+delta'
+        : mode;
   decks.forEach((d, i) =>
     console.log(`  ${SEATS[i]} [${label(modeOf(SEATS[i]!))}]  ${d.commander.name}`),
   );
@@ -337,7 +437,13 @@ async function main(): Promise<void> {
       others,
     );
   }
-  const providers = new Map<PlayerId, OpenAiDecisionProvider>();
+  const providers = new Map<PlayerId, AsyncDecisionProvider>();
+  const tracker = new SeatTracker();
+  const lostSeats = (): PlayerId[] =>
+    engine
+      .getState()
+      .players.filter((p) => p.hasLost === true)
+      .map((p) => p.id);
   const started = performance.now();
   const result = await runToCompletionAsync(
     engine,
@@ -345,7 +451,7 @@ async function main(): Promise<void> {
       let provider = providers.get(seat);
       if (provider === undefined) {
         const mode = modeOf(seat);
-        provider = new OpenAiDecisionProvider(
+        const live = new OpenAiDecisionProvider(
           tacticianClient,
           queue,
           engine,
@@ -354,6 +460,7 @@ async function main(): Promise<void> {
           undefined,
           coordinators[mode],
         );
+        provider = awaitStrategist ? awaitingStrategist(live, coordinators[mode]) : live;
         providers.set(seat, provider);
       }
       return provider;
@@ -361,6 +468,7 @@ async function main(): Promise<void> {
     {
       maxDecisions: 20_000,
       onDecision(request) {
+        tracker.observe(request, lostSeats());
         if (request.decidingPlayer === request.activePlayer && request.step === null) {
           process.stderr.write(`\r  turn ${request.turn}  `);
         }
@@ -379,6 +487,7 @@ async function main(): Promise<void> {
     life[player.id] = player.hasLost === true ? 0 : player.life;
   }
   const turns = result.turnCount;
+  tracker.finish(turns, lostSeats());
   const report = {
     seed,
     swap,
@@ -393,23 +502,52 @@ async function main(): Promise<void> {
     winner: result.winnerSeat,
     winnerMode: result.winnerSeat === null ? null : modeOf(result.winnerSeat),
     finishingOrder: result.finishingOrder,
+    halted: result.halted,
+    haltReason: result.haltReason,
+    ...(result.haltSite === undefined ? {} : { haltSite: result.haltSite }),
     life,
+    /** Each seat's own turns played and the game turn it was eliminated on (null: it survived). */
+    seatTurns: Object.fromEntries(
+      SEATS.map((s) => [
+        s,
+        { ownTurns: tracker.ownTurnsOf(s), eliminatedOnTurn: tracker.eliminationTurnOf(s) },
+      ]),
+    ),
     seats: Object.fromEntries(SEATS.map((s) => [s, modeOf(s)])),
     /** What the `model` seats played: the model tactician, or the bot-led bot with no escalation. */
     opponents,
+    /** Whether the `bot` seats' strategist got delta prompts (S6). */
+    delta,
+    /** Whether each decision waited for its seat's strategist call to land. */
+    awaitStrategist,
     escalation,
     shadow,
     perMode: Object.fromEntries(
       (['bot', 'model'] as const).map((mode) => {
         const t = tallies[mode];
         const calls = t.tacticianCalls + t.strategistCalls;
+        const ownTurns = SEATS.filter((s) => modeOf(s) === mode).reduce(
+          (sum, s) => sum + tracker.ownTurnsOf(s),
+          0,
+        );
         return [
           mode,
           {
             ...t,
+            ownTurns,
+            strategistCallsPerOwnTurn: Number(
+              (t.strategistCalls / Math.max(1, ownTurns)).toFixed(3),
+            ),
+            promptTokensPerOwnTurn: Math.round(t.promptTokens / Math.max(1, ownTurns)),
+            /** Wake reasons of this side's strategist calls, seat dropped (hill-climb S7). */
+            strategistWakes: { ...coordinators[mode].strategistStats.wakes },
             costUsd: t.costKnown ? Number(t.costUsd.toFixed(4)) : null,
             callsPerTurn: Number((calls / Math.max(1, turns)).toFixed(2)),
             promptTokensPerTurn: Math.round(t.promptTokens / Math.max(1, turns)),
+            cacheReadSharePct:
+              t.promptTokens === 0
+                ? 0
+                : Number(((t.cacheReadTokens / t.promptTokens) * 100).toFixed(1)),
           },
         ];
       }),

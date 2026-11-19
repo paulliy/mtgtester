@@ -18076,8 +18076,13 @@
     "power": 3,
     "ruleStatics": [
       {
-        "kind": "damageDoubledToOpponents",
-        "sourceControllerOnly": true
+        "factor": 2,
+        "kind": "damageReplacement",
+        "recipient": "opponents",
+        "sourceFilter": {
+          "kind": "controller",
+          "who": "you"
+        }
       }
     ],
     "scryfallId": "1eb34f51-0bd2-43c3-af95-2ce8dabcc7bb",

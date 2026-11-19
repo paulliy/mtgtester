@@ -7,6 +7,7 @@ import { PR11B_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr11b
 import { PR11_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr11-scenario-catalog';
 import { PILOT_CURRENT_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pilot-current-scenario-catalog';
 import { PR13_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr13-scenario-catalog';
+import { CASTING_STATICS_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/casting-statics-scenario-catalog';
 import { RUNNER_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/runner-scenario-catalog';
 import { PR12_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr12-scenario-catalog';
 import { PR10_ALL_SCENARIO_IDS } from '../../../packages/server/src/cards/pr10-scenario-catalog';
@@ -112,6 +113,7 @@ async function runScenario(page: Page, title: string): Promise<void> {
         !PR10_ALL_SCENARIO_IDS.includes(scenarioId) &&
         !PR11_ALL_SCENARIO_IDS.includes(scenarioId) &&
         !PR13_ALL_SCENARIO_IDS.includes(scenarioId) &&
+        !CASTING_STATICS_ALL_SCENARIO_IDS.includes(scenarioId) &&
         !PILOT_CURRENT_ALL_SCENARIO_IDS.includes(scenarioId) &&
         !RUNNER_ALL_SCENARIO_IDS.includes(scenarioId) &&
         !PR12_ALL_SCENARIO_IDS.includes(scenarioId) &&
@@ -154,6 +156,7 @@ async function runScenario(page: Page, title: string): Promise<void> {
             !PR10_ALL_SCENARIO_IDS.includes(id) &&
             !PR11_ALL_SCENARIO_IDS.includes(id) &&
             !PR13_ALL_SCENARIO_IDS.includes(id) &&
+            !CASTING_STATICS_ALL_SCENARIO_IDS.includes(id) &&
             !PILOT_CURRENT_ALL_SCENARIO_IDS.includes(id) &&
             !RUNNER_ALL_SCENARIO_IDS.includes(id) &&
             !PR12_ALL_SCENARIO_IDS.includes(id) &&
