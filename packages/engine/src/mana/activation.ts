@@ -63,7 +63,15 @@ function planActivation(
   x: number,
   unavailable: readonly string[],
 ): ActivationPlan | null {
-  const sources = manaSourcesFor(ctx, player.id);
+  // A cost that takes cards from the hand (Pack Rat's discard) is paid before the mana here, so a
+  // hand mana source (Simian Spirit Guide) could be that card or leave too few to pay it. Fail
+  // closed: such an activation is priced and paid from the board alone.
+  const takesFromHand = costs.some(
+    (c) => c.kind === 'discardCard' || c.kind === 'discardHand' || c.kind === 'exileCardFromHand',
+  );
+  const sources = manaSourcesFor(ctx, player.id).filter(
+    (s) => !takesFromHand || s.fromHand !== true,
+  );
   const excluded = new Set(unavailable);
   if (costs.some((c) => c.kind === 'tap' || c.kind === 'sacrificeSelf' || c.kind === 'exileSelf'))
     excluded.add(source.cardId);

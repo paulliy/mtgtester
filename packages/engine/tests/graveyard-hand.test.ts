@@ -820,6 +820,30 @@ describe('mana abilities from the hand (Spirit Guides)', () => {
     expect(zoneOf(ctx, skeleton.cardId)).toBe('battlefield');
   });
 
+  it('graveyard-hand-spirit-guide-discard-cost — a Spirit Guide is not both the discard and the mana', () => {
+    const rat = oracle({
+      name: 'Lab Rat',
+      typeLine: 'Artifact',
+      manaCost: '{1}',
+      oracleText: '{2}{B}, Discard a card: Draw a card.',
+    });
+    expect(interpretCard(rat).modeled).toBe(true);
+    const ctx = pod('graveyard-hand-guide-discard');
+    const perm = spawn(ctx, 'P1', rat);
+    addMana(playerById(ctx, 'P1'), mana('BC'));
+    const guide = conjure(ctx, 'P1', pinned('Simian Spirit Guide'), 'hand');
+    // The Guide is the only card: it cannot both be discarded and make the third mana.
+    expect(optionFor(ctx, 'P1', perm.id)).toBeUndefined();
+    // With the board able to pay, the Guide may be the discarded card.
+    addMana(playerById(ctx, 'P1'), mana('C'));
+    const option = optionFor(ctx, 'P1', perm.id);
+    expect(option).toBeDefined();
+    take(ctx, 'P1', option!.payload as PriorityActionPayload);
+    settle(ctx);
+    expect(zoneOf(ctx, guide.cardId)).toBe('graveyard');
+    expect(playerById(ctx, 'P1').manaEntries).toHaveLength(0);
+  });
+
   it('graveyard-hand-spirit-guide-self — a Spirit Guide never pays to cast itself', () => {
     const ctx = pod('graveyard-hand-guide-self');
     spawn(ctx, 'P1', mountain());
