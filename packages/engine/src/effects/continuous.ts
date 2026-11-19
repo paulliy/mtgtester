@@ -1211,7 +1211,10 @@ export function computeAllCharacteristics(
   // every tapped/untapped mix of the same board, so a tap alone is no miss. That is what keeps
   // each state the mana planner searches from costing a full pass.
   const includeTapped = cached?.usedTapped ?? true;
-  const digest = scopedDigestOf(ctx, extra, includeGraveyards, includeTapped);
+  // With nothing cached the lookup is a miss whatever the digest, so it is computed once, after
+  // the pass, with the flags the pass established.
+  const digest =
+    cached === undefined ? undefined : scopedDigestOf(ctx, extra, includeGraveyards, includeTapped);
 
   if (cached !== undefined && cached.digest === digest && cached.extraCardId === extraCardId) {
     countWork('layerCacheHits');
@@ -1232,7 +1235,7 @@ export function computeAllCharacteristics(
   setCached(ctx, {
     // Re-digest with the flags this pass actually established, so the next comparison matches.
     digest:
-      usedGraveyards === includeGraveyards && usedTapped === includeTapped
+      digest !== undefined && usedGraveyards === includeGraveyards && usedTapped === includeTapped
         ? digest
         : scopedDigestOf(ctx, extra, usedGraveyards, usedTapped),
     usedGraveyards,
