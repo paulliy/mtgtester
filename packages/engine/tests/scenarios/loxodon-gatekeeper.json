@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "card": "Loxodon Gatekeeper",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{0}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Rock",
+      "typeLine": "Artifact",
+      "manaCost": "{0}"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "loxodon-gatekeeper-opponent-permanents-tapped",
+      "title": "Loxodon Gatekeeper: an opponent's land, creature and artifact enter tapped",
+      "clauses": [1],
+      "instructions": ["P2 plays a Forest, then casts Scenario Bear and Scenario Rock."],
+      "expectedOutcome": "The Forest, the Bear and the Rock each enter under P2's control tapped.",
+      "turn": {
+        "player": "P2"
+      },
+      "seats": {
+        "P1": {
+          "battlefield": ["Loxodon Gatekeeper"]
+        },
+        "P2": {
+          "hand": ["Forest", "Scenario Bear", "Scenario Rock"],
+          "battlefield": ["Plains", "Plains", "Plains"]
+        }
+      },
+      "script": [
+        {
+          "player": "P2",
+          "choose": "/^Play Forest/"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Bear/"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Cast Scenario Rock/"
+        }
+      ],
+      "expect": [
+        {
+          "tapped": {
+            "card": "Forest",
+            "equals": true,
+            "player": "P2"
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Bear",
+            "equals": true,
+            "player": "P2"
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Rock",
+            "equals": true,
+            "player": "P2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "loxodon-gatekeeper-own-permanents-untapped",
+      "title": "Loxodon Gatekeeper: your own land, creature and artifact still enter untapped",
+      "clauses": [1],
+      "instructions": ["Play a Forest, then cast Scenario Bear and Scenario Rock."],
+      "expectedOutcome": "The restriction only applies to opponents' permanents: your Forest, Bear and Rock enter untapped.",
+      "seats": {
+        "P1": {
+          "hand": ["Forest", "Scenario Bear", "Scenario Rock"],
+          "battlefield": ["Loxodon Gatekeeper", "Plains", "Plains", "Plains"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Play Forest/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Bear/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Rock/"
+        }
+      ],
+      "expect": [
+        {
+          "tapped": {
+            "card": "Forest",
+            "equals": false,
+            "player": "P1"
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Bear",
+            "equals": false,
+            "player": "P1"
+          }
+        },
+        {
+          "tapped": {
+            "card": "Scenario Rock",
+            "equals": false,
+            "player": "P1"
+          }
+        }
+      ]
+    }
+  ]
+}
