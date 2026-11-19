@@ -5635,7 +5635,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/w1-remaining.ts",
-      "uniqueOracleIds": 7,
+      "uniqueOracleIds": 6,
       "reviewedOracleIds": 7,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -5774,6 +5774,13 @@
     }
   ],
   "interpreterRestored": [
+    {
+      "oracleId": "60e7130a-d321-4e50-93a4-999013c76054",
+      "name": "Gut, True Soul Zealot",
+      "sourceFile": "packages/engine/src/cards/overrides/w1-remaining.ts",
+      "restoredIn": "commander-pairs",
+      "note": "unsupportedCard deleted: Choose a Background now parses as deck construction only and deck validation checks the Background pairing; the attack trigger stays authored in coverage-pr11.ts, tested in packages/engine/tests/pr11-lifecycle.test.ts."
+    },
     {
       "oracleId": "349ea6c7-6b3e-417f-b082-b712e2b1635b",
       "name": "Forum of Amity",

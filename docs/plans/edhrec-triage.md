@@ -6,9 +6,9 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 | Failing slot | Cards | Share of slots |
 | ------------ | ----: | -------------: |
-| effect | 2412 | 10.99% |
-| line | 1196 | 6.70% |
-| subject | 1163 | 5.72% |
+| effect | 2414 | 10.96% |
+| line | 1195 | 6.74% |
+| subject | 1162 | 5.71% |
 | trigger event | 391 | 1.55% |
 | cost | 298 | 1.26% |
 | condition | 154 | 0.69% |
@@ -19,7 +19,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 
 `line` means no slot recorded a failure inside the line: the line matched no sentence shape at all.
 
-## effect (2412)
+## effect (2414)
 
 - 39 × `look at the top n cards of your library` (Thassa's Oracle, Loot, Exuberant Explorer, Experimental Augury)
 - 16 × `exile the top card of your library` (Blazing Crescendo, Cori Mountain Monastery, Count on Luck)
@@ -37,7 +37,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 8 × `discover n` (Hit the Mother Lode, Hidden Nursery, Hidden Volcano)
 - 8 × `populate` (Nesting Dovehawk, Determined Iteration, Growing Ranks)
 
-## line (1196)
+## line (1195)
 
 - 11 × `modular n` (Arcbound Ravager, Arcbound Crusher, Scrapyard Recombiner)
 - 10 × `when this land enters, it deals n damage to target opponent` (Abraded Bluffs, Bristling Backwoods, Jagged Barrens)
@@ -55,7 +55,7 @@ Each of the 5917 cards in the [EDHREC ready list](edhrec-ready-list.md) that is 
 - 5 × `buyback {m}` (Capsize, Sprout Swarm, Mystic Speculation)
 - 4 × `~ doesn't untap during your untap step` (Basalt Monolith, Grim Monolith, Goblin Sharpshooter)
 
-## subject (1163)
+## subject (1162)
 
 - 27 × `you may` (Mockingbird, Vesuva, Phantasmal Image)
 - 25 × `~` (Yahenni, Undying Partisan, Marvin, Murderous Mimic, Paradise Druid)

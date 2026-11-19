@@ -75,7 +75,7 @@ rank	outcome	definition
 514	blocked	568e7f13c3e5f597
 515	blocked	7929543806d77d6d
 520	blocked	453b39ec62531365
-523	blocked	cd9eadb7afbc7555
+523	modeled	cc50cc2b4192d1fb
 526	blocked	8056ffe14b3a3b46
 527	blocked	b258ff9d72afa420
 531	blocked	fba3db651613c7bf
@@ -266,7 +266,7 @@ rank	outcome	definition
 956	modeled	4bd4f8a90f098ed2
 958	modeled	279df5a510acc865
 962	blocked	46940f1363a01528
-964	blocked	ace56b8e3c47cda1
+964	modeled	16960e0da154586b
 966	blocked	f2bf86bee581c7aa
 969	blocked	328b75d58527db6b
 971	blocked	f537108a361e80f4
@@ -506,7 +506,7 @@ rank	outcome	definition
 1599	blocked	5c044bf17934e64a
 1601	modeled	7e6b59725bcf2f24
 1605	["unrecognized rules text: \"~ deals damage equal to the sacrificed creature's power to any target.\""]	f1e9520db4815718
-1609	blocked	82952fa8853b0d72
+1609	modeled	cc3916739ba97697
 1611	blocked	61b627e4f973cf1b
 1612	blocked	dd8f1498084f1cab
 1613	blocked	22ed172f9accd829
@@ -1396,7 +1396,7 @@ rank	outcome	definition
 3620	blocked	6c6975e945d9add0
 3622	blocked	d24fbc9bc8cb76fc
 3623	blocked	3688ea07c58fe84b
-3628	blocked	1951ce054018f025
+3628	modeled	bcec29c436c13b2a
 3629	blocked	f0f98a49a064f108
 3630	blocked	f4ba10fe0b00dc14
 3631	blocked	8eece01cdf5fee06
@@ -1526,7 +1526,7 @@ rank	outcome	definition
 3889	blocked	eb4f438960c82b12
 3894	blocked	e1ad2476241a6dd8
 3896	blocked	99dadafdf9fa9713
-3898	blocked	ad10e004a2cf29c2
+3898	modeled	5346923757676e34
 3901	blocked	d61b5472895d2c91
 3903	blocked	baa32daf5cfc6852
 3904	blocked	f0132f69ff099dda
@@ -1775,7 +1775,7 @@ rank	outcome	definition
 4439	blocked	81eff3b72f31fbe4
 4440	blocked	39b2a045f62da779
 4443	blocked	dce9f62b7e76ce7c
-4444	blocked	3faddd31c65f1e5b
+4444	modeled	a82d386e9532e5d0
 4446	blocked	8f384991ff202d97
 4456	modeled	d5fe5fe64366fbe0
 4457	modeled	9aa12790d9ff9622
@@ -1871,7 +1871,7 @@ rank	outcome	definition
 4634	blocked	759550bebb0128c7
 4636	blocked	3d5fec7ab27b8b6d
 4639	blocked	ded829eb8a1d92c9
-4641	blocked	6f6137d263a96688
+4641	modeled	9169bdc556cb595f
 4644	blocked	5c2a424825587a39
 4645	blocked	d1288fadca76971e
 4646	blocked	f8c111735d307bff
@@ -2334,7 +2334,7 @@ rank	outcome	definition
 5599	blocked	d753783ea0c2bd81
 5600	blocked	089cfa24341c1c8f
 5603	modeled	844e6fad305b45b5
-5604	blocked	cf0f2d8a7f4ecf3e
+5604	modeled	8493f6931fab0585
 5607	blocked	59d7370fab1d46e2
 5608	blocked	c6f10f4e222373f5
 5609	blocked	9edf2dd70b23a072
@@ -2470,7 +2470,7 @@ rank	outcome	definition
 5849	blocked	4b8fb2134647137e
 5850	blocked	eb1cf015a49759bf
 5851	blocked	6913e7b8f9c650ba
-5853	blocked	ca63e672a32603e2
+5853	modeled	c026b02a0cc44683
 5855	blocked	38c0330ab01491a7
 5856	blocked	53b4ca6e67e818c7
 5858	blocked	3247a1d03870c32b
@@ -2787,7 +2787,7 @@ rank	outcome	definition
 6528	blocked	798ad55aff5fd84e
 6531	blocked	57e03fc8d81232f3
 6532	blocked	8cde7fa699b24603
-6533	blocked	b920995a35690d2c
+6533	modeled	e95dbd8b3d72de71
 6535	blocked	a5809723d10e45ce
 6539	blocked	1359faa7d736f6c8
 6540	blocked	9027ee573d3b0654
@@ -3579,7 +3579,7 @@ rank	outcome	definition
 8146	blocked	d47efeec2cbecd95
 8147	blocked	0bdeb836c7d7f7dd
 8149	blocked	45e89bc1cffc63d9
-8150	blocked	e44e15ce3e0b7957
+8150	modeled	d44317bba5352e85
 8155	blocked	44bafd9d46026465
 8156	modeled	bc757a5f7d85ce5e
 8158	blocked	831e73a7d78891e0
@@ -3974,9 +3974,9 @@ rank	outcome	definition
 8974	blocked	f3545c04cd27b3a9
 8977	blocked	eef49556e479ea4e
 8980	blocked	ce4c171e78dbebb9
-8981	blocked	1249a3b3906547a7
+8981	modeled	30e90c54a53685e6
 8982	blocked	2f7b2a428bef81de
-8983	blocked	de0f669f92ba798a
+8983	modeled	350f67b03203a4e3
 8985	blocked	e8668e07d0743b55
 8986	blocked	2ed5401b241c4724
 8991	blocked	ea4dc55c4d32fdf4
@@ -4265,7 +4265,7 @@ rank	outcome	definition
 9553	blocked	2511bdca4a75403c
 9556	blocked	e30843280528d45b
 9558	modeled	9fd701f8e423a1c3
-9560	blocked	0fa14e0b19517a3b
+9560	modeled	ac300ec8dcf80d8c
 9561	blocked	33aea5767cab4762
 9562	blocked	14e6b877955a9f59
 9564	blocked	8df032625de3eba3
@@ -5414,7 +5414,7 @@ rank	outcome	definition
 11860	modeled	5f81c543a2d30c69
 11862	blocked	e028757db97c25e6
 11863	modeled	9dae096c496a5f1b
-11864	blocked	33da25b8b49a473a
+11864	modeled	0cf6165cd293cf0a
 11865	blocked	8cc47a2558b42008
 11867	blocked	22dff8d58829591d
 11868	modeled	ba6a2bf558980cd7

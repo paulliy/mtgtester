@@ -19,6 +19,11 @@ export interface PlayerBoardState extends Omit<SpectatorState, 'seats' | 'battle
   /** Current top cards revealed publicly or privately viewable by this player. */
   revealedLibraryTops?: { player: PlayerId; card: SpectatorCard }[];
   /**
+   * Cards this viewer saw in another player's hand ("look at target player's hand", CR 402.3)
+   * that are still there. Only the viewer who looked gets it, and only when non-empty.
+   */
+  knownHands?: { player: PlayerId; cards: SpectatorCard[] }[];
+  /**
    * The viewer's ready mana, for the player's resource strip: floating mana plus one unit per
    * mana a currently activatable source makes without itself costing mana, and the colors those
    * units can be. Sources that need mana to activate (Cabal Coffers, filter lands) or whose mana

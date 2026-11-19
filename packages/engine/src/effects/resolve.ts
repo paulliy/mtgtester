@@ -132,6 +132,7 @@ import {
   movePermanentsTogether,
   playerById,
   queuePlayerTriggersForEvent,
+  liveKnownHandCard,
   queueTriggersForEvent,
   queueTriggersForObject,
   removeFromCurrentZone,
@@ -340,6 +341,20 @@ function* gainLifeFromLifelink(
   if (entry === undefined) batch.set(key, { controllerId: source.controllerId, amount });
   else entry.amount += amount;
 }
+
+/**
+ * Instructions that deal damage to several recipients at once (CR 120.3f): a run of them shares
+ * one lifelink batch, so each source gains life once for all of it.
+ */
+const SIMULTANEOUS_DAMAGE_OPS: ReadonlySet<Effect['op']> = new Set<Effect['op']>([
+  'damageEach',
+  'damageEachPlayer',
+  'damageEachOtherOpponent',
+  'eachOpponentDamage',
+  'dealDamageEachChosen',
+  'dealDamageDivided',
+  'damageEachCreatureController',
+]);
 
 /** Gain each source's summed lifelink from a finished simultaneous-damage batch, once each. */
 function* flushLifelinkBatch(
@@ -2207,9 +2222,10 @@ function* executeAbilityEffects(
     return currentId !== null && findObjectById(ctx, currentId) !== undefined ? currentId : null;
   };
 
-  // "Deals N damage to each creature and each player" is two instructions but one simultaneous
-  // damage event, so a lifelink source's gain is summed across the run and gained once
-  // (CR 120.3f, 119.9). A run is consecutive damageEach / damageEachPlayer instructions.
+  // Damage one instruction deals to several recipients is dealt at once, and "deals N damage to
+  // each creature and each player" is two instructions but one simultaneous damage event. So a
+  // lifelink source's gain is summed across a run of consecutive multi-recipient damage
+  // instructions and gained once (CR 120.3f, 119.9).
   let lifelinkBatch: Map<string, { controllerId: PlayerId; amount: number }> | undefined;
   const closeLifelinkBatch = function* (): GameGen<void> {
     if (lifelinkBatch === undefined) return;
@@ -2219,7 +2235,7 @@ function* executeAbilityEffects(
     yield* flushLifelinkBatch(ctx, batch);
   };
   for (const effect of ability.effects ?? []) {
-    if (effect.op === 'damageEach' || effect.op === 'damageEachPlayer') {
+    if (SIMULTANEOUS_DAMAGE_OPS.has(effect.op)) {
       if (lifelinkBatch === undefined && ctx.lifelinkBatch === undefined) {
         lifelinkBatch = new Map();
         ctx.lifelinkBatch = lifelinkBatch;
@@ -4460,6 +4476,25 @@ function* executeAbilityEffects(
         const count = amountOf(effect.count);
         for (const player of players) loseLife(ctx, player, amount);
         for (const player of players) yield* drawCards(ctx, player, count);
+        break;
+      }
+      case 'lookAtHand': {
+        const playerId = ref(effect.target);
+        const player = ctx.state.players.find((candidate) => candidate.id === playerId);
+        if (player === undefined || player.hasLost || player.id === controller.id) break;
+        const known = (controller.knownHandCards ?? []).filter(
+          (entry) => entry.owner !== player.id && liveKnownHandCard(ctx, entry) !== undefined,
+        );
+        for (const card of player.hand) known.push({ owner: player.id, objectId: card.id });
+        controller.knownHandCards = known;
+        // The event names no cards: the shared log, replays and spectators learn only that it
+        // happened (CR 701.20a: looking is not revealing).
+        emit(
+          ctx,
+          'lookAtHand',
+          { player: controller.id, target: player.id, count: player.hand.length },
+          controller.id,
+        );
         break;
       }
       case 'revealHandAndDiscard': {

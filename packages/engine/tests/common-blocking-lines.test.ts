@@ -28,7 +28,17 @@ import { createGame } from '../src/state/game';
 import { moveObject, playerById } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { runPrioritySequence } from '../src/turn/priority';
-import { conjure, copies, divination, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import {
+  conjure,
+  copies,
+  divination,
+  forest,
+  gameConfig,
+  oracle,
+  pump,
+  pumpStrict,
+  spawn,
+} from './fixtures';
 
 interface PinnedFixture {
   cards: { sha256: string; card: OracleCard }[];
@@ -92,16 +102,22 @@ function take(
   payload: PriorityActionPayload,
   targets: ReadonlyMap<number, string> = new Map(),
 ) {
-  return pump(applyPriorityAction(ctx, playerById(ctx, playerId), payload, { index: 0, targets }));
+  return pumpStrict(
+    applyPriorityAction(ctx, playerById(ctx, playerId), payload, { index: 0, targets }),
+  );
 }
 
 /** Every player passes; pending triggers go on the stack and resolve. */
 function settle(ctx: GameContext, answer?: Answer) {
-  return pump(runPrioritySequence(ctx), (decision, count) => {
-    const pass = decision.options.findIndex((option) => option.type === 'pass');
-    if (pass >= 0) return { index: pass, targets: new Map() };
-    return answer?.(decision, count) ?? { index: 0, targets: new Map() };
-  });
+  return pump(
+    runPrioritySequence(ctx),
+    (decision, count) => {
+      const pass = decision.options.findIndex((option) => option.type === 'pass');
+      if (pass >= 0) return { index: pass, targets: new Map() };
+      return answer?.(decision, count);
+    },
+    { strict: true },
+  );
 }
 
 const mana = (symbols: string) =>
@@ -240,7 +256,7 @@ describe('rule-static lines', () => {
     expect(optionFor(ctx, 'P1', trinket.id)).toBeUndefined();
     expect(rock.tapped).toBe(false);
 
-    pump(moveObject(ctx, rod, { zone: 'graveyard' }));
+    pumpStrict(moveObject(ctx, rod, { zone: 'graveyard' }));
     expect(optionFor(ctx, 'P1', trinket.id)).toBeDefined();
   });
 });
@@ -266,7 +282,7 @@ describe('spell and ability lines', () => {
     const option = optionFor(ctx, 'P2', counter.id);
     expect(option).toBeDefined();
     take(ctx, 'P2', option!.payload as PriorityActionPayload, new Map([[0, spell.id]]));
-    pump(resolveTopOfStack(ctx));
+    pumpStrict(resolveTopOfStack(ctx));
 
     expect(ctx.state.stack).toHaveLength(0);
     expect(ctx.state.exile.map((object) => object.name)).toContain(divination().name);
@@ -317,7 +333,7 @@ describe('spell and ability lines', () => {
       oracle({ name: 'Lab Relic', typeLine: 'Artifact', manaCost: '{1}' }),
       'graveyard',
     );
-    pump(moveObject(ctx, retriever, { zone: 'graveyard' }));
+    pumpStrict(moveObject(ctx, retriever, { zone: 'graveyard' }));
     const offered: string[] = [];
     settle(ctx, (decision) => {
       offered.push(...decision.options.map((option) => option.description));
@@ -330,7 +346,7 @@ describe('spell and ability lines', () => {
     // Alone in the graveyard it has no legal target, so it stays there.
     const lonely = pod('common-lines-retriever-alone');
     const only = spawn(lonely, 'P1', pinned('Myr Retriever'));
-    pump(moveObject(lonely, only, { zone: 'graveyard' }));
+    pumpStrict(moveObject(lonely, only, { zone: 'graveyard' }));
     settle(lonely);
     expect(playerById(lonely, 'P1').hand).toHaveLength(0);
     expect(playerById(lonely, 'P1').graveyard.map((object) => object.name)).toEqual([
