@@ -75,6 +75,8 @@ export interface CensusCounts {
   tactician: number;
   strategist: number;
   strategistReused: number;
+  /** Strategist wake reasons, seat dropped (see `StrategyCoordinator.strategistStats`). */
+  strategistWakes: Record<string, number>;
   tacticianPromptTokens: number;
   strategistPromptTokens: number;
   byDecisionType: Record<string, number>;
@@ -96,6 +98,7 @@ function emptyCounts(): CensusCounts {
     tactician: 0,
     strategist: 0,
     strategistReused: 0,
+    strategistWakes: {},
     tacticianPromptTokens: 0,
     strategistPromptTokens: 0,
     byDecisionType: {},
@@ -208,6 +211,7 @@ export async function censusPod(
   observe?.(engine);
   counts.strategist = coordinator.strategistStats.calls;
   counts.strategistReused = coordinator.strategistStats.reused;
+  addInto(counts.strategistWakes, coordinator.strategistStats.wakes);
   return counts;
 }
 
@@ -245,6 +249,7 @@ async function main(): Promise<void> {
       total.tactician += c.tactician;
       total.strategist += c.strategist;
       total.strategistReused += c.strategistReused;
+      addInto(total.strategistWakes, c.strategistWakes);
       total.tacticianPromptTokens += c.tacticianPromptTokens;
       total.strategistPromptTokens += c.strategistPromptTokens;
       addInto(total.byDecisionType, c.byDecisionType);
@@ -263,6 +268,7 @@ async function main(): Promise<void> {
         (total.tacticianPromptTokens + total.strategistPromptTokens) / total.turns,
       ),
       strategistReused: total.strategistReused,
+      strategistWakes: total.strategistWakes,
       tacticianByDecisionType: total.byDecisionType,
       // ADR 0044: would-fire counts per trigger (shadow), and model calls each live one made.
       triggerFiredPerTurn: Object.fromEntries(
