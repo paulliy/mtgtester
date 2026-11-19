@@ -324,6 +324,13 @@ export interface PaymentPlan {
   lifePaid?: number;
   /** Concrete mana-only cost after choosing how each Phyrexian pip is paid. */
   resolvedCost?: ParsedManaCost;
+  /**
+   * Life-gain replacement orders (CR 616.1) the plan depends on, by index into `tapSources`: the
+   * answers, in turn, to the order decisions that source's rider asks. Set only where the plan
+   * is payable under the chosen order and not under every order (a higher-gain order pays a
+   * life cost the least gain cannot), so the payment makes the choice the plan proved.
+   */
+  lifeGainOrders?: Record<number, number[]>;
 }
 
 /**

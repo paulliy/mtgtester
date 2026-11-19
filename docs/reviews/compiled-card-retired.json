@@ -114,6 +114,13 @@
       "reason": "Codex review on PR #72, 2026-11-17: 'If no counters were removed this way' branches on sourceHasCounters, not on counters actually removed; if it leaves in response it adds {C}{G}{U} instead of drawing (the Coalition Relic gap). A scan found only Replicating Ring with a removal shape, whose tokens do not depend on the removal."
     },
     {
+      "name": "Calamity Bearer",
+      "oracleId": "b3f7c4ac-b788-4307-9bc3-d99ce310e07c",
+      "patchSha256": "5607d8e0949d908f144cb6060a15faa4d38f147f92f1d99f3113ad143c99a454",
+      "batch": "chunk-012",
+      "reason": "The interpreter now parses this damage-doubling line (casting-statics PR #93, damageReplacement); the compiled patch double-claims it."
+    },
+    {
       "name": "Captain's Claws",
       "oracleId": "4cacd7de-83ac-4767-b6f2-f5a89f04a0b9",
       "patchSha256": "76a4ff5a3e8edfc9b58c2947e3dbabc2df09937194bdb24b746de833323ca496",
@@ -322,6 +329,13 @@
       "patchSha256": "61125ce7a107fff3b8ec86e86d9220725c4f144218bb1b4f73ca394971ba1d95",
       "batch": "chunk-003",
       "reason": "Owner review on PR #72, 2026-11-17: its rider applies even when it fails to become a copy."
+    },
+    {
+      "name": "Gratuitous Violence",
+      "oracleId": "7c340a39-4ee0-4ba1-bb66-6674f8020fda",
+      "patchSha256": "cbfea6a3925f22721cf2ccd77fb1d4fee97e278821e161c4ce7156227b639b05",
+      "batch": "chunk-002",
+      "reason": "The interpreter now parses this damage-doubling line (casting-statics PR #93, damageReplacement); the compiled patch double-claims it."
     },
     {
       "name": "Groundchuck & Dirtbag",
@@ -854,6 +868,13 @@
       "patchSha256": "a223770dcf565d933e199a9cad808f812fdf5331e2824952f803f71960f638b3",
       "batch": "chunk-008",
       "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Uncivil Unrest",
+      "oracleId": "bd655e8b-f192-4635-9e23-357b6f89ef8f",
+      "patchSha256": "20b20bb6fb31951916d0fefaaa07bd957c0c0abb46ba86ee4fd1812498daf453",
+      "batch": "chunk-003",
+      "reason": "The interpreter now parses this damage-doubling line (casting-statics PR #93, damageReplacement); the compiled patch double-claims it."
     },
     {
       "name": "Uncover the Moon-Letters",

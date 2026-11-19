@@ -121,22 +121,30 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   const turnOf = async () =>
     Number(/Turn (\d+)/.exec(await page.locator('.turn-badge').innerText())?.[1] ?? 0);
   const castTurn = await turnOf();
+  // The cast answered `currentRequestId`. The next request may not come this turn: the engine
+  // auto-passes a player whose only options are passes (brief §7.4), so with every land tapped
+  // for the spell the game can run straight on to the bots and back to your next upkeep. Each
+  // step therefore waits for a request newer than the last one answered, never the answered one.
+  let answeredRequestId = currentRequestId;
   for (let passes = 0; passes < 40; passes++) {
+    const requestId = await waitForNewPlayerAction(answeredRequestId);
     if ((await turnOf()) > castTurn && (await passPriority.isVisible())) {
       if ((await page.locator('.turn-badge').innerText()).includes('Your turn')) break;
     }
-    // Bots can answer between frames, so bind to whichever request is newest.
-    const requestBeforePass = playerActionRequestIds.at(-1);
-    await expect(page.locator('.decision')).toHaveAttribute('data-request-id', requestBeforePass!);
     if (await passPriority.isVisible()) {
       await passPriority.click();
       if (await passAnyway.isVisible()) await passAnyway.click();
     } else if (await discardPrompt.isVisible()) {
       await page.locator('.hand-card.actionable').first().click();
+      const confirm = page.locator('.tray-actions').getByRole('button', { name: 'Confirm' });
+      if (await confirm.isVisible({ timeout: 1000 }).catch(() => false)) await confirm.click();
+    } else {
+      const choice = (await page.locator('.decision').innerText()).replace(/\s+/g, ' ').trim();
+      throw new Error(
+        `A non-priority human choice appeared while passing to your next turn; this scenario needs an explicit UI step. The choice: ${choice}`,
+      );
     }
-    await expect
-      .poll(() => playerActionRequestIds.at(-1), { timeout: 60_000 })
-      .not.toBe(requestBeforePass);
+    answeredRequestId = requestId;
   }
   await expect(page.locator('.turn-badge')).toContainText('Your turn');
   const summary = page.locator('.bot-summary');

@@ -878,26 +878,40 @@ describe('Gut, True Soul Zealot', () => {
   const thopter = (): OracleCard =>
     oracle({ name: 'Spare Artifact', typeLine: 'Artifact', manaCost: '{1}' });
   /** P1 attacks P2 with `attacker`; `sacrifice` names the permanent to sacrifice, or null to decline. */
-  function attack(ctx: GameContext, attacker: string, sacrifice: string | null): string[] {
+  function attack(
+    ctx: GameContext,
+    attacker: string | readonly string[],
+    sacrifice: string | null,
+    triggers: { offered: number } = { offered: 0 },
+  ): string[] {
+    const attackers = typeof attacker === 'string' ? [attacker] : attacker;
     ctx.state.phase = 'combat';
     const offered: string[] = [];
-    pump(runCombatPhase(ctx), (decision) => {
-      if (decision.decisionType === 'declareAttackers')
-        return declareAttacks(decision, (id) => (id === attacker ? 'P2' : null));
-      const accept = decision.options.findIndex((option) => option.type === 'acceptTrigger');
-      if (accept >= 0) {
-        const decline = decision.options.findIndex((option) => option.type === 'declineTrigger');
-        return { index: sacrifice === null ? decline : accept, targets: new Map() };
-      }
-      if (decision.prompt.includes('choose a permanent to sacrifice')) {
-        offered.push(...decision.options.map((option) => option.description));
-        const index = decision.options.findIndex(
-          (option) => option.description === `Sacrifice ${sacrifice}`,
-        );
-        return { index: Math.max(0, index), targets: new Map() };
-      }
-      return { index: 0, targets: new Map() };
-    });
+    pump(
+      runCombatPhase(ctx),
+      (decision) => {
+        if (decision.decisionType === 'declareAttackers')
+          return declareAttacks(decision, (id) => (attackers.includes(id) ? 'P2' : null));
+        const accept = decision.options.findIndex((option) => option.type === 'acceptTrigger');
+        if (accept >= 0) {
+          triggers.offered += 1;
+          const decline = decision.options.findIndex((option) => option.type === 'declineTrigger');
+          return { index: sacrifice === null ? decline : accept, targets: new Map() };
+        }
+        if (decision.prompt.includes('choose a permanent to sacrifice')) {
+          offered.push(...decision.options.map((option) => option.description));
+          const index = decision.options.findIndex(
+            (option) => option.description === `Sacrifice ${sacrifice}`,
+          );
+          return { index: Math.max(0, index), targets: new Map() };
+        }
+        if (decision.decisionType === 'declareBlockers') return declareBlocks(decision, () => null);
+        // Two of Gut's triggers at once (a per-attacker trigger) ask for an order; any order will do.
+        if (decision.decisionType === 'orderTriggers') return { index: 0, targets: new Map() };
+        return undefined;
+      },
+      { strict: true },
+    );
     return offered;
   }
 
@@ -923,6 +937,18 @@ describe('Gut, True Soul Zealot', () => {
     expect(computeCharacteristics(ctx, skeleton).keywords).toContain('menace');
     // It attacked P2 alongside Gut: the 4 combat damage is in P2's life total.
     expect(player(ctx, 'P2').life).toBe(40 - computeCharacteristics(ctx, gut).power - 4);
+
+    // "Whenever you attack" triggers once per combat, however many creatures attack.
+    const pair = game('pr11-gut-two-attackers');
+    const leader = spawn(pair, 'P1', GUT);
+    const partner = spawn(pair, 'P1', bear());
+    spawn(pair, 'P1', thopter());
+    spawn(pair, 'P1', thopter());
+    const triggers = { offered: 0 };
+    attack(pair, [leader.id, partner.id], 'Spare Artifact', triggers);
+    expect(triggers.offered).toBe(1);
+    expect(battlefield(pair, 'Spare Artifact')).toHaveLength(1);
+    expect(battlefield(pair, 'Skeleton')).toHaveLength(1);
   });
 
   it('gut-c01-negative — declining, or having nothing else to sacrifice, makes no Skeleton', () => {
@@ -948,6 +974,8 @@ describe('Gut, True Soul Zealot', () => {
         if (decision.decisionType === 'declareAttackers')
           return declareAttacks(decision, (id) => (id === raider.id ? 'P1' : null));
         if (decision.decisionType === 'declareBlockers') return declareBlocks(decision, () => null);
+        // Two of Gut's triggers at once (a per-attacker trigger) ask for an order; any order will do.
+        if (decision.decisionType === 'orderTriggers') return { index: 0, targets: new Map() };
         return { index: 0, targets: new Map() };
       },
       { strict: true },
