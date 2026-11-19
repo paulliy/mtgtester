@@ -29,6 +29,7 @@
  * `exec` command (Anthropic API), a batch job, or an agent. `check` is idempotent: run it after
  * each round of answers until nothing is pending.
  */
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   existsSync,
@@ -39,7 +40,15 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
+import { relative, resolve } from 'node:path';
 import type { CardDefinition } from '../../packages/engine/src/cards/definition';
+import {
+  appendRefusals,
+  PRIMITIVE_BACKLOG_GROUPS_PATH,
+  renderGroupsFile,
+  type BacklogGroupsFile,
+  type XmageBucket,
+} from '../../packages/server/src/cards/primitive-backlog';
 import { runPrettier } from '../cards/prettier';
 import {
   loadCalibrationSet,
@@ -965,6 +974,7 @@ function report(trial: string): void {
     `${trial}/results.json`,
     `${JSON.stringify({ measuredCostUsd: totalCost, estimatedCost: estimate, calibration, cards: results }, null, 2)}\n`,
   );
+  feedPrimitiveBacklog(trial, states);
   const tally = new Map<string, number>();
   for (const row of results) tally.set(row.outcome, (tally.get(row.outcome) ?? 0) + 1);
   console.log(Object.fromEntries(tally));
@@ -982,6 +992,53 @@ function report(trial: string): void {
   }
   console.log(`API cost recorded: $${totalCost.toFixed(4)} over ${usage.length} calls`);
   console.log('estimate from prompt and answer sizes:', estimate);
+}
+
+const XMAGE_BUCKETS: ReadonlySet<string> = new Set([
+  'xmage-known-classes',
+  'xmage-custom-classes',
+  'xmage-missing',
+]);
+
+/**
+ * Append this trial's refusals to the primitive backlog's groups file as ungrouped entries, so the
+ * next `bun run primitive-backlog` lists them under "needs grouping". Cards the file already lists
+ * are left alone, so re-running `report` adds nothing.
+ */
+function feedPrimitiveBacklog(trial: string, states: readonly CardState[]): void {
+  const path = resolve(PRIMITIVE_BACKLOG_GROUPS_PATH);
+  if (!existsSync(path)) return;
+  const file = JSON.parse(readFileSync(path, 'utf8')) as BacklogGroupsFile;
+  const trialPath = relative(process.cwd(), resolve(trial)).replace(/\\/g, '/');
+  // Only committed trials feed the backlog; a scratch or calibration run elsewhere must not
+  // touch the tracked groups file.
+  if (!trialPath.startsWith('docs/reviews/')) {
+    console.log(
+      `${trialPath} is not under docs/reviews/, so its refusals were not added to the primitive backlog`,
+    );
+    return;
+  }
+  const added = appendRefusals(
+    file,
+    states
+      .filter((state) => state.stage === 'inexpressible')
+      .map((state) => ({
+        name: state.name,
+        trial: trialPath,
+        reason: state.inexpressibleReason ?? '',
+        ...(state.xmageBucket !== undefined && XMAGE_BUCKETS.has(state.xmageBucket)
+          ? { xmageBucket: state.xmageBucket as XmageBucket }
+          : {}),
+      })),
+  );
+  if (added.length === 0) return;
+  writeFileSync(path, renderGroupsFile(file));
+  // Regenerate the queue and report so snapshots:check stays clean.
+  const regen = spawnSync('bun', ['run', 'primitive-backlog'], { stdio: 'inherit' });
+  if (regen.status !== 0) throw new Error('bun run primitive-backlog failed after adding refusals');
+  console.log(
+    `added ${added.length} refusals to ${PRIMITIVE_BACKLOG_GROUPS_PATH} as ungrouped; group them by hand, then run bun run primitive-backlog`,
+  );
 }
 
 const argv = process.argv.slice(2);
