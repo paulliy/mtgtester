@@ -1063,10 +1063,71 @@ function idleReactivePenalty(
   return 0;
 }
 
-/** Does casting this at sorcery speed break the strategist's hold-up-mana knob? */
+/** Roles worth keeping mana open for through the opponents' turns. */
+const INTERACTION: ReadonlySet<CardRole> = new Set([
+  'counter',
+  'removal',
+  'wipe',
+  'burn',
+  'protection',
+]);
+
+/**
+ * The mana the seat's held instant-speed interaction needs, or 0 when it holds none: the dearest
+ * play costing at most `holdUpMaxInteractionCost` among instants with an interaction role and
+ * flash cards in hand, and instant-speed interaction abilities on the menu.
+ */
+function heldInteractionCost(ctx: PolicyContext): number {
+  const { view, request } = ctx;
+  let cost = 0;
+  const consider = (mv: number): void => {
+    if (mv > 0 && mv <= P.holdUpMaxInteractionCost) cost = Math.max(cost, mv);
+  };
+  for (const card of view.hand) {
+    const traits = traitsFor(ctx, card.name);
+    if (traits === undefined) continue;
+    const interacts = traits.roles.some((r) => INTERACTION.has(r));
+    const flashCreature = traits.flash === true && traits.types.includes('Creature');
+    const instantSpeed = traits.types.includes('Instant') || traits.flash === true;
+    if ((instantSpeed && interacts) || flashCreature) consider(traits.manaValue);
+  }
+  for (const action of request.legalActions) {
+    if (action.type !== 'activateAbility' || action.data?.['producesMana'] === true) continue;
+    const index = abilityIndexOf(action);
+    const traits = traitsFor(ctx, sourceNameOf(action, view));
+    if (index === undefined || traits === undefined || traits.abilitySorcery?.[index] === true)
+      continue;
+    if (!(traits.abilityRoles?.[index] ?? []).some((r) => INTERACTION.has(r))) continue;
+    const shown = action.data?.['manaCost'];
+    if (typeof shown === 'string') consider(manaValueOfCost(shown));
+  }
+  return cost;
+}
+
+/** Lands and other mana-producing permanents the seat controls, tapped or not. */
+function manaBase(ctx: PolicyContext): number {
+  const { view } = ctx;
+  return view.battlefield.filter(
+    (p) =>
+      p.controller === view.seat &&
+      (isLandType(p.typeLine) || (traitsFor(ctx, p.name)?.manaUnits?.length ?? 0) > 0),
+  ).length;
+}
+
+/**
+ * Does casting this at sorcery speed break the strategist's hold-up-mana knob? Only when the seat
+ * holds cheap instant-speed interaction to use that mana on, and only once its mana base can keep
+ * the reserve and still cast a three-drop, so early development is never held back.
+ */
 function holdUpPenalty(mv: number, action: LegalAction, ctx: PolicyContext): number {
-  const want = ctx.steering?.holdUpMana ?? 0;
-  if (want <= 0 || action.data?.['instantSpeed'] === true) return 0;
+  const knob = ctx.steering?.holdUpMana ?? 0;
+  if (knob <= 0 || action.data?.['instantSpeed'] === true) return 0;
+  const want = Math.min(
+    knob,
+    once(ctx, 'heldInteraction', () => heldInteractionCost(ctx)),
+  );
+  if (want <= 0) return 0;
+  if (once(ctx, 'manaBase', () => manaBase(ctx)) - want < P.holdUpDevelopMana) return 0;
   // Each source row is one permanent. Its `count` sums every alternative mana ability, so a
   // row that makes several kinds of mana (Aether Hub, Command Tower) usually yields one per
   // tap; only a single-symbol row (Forest, Sol Ring) is taken at its count. That undercounts a

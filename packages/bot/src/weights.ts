@@ -189,8 +189,18 @@ export const WEIGHTS = {
     wipeOwnLossWeight: 1.3,
     /** A pump or protection instant cast with nothing on the stack and no combat. */
     idleTrickPenalty: 8,
-    /** A sorcery-speed cast that drops untapped mana below the strategist's `holdUpMana`. */
+    /**
+     * A sorcery-speed cast that drops untapped mana below what the seat should keep up: the
+     * strategist's `holdUpMana`, but only for instant-speed interaction it actually holds.
+     */
     holdUpPenalty: 10,
+    /** Interaction dearer than this is not worth keeping mana up for every turn. */
+    holdUpMaxInteractionCost: 3,
+    /**
+     * Mana that must stay free to develop: holding mana up never stops a three-drop, so turns one
+     * to three play out normally and holding 2 starts with a fifth mana source.
+     */
+    holdUpDevelopMana: 3,
     /** Strategist steering by card name. */
     prioritizeBonus: 6,
     holdPenalty: 12,

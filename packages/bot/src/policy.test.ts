@@ -557,13 +557,73 @@ describe('steering', () => {
     expect(ranked.at(-1)!.action.id).toBe(1);
   });
 
+  // Holding mana up needs something to hold it for: a cheap counterspell in hand, and a mana base
+  // big enough that keeping two open still leaves a three-drop castable (five sources).
+  const counterspell = card('cs', 'Counterspell', 'Instant', '{U}{U}');
+  const holdKnowledge = knowledge({
+    Counterspell: { manaValue: 2, types: ['Instant'], roles: ['counter'] },
+    'Ambush Viper': { manaValue: 2, types: ['Creature'], flash: true, power: 2 },
+    'Dissolve Late': { manaValue: 4, types: ['Instant'], roles: ['counter'] },
+  });
+  const lands = (n: number) => Array.from({ length: n }, (_, i) => land(`l${i}`));
+  const holding = (extra: Partial<PlayerView> = {}) =>
+    view({ hand: [counterspell], battlefield: lands(5), ...extra });
+
   it('leaves mana up when asked to hold it', () => {
     const actions = [PASS, spell(1, 'Sorcery', '{3}')];
     const sources = [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 }));
-    const res = decide(request(actions), view({ manaSources: sources }), new Rng('a'), {
+    const res = decide(request(actions), holding({ manaSources: sources }), new Rng('a'), {
+      knowledge: holdKnowledge,
       steering: { holdUpMana: 2 },
     });
     expect(res.actionId).toBe(0);
+  });
+
+  it('holds nothing up when it holds no instant-speed interaction', () => {
+    const actions = [PASS, spell(1, 'Sorcery', '{3}')];
+    const sources = [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 }));
+    const res = decide(
+      request(actions),
+      holding({ hand: [], manaSources: sources }),
+      new Rng('a'),
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
+    );
+    expect(res.actionId).toBe(1);
+  });
+
+  it('never holds back early plays: a one-drop on turn one, a three-drop on turn three', () => {
+    const one = decide(
+      request([PASS, spell(1, 'Bear Cub', '{G}')]),
+      holding({
+        battlefield: lands(1),
+        manaSources: [{ name: 'Forest', symbols: ['G'], count: 1 }],
+      }),
+      new Rng('a'),
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
+    );
+    expect(one.actionId).toBe(1);
+    const three = decide(
+      request([PASS, spell(1, 'Three Drop', '{2}{G}')]),
+      holding({
+        battlefield: lands(3),
+        manaSources: [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 })),
+      }),
+      new Rng('a'),
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
+    );
+    expect(three.actionId).toBe(1);
+  });
+
+  it('holds up for a flash creature, but not for interaction dearer than three', () => {
+    const actions = [PASS, spell(1, 'Sorcery', '{3}')];
+    const sources = [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 }));
+    const answer = (hand: CardView[]) =>
+      decide(request(actions), holding({ hand, manaSources: sources }), new Rng('a'), {
+        knowledge: holdKnowledge,
+        steering: { holdUpMana: 2 },
+      }).actionId;
+    expect(answer([card('av', 'Ambush Viper', 'Creature — Snake', '{1}{G}')])).toBe(0);
+    expect(answer([card('dl', 'Dissolve Late', 'Instant', '{3}{U}')])).toBe(1);
   });
 
   it('counts grouped sources once toward held mana', () => {
@@ -572,20 +632,20 @@ describe('steering', () => {
     const forests = [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 }));
     const held = decide(
       request(actions),
-      view({ manaSources: forests, availableMana: { G: 3 } }),
+      holding({ manaSources: forests, availableMana: { G: 3 } }),
       new Rng('a'),
-      { steering: { holdUpMana: 2 } },
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
     );
     expect(held.actionId).toBe(0);
     // One row that makes five (a grouped or multi-mana source) leaves two up after {3}.
     const grouped = decide(
       request(actions),
-      view({
+      holding({
         manaSources: [{ name: 'Forest', symbols: ['G'], count: 5 }],
         availableMana: { G: 5 },
       }),
       new Rng('a'),
-      { steering: { holdUpMana: 2 } },
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
     );
     expect(grouped.actionId).toBe(1);
   });
@@ -596,7 +656,8 @@ describe('steering', () => {
       { name: 'Aether Hub', symbols: ['C', 'W', 'U', 'B', 'R', 'G'], count: 2 },
       { name: 'Forest', symbols: ['G'], count: 2 },
     ];
-    const res = decide(request(actions), view({ manaSources: sources }), new Rng('a'), {
+    const res = decide(request(actions), holding({ manaSources: sources }), new Rng('a'), {
+      knowledge: holdKnowledge,
       steering: { holdUpMana: 2 },
     });
     expect(res.actionId).toBe(0);
