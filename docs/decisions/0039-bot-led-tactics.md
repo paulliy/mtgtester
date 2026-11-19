@@ -114,6 +114,40 @@ models (`qwen/qwen3.7-flash`, `poolside/laguna-s-2.1`) were unavailable, so the 
 fallback bot. One game is also one sample. A fair quality comparison needs an available tactician
 chain and several games with seats swapped.
 
+### Paid duel, 2026-11-19 (Particle-1 tactician chain)
+
+`bun run ai-mode-duel`, seeds `mode-duel-2`, `-3` and `-4`, each meant to be played as-is and with
+`--swap`, 60-turn cap, default spend caps. Bot-led seats play `AI_TACTICAL_MODE=bot` with no
+escalation; model seats play `AI_TACTICAL_MODE=model` on `particle-ai/particle-1` at low reasoning,
+with `deepseek/deepseek-v4-flash` as the backup. Five of the six games finished; the sixth is
+described below and is not counted.
+
+| Game                   | Winner     | Turns | Bot calls/turn | Model calls/turn | Model fallback share | Cost    |
+| ---------------------- | ---------- | ----- | -------------- | ---------------- | -------------------- | ------- |
+| `mode-duel-2`          | model (P2) | 44    | 0.34           | 4.77             | 1.1%                 | $0.1153 |
+| `mode-duel-2`, swapped | bot (P4)   | 35    | 0.40           | 2.69             | 2.5%                 | $0.0566 |
+| `mode-duel-3`          | model (P4) | 54    | 0.41           | 6.43             | 1.6%                 | $0.1621 |
+| `mode-duel-3`, swapped | model (P1) | 37    | 0.41           | 4.43             | 0.7%                 | $0.0817 |
+| `mode-duel-4`          | model (P4) | 48    | 0.44           | 3.15             | 3.2%                 | $0.0918 |
+
+Against the bar set before the run:
+
+- **Calls per turn: met.** Bot seats made 0.34 to 0.44 calls per turn, about a tenth to a fifteenth
+  of the model seats' 2.69 to 6.43, so well under a third.
+- **Fallback share: met.** The model seats' share of failed tactician calls was at most 3.2%
+  (under 5%), so the model tactician got a fair game and the Particle-1 chain answered reliably.
+- **Win rate: not met.** Bot-led seats won 1 of 5 games (20%) against the 40% bar. With one game
+  unfinished the best possible result was 2 of 6, so the bar could not be reached.
+
+The sixth game, `mode-duel-4` swapped, did not finish. It stayed on turn 34 for over 30 minutes at
+about 80% CPU and 3 GB of memory with no model spend, which looks like an engine loop like the one
+noted above; it was stopped by hand and is not counted. An offline replay of the same seed and
+seating (bot answers every decision) did not reach that point in 150 seconds, so the cause is not
+known and the loop is not reproduced. Five games is a small sample, and one game is one sample
+each; the win-rate result is a miss, not a measured gap in play strength.
+
+Total spend for the five finished games was $0.51.
+
 ## Consequences
 
 - The fallback bot on a model failure, the table server's bots and the sweeps all play the new
