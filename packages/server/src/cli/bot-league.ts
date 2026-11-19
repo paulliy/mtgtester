@@ -17,7 +17,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { OracleCard } from '@mtg/shared';
+import type { OracleCard, PlayStyle } from '@mtg/shared';
 import { DEFAULT_POLICY_FIXES, POLICY_FIXES } from '@mtg/bot';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
@@ -60,7 +60,12 @@ export const ARMS: Record<string, LeagueArm> = {
   'style-aggro': styleArm('aggro'),
   'style-control': styleArm('control'),
   'style-combo': styleArm('combo'),
-  styled: { name: 'styled', knowledge: true, fixes: [...DEFAULT_POLICY_FIXES], styleFromDeck: true },
+  styled: {
+    name: 'styled',
+    knowledge: true,
+    fixes: [...DEFAULT_POLICY_FIXES],
+    styleFromDeck: true,
+  },
   // Hill-climb S7: the production bot steered by the proxy strategist, under each wake schedule.
   'proxy-every-turn': proxyArm('proxy-every-turn', 'everyTurn', 'table-v1'),
   'proxy-v1': proxyArm('proxy-v1', 'onChange', 'table-v1'),
@@ -72,7 +77,12 @@ export const ARMS: Record<string, LeagueArm> = {
 };
 
 function styleArm(style: PlayStyle): LeagueArm {
-  return { name: `style-${style}`, knowledge: true, fixes: [...DEFAULT_POLICY_FIXES], steering: { style } };
+  return {
+    name: `style-${style}`,
+    knowledge: true,
+    fixes: [...DEFAULT_POLICY_FIXES],
+    steering: { style },
+  };
 }
 
 function proxyArm(name: string, replan: 'everyTurn' | 'onChange', rule: WakeRule): LeagueArm {

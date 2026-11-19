@@ -20,7 +20,10 @@ export function styleForStrategy(strategy: ArchetypeStrategy): PlayStyle {
 }
 
 /** The style for a generated or imported deck, classified the way match setup classifies it. */
-export function styleForDeck(deck: { commander: OracleCard; cards: readonly OracleCard[] }): PlayStyle {
+export function styleForDeck(deck: {
+  commander: OracleCard;
+  cards: readonly OracleCard[];
+}): PlayStyle {
   const { strategy } = inferArchetype({
     commanders: [deck.commander],
     cards: deck.cards.map((card) => ({ card, quantity: 1 })),

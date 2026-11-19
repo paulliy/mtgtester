@@ -100,7 +100,6 @@ function sourceId(action: LegalAction): string | undefined {
   return action.interaction?.kind === 'source' ? action.interaction.sourceId : undefined;
 }
 
-
 /**
  * `scarce-answer`: at `priority`, the bot would cast a counterspell, board wipe, or destroy or
  * exile removal; no other card in the seat's hand has that role; and the public board shows no
@@ -152,10 +151,6 @@ function unknownCard(input: TriggerInput): boolean {
 }
 
 // --- lethal (the helpers live in `@mtg/bot`'s answers module) -----------------------------------
-
-
-
-
 
 /** Whether the creatures this attack leaves home (and vigilant attackers) hold off the swing. */
 function attackKeepsSafe(

@@ -103,9 +103,13 @@ Full tables and commands: [review](../reviews/bot-answer-discipline-2026-11-19.m
   44 wins to 36 (55%, 95% interval 44 to 66%), life share 0.55 to 0.45; 20 games halted on an
   engine payment refusal that also halts games without these fixes. Not a significant gain, and no
   sign of a loss, which is what the gate asks.
-- **Styles**: see the review. League decks are generated from the coverage pool and 97% of them
-  classify as midrange (194 of 200 seats; 6 control, no aggro or combo), so the `styled` arm is
-  nearly the plain bot there. Each preset was measured on its own against the plain bot instead.
+- **Styles**, each preset against the plain bot over 100 league games: `style-aggro` won 54 to 38
+  (58.7%, 95% interval 48.6 to 68.8%, life share 0.59); `style-control` won 42 to 45 (48.3%,
+  interval 37.8 to 58.8%). League decks are generated from the coverage pool and 97% of them
+  classify as midrange (194 of 200 seats; 6 control, no aggro or combo), so these runs measure
+  each preset on a midrange deck, not whether matching style to deck helps. The aggro result
+  suggests the plain bot is too passive with these decks; it needs a repeat on another seed before
+  it changes a default.
 
 ## Consequences
 

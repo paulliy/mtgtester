@@ -51,7 +51,10 @@ export interface LeagueGameReply {
   life: Record<PlayerId, number>;
   ms: number;
   /** Proxy strategist calls and reuses per arm name, for arms with `proxy`. */
-  proxyCalls?: Record<string, { calls: number; reused: number }>;  /** The play style each `styleFromDeck` seat was given. */
+  proxyCalls?: Record<
+    string,
+    { calls: number; reused: number }
+  >; /** The play style each `styleFromDeck` seat was given. */
   styles?: Record<string, PlayStyle>;
 }
 

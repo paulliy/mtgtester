@@ -78,7 +78,17 @@ the halts come from the current card pool, not from these fixes.
 Each preset on its own against the plain production bot, same decks and seeds, seats swapped:
 `bun run bot-league --games 100 --seed style-exp --a <arm> --b fixed --jobs 4 --timeout-ms 300000`.
 
-_Results pending: these runs were in progress when this was committed._
+| Arm             | Wins against `fixed` | Win rate (95% interval) | Life share | Halted, timed out |
+| --------------- | -------------------- | ----------------------- | ---------- | ----------------- |
+| `style-aggro`   | 54 to 38             | 58.7% (48.6 to 68.8%)   | 0.59       | 7, 1              |
+| `style-control` | 42 to 45             | 48.3% (37.8 to 58.8%)   | 0.48       | 12, 1             |
+
+No errors in either run. `style-combo` and `styled` were not run.
+
+The aggro preset is the one signal: playing these midrange decks more aggressively won more often,
+with an interval that just reaches 50%. The control preset made no measurable difference. Both are
+one run of 100 games, so a repeat on another seed is the next step before either becomes a
+default.
 
 The league's decks are generated from the coverage pool. Classified the way match setup does
 (`play-style.ts`), 194 of 200 seats are midrange and 6 control, with no aggro or combo. So these
