@@ -92,3 +92,29 @@ from this rule.
 `ai-mode-duel` gained a `SeatTracker` (own turns and elimination turn per seat), per-side
 `ownTurns`, `strategistCallsPerOwnTurn`, `promptTokensPerOwnTurn` and `strategistWakes`, and the
 engine's `halted`, `haltReason` and `haltSite`. Covered by `ai-mode-duel.test.ts`.
+
+## Follow-up: GLM provider allowlist
+
+The OpenRouter activity export for these games showed the strategist's GLM 5.3 Flash calls spread
+over 15 providers. At the same `effort: low`, Cohere (207 calls) and OpenInference (140) averaged
+about 1,130 reasoning tokens a call against 110 to 190 elsewhere, and cost 2 to 4 times as much:
+18% of GLM calls, 33% of GLM spend. Makora returned no reasoning at all. One Cohere call ran into
+the 5,000-token cap. Only 3.6% of prompt tokens were read from cache.
+
+`openRouterProviderOnly` (env `AI_OPENROUTER_PROVIDER_ONLY`) now sends `provider.only` per
+model. GLM 5.3 Flash defaults to the eight providers that served it at normal length and price
+on 40 or more calls: Wafer, InferenceNet, CoreWeave, Particle AI, Together, Modal, Mistral and
+Reka. Other models are unrestricted. The duel report counts attempts per serving provider.
+
+Five games on seeds `s7-batch-16`, `-17`, `-21`, `-23` and `-24` (`provider-allowlist/`):
+
+| Strategist calls           | Calls | Cost per call | Response tokens per call | Minutes per game turn |
+| -------------------------- | ----- | ------------- | ------------------------ | --------------------- |
+| All 56 games above         | 1,437 | $0.00058      | 429                      | 0.041                 |
+| Same five seeds above      | 132   | $0.00054      | 452                      |                       |
+| Same five seeds, allowlist | 109   | $0.00043      | 256                      | 0.024                 |
+
+All 109 calls went to allowlisted providers (CoreWeave 26, Wafer 20, InferenceNet 19, Particle
+AI 14, Together 12, Mistral 10, Modal 8); none failed. `s7-batch-23` halted on the mana payment
+gap at turn 17. Five games is a check that routing works and costs fall, not a measurement of
+by how much.

@@ -68,6 +68,8 @@ export interface Tally {
   settledUsd: number;
   /** Unpriced attempts whose billed cost could not be found after the game. */
   unsettledAttempts: number;
+  /** Physical attempts per serving provider, as OpenRouter names it (`provider` in the reply). */
+  providers: Record<string, number>;
 }
 
 export function emptyTally(): Tally {
@@ -83,6 +85,7 @@ export function emptyTally(): Tally {
     unknownCostCalls: 0,
     settledUsd: 0,
     unsettledAttempts: 0,
+    providers: {},
   };
 }
 
@@ -143,6 +146,10 @@ export function counting<M extends string = ModeName>(
   };
   inner.setAttemptObserver(async (attempt) => {
     const mode = modeByRequest.get(attempt.logicalRequestId);
+    if (mode !== undefined && attempt.backend !== undefined) {
+      const providers = tallies[mode].providers;
+      providers[attempt.backend] = (providers[attempt.backend] ?? 0) + 1;
+    }
     if (mode !== undefined && attempt.status !== 'accepted') {
       const { promptTokens, responseTokens, costUsd } = attempt.usage;
       const tally = tallies[mode];
