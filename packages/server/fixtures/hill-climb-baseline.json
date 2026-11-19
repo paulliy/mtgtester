@@ -11,32 +11,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "dc0eb202",
+      "commit": "94e42308",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 56.48,
+      "calibrationMs": 43.19,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 7.32,
+          "value": 6.38,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.238
+          "spread": 0.184
         },
         "engine.medianGameMsPerDecision": {
-          "value": 7.43,
+          "value": 6.45,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.143
+          "spread": 0.121
         },
         "setup.msPerGame": {
-          "value": 74.41,
+          "value": 0.85,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.135
+          "spread": 0.029
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -75,13 +75,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 3718,
+          "value": 4884,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 54.953,
+          "value": 60.194,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -92,14 +92,20 @@
           "better": "higher",
           "kind": "exact"
         },
+        "coverage.playableDecksPct": {
+          "value": 100,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
         "authoring.poolMutantsLeftPct": {
-          "value": 76.11,
+          "value": 77.59,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 44.97,
+          "value": 40.08,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -111,7 +117,7 @@
           "kind": "exact"
         },
         "authoring.poolDraftFailures": {
-          "value": 0,
+          "value": 1,
           "unit": "drafts",
           "better": "lower",
           "kind": "exact"
@@ -145,32 +151,32 @@
         "coverage",
         "authoring"
       ],
-      "commit": "dc0eb202",
+      "commit": "94e42308",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 57.12,
+      "calibrationMs": 48.08,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 51.68,
+          "value": 45.34,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.021
+          "spread": 0.055
         },
         "engine.medianGameMsPerDecision": {
-          "value": 13.21,
+          "value": 10.91,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.115
+          "spread": 0.155
         },
         "setup.msPerGame": {
-          "value": 69.81,
+          "value": 0.85,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.094
+          "spread": 0.166
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -209,13 +215,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 3718,
+          "value": 4884,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 54.953,
+          "value": 60.194,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -226,26 +232,32 @@
           "better": "higher",
           "kind": "exact"
         },
+        "coverage.playableDecksPct": {
+          "value": 100,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
         "authoring.poolMutantsLeftPct": {
-          "value": 76.06,
+          "value": 79.1,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 45.12,
+          "value": 40.6,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolCardsFullyScaffolded": {
-          "value": 998,
+          "value": 1038,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolDraftFailures": {
-          "value": 0,
+          "value": 2,
           "unit": "drafts",
           "better": "lower",
           "kind": "exact"
