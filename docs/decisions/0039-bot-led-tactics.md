@@ -114,3 +114,34 @@ chain and several games with seats swapped.
 - Not done here, and the next steps: tune `WEIGHTS.policy` by self-play with the league once the
   engine is cheaper (ADR 0023 item 12), compare bot mode against the model tactician in paid games,
   and use logged model answers to check the bot's close calls.
+
+## Amendment (2026-11-16): wake rule `table-v2` (hill-climb S7)
+
+`AI_STRATEGIST_WAKE_RULE` picks which table changes wake the strategist under `onChange`.
+`table-v1` is decision 5 as written. `table-v2`, the new default, keeps its thresholds but drops
+the changes a seat's knobs already expected:
+
+- the seat's own power or nonland count growing (its own plays carrying out its knobs); its own
+  losses still wake it;
+- any commander arriving: every commander is public from turn 0, in the prompt with its text and
+  cast count, and a big body still shows in its seat's power and permanents. A commander leaving,
+  which nobody can schedule, still wakes.
+
+Why: the census showed commander arrivals behind 30% of all wakes, most of them a commander
+entering on any of the four seats, which woke every other seat in turn.
+
+Evidence, all offline (`bun run hill-climb --only model`, standard profile, and `bun run
+bot-league`, 200 games per pairing, seed `s7`):
+
+| Measure                            | table-v1 | table-v2 | Change           |
+| ---------------------------------- | -------- | -------- | ---------------- |
+| `model.bot.callsPerTurn`           | 0.803    | 0.605    | -24.7%           |
+| `model.bot.promptTokensPerTurn`    | 2,490    | 1,898    | -23.8%           |
+| League proxy-strategist calls      | 2,613    | 2,193    | -16%             |
+| League: v2 against v1, v2 win rate |          | 49.4%    | 95% CI 42 to 57% |
+
+The league steers the bot with a deterministic proxy strategist (`ai/proxy-strategist.ts`) under
+each schedule. The same league could not tell the proxy asked every turn from no strategist at all
+(49.1%, CI 42 to 57%), so it shows only that v2 does not break the bot; it cannot see knob
+staleness. The real check is paid: `bun run ai-mode-duel --opponents bot-v1` seats table-v2 bot
+seats against table-v1 bot seats with the same strategist, and needs approval before it runs.
