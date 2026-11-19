@@ -342,6 +342,20 @@ function* gainLifeFromLifelink(
   else entry.amount += amount;
 }
 
+/**
+ * Instructions that deal damage to several recipients at once (CR 120.3f): a run of them shares
+ * one lifelink batch, so each source gains life once for all of it.
+ */
+const SIMULTANEOUS_DAMAGE_OPS: ReadonlySet<Effect['op']> = new Set<Effect['op']>([
+  'damageEach',
+  'damageEachPlayer',
+  'damageEachOtherOpponent',
+  'eachOpponentDamage',
+  'dealDamageEachChosen',
+  'dealDamageDivided',
+  'damageEachCreatureController',
+]);
+
 /** Gain each source's summed lifelink from a finished simultaneous-damage batch, once each. */
 function* flushLifelinkBatch(
   ctx: GameContext,
@@ -2208,9 +2222,10 @@ function* executeAbilityEffects(
     return currentId !== null && findObjectById(ctx, currentId) !== undefined ? currentId : null;
   };
 
-  // "Deals N damage to each creature and each player" is two instructions but one simultaneous
-  // damage event, so a lifelink source's gain is summed across the run and gained once
-  // (CR 120.3f, 119.9). A run is consecutive damageEach / damageEachPlayer instructions.
+  // Damage one instruction deals to several recipients is dealt at once, and "deals N damage to
+  // each creature and each player" is two instructions but one simultaneous damage event. So a
+  // lifelink source's gain is summed across a run of consecutive multi-recipient damage
+  // instructions and gained once (CR 120.3f, 119.9).
   let lifelinkBatch: Map<string, { controllerId: PlayerId; amount: number }> | undefined;
   const closeLifelinkBatch = function* (): GameGen<void> {
     if (lifelinkBatch === undefined) return;
@@ -2220,7 +2235,7 @@ function* executeAbilityEffects(
     yield* flushLifelinkBatch(ctx, batch);
   };
   for (const effect of ability.effects ?? []) {
-    if (effect.op === 'damageEach' || effect.op === 'damageEachPlayer') {
+    if (SIMULTANEOUS_DAMAGE_OPS.has(effect.op)) {
       if (lifelinkBatch === undefined && ctx.lifelinkBatch === undefined) {
         lifelinkBatch = new Map();
         ctx.lifelinkBatch = lifelinkBatch;
