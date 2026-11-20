@@ -10,7 +10,12 @@ import { interpretCard } from '../src/cards/interpret';
 import { DEFAULT_MAX_TOKEN_CHAIN_DEPTH, DEFAULT_MAX_TURN_OBJECTS, Engine } from '../src/engine';
 import { TREASURE } from '../src/cards/tokens';
 import { createGame } from '../src/state/game';
-import { atResolutionDepth, createToken, resolutionDepth } from '../src/state/objects';
+import {
+  atResolutionDepth,
+  createToken,
+  resolutionDepth,
+  stackObjectDepth,
+} from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { installDefinitionTransform } from '../src/testing/definition-transform';
 import { cardMutants, mutate } from './mutation/operators';
@@ -148,6 +153,27 @@ describe('per-turn object budget', () => {
     // A new turn starts a new chain.
     ctx.state.turnNumber++;
     expect(resolutionDepth(ctx, token.cardId)).toBe(0);
+  });
+
+  it('follows a token that triggers itself: a self-copying token keeps its depth', () => {
+    const ctx = chainGame(3);
+    // Polyraptor's "whenever this is dealt damage, create a token that's a copy of it": the
+    // trigger's subject is its own source, so it records no trigger object.
+    let token = run(atResolutionDepth(ctx, 0, () => plain(() => createToken(ctx, TREASURE, 'P1'))));
+    for (let depth = 1; depth <= 3; depth++) {
+      const trigger = { kind: 'triggeredAbility', sourceCardId: token.cardId };
+      expect(stackObjectDepth(ctx, trigger)).toBe(depth);
+      token = run(
+        atResolutionDepth(ctx, stackObjectDepth(ctx, trigger), () =>
+          plain(() => createToken(ctx, TREASURE, 'P1')),
+        ),
+      );
+    }
+    expect(() =>
+      stackObjectDepth(ctx, { kind: 'triggeredAbility', sourceCardId: token.cardId }),
+    ).toThrow('ran more than 3 deep in one turn');
+    // A token's activated ability is chosen each time: its source does not count.
+    expect(stackObjectDepth(ctx, { kind: 'activatedAbility', sourceCardId: token.cardId })).toBe(0);
   });
 
   it('keeps a wide legal turn shallow: hundreds of tokens each triggering an ability (fuzz-203)', () => {

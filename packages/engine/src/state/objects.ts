@@ -109,6 +109,23 @@ export function resolutionDepth(ctx: GameContext, triggerObjectCardId: string | 
   return depth;
 }
 
+/**
+ * A stack object's depth in this turn's token chain: the depth of the token whose event triggered
+ * it, or for a triggered ability, of its source when that is a token in the chain, whichever is
+ * deeper. A trigger whose subject is its own source records no trigger object ("whenever this is
+ * dealt damage, create a token that's a copy of it"), so without the source a token copying
+ * itself would restart the chain at every step.
+ */
+export function stackObjectDepth(
+  ctx: GameContext,
+  top: { kind: string; sourceCardId: string; triggerObjectCardId?: string },
+): number {
+  return Math.max(
+    resolutionDepth(ctx, top.triggerObjectCardId),
+    top.kind === 'triggeredAbility' ? resolutionDepth(ctx, top.sourceCardId) : 0,
+  );
+}
+
 /** Run `resolve` with `depth` as the resolving object's chain depth (see `noteTokenDepth`). */
 export function* atResolutionDepth<T>(
   ctx: GameContext,
