@@ -138,22 +138,7 @@ export function traitsFor(ctx: PolicyContext, name: string | undefined): CardTra
 
 // --- Values of things on the table -----------------------------------------------------------
 
-/** A permanent's worth in LEP to whoever controls it. */
-export function permanentValue(p: PermanentView, ctx: PolicyContext): number {
-  return (
-    permanentBaseValue(p, ctx) + (isCommanderName(p.name, ctx) ? P.commanderPermanentBonus : 0)
-  );
-}
-
-/**
- * `commanderValue`: whether `name` is a commander at this table, ours or an opponent's, so worth
- * more than its body: it comes back taxed, and it is what the deck is built around.
- */
-function isCommanderName(name: string, ctx: PolicyContext): boolean {
-  return fixOn(ctx, 'commanderValue') && commanderNamed(name, ctx);
-}
-
-/** Whether `name` is a commander at this table, whatever the fixes. */
+/** Whether `name` is a commander at this table, ours or an opponent's. */
 function commanderNamed(name: string, ctx: PolicyContext): boolean {
   const names = once(ctx, 'commanderNames', () => {
     const { view } = ctx;
@@ -165,7 +150,8 @@ function commanderNamed(name: string, ctx: PolicyContext): boolean {
   return names.has(name);
 }
 
-function permanentBaseValue(p: PermanentView, ctx: PolicyContext): number {
+/** A permanent's worth in LEP to whoever controls it. */
+export function permanentValue(p: PermanentView, ctx: PolicyContext): number {
   if (isCreaturePermanent(p)) {
     const w = WEIGHTS.combat;
     return (
@@ -1320,8 +1306,7 @@ function answerThreat(kind: AnswerKind, action: LegalAction, ctx: PolicyContext)
       // A spell is shown by its card name; an ability's description is not one.
       const traits = traitsFor(ctx, item.description);
       if (traits === undefined) return null;
-      const commander = isCommanderName(item.description, ctx) ? P.commanderPermanentBonus : 0;
-      best = Math.max(best, spellThreat(traits) + commander);
+      best = Math.max(best, spellThreat(traits));
     }
     return best;
   }

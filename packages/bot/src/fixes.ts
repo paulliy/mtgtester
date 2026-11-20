@@ -22,8 +22,6 @@ export const POLICY_FIXES = [
   'scarceAnswer',
   /** Damage at a player that does not kill is worth the damage, not a flat player value. */
   'faceDamage',
-  /** A commander, ours or theirs, is worth more than its body: never fed to a cost, first to answer. */
-  'commanderValue',
 ] as const;
 export type PolicyFix = (typeof POLICY_FIXES)[number];
 
