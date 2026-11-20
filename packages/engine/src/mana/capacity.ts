@@ -34,7 +34,9 @@ function fixedCountAbility(ability: ManaAbilitySpec): boolean {
  * cannot be paid for.
  *
  * The bound is the mana already in the pool plus, for each untapped permanent the player controls,
- * the most units any one of its mana abilities makes. It holds only when every mana ability of
+ * the most units any one of its mana abilities makes, plus the units of each card in hand with a
+ * mana ability that works from the hand ("exile this card from your hand: add {R}", once each:
+ * the card leaves). It holds only when every mana ability of
  * those permanents, tapped or not, is a fixed-count `{T}` ability and no static adds mana to an
  * activation (`manaActivationRider`): then each permanent pays out at most once per payment, a
  * tapped one never, and no activation changes another's production. Colors, restrictions,
@@ -59,5 +61,7 @@ export function fixedManaCapacity(ctx: GameContext, player: EnginePlayerState): 
     }
     if (!permanent.tapped) capacity += most;
   }
+  for (const card of player.hand)
+    capacity += ctx.defs.get(card.oracleId)?.handManaAbility?.units.length ?? 0;
   return capacity;
 }

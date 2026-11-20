@@ -208,4 +208,24 @@ describe('the priority menu with the capacity bound', () => {
     const spell = conjure(ctx, 'P2', instant('Hybrid Drop', '{G}{U}{G/P}'), 'hand');
     expect(castable(ctx, spell.id)).toBe(true);
   });
+
+  it('counts a mana ability that works from the hand', () => {
+    // Found in review (Codex on #86): with no lands, a card that exiles itself from the hand for
+    // {R} pays for a {R} instant. Counting only the pool and the battlefield ruled it out.
+    const ctx = game();
+    conjure(
+      ctx,
+      'P2',
+      oracle({
+        name: 'Hand Guide',
+        typeLine: 'Creature — Ape Spirit',
+        manaCost: '{2}{R}',
+        oracleText: 'Exile this card from your hand: Add {R}.',
+      }),
+      'hand',
+    );
+    const spell = conjure(ctx, 'P2', instant('Red Drop', '{R}'), 'hand');
+    expect(fixedManaCapacity(ctx, playerById(ctx, 'P2'))).toBe(1);
+    expect(castable(ctx, spell.id)).toBe(true);
+  });
 });
