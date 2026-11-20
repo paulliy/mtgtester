@@ -12,6 +12,8 @@ export const ENGINE_VERSION = '0.2.0-phase2';
 
 // The driver.
 export { DEFAULT_MAX_TOKEN_CHAIN_DEPTH, DEFAULT_MAX_TURN_OBJECTS, Engine } from './engine';
+export { engineWork, engineWorkSince } from './work-counters';
+export type { EngineWork } from './work-counters';
 export type { EngineDriver, EngineOptions } from './engine';
 export type { PreparedScenarioSpec } from './testing/prepared-scenario';
 export {
@@ -54,6 +56,8 @@ export type {
 
 // Card interpretation (the server will reuse this to pre-flight decks in Phase 3).
 export { interpretCard, interpretCardWithDiagnostics } from './cards/interpret';
+export { interpretProvisional } from './cards/provisional';
+export type { ProvisionalPatch, ProvisionalResult } from './cards/provisional';
 export { clearDefinitionCache, definitionCacheSize } from './cards/definition-cache';
 export type { GrammarSlot, SlotFailure } from './cards/grammar/diagnostics';
 export type {

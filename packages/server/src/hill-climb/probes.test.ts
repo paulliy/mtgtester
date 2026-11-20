@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { OracleCard } from '@mtg/shared';
+import { engineWork, engineWorkSince } from '@mtg/engine';
 import { PINNED_ORACLE_PATH, type PinnedCard } from '../cards/edhrec-pins';
 import { loadDecks } from '../cli/fuzz-plan';
 import {
@@ -16,6 +17,7 @@ import {
   modelProbe,
   playableDeckPct,
   timed,
+  workMetrics,
 } from './probes';
 import { compareReports, type Baseline, type Report } from './report';
 
@@ -37,6 +39,9 @@ describe('the committed hill-climb baseline', () => {
         ).toBe(true);
       for (const metric of Object.values(report.metrics))
         expect(Number.isFinite(metric.value)).toBe(true);
+      // Without them the work gate below reads every counter as new and checks nothing.
+      for (const id of Object.keys(workMetrics(engineWorkSince(engineWork()))))
+        expect(report.metrics[id], `${name} has no ${id}: rewrite the baseline`).toBeDefined();
     }
   });
 });
@@ -60,6 +65,37 @@ describe('hill-climb gate: exact metrics against the committed baseline', () => 
     const comparison = compareReports(baseline.profiles['quick']!, current);
     expect(comparison.failures).toEqual([]);
     expect(comparison.rows.length).toBeGreaterThanOrEqual(6);
+  }, 120_000);
+
+  /**
+   * The engine work counters repeat exactly, so a pure performance change that makes the same
+   * games do more work fails here on any machine. When main has changed the games since the
+   * baseline was written, the counts measure different work and are not compared (the command
+   * prints INCOMPARABLE); rewriting the baseline restores the gate.
+   */
+  it('does no more engine work in the same benchmark games', async () => {
+    const decks = await loadDecks();
+    const quick = baseline.profiles['quick']!;
+    const exactOnly = (metrics: Report['metrics']): Report['metrics'] =>
+      Object.fromEntries(Object.entries(metrics).filter(([, metric]) => metric.kind === 'exact'));
+    const engine = engineProbe(decks, PROFILES['quick']!, 1, () => {});
+    const comparison = compareReports(
+      { ...quick, metrics: exactOnly(quick.metrics) },
+      {
+        ...quick,
+        probes: ['engine'],
+        metrics: exactOnly(engine.metrics),
+        fingerprints: engine.fingerprints,
+      },
+      { allowBehaviorChange: true },
+    );
+    expect(comparison.failures).toEqual([]);
+    const work = comparison.rows.filter((row) => row.id.startsWith('engine.work.'));
+    expect(work.length).toBeGreaterThanOrEqual(8);
+    // Every counter is compared against a baseline value, never passed through as new.
+    expect(work.filter((row) => row.verdict === 'new').map((row) => row.id)).toEqual([]);
+    if (comparison.fingerprints.verdict === 'identical')
+      expect(work.every((row) => row.verdict !== 'incomparable')).toBe(true);
   }, 120_000);
 
   it('models no fewer cards', async () => {
@@ -100,6 +136,12 @@ describe('engineProbe', () => {
     expect(second.fingerprints).toEqual(first.fingerprints);
     expect(first.metrics['engine.msPerDecision']!.kind).toBe('timed');
     expect(first.metrics['engine.msPerDecision']!.value).toBeGreaterThan(0);
+    // The work counters are exact: the same games count the same work in another probe run.
+    const work = (metrics: Report['metrics']) =>
+      Object.fromEntries(Object.entries(metrics).filter(([id]) => id.startsWith('engine.work.')));
+    expect(Object.keys(work(first.metrics))).toHaveLength(10);
+    expect(first.metrics['engine.work.layerPasses']!.value).toBeGreaterThan(0);
+    expect(work(second.metrics)).toEqual(work(first.metrics));
   }, 120_000);
 });
 

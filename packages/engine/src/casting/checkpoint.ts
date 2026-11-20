@@ -1,5 +1,6 @@
 import { clearCached, getCached, setCached } from '../effects/layer-cache';
 import type { GameContext } from '../state/types';
+import { countWork } from '../work-counters';
 
 /**
  * In-place recovery for the supported casting payment scope. It preserves references held by
@@ -7,6 +8,7 @@ import type { GameContext } from '../state/types';
  * this is not a general reversal of arbitrary game actions (CR 733.1).
  */
 export function castingCheckpoint(ctx: GameContext): () => void {
+  countWork('castCheckpoints');
   const restore: (() => void)[] = [];
   const seen = new WeakSet<object>();
   function capture(value: unknown): void {

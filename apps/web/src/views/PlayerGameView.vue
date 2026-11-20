@@ -1358,6 +1358,7 @@ function abandon(): void {
                   :scryfall-id="commander.scryfallId"
                   :name="commander.name"
                   size="small"
+                  :provisional="commander.provisional === true"
                 />
               </span>
               <strong
@@ -1513,6 +1514,7 @@ function abandon(): void {
                     :scryfall-id="commander.scryfallId"
                     :name="commander.name"
                     size="small"
+                    :provisional="commander.provisional === true"
                   />
                 </button>
                 <span
@@ -1526,6 +1528,7 @@ function abandon(): void {
                     :scryfall-id="commander.scryfallId"
                     :name="commander.name"
                     size="small"
+                    :provisional="commander.provisional === true"
                   />
                 </span>
               </template>
@@ -1744,6 +1747,7 @@ function abandon(): void {
                 :scryfall-id="card.scryfallId"
                 :name="card.name"
                 :is-token="card.isToken === true"
+                :provisional="card.provisional === true"
                 size="small"
               />
               <span v-if="playableVerbById.get(card.id)" class="play-tag">{{

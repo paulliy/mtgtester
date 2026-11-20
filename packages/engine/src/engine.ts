@@ -45,6 +45,7 @@ import { prepareScenario } from './testing/prepared-scenario';
 import { buildSpectatorState } from './view/spectator';
 import { buildPlayerBoardState } from './view/spectator';
 import { buildPlayerView } from './view/view';
+import { stampProvisional } from './state/provisional-use';
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
@@ -222,7 +223,7 @@ export class Engine implements EngineDriver {
         this.nextOutcome = null;
 
         if (step.done === true) {
-          this.finished = step.value;
+          this.finished = stampProvisional(this.ctx, step.value);
           return { kind: 'gameOver', result: this.finished };
         }
 
@@ -265,35 +266,35 @@ export class Engine implements EngineDriver {
         // Halt loudly, never guess (brief §6.3).
         emit(this.ctx, 'engineHalt', { reason: err.message, card: err.cardName });
         debug(this.ctx, 'engine', `ENGINE HALT: ${err.message}`);
-        this.finished = {
+        this.finished = stampProvisional(this.ctx, {
           gameId: this.ctx.state.gameId,
           winnerSeat: null,
           finishingOrder: [...this.ctx.state.eliminatedPlayers],
           turnCount: this.ctx.state.turnNumber,
           halted: true,
           haltReason: err.message,
-        };
+        });
         return { kind: 'gameOver', result: this.finished };
       }
       if (err instanceof EngineBudgetError) {
         // A work limit, not a rules outcome: halt with the limit named (ADR 0031 decision 9).
         emit(this.ctx, 'engineHalt', { reason: err.message, budget: err.budget });
         debug(this.ctx, 'engine', `ENGINE HALT: ${err.message}`);
-        this.finished = {
+        this.finished = stampProvisional(this.ctx, {
           gameId: this.ctx.state.gameId,
           winnerSeat: null,
           finishingOrder: [...this.ctx.state.eliminatedPlayers],
           turnCount: this.ctx.state.turnNumber,
           halted: true,
           haltReason: err.message,
-        };
+        });
         return { kind: 'gameOver', result: this.finished };
       }
       if (err instanceof EngineInvariantError && this.ctx.strictInvariants !== true) {
         // An authoring or engine bug: halt with the site so the record names it (ADR 0034).
         emit(this.ctx, 'engineHalt', { reason: err.message, site: err.site });
         debug(this.ctx, 'engine', `ENGINE HALT: ${err.message}`);
-        this.finished = {
+        this.finished = stampProvisional(this.ctx, {
           gameId: this.ctx.state.gameId,
           winnerSeat: null,
           finishingOrder: [...this.ctx.state.eliminatedPlayers],
@@ -301,7 +302,7 @@ export class Engine implements EngineDriver {
           halted: true,
           haltReason: err.message,
           haltSite: err.site,
-        };
+        });
         return { kind: 'gameOver', result: this.finished };
       }
       throw err;
@@ -470,7 +471,7 @@ export class Engine implements EngineDriver {
         'a conceded game kept running past the concession',
       );
     }
-    this.finished = step.value;
+    this.finished = stampProvisional(this.ctx, step.value);
     return true;
   }
 

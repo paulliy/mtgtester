@@ -6,6 +6,7 @@
  * card or interaction is better served by pitting two distinct curated decks against each other.
  *
  *   bun run play-decks <deckFileOrUrl> <deckFileOrUrl> [more...] [--seed S] [--verbose]
+ *                      [--provisional]   # also play machine-checked review-queue cards (H1)
  *
  * Unresolved/unmodeled cards in a deck still halt the engine (brief §5) — this is a test tool,
  * not a substitute for `bun run coverage`.
@@ -19,6 +20,12 @@ import { HeuristicDecisionProvider } from '@mtg/bot';
 import { loadOracleIndexFromFile } from '../cards/oracle-index';
 import { importDeck } from '../decks/source';
 import { resolveDeck } from '../decks/resolve';
+import {
+  describeCatalog,
+  loadProvisionalCatalog,
+  provisionalGameConfig,
+  type ProvisionalCatalog,
+} from '../cards/provisional';
 
 const BULK_PATH = 'data/scryfall-oracle-cards.json';
 
@@ -26,14 +33,21 @@ interface Args {
   deckInputs: string[];
   seed: string;
   verbose: boolean;
+  provisional: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { deckInputs: [], seed: 'play-decks-demo', verbose: false };
+  const args: Args = {
+    deckInputs: [],
+    seed: 'play-decks-demo',
+    verbose: false,
+    provisional: false,
+  };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--seed') args.seed = argv[++i] ?? args.seed;
     else if (arg === '--verbose' || arg === '-v') args.verbose = true;
+    else if (arg === '--provisional') args.provisional = true;
     else args.deckInputs.push(arg as string);
   }
   return args;
@@ -111,7 +125,18 @@ async function main(): Promise<void> {
   }));
 
   console.log(`\nPlaying ${players.length}-player game (Heuristic Bot Providers)…`);
-  const engine = new Engine({ gameId: 'play-decks-demo', seed: args.seed, players, turnCap: 200 });
+  let provisional: ProvisionalCatalog | undefined;
+  if (args.provisional) {
+    provisional = loadProvisionalCatalog(index);
+    console.log(describeCatalog(provisional));
+  }
+  const engine = new Engine({
+    gameId: 'play-decks-demo',
+    seed: args.seed,
+    players,
+    turnCap: 200,
+    ...provisionalGameConfig(provisional, players),
+  });
   const providers = new Map<string, HeuristicDecisionProvider>();
   let surfacedDecisions = 0;
 
@@ -144,6 +169,8 @@ async function main(): Promise<void> {
   console.log('─'.repeat(19));
   if (result.halted) {
     console.log(`  ✗ HALTED — ${result.haltReason ?? 'unknown reason'}`);
+    if (result.provisionalCards !== undefined)
+      console.log(`    Provisional cards in play: ${result.provisionalCards.join(', ')}`);
     process.exitCode = 1;
     return;
   }
@@ -152,6 +179,10 @@ async function main(): Promise<void> {
   console.log(`    Surfaced Decisions: ${surfacedDecisions.toLocaleString()}`);
   console.log(`    Elimination Order:  ${result.finishingOrder.join(' → ') || '(none)'}`);
   console.log(`    Final Life Totals:  ${formatPlayerLives(engine)}`);
+  if (result.provisionalCards !== undefined)
+    console.log(
+      `    Provisional cards:  ${result.provisionalCards.length} (unreviewed: ${result.provisionalCards.join(', ')})`,
+    );
 }
 
 main().catch((err) => {

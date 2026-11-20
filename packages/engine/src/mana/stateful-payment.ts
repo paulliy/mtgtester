@@ -1,5 +1,5 @@
 import { copyData } from '../state/copy-data';
-import { getCached, setCached } from '../effects/layer-cache';
+import { getCached, setCached, shareDefinitionIds } from '../effects/layer-cache';
 import { playerLifeLocked } from '../state/phasing';
 import type { EnginePlayerState, GameContext } from '../state/types';
 import type {
@@ -26,12 +26,13 @@ import {
 import {
   characteristicsFixedDuringPayment,
   countFixedWhileNothingLeaves,
+  definitionsInPlay,
   gateCannotOpenDuringPayment,
   leavingPermanentsKeepProduction,
   stableSelector,
 } from './payment-stability';
 import type { Condition } from '../cards/condition';
-import { selectedPermanentDefinition } from '../cards/spell-faces';
+import { countWork } from '../work-counters';
 
 const bounds = { states: 2048, activations: 32, productions: 256, lifeGainOrders: 64 };
 
@@ -50,6 +51,7 @@ function onlyLifeGainOrder(decision: PendingDecision): boolean {
  * made each searched state of a 58-turn fuzz game cost over a second.
  */
 function clone(ctx: GameContext): GameContext {
+  countWork('stateCopies');
   const { sequenceSnapshots: _snapshots, eventLog, ...state } = ctx.state;
   const copy: GameContext = {
     state: { ...copyData(state), eventLog: eventLog.slice() },
@@ -60,6 +62,7 @@ function clone(ctx: GameContext): GameContext {
   // The copy starts with the original's layer results: its state is the same, and the cache is
   // checked against a digest of the copy's own state on every read, so a copy that diverges
   // recomputes. Starting cold cost a full layer pass for every state the search visits.
+  shareDefinitionIds(ctx, copy);
   const layers = getCached(ctx);
   if (layers !== undefined) setCached(copy, layers);
   return copy;
@@ -296,21 +299,6 @@ const BOARD_BLIND_DYNAMIC: ReadonlySet<string> = new Set([
   'chosenColor',
   'exiledWithSourceColors',
 ]);
-
-/**
- * Every definition whose statics are in play. The capacity bound and the static solve rest
- * on activations leaving every characteristic as it is; a static that reads tapped status or life
- * breaks that ("while this is untapped, lands you control lose all abilities": tapping it gives the
- * lands their mana abilities back), and then the search copies the game with no bound at all.
- */
-function definitionsInPlay(ctx: GameContext) {
-  return ctx.state.battlefield.flatMap((permanent) => {
-    if (permanent.faceDown) return [];
-    const printed = ctx.defs.get(permanent.oracleId);
-    if (printed === undefined) return [];
-    return [printed, selectedPermanentDefinition(printed, permanent.face, permanent.unlockedDoors)];
-  });
-}
 
 /** Actual activation replay, including post-cost production, with no strategic cost decisions. */
 export function planStatefulManaPayment(
@@ -613,6 +601,7 @@ export function searchPayment(
     );
   };
   const visit = (snapshot: GameContext): PaymentPlan | null => {
+    countWork('manaPlannerStates');
     const payer = snapshot.state.players.find((p) => p.id === player.id)!;
     const availableSources = sourcesFor(snapshot, payer);
     if (
@@ -896,6 +885,7 @@ export function searchPayment(
   // against the same state budget, and a payment needing five or six activations on a board the
   // static solve cannot take halted before it got there: fuzz-199, 206, 211, 227, 235.)
   const attempt = (): PaymentPlan | null => {
+    countWork('manaPlannerSearches');
     cut = false;
     seen.clear();
     const result = visit(clone(ctx));

@@ -100,6 +100,13 @@ review queue (`docs/reviews/compiled-card-queue.json`). It enters the card pool 
 `run.ts promote`, after its queue entry is accepted (below), as an `implemented-unreviewed` card
 ([ADR 0047](../../docs/decisions/0047-compiled-cards-as-unreviewed-overrides.md)).
 
+**Provisional play is opt-in** ([ADR 0050](../../docs/decisions/0050-provisional-card-tier.md),
+proposed). With `--provisional`, `serve`, `play-decks` and `fuzz` admit `compiled-checked` entries
+whose patch bytes still match as provisional cards: marked in the UI and log, listed on the game
+result, and never used by benchmarks or fingerprints. Without the switch nothing changes.
+`run.ts audit --seed S [--count 10]` samples them for review and `run.ts audit-verdict` records a verdict;
+a `rejected` verdict takes the card out of provisional play.
+
 ## Running
 
 ```bash

@@ -19,7 +19,12 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { DecisionResponse, OracleCard, PlayerId } from '@mtg/shared';
-import { Engine, RandomDecisionProvider, type DecisionProvider } from '@mtg/engine';
+import {
+  Engine,
+  RandomDecisionProvider,
+  type CardDefinition,
+  type DecisionProvider,
+} from '@mtg/engine';
 import { HeuristicDecisionProvider } from '@mtg/bot';
 import { installDefaultDiagnostics } from '../../../engine/src/testing/diagnostics';
 import { installStateInvariants } from '../../../engine/src/testing/invariants';
@@ -42,6 +47,8 @@ export interface FuzzRequest {
   turnCap: number;
   /** Decisions the providers may answer before the game fails as a runaway. */
   maxDecisions: number;
+  /** Provisional definitions (H1) the game opts into, for `fuzz --provisional`. */
+  provisionalDefinitions?: CardDefinition[];
 }
 
 export interface FuzzReply {
@@ -94,6 +101,11 @@ export function playFuzzGame(request: FuzzRequest): FuzzReply {
       seed: request.seed,
       turnCap: request.turnCap,
       strictInvariants: true,
+      ...(request.provisionalDefinitions !== undefined &&
+        request.provisionalDefinitions.length > 0 && {
+          allowProvisional: true,
+          provisionalDefinitions: request.provisionalDefinitions,
+        }),
       players: request.decks.map((deck, seat) => ({
         id: `P${seat + 1}`,
         deckId: deck.label,

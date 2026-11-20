@@ -27,6 +27,7 @@ import type {
 } from '@mtg/shared';
 import type { OracleIndex } from '../cards/oracle-index';
 import type { SupportedPool } from '../cards/pool';
+import { isProvisional, type ProvisionalCatalog } from '../cards/provisional';
 import type { GameStore } from '../db';
 import type { BannedList } from '../decks/banned';
 import { inferArchetype } from '../decks/archetype';
@@ -62,11 +63,17 @@ export interface SeatSetup {
 
 export type SetupResult = { ok: true; seats: SeatSetup[] } | { ok: false; problems: SeatProblem[] };
 
-/** Distinct names in `cards` that `interpretCard` cannot model (brief §6.3, ADR 0009). */
-export function unmodeledCardNames(cards: readonly OracleCard[]): string[] {
+/**
+ * Distinct names in `cards` that `interpretCard` cannot model (brief §6.3, ADR 0009). A card the
+ * process admitted as provisional (H1) counts as playable when `provisional` is given.
+ */
+export function unmodeledCardNames(
+  cards: readonly OracleCard[],
+  provisional?: ProvisionalCatalog,
+): string[] {
   const names = new Set<string>();
   for (const card of cards) {
-    if (!interpretCard(card).modeled) names.add(card.name);
+    if (!interpretCard(card).modeled && !isProvisional(provisional, card)) names.add(card.name);
   }
   return [...names].sort();
 }
@@ -248,7 +255,7 @@ async function setupImportedSeat(
 
   // Pre-flight (ADR 0009 / ADR 0012 §3). A deck with even one unmodeled card cannot be played,
   // so it is rejected here with the full list rather than halting mid-game.
-  const unmodeled = unmodeledCardNames([...commanders, ...cards]);
+  const unmodeled = unmodeledCardNames([...commanders, ...cards], deps.pool?.provisional);
   if (unmodeled.length > 0) {
     return problem(
       seat,
