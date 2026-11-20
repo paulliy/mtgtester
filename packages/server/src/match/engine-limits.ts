@@ -15,5 +15,11 @@
  * limit. The engine therefore also halts a turn that creates more than `DEFAULT_MAX_TURN_OBJECTS`
  * (1,000) objects whenever `maxObjects` is set; no stored limit changes. Over 60 seeded four-bot
  * fuzz games the most one turn created was 173.
+ *
+ * 2026-11-20 (#46): legal turns pass that. Rabble Rousing with Champion of Lambholt created 2,272
+ * objects in one turn (fuzz-203), Old Gnawbone 1,536 (fuzz-212). A token loop now halts on its
+ * chain depth (`DEFAULT_MAX_TOKEN_CHAIN_DEPTH`, 100): each token that triggers an ability making
+ * the next token is one step deeper, which a loop climbs every round and a wide legal turn does
+ * not. The per-turn object default rises to 5,000 as the backstop. No stored limit changes.
  */
 export const TABLE_ENGINE_LIMITS = Object.freeze({ maxStepWork: 50_000, maxObjects: 20_000 });

@@ -68,12 +68,14 @@ function capEngineWork(
   maxStepWork?: number,
   maxObjects?: number,
   maxTurnObjects?: number,
+  maxTokenChainDepth?: number,
 ): void {
   const ctx = (engine as unknown as { ctx: GameContext }).ctx;
   ctx.budget = {
     ...(maxStepWork !== undefined && { maxStepWork }),
     ...(maxObjects !== undefined && { maxObjects }),
     ...(maxTurnObjects !== undefined && { maxTurnObjects }),
+    ...(maxTokenChainDepth !== undefined && { maxTokenChainDepth }),
     stepWork: { count: 0 },
     objectsAtStart: ctx.state.nextObjectNum,
   };
@@ -95,6 +97,7 @@ export function runScenario(
     maxStepWork?: number;
     maxObjects?: number;
     maxTurnObjects?: number;
+    maxTokenChainDepth?: number;
     /** Decisions before the run gives up (default 2,000); mutation runs pass a lower cap. */
     maxDecisions?: number;
   } = {},
@@ -106,9 +109,16 @@ export function runScenario(
   if (
     options.maxStepWork !== undefined ||
     options.maxObjects !== undefined ||
-    options.maxTurnObjects !== undefined
+    options.maxTurnObjects !== undefined ||
+    options.maxTokenChainDepth !== undefined
   )
-    capEngineWork(engine, options.maxStepWork, options.maxObjects, options.maxTurnObjects);
+    capEngineWork(
+      engine,
+      options.maxStepWork,
+      options.maxObjects,
+      options.maxTurnObjects,
+      options.maxTokenChainDepth,
+    );
   const firstSequence = engine.getState().eventLog.length;
   const end = scenario.end ?? 'script';
   const answered: ScenarioRun['answered'] = [];
