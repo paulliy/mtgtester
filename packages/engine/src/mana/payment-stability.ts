@@ -311,3 +311,71 @@ export function leavingPermanentsKeepProduction(
     return answer.general && (!powerGated || answer.power);
   });
 }
+
+/**
+ * A self-sacrificing source (a Treasure: "{T}, Sacrifice this artifact: Add one mana of any
+ * color") changes the board by more than a tap: it leaves the battlefield, and a card goes to its
+ * owner's graveyard. Under `characteristicsFixedDuringPayment` no static reads tapped status,
+ * life or any condition but a board count, so a departure can add capacity only through a static
+ * that reads a count, a zone or a graveyard ("as long as you control no artifacts, lands lose all
+ * abilities", "for each artifact", threshold); a gate that counts up ("activate only if you control
+ * three or more artifacts", `gateCannotOpenDuringPayment`) can only close. So the capacity bound
+ * may count such a source when no static in play reads any of these. Conservative: one that does
+ * keeps the copying search, whichever way it would move.
+ */
+function readsBoardMembership(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(readsBoardMembership);
+  if (value === null || typeof value !== 'object') return false;
+  const record = value as Record<string, unknown>;
+  const kind = record['kind'];
+  if (typeof kind === 'string' && /count|zone|graveyard/i.test(kind)) return true;
+  return Object.values(record).some(readsBoardMembership);
+}
+
+/** Layer-7 keys: a static that only changes power and toughness. */
+const PT_ONLY_KEYS: ReadonlySet<string> = new Set(['layer', 'sublayer', 'power', 'toughness']);
+
+function membershipStatics(
+  staticEffects: readonly unknown[],
+  ruleStatics: readonly unknown[],
+  gated: boolean,
+) {
+  const matters = staticEffects.filter((effect) => {
+    const op = (effect as { op?: Record<string, unknown> }).op ?? {};
+    if (OPS_OUTSIDE_PAYMENT.some((key) => key in op)) return false;
+    // Power and toughness reach a payment only through a gate's selector ("activate only if you
+    // control a creature with power 4 or greater"); with no gate, a P/T static cannot add capacity.
+    return gated || !Object.keys(op).every((key) => PT_ONLY_KEYS.has(key));
+  });
+  return !readsBoardMembership(matters) && !readsBoardMembership(ruleStatics);
+}
+
+const departureSafeByDefinition = new WeakMap<object, boolean>();
+
+const departureSafeGated = new WeakMap<object, boolean>();
+
+/**
+ * `gated`: some mana ability of the payer has an activation condition, so statics that only
+ * change power and toughness count too.
+ */
+export function departuresCannotAddCapacity(
+  definitions: readonly StaticHolder[],
+  gated: boolean,
+): boolean {
+  const cache = gated ? departureSafeGated : departureSafeByDefinition;
+  return definitions.every((definition) => {
+    let answer = cache.get(definition);
+    if (answer === undefined) {
+      answer =
+        membershipStatics(definition.staticEffects, definition.ruleStatics, gated) &&
+        (definition.backFace === undefined ||
+          membershipStatics(
+            definition.backFace.staticEffects,
+            definition.backFace.ruleStatics,
+            gated,
+          ));
+      cache.set(definition, answer);
+    }
+    return answer;
+  });
+}

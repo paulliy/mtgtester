@@ -137,3 +137,26 @@ describe('buildCardKnowledge', () => {
     expect(knowledge('Not A Card')).toBeUndefined();
   });
 });
+
+describe('flash', () => {
+  const reviewed = (
+    JSON.parse(
+      readFileSync(new URL('../../fixtures/flash-creatures.json', import.meta.url), 'utf8'),
+    ) as { cards: Array<{ name: string; label: 'flash' | 'grants-only' }> }
+  ).cards;
+
+  it('flags exactly the reviewed creatures that have flash, not those that only grant it', () => {
+    const wrong = reviewed.filter((c) => (traits(c.name).flash === true) !== (c.label === 'flash'));
+    expect(wrong).toEqual([]);
+    expect(reviewed.filter((c) => c.label === 'flash').length).toBe(155);
+  });
+
+  it('flags no other creature in the coverage pool', () => {
+    const listed = new Set(reviewed.map((c) => c.name));
+    const extra = cards
+      .filter((c) => c.typeLine.includes('Creature') && !listed.has(c.name))
+      .filter((c) => cardTraits(interpretCard(c)).flash === true)
+      .map((c) => c.name);
+    expect(extra).toEqual([]);
+  });
+});

@@ -557,13 +557,98 @@ describe('steering', () => {
     expect(ranked.at(-1)!.action.id).toBe(1);
   });
 
+  // Holding mana up needs something to hold it for: a cheap counterspell in hand, and a mana base
+  // big enough that keeping two open still leaves a three-drop castable (five sources).
+  const counterspell = card('cs', 'Counterspell', 'Instant', '{U}{U}');
+  const holdKnowledge = knowledge({
+    Counterspell: { manaValue: 2, types: ['Instant'], roles: ['counter'] },
+    'Ambush Viper': { manaValue: 2, types: ['Creature'], flash: true, power: 2 },
+    'Dissolve Late': { manaValue: 4, types: ['Instant'], roles: ['counter'] },
+  });
+  const lands = (n: number) => Array.from({ length: n }, (_, i) => land(`l${i}`));
+  const holding = (extra: Partial<PlayerView> = {}) =>
+    view({ hand: [counterspell], battlefield: lands(5), ...extra });
+
   it('leaves mana up when asked to hold it', () => {
     const actions = [PASS, spell(1, 'Sorcery', '{3}')];
     const sources = [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 }));
-    const res = decide(request(actions), view({ manaSources: sources }), new Rng('a'), {
+    const res = decide(request(actions), holding({ manaSources: sources }), new Rng('a'), {
+      knowledge: holdKnowledge,
       steering: { holdUpMana: 2 },
     });
     expect(res.actionId).toBe(0);
+  });
+
+  it('holds nothing up when it holds no instant-speed interaction', () => {
+    const actions = [PASS, spell(1, 'Sorcery', '{3}')];
+    const sources = [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 }));
+    const res = decide(
+      request(actions),
+      holding({ hand: [], manaSources: sources }),
+      new Rng('a'),
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
+    );
+    expect(res.actionId).toBe(1);
+  });
+
+  it('never holds back early plays: a one-drop on turn one, a three-drop on turn three', () => {
+    const one = decide(
+      request([PASS, spell(1, 'Bear Cub', '{G}')]),
+      holding({
+        battlefield: lands(1),
+        manaSources: [{ name: 'Forest', symbols: ['G'], count: 1 }],
+      }),
+      new Rng('a'),
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
+    );
+    expect(one.actionId).toBe(1);
+    const three = decide(
+      request([PASS, spell(1, 'Three Drop', '{2}{G}')]),
+      holding({
+        battlefield: lands(3),
+        manaSources: [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 })),
+      }),
+      new Rng('a'),
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
+    );
+    expect(three.actionId).toBe(1);
+  });
+
+  it('holds up for a flash creature, but not for interaction dearer than three', () => {
+    const actions = [PASS, spell(1, 'Sorcery', '{3}')];
+    const sources = [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 }));
+    const answer = (hand: CardView[]) =>
+      decide(request(actions), holding({ hand, manaSources: sources }), new Rng('a'), {
+        knowledge: holdKnowledge,
+        steering: { holdUpMana: 2 },
+      }).actionId;
+    expect(answer([card('av', 'Ambush Viper', 'Creature — Snake', '{1}{G}')])).toBe(0);
+    expect(answer([card('dl', 'Dissolve Late', 'Instant', '{3}{U}')])).toBe(1);
+  });
+
+  it('never holds up against casting the commander, or from a hand that would discard', () => {
+    const sources = [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 }));
+    const fromCommand: LegalAction = {
+      ...spell(1, 'Sorcery', '{3}'),
+      data: { sourceName: 'Sorcery', manaCost: '{3}', sourceZone: 'command' },
+    };
+    const commander = decide(
+      request([PASS, fromCommand]),
+      holding({ manaSources: sources }),
+      new Rng('a'),
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
+    );
+    expect(commander.actionId).toBe(1);
+    const fullHand = Array.from({ length: 6 }, (_, i) =>
+      card(`x${i}`, `Filler ${i}`, 'Sorcery', '{5}'),
+    );
+    const full = decide(
+      request([PASS, spell(1, 'Sorcery', '{3}')]),
+      holding({ hand: [counterspell, ...fullHand], manaSources: sources }),
+      new Rng('a'),
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
+    );
+    expect(full.actionId).toBe(1);
   });
 
   it('counts grouped sources once toward held mana', () => {
@@ -572,20 +657,20 @@ describe('steering', () => {
     const forests = [1, 2, 3].map((n) => ({ name: `Forest ${n}`, symbols: ['G'], count: 1 }));
     const held = decide(
       request(actions),
-      view({ manaSources: forests, availableMana: { G: 3 } }),
+      holding({ manaSources: forests, availableMana: { G: 3 } }),
       new Rng('a'),
-      { steering: { holdUpMana: 2 } },
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
     );
     expect(held.actionId).toBe(0);
     // One row that makes five (a grouped or multi-mana source) leaves two up after {3}.
     const grouped = decide(
       request(actions),
-      view({
+      holding({
         manaSources: [{ name: 'Forest', symbols: ['G'], count: 5 }],
         availableMana: { G: 5 },
       }),
       new Rng('a'),
-      { steering: { holdUpMana: 2 } },
+      { knowledge: holdKnowledge, steering: { holdUpMana: 2 } },
     );
     expect(grouped.actionId).toBe(1);
   });
@@ -596,7 +681,8 @@ describe('steering', () => {
       { name: 'Aether Hub', symbols: ['C', 'W', 'U', 'B', 'R', 'G'], count: 2 },
       { name: 'Forest', symbols: ['G'], count: 2 },
     ];
-    const res = decide(request(actions), view({ manaSources: sources }), new Rng('a'), {
+    const res = decide(request(actions), holding({ manaSources: sources }), new Rng('a'), {
+      knowledge: holdKnowledge,
       steering: { holdUpMana: 2 },
     });
     expect(res.actionId).toBe(0);
@@ -614,7 +700,9 @@ describe('steering', () => {
     expect(res.actionId).toBe(1);
   });
 
-  function attack(subjects: Array<{ id: string; power: number; toughness: number }>): LegalAction {
+  function attack(
+    subjects: Array<{ id: string; power: number; toughness: number; hasTriggers?: boolean }>,
+  ): LegalAction {
     return {
       id: 0,
       type: 'attackDeclaration',
@@ -626,7 +714,7 @@ describe('steering', () => {
           power: s.power,
           toughness: s.toughness,
           mustAttack: false,
-          hasTriggers: false,
+          hasTriggers: s.hasTriggers ?? false,
           defenders: ['P2', 'P3'],
           planeswalkers: [],
         })),
@@ -660,6 +748,7 @@ describe('steering', () => {
   it('only swings into a bad block when aggression is high', () => {
     const board = [
       creature('c1', 'P1', 2, 2),
+      creature('c2', 'P1', 2, 2),
       creature('wall', 'P2', 4, 6),
       creature('wall2', 'P3', 4, 6),
     ];
@@ -674,6 +763,125 @@ describe('steering', () => {
       steering: { aggression: 1 },
     });
     expect(raging.targets![0]!.choice).not.toBe(NO_ATTACK_TARGET);
+  });
+
+  it('a risky attack needs a reason: a lone creature or a 1-power body without a trigger stays home', () => {
+    const walls = [creature('wall', 'P2', 4, 6), creature('wall2', 'P3', 4, 6)];
+    const swing = (
+      board: PermanentView[],
+      subject: { id: string; power: number; toughness: number; hasTriggers?: boolean },
+    ) =>
+      decide(
+        request([attack([subject])], {
+          decisionType: 'declareAttackers',
+          phase: 'combat',
+          step: 'declareAttackers',
+        }),
+        view({ battlefield: [...board, ...walls] }),
+        new Rng('a'),
+        { steering: { aggression: 1 } },
+      ).targets![0]!.choice;
+    const pair = [creature('c1', 'P1', 1, 1), creature('c2', 'P1', 2, 2)];
+    expect(swing([creature('c1', 'P1', 2, 2)], { id: 'c1', power: 2, toughness: 2 })).toBe(
+      NO_ATTACK_TARGET,
+    );
+    expect(swing(pair, { id: 'c1', power: 1, toughness: 1 })).toBe(NO_ATTACK_TARGET);
+    expect(swing(pair, { id: 'c1', power: 1, toughness: 1, hasTriggers: true })).not.toBe(
+      NO_ATTACK_TARGET,
+    );
+  });
+});
+
+describe('last answer and face damage', () => {
+  const counter: LegalAction = {
+    id: 1,
+    type: 'castSpell',
+    description: 'Cast Counterspell',
+    interaction: { kind: 'source', sourceId: 'c1' },
+    targets: [{ slot: 0, options: ['s1'] }],
+    data: { sourceName: 'Counterspell', manaCost: '{U}{U}', instantSpeed: true },
+  };
+  const k = knowledge({
+    Counterspell: { manaValue: 2, roles: ['counter'], spellTargets: ['hostile'] },
+    'Mind Stone': { manaValue: 2, types: ['Artifact'], roles: ['ramp'] },
+    'Wrath of God': { manaValue: 4, types: ['Sorcery'], roles: ['wipe'] },
+    Shock: {
+      manaValue: 1,
+      roles: ['burn', 'removal'],
+      spellTargets: ['hostile'],
+      spellDamage: [2],
+    },
+  });
+  const facing = (spell: string, extra: Partial<PlayerView> = {}): PlayerView =>
+    view({
+      hand: [card('c1', 'Counterspell', 'Instant', '{U}{U}')],
+      stack: [{ id: 's1', controller: 'P2', description: spell, targets: [] }],
+      ...extra,
+    });
+  const answer = (v: PlayerView, steering?: BotSteering) =>
+    decide(request([PASS, counter], { activePlayer: 'P2' }), v, new Rng('a'), {
+      knowledge: k,
+      ...(steering !== undefined && { steering }),
+    }).actionId;
+
+  it('keeps the only counterspell from a two-mana rock and spends it on a wipe', () => {
+    expect(answer(facing('Mind Stone'))).toBe(0);
+    expect(answer(facing('Wrath of God'))).toBe(1);
+  });
+
+  it('spends it on the rock when another counterspell backs it up', () => {
+    const backed = facing('Mind Stone', {
+      hand: [
+        card('c1', 'Counterspell', 'Instant', '{U}{U}'),
+        card('c2', 'Counterspell', 'Instant', '{U}{U}'),
+      ],
+    });
+    expect(answer(backed)).toBe(1);
+  });
+
+  it('spends it when the strategist prioritizes the card', () => {
+    expect(answer(facing('Mind Stone'), { prioritize: ['Counterspell'] })).toBe(1);
+  });
+
+  it('spends it when lethal is on the public board', () => {
+    const dying = facing('Mind Stone', { life: 5, battlefield: [creature('x', 'P2', 6, 6)] });
+    expect(answer(dying)).toBe(1);
+  });
+
+  it('spends it on the rock without the scarceAnswer fix, as the bot did before', () => {
+    const res = decide(
+      request([PASS, counter], { activePlayer: 'P2' }),
+      facing('Mind Stone'),
+      new Rng('a'),
+      {
+        knowledge: k,
+        fixes: [],
+      },
+    );
+    expect(res.actionId).toBe(1);
+  });
+
+  it('burns a creature it kills rather than two points at a healthy player, but finishes a low one', () => {
+    const shock: LegalAction = {
+      id: 1,
+      type: 'castSpell',
+      description: 'Cast Shock',
+      targets: [{ slot: 0, options: ['P2', 'lions'] }],
+      data: { sourceName: 'Shock', manaCost: '{R}', instantSpeed: true },
+    };
+    const board = [creature('lions', 'P3', 2, 1)];
+    const aim = (p2Life: number) =>
+      decide(
+        request([PASS, shock]),
+        view({
+          battlefield: board,
+          opponents: view().opponents.map((o) => (o.seat === 'P2' ? { ...o, life: p2Life } : o)),
+        }),
+        new Rng('a'),
+        { knowledge: k },
+      ).targets;
+    expect(aim(30)).toEqual([{ slot: 0, choice: 'lions' }]);
+    expect(aim(2)).toEqual([{ slot: 0, choice: 'P2' }]);
   });
 });
 

@@ -18,6 +18,10 @@ export const POLICY_FIXES = [
   'landColors',
   /** Before attacking, compare the opponents' power next turn with life and the blockers kept. */
   'attackReserve',
+  /** Keep the last counterspell or hard removal in hand for a real threat unless lethal is at stake. */
+  'scarceAnswer',
+  /** Damage at a player that does not kill is worth the damage, not a flat player value. */
+  'faceDamage',
 ] as const;
 export type PolicyFix = (typeof POLICY_FIXES)[number];
 

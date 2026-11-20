@@ -40,6 +40,19 @@ const FIXED_BY: Record<PolicyFix, string[]> = {
     'temple-for-next-turn',
   ],
   attackReserve: ['keep-blockers-home', 'hold-the-ground-at-five', 'two-home-to-live'],
+  scarceAnswer: ['hold-negate-for-a-threat', 'hold-the-counter', 'hold-the-swords-for-a-threat'],
+  faceDamage: ['shock-the-other-threat'],
+};
+
+/**
+ * Fixes whose positions also need an earlier fix. `scarceAnswer` keeps the last counterspell, and
+ * only `neverYield` stops the bot yielding the turn away with it, which would waste the hold.
+ * `faceDamage` keeps Shock off a player, and only `ownStack` sees that the Bolt already on the
+ * stack kills the Bears, so the Lions are the target.
+ */
+const BUILDS_ON: Partial<Record<PolicyFix, PolicyFix[]>> = {
+  scarceAnswer: ['neverYield'],
+  faceDamage: ['ownStack'],
 };
 
 const SEEDS = ['gate-1', 'gate-2'];
@@ -73,11 +86,20 @@ describe('ADR 0043 bot fixes', () => {
   });
 
   for (const fix of POLICY_FIXES) {
-    it(`${fix} alone solves its positions on every seed`, async () => {
-      for (const { caseId, score } of await scores([fix], FIXED_BY[fix]))
+    const base = BUILDS_ON[fix] ?? [];
+    const label = base.length === 0 ? 'alone' : `with ${base.join(', ')}`;
+    it(`${fix} ${label} solves its positions on every seed`, async () => {
+      for (const { caseId, score } of await scores([fix, ...base], FIXED_BY[fix]))
         expect({ caseId, score }).toEqual({ caseId, score: 1 });
     });
   }
+
+  it('a fix that builds on another is still needed: the base alone fails its positions', async () => {
+    for (const [fix, base] of Object.entries(BUILDS_ON) as [PolicyFix, PolicyFix[]][]) {
+      const own = await scores(base, FIXED_BY[fix]);
+      expect({ fix, failed: own.some((entry) => entry.score < 1) }).toEqual({ fix, failed: true });
+    }
+  });
 
   it('the card-aware bot before the fixes fails on at least one seed of every fix', async () => {
     const all = await scores([], Object.values(FIXED_BY).flat());

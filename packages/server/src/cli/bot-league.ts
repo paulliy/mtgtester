@@ -7,20 +7,27 @@
  * few at a time.
  *
  *   bun run bot-league [--games N] [--seed S] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N]
- *                      [--timeout-ms N] [--json out.json]
+ *                      [--timeout-ms N] [--deck NAME] [--json out.json]
+ *
+ * `--deck NAME` seats one premade deck (`fixtures/coverage-decks/NAME.txt`) in all four seats, so
+ * the arms play a mirror and differ only in how they play it: the way to test a play style on a
+ * deck built for it. Without it every seat gets its own generated deck.
  *
  * ARM is one of the presets in `ARMS` below.
  */
 
 import { spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { OracleCard } from '@mtg/shared';
+import type { BotSteering, OracleCard, PlayStyle } from '@mtg/shared';
 import { DEFAULT_POLICY_FIXES, POLICY_FIXES } from '@mtg/bot';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
+import { buildOracleIndexFromCards } from '../cards/oracle-index';
+import { resolveDeck } from '../decks/resolve';
+import { importDeck } from '../decks/source';
 import { DEFAULT_AI_CONFIG } from '../ai/config';
 import type { WakeRule } from '../ai/steering';
 // Type-only: the game module runs a game when it is the entry point.
@@ -42,6 +49,21 @@ export const ARMS: Record<string, LeagueArm> = {
   policy: { name: 'policy' },
   knowledge: { name: 'knowledge', knowledge: true },
   fixed: { name: 'fixed', knowledge: true, fixes: [...DEFAULT_POLICY_FIXES] },
+  // The production bot as ADR 0043 left it, before `scarceAnswer` and `faceDamage`: their gate.
+  'fixed-0043': {
+    name: 'fixed-0043',
+    knowledge: true,
+    // Named, not "all but the new ones": a fix added later must not leak into the old bot.
+    fixes: [
+      'ownStack',
+      'neverYield',
+      'lethalTargets',
+      'lethalValue',
+      'castOrder',
+      'landColors',
+      'attackReserve',
+    ],
+  },
   ...FIX_ARMS,
   aggro: { name: 'aggro', knowledge: true, steering: { aggression: 0.85 } },
   control: {
@@ -49,11 +71,67 @@ export const ARMS: Record<string, LeagueArm> = {
     knowledge: true,
     steering: { aggression: 0.3, holdUpMana: 2, avoidOverextending: true },
   },
+  // Play styles (`BotSteering.style`): each preset on its own, and the style the deck's archetype
+  // implies, with no strategist and under the proxy strategist.
+  'style-aggro': styleArm('aggro'),
+  'style-tempo': styleArm('tempo'),
+  'style-value': styleArm('value'),
+  'style-control': styleArm('control'),
+  'style-ramp': styleArm('ramp'),
+  'style-combo': styleArm('combo'),
+  styled: {
+    name: 'styled',
+    knowledge: true,
+    fixes: [...DEFAULT_POLICY_FIXES],
+    styleFromDeck: true,
+  },
   // Hill-climb S7: the production bot steered by the proxy strategist, under each wake schedule.
   'proxy-every-turn': proxyArm('proxy-every-turn', 'everyTurn', 'table-v1'),
   'proxy-v1': proxyArm('proxy-v1', 'onChange', 'table-v1'),
   'proxy-v2': proxyArm('proxy-v2', 'onChange', 'table-v2'),
+  'proxy-v2-styled': {
+    ...proxyArm('proxy-v2-styled', 'onChange', 'table-v2'),
+    styleFromDeck: true,
+  },
 };
+
+/**
+ * A preset by name, or `steer:<json>`: the production bot with those knobs, for trying a steering
+ * or style variant without adding a preset (`steer:{"style":"control","aggression":0.5}`).
+ */
+export function armFor(name: string): LeagueArm {
+  if (name.startsWith('steer:')) {
+    let steering: unknown;
+    try {
+      steering = JSON.parse(name.slice('steer:'.length));
+    } catch {
+      throw new Error(`arm ${name}: the knobs after steer: are not JSON`);
+    }
+    if (typeof steering !== 'object' || steering === null || Array.isArray(steering))
+      throw new Error(`arm ${name}: the knobs after steer: must be a JSON object`);
+    return {
+      name,
+      knowledge: true,
+      fixes: [...DEFAULT_POLICY_FIXES],
+      steering: steering as BotSteering,
+    };
+  }
+  const arm = ARMS[name];
+  if (arm === undefined)
+    throw new Error(
+      `unknown arm ${name}; choose from ${Object.keys(ARMS).join(', ')} or steer:<json>`,
+    );
+  return arm;
+}
+
+function styleArm(style: PlayStyle): LeagueArm {
+  return {
+    name: `style-${style}`,
+    knowledge: true,
+    fixes: [...DEFAULT_POLICY_FIXES],
+    steering: { style },
+  };
+}
 
 function proxyArm(name: string, replan: 'everyTurn' | 'onChange', rule: WakeRule): LeagueArm {
   return {
@@ -72,6 +150,7 @@ interface Args {
   turnCap: number;
   jobs: number;
   timeoutMs: number;
+  deck?: string;
   json?: string;
 }
 
@@ -116,6 +195,10 @@ function parseArgs(argv: string[]): Args {
         args.timeoutMs = Number(next);
         i++;
         break;
+      case '--deck':
+        if (next !== undefined) args.deck = next;
+        i++;
+        break;
       case '--json':
         if (next !== undefined) args.json = next;
         i++;
@@ -124,12 +207,52 @@ function parseArgs(argv: string[]): Args {
         throw new Error(`unknown argument ${argv[i]}`);
     }
   }
-  for (const arm of [args.a, args.b]) {
-    if (ARMS[arm] === undefined) {
-      throw new Error(`unknown arm ${arm}; choose from ${Object.keys(ARMS).join(', ')}`);
-    }
-  }
+  for (const arm of [args.a, args.b]) armFor(arm);
   return args;
+}
+
+/** Where `--deck` looks, and the Oracle fixture each folder's cards resolve against. */
+const DECK_SOURCES = [
+  { dir: 'packages/server/fixtures/coverage-decks', oracle: [FIXTURE] },
+  {
+    dir: 'packages/server/fixtures/archetype-decks',
+    oracle: [FIXTURE, 'packages/server/fixtures/archetype-decks-oracle.json'],
+  },
+];
+
+/**
+ * A premade deck by file name, for a mirror (`--deck`): a coverage deck, or an archetype test deck
+ * (`fixtures/archetype-decks`, real decks adapted to the modeled pool). One commander only.
+ */
+export async function premadeDeck(
+  name: string,
+): Promise<{ commander: OracleCard; cards: OracleCard[] }> {
+  const source = DECK_SOURCES.find((s) => existsSync(resolve(s.dir, `${name}.txt`)));
+  if (source === undefined) throw new Error(`--deck: no deck named ${name}`);
+  const index = buildOracleIndexFromCards(
+    source.oracle.flatMap(
+      (path) => JSON.parse(readFileSync(resolve(path), 'utf8')) as OracleCard[],
+    ),
+  );
+  const { resolved, unresolvedNames } = resolveDeck(
+    await importDeck(readFileSync(resolve(source.dir, `${name}.txt`), 'utf8')),
+    index,
+  );
+  if (resolved === null)
+    throw new Error(`--deck ${name}: unresolved ${unresolvedNames.join(', ')}`);
+  if (resolved.commanders.length !== 1)
+    throw new Error(
+      `--deck ${name}: ${resolved.commanders.length} commanders; the league seats one`,
+    );
+  return {
+    commander: resolved.commanders[0]!,
+    cards: [
+      ...(resolved.companion === null ? [] : [resolved.companion]),
+      ...resolved.cards.flatMap((entry) =>
+        Array.from({ length: entry.quantity }, () => entry.card),
+      ),
+    ],
+  };
 }
 
 function loadPool(): SupportedPool {
@@ -139,12 +262,12 @@ function loadPool(): SupportedPool {
 
 const GAME_RUNNER = fileURLToPath(new URL('./bot-league-game.ts', import.meta.url));
 
-type Outcome =
+export type Outcome =
   | { kind: 'played'; reply: LeagueGameReply }
   | { kind: 'timeout' }
   | { kind: 'error'; message: string };
 
-function runInChild(
+export function runInChild(
   request: LeagueGameRequest,
   timeoutMs: number,
   dir: string,
@@ -195,8 +318,8 @@ interface Tally {
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const pool = loadPool();
-  const armA = ARMS[args.a]!;
-  const armB = ARMS[args.b]!;
+  const armA = armFor(args.a);
+  const armB = armFor(args.b);
   const dir = mkdtempSync(join(tmpdir(), 'bot-league-'));
   const tally: Tally = {
     wins: { [armA.name]: 0, [armB.name]: 0 },
@@ -211,12 +334,16 @@ async function main(): Promise<void> {
     proxyCalls: {},
   };
 
+  const mirror = args.deck === undefined ? undefined : await premadeDeck(args.deck);
   const requests: LeagueGameRequest[] = [];
   for (let g = 0; g < args.games; g++) {
     const seed = `${args.seed}-${Math.floor(g / 2)}`;
-    const decks = Array.from({ length: 4 }, (_, i) =>
-      generateCommanderDeck(pool, { seed: `${seed}-seat${i + 1}` }),
-    );
+    const decks =
+      mirror !== undefined
+        ? [mirror, mirror, mirror, mirror]
+        : Array.from({ length: 4 }, (_, i) =>
+            generateCommanderDeck(pool, { seed: `${seed}-seat${i + 1}` }),
+          );
     const swap = g % 2 === 1;
     const first = swap ? armB : armA;
     const second = swap ? armA : armB;
@@ -307,4 +434,5 @@ async function main(): Promise<void> {
     writeFileSync(args.json, JSON.stringify({ args, summary, errors: tally.errors }, null, 2));
 }
 
-void main();
+const entryPoint = process.argv[1];
+if (entryPoint !== undefined && resolve(entryPoint) === fileURLToPath(import.meta.url)) void main();
