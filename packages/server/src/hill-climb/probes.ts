@@ -236,6 +236,17 @@ const CENSUS_MODES: Array<{ key: string; config: Partial<AiConfig> }> = [
       providerPromptCacheLayoutEnabled: true,
     },
   },
+  {
+    // Hill-climb S6: delta prompts are the default since 2026-11-18, so `bot` measures them; this
+    // keeps the full-prompt strategist measured for comparison.
+    key: 'botNoDelta',
+    config: {
+      tacticalMode: 'bot',
+      botEscalation: [],
+      strategistReplan: 'onChange',
+      strategistDeltaEnabled: false,
+    },
+  },
 ];
 
 /**

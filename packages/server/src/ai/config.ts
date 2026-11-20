@@ -120,6 +120,15 @@ export interface AiConfig {
   /** Most own turns a seat's knobs are reused before the strategist is asked again. Default 3. */
   strategistMaxReuseTurns: number;
   /**
+   * Hill-climb S6: in `bot` mode, send the strategist its last intent and knobs plus what changed,
+   * instead of the whole board again (`strategist-delta.ts`). Env:
+   * `AI_STRATEGIST_DELTA_ENABLED`. Default: on since 2026-11-18, after a paid duel (delta seats won
+   * both games, prompts 33% smaller per call); `AI_STRATEGIST_DELTA_ENABLED=false` turns it off.
+   */
+  strategistDeltaEnabled: boolean;
+  /** Delta prompts a seat may get in a row before a full one. Env: `AI_STRATEGIST_DELTA_REFRESH`. Default 3. */
+  strategistDeltaRefreshEvery: number;
+  /**
    * Under `onChange`, which table changes count (see `WakeRule` in `ai/steering.ts`). `table-v2`
    * ignores changes the seat's knobs already expected: its own board growing and any commander
    * arriving. Env: `AI_STRATEGIST_WAKE_RULE`. Default: `table-v2`.
@@ -349,6 +358,8 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   botEscalationMargin: 1,
   strategistReplan: 'onChange',
   strategistMaxReuseTurns: 3,
+  strategistDeltaEnabled: true,
+  strategistDeltaRefreshEvery: 3,
   strategistWakeRule: 'table-v2',
   strategistTacticianFlag: 'off',
   filterNonCachingProviders: true,
@@ -815,6 +826,14 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     strategistMaxReuseTurns: parseNonNegativeInt(
       env['AI_STRATEGIST_MAX_REUSE_TURNS'],
       DEFAULT_AI_CONFIG.strategistMaxReuseTurns,
+    ),
+    strategistDeltaEnabled: parseBoolean(
+      env['AI_STRATEGIST_DELTA_ENABLED'],
+      DEFAULT_AI_CONFIG.strategistDeltaEnabled,
+    ),
+    strategistDeltaRefreshEvery: parseNonNegativeInt(
+      env['AI_STRATEGIST_DELTA_REFRESH'],
+      DEFAULT_AI_CONFIG.strategistDeltaRefreshEvery,
     ),
     strategistWakeRule: parseChoice(
       env['AI_STRATEGIST_WAKE_RULE'],
