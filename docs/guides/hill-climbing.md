@@ -10,6 +10,7 @@ played differently. It uses no network and no paid model.
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
 | `engine.msPerDecision`                                   | Engine time per decision over the seeded benchmark games (`engine-bench` pods). The mean, so the slowest game dominates it.                                                                                                                                                                 | timed |
 | `engine.medianGameMsPerDecision`                         | The same, for the median game: what a typical game costs.                                                                                                                                                                                                                                   | timed |
+| `engine.work.<counter>`                                  | Exact counts of the engine's expensive operations over the same games: see below.                                                                                                                                                                                                           | exact |
 | `setup.msPerGame`                                        | Time to construct a four-player game: card interpretation, shuffles, opening hands.                                                                                                                                                                                                         | timed |
 | `model.<mode>.callsPerTurn`                              | Tactician plus strategist calls per turn, from the call census on fixed decks. Modes: `default` (what a new game uses), `model`, `bot`, `botCached` (bot mode with the stable-prefix layout), and `botNoDelta` (bot mode with full strategist prompts; delta prompts, S6, are the default). | exact |
 | `model.<mode>.promptTokensPerTurn`                       | Prompt tokens those calls would send per turn.                                                                                                                                                                                                                                              | exact |
@@ -20,6 +21,10 @@ played differently. It uses no network and no paid model.
 | `coverage.edhrecSlotSharePct`                            | Share of all EDHREC deck slots those cards fill.                                                                                                                                                                                                                                            | exact |
 | `coverage.fixtureDeckCardsModeledPct`                    | Share of the coverage decks' cards that model.                                                                                                                                                                                                                                              | exact |
 | `coverage.compilerRefusals`, `coverage.playableDecksPct` | Read from `primitive-backlog.json` and `deck-coverage.json` when those reports exist.                                                                                                                                                                                                       | exact |
+| `coverage.compilerScreenCatches`                         | Compile refusals in the committed trials the pre-call screen declines with no model call, each judged by a screen built without that card, plus refusals of history rules the engine has since covered.                                                                                     | exact |
+| `coverage.compilerScreenLosses`                          | Cards in the committed trials that compiled but the screen would decline (same leave-one-out replay). Must stay 0.                                                                                                                                                                          | exact |
+| `compiler.textCheckSettledPatches`                       | Committed card-compiler trial patches the free text check settles with no model call (`scripts/card-compiler/settle.ts`). Guarded by `text-check.test.ts` against settling a wrong patch.                                                                                                   | exact |
+| `compiler.textCheckPoolMatches`                          | Modeled pinned-pool cards whose parsed IR renders to exactly their Oracle text: renderer coverage on the lines future patches look like.                                                                                                                                                    | exact |
 | `authoring.poolMutantsLeftPct`                           | Share of IR mutants of the modeled EDHREC cards that no passing promotion scaffold kills: test work an agent still writes (lower).                                                                                                                                                          | exact |
 | `authoring.poolPartsScaffoldedPct`                       | Share of those cards' parts (abilities, keywords, statics, replacement fields) with a passing scaffold draft.                                                                                                                                                                               | exact |
 | `authoring.poolCardsFullyScaffolded`                     | Cards whose every part has a passing draft, so promotion is review plus negatives.                                                                                                                                                                                                          | exact |
@@ -40,6 +45,38 @@ those tokens from cache (its time-to-live, routing, minimum sizes) is only measu
 for example the `cacheReadSharePct` that `bun run ai-mode-duel` reports per mode. The census gives
 each seat's strategist its inferred archetype, as a live match does.
 
+## Engine work counters
+
+Timings in a cloud container move 15-30% between runs, so a 5% engine win cannot be shown by the
+clock. The engine counts its expensive operations (`engineWork()` in `@mtg/engine`,
+`packages/engine/src/work-counters.ts`), and the engine probe reports them over the benchmark
+games. They repeat to the last digit on any machine, under the test suite's load too, and the probe
+fails if two repeats of the same games count differently.
+
+| Counter                            | Counts                                                                         |
+| ---------------------------------- | ------------------------------------------------------------------------------ |
+| `layerPasses`                      | Full CR 613 layer passes over the battlefield (layer-cache misses).            |
+| `layerCacheHits`                   | Characteristics queries answered from the cache. Shown only, never a verdict.  |
+| `layerDigests`                     | Hashes of every layer input, once per read scope or per query outside one.     |
+| `castCheckpoints`                  | Casting checkpoints, each capturing every object in the game for rollback.     |
+| `castPreviews`                     | Casting previews: shallow projections of the game with a card on the stack.    |
+| `manaSourceListings`               | Listings of a player's mana sources: every mana ability judged payable now.    |
+| `spellPaymentSearches`             | Searches for a spell's joint payment of mana and non-mana costs.               |
+| `manaPlannerSearches`              | Payments the stateful mana planner searched.                                   |
+| `manaPlannerStates`, `stateCopies` | States that planner visited, and the deep copies of the game it made for them. |
+
+A count measures the work the games needed, so it compares only when every fingerprint is
+identical. When the games differ the row says `INCOMPARABLE` and does not fail. Counters include
+the engine work the bot asks for through its view, and leave out the checks
+`MTG_VERIFY_LAYER_CACHE=1` and `strictInvariants` make, so turning those on changes no count.
+`bun run engine-bench` prints the totals too.
+
+Use them as the target metric for engine CPU work: a change that leaves the games identical and
+cuts `layerPasses` or `stateCopies` is a real win even when the timing row says `UNCHANGED`. Still
+check the timing row for a `REGRESSED`, since a change can do fewer operations that each cost more.
+To add a counter, add a field to `EngineWork`, call `countWork` where the work happens (never read
+a counter in engine code: a test enforces it), and add its unit in `WORK_UNITS` in `probes.ts`.
+
 ## The loop
 
 1. **Measure the base.** On a clean checkout of the commit you start from:
@@ -48,7 +85,8 @@ each seat's strategist its inferred archetype, as a live match does.
 3. **Compare on the same machine.**
    `bun run hill-climb --repeat 3 --against <scratch>/before.json`
 4. **Keep it only if it is a real win.** The table must show `IMPROVED` on the metric you aimed
-   at, no `REGRESSED` row, and `games: all N fingerprints identical`. An `UNCHANGED` verdict means
+   at (for engine CPU, an `engine.work.*` counter or the timing), no `REGRESSED` row, and
+   `games: all N fingerprints identical`. An `UNCHANGED` verdict means
    the change is inside the noise: drop it, however good the idea looked.
 5. **Bank it.** In the pull request, paste the comparison table. Then run
    `bun run hill-climb --write-baseline` on the committed change and commit the baseline, so the
@@ -78,8 +116,11 @@ profile.
 ## What guards main
 
 `packages/server/src/hill-climb/probes.test.ts` runs in the normal test suite. It recomputes the
-exact model-call and coverage metrics and fails when one is worse than
-`packages/server/fixtures/hill-climb-baseline.json`. Timings and fingerprints are checked by the
+exact model-call, coverage and engine work metrics and fails when one is worse than
+`packages/server/fixtures/hill-climb-baseline.json`. The work counters are compared only while the
+quick games still match the baseline's fingerprints; after a change that alters play, rewrite the
+baseline to turn that gate back on. `packages/engine/tests/work-counters.test.ts` pins what each
+counter counts. Timings and fingerprints are checked by the
 command, not by the suite, because timings are not trustworthy while tests share the machine and
 fingerprints change with every intended rules or card change. If main changed the games after the
 baseline was written, the command says so: compare with `--against` a report from your base commit.

@@ -47,7 +47,7 @@ import { canPay, describeManaCost } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
 import { computeCharacteristics, selectPermanents } from '../effects/continuous';
 import type { Selector, SelectorSource } from './selector';
-import { ofType, selectMatches } from './selector';
+import { ofType, selectMatches, tappedState } from './selector';
 import type { PlayerId } from '@mtg/shared';
 import type { EnginePermanent } from '../state/types';
 
@@ -254,6 +254,12 @@ export type Condition =
   | { kind: 'castSpellThisTurn'; category: 'any' | 'noncreature'; cmp: '>=' | '<='; n: number }
   /** "If a modified creature died under your control this turn" (CR 700.9, Intermediate Chirography). */
   | { kind: 'modifiedCreatureDiedUnderYourControlThisTurn' }
+  /**
+   * "Activate only if you attacked this turn" (Bloodsoaked Champion; raid, CR 207.2c): you
+   * declared at least one attacking creature this turn. Creatures put onto the battlefield
+   * attacking were never declared and do not count. Reset at the start of each turn.
+   */
+  | { kind: 'youAttackedThisTurn' }
   | { kind: 'not'; of: Condition };
 
 export const countPermanents = (
@@ -327,6 +333,7 @@ export function isChoiceCondition(condition: Condition): boolean {
     case 'sourceHasCounters':
     case 'castSpellThisTurn':
     case 'modifiedCreatureDiedUnderYourControlThisTurn':
+    case 'youAttackedThisTurn':
     case 'controlsLandsWithSameName':
       return false;
     default:
@@ -377,6 +384,8 @@ export function evaluateCondition(
   switch (condition.kind) {
     case 'modifiedCreatureDiedUnderYourControlThisTurn':
       return ctx.state.modifiedCreatureDiedThisTurn?.[source.controllerId] === true;
+    case 'youAttackedThisTurn':
+      return ctx.state.attackedThisTurnPlayers?.[source.controllerId] === true;
     case 'castSpellThisTurn': {
       const player = ctx.state.players.find((candidate) => candidate.id === source.controllerId);
       if (player === undefined) return false;
@@ -536,7 +545,7 @@ export function evaluateCondition(
     case 'isUntapped': {
       if (source?.cardId === undefined) return false;
       const perm = sourceState();
-      return perm !== undefined && !perm.tapped;
+      return perm !== undefined && !tappedState(perm);
     }
     case 'giftPromised':
       return source.giftPromised === true;

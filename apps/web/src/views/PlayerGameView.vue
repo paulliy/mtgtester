@@ -701,6 +701,9 @@ function chooseAction(action: LegalAction): void {
     targetSlots(action).length === 0 &&
     sourceActions.value.filter((candidate) => sourceId(candidate) === sourceId(action)).length === 1
   ) {
+    // Taken at once, so close the source: otherwise its tray shows a stale "Play" button until
+    // the next request arrives, and pressing it resubmits an action that is already gone.
+    focusedSourceId.value = null;
     store.submitPlayerAction(action.id);
     return;
   }
@@ -1355,6 +1358,7 @@ function abandon(): void {
                   :scryfall-id="commander.scryfallId"
                   :name="commander.name"
                   size="small"
+                  :provisional="commander.provisional === true"
                 />
               </span>
               <strong
@@ -1510,6 +1514,7 @@ function abandon(): void {
                     :scryfall-id="commander.scryfallId"
                     :name="commander.name"
                     size="small"
+                    :provisional="commander.provisional === true"
                   />
                 </button>
                 <span
@@ -1523,6 +1528,7 @@ function abandon(): void {
                     :scryfall-id="commander.scryfallId"
                     :name="commander.name"
                     size="small"
+                    :provisional="commander.provisional === true"
                   />
                 </span>
               </template>
@@ -1741,6 +1747,7 @@ function abandon(): void {
                 :scryfall-id="card.scryfallId"
                 :name="card.name"
                 :is-token="card.isToken === true"
+                :provisional="card.provisional === true"
                 size="small"
               />
               <span v-if="playableVerbById.get(card.id)" class="play-tag">{{

@@ -103,6 +103,8 @@ export function pluralForms(word: string): string[] {
   if (w.endsWith('fe')) forms.push(`${w.slice(0, -2)}ves`);
   else if (w.endsWith('f')) forms.push(`${w.slice(0, -1)}ves`);
   if (w.endsWith('y')) forms.push(`${w.slice(0, -1)}ies`);
+  // Irregular plurals rules text prints ("can't be blocked by Oxen", Ox Drover).
+  if (w === 'ox') forms.push('oxen');
   return forms;
 }
 

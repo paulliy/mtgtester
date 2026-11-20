@@ -7,6 +7,7 @@ import {
   budgetedFetch,
   counting,
   emptyTally,
+  fallbackShare,
   SeatTracker,
   type Budget,
 } from './ai-mode-duel';
@@ -35,7 +36,12 @@ describe('ai-mode-duel spend accounting', () => {
     const budget: Budget = { maxUsd: 1, maxCalls: 10, spentUsd: 0, calls: 0, capped: false };
     const client = counting(inner, 'tactician', () => 'model', tallies, budget);
     await expect(client.requestDecision(prompt, request)).rejects.toThrow('malformed JSON');
-    expect(tallies.model).toMatchObject({ promptTokens: 100, responseTokens: 50, failedCalls: 1 });
+    expect(tallies.model).toMatchObject({
+      promptTokens: 100,
+      responseTokens: 50,
+      failedCalls: 1,
+      failedTacticianCalls: 1,
+    });
     expect(budget.spentUsd).toBeCloseTo(0.01);
     expect(tallies.bot.promptTokens).toBe(0);
   });
@@ -208,6 +214,29 @@ describe('ai-mode-duel spend accounting', () => {
       'spend cap',
     );
     expect(sent).toBe(2);
+  });
+
+  it('does not count a call stopped by the spend cap as a provider failure', async () => {
+    const budget: Budget = { maxUsd: 1, maxCalls: 10, spentUsd: 0, calls: 0, capped: false };
+    const inner = {
+      activeModel: 'm',
+      setAttemptObserver() {},
+      async requestDecision() {
+        // As `budgetedFetch` does when the call that would cross the cap is sent.
+        budget.capped = true;
+        throw new Error('ai-mode-duel spend cap reached');
+      },
+    } as unknown as OpenAiCompatibleClient;
+    const tallies = { bot: emptyTally(), model: emptyTally() };
+    const client = counting(inner, 'tactician', () => 'model', tallies, budget);
+    await expect(client.requestDecision(prompt, request)).rejects.toThrow('spend cap');
+    expect(tallies.model).toMatchObject({ failedCalls: 0, failedTacticianCalls: 0 });
+  });
+
+  it('reports the share of tactician calls that fell back to the bot', () => {
+    const tally = { ...emptyTally(), tacticianCalls: 95, failedTacticianCalls: 5, failedCalls: 7 };
+    expect(fallbackShare(tally)).toBe(0.05);
+    expect(fallbackShare(emptyTally())).toBe(0);
   });
 });
 

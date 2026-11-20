@@ -9,7 +9,16 @@ import {
   launchScenario,
   observePriority,
 } from './pr09-viewer-helpers';
+import { g1Flows } from './runner-flows-g1';
+import { g2Flows } from './runner-flows-g2';
+import { g3Flows } from './runner-flows-g3';
+import { g4Flows } from './runner-flows-g4';
+import { g5Flows } from './runner-flows-g5';
 import { RUNNER_ALL_SCENARIOS } from '../../../packages/server/src/cards/runner-scenario-catalog';
+import { s3g1Flows } from './runner-flows-s3-g1';
+import { s3g2Flows } from './runner-flows-s3-g2';
+import { s3g3Flows } from './runner-flows-s3-g3';
+import { s3g4Flows } from './runner-flows-s3-g4';
 
 /**
  * Viewer evidence for the scenarios the engine-test runner also drives (ADR 0034 decision 10).
@@ -468,6 +477,18 @@ const exileThumb = (page: Page, seat: string, name: string): Locator =>
     .filter({ has: page.getByRole('img', { name, exact: true }) });
 
 const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
+  // PR #94's evasion and blocking batch.
+  ...g1Flows({ passUntil, passStackUntil }),
+  ...g2Flows({ passUntil, passStackUntil }),
+  ...g3Flows({ passUntil, passStackUntil }),
+  ...g4Flows({ passUntil, passStackUntil }),
+  // PR #96's graveyard and hand batch.
+  ...g5Flows({ passUntil, passStackUntil }),
+  // PR #89's common blocking lines.
+  ...s3g1Flows({ passUntil, passStackUntil }),
+  ...s3g2Flows({ passUntil, passStackUntil }),
+  ...s3g3Flows({ passUntil, passStackUntil }),
+  ...s3g4Flows({ passUntil, passStackUntil }),
   'mizzium-mortars-target': async (page) => {
     await castWith(page, hand(page, 'Mizzium Mortars'), {
       targets: [['P2', 'Scenario Ox']],

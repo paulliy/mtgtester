@@ -8,11 +8,14 @@ import {
   HttpError,
   NoAvailableModelError,
 } from './errors';
-import { DEFAULT_AI_CONFIG } from './config';
+import { DEFAULT_AI_CONFIG as BASE_AI_CONFIG } from './config';
 import { StrategyCoordinator } from './strategy-coordinator';
 import { AiCallLogger } from './logger';
 import type { Engine } from '@mtg/engine';
 import type { JevComparison, JevTacticalPolicy } from './jev-policy';
+
+// These tests exercise the model tactician; pin it, since bot-led tactics are the default (ADR 0039).
+const DEFAULT_AI_CONFIG = { ...BASE_AI_CONFIG, tacticalMode: 'model' as const };
 
 describe('OpenAiDecisionProvider', () => {
   const mockEngine = {

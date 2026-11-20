@@ -22,7 +22,11 @@ if (
   );
 const path = 'packages/server/fixtures/card-verification-manifest.json';
 const previous = parseReviewManifest(
-  execFileSync('git', ['show', `${args[1]}:${path}`], { encoding: 'utf8' }),
+  // The manifest is past execFileSync's 1 MiB default buffer.
+  execFileSync('git', ['show', `${args[1]}:${path}`], {
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
+  }),
 );
 const bytes = readFileSync(path, 'utf8');
 const current = parseReviewManifest(bytes);

@@ -27,6 +27,8 @@ export function buildReplayRecord(input: {
   rng: GameReplayConfig['rng'];
   /** The engine's work limits, when the game set any (a table's). Absent for the tester's. */
   engineLimits?: { maxStepWork: number; maxObjects: number };
+  /** The provisional patches the game played (H1), when it played any. */
+  provisional?: GameReplayConfig['provisional'];
 }): GameReplayRecord {
   const config: GameReplayConfig = {
     schemaVersion: 1,
@@ -44,6 +46,8 @@ export function buildReplayRecord(input: {
       maxDecisions: DEFAULT_MAX_DECISIONS,
       ...(input.engineLimits !== undefined && input.engineLimits),
     },
+    ...(input.provisional !== undefined &&
+      input.provisional.length > 0 && { provisional: input.provisional }),
   };
   return {
     config,

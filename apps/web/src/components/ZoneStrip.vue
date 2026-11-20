@@ -92,6 +92,7 @@ function onCardLeave(): void {
           :scryfall-id="card.scryfallId"
           :name="card.name"
           :is-token="card.isToken === true"
+          :provisional="card.provisional === true"
           size="small"
         />
       </div>

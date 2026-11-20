@@ -18,6 +18,7 @@ import type { EnginePlayerState, GameContext } from '../state/types';
 import { planPayment } from './cost';
 import type { ManaSource, ParsedManaCost, PaymentPlan } from './cost';
 import { needsStatefulManaPayment, planStatefulManaPayment } from './stateful-payment';
+import { countWork } from '../work-counters';
 
 export interface SpellPaymentRequest {
   /** Already locked total mana cost, including reductions and additional mana costs. */
@@ -74,6 +75,7 @@ export function planSpellPayment(
   request: SpellPaymentRequest,
   prefix: readonly SpellPaymentChoice[] = [],
 ): SpellPaymentWitness | null {
+  countWork('spellPaymentSearches');
   const source = { cardId: request.sourceCardId, controllerId: player.id };
   const lockedCosts: AbilityCost[] = request.costs.map((cost) =>
     cost.kind === 'payLifeValue'
@@ -201,6 +203,8 @@ export function planSpellPayment(
         currentSources.flatMap((manaSource): ManaSource[] => {
           if (taps.has(manaSource.cardId) && manaSource.costs.some((cost) => cost.kind === 'tap'))
             return [];
+          // A card discarded or exiled from hand for this cost cannot also make its mana.
+          if (manaSource.fromHand === true && consumed.has(manaSource.cardId)) return [];
           if (
             reserved.has(manaSource.cardId) &&
             manaSource.costs.some(
@@ -242,7 +246,9 @@ export function planSpellPayment(
             allows,
             (context, payer) =>
               usableFrom(payer, [
-                ...manaSourcesFor(context, payer.id, true),
+                // The replay planner proves board activations only; a card in hand that makes
+                // mana (Spirit Guide) is not offered to it (fail closed).
+                ...manaSourcesFor(context, payer.id, true, 'payment', false),
                 ...(request.spellDefinition !== undefined &&
                 spellHasConvoke(request.spellDefinition)
                   ? convokeSourcesFor(context, payer.id)

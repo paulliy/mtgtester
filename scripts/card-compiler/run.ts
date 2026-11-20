@@ -15,6 +15,8 @@
  *   bun run scripts/card-compiler/run.ts resmoke <trial-dir>       # validate again, replay smoke
  *   bun run scripts/card-compiler/run.ts import <trial-dir> <dir>  # check patches made elsewhere
  *   bun run scripts/card-compiler/run.ts queue <trial-dir>...      # rebuild the review queue
+ *   bun run scripts/card-compiler/run.ts audit [--seed S] [--count N]  # sample provisional cards
+ *   bun run scripts/card-compiler/run.ts audit-verdict "<name>" <source> accepted|rejected --by <who>
  *
  *   bun run scripts/card-compiler/run.ts ledger [<trial-dir>...]   # every card any trial has taken
  *
@@ -57,6 +59,12 @@ import {
   type CalibrationCase,
 } from './calibration';
 import { textCheck } from './render';
+import { audit, review } from './audit';
+import {
+  loadScreen,
+  screenLines,
+  type ScreenRule,
+} from '../../packages/server/src/cards/compiler-screen';
 import {
   LEDGER_PATH,
   QUEUE_PATH,
@@ -127,7 +135,12 @@ export interface CardState {
   textCheck?: 'renderer' | 'model';
   /** Compile rounds answered so far. */
   rounds: number;
-  stage: 'compile' | 'invalid' | 'inexpressible' | 'back' | 'judge' | 'done' | 'stale';
+  stage: 'compile' | 'screened' | 'invalid' | 'inexpressible' | 'back' | 'judge' | 'done' | 'stale';
+  /**
+   * For `screened`: the pre-call screen rule that declined the card with no model call
+   * (packages/server/src/cards/compiler-screen.ts). Screened cards are not refusal evidence.
+   */
+  screenedBy?: string;
   validatorIssues: string[][];
   inexpressibleReason?: string;
   smoke?: SmokeResult[];
@@ -271,7 +284,18 @@ function refuseCalibrationCollision(
   );
 }
 
-function prepare(trial: string, calibrationCount: number): void {
+let activeRules: ScreenRule[] | undefined;
+/** The pre-call screen's confirmed rules, built once from the committed evidence. */
+function screenRules(): ScreenRule[] {
+  activeRules ??= loadScreen().active;
+  return activeRules;
+}
+
+/**
+ * Writes the compile prompts. Unless `--no-screen` is given, a card whose line names a primitive
+ * the IR is known to lack is declined here as `screened`, and no prompt is written for it.
+ */
+function prepare(trial: string, calibrationCount: number, useScreen: boolean): void {
   const p = paths(trial);
   const rows = JSON.parse(readFileSync(`${trial}/targets.json`, 'utf8')) as TargetRow[];
   const targets = loadTargets(trial);
@@ -281,13 +305,33 @@ function prepare(trial: string, calibrationCount: number): void {
   write(p.prefix('compile'), compilePrefix());
   write(p.prefix('back'), BACK_PREFIX);
   write(p.prefix('judge'), JUDGE_PREFIX);
+  let screened = 0;
+  let reopened = 0;
   for (const row of rows) {
     const target = targets.get(row.name);
     if (target === undefined) {
       states.set(row.name, { ...row, rounds: 0, stage: 'stale', validatorIssues: [] });
       continue;
     }
-    if (states.has(row.name)) continue;
+    // A card the model has answered keeps its outcome. A screened card is judged again, so
+    // `--no-screen` or a rule that has since retired gives it a compile prompt.
+    const existing = states.get(row.name);
+    if (existing !== undefined && existing.stage !== 'screened') continue;
+    const hit = useScreen ? screenLines(target.lines, screenRules(), target.name) : null;
+    if (hit !== null) {
+      states.set(row.name, {
+        ...row,
+        lines: target.lines,
+        rounds: 0,
+        stage: 'screened',
+        validatorIssues: [],
+        screenedBy: hit.rule.id,
+        inexpressibleReason: `${hit.rule.missing} (screened before compile: "${hit.line}")`,
+      });
+      screened++;
+      continue;
+    }
+    if (existing !== undefined) reopened++;
     states.set(row.name, {
       ...row,
       lines: target.lines,
@@ -298,7 +342,9 @@ function prepare(trial: string, calibrationCount: number): void {
     write(p.prompt('compile', row.name, 1), compileSuffix(target));
   }
   saveState(trial, states);
-  console.log(`prepared ${states.size} cards`);
+  console.log(
+    `prepared ${states.size} cards; ${screened} declined by the screen with no model call${useScreen ? '' : ' (screen off)'}; ${reopened} screened earlier and now sent to compile`,
+  );
   calibrate(trial, calibrationCount);
 }
 
@@ -873,7 +919,12 @@ function smokeOk(state: CardState): boolean {
 
 /** Where a card ended up in its trial. */
 function outcomeOf(state: CardState): string {
-  if (state.stage === 'stale' || state.stage === 'inexpressible' || state.stage === 'invalid')
+  if (
+    state.stage === 'stale' ||
+    state.stage === 'inexpressible' ||
+    state.stage === 'screened' ||
+    state.stage === 'invalid'
+  )
     return state.stage;
   if (state.valid !== true) return 'pending';
   if (!smokeOk(state)) return 'smoke-failed';
@@ -960,6 +1011,7 @@ function report(trial: string): void {
     compileRounds: state.rounds,
     validatorIssues: state.validatorIssues,
     inexpressibleReason: state.inexpressibleReason,
+    screenedBy: state.screenedBy,
     smoke: state.smoke?.map((run) => ({
       scenario: run.scenario,
       ok: run.ok,
@@ -1062,7 +1114,17 @@ function numberFlag(name: string, fallback: number): number {
 }
 const calibrationCases = numberFlag('calibration', DEFAULT_CALIBRATION_CASES);
 const batchSize = numberFlag('size', 25);
+const noScreenFlag = argv.indexOf('--no-screen');
+if (noScreenFlag >= 0) argv.splice(noScreenFlag, 1);
 const [command, trial, stage] = argv;
+if (command === 'audit') {
+  audit(argv.slice(1));
+  process.exit(0);
+}
+if (command === 'audit-verdict') {
+  review(argv.slice(1));
+  process.exit(0);
+}
 if (command === 'ledger') {
   ledger(argv.slice(1));
   process.exit(0);
@@ -1080,13 +1142,13 @@ if (command === 'promote' || command === 'retire' || command === 'review' || com
 }
 if (trial === undefined)
   throw new Error(
-    'usage: run.ts <prepare|calibrate|batches|exec|check|report|recheck|resmoke|import|queue|review|promote|retire|verify> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity]',
+    'usage: run.ts <prepare|calibrate|batches|exec|check|report|recheck|resmoke|import|queue|review|promote|retire|verify|audit|audit-verdict> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity] [--no-screen]',
   );
 if (command === 'queue') queue(process.argv.slice(3));
 else if (command === 'import') {
   if (stage === undefined) throw new Error('usage: run.ts import <trial-dir> <patch-dir>');
   importPatches(trial, stage);
-} else if (command === 'prepare') prepare(trial, calibrationCases);
+} else if (command === 'prepare') prepare(trial, calibrationCases, noScreenFlag < 0);
 else if (command === 'calibrate') calibrate(trial, calibrationCases);
 else if (command === 'batches') batches(trial, stage ?? 'compile', batchSize);
 else if (command === 'check') check(trial);

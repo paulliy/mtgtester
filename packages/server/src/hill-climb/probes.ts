@@ -5,18 +5,26 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { cpus } from 'node:os';
-import { Engine } from '@mtg/engine';
+import { Engine, type EngineWork } from '@mtg/engine';
 import type { AiConfig } from '../ai/config';
+import {
+  compilerTrials,
+  loadRuleEvidence,
+  loadScreenHistory,
+  loadTrialCards,
+  replayScreen,
+} from '../cards/compiler-screen';
 import { measureCoverage } from '../cards/coverage';
 import { PINNED_ORACLE_PATH, type PinnedCard } from '../cards/edhrec-pins';
 import type { EdhrecRanking } from '../cards/edhrec-ranking';
 import { censusPod } from '../cli/ai-call-census';
-import { playGame } from '../cli/engine-bench-game';
+import { playGame, sumWork } from '../cli/engine-bench-game';
 import type { FuzzDeck } from '../cli/fuzz-game';
 import { loadDecks, pod } from '../cli/fuzz-plan';
 import { TABLE_ENGINE_LIMITS } from '../match/engine-limits';
 import { authoringProbe } from './authoring';
 import type { Metric, Report } from './report';
+import { measureSettle, poolTextMatches } from '../../../../scripts/card-compiler/settle';
 
 export interface Profile {
   /** Heuristic-only benchmark games played, and their turn cap. */
@@ -50,7 +58,7 @@ export const PROFILES: Record<string, Profile> = {
   },
 };
 
-export const PROBES = ['engine', 'setup', 'model', 'coverage', 'authoring'] as const;
+export const PROBES = ['engine', 'setup', 'model', 'coverage', 'authoring', 'compiler'] as const;
 export type Probe = (typeof PROBES)[number];
 
 type Metrics = Record<string, Metric>;
@@ -87,6 +95,36 @@ const exact = (value: number, unit: string, better: Metric['better']): Metric =>
   kind: 'exact',
 });
 
+/** Units for the engine work counters (`engineWork` in @mtg/engine), by counter. */
+const WORK_UNITS: Record<keyof EngineWork, string> = {
+  layerPasses: 'passes',
+  layerCacheHits: 'hits',
+  layerDigests: 'digests',
+  castCheckpoints: 'checkpoints',
+  castPreviews: 'previews',
+  manaSourceListings: 'listings',
+  spellPaymentSearches: 'searches',
+  manaPlannerSearches: 'searches',
+  manaPlannerStates: 'states',
+  stateCopies: 'copies',
+};
+
+/**
+ * The engine work counters over the benchmark games, as exact metrics. They count the work the
+ * games needed, so they compare only when both sides played the same games (`sameGames`). Cache
+ * hits are reported but count neither way: a cheaper design can need fewer lookups.
+ */
+export function workMetrics(work: EngineWork): Metrics {
+  const metrics: Metrics = {};
+  for (const kind of Object.keys(WORK_UNITS) as Array<keyof EngineWork>)
+    metrics[`engine.work.${kind}`] = {
+      ...exact(work[kind], WORK_UNITS[kind], 'lower'),
+      sameGames: true,
+      ...(kind === 'layerCacheHits' ? { informational: true } : {}),
+    };
+  return metrics;
+}
+
 /** The first `count` seeds whose pod is all heuristic players, as `engine-bench` picks them. */
 function heuristicSeeds(decks: FuzzDeck[], count: number): number[] {
   const seeds: number[] = [];
@@ -109,6 +147,7 @@ export function engineProbe(
   const perDecision: number[] = [];
   const medianGame: number[] = [];
   let fingerprints: Record<string, string> = {};
+  let work: EngineWork | undefined;
   // One untimed game first, so the first timed game is not charged for JIT warm-up.
   playGame(seeds[0]!, pod(decks, seeds[0]!).decks, pod(decks, seeds[0]!).providers, 10);
   for (let repeat = 0; repeat < repeats; repeat++) {
@@ -116,13 +155,23 @@ export function engineProbe(
       const plan = pod(decks, seed);
       const run = playGame(seed, plan.decks, plan.providers, profile.engineTurnCap);
       if (run.outcome.startsWith('error:')) throw new Error(`seed ${seed}: ${run.outcome}`);
-      log(`  engine seed ${seed}: ${run.decisions} decisions, ${run.engineMs} ms`);
+      log(
+        `  engine seed ${seed}: ${run.decisions} decisions, ${run.engineMs} ms, ` +
+          `${run.work.layerPasses} layer passes, ${run.work.stateCopies} state copies`,
+      );
       return run;
     });
     const played = Object.fromEntries(runs.map((run) => [String(run.seed), run.fingerprint]));
     if (repeat > 0 && JSON.stringify(played) !== JSON.stringify(fingerprints))
       throw new Error('the same seeds played differently on a repeat: the games are not seeded');
     fingerprints = played;
+    // The counts are exact: a repeat that did different work did not run the same code path.
+    const total = sumWork(runs.map((run) => run.work));
+    if (work !== undefined && JSON.stringify(total) !== JSON.stringify(work))
+      throw new Error(
+        'the same games did different engine work on a repeat: a counter is not exact',
+      );
+    work = total;
     const engineMs = runs.reduce((sum, run) => sum + run.engineMs, 0);
     const decisions = runs.reduce((sum, run) => sum + run.decisions, 0);
     perDecision.push(engineMs / Math.max(1, decisions));
@@ -133,6 +182,7 @@ export function engineProbe(
       // The mean is dominated by the slowest game; the median says what a typical game costs.
       'engine.msPerDecision': timed(perDecision, 'ms'),
       'engine.medianGameMsPerDecision': timed(medianGame, 'ms'),
+      ...workMetrics(work!),
     },
     fingerprints,
   };
@@ -314,6 +364,30 @@ export function playableDeckPct(report: {
 }
 
 /**
+ * The compiler's pre-call screen replayed over every committed trial, leaving each card's own
+ * outcome out of the screen that judges it. Catches are refusals declined with no model call;
+ * losses are cards that compiled but would have been declined. A rule confirmed by one card alone
+ * catches nothing here, so the metric rewards rules that generalize. A refusal whose rule (one in
+ * the committed screen history) has since retired, because a modeled card or validated patch now
+ * covers the wording, still counts: closing the gap is progress, not a screen regression.
+ */
+export function compilerScreenMetrics(): Metrics {
+  const matches = loadRuleEvidence();
+  const history = loadScreenHistory();
+  let caught = 0;
+  let lost = 0;
+  for (const trial of compilerTrials()) {
+    const replay = replayScreen(loadTrialCards(trial), matches, { leaveOneOut: true, history });
+    caught += replay.caught + replay.settled;
+    lost += replay.acceptedLost.length;
+  }
+  return {
+    'coverage.compilerScreenCatches': exact(caught, 'calls', 'higher'),
+    'coverage.compilerScreenLosses': exact(lost, 'cards', 'lower'),
+  };
+}
+
+/**
  * Card coverage, computed live from the pinned Oracle fixtures so an interpreter change shows at
  * once. The backlog and deck metrics are read from their committed reports when those exist.
  */
@@ -334,6 +408,7 @@ export function coverageProbe(decks: FuzzDeck[]): Metrics {
       'higher',
     ),
   };
+  Object.assign(metrics, compilerScreenMetrics());
   if (existsSync(PRIMITIVE_BACKLOG_PATH)) {
     const refusals = backlogRefusals(readJson(PRIMITIVE_BACKLOG_PATH));
     if (refusals !== null) metrics['coverage.compilerRefusals'] = exact(refusals, 'cards', 'lower');
@@ -343,6 +418,18 @@ export function coverageProbe(decks: FuzzDeck[]): Metrics {
     if (playable !== null) metrics['coverage.playableDecksPct'] = exact(playable, '%', 'higher');
   }
   return metrics;
+}
+
+/**
+ * The card compiler's free meaning check (`scripts/card-compiler/render.ts`): how many committed
+ * trial patches it settles with no model call, and how many modeled pool cards it renders to
+ * their Oracle text (the same check run on the parser's output, a proxy for future patches).
+ */
+export function compilerProbe(): Metrics {
+  return {
+    'compiler.textCheckSettledPatches': exact(measureSettle().settled.length, 'patches', 'higher'),
+    'compiler.textCheckPoolMatches': exact(poolTextMatches(), 'cards', 'higher'),
+  };
 }
 
 /**
@@ -410,6 +497,7 @@ export async function measure(options: MeasureOptions): Promise<Report> {
     else if (probe === 'model') Object.assign(metrics, await modelProbe(decks, profile));
     else if (probe === 'authoring')
       Object.assign(metrics, authoringProbe(profile.authoringStride, log).metrics);
+    else if (probe === 'compiler') Object.assign(metrics, compilerProbe());
     else Object.assign(metrics, coverageProbe(decks));
   }
   // The machine's speed drifts over a long run, so calibrate again and keep the faster reading.

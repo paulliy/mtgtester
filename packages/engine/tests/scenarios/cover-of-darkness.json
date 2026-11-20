@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "card": "Cover of Darkness",
+  "supportCards": [
+    {
+      "name": "Scenario Goblin",
+      "typeLine": "Creature — Goblin",
+      "manaCost": "{R}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature — Ogre",
+      "manaCost": "{2}{R}",
+      "power": "3",
+      "toughness": "3"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "cover-of-darkness-chosen-type-unblockable",
+      "title": "Cover of Darkness: a creature of the chosen type has fear",
+      "clauses": [2],
+      "instructions": [
+        "Cast Cover of Darkness and choose Goblin.",
+        "Attack P2 with Scenario Goblin only; P2 controls only Scenario Ogre (not black or artifact)."
+      ],
+      "expectedOutcome": "P2 is never asked to block; Scenario Goblin deals 1 damage.",
+      "seats": {
+        "P1": {
+          "hand": ["Cover of Darkness"],
+          "battlefield": ["Scenario Goblin", "Scenario Bear", "Swamp", "Swamp"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Cast Cover of Darkness"
+        },
+        {
+          "player": "P1",
+          "choose": "Goblin"
+        },
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2", "__no_attack__"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Cover of Darkness"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cover-of-darkness-other-type-blockable",
+      "title": "Cover of Darkness: a creature not of the chosen type is unaffected",
+      "clauses": [2],
+      "instructions": [
+        "Cast Cover of Darkness and choose Goblin.",
+        "Attack P2 with Scenario Bear only; P2 controls only Scenario Ogre.",
+        "P2 blocks."
+      ],
+      "expectedOutcome": "The Bear has no fear: the block is legal, Scenario Bear dies and P2 takes no damage.",
+      "seats": {
+        "P1": {
+          "hand": ["Cover of Darkness"],
+          "battlefield": ["Scenario Goblin", "Scenario Bear", "Swamp", "Swamp"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Cast Cover of Darkness"
+        },
+        {
+          "player": "P1",
+          "choose": "Goblin"
+        },
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["__no_attack__", "P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Scenario Bear"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    }
+  ]
+}

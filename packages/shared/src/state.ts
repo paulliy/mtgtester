@@ -85,6 +85,12 @@ export interface GameResult {
    * players still in it, not a halt. Absent means `'rules'`, so every rules result is unchanged.
    */
   endReason?: GameEndReason;
+  /**
+   * The provisional cards (H1) this game's decks held, sorted by name: cards playing by a
+   * machine-checked patch nobody has reviewed. Absent when there were none, which is every game
+   * that did not opt in. A result carrying it must never be read as fully reviewed evidence.
+   */
+  provisionalCards?: string[];
 }
 
 export type GameEndReason = 'rules' | 'timeLimit' | 'allAway';

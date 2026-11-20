@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "card": "Drift of Phantasms",
+  "supportCards": [
+    {
+      "name": "Scenario Cub",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{2}{G}",
+      "power": "3",
+      "toughness": "3"
+    },
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature — Ogre",
+      "manaCost": "{3}{R}",
+      "power": "4",
+      "toughness": "4"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "drift-of-phantasms-transmute",
+      "title": "Drift of Phantasms: transmute finds a card with the same mana value (3)",
+      "clauses": [3],
+      "instructions": [
+        "Activate transmute from your hand, paying with your lands.",
+        "Search your library and take Scenario Cub."
+      ],
+      "expectedOutcome": "Drift of Phantasms is discarded, Scenario Cub is revealed and put into your hand, Scenario Ogre (mana value 4) stays in the library, and the library is shuffled.",
+      "seats": {
+        "P1": {
+          "hand": ["Drift of Phantasms"],
+          "battlefield": ["Island", "Island", "Island"],
+          "libraryTop": ["Scenario Ogre", "Scenario Cub"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Drift of Phantasms \\(hand\\): Transmute/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Scenario Cub/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Cub"],
+            "lacks": ["Drift of Phantasms"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Drift of Phantasms"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Scenario Ogre"],
+            "lacks": ["Scenario Cub"]
+          }
+        },
+        {
+          "event": {
+            "type": "shuffle",
+            "count": 1
+          }
+        },
+        {
+          "event": {
+            "type": "searchFound",
+            "payload": "\"revealed\":true",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "drift-of-phantasms-transmute-no-match",
+      "title": "Drift of Phantasms: transmute offers nothing of another mana value",
+      "clauses": [3],
+      "instructions": ["Activate transmute with only a mana value 4 card in your library."],
+      "expectedOutcome": "Drift of Phantasms is still discarded, Scenario Ogre is not offered and stays in the library, and the library is shuffled.",
+      "seats": {
+        "P1": {
+          "hand": ["Drift of Phantasms"],
+          "battlefield": ["Island", "Island", "Island"],
+          "libraryTop": ["Scenario Ogre"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Drift of Phantasms \\(hand\\): Transmute/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Scenario Ogre", "Drift of Phantasms"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Drift of Phantasms"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Scenario Ogre"]
+          }
+        },
+        {
+          "event": {
+            "type": "shuffle",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

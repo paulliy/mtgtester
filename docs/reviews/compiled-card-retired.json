@@ -107,6 +107,13 @@
       "reason": "Its Vampire condition selects attachedToSource, which never matches in a condition (chunk 011)."
     },
     {
+      "name": "Bonders' Enclave",
+      "oracleId": "f33ce38a-34ec-4b65-a0fc-160484a02007",
+      "patchSha256": "9ea565609c0565fcca03627f4bed7132a9bca373961e5c8aa7673363fb9f34c8",
+      "batch": "chunk-001",
+      "reason": "The engine-features stack (PRs #93, #94, #96) now parses the line this patch claims; the interpreter's own reading replaces it."
+    },
+    {
       "name": "Bounty of the Luxa",
       "oracleId": "e6b20c30-88c2-4cb0-a5e4-46f1df924a7c",
       "patchSha256": "5b8aec22d8eda40529b76f83c82dda006599d52d9cb059d67aa4b07d47f95633",
@@ -184,6 +191,13 @@
       "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
     },
     {
+      "name": "Dimir Infiltrator",
+      "oracleId": "d215127b-5f1d-4d3c-935b-c228c9c7f874",
+      "patchSha256": "7a75c93cbbedc9023c7a0599b4cc90fda6c242ce62e7e304daf3df3f297ec313",
+      "batch": "chunk-006",
+      "reason": "The engine-features stack (PRs #93, #94, #96) now parses the line this patch claims; the interpreter's own reading replaces it."
+    },
+    {
       "name": "Displace",
       "oracleId": "334e2147-5944-4558-b2bc-2f2bfb96dfa5",
       "patchSha256": "d9161093ccaed00f04e5e2c2c917fbdb25f50ce108af8179b2f03ba11badb43b",
@@ -191,11 +205,25 @@
       "reason": "Owner review on PR #72, 2026-11-17: multi-card blink is sequential, not simultaneous (exile together, return together)."
     },
     {
+      "name": "Dizzy Spell",
+      "oracleId": "7de04284-dcaa-4b63-a734-fcfe2698f83c",
+      "patchSha256": "b127b254fa4c572f0e200d8dfadd4cc4c70ea83194546d78ead6772aa7247edd",
+      "batch": "chunk-007",
+      "reason": "The engine-features stack (PRs #93, #94, #96) now parses the line this patch claims; the interpreter's own reading replaces it."
+    },
+    {
       "name": "Draconic Lore",
       "oracleId": "440881ad-48cf-4b82-8bb5-f506d1a51755",
       "patchSha256": "70c528bcd0ad7832c2b9c39df4e7541fe6be28e1fa9ed5dfa69e02dfcce20d9d",
       "batch": "chunk-010",
       "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Drift of Phantasms",
+      "oracleId": "6ee51134-c4ad-4101-8ce2-23dde9359cd4",
+      "patchSha256": "704515a6b6f06257800fac945218b57634942d3491cad0da9032a1d5b8c2aad5",
+      "batch": "chunk-003",
+      "reason": "The engine-features stack (PRs #93, #94, #96) now parses the line this patch claims; the interpreter's own reading replaces it."
     },
     {
       "name": "Eidolon of Rhetoric",
@@ -450,6 +478,13 @@
       "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
     },
     {
+      "name": "Kolaghan, the Storm's Fury",
+      "oracleId": "f6e160c1-b29f-4f3d-ab55-43ffe3ab4acf",
+      "patchSha256": "e36e8bfc12dd618e1596df7ae1653259b466d6b6b04ffb86668037aeaeb0f68e",
+      "batch": "chunk-008",
+      "reason": "PR #94's grammar now parses the claimed line (evasion/blocking batch); the interpreter models the card"
+    },
+    {
       "name": "Krang, Master Mind",
       "oracleId": "52562194-4a97-40d2-aa73-7827f7834f2f",
       "patchSha256": "56731a3f8e14c89db6382b2eaac2a853e14d4c518146e0fa5856df260f8d7293",
@@ -562,6 +597,13 @@
       "reason": "Owner review on PR #72, 2026-11-17: token creation is gated on the self-sacrifice and counts entrants wrongly."
     },
     {
+      "name": "Muddle the Mixture",
+      "oracleId": "0826cf7d-7ccc-459b-a92f-29dc169628f8",
+      "patchSha256": "4d72f25a34683fb8740f05d4e11b19e372c96b73ca97580ea0293b78a3a519b3",
+      "batch": "chunk-001",
+      "reason": "The engine-features stack (PRs #93, #94, #96) now parses the line this patch claims; the interpreter's own reading replaces it."
+    },
+    {
       "name": "Necroduality",
       "oracleId": "d36acdfe-2b1b-4c19-8b81-0b3127e480fe",
       "patchSha256": "906e386dfc7bbd41d3215797abea9c199bda8a6cb5972e4144cdde304c5e93c6",
@@ -660,6 +702,13 @@
       "reason": "Owner review on PR #72, 2026-11-17: offspring has no intervening-if, so the trigger goes on the stack when offspring was not paid."
     },
     {
+      "name": "Rampaging Ceratops",
+      "oracleId": "91d01119-9b3e-4629-8cf0-bbca2c19a7cc",
+      "patchSha256": "e1b26e637a29e4a34e2a3f0b728c9b3ae099f91470eec8e1362c043996f57157",
+      "batch": "chunk-016",
+      "reason": "PR #94's grammar now parses the claimed line (evasion/blocking batch); the interpreter models the card"
+    },
+    {
       "name": "Reject Imperfection",
       "oracleId": "25781dc5-d6ea-4273-9fe3-06a8808b3718",
       "patchSha256": "9225620ce13e5fef9bd317a55684f35cb7022b0907b3faab563066db41042a8f",
@@ -679,6 +728,13 @@
       "patchSha256": "78efd668c9419c007f681a174938c2f931693b1c2ccd4b5a5b8871574b4e2449",
       "batch": "chunk-006",
       "reason": "PR #89's grammar now parses the claimed line; the interpreter's reading was checked equivalent to the patch (filter factoring and redundant scope only)"
+    },
+    {
+      "name": "Riders of Rohan",
+      "oracleId": "688a559d-249f-4d03-98e6-581843e7ddc3",
+      "patchSha256": "d0aed02347954f470fecbff4928b34bba1adf2d5875a06872c6f036d0442bab3",
+      "batch": "chunk-008",
+      "reason": "PR #94's grammar now parses the claimed line (evasion/blocking batch); the interpreter models the card"
     },
     {
       "name": "Ring of Evos Isle",
@@ -772,6 +828,13 @@
       "reason": "Owner review on PR #72, 2026-11-17: checks the returning incarnation's characteristics, not the exiled object's."
     },
     {
+      "name": "Sliver Hive",
+      "oracleId": "e7286688-ffbe-4d25-ad55-27990f005368",
+      "patchSha256": "d7cc4722ea1e0bbb0594e6fa0a0b110dc7b2844482079d84089e0a79fd9d1e33",
+      "batch": "chunk-006",
+      "reason": "The engine-features stack (PRs #93, #94, #96) now parses the line this patch claims; the interpreter's own reading replaces it."
+    },
+    {
       "name": "Smoke Shroud",
       "oracleId": "a621c5f6-c1c6-4bc9-88b1-f459efa07a39",
       "patchSha256": "006b2757e467adb92f6a1cdd1708b53a03374df07b546b200666282708aef6f6",
@@ -861,6 +924,13 @@
       "patchSha256": "46b834ce0653293da4b4028b04410720eaf6aa39b66ed4ca445953b82d8da144",
       "batch": "chunk-008",
       "reason": "Owner review on PR #72, 2026-11-17: a land's tapped-for-mana rider also augments its non-tap mana abilities (sacrifice-only abilities, mana filters); the engine has no tap-for-mana qualification."
+    },
+    {
+      "name": "Troll of Khazad-dûm",
+      "oracleId": "222fd9fc-7af4-4269-bbb9-cd7b8ac029bd",
+      "patchSha256": "8b05bba3f78380a382a1191f12100dab47c88068aab880f5446b9336a9d98f4a",
+      "batch": "chunk-003",
+      "reason": "PR #94's grammar now parses the claimed line (evasion/blocking batch); the interpreter models the card"
     },
     {
       "name": "Turn Aside",

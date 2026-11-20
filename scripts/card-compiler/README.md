@@ -9,6 +9,21 @@ model cannot invent primitives.
 
 1. **Select** (`select.ts`): unmodeled cards from the pinned EDHREC pool whose only blockers are
    unparsed rules lines, spread across rank.
+
+   **Screen** (`packages/server/src/cards/compiler-screen.ts`, free): `prepare` declines a card
+   with no model call when one of its lines names a primitive the IR is known to lack, and records
+   it as `screened` with the rule and reason. A rule is a Comprehensive Rules keyword the engine
+   does not implement (701 actions, 702 abilities) or a hand-written phrase (`PHRASE_RULES`). It
+   screens only once a past compile refusal confirmed it (a refused line matches it and the
+   model's reason names it), and it retires itself as soon as a modeled card or any validated
+   patch uses the wording. Screened cards are not refusal evidence, so a rule can never confirm
+   itself. On trial 02 it declines 31 of the 191 refused cards and none of the 109 that compiled;
+   judged leave-one-out (each card by a screen built without it) it declines 11 and still loses
+   none. `prepare --no-screen` turns it off. Every rule that has screened is listed in
+   `packages/server/fixtures/compiler-screen-history.json` (a test fails until a new one is added;
+   never remove one). When a listed rule retires, the replay counts its refusals as settled
+   rather than caught, so the catch metric and floors hold when the engine gains a primitive.
+
 2. **Compile** (`prompts.ts`, compile stage): the model gets a fixed prefix (rules plus the IR schema,
    extracted from the engine's own type declarations by `schema.ts`) and a per-card suffix (the card,
    what the parser already produced, and the six most similar modeled cards with their IR from
@@ -41,8 +56,25 @@ model cannot invent primitives.
 5. **Text check** (`render.ts`, free): a deterministic renderer turns the patch back into English
    and compares it with the Oracle lines after normalizing wording. A match settles the meaning
    check with no model call. Anything it cannot render, or renders differently, goes on to 6 and 7.
-   On trial 01 it settled 9 of 20 valid patches, and both wrong patches fell through to the model.
-   `bun run scripts/card-compiler/render.ts --mismatches` reports its coverage on modeled cards.
+   It settles 45 of the 129 committed trial patches (35%; it was 10 before the November 2026
+   widening), and both patches the trial 01 audit found wrong still fall through to the model.
+   `bun run scripts/card-compiler/settle.ts` lists what settles and why the rest do not;
+   `bun run scripts/card-compiler/render.ts --mismatches` reports coverage on modeled pool cards.
+   Where Oracle words one IR several ways ("gain 1 life for each Elf", "gain X life, where X is
+   the number of Elves"), the renderer writes all of them as an alternative group and a printed
+   line may match any; each wording must mean exactly the IR.
+
+   **Soundness guard.** A wrong patch that settles would reach review marked as checked, so
+   `packages/server/src/hill-climb/text-check.test.ts` checks two things. Every settled trial
+   patch must have a hand audit entry in `settle-audit.json` saying it is correct, so a renderer
+   change that settles a new patch fails until someone audits it. And every single-step mutant of
+   a settled patch or a matching pool card (`settle-mutants.ts`: numbers, flags, enum swaps,
+   dropped or reordered list items, deleted keys, and keys added from other nodes of the same
+   shape) that still validates and means something else must fail to settle. When that test names
+   a survivor, either the renderer ignores a field (make it read the field, or refuse the node)
+   or the two definitions really are equivalent (add the rule to `canonicalDefinition`, with the
+   engine fact that makes it true).
+
 6. **Back-translate**: a second call sees only the patch (descriptions removed, card name hidden) and
    writes the rules text it implements.
 7. **Judge**: a third call compares the real lines with the back-translation and lists any difference
@@ -67,6 +99,13 @@ anything; put that card in a new trial.
 review queue (`docs/reviews/compiled-card-queue.json`). It enters the card pool only through
 `run.ts promote`, after its queue entry is accepted (below), as an `implemented-unreviewed` card
 ([ADR 0047](../../docs/decisions/0047-compiled-cards-as-unreviewed-overrides.md)).
+
+**Provisional play is opt-in** ([ADR 0050](../../docs/decisions/0050-provisional-card-tier.md),
+proposed). With `--provisional`, `serve`, `play-decks` and `fuzz` admit `compiled-checked` entries
+whose patch bytes still match as provisional cards: marked in the UI and log, listed on the game
+result, and never used by benchmarks or fingerprints. Without the switch nothing changes.
+`run.ts audit --seed S [--count 10]` samples them for review and `run.ts audit-verdict` records a verdict;
+a `rejected` verdict takes the card out of provisional play.
 
 ## Running
 

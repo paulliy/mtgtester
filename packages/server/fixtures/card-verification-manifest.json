@@ -20046,6 +20046,3005 @@
         }
       ],
       "gameplayAiScenarioIds": []
+    },
+    "3fa5e109-4a67-4523-8183-90e48a906400": {
+      "name": "Agent of Erebos",
+      "oracleSha256": "0d86b7f9e4f8279939f2ddef6000e6998e5b4668d738e6d1778eac6510295e64",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Constellation — Whenever this creature or another enchantment you control enters, exile target player's graveyard.",
+          "implementation": [
+            "Enters-battlefield trigger on this or another enchantment you control with a target-player slot whose effect exiles every card in that player's graveyard (CR 603.2, CR 400.7, CR 701.13)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/agent-of-erebos.test.ts::agent-of-erebos-exiles-target-graveyard",
+            "cards/common-lines/agent-of-erebos.test.ts::agent-of-erebos-nonenchantment-does-not-trigger"
+          ],
+          "viewerScenarioIds": [
+            "agent-of-erebos-exiles-target-graveyard",
+            "agent-of-erebos-nonenchantment-does-not-trigger"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f5e3c26c-c28c-455f-a682-2597e4b92d10": {
+      "name": "Arcane Laboratory",
+      "oracleSha256": "4efc8f981c632c9765053332969080d2e354289645aba3af9cb066d8b76b3ada",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Each player can't cast more than one spell each turn.",
+          "implementation": [
+            "Rule static limiting each player to one spell cast per turn, checked when casting is proposed; land plays are not casts (CR 601.2, CR 305.1)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/arcane-laboratory.test.ts::arcane-laboratory-second-spell-blocked",
+            "cards/common-lines/arcane-laboratory.test.ts::arcane-laboratory-first-spell-and-land-allowed"
+          ],
+          "viewerScenarioIds": [
+            "arcane-laboratory-second-spell-blocked",
+            "arcane-laboratory-first-spell-and-land-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "727f3201-1cfc-4ab2-9dfe-be4f7251f42f": {
+      "name": "Boggart Trawler // Boggart Bog",
+      "oracleSha256": "7b881991e7e7d67cb66a2463008547c7142b34086380f87172ce01e3844ff0d5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, exile target player's graveyard.",
+          "implementation": [
+            "Enters-battlefield trigger with a target-player slot whose effect exiles all cards in that player's graveyard (CR 603.6a, CR 701.13)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/boggart-trawler.test.ts::boggart-trawler-exiles-target-graveyard",
+            "cards/common-lines/boggart-trawler.test.ts::boggart-trawler-leaves-other-graveyards"
+          ],
+          "viewerScenarioIds": [
+            "boggart-trawler-exiles-target-graveyard",
+            "boggart-trawler-leaves-other-graveyards"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5a2fa420-c27f-4c14-b285-e0bb2828e053": {
+      "name": "Cyan, Vengeful Samurai",
+      "oracleSha256": "39282e1eac35522b707c53a36967acea69b0bc24e09ec3781d4a2deef7cdb19a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each creature card in your graveyard.",
+          "implementation": [
+            "Self cost reduction counting creature cards in its controller's graveyard when the total cost is determined (CR 601.2f, CR 118.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/cyan-vengeful-samurai.test.ts::cyan-vengeful-samurai-cost-reduced-per-creature-card",
+            "cards/common-lines/cyan-vengeful-samurai.test.ts::cyan-vengeful-samurai-noncreature-cards-do-not-reduce"
+          ],
+          "viewerScenarioIds": [
+            "cyan-vengeful-samurai-cost-reduced-per-creature-card",
+            "cyan-vengeful-samurai-noncreature-cards-do-not-reduce"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "894015d5-ee78-45df-8d37-53df963c59a6": {
+      "name": "Emerge Unscathed",
+      "oracleSha256": "efbb8d99e99b9258221b43968796f6b13f59b2364c51668355419a5c7ab3cce1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature you control gains protection from the color of your choice until end of turn.",
+          "implementation": [
+            "Spell effect: target creature you control gains protection from a color chosen on resolution until end of turn, so creatures of that color can't block it and it can't be damaged by sources of that color (CR 702.16, CR 611.2a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/emerge-unscathed.test.ts::emerge-unscathed-protection-from-chosen-color",
+            "cards/common-lines/emerge-unscathed.test.ts::emerge-unscathed-other-color-can-be-blocked"
+          ],
+          "viewerScenarioIds": [
+            "emerge-unscathed-protection-from-chosen-color",
+            "emerge-unscathed-other-color-can-be-blocked"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "48e603a2-b965-4fbc-ad57-4388bce5ac8b": {
+      "name": "Gods Willing",
+      "oracleSha256": "52131ace2ac3cd83a8fc87e8061122dfd63e735f6502c41f45238b29658da13c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature you control gains protection from the color of your choice until end of turn. (It can't be blocked, targeted, dealt damage, enchanted, or equipped by anything of that color.)",
+          "implementation": [
+            "Spell effect: target creature you control gains protection from a color chosen on resolution until end of turn, so creatures of that color can't block it (CR 702.16, CR 611.2a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/gods-willing.test.ts::gods-willing-protection-from-chosen-color",
+            "cards/common-lines/gods-willing.test.ts::gods-willing-other-color-can-be-blocked"
+          ],
+          "viewerScenarioIds": [
+            "gods-willing-protection-from-chosen-color",
+            "gods-willing-other-color-can-be-blocked"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "08c595da-9305-42a9-b72f-5ccc546edc01": {
+      "name": "Junk Diver",
+      "oracleSha256": "b1895ad405cdbac57f4d0391e422381e54d4d3e9f3ea624021fc458d4c014697",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, return another target artifact card from your graveyard to your hand.",
+          "implementation": [
+            "Dies trigger with a graveyard target slot filtered to artifact cards other than the source, returning the chosen card to its owner's hand (CR 700.4, CR 603.10a, CR 115.1)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/junk-diver.test.ts::junk-diver-returns-another-artifact-card",
+            "cards/common-lines/junk-diver.test.ts::junk-diver-does-not-return-itself"
+          ],
+          "viewerScenarioIds": [
+            "junk-diver-returns-another-artifact-card",
+            "junk-diver-does-not-return-itself"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e2e44d46-9df4-46f8-acf7-5581b2257620": {
+      "name": "Lookout's Dispersal",
+      "oracleSha256": "d4a62408c6a33d6b644c859e598a7161df5545f7412fb368999f30d0633dba47",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast if you control a Pirate.",
+          "implementation": [
+            "Self cost reduction applied when the spell's total cost is determined, only while its controller controls a Pirate (CR 601.2f, CR 118.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/lookouts-dispersal.test.ts::lookouts-dispersal-cost-reduced-with-pirate",
+            "cards/common-lines/lookouts-dispersal.test.ts::lookouts-dispersal-full-cost-without-pirate"
+          ],
+          "viewerScenarioIds": [
+            "lookouts-dispersal-cost-reduced-with-pirate",
+            "lookouts-dispersal-full-cost-without-pirate"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d07d3be3-f69d-4484-8467-cffd43871788": {
+      "name": "Myr Retriever",
+      "oracleSha256": "d7fe5ce3d562322e8f7e77b37834b85a016ea507daeb77384bb2f827bcb42a82",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, return another target artifact card from your graveyard to your hand.",
+          "implementation": [
+            "Dies trigger with a graveyard target slot filtered to artifact cards other than the source, returning the chosen card to its owner's hand (CR 700.4, CR 603.10a, CR 115.1)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/myr-retriever.test.ts::myr-retriever-returns-another-artifact-card",
+            "cards/common-lines/myr-retriever.test.ts::myr-retriever-does-not-return-itself"
+          ],
+          "viewerScenarioIds": [
+            "myr-retriever-returns-another-artifact-card",
+            "myr-retriever-does-not-return-itself"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a9581345-87dc-4fbd-acc1-bb629f2cf40f": {
+      "name": "Primeval Protector",
+      "oracleSha256": "651be5738f3a1d4a8a7204725ccf709068510eb003e892ee77b186c075cc41fa",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each creature your opponents control.",
+          "implementation": [
+            "Self cost reduction counting creatures controlled by the caster's opponents when the total cost is determined (CR 601.2f, CR 118.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/primeval-protector.test.ts::primeval-protector-cost-reduced-per-opponent-creature",
+            "cards/common-lines/primeval-protector.test.ts::primeval-protector-own-creatures-do-not-reduce"
+          ],
+          "viewerScenarioIds": [
+            "primeval-protector-cost-reduced-per-opponent-creature",
+            "primeval-protector-own-creatures-do-not-reduce"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3dfbf95e-a91b-429c-96e2-95ac777e7027": {
+      "name": "Sejiri Steppe",
+      "oracleSha256": "a34080be07f428f3319185d78cebd4f53a4033baefaad5a0c17516b6029b25a3",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This land enters tapped.",
+          "implementation": [
+            "Replacement effect: this permanent enters the battlefield tapped (CR 614.1d, CR 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/sejiri-steppe.test.ts::sejiri-steppe-protection-from-chosen-color",
+            "cards/common-lines/sejiri-steppe.test.ts::sejiri-steppe-other-color-can-be-blocked"
+          ],
+          "viewerScenarioIds": [
+            "sejiri-steppe-protection-from-chosen-color",
+            "sejiri-steppe-other-color-can-be-blocked"
+          ]
+        },
+        {
+          "oracleText": "When this land enters, target creature you control gains protection from the color of your choice until end of turn.",
+          "implementation": [
+            "Enters-battlefield trigger targeting a creature you control; the effect grants protection from a color chosen on resolution until end of turn (CR 603.6a, CR 702.16, CR 611.2a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/sejiri-steppe.test.ts::sejiri-steppe-protection-from-chosen-color",
+            "cards/common-lines/sejiri-steppe.test.ts::sejiri-steppe-other-color-can-be-blocked"
+          ],
+          "viewerScenarioIds": [
+            "sejiri-steppe-protection-from-chosen-color",
+            "sejiri-steppe-other-color-can-be-blocked"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6dd5782d-2d1a-4d6b-8381-e15d0d5be24f": {
+      "name": "Stoic Rebuttal",
+      "oracleSha256": "890ed1505dda34bd2b3dd0f6dbbcdd0a7462cbb6365a93b49ab4530e7d24409e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Metalcraft — This spell costs {1} less to cast if you control three or more artifacts.",
+          "implementation": [
+            "Self cost reduction applied when the spell's total cost is determined, only while its controller controls three or more artifacts (CR 601.2f, CR 118.7, CR 207.2c)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/stoic-rebuttal.test.ts::stoic-rebuttal-metalcraft-reduces-cost",
+            "cards/common-lines/stoic-rebuttal.test.ts::stoic-rebuttal-full-cost-below-metalcraft"
+          ],
+          "viewerScenarioIds": [
+            "stoic-rebuttal-metalcraft-reduces-cost",
+            "stoic-rebuttal-full-cost-below-metalcraft"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "97326cad-b13c-4e52-82ce-850a39e5ff08": {
+      "name": "Torpor Orb",
+      "oracleSha256": "ab318813ed9d496935acbc084c01aee3756e163d2f7beadaae3451a758f8fff0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures entering don't cause abilities to trigger.",
+          "implementation": [
+            "Rule static suppressing triggered abilities that trigger from a creature entering the battlefield, leaving noncreature entering triggers alone (CR 603.2g, CR 603.6a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/torpor-orb.test.ts::torpor-orb-creature-enters-trigger-suppressed",
+            "cards/common-lines/torpor-orb.test.ts::torpor-orb-noncreature-enters-trigger-works"
+          ],
+          "viewerScenarioIds": [
+            "torpor-orb-creature-enters-trigger-suppressed",
+            "torpor-orb-noncreature-enters-trigger-works"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2bd81743-84c8-43ec-86f5-68230036827b": {
+      "name": "Wizard's Lightning",
+      "oracleSha256": "b79db6c984d0f95c15ac24a169e1ecd5a99e111e55d268361d76ce30e76bc3d7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {2} less to cast if you control a Wizard.",
+          "implementation": [
+            "Self cost reduction applied when the spell's total cost is determined, only while its controller controls a Wizard (CR 601.2f, CR 118.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/wizards-lightning.test.ts::wizards-lightning-cost-reduced-with-wizard",
+            "cards/common-lines/wizards-lightning.test.ts::wizards-lightning-full-cost-without-wizard"
+          ],
+          "viewerScenarioIds": [
+            "wizards-lightning-cost-reduced-with-wizard",
+            "wizards-lightning-full-cost-without-wizard"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5f981cca-5cd9-49e4-ab1a-bbbf6fc7e737": {
+      "name": "Ancient Stone Idol",
+      "oracleSha256": "fd947f301fafab8790c3b7ba73f3869f1ea25031eeb408593121b8cc1914f2e5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each attacking creature.",
+          "implementation": [
+            "self cost reduction counting attacking creatures on the battlefield when the spell is cast, applied by the normal cast path (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/ancient-stone-idol.test.ts::ancient-stone-idol-two-attackers",
+            "cards/common-lines/ancient-stone-idol.test.ts::ancient-stone-idol-non-attackers-uncounted"
+          ],
+          "viewerScenarioIds": [
+            "ancient-stone-idol-two-attackers",
+            "ancient-stone-idol-non-attackers-uncounted"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "13ac12db-d04b-4211-90df-886e1c597e8f": {
+      "name": "Arwen's Gift",
+      "oracleSha256": "4365a712ba5d1ffa79d29df687a7829fac3977873d5eb0a5b2e22a9d01e556da",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast if you control two or more legendary creatures.",
+          "implementation": [
+            "conditional self cost reduction checked on cast against the caster's legendary creature count (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/arwens-gift.test.ts::arwens-gift-two-legends",
+            "cards/common-lines/arwens-gift.test.ts::arwens-gift-one-legend"
+          ],
+          "viewerScenarioIds": ["arwens-gift-two-legends", "arwens-gift-one-legend"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f1266a1b-bae6-4ded-b4d5-7586a5b6c5d0": {
+      "name": "Clarion Conqueror",
+      "oracleSha256": "72891f840071178f2b8f0f16c38e5872791dfee9312e488be8d6d5ca010f2413",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Activated abilities of artifacts, creatures, and planeswalkers can't be activated.",
+          "implementation": [
+            "all-players activation lock on the listed permanent types, consulted when priority options are computed (CR 602.5)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/clarion-conqueror.test.ts::clarion-conqueror-locks-artifact-creature-planeswalker",
+            "cards/common-lines/clarion-conqueror.test.ts::clarion-conqueror-enchantment-ability-allowed"
+          ],
+          "viewerScenarioIds": [
+            "clarion-conqueror-locks-artifact-creature-planeswalker",
+            "clarion-conqueror-enchantment-ability-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4b2e9aa9-6f91-41de-84b6-e9a89be06a53": {
+      "name": "Dissipate",
+      "oracleSha256": "6de4311fd6dcb40d08caf75daef32a90264a59d68db612c0237c869b5fa49812",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+          "implementation": [
+            "counter target spell, exiling it instead of the graveyard only when it was actually countered (CR 701.6, 701.5a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/dissipate.test.ts::dissipate-exiles-countered-spell",
+            "cards/common-lines/dissipate.test.ts::dissipate-uncounterable-resolves"
+          ],
+          "viewerScenarioIds": [
+            "dissipate-exiles-countered-spell",
+            "dissipate-uncounterable-resolves"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "32452ccf-88c7-41d6-93e5-15d31f29726d": {
+      "name": "Frozen Aether",
+      "oracleSha256": "45dd91a6315355c2da39cbdd5bed360cb74687b38f2b5cee898278ad02c8e739",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Artifacts, creatures, and lands your opponents control enter tapped.",
+          "implementation": [
+            "static replacement effect: matching permanents an opponent controls enter the battlefield tapped (CR 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/frozen-aether.test.ts::frozen-aether-opponent-permanents-tapped",
+            "cards/common-lines/frozen-aether.test.ts::frozen-aether-own-permanents-untapped"
+          ],
+          "viewerScenarioIds": [
+            "frozen-aether-opponent-permanents-tapped",
+            "frozen-aether-own-permanents-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a0d615b3-7ee3-43d7-ad37-5f7f1544a8db": {
+      "name": "Hushwing Gryff",
+      "oracleSha256": "f2671d535791d2cb588175ef5afca4dd4346f77c3d14115b04d8499c4d81a896",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures entering don't cause abilities to trigger.",
+          "implementation": [
+            "static rule that suppresses enters-the-battlefield triggers of creatures entering, leaving other permanents' triggers alone (CR 603.2g)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/hushwing-gryff.test.ts::hushwing-gryff-creature-entering-no-trigger",
+            "cards/common-lines/hushwing-gryff.test.ts::hushwing-gryff-noncreature-still-triggers"
+          ],
+          "viewerScenarioIds": [
+            "hushwing-gryff-creature-entering-no-trigger",
+            "hushwing-gryff-noncreature-still-triggers"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5602c14d-cc22-47d7-a1b0-6491749f00dd": {
+      "name": "Keep Safe",
+      "oracleSha256": "257bce63531830993d8d65dc5ea405c889c6f086a741f6ec0ae6f63d2c465da1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell that targets a permanent you control.",
+          "implementation": [
+            "counter target spell, with the target restricted to stack spells that target a permanent the caster controls (CR 701.6, 115.9)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/keep-safe.test.ts::keep-safe-counters-spell-targeting-your-permanent",
+            "cards/common-lines/keep-safe.test.ts::keep-safe-spell-targeting-you-not-counterable"
+          ],
+          "viewerScenarioIds": [
+            "keep-safe-counters-spell-targeting-your-permanent",
+            "keep-safe-spell-targeting-you-not-counterable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "861f0b1c-3b37-4d38-9232-e42565247076": {
+      "name": "Loxodon Gatekeeper",
+      "oracleSha256": "e0ae0e1d7892e87d897d5f4dd4dfe4b2182ed96ac6b17952526943bc61a762c4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Artifacts, creatures, and lands your opponents control enter tapped.",
+          "implementation": [
+            "static replacement effect: matching permanents an opponent controls enter the battlefield tapped (CR 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/loxodon-gatekeeper.test.ts::loxodon-gatekeeper-opponent-permanents-tapped",
+            "cards/common-lines/loxodon-gatekeeper.test.ts::loxodon-gatekeeper-own-permanents-untapped"
+          ],
+          "viewerScenarioIds": [
+            "loxodon-gatekeeper-opponent-permanents-tapped",
+            "loxodon-gatekeeper-own-permanents-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2f83ca86-e23d-40f7-8085-6928d8cfef9b": {
+      "name": "Null Rod",
+      "oracleSha256": "cfbe5ee8708e8a4ba90e5a826f5b49fbcadbdc4e2acffd2adb8f266ba28d5f1b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Activated abilities of artifacts can't be activated.",
+          "implementation": [
+            "all-players activation lock on artifacts, consulted when priority options are computed (CR 602.5)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/null-rod.test.ts::null-rod-locks-artifact-ability",
+            "cards/common-lines/null-rod.test.ts::null-rod-creature-ability-allowed"
+          ],
+          "viewerScenarioIds": [
+            "null-rod-locks-artifact-ability",
+            "null-rod-creature-ability-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c40bc9f6-2b72-4ae1-b912-50075af59628": {
+      "name": "Remorseful Cleric",
+      "oracleSha256": "a5ea55e406ebd298eb27d07e0419b24ccc5d0b57964d456e08eb427c8baaa7ea",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Sacrifice this creature: Exile target player's graveyard.",
+          "implementation": [
+            "sacrifice-self activated ability whose effect exiles every card in the targeted player's graveyard (CR 602.2, 701.13)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/remorseful-cleric.test.ts::remorseful-cleric-exiles-target-graveyard",
+            "cards/common-lines/remorseful-cleric.test.ts::remorseful-cleric-can-exile-itself"
+          ],
+          "viewerScenarioIds": [
+            "remorseful-cleric-exiles-target-graveyard",
+            "remorseful-cleric-can-exile-itself"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c1909d70-d8f4-4c54-8587-0a910f123238": {
+      "name": "Shelter",
+      "oracleSha256": "f9f590659a10934fae819ca6689ad156e70165316b65a66a87b2bd1822f1a72d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature you control gains protection from the color of your choice until end of turn.",
+          "implementation": [
+            "target creature gains protection from a color chosen on resolution until end of turn, so spells and sources of that color can no longer target or damage it (CR 702.16, 611.2a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/shelter.test.ts::shelter-protection-from-chosen-color",
+            "cards/common-lines/shelter.test.ts::shelter-protection-only-from-chosen-color"
+          ],
+          "viewerScenarioIds": [
+            "shelter-protection-from-chosen-color",
+            "shelter-protection-only-from-chosen-color"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "12c63a45-7eb2-4262-b571-3358182f5610": {
+      "name": "Stony Silence",
+      "oracleSha256": "ee5afe060316981c47e74a060a5cb068a4cc6b48eb95eee8a73929605b7976bc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Activated abilities of artifacts can't be activated.",
+          "implementation": [
+            "all-players activation lock on artifacts, consulted when priority options are computed (CR 602.5)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/stony-silence.test.ts::stony-silence-locks-artifact-ability",
+            "cards/common-lines/stony-silence.test.ts::stony-silence-creature-ability-allowed"
+          ],
+          "viewerScenarioIds": [
+            "stony-silence-locks-artifact-ability",
+            "stony-silence-creature-ability-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4325ae73-af43-4a7d-a552-9909f0dc77db": {
+      "name": "Turn Aside",
+      "oracleSha256": "3586ee18736c33528f0feace2e40aca09f603e25cd5390487c5630eab702e575",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Counter target spell that targets a permanent you control.",
+          "implementation": [
+            "counter target spell, with the target restricted to stack spells that target a permanent the caster controls (CR 701.6, 115.9)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/turn-aside.test.ts::turn-aside-counters-spell-targeting-your-permanent",
+            "cards/common-lines/turn-aside.test.ts::turn-aside-spell-targeting-opponents-permanent-not-counterable"
+          ],
+          "viewerScenarioIds": [
+            "turn-aside-counters-spell-targeting-your-permanent",
+            "turn-aside-spell-targeting-opponents-permanent-not-counterable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b828251c-86a9-454f-9852-d0876d0f5153": {
+      "name": "Wizard's Retort",
+      "oracleSha256": "260eecc0cb297f7cf1401e2e2249b801a24cf8f93647d6201271ad0739e2afe7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast if you control a Wizard.",
+          "implementation": [
+            "conditional self cost reduction checked on cast against the caster's Wizard permanents (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/wizards-retort.test.ts::wizards-retort-with-wizard",
+            "cards/common-lines/wizards-retort.test.ts::wizards-retort-without-wizard"
+          ],
+          "viewerScenarioIds": ["wizards-retort-with-wizard", "wizards-retort-without-wizard"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "48d14b5c-711a-4f8a-9de5-55415cb7a79a": {
+      "name": "Angel of Finality",
+      "oracleSha256": "788c7e800f24c49d52a2d79b839fbac8cbe89c12af07554a995d71e4edd502f9",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature enters, exile target player's graveyard.",
+          "implementation": [
+            "enter trigger targeting a player that exiles every card in that player's graveyard (CR 603.6a, 115.1, 406.3)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/angel-of-finality.test.ts::angel-of-finality-exiles-target-graveyard",
+            "cards/common-lines/angel-of-finality.test.ts::angel-of-finality-leaves-other-graveyards"
+          ],
+          "viewerScenarioIds": [
+            "angel-of-finality-exiles-target-graveyard",
+            "angel-of-finality-leaves-other-graveyards"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "085bc7be-bd44-40af-8e8f-a1a8006fe22c": {
+      "name": "Assert Authority",
+      "oracleSha256": "46d2f482749a44fc224e92e61e8a6022342e0b4a6cf1d8ba508f6c5da21bbe39",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)",
+          "implementation": [
+            "affinity cost reduction counts artifacts the caster controls and lowers the generic part of the cost (CR 702.41a, 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/assert-authority.test.ts::assert-authority-affinity-counts-only-your-artifacts"
+          ],
+          "viewerScenarioIds": ["assert-authority-affinity-counts-only-your-artifacts"]
+        },
+        {
+          "oracleText": "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+          "implementation": [
+            "counter effect that exiles the countered spell instead of putting it into its owner's graveyard (CR 701.6a, 608.2b)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/assert-authority.test.ts::assert-authority-counters-and-exiles"
+          ],
+          "viewerScenarioIds": ["assert-authority-counters-and-exiles"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0c4bc9ea-a5fd-4f44-96a1-5448eee228c4": {
+      "name": "Collector Ouphe",
+      "oracleSha256": "85cbd6dd67d5c09b876ec1c932fd418e9c78414ed3f263612a7499c2817adbf2",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Activated abilities of artifacts can't be activated.",
+          "implementation": [
+            "static rule effect forbidding activation of activated abilities (mana abilities included) of artifacts controlled by any player (CR 602.5, 605.1a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/collector-ouphe.test.ts::collector-ouphe-artifact-cannot-activate",
+            "cards/common-lines/collector-ouphe.test.ts::collector-ouphe-opponent-artifact-cannot-activate",
+            "cards/common-lines/collector-ouphe.test.ts::collector-ouphe-nonartifact-still-activates"
+          ],
+          "viewerScenarioIds": [
+            "collector-ouphe-artifact-cannot-activate",
+            "collector-ouphe-opponent-artifact-cannot-activate",
+            "collector-ouphe-nonartifact-still-activates"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "440881ad-48cf-4b82-8bb5-f506d1a51755": {
+      "name": "Draconic Lore",
+      "oracleSha256": "b13d523144d66dd25d69f868201a60fbc75f9a1b2daf64722438e2aaf0d8d2f3",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {2} less to cast if you control a Dragon.",
+          "implementation": [
+            "conditional self cost reduction applied when the caster controls a Dragon (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/draconic-lore.test.ts::draconic-lore-cheaper-with-dragon",
+            "cards/common-lines/draconic-lore.test.ts::draconic-lore-opponents-dragon-no-discount"
+          ],
+          "viewerScenarioIds": [
+            "draconic-lore-cheaper-with-dragon",
+            "draconic-lore-opponents-dragon-no-discount"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5f2628e3-e29a-4d77-bc27-6e1ce240d192": {
+      "name": "Ghoultree",
+      "oracleSha256": "a2422145a492c43c7e6824692f9f4e0689387f6ad575f437ccbb7f3f0b8f6de1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each creature card in your graveyard.",
+          "implementation": [
+            "self cost reduction of {1} per creature card in the caster's own graveyard (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/ghoultree.test.ts::ghoultree-cheaper-per-creature-card-in-graveyard",
+            "cards/common-lines/ghoultree.test.ts::ghoultree-only-own-creature-cards-count"
+          ],
+          "viewerScenarioIds": [
+            "ghoultree-cheaper-per-creature-card-in-graveyard",
+            "ghoultree-only-own-creature-cards-count"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4bba3663-7f3c-4589-88aa-cf0bfe36b171": {
+      "name": "Imposing Sovereign",
+      "oracleSha256": "adcbacd49fd89bb012b74e6f7bfcfd2ebf9a3b832f07eb6bf8f444f032a1932b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures your opponents control enter tapped.",
+          "implementation": [
+            "replacement effect on opponents' creatures entering the battlefield: they enter tapped (CR 614.1d, 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/imposing-sovereign.test.ts::imposing-sovereign-opponent-creature-enters-tapped",
+            "cards/common-lines/imposing-sovereign.test.ts::imposing-sovereign-own-creature-enters-untapped"
+          ],
+          "viewerScenarioIds": [
+            "imposing-sovereign-opponent-creature-enters-tapped",
+            "imposing-sovereign-own-creature-enters-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b9243163-b726-432e-830f-86132aa7f34a": {
+      "name": "Kinjalli's Sunwing",
+      "oracleSha256": "b8a926d267c638283af92a4c73e210717cb257ea222697c8621878b4f3dbac99",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures your opponents control enter tapped.",
+          "implementation": [
+            "replacement effect on opponents' creatures entering the battlefield: they enter tapped (CR 614.1d, 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/kinjallis-sunwing.test.ts::kinjallis-sunwing-opponent-creature-enters-tapped",
+            "cards/common-lines/kinjallis-sunwing.test.ts::kinjallis-sunwing-opponent-noncreature-enters-untapped"
+          ],
+          "viewerScenarioIds": [
+            "kinjallis-sunwing-opponent-creature-enters-tapped",
+            "kinjallis-sunwing-opponent-noncreature-enters-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b67db32b-30a9-49d2-b4c2-90a9f80c36eb": {
+      "name": "Manglehorn",
+      "oracleSha256": "25735745707fbd60303fbdef1c3a3c1e843eb79757e202c2b3e176f1502938a0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Artifacts your opponents control enter tapped.",
+          "implementation": [
+            "replacement effect on opponents' artifacts entering the battlefield: they enter tapped (CR 614.1d, 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/manglehorn.test.ts::manglehorn-opponent-artifact-enters-tapped",
+            "cards/common-lines/manglehorn.test.ts::manglehorn-opponent-nonartifact-enters-untapped"
+          ],
+          "viewerScenarioIds": [
+            "manglehorn-opponent-artifact-enters-tapped",
+            "manglehorn-opponent-nonartifact-enters-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bb4507c1-1e5d-48b5-8fc0-1d26bd1c9e72": {
+      "name": "Overwhelming Remorse",
+      "oracleSha256": "c68bf6eb8b507928d7d2ec977a5535cd4bb279792b1acf7e8347464297c87c23",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each creature card in your graveyard.",
+          "implementation": [
+            "self cost reduction of {1} per creature card in the caster's own graveyard (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/overwhelming-remorse.test.ts::overwhelming-remorse-cheaper-per-creature-card",
+            "cards/common-lines/overwhelming-remorse.test.ts::overwhelming-remorse-discount-is-per-creature-card"
+          ],
+          "viewerScenarioIds": [
+            "overwhelming-remorse-cheaper-per-creature-card",
+            "overwhelming-remorse-discount-is-per-creature-card"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9cfc01a7-e291-4388-bd09-94846d72e291": {
+      "name": "Rumbleweed",
+      "oracleSha256": "d4a704a36a7d4faa83b7e6277bd333d3a3b2c1431fad9cb92e152a12cb54ca73",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each land card in your graveyard.",
+          "implementation": [
+            "self cost reduction of {1} per land card in the caster's own graveyard (CR 601.2f)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/rumbleweed.test.ts::rumbleweed-cheaper-per-land-card-in-graveyard",
+            "cards/common-lines/rumbleweed.test.ts::rumbleweed-creature-cards-give-no-discount"
+          ],
+          "viewerScenarioIds": [
+            "rumbleweed-cheaper-per-land-card-in-graveyard",
+            "rumbleweed-creature-cards-give-no-discount"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "13be47e4-9da2-4f9e-baf0-db96f7777ccb": {
+      "name": "Thalia, Heretic Cathar",
+      "oracleSha256": "aabd854909cb6050bae7ef08b311b71829d7c541c343d86cac1f8fc6e0ff947a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures and nonbasic lands your opponents control enter tapped.",
+          "implementation": [
+            "replacement effect on opponents' creatures and nonbasic lands entering the battlefield: they enter tapped (CR 614.1d, 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/thalia-heretic-cathar.test.ts::thalia-opponent-creature-enters-tapped",
+            "cards/common-lines/thalia-heretic-cathar.test.ts::thalia-opponent-nonbasic-land-enters-tapped",
+            "cards/common-lines/thalia-heretic-cathar.test.ts::thalia-opponent-basic-land-enters-untapped"
+          ],
+          "viewerScenarioIds": [
+            "thalia-opponent-creature-enters-tapped",
+            "thalia-opponent-nonbasic-land-enters-tapped",
+            "thalia-opponent-basic-land-enters-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5b2ffb53-86b7-4665-a5c7-b85b035b6c81": {
+      "name": "Urabrask the Hidden",
+      "oracleSha256": "160e18f9c18750116529000fc367caed7de28c31e7f4855c19ed6562eae38993",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures your opponents control enter tapped.",
+          "implementation": [
+            "replacement effect on opponents' creatures entering the battlefield: they enter tapped (CR 614.1d, 614.12)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/urabrask-the-hidden.test.ts::urabrask-opponent-creature-enters-tapped",
+            "cards/common-lines/urabrask-the-hidden.test.ts::urabrask-own-creature-enters-untapped"
+          ],
+          "viewerScenarioIds": [
+            "urabrask-opponent-creature-enters-tapped",
+            "urabrask-own-creature-enters-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "319ee221-bace-41e9-b386-6b528bd780c1": {
+      "name": "Workshop Assistant",
+      "oracleSha256": "e33cf0e7cfea2bd2dfcf5aa0d97cd9b9c56bbcbcc9eb93303ad63bf83d4794b5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, return another target artifact card from your graveyard to your hand.",
+          "implementation": [
+            "dies trigger targeting an artifact card in the controller's graveyard other than the source and returning it to hand (CR 603.10a, 115.1, 400.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/workshop-assistant.test.ts::workshop-assistant-returns-another-artifact",
+            "cards/common-lines/workshop-assistant.test.ts::workshop-assistant-cannot-return-itself"
+          ],
+          "viewerScenarioIds": [
+            "workshop-assistant-returns-another-artifact",
+            "workshop-assistant-cannot-return-itself"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f8536726-993b-4100-918c-e3c7177d4c65": {
+      "name": "Spectral Denial",
+      "oracleSha256": "31092345f6d7c0057f9d1d188e781cd77ffc5cf045dd8e52dc092ab5cbe56d7d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast for each creature you control with power 4 or greater.",
+          "implementation": [
+            "self cost reduction of {1} per creature the caster controls with power 4 or greater, lowering the generic part of the cost including X (CR 601.2f); the counter-unless-pays clause then charges the announced X (CR 107.3f, 701.6a)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/spectral-denial.test.ts::spectral-denial-cheaper-with-power-four-creature",
+            "cards/common-lines/spectral-denial.test.ts::spectral-denial-power-three-creature-no-discount"
+          ],
+          "viewerScenarioIds": [
+            "spectral-denial-cheaper-with-power-four-creature",
+            "spectral-denial-power-three-creature-no-discount"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fe1556cc-32d0-4e51-bb15-f3fce669a5e1": {
+      "name": "Arcane Epiphany",
+      "oracleSha256": "b127c3e09a1ad8e37f771f407fb96b0f9bbafef55f6627ab9b7492c9b5db99e3",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast if you control a Wizard.",
+          "implementation": [
+            "self cost reduction applied when the spell is cast while its controller controls a Wizard (CR 601.2f, 117.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/arcane-epiphany.test.ts::arcane-epiphany-cheaper-with-wizard",
+            "cards/common-lines/arcane-epiphany.test.ts::arcane-epiphany-full-price-without-wizard"
+          ],
+          "viewerScenarioIds": [
+            "arcane-epiphany-cheaper-with-wizard",
+            "arcane-epiphany-full-price-without-wizard"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c8c38570-0b42-4bfc-896f-f57f9a11ba9d": {
+      "name": "Benevolent Bodyguard",
+      "oracleSha256": "b6bf4c91cf53e726a3024462419735633f560fbadd8a0a3e8149813efadfcc93",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Sacrifice this creature: Target creature you control gains protection from the color of your choice until end of turn.",
+          "implementation": [
+            "sacrifice-cost activated ability whose resolution asks for a color and grants protection from it until end of turn (CR 702.16, 602.2)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/benevolent-bodyguard.test.ts::benevolent-bodyguard-protects-from-chosen-color",
+            "cards/common-lines/benevolent-bodyguard.test.ts::benevolent-bodyguard-other-color-can-be-blocked"
+          ],
+          "viewerScenarioIds": [
+            "benevolent-bodyguard-protects-from-chosen-color",
+            "benevolent-bodyguard-other-color-can-be-blocked"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6225a704-430a-4f56-ad87-0e8d87f285f5": {
+      "name": "Cursed Totem",
+      "oracleSha256": "7012f43d1e701d6d846e5069d26b041e8093c09d5cdbc9097b781b0ef32d9b4d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Activated abilities of creatures can't be activated.",
+          "implementation": [
+            "rule-static that removes activated abilities of creature sources from the legal action list (CR 602.5)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/cursed-totem.test.ts::cursed-totem-creature-ability-cannot-be-activated",
+            "cards/common-lines/cursed-totem.test.ts::cursed-totem-artifact-ability-still-works",
+            "cards/common-lines/cursed-totem.test.ts::cursed-totem-no-totem-creature-ability-works"
+          ],
+          "viewerScenarioIds": [
+            "cursed-totem-creature-ability-cannot-be-activated",
+            "cursed-totem-artifact-ability-still-works",
+            "cursed-totem-no-totem-creature-ability-works"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "33017203-233e-498e-806e-94b1dccf5c35": {
+      "name": "Eidolon of Rhetoric",
+      "oracleSha256": "04b3df73736dcb9a4a762fe66a170612fa78a1de5e93707948c29f82679ac2b6",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Each player can't cast more than one spell each turn.",
+          "implementation": [
+            "rule-static limiting each player to one cast per turn, counted by spells cast this turn (CR 101.2, 601.2)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/eidolon-of-rhetoric.test.ts::eidolon-of-rhetoric-second-spell-refused",
+            "cards/common-lines/eidolon-of-rhetoric.test.ts::eidolon-of-rhetoric-two-spells-without-it",
+            "cards/common-lines/eidolon-of-rhetoric.test.ts::eidolon-of-rhetoric-land-play-is-not-a-spell"
+          ],
+          "viewerScenarioIds": [
+            "eidolon-of-rhetoric-second-spell-refused",
+            "eidolon-of-rhetoric-two-spells-without-it",
+            "eidolon-of-rhetoric-land-play-is-not-a-spell"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9d6a9a37-a245-4503-baeb-9488553798ab": {
+      "name": "Gixian Puppeteer",
+      "oracleSha256": "b9d0e2f1dca41d03d328c442ac4f640378a0fb496fa2fda7dbcb368ee7544fb1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, return another target creature card with mana value 3 or less from your graveyard to the battlefield.",
+          "implementation": [
+            "dies trigger targeting a creature card with mana value 3 or less in its controller's graveyard other than the source (CR 700.4, 115.1, 400.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/gixian-puppeteer.test.ts::gixian-puppeteer-returns-another-small-creature",
+            "cards/common-lines/gixian-puppeteer.test.ts::gixian-puppeteer-cannot-return-itself",
+            "cards/common-lines/gixian-puppeteer.test.ts::gixian-puppeteer-mana-value-four-not-returned"
+          ],
+          "viewerScenarioIds": [
+            "gixian-puppeteer-returns-another-small-creature",
+            "gixian-puppeteer-cannot-return-itself",
+            "gixian-puppeteer-mana-value-four-not-returned"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fda76032-7e6f-416f-8874-2a0642837522": {
+      "name": "Jirina, Dauntless General",
+      "oracleSha256": "ba3d63061bb61b74964fd9889ed90a487da60ad880d48f0e972305a1d8b1fdb0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When Jirina enters, exile target player's graveyard.",
+          "implementation": [
+            "enters trigger targeting a player and exiling every card in that player's graveyard (CR 603.6a, 115.1)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/jirina-dauntless-general.test.ts::jirina-exiles-target-opponent-graveyard",
+            "cards/common-lines/jirina-dauntless-general.test.ts::jirina-exiles-only-the-targeted-graveyard"
+          ],
+          "viewerScenarioIds": [
+            "jirina-exiles-target-opponent-graveyard",
+            "jirina-exiles-only-the-targeted-graveyard"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "81fdd1c4-d43b-4f8b-8712-7c2bf45a3e0b": {
+      "name": "Kismet",
+      "oracleSha256": "bc3eccefaca6d6791b078c4652cf164d9f3b55be5894552eb6d427662de3da13",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Artifacts, creatures, and lands your opponents control enter tapped.",
+          "implementation": [
+            "rule-static replacement making opponents' artifacts, creatures and lands enter tapped (CR 614.1d)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/kismet.test.ts::kismet-opponent-permanents-enter-tapped",
+            "cards/common-lines/kismet.test.ts::kismet-own-permanents-enter-untapped"
+          ],
+          "viewerScenarioIds": [
+            "kismet-opponent-permanents-enter-tapped",
+            "kismet-own-permanents-enter-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b2c30683-cc7f-4341-add1-b08cb9b93eeb": {
+      "name": "Morcant's Loyalist",
+      "oracleSha256": "0c848b70751346c7e5f1a366ffdef12be6f44fd3513dd4b99aae6680663ee904",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, return another target Elf card from your graveyard to your hand.",
+          "implementation": [
+            "dies trigger targeting an Elf card in its controller's graveyard other than the source and returning it to hand (CR 700.4, 115.1, 400.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/morcants-loyalist.test.ts::morcants-loyalist-returns-another-elf",
+            "cards/common-lines/morcants-loyalist.test.ts::morcants-loyalist-non-elf-and-itself-not-returned"
+          ],
+          "viewerScenarioIds": [
+            "morcants-loyalist-returns-another-elf",
+            "morcants-loyalist-non-elf-and-itself-not-returned"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "91ddd2bd-2dec-4670-8edb-e89c009b2187": {
+      "name": "Pearl of Wisdom",
+      "oracleSha256": "dfaf2fcee17e8a4861575e4f755f488648e2422889da4dab20f4db3361c895d8",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast if you control an Otter.",
+          "implementation": [
+            "self cost reduction applied when the spell is cast while its controller controls an Otter (CR 601.2f, 117.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/pearl-of-wisdom.test.ts::pearl-of-wisdom-cheaper-with-otter",
+            "cards/common-lines/pearl-of-wisdom.test.ts::pearl-of-wisdom-full-price-without-otter"
+          ],
+          "viewerScenarioIds": [
+            "pearl-of-wisdom-cheaper-with-otter",
+            "pearl-of-wisdom-full-price-without-otter"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7ef5c812-ad7d-4d6c-8ee5-68561e7e4bd7": {
+      "name": "Saved by the Shell",
+      "oracleSha256": "c29dcec4da3ac8531cc217f56cea1a882557f49ede9dcc2dddcc9dfcae0b56ef",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {1} less to cast if you control a Turtle.",
+          "implementation": [
+            "self cost reduction applied when the spell is cast while its controller controls a Turtle (CR 601.2f, 117.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/saved-by-the-shell.test.ts::saved-by-the-shell-cheaper-with-turtle",
+            "cards/common-lines/saved-by-the-shell.test.ts::saved-by-the-shell-full-price-without-turtle"
+          ],
+          "viewerScenarioIds": [
+            "saved-by-the-shell-cheaper-with-turtle",
+            "saved-by-the-shell-full-price-without-turtle"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "be2b9c6d-4ecb-49ec-b276-4aa93c5dfc00": {
+      "name": "Spider-Woman, Stunning Savior",
+      "oracleSha256": "5fdf45464730bace4fbc3f9301f5dce5b0eb6b09b158c2a04af8f2782d6b29d8",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Venom Blast — Artifacts and creatures your opponents control enter tapped.",
+          "implementation": [
+            "rule-static replacement making opponents' artifacts and creatures enter tapped (CR 614.1d)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/spider-woman-stunning-savior.test.ts::spider-woman-opponent-creatures-and-artifacts-enter-tapped",
+            "cards/common-lines/spider-woman-stunning-savior.test.ts::spider-woman-opponent-land-enters-untapped",
+            "cards/common-lines/spider-woman-stunning-savior.test.ts::spider-woman-own-permanents-enter-untapped"
+          ],
+          "viewerScenarioIds": [
+            "spider-woman-opponent-creatures-and-artifacts-enter-tapped",
+            "spider-woman-opponent-land-enters-untapped",
+            "spider-woman-own-permanents-enter-untapped"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1573f7f9-672c-421a-b1ac-3d0d8aea59ca": {
+      "name": "Tormod's Crypt",
+      "oracleSha256": "562ea7d2ff236eb1cccb71d889d7f27a604d89b64ab9c356072d491f36816561",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{T}, Sacrifice this artifact: Exile target player's graveyard.",
+          "implementation": [
+            "tap-and-sacrifice cost activated ability targeting a player and exiling that player's graveyard (CR 602.2, 701.13)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/tormods-crypt.test.ts::tormods-crypt-exiles-target-graveyard",
+            "cards/common-lines/tormods-crypt.test.ts::tormods-crypt-only-targeted-graveyard",
+            "cards/common-lines/tormods-crypt.test.ts::tormods-crypt-tapped-cannot-activate"
+          ],
+          "viewerScenarioIds": [
+            "tormods-crypt-exiles-target-graveyard",
+            "tormods-crypt-only-targeted-graveyard",
+            "tormods-crypt-tapped-cannot-activate"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8388faa0-f64e-4b01-836e-617f99b808a4": {
+      "name": "Venom's Hunger",
+      "oracleSha256": "f29bd3a50a9dc352e9b30669e5faf2e12aceeb96b71f521631b3dca298934a01",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This spell costs {2} less to cast if you control a Villain.",
+          "implementation": [
+            "self cost reduction applied when the spell is cast while its controller controls a Villain (CR 601.2f, 117.7)"
+          ],
+          "engineTestIds": [
+            "cards/common-lines/venoms-hunger.test.ts::venoms-hunger-cheaper-with-villain",
+            "cards/common-lines/venoms-hunger.test.ts::venoms-hunger-full-price-without-villain"
+          ],
+          "viewerScenarioIds": [
+            "venoms-hunger-cheaper-with-villain",
+            "venoms-hunger-full-price-without-villain"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "666af637-9282-4121-962a-048e528f9221": {
+      "name": "Steel Leaf Champion",
+      "oracleSha256": "fbaade31376c33abb7ff3acfd66a1fac799fa1db5d7fb25b92b035008179ee90",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked by creatures with power 2 or less.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, notBy creatures with power 2 or less; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/steel-leaf-champion.test.ts::steel-leaf-champion-blocked-by-power-three",
+            "cards/evasion-blocking/steel-leaf-champion.test.ts::steel-leaf-champion-unblockable-by-power-two"
+          ],
+          "viewerScenarioIds": [
+            "steel-leaf-champion-blocked-by-power-three",
+            "steel-leaf-champion-unblockable-by-power-two"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "008f2698-1721-45a3-8353-10f2f400dc8f": {
+      "name": "Shizo, Death's Storehouse",
+      "oracleSha256": "a6f8768e853f777cf675bfb89242acc8423dd0c15b3433ed8e9abf17c8793acb",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{B}, {T}: Target legendary creature gains fear until end of turn.",
+          "implementation": [
+            "Activated ability costing {B} and {T}: target legendary creature gains the fear keyword until end of turn; fear is a blockRestriction (only artifact and/or black creatures may block) (CR 702.36)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/shizo-deaths-storehouse.test.ts::shizo-deaths-storehouse-fear-green-creature-cannot-block",
+            "cards/evasion-blocking/shizo-deaths-storehouse.test.ts::shizo-deaths-storehouse-fear-black-creature-may-block",
+            "cards/evasion-blocking/shizo-deaths-storehouse.test.ts::shizo-deaths-storehouse-fear-only-legendary-target",
+            "cards/evasion-blocking/shizo-deaths-storehouse.test.ts::clause 2, negative: only the legendary creature is a legal target, not a nonlegendary one"
+          ],
+          "viewerScenarioIds": [
+            "shizo-deaths-storehouse-fear-green-creature-cannot-block",
+            "shizo-deaths-storehouse-fear-black-creature-may-block",
+            "shizo-deaths-storehouse-fear-only-legendary-target"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "634d5009-cbf3-44cb-8c15-7057f501a210": {
+      "name": "Trailblazer's Boots",
+      "oracleSha256": "5266977472c192c4d990b5eeb77858feabc7a2e236f9272491760c88350a7ad2",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature has nonbasic landwalk.",
+          "implementation": [
+            "landwalk rule static (nonbasic) granted to the equipped creature by the Equipment; defending player's nonbasic land makes it unblockable (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/trailblazers-boots.test.ts::trailblazers-boots-unblockable",
+            "cards/evasion-blocking/trailblazers-boots.test.ts::trailblazers-boots-blockable"
+          ],
+          "viewerScenarioIds": ["trailblazers-boots-unblockable", "trailblazers-boots-blockable"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "69facbc7-3859-4716-b627-5199571fb3cf": {
+      "name": "Chasm Skulker",
+      "oracleSha256": "398a28b3d5cefd7ceeeaec476f923868be91dcbcdc82ca9f1b229f02ff6edb95",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "When this creature dies, create X 1/1 blue Squid creature tokens with islandwalk, where X is the number of +1/+1 counters on this creature.",
+          "implementation": [
+            "Dies trigger creating X Squid tokens with islandwalk, X counted from the +1/+1 counters on it as it last existed on the battlefield; islandwalk is a blockRestriction (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/chasm-skulker.test.ts::chasm-skulker-dies-with-counters-makes-squids",
+            "cards/evasion-blocking/chasm-skulker.test.ts::chasm-skulker-squid-has-islandwalk",
+            "cards/evasion-blocking/chasm-skulker.test.ts::chasm-skulker-dies-without-counters-makes-none"
+          ],
+          "viewerScenarioIds": [
+            "chasm-skulker-dies-with-counters-makes-squids",
+            "chasm-skulker-squid-has-islandwalk",
+            "chasm-skulker-dies-without-counters-makes-none"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "88bb91b5-2ccd-4ce9-8cd4-e54d63c12abf": {
+      "name": "Coruscation Mage",
+      "oracleSha256": "e2ff60cbea5e62cfb5d1b04e119acb743e436e98567dd44420f3e0d4158a2c27",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Offspring {2}",
+          "implementation": [
+            "offspring keyword cost parse rule: optionalAdditionalCost (offspring) plus an enters trigger creating a 1/1 token copy when the extra cost was paid"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/coruscation-mage.test.ts::coruscation-mage-offspring-paid",
+            "cards/evasion-blocking/coruscation-mage.test.ts::coruscation-mage-offspring-declined",
+            "cards/evasion-blocking/coruscation-mage.test.ts::offspring paid: the second copy is a 1/1 token, the first a card",
+            "cards/evasion-blocking/coruscation-mage.test.ts::offspring declined: exactly one permanent, not a token",
+            "cards/evasion-blocking/coruscation-mage.test.ts::offspring is only offered when its extra cost can be paid"
+          ],
+          "viewerScenarioIds": [
+            "coruscation-mage-offspring-paid",
+            "coruscation-mage-offspring-declined"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e1a2bd31-b800-47cd-8866-1b849a601b09": {
+      "name": "Agate Instigator",
+      "oracleSha256": "4d54fef84943f52147f72f699d0c2d22172b2498792ffa20be8799621ecc4d77",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Offspring {1}{R}",
+          "implementation": [
+            "offspring keyword cost parse rule: optionalAdditionalCost (offspring) plus an enters trigger creating a 1/1 token copy when the extra cost was paid"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/agate-instigator.test.ts::agate-instigator-offspring-paid",
+            "cards/evasion-blocking/agate-instigator.test.ts::agate-instigator-offspring-declined",
+            "cards/evasion-blocking/agate-instigator.test.ts::offspring paid: the second copy is a 1/1 token, the first a card",
+            "cards/evasion-blocking/agate-instigator.test.ts::offspring declined: exactly one permanent, not a token",
+            "cards/evasion-blocking/agate-instigator.test.ts::offspring is only offered when its extra cost can be paid"
+          ],
+          "viewerScenarioIds": [
+            "agate-instigator-offspring-paid",
+            "agate-instigator-offspring-declined"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d78654fc-7d90-40ce-9c36-a211424d1a88": {
+      "name": "Cover of Darkness",
+      "oracleSha256": "ab138afd5d973b674ed4e8e5e39eadc2c12f7f0eb0904303743e25104282e29c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures of the chosen type have fear.",
+          "implementation": [
+            "chosen creature type stored as the permanent enters; layer-6 static grants fear to creatures of that type (CR 702.36)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/cover-of-darkness.test.ts::cover-of-darkness-chosen-type-unblockable",
+            "cards/evasion-blocking/cover-of-darkness.test.ts::cover-of-darkness-other-type-blockable"
+          ],
+          "viewerScenarioIds": [
+            "cover-of-darkness-chosen-type-unblockable",
+            "cover-of-darkness-other-type-blockable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f33cd975-ab70-4209-a6d8-e0d727772bf2": {
+      "name": "Cold-Eyed Selkie",
+      "oracleSha256": "ab119a762e40d00c0539b10f8f46c8eca81592b4bff5e4c80eae4c48f9c50aa2",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Islandwalk",
+          "implementation": [
+            "Islandwalk keyword: can't be blocked as long as defending player controls a Island (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/cold-eyed-selkie.test.ts::cold-eyed-selkie-unblockable-with-island",
+            "cards/evasion-blocking/cold-eyed-selkie.test.ts::cold-eyed-selkie-blockable-without-island"
+          ],
+          "viewerScenarioIds": [
+            "cold-eyed-selkie-unblockable-with-island",
+            "cold-eyed-selkie-blockable-without-island"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "222fd9fc-7af4-4269-bbb9-cd7b8ac029bd": {
+      "name": "Troll of Khazad-dûm",
+      "oracleSha256": "cc03f7c3d3e5a1aa4c01dcffe6d22dd48d8ab27350e8e6a00b37cb10f7415919",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked except by three or more creatures.",
+          "implementation": [
+            "blockRestriction/minBlockers rule static: attackers self, minBlockers 3; blocker groups smaller than three are not offered (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/troll-of-khazad-dum.test.ts::troll-of-khazad-dum-two-blockers-not-enough",
+            "cards/evasion-blocking/troll-of-khazad-dum.test.ts::troll-of-khazad-dum-three-blockers-may-block"
+          ],
+          "viewerScenarioIds": [
+            "troll-of-khazad-dum-two-blockers-not-enough",
+            "troll-of-khazad-dum-three-blockers-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "66810ef7-ea3a-4afa-92f0-b21ec52cc8d0": {
+      "name": "Shadow Rift",
+      "oracleSha256": "de4f17badb925d38ca51f865367b9e38de2c9c2d4b47303e9a211d905b293729",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Target creature gains shadow until end of turn.",
+          "implementation": [
+            "Instant: target creature gains the shadow keyword until end of turn, then its controller draws a card; shadow is a blockRestriction in both directions (CR 702.28)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/shadow-rift.test.ts::shadow-rift-shadow-attacker-unblockable",
+            "cards/evasion-blocking/shadow-rift.test.ts::shadow-rift-shadow-blocker-may-block"
+          ],
+          "viewerScenarioIds": [
+            "shadow-rift-shadow-attacker-unblockable",
+            "shadow-rift-shadow-blocker-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7e40f37c-9a0c-40e0-b195-7ea94b12f798": {
+      "name": "Elvish Champion",
+      "oracleSha256": "c54405eb5239c1f1e0a2d244840aa7e3556a77fd337fc66c43625478c53a6dff",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Other Elf creatures get +1/+1 and have forestwalk.",
+          "implementation": [
+            "landwalk rule static (forestwalk) granted to other Elfs by the lord; the defending player's Forest makes the creature unblockable (CR 702.14)",
+            "+1/+1 layer-7 static on other Elfs"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/elvish-champion.test.ts::elvish-champion-walker-unblockable",
+            "cards/evasion-blocking/elvish-champion.test.ts::elvish-champion-no-matching-land",
+            "cards/evasion-blocking/elvish-champion.test.ts::elvish-champion-lord-itself-blockable"
+          ],
+          "viewerScenarioIds": [
+            "elvish-champion-walker-unblockable",
+            "elvish-champion-no-matching-land",
+            "elvish-champion-lord-itself-blockable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "538fa2e0-d225-4232-b243-38868b695e26": {
+      "name": "Alpha Authority",
+      "oracleSha256": "26d7a90e5b3321b0ec183941309a571ba9b5291e547ac398b5407fdaf0c848a4",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Enchanted creature has hexproof and can't be blocked by more than one creature.",
+          "implementation": [
+            "blockRestriction rule static (maxBlockers 1) on the enchanted creature; a multi-blocker declaration is rejected and repaired (CR 509.1b)",
+            "hexproof keyword granted to the enchanted creature"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/alpha-authority.test.ts::alpha-authority-two-blockers-repaired",
+            "cards/evasion-blocking/alpha-authority.test.ts::alpha-authority-one-blocker-allowed"
+          ],
+          "viewerScenarioIds": [
+            "alpha-authority-two-blockers-repaired",
+            "alpha-authority-one-blocker-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d236b3fc-0d3f-4d99-875d-e32a33fe5767": {
+      "name": "Goblin King",
+      "oracleSha256": "cec4c99c4de3f949c2c446fac10628a851b5be21ff580f54f93654ebcf83a206",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Other Goblins get +1/+1 and have mountainwalk.",
+          "implementation": [
+            "landwalk rule static (mountainwalk) granted to other Goblins by the lord; the defending player's Mountain makes the creature unblockable (CR 702.14)",
+            "+1/+1 layer-7 static on other Goblins"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/goblin-king.test.ts::goblin-king-walker-unblockable",
+            "cards/evasion-blocking/goblin-king.test.ts::goblin-king-no-matching-land",
+            "cards/evasion-blocking/goblin-king.test.ts::goblin-king-lord-itself-blockable"
+          ],
+          "viewerScenarioIds": [
+            "goblin-king-walker-unblockable",
+            "goblin-king-no-matching-land",
+            "goblin-king-lord-itself-blockable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9f6ea9fe-eee5-4dca-a34e-c66d3e218716": {
+      "name": "Master of the Pearl Trident",
+      "oracleSha256": "bb9de66a2c82d0538cab56c7ab4042f44bbf9fd9e4c720d9da9a594d9c1e2b19",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Other Merfolk creatures you control get +1/+1 and have islandwalk.",
+          "implementation": [
+            "landwalk rule static (islandwalk) granted to other Merfolks by the lord; the defending player's Island makes the creature unblockable (CR 702.14)",
+            "+1/+1 layer-7 static on other Merfolks"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/master-of-the-pearl-trident.test.ts::master-of-the-pearl-trident-walker-unblockable",
+            "cards/evasion-blocking/master-of-the-pearl-trident.test.ts::master-of-the-pearl-trident-no-matching-land",
+            "cards/evasion-blocking/master-of-the-pearl-trident.test.ts::master-of-the-pearl-trident-lord-itself-blockable"
+          ],
+          "viewerScenarioIds": [
+            "master-of-the-pearl-trident-walker-unblockable",
+            "master-of-the-pearl-trident-no-matching-land",
+            "master-of-the-pearl-trident-lord-itself-blockable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "603ef53f-6191-4229-b85f-adad6f4503ce": {
+      "name": "Prowler's Helm",
+      "oracleSha256": "f0a86d016cd6a35bc8d29ec699b91342fb31c5077126601f62873fc9eca8ec9e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature can't be blocked except by Walls.",
+          "implementation": [
+            "blockRestriction rule static: equipped creature can be blocked only by Walls (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/prowlers-helm.test.ts::prowlers-helm-unblockable",
+            "cards/evasion-blocking/prowlers-helm.test.ts::prowlers-helm-blockable"
+          ],
+          "viewerScenarioIds": ["prowlers-helm-unblockable", "prowlers-helm-blockable"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6a262f53-2eea-45d0-8189-9222d66f1b52": {
+      "name": "Shifting Sliver",
+      "oracleSha256": "895a2798289adc25e704e8e2988832695e5ed40469c1e788943eb0cf27954fb1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Slivers can't be blocked except by Slivers.",
+          "implementation": [
+            "blockRestriction rule static: Slivers can be blocked only by Slivers (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/shifting-sliver.test.ts::shifting-sliver-non-sliver-cant-block",
+            "cards/evasion-blocking/shifting-sliver.test.ts::shifting-sliver-sliver-may-block"
+          ],
+          "viewerScenarioIds": [
+            "shifting-sliver-non-sliver-cant-block",
+            "shifting-sliver-sliver-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d31c6043-e005-4efe-9aa7-d82cb122eebe": {
+      "name": "Serpent of Yawning Depths",
+      "oracleSha256": "c53a4cc580769a034531583273a971e58d50b389805f1864f1469d91e51e4855",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Krakens, Leviathans, Octopuses, and Serpents you control can't be blocked except by Krakens, Leviathans, Octopuses, and Serpents.",
+          "implementation": [
+            "notBy/onlyBy blockRestriction rule static on your Krakens, Leviathans, Octopuses and Serpents: only creatures of those subtypes may block them (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/serpent-of-yawning-depths.test.ts::serpent-of-yawning-depths-kraken-may-block",
+            "cards/evasion-blocking/serpent-of-yawning-depths.test.ts::serpent-of-yawning-depths-bear-cannot-block",
+            "cards/evasion-blocking/serpent-of-yawning-depths.test.ts::serpent-of-yawning-depths-other-creature-unaffected"
+          ],
+          "viewerScenarioIds": [
+            "serpent-of-yawning-depths-kraken-may-block",
+            "serpent-of-yawning-depths-bear-cannot-block",
+            "serpent-of-yawning-depths-other-creature-unaffected"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e84837bd-4f94-43e1-876e-d82cae6ee247": {
+      "name": "Behind the Scenes",
+      "oracleSha256": "ad721a5ae15aa71170e41a498ce9786e7e52b631bf79b17bca22cf44c2ed44ab",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Creatures you control have skulk.",
+          "implementation": [
+            "skulk keyword granted to every creature you control by a static ability (CR 702.118)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/behind-the-scenes.test.ts::behind-the-scenes-greater-power-cant-block",
+            "cards/evasion-blocking/behind-the-scenes.test.ts::behind-the-scenes-equal-power-may-block"
+          ],
+          "viewerScenarioIds": [
+            "behind-the-scenes-greater-power-cant-block",
+            "behind-the-scenes-equal-power-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cc7f290f-ca00-4285-9bdb-4b4402444f30": {
+      "name": "Lord of Atlantis",
+      "oracleSha256": "39a73e70444e28956a450df9024910eccaac550133d9545182a6ebedaae0a19c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Other Merfolk get +1/+1 and have islandwalk.",
+          "implementation": [
+            "landwalk rule static (islandwalk) granted to other Merfolks by the lord; the defending player's Island makes the creature unblockable (CR 702.14)",
+            "+1/+1 layer-7 static on other Merfolks"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/lord-of-atlantis.test.ts::lord-of-atlantis-walker-unblockable",
+            "cards/evasion-blocking/lord-of-atlantis.test.ts::lord-of-atlantis-no-matching-land",
+            "cards/evasion-blocking/lord-of-atlantis.test.ts::lord-of-atlantis-lord-itself-blockable"
+          ],
+          "viewerScenarioIds": [
+            "lord-of-atlantis-walker-unblockable",
+            "lord-of-atlantis-no-matching-land",
+            "lord-of-atlantis-lord-itself-blockable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "532ee9c3-391c-44db-8ed5-a1d28fd7f876": {
+      "name": "Splinter's Technique",
+      "oracleSha256": "b2fee5793dc43be746bd70fab85bd960c1b054fd8fff8ad18415a15daeede07e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Sneak {1}{B}",
+          "implementation": [
+            "sneak keyword cost parse rule on instants and sorceries: alternative cost castable only in the active player's declare blockers step by returning an unblocked attacker"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/splinters-technique.test.ts::splinters-technique-sneak",
+            "cards/evasion-blocking/splinters-technique.test.ts::splinters-technique-sneak-blocked",
+            "cards/evasion-blocking/splinters-technique.test.ts::splinters-technique-sneak-main-phase",
+            "cards/evasion-blocking/splinters-technique.test.ts::sneak is offered in the declare blockers step with an unblocked attacker",
+            "cards/evasion-blocking/splinters-technique.test.ts::sneak is not offered once the attacker is blocked",
+            "cards/evasion-blocking/splinters-technique.test.ts::sneak is not offered in the precombat main phase"
+          ],
+          "viewerScenarioIds": [
+            "splinters-technique-sneak",
+            "splinters-technique-sneak-blocked",
+            "splinters-technique-sneak-main-phase"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "dbdd0963-b395-4cb8-ad9a-ed85a3e9f2e5": {
+      "name": "Inkwell Leviathan",
+      "oracleSha256": "792b86d26e4d318d7e33d3b939958d1623c525a6f1210fc96820e50306572e8e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Islandwalk",
+          "implementation": [
+            "Islandwalk keyword: can't be blocked as long as defending player controls a Island (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/inkwell-leviathan.test.ts::inkwell-leviathan-unblockable-with-island",
+            "cards/evasion-blocking/inkwell-leviathan.test.ts::inkwell-leviathan-blockable-without-island"
+          ],
+          "viewerScenarioIds": [
+            "inkwell-leviathan-unblockable-with-island",
+            "inkwell-leviathan-blockable-without-island"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2a14670b-2ab6-4e1d-9b33-610a87bdb7ce": {
+      "name": "Prosperous Bandit",
+      "oracleSha256": "e41dc99570a842fff595446fa83f09178c9e2a9e098f24c65870af19d98d11bd",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Offspring {1}",
+          "implementation": [
+            "offspring keyword cost parse rule: optionalAdditionalCost (offspring) plus an enters trigger creating a 1/1 token copy when the extra cost was paid"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/prosperous-bandit.test.ts::prosperous-bandit-offspring-paid",
+            "cards/evasion-blocking/prosperous-bandit.test.ts::prosperous-bandit-offspring-declined",
+            "cards/evasion-blocking/prosperous-bandit.test.ts::offspring paid: the second copy is a 1/1 token, the first a card",
+            "cards/evasion-blocking/prosperous-bandit.test.ts::offspring declined: exactly one permanent, not a token",
+            "cards/evasion-blocking/prosperous-bandit.test.ts::offspring is only offered when its extra cost can be paid"
+          ],
+          "viewerScenarioIds": [
+            "prosperous-bandit-offspring-paid",
+            "prosperous-bandit-offspring-declined"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3a6f886b-2043-47e9-9c0f-f7913a6fa67d": {
+      "name": "Shadowmage Infiltrator",
+      "oracleSha256": "b445c981ffd178750599e6946504455d41381cd879cfadeef6e0c85eeb031f5a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Fear",
+          "implementation": [
+            "fear keyword: can't be blocked except by artifact creatures and/or black creatures (CR 702.36)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/shadowmage-infiltrator.test.ts::shadowmage-infiltrator-unblockable-by-nonblack",
+            "cards/evasion-blocking/shadowmage-infiltrator.test.ts::shadowmage-infiltrator-blockable-by-black"
+          ],
+          "viewerScenarioIds": [
+            "shadowmage-infiltrator-unblockable-by-nonblack",
+            "shadowmage-infiltrator-blockable-by-black"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "46b5f12e-9fe5-44f6-b895-ee8c33205521": {
+      "name": "Aberrant",
+      "oracleSha256": "9585bd9575e0f3f9929ec5775c6734b3038ba3d334e1a290d3b4a86cac55d18a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Ravenous",
+          "implementation": [
+            "ravenous keyword parse rule: X in the mana cost, enters with X +1/+1 counters, and a draw trigger when X is 5 or more"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/aberrant.test.ts::aberrant-x5",
+            "cards/evasion-blocking/aberrant.test.ts::aberrant-x4",
+            "cards/evasion-blocking/aberrant.test.ts::ravenous: the X choice is offered, and X=5 and X=4 differ only by the draw"
+          ],
+          "viewerScenarioIds": ["aberrant-x5", "aberrant-x4"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a82842b8-cc2e-44fa-b869-7bccc16ca74f": {
+      "name": "Tervigon",
+      "oracleSha256": "84704e8fdf7cbca46a9efa7980ee3ec4632fd5b792fccf6b7a43571df373b64f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Ravenous",
+          "implementation": [
+            "ravenous keyword parse rule: X in the mana cost, enters with X +1/+1 counters, and a draw trigger when X is 5 or more"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/tervigon.test.ts::tervigon-x5",
+            "cards/evasion-blocking/tervigon.test.ts::tervigon-x4",
+            "cards/evasion-blocking/tervigon.test.ts::ravenous: the X choice is offered, and X=5 and X=4 differ only by the draw"
+          ],
+          "viewerScenarioIds": ["tervigon-x5", "tervigon-x4"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "89750d72-d1c0-4c8a-aa72-fdd48570aa92": {
+      "name": "Vorrac Battlehorns",
+      "oracleSha256": "aa7bfbeb25e859b3bdfe71567a7955537625af015e43dabd938419fcaed8d7ff",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature has trample and can't be blocked by more than one creature.",
+          "implementation": [
+            "blockRestriction rule static (maxBlockers 1) on the equipped creature; a multi-blocker declaration is rejected and repaired (CR 509.1b)",
+            "trample keyword granted by the Equipment"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/vorrac-battlehorns.test.ts::vorrac-battlehorns-two-blockers-repaired",
+            "cards/evasion-blocking/vorrac-battlehorns.test.ts::vorrac-battlehorns-one-blocker-allowed"
+          ],
+          "viewerScenarioIds": [
+            "vorrac-battlehorns-two-blockers-repaired",
+            "vorrac-battlehorns-one-blocker-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a8966245-501c-47e4-8ce0-849dcb532eb2": {
+      "name": "Flopsie, Bumi's Buddy",
+      "oracleSha256": "9311cca5852592d504fa83b65cee27438a1e39d18243c83376effefe7aa1f101",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Each creature you control with power 4 or greater can't be blocked by more than one creature.",
+          "implementation": [
+            "blockRestriction rule static: matching attackers get maxBlockers 1; a declaration putting more than one blocker on such an attacker is rejected and repaired (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/flopsie.test.ts::flopsie-single-block-only",
+            "cards/evasion-blocking/flopsie.test.ts::flopsie-double-block-allowed"
+          ],
+          "viewerScenarioIds": ["flopsie-single-block-only", "flopsie-double-block-allowed"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "2e163679-7303-4e05-9d20-86b76dfa1407": {
+      "name": "Vampire Cutthroat",
+      "oracleSha256": "45aa4c537d62ec06a1aa9d2d68a554c6e8a11c1e2833833979f691e23777770a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Skulk",
+          "implementation": [
+            "skulk keyword: can't be blocked by creatures with greater power (CR 702.118)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/vampire-cutthroat.test.ts::vampire-cutthroat-unblockable-by-greater-power",
+            "cards/evasion-blocking/vampire-cutthroat.test.ts::vampire-cutthroat-blockable-by-equal-power"
+          ],
+          "viewerScenarioIds": [
+            "vampire-cutthroat-unblockable-by-greater-power",
+            "vampire-cutthroat-blockable-by-equal-power"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e7d8b8ea-07d7-4b6c-aa49-6a2ad185a304": {
+      "name": "Termagant Swarm",
+      "oracleSha256": "2829e911d3cca5c61f052c91a5c54dd735966def532f610e3ae9744289c9364f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Ravenous",
+          "implementation": [
+            "ravenous keyword parse rule: X in the mana cost, enters with X +1/+1 counters, and a draw trigger when X is 5 or more"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/termagant-swarm.test.ts::termagant-swarm-x5",
+            "cards/evasion-blocking/termagant-swarm.test.ts::termagant-swarm-x4",
+            "cards/evasion-blocking/termagant-swarm.test.ts::ravenous: the X choice is offered, and X=5 and X=4 differ only by the draw"
+          ],
+          "viewerScenarioIds": ["termagant-swarm-x5", "termagant-swarm-x4"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "688a559d-249f-4d03-98e6-581843e7ddc3": {
+      "name": "Riders of Rohan",
+      "oracleSha256": "489e62a52cba90982b8c94c997028ab4330ac7711a03eb90d01ac55dd84362af",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Dash {4}{R}{W}",
+          "implementation": [
+            "dash keyword cost parse rule: alternative cost, haste, and return to hand at the beginning of the next end step"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/riders-of-rohan.test.ts::riders-of-rohan-dash",
+            "cards/evasion-blocking/riders-of-rohan.test.ts::riders-of-rohan-cast-normally"
+          ],
+          "viewerScenarioIds": ["riders-of-rohan-dash", "riders-of-rohan-cast-normally"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d1f3d5ca-cb17-400f-8ed9-3b9a4f151b62": {
+      "name": "Steelburr Champion",
+      "oracleSha256": "230f7938638108bd0724e3eedc44dc33d5e33cc951fe81a548ef0636e4925091",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Offspring {1}{W}",
+          "implementation": [
+            "offspring keyword cost parse rule: optionalAdditionalCost (offspring) plus an enters trigger creating a 1/1 token copy when the extra cost was paid"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/steelburr-champion.test.ts::steelburr-champion-offspring-paid",
+            "cards/evasion-blocking/steelburr-champion.test.ts::steelburr-champion-offspring-declined",
+            "cards/evasion-blocking/steelburr-champion.test.ts::offspring paid: the second copy is a 1/1 token, the first a card",
+            "cards/evasion-blocking/steelburr-champion.test.ts::offspring declined: exactly one permanent, not a token",
+            "cards/evasion-blocking/steelburr-champion.test.ts::offspring is only offered when its extra cost can be paid"
+          ],
+          "viewerScenarioIds": [
+            "steelburr-champion-offspring-paid",
+            "steelburr-champion-offspring-declined"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f6e160c1-b29f-4f3d-ab55-43ffe3ab4acf": {
+      "name": "Kolaghan, the Storm's Fury",
+      "oracleSha256": "bb67484b1c635c08119bad3d72b27e36e22d05f70054a26f5adfcb28911a533a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Dash {3}{B}{R}",
+          "implementation": [
+            "dash keyword cost parse rule: alternative cost, haste, and return to hand at the beginning of the next end step"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/kolaghan-the-storms-fury.test.ts::kolaghan-the-storms-fury-dash",
+            "cards/evasion-blocking/kolaghan-the-storms-fury.test.ts::kolaghan-the-storms-fury-cast-normally"
+          ],
+          "viewerScenarioIds": [
+            "kolaghan-the-storms-fury-dash",
+            "kolaghan-the-storms-fury-cast-normally"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a50c55a7-4e7e-40f6-b76c-1e32598dc9b6": {
+      "name": "Mask of Riddles",
+      "oracleSha256": "a7a5c650e7c46aadd19ee9f1a5d7b423bdb9f6702233f4c7fc8a987317e59a7f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature has fear.",
+          "implementation": [
+            "fear keyword granted to the equipped creature: can't be blocked except by artifact creatures and/or black creatures (CR 702.36)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/mask-of-riddles.test.ts::mask-of-riddles-unblockable",
+            "cards/evasion-blocking/mask-of-riddles.test.ts::mask-of-riddles-blockable"
+          ],
+          "viewerScenarioIds": ["mask-of-riddles-unblockable", "mask-of-riddles-blockable"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "acba24c1-168c-473b-96bb-1ba836c69f22": {
+      "name": "Ratcatcher",
+      "oracleSha256": "1be77fe8e05823922800ffbef4edeaaefabffdf9241b49b5cc4f5b6165998855",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Fear",
+          "implementation": [
+            "fear keyword: can't be blocked except by artifact creatures and/or black creatures (CR 702.36)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/ratcatcher.test.ts::ratcatcher-unblockable-by-nonblack",
+            "cards/evasion-blocking/ratcatcher.test.ts::ratcatcher-blockable-by-black"
+          ],
+          "viewerScenarioIds": [
+            "ratcatcher-unblockable-by-nonblack",
+            "ratcatcher-blockable-by-black"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6da00e2d-4287-48eb-8abe-d153318381fd": {
+      "name": "Dwarven Grunt",
+      "oracleSha256": "2c4edb5af3638bd584f9826c32238825b7d3305966851d189a1cb5de110284fc",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Mountainwalk",
+          "implementation": [
+            "Mountainwalk keyword: can't be blocked as long as defending player controls a Mountain (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/dwarven-grunt.test.ts::dwarven-grunt-unblockable-with-mountain",
+            "cards/evasion-blocking/dwarven-grunt.test.ts::dwarven-grunt-blockable-without-mountain"
+          ],
+          "viewerScenarioIds": [
+            "dwarven-grunt-unblockable-with-mountain",
+            "dwarven-grunt-blockable-without-mountain"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "328834f6-1f49-417a-a2d6-d430b8dca177": {
+      "name": "Skeleton Key",
+      "oracleSha256": "690c78eec43f05f428b0bdba584fe0516d6f087ef9326586ab009342a59c1c27",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Equipped creature has skulk.",
+          "implementation": [
+            "skulk keyword granted to the equipped creature: can't be blocked by creatures with greater power (CR 702.118)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/skeleton-key.test.ts::skeleton-key-unblockable",
+            "cards/evasion-blocking/skeleton-key.test.ts::skeleton-key-blockable"
+          ],
+          "viewerScenarioIds": ["skeleton-key-unblockable", "skeleton-key-blockable"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "fe1eb8b3-c605-4711-a057-ed3565bfe75c": {
+      "name": "Michelangelo, Mutant BFF",
+      "oracleSha256": "0418633d293728d93d10480206f14f8228b73987887f92b07db5df260282a6d7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Each creature you control with a counter on it can't be blocked by more than one creature.",
+          "implementation": [
+            "blockRestriction rule static: matching attackers get maxBlockers 1; a declaration putting more than one blocker on such an attacker is rejected and repaired (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/michelangelo.test.ts::michelangelo-single-block-only",
+            "cards/evasion-blocking/michelangelo.test.ts::michelangelo-double-block-allowed"
+          ],
+          "viewerScenarioIds": [
+            "michelangelo-single-block-only",
+            "michelangelo-double-block-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "b19a7ae7-3af5-4aa6-80e1-8888054427de": {
+      "name": "Dauthi Embrace",
+      "oracleSha256": "6bcd1990759fcb30c0eebf66fca9b88852e9687b5f974bee414ba706b93e173f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{B}{B}: Target creature gains shadow until end of turn.",
+          "implementation": [
+            "Activated ability costing {B}{B}: target creature gains the shadow keyword until end of turn; shadow is a blockRestriction in both directions (CR 702.28)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/dauthi-embrace.test.ts::dauthi-embrace-shadow-attacker-unblockable",
+            "cards/evasion-blocking/dauthi-embrace.test.ts::dauthi-embrace-shadow-blocker-may-block"
+          ],
+          "viewerScenarioIds": [
+            "dauthi-embrace-shadow-attacker-unblockable",
+            "dauthi-embrace-shadow-blocker-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e3552730-fe09-443f-b432-9640b69c7bbb": {
+      "name": "Rancid Rats",
+      "oracleSha256": "c66e5e679fb4ff1719bff8d20260e6c6cca4d5af3378de4ccbad15bd82b8061a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Skulk",
+          "implementation": [
+            "skulk keyword: can't be blocked by creatures with greater power (CR 702.118)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/rancid-rats.test.ts::rancid-rats-unblockable-by-greater-power",
+            "cards/evasion-blocking/rancid-rats.test.ts::rancid-rats-blockable-by-equal-power"
+          ],
+          "viewerScenarioIds": [
+            "rancid-rats-unblockable-by-greater-power",
+            "rancid-rats-blockable-by-equal-power"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "dcbb6b0e-2219-4ba4-9720-3e58b59b4328": {
+      "name": "Eladamri, Lord of Leaves",
+      "oracleSha256": "8c7e05e1d2fb58de86954621641efae6526f42b7e7c3144ea22148fc03d50afe",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Other Elf creatures have forestwalk.",
+          "implementation": [
+            "landwalk rule static (forestwalk) granted to other Elfs by the lord; the defending player's Forest makes the creature unblockable (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/eladamri-lord-of-leaves.test.ts::eladamri-lord-of-leaves-walker-unblockable",
+            "cards/evasion-blocking/eladamri-lord-of-leaves.test.ts::eladamri-lord-of-leaves-no-matching-land",
+            "cards/evasion-blocking/eladamri-lord-of-leaves.test.ts::eladamri-lord-of-leaves-lord-itself-blockable"
+          ],
+          "viewerScenarioIds": [
+            "eladamri-lord-of-leaves-walker-unblockable",
+            "eladamri-lord-of-leaves-no-matching-land",
+            "eladamri-lord-of-leaves-lord-itself-blockable"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "035ee753-232f-4ba2-afbf-8d1eb162e6f8": {
+      "name": "Merrow Harbinger",
+      "oracleSha256": "d877bde7c67944e31a57d6657921e7734ce19c8ef9387d20becbef8f6b69b38a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Islandwalk",
+          "implementation": [
+            "Islandwalk keyword: can't be blocked as long as defending player controls a Island (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/merrow-harbinger.test.ts::merrow-harbinger-unblockable-with-island",
+            "cards/evasion-blocking/merrow-harbinger.test.ts::merrow-harbinger-blockable-without-island"
+          ],
+          "viewerScenarioIds": [
+            "merrow-harbinger-unblockable-with-island",
+            "merrow-harbinger-blockable-without-island"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5b15dcac-38dc-4957-bc01-40153ea07559": {
+      "name": "Silhana Ledgewalker",
+      "oracleSha256": "0c2639efe9ebeec8bb85e84ac3c612e7abd83b646ee48e8222e0f71444946379",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked except by creatures with flying.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, onlyBy creatures with flying; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/silhana-ledgewalker.test.ts::silhana-ledgewalker-unblockable-by-nonflyer",
+            "cards/evasion-blocking/silhana-ledgewalker.test.ts::silhana-ledgewalker-blockable-by-flyer"
+          ],
+          "viewerScenarioIds": [
+            "silhana-ledgewalker-unblockable-by-nonflyer",
+            "silhana-ledgewalker-blockable-by-flyer"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "78cb1f05-edad-4430-9095-f3eabd80bf41": {
+      "name": "Challenger Troll",
+      "oracleSha256": "82969627cdaf339822e30d2030d0b69f02faf3a18b19fd398d9282b40ede6c58",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Each creature you control with power 4 or greater can't be blocked by more than one creature.",
+          "implementation": [
+            "blockRestriction rule static: matching attackers get maxBlockers 1; a declaration putting more than one blocker on such an attacker is rejected and repaired (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/challenger-troll.test.ts::challenger-troll-single-block-only",
+            "cards/evasion-blocking/challenger-troll.test.ts::challenger-troll-double-block-allowed"
+          ],
+          "viewerScenarioIds": [
+            "challenger-troll-single-block-only",
+            "challenger-troll-double-block-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "46ddc2e1-386f-4aaf-b37b-37b1708e0d9c": {
+      "name": "Shadow Sliver",
+      "oracleSha256": "b089605770167631ddddc441176158543ae7639128537a708fdfa931ee4189a5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "All Sliver creatures have shadow.",
+          "implementation": [
+            "static grant: all Sliver creatures have shadow; shadow keyword restricts blocking both ways (CR 702.28)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/shadow-sliver.test.ts::shadow-sliver-unblockable-by-nonshadow",
+            "cards/evasion-blocking/shadow-sliver.test.ts::shadow-sliver-blockable-by-other-sliver"
+          ],
+          "viewerScenarioIds": [
+            "shadow-sliver-unblockable-by-nonshadow",
+            "shadow-sliver-blockable-by-other-sliver"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d1dfed64-6e88-44c2-b479-9a2d072e4be7": {
+      "name": "Greater Sandwurm",
+      "oracleSha256": "31be19872de43b2a58d83e029849eb4d854a2a98fe33cc1b64cbd57a95e4bc4c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked by creatures with power 2 or less.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, notBy creatures with power 2 or less; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/greater-sandwurm.test.ts::greater-sandwurm-unblockable-by-power-two",
+            "cards/evasion-blocking/greater-sandwurm.test.ts::greater-sandwurm-blocked-by-power-three"
+          ],
+          "viewerScenarioIds": [
+            "greater-sandwurm-unblockable-by-power-two",
+            "greater-sandwurm-blocked-by-power-three"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "194284f7-cf92-4d9f-a8ce-e4dc3505ab7a": {
+      "name": "Donatello's Technique",
+      "oracleSha256": "fad541d300988d906cae005a838af21506ed3c487af35298b7ad7fe9543e7591",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Sneak {U}",
+          "implementation": [
+            "sneak keyword cost parse rule on instants and sorceries: alternative cost castable only in the active player's declare blockers step by returning an unblocked attacker"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/donatellos-technique.test.ts::donatellos-technique-sneak",
+            "cards/evasion-blocking/donatellos-technique.test.ts::donatellos-technique-sneak-blocked",
+            "cards/evasion-blocking/donatellos-technique.test.ts::donatellos-technique-sneak-main-phase",
+            "cards/evasion-blocking/donatellos-technique.test.ts::sneak is offered in the declare blockers step with an unblocked attacker",
+            "cards/evasion-blocking/donatellos-technique.test.ts::sneak is not offered once the attacker is blocked",
+            "cards/evasion-blocking/donatellos-technique.test.ts::sneak is not offered in the precombat main phase"
+          ],
+          "viewerScenarioIds": [
+            "donatellos-technique-sneak",
+            "donatellos-technique-sneak-blocked",
+            "donatellos-technique-sneak-main-phase"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "70f26726-0373-4e50-a1de-37392ca94890": {
+      "name": "Ox Drover",
+      "oracleSha256": "5a22bced12da68a508b9bb21f1d41c40f79f2d1e76919f62b301cb7deda4bf2d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked by Oxen.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, notBy creatures with subtype Ox; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/ox-drover.test.ts::ox-drover-unblockable-by-ox",
+            "cards/evasion-blocking/ox-drover.test.ts::ox-drover-blockable-by-non-ox"
+          ],
+          "viewerScenarioIds": ["ox-drover-unblockable-by-ox", "ox-drover-blockable-by-non-ox"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "682cbf2a-2723-4590-ae52-7c5d8b2573cf": {
+      "name": "Beloved Princess",
+      "oracleSha256": "0c9da806871c5e385617bf78098890e7d71588765dd97c37d68b0ebdc4f8889f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked by creatures with power 3 or greater.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, notBy creatures with power 3 or greater; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/beloved-princess.test.ts::beloved-princess-unblockable-by-power-three",
+            "cards/evasion-blocking/beloved-princess.test.ts::beloved-princess-blocked-by-power-two"
+          ],
+          "viewerScenarioIds": [
+            "beloved-princess-unblockable-by-power-three",
+            "beloved-princess-blocked-by-power-two"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "47dd7ef4-7645-4878-ab91-261aa8fcf834": {
+      "name": "Zodiac Monkey",
+      "oracleSha256": "0908ac70cfca320931f000ebcae12d36c9789408e3e48d8627479f254a11557d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Forestwalk",
+          "implementation": [
+            "Forestwalk keyword: can't be blocked as long as defending player controls a Forest (CR 702.14)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/zodiac-monkey.test.ts::zodiac-monkey-unblockable-with-forest",
+            "cards/evasion-blocking/zodiac-monkey.test.ts::zodiac-monkey-blockable-without-forest"
+          ],
+          "viewerScenarioIds": [
+            "zodiac-monkey-unblockable-with-forest",
+            "zodiac-monkey-blockable-without-forest"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "91d01119-9b3e-4629-8cf0-bbca2c19a7cc": {
+      "name": "Rampaging Ceratops",
+      "oracleSha256": "62ba6582474ce1b8123a551afdb84d8bffdc5ed7f305ede09e36d857f4a36f08",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked except by three or more creatures.",
+          "implementation": [
+            "blockRestriction/minBlockers rule static: attackers self, minBlockers 3; blocker groups smaller than three are not offered (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/rampaging-ceratops.test.ts::rampaging-ceratops-two-blockers-not-enough",
+            "cards/evasion-blocking/rampaging-ceratops.test.ts::rampaging-ceratops-three-blockers-may-block"
+          ],
+          "viewerScenarioIds": [
+            "rampaging-ceratops-two-blockers-not-enough",
+            "rampaging-ceratops-three-blockers-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f334087a-deda-4e9e-ab58-68f7e226d7ce": {
+      "name": "Ant-Man, Elusive Avenger",
+      "oracleSha256": "37798e8aae0207bee8fdf6e9ecd0409f8df29eed9fc0456af506374c13b8aef3",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Ant-Man can't be blocked by creatures with greater power.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, notByGreaterPower; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/ant-man.test.ts::ant-man-greater-power-cannot-block",
+            "cards/evasion-blocking/ant-man.test.ts::ant-man-equal-power-may-block"
+          ],
+          "viewerScenarioIds": [
+            "ant-man-greater-power-cannot-block",
+            "ant-man-equal-power-may-block"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "38b23fe1-0e76-494a-ad9b-bc22c7d21a5e": {
+      "name": "Sunder Shaman",
+      "oracleSha256": "94181568f5dc13d3c906bb40b70df5e05b2de6f9462c8a4d0838abecbe69b3b6",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked by more than one creature.",
+          "implementation": [
+            "blockRestriction rule static: matching attackers get maxBlockers 1; a declaration putting more than one blocker on such an attacker is rejected and repaired (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/sunder-shaman.test.ts::sunder-shaman-single-block-only",
+            "cards/evasion-blocking/sunder-shaman.test.ts::sunder-shaman-double-block-allowed"
+          ],
+          "viewerScenarioIds": [
+            "sunder-shaman-single-block-only",
+            "sunder-shaman-double-block-allowed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "8a31c49f-5b3f-4f84-a08e-58b30a6bff7c": {
+      "name": "Stormkeld Vanguard // Bear Down",
+      "oracleSha256": "0a26d28d22a0131b126009223386bd782c8febb7185aeaac520954c9cc3db801",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "This creature can't be blocked by creatures with power 2 or less.",
+          "implementation": [
+            "blockRestriction rule static: attackers self, notBy creatures with power 2 or less; checked as blockers are declared (CR 509.1b)"
+          ],
+          "engineTestIds": [
+            "cards/evasion-blocking/stormkeld-vanguard.test.ts::stormkeld-vanguard-unblockable-by-power-two",
+            "cards/evasion-blocking/stormkeld-vanguard.test.ts::stormkeld-vanguard-blocked-by-power-three"
+          ],
+          "viewerScenarioIds": [
+            "stormkeld-vanguard-unblockable-by-power-two",
+            "stormkeld-vanguard-blocked-by-power-three"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "80b8ee3d-4174-4f47-a533-a3db1e703382": {
+      "name": "Adorned Pouncer",
+      "oracleSha256": "2badd5ea3c919f1680c7b72ad4941e6e688425fe7ad9dc72f99512ecee8097c5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Eternalize {3}{W}{W} ({3}{W}{W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Cat with no mana cost. Eternalize only as a sorcery.)",
+          "implementation": [
+            "eternalize keyword parse rule: a graveyard ability, sorcery speed, costs {mana} and exiling this card; op createTokenCopyOfSourceCard copies the printed card with setColors [B], adds subtype Zombie, sets base power and toughness 4/4 and clears the mana cost (CR 702.129)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/adorned-pouncer.test.ts::adorned-pouncer-eternalize",
+            "cards/graveyard-hand/adorned-pouncer.test.ts::adorned-pouncer-eternalize-sorcery-speed",
+            "cards/graveyard-hand/adorned-pouncer.test.ts::eternalize: the token is a 4/4 Zombie, and the ability is sorcery speed"
+          ],
+          "viewerScenarioIds": [
+            "adorned-pouncer-eternalize",
+            "adorned-pouncer-eternalize-sorcery-speed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "3c49e98d-d33b-47fa-8b07-b38b367de2c7": {
+      "name": "Angel of Sanctions",
+      "oracleSha256": "79dba78f990f57bf72066aab47b7d501977f5f234602d716c2d6692844985416",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Embalm {5}{W} ({5}{W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a white Zombie Angel with no mana cost. Embalm only as a sorcery.)",
+          "implementation": [
+            "embalm keyword parse rule: a graveyard ability, sorcery speed, costs {mana} and exiling this card; op createTokenCopyOfSourceCard copies the printed card with setColors [W], adds subtype Zombie and clears the mana cost (CR 702.128)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/angel-of-sanctions.test.ts::angel-of-sanctions-embalm",
+            "cards/graveyard-hand/angel-of-sanctions.test.ts::angel-of-sanctions-embalm-sorcery-speed",
+            "cards/graveyard-hand/angel-of-sanctions.test.ts::embalm: the token is a 3/4 Zombie, and the ability is sorcery speed"
+          ],
+          "viewerScenarioIds": [
+            "angel-of-sanctions-embalm",
+            "angel-of-sanctions-embalm-sorcery-speed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "4e0b9273-6614-41a8-9738-959349c0717b": {
+      "name": "Anointer Priest",
+      "oracleSha256": "edcb32be1141c100f1794da50b0b1ae82a28ce332cd15e199fc8964c01cbdd5e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Embalm {3}{W} ({3}{W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a white Zombie Human Cleric with no mana cost. Embalm only as a sorcery.)",
+          "implementation": [
+            "embalm keyword parse rule: a graveyard ability, sorcery speed, costs {mana} and exiling this card; op createTokenCopyOfSourceCard copies the printed card with setColors [W], adds subtype Zombie and clears the mana cost (CR 702.128)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/anointer-priest.test.ts::anointer-priest-embalm",
+            "cards/graveyard-hand/anointer-priest.test.ts::anointer-priest-embalm-sorcery-speed",
+            "cards/graveyard-hand/anointer-priest.test.ts::embalm: the token is a 1/3 Zombie, and the ability is sorcery speed"
+          ],
+          "viewerScenarioIds": ["anointer-priest-embalm", "anointer-priest-embalm-sorcery-speed"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "bb813ffa-2615-4177-a7fb-6e0dfb819fc2": {
+      "name": "Aven Wind Guide",
+      "oracleSha256": "4ae76a0aa33071f4573ca5c23ad7cfab6a3590c9a4a6cd19babf5e4acfcc0545",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Embalm {4}{W}{U} ({4}{W}{U}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a white Zombie Bird Warrior with no mana cost. Embalm only as a sorcery.)",
+          "implementation": [
+            "embalm keyword parse rule: a graveyard ability, sorcery speed, costs {mana} and exiling this card; op createTokenCopyOfSourceCard copies the printed card with setColors [W], adds subtype Zombie and clears the mana cost (CR 702.128)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/aven-wind-guide.test.ts::aven-wind-guide-embalm",
+            "cards/graveyard-hand/aven-wind-guide.test.ts::aven-wind-guide-embalm-sorcery-speed",
+            "cards/graveyard-hand/aven-wind-guide.test.ts::embalm: the token is a 2/3 Zombie, and the ability is sorcery speed"
+          ],
+          "viewerScenarioIds": ["aven-wind-guide-embalm", "aven-wind-guide-embalm-sorcery-speed"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e80772e2-8623-4094-81a2-70828b2b151c": {
+      "name": "Blightsteel Colossus",
+      "oracleSha256": "6a043a363bbd8cea3edc186fe51228adba47bc18785899af04a2f2f5d344104b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "If Blightsteel Colossus would be put into a graveyard from anywhere, reveal Blightsteel Colossus and shuffle it into its owner's library instead.",
+          "implementation": [
+            "definition flag shuffleIntoLibraryInsteadOfGraveyard: graveyardDestination reveals the card and shuffles it into its owner's library from any zone; when Rest in Peace also applies, the owner chooses which replacement to apply (CR 616.1)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/blightsteel-colossus.test.ts::blightsteel-colossus-discard-shuffles",
+            "cards/graveyard-hand/blightsteel-colossus.test.ts::blightsteel-colossus-rest-in-peace-exile"
+          ],
+          "viewerScenarioIds": [
+            "blightsteel-colossus-discard-shuffles",
+            "blightsteel-colossus-rest-in-peace-exile"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "cad09970-14c8-4d80-82fe-6c855efb0191": {
+      "name": "Bloodsoaked Champion",
+      "oracleSha256": "9b720f574ba6b7753945f01e9fe8e62c874f663fe930c5433edc34b0747039b7",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Raid — {1}{B}: Return this card from your graveyard to the battlefield. Activate only if you attacked this turn.",
+          "implementation": [
+            "graveyard activated ability (zone graveyard) with op returnSelfFromGraveyardToBattlefield; mana costs only; the stack source is the graveyard object, so a card that left the graveyard before resolution does nothing (CR 400.7)",
+            "activation condition youAttackedThisTurn, read from attackedThisTurnPlayers, which combat sets when attackers are declared and the turn clears"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/bloodsoaked-champion.test.ts::bloodsoaked-champion-raid-return",
+            "cards/graveyard-hand/bloodsoaked-champion.test.ts::bloodsoaked-champion-no-raid",
+            "cards/graveyard-hand/bloodsoaked-champion.test.ts::raid: the ability is offered only after an attack"
+          ],
+          "viewerScenarioIds": ["bloodsoaked-champion-raid-return", "bloodsoaked-champion-no-raid"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "f33ce38a-34ec-4b65-a0fc-160484a02007": {
+      "name": "Bonders' Enclave",
+      "oracleSha256": "99a43cae0ad52170dac191b8ff2663160ea1de10543727ea177fc7fe67557e7b",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater.",
+          "implementation": [
+            "activation condition \"you control a creature with power 4 or greater\" parsed as countPermanents(you, >= 1)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/bonders-enclave.test.ts::bonders-enclave-draw",
+            "cards/graveyard-hand/bonders-enclave.test.ts::bonders-enclave-no-power-4",
+            "cards/graveyard-hand/bonders-enclave.test.ts::the draw ability is offered only with power 4 or greater"
+          ],
+          "viewerScenarioIds": ["bonders-enclave-draw", "bonders-enclave-no-power-4"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "1b09d0cf-403c-4a15-aeee-602a1bdaf0c1": {
+      "name": "Darksteel Colossus",
+      "oracleSha256": "2f77fc8d5cf38b9fbc31d322725389e4e4c0f8490d8b62335175062c08c90111",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "If Darksteel Colossus would be put into a graveyard from anywhere, reveal Darksteel Colossus and shuffle it into its owner's library instead.",
+          "implementation": [
+            "definition flag shuffleIntoLibraryInsteadOfGraveyard: graveyardDestination reveals the card and shuffles it into its owner's library from any zone; when Rest in Peace also applies, the owner chooses which replacement to apply (CR 616.1)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/darksteel-colossus.test.ts::darksteel-colossus-discard-shuffles",
+            "cards/graveyard-hand/darksteel-colossus.test.ts::darksteel-colossus-rest-in-peace-exile"
+          ],
+          "viewerScenarioIds": [
+            "darksteel-colossus-discard-shuffles",
+            "darksteel-colossus-rest-in-peace-exile"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d215127b-5f1d-4d3c-935b-c228c9c7f874": {
+      "name": "Dimir Infiltrator",
+      "oracleSha256": "f66e78902b8f081d584a8d5de077af1eca69fb7aab0482ef69caef3d1d959f18",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+          "implementation": [
+            "transmute keyword parse rule: a hand ability, sorcery speed, costs {mana} and discarding this card; searches the library for a card whose mana value equals the printed card's, reveals it, puts it into the hand, then shuffles"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/dimir-infiltrator.test.ts::dimir-infiltrator-transmute",
+            "cards/graveyard-hand/dimir-infiltrator.test.ts::dimir-infiltrator-transmute-no-match"
+          ],
+          "viewerScenarioIds": [
+            "dimir-infiltrator-transmute",
+            "dimir-infiltrator-transmute-no-match"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7de04284-dcaa-4b63-a734-fcfe2698f83c": {
+      "name": "Dizzy Spell",
+      "oracleSha256": "367867c5978ac2139dbd115ad62fe60e3685f2fa0db6f198fe0ec3f3d183e816",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+          "implementation": [
+            "transmute keyword parse rule: a hand ability, sorcery speed, costs {mana} and discarding this card; searches the library for a card whose mana value equals the printed card's, reveals it, puts it into the hand, then shuffles"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/dizzy-spell.test.ts::dizzy-spell-transmute",
+            "cards/graveyard-hand/dizzy-spell.test.ts::dizzy-spell-transmute-no-match"
+          ],
+          "viewerScenarioIds": ["dizzy-spell-transmute", "dizzy-spell-transmute-no-match"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6ee51134-c4ad-4101-8ce2-23dde9359cd4": {
+      "name": "Drift of Phantasms",
+      "oracleSha256": "823923ec429220ae0af120ca7d5ef3e1601b5ec2e3f11248c7e3c547af21504d",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+          "implementation": [
+            "transmute keyword parse rule: a hand ability, sorcery speed, costs {mana} and discarding this card; searches the library for a card whose mana value equals the printed card's, reveals it, puts it into the hand, then shuffles"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/drift-of-phantasms.test.ts::drift-of-phantasms-transmute",
+            "cards/graveyard-hand/drift-of-phantasms.test.ts::drift-of-phantasms-transmute-no-match"
+          ],
+          "viewerScenarioIds": [
+            "drift-of-phantasms-transmute",
+            "drift-of-phantasms-transmute-no-match"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "c30f9be4-c274-4ad0-b5d7-7d3421aa4277": {
+      "name": "Drownyard Temple",
+      "oracleSha256": "04f29f1380d0adff0063a31415d8de7f9d7d267acd4a1a0edfbf4c503684712a",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{3}: Return this card from your graveyard to the battlefield tapped.",
+          "implementation": [
+            "graveyard activated ability (zone graveyard) with op returnSelfFromGraveyardToBattlefield; mana costs only; the stack source is the graveyard object, so a card that left the graveyard before resolution does nothing (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/drownyard-temple.test.ts::drownyard-temple-return",
+            "cards/graveyard-hand/drownyard-temple.test.ts::drownyard-temple-from-hand",
+            "cards/graveyard-hand/drownyard-temple.test.ts::the return ability is not offered from the hand or the battlefield"
+          ],
+          "viewerScenarioIds": ["drownyard-temple-return", "drownyard-temple-from-hand"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6b0e23cf-7d68-4329-86db-7adc26abd86b": {
+      "name": "Elvish Spirit Guide",
+      "oracleSha256": "b668e8a237348ab729d4f78ec49d9ca99780edf1f122adbec6c5235afc5c099c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Exile this card from your hand: Add {G}.",
+          "implementation": [
+            "definition field handManaAbility: the hand card is a mana source (fromHand) that exiles itself to add the mana; the payment planner uses hand sources only when the board cannot pay, fewest first"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/elvish-spirit-guide.test.ts::elvish-spirit-guide-pays-from-hand",
+            "cards/graveyard-hand/elvish-spirit-guide.test.ts::elvish-spirit-guide-board-first"
+          ],
+          "viewerScenarioIds": [
+            "elvish-spirit-guide-pays-from-hand",
+            "elvish-spirit-guide-board-first"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "7973820b-fdaf-46ec-9e3e-d4c0e77b5067": {
+      "name": "Fanatic of Rhonas",
+      "oracleSha256": "a11c77a61f7af87b3ca96a6e3eb496f73212242dd43d8e05490ad5687d262213",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Eternalize {2}{G}{G} ({2}{G}{G}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Snake Druid with no mana cost. Eternalize only as a sorcery.)",
+          "implementation": [
+            "eternalize keyword parse rule: a graveyard ability, sorcery speed, costs {mana} and exiling this card; op createTokenCopyOfSourceCard copies the printed card with setColors [B], adds subtype Zombie, sets base power and toughness 4/4 and clears the mana cost (CR 702.129)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/fanatic-of-rhonas.test.ts::fanatic-of-rhonas-eternalize",
+            "cards/graveyard-hand/fanatic-of-rhonas.test.ts::fanatic-of-rhonas-eternalize-sorcery-speed",
+            "cards/graveyard-hand/fanatic-of-rhonas.test.ts::eternalize: the token is a 4/4 Zombie, and the ability is sorcery speed"
+          ],
+          "viewerScenarioIds": [
+            "fanatic-of-rhonas-eternalize",
+            "fanatic-of-rhonas-eternalize-sorcery-speed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0b683611-e46f-4105-b336-014d1556c8de": {
+      "name": "Haunt of the Dead Marshes",
+      "oracleSha256": "b0e0bfecb2883ae735f246fe918d959e9ca565b41e720f9e92b01c8c377bb01c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{2}{B}: Return this card from your graveyard to the battlefield tapped. Activate only if you control a legendary creature.",
+          "implementation": [
+            "graveyard activated ability (zone graveyard) with op returnSelfFromGraveyardToBattlefield; mana costs only; the stack source is the graveyard object, so a card that left the graveyard before resolution does nothing (CR 400.7)",
+            "activation condition \"you control a <noun>\" parsed as countPermanents(you, >= 1)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/haunt-of-the-dead-marshes.test.ts::haunt-of-the-dead-marshes-return",
+            "cards/graveyard-hand/haunt-of-the-dead-marshes.test.ts::haunt-of-the-dead-marshes-no-legend",
+            "cards/graveyard-hand/haunt-of-the-dead-marshes.test.ts::the ability is offered only while you control a legendary creature"
+          ],
+          "viewerScenarioIds": [
+            "haunt-of-the-dead-marshes-return",
+            "haunt-of-the-dead-marshes-no-legend"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "0826cf7d-7ccc-459b-a92f-29dc169628f8": {
+      "name": "Muddle the Mixture",
+      "oracleSha256": "2656872149eeefa48ba24c6d484750799d70fd05fc69634da01ad73e816d5025",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+          "implementation": [
+            "transmute keyword parse rule: a hand ability, sorcery speed, costs {mana} and discarding this card; searches the library for a card whose mana value equals the printed card's, reveals it, puts it into the hand, then shuffles"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/muddle-the-mixture.test.ts::muddle-the-mixture-transmute",
+            "cards/graveyard-hand/muddle-the-mixture.test.ts::muddle-the-mixture-transmute-no-match"
+          ],
+          "viewerScenarioIds": [
+            "muddle-the-mixture-transmute",
+            "muddle-the-mixture-transmute-no-match"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "6c1d22d4-f28e-4041-a9b6-1575e8929b61": {
+      "name": "Nexus of Fate",
+      "oracleSha256": "2c9116544de1212b24c3adbe818b9330ef5f83c1b3191573e2f8a41a1766dc9c",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "If Nexus of Fate would be put into a graveyard from anywhere, reveal Nexus of Fate and shuffle it into its owner's library instead.",
+          "implementation": [
+            "definition flag shuffleIntoLibraryInsteadOfGraveyard: graveyardDestination reveals the card and shuffles it into its owner's library from any zone; when Rest in Peace also applies, the owner chooses which replacement to apply (CR 616.1)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/nexus-of-fate.test.ts::nexus-of-fate-resolves-shuffles",
+            "cards/graveyard-hand/nexus-of-fate.test.ts::nexus-of-fate-countered-shuffles"
+          ],
+          "viewerScenarioIds": [
+            "nexus-of-fate-resolves-shuffles",
+            "nexus-of-fate-countered-shuffles"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "5f4ad578-f2c4-47f6-8080-8fbc17383f6f": {
+      "name": "Persistent Specimen",
+      "oracleSha256": "15b86a2ebc05f3da0938006160d54345e16f50bc1ec0a0b2e8ccfbd0d773146f",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{2}{B}: Return this card from your graveyard to the battlefield tapped.",
+          "implementation": [
+            "graveyard activated ability (zone graveyard) with op returnSelfFromGraveyardToBattlefield; mana costs only; the stack source is the graveyard object, so a card that left the graveyard before resolution does nothing (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/persistent-specimen.test.ts::persistent-specimen-return",
+            "cards/graveyard-hand/persistent-specimen.test.ts::persistent-specimen-from-hand",
+            "cards/graveyard-hand/persistent-specimen.test.ts::the return ability is not offered from the hand or the battlefield"
+          ],
+          "viewerScenarioIds": ["persistent-specimen-return", "persistent-specimen-from-hand"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "9dbc3530-b278-4c8d-b2cc-a09dfac9d5e5": {
+      "name": "Reassembling Skeleton",
+      "oracleSha256": "edd9602c1ce6d7ea533de8c08c9feb60f99b43a607d2df9e5b674d9946b61630",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{1}{B}: Return this card from your graveyard to the battlefield tapped.",
+          "implementation": [
+            "graveyard activated ability (zone graveyard) with op returnSelfFromGraveyardToBattlefield; mana costs only; the stack source is the graveyard object, so a card that left the graveyard before resolution does nothing (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/reassembling-skeleton.test.ts::reassembling-skeleton-return",
+            "cards/graveyard-hand/reassembling-skeleton.test.ts::reassembling-skeleton-from-hand",
+            "cards/graveyard-hand/reassembling-skeleton.test.ts::the return ability is not offered from the hand or the battlefield"
+          ],
+          "viewerScenarioIds": ["reassembling-skeleton-return", "reassembling-skeleton-from-hand"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "058dae67-807e-4542-ae51-f2b1216ffaed": {
+      "name": "Retrofitted Transmogrant",
+      "oracleSha256": "260d8a7ca0cb76d8a76d17cbffca938a98039adb2fa4c25c2dc73714e9cbf89e",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{3}{B}: Return this card from your graveyard to the battlefield tapped with two +1/+1 counters on it.",
+          "implementation": [
+            "graveyard activated ability (zone graveyard) with op returnSelfFromGraveyardToBattlefield; mana costs only; the stack source is the graveyard object, so a card that left the graveyard before resolution does nothing (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/retrofitted-transmogrant.test.ts::retrofitted-transmogrant-return",
+            "cards/graveyard-hand/retrofitted-transmogrant.test.ts::retrofitted-transmogrant-from-hand",
+            "cards/graveyard-hand/retrofitted-transmogrant.test.ts::the return ability is not offered from the hand or the battlefield"
+          ],
+          "viewerScenarioIds": [
+            "retrofitted-transmogrant-return",
+            "retrofitted-transmogrant-from-hand"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "d85ea576-a794-44bf-b405-1f1c49477409": {
+      "name": "Sacred Cat",
+      "oracleSha256": "c408a9d01850fad41df272877408ca66bf463e95485053e33948493937cdd2c1",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Embalm {W} ({W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a white Zombie Cat with no mana cost. Embalm only as a sorcery.)",
+          "implementation": [
+            "embalm keyword parse rule: a graveyard ability, sorcery speed, costs {mana} and exiling this card; op createTokenCopyOfSourceCard copies the printed card with setColors [W], adds subtype Zombie and clears the mana cost (CR 702.128)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/sacred-cat.test.ts::sacred-cat-embalm",
+            "cards/graveyard-hand/sacred-cat.test.ts::sacred-cat-embalm-sorcery-speed",
+            "cards/graveyard-hand/sacred-cat.test.ts::embalm: the token is a 1/1 Zombie, and the ability is sorcery speed"
+          ],
+          "viewerScenarioIds": ["sacred-cat-embalm", "sacred-cat-embalm-sorcery-speed"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "44e0ffa3-8915-4c1f-8f1a-4aeea1365f07": {
+      "name": "Simian Spirit Guide",
+      "oracleSha256": "db578fbb9f139562de9c9d336dccbd8878635592c7ee548c3414d08c9b9d63f0",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Exile this card from your hand: Add {R}.",
+          "implementation": [
+            "definition field handManaAbility: the hand card is a mana source (fromHand) that exiles itself to add the mana; the payment planner uses hand sources only when the board cannot pay, fewest first"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/simian-spirit-guide.test.ts::simian-spirit-guide-pays-from-hand",
+            "cards/graveyard-hand/simian-spirit-guide.test.ts::simian-spirit-guide-board-first"
+          ],
+          "viewerScenarioIds": [
+            "simian-spirit-guide-pays-from-hand",
+            "simian-spirit-guide-board-first"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "e7286688-ffbe-4d25-ad55-27990f005368": {
+      "name": "Sliver Hive",
+      "oracleSha256": "c5483126aac0e7b80a9938ced20fc298d4b7ba06186b1d88d6e4079cd9b3c484",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver.",
+          "implementation": [
+            "activation condition \"you control a Sliver\" parsed as countPermanents(you, >= 1)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/sliver-hive.test.ts::sliver-hive-token",
+            "cards/graveyard-hand/sliver-hive.test.ts::sliver-hive-no-sliver",
+            "cards/graveyard-hand/sliver-hive.test.ts::the token ability is offered only while you control a Sliver"
+          ],
+          "viewerScenarioIds": ["sliver-hive-token", "sliver-hive-no-sliver"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "12397dbf-99a9-40c3-aa7c-76d09baad008": {
+      "name": "Teacher's Pest",
+      "oracleSha256": "e09a34b00efa113547bbfc571fb39fb3d4d5ef1e8c86f0cb22d8ff3db0e19bca",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "{B}{G}: Return this card from your graveyard to the battlefield tapped.",
+          "implementation": [
+            "graveyard activated ability (zone graveyard) with op returnSelfFromGraveyardToBattlefield; mana costs only; the stack source is the graveyard object, so a card that left the graveyard before resolution does nothing (CR 400.7)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/teachers-pest.test.ts::teachers-pest-return",
+            "cards/graveyard-hand/teachers-pest.test.ts::teachers-pest-from-hand",
+            "cards/graveyard-hand/teachers-pest.test.ts::the return ability is not offered from the hand or the battlefield"
+          ],
+          "viewerScenarioIds": ["teachers-pest-return", "teachers-pest-from-hand"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a5ae93e9-0385-47fd-9d8f-306e9a6b7fe6": {
+      "name": "Timeless Dragon",
+      "oracleSha256": "4410a1ddc1ddbf3bb730c42bba515a459c779bb2730e728ce48943bed711db61",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Eternalize {2}{W}{W} ({2}{W}{W}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Dragon with no mana cost. Eternalize only as a sorcery.)",
+          "implementation": [
+            "eternalize keyword parse rule: a graveyard ability, sorcery speed, costs {mana} and exiling this card; op createTokenCopyOfSourceCard copies the printed card with setColors [B], adds subtype Zombie, sets base power and toughness 4/4 and clears the mana cost (CR 702.129)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/timeless-dragon.test.ts::timeless-dragon-eternalize",
+            "cards/graveyard-hand/timeless-dragon.test.ts::timeless-dragon-eternalize-sorcery-speed",
+            "cards/graveyard-hand/timeless-dragon.test.ts::eternalize: the token is a 4/4 Zombie, and the ability is sorcery speed"
+          ],
+          "viewerScenarioIds": [
+            "timeless-dragon-eternalize",
+            "timeless-dragon-eternalize-sorcery-speed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "a52a06aa-56fc-4845-bbcd-a54f16369b34": {
+      "name": "Timeless Witness",
+      "oracleSha256": "79e7e22eb6e4750dd43fb0ad0d2a140e315e940a088fc5fd3f020703cab878fb",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Eternalize {5}{G}{G} ({5}{G}{G}, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Human Shaman with no mana cost. Eternalize only as a sorcery.)",
+          "implementation": [
+            "eternalize keyword parse rule: a graveyard ability, sorcery speed, costs {mana} and exiling this card; op createTokenCopyOfSourceCard copies the printed card with setColors [B], adds subtype Zombie, sets base power and toughness 4/4 and clears the mana cost (CR 702.129)"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/timeless-witness.test.ts::timeless-witness-eternalize",
+            "cards/graveyard-hand/timeless-witness.test.ts::timeless-witness-eternalize-sorcery-speed",
+            "cards/graveyard-hand/timeless-witness.test.ts::eternalize: the token is a 4/4 Zombie, and the ability is sorcery speed"
+          ],
+          "viewerScenarioIds": [
+            "timeless-witness-eternalize",
+            "timeless-witness-eternalize-sorcery-speed"
+          ]
+        }
+      ],
+      "gameplayAiScenarioIds": []
+    },
+    "46eefc72-2d9e-4389-8ae1-26d9ee472b5c": {
+      "name": "Tolaria West",
+      "oracleSha256": "c2910eae78a6507e2279b724bfb14e7fe756457fd14c9af34b72946de4d156c5",
+      "implementationStatus": "implemented-unreviewed",
+      "clauses": [
+        {
+          "oracleText": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with mana value 0, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+          "implementation": [
+            "transmute keyword parse rule: a hand ability, sorcery speed, costs {mana} and discarding this card; searches the library for a card whose mana value equals the printed card's, reveals it, puts it into the hand, then shuffles"
+          ],
+          "engineTestIds": [
+            "cards/graveyard-hand/tolaria-west.test.ts::tolaria-west-transmute",
+            "cards/graveyard-hand/tolaria-west.test.ts::tolaria-west-transmute-finds-land"
+          ],
+          "viewerScenarioIds": ["tolaria-west-transmute", "tolaria-west-transmute-finds-land"]
+        }
+      ],
+      "gameplayAiScenarioIds": []
     }
   }
 }

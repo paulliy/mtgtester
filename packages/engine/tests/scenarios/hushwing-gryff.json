@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "card": "Hushwing Gryff",
+  "supportCards": [
+    {
+      "name": "Scenario Sprout",
+      "typeLine": "Creature — Plant",
+      "manaCost": "{1}{G}",
+      "oracleText": "When Scenario Sprout enters, you gain 3 life.",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Shrine",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": "When Scenario Shrine enters, you gain 3 life."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "hushwing-gryff-creature-entering-no-trigger",
+      "title": "Hushwing Gryff: a creature entering does not trigger its enter ability",
+      "clauses": [3],
+      "instructions": ["Cast Scenario Sprout."],
+      "expectedOutcome": "Hushwing Gryff stops the Sprout's enters trigger: you stay at 40 life, and the Sprout is on the battlefield.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Sprout"],
+          "battlefield": ["Hushwing Gryff", "Forest", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Sprout/"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Sprout"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "hushwing-gryff-noncreature-still-triggers",
+      "title": "Hushwing Gryff: a noncreature permanent entering still triggers",
+      "clauses": [3],
+      "instructions": ["Cast Scenario Shrine."],
+      "expectedOutcome": "An artifact that is not a creature entering is not stopped: its trigger resolves and you gain 3 life.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Shrine"],
+          "battlefield": ["Hushwing Gryff", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Shrine/"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P1",
+            "equals": 43
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Shrine"]
+          }
+        }
+      ]
+    }
+  ]
+}

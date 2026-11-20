@@ -1170,6 +1170,8 @@ export class GameServer {
       gameMode,
       disclosure: policy,
       ...replayOption(this.replayIdentity()),
+      // Optional chaining: test seams build a server without a pool.
+      ...(this.deps.pool?.provisional !== undefined && { provisional: this.deps.pool.provisional }),
       ...(humanSeat !== undefined && { humanSeat }),
       store: this.deps.store,
       ...(playbackMode !== undefined && { playbackMode }),

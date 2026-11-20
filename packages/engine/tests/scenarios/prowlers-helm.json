@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "card": "Prowler's Helm",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature — Ogre",
+      "manaCost": "{2}{R}",
+      "power": "3",
+      "toughness": "3"
+    },
+    {
+      "name": "Scenario Wall",
+      "typeLine": "Creature — Wall",
+      "manaCost": "{2}",
+      "power": "0",
+      "toughness": "4"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "prowlers-helm-unblockable",
+      "title": "Prowler's Helm: a non-Wall can't block the equipped creature",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with the equipped Scenario Bear while P2 controls only Scenario Ogre (not a Wall)."
+      ],
+      "expectedOutcome": "P2 is never asked to block; Scenario Bear deals 2 damage.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Scenario Bear",
+            {
+              "card": "Prowler's Helm",
+              "attachedTo": {
+                "player": "P1",
+                "card": "Scenario Bear"
+              }
+            }
+          ]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Ogre"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "prowlers-helm-blockable",
+      "title": "Prowler's Helm: a Wall may block the equipped creature",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with the equipped Scenario Bear; P2 controls Scenario Ogre and Scenario Wall.",
+        "Only the Wall is an eligible blocker; it blocks."
+      ],
+      "expectedOutcome": "The Wall blocks: no damage to P2, and neither creature dies.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Scenario Bear",
+            {
+              "card": "Prowler's Helm",
+              "attachedTo": {
+                "player": "P1",
+                "card": "Scenario Bear"
+              }
+            }
+          ]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre", "Scenario Wall"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Scenario Bear"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Wall", "Scenario Ogre"]
+          }
+        }
+      ]
+    }
+  ]
+}

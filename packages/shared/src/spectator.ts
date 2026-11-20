@@ -49,6 +49,11 @@ export interface SpectatorCard {
    * UI can't tell from the text. Optional only because snapshots saved before it lack the field.
    */
   isToken?: boolean;
+  /**
+   * True for a provisional card (H1): it plays by a machine-checked patch nobody has reviewed
+   * yet, and the UI marks it. Absent for every other card.
+   */
+  provisional?: true;
 }
 
 /**
@@ -105,6 +110,8 @@ export interface SpectatorCommander {
   scryfallId: string | null;
   /** The commander's color identity, which bounds its deck's colors. Absent in older snapshots. */
   colorIdentity?: Color[];
+  /** A provisional commander (H1): machine-checked rules nobody has reviewed. */
+  provisional?: true;
 }
 
 export interface SpectatorSeat {

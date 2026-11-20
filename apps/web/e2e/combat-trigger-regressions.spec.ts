@@ -23,8 +23,10 @@ const pins = JSON.parse(
   cards: { sha256: string; card: { name: string } }[];
 };
 function sourceHashes() {
+  // The repository's file list passed Node's 1 MB default buffer (ENOBUFS); match card-gate.ts.
   const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], {
     encoding: 'utf8',
+    maxBuffer: 1 << 28,
   })
     .trim()
     .split('\n');

@@ -138,3 +138,35 @@ reverted to `def.triggers`, so it is evidence rather than decoration.
   Mutavault's self-animation becomes expressible.
 - **The interpreter emits no `loseAllAbilities`**; it is reachable only from hand-written
   definitions. Real Humility needs layer-7b set-P/T from a `Value` as well.
+
+## Amendment 1 (2026-11-15): a 53-bit digest
+
+The digest was one 32-bit lane of `h = (h ^ x) * prime`. The engine work counters found it
+colliding in benchmark games, and any 32-bit key collides about 8 times over the 2^18
+tapped/untapped mixes of 18 lands (the old one did 12). A collision is a cache hit on a different
+state. `digestOf` now scrambles each word MurmurHash3-style into two lanes that rotate and
+multiply differently and returns 53 bits, the most a JS number holds exactly; strings fold in as
+their own 53-bit digests, and variable-length runs are length-prefixed or terminated.
+`tests/layer-digest.test.ts` pins the width and the absence of collisions on those grids. Games
+and work counts were unchanged on the benchmark seeds.
+
+## Amendment 2 (2026-11-15): tapped status is a key input only when a pass reads it
+
+Tapped status was folded into the digest unconditionally (Iymrith's "ward {4} as long as it's
+untapped"). The stateful mana planner taps a source in every state it searches, so every searched
+state missed the cache and ran a full layer pass: 72% of all layer passes on the benchmark seeds,
+almost all from one Exotic Orchard game.
+
+Tapped status is now gated like graveyards, but measured rather than inferred. Every tapped read a
+layer pass can reach goes through `tappedState` (`cards/selector.ts`), which counts its reads; the
+pass records whether the count moved (`usedTapped`), and the next lookup leaves `tapped` out of the
+key when it did not. This is sound for the graveyard flag's reason: the pass is a function of the
+digest's other inputs plus whatever it read, so a pass that read no tapped status has the same
+answer for every tapped mix of the same board, and a reader entering changes the battlefield part
+of the digest and forces a miss that sets the flag again.
+
+The risk is a raw `.tapped` read added to code a pass reaches. `tests/layer-tap-reads.test.ts`
+fails on one in the files a pass runs (continuous, values, condition, selector, source identity),
+and `MTG_VERIFY_LAYER_CACHE=1` and the `strictInvariants` sampling still recompute on hits. Result
+on `engine-bench --games 6 --turn-cap 40`: layer passes 38,228 to 17,860, every fingerprint
+identical.

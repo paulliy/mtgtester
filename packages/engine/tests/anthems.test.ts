@@ -499,12 +499,12 @@ describe('the interpreter halts rather than guess a tribe (ADR 0008)', () => {
         manaCost: '{2}{R}',
         power: '2',
         toughness: '2',
-        oracleText: 'Other Goblins you control have mountainwalk.',
+        oracleText: 'Other Goblins you control have horsemanship.',
       }),
     );
     expect(def.modeled).toBe(false);
     expect(def.unmodeledReasons).toEqual([
-      'unrecognized rules text: "Other Goblins you control have mountainwalk."',
+      'unrecognized rules text: "Other Goblins you control have horsemanship."',
     ]);
   });
 });

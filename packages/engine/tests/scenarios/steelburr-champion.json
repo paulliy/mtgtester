@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "card": "Steelburr Champion",
+  "scenarios": [
+    {
+      "id": "steelburr-champion-offspring-paid",
+      "title": "Steelburr Champion: paying the offspring cost makes a 1/1 token copy",
+      "clauses": [1],
+      "instructions": ["Cast Steelburr Champion paying its offspring cost ({3}{W}{W})."],
+      "expectedOutcome": "Two Steelburr Champion are on the battlefield: the original and a 1/1 token copy.",
+      "seats": {
+        "P1": {
+          "hand": ["Steelburr Champion"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Steelburr Champion \\(\\{3\\}\\{W\\}\\{W\\}\\) — offspring 1$/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Steelburr Champion", "Steelburr Champion"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "steelburr-champion-offspring-declined",
+      "title": "Steelburr Champion: casting it for its normal cost makes no token",
+      "clauses": [1],
+      "instructions": [
+        "Cast Steelburr Champion for {2}{W} without the offspring cost, with enough mana to have paid it."
+      ],
+      "expectedOutcome": "Only the original Steelburr Champion is on the battlefield; no token copy is created.",
+      "seats": {
+        "P1": {
+          "hand": ["Steelburr Champion"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Steelburr Champion \\(\\{2\\}\\{W\\}\\)$/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Steelburr Champion"]
+          }
+        }
+      ]
+    }
+  ]
+}

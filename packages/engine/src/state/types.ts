@@ -940,6 +940,12 @@ export interface EngineState extends GameState {
    */
   modifiedCreatureDiedThisTurn?: Record<PlayerId, true>;
   /**
+   * Players who declared at least one attacking creature this turn ("if you attacked this
+   * turn", Bloodsoaked Champion). Read only by activation restrictions, never by a continuous
+   * effect, so the layer cache does not digest it. Reset at the start of each turn.
+   */
+  attackedThisTurnPlayers?: Record<PlayerId, true>;
+  /**
    * "If this is the second time this ability has resolved this turn" (Rumor Gatherer): how many
    * times each counted ability has resolved this turn, keyed by the source's battlefield object
    * id and the ability's key. A source that changes zones is a new object with a fresh count
@@ -1016,6 +1022,17 @@ export interface EngineState extends GameState {
   combatDamagePlayersBySource: Record<CardId, PlayerId[]>;
   /** Safety cap: exceeding this halts the game as a probable bug (brief §4). */
   turnCap: number;
+  /**
+   * Provisional cards (H1) already announced in the log by `provisionalCardUsed`, by oracle id.
+   * Absent in a game with no provisional card, so such a game's state is unchanged.
+   */
+  provisionalAnnounced?: string[];
+  /**
+   * Names of the provisional cards the decks held when the game began (H1), sorted. Fixed at
+   * creation, so tokens and copies of a provisional card, which keep its trust marking, never
+   * add to it. Absent in a game with no provisional card.
+   */
+  provisionalDeckCards?: string[];
   /**
    * Additional combat phases waiting to run, most recently inserted first (CR 500.8): each runs
    * directly after the phase it was created in, ahead of anything scheduled after that phase
@@ -1131,6 +1148,18 @@ export interface GameConfig {
    * produce yet. Not used in production paths.
    */
   customDefinitions?: CardDefinition[];
+  /**
+   * Opt in to provisional cards (H1): definitions built from machine-checked patches no person
+   * has reviewed yet. Off by default, and must stay off in every benchmark, fingerprint and
+   * coverage run. `createGame` refuses `provisionalDefinitions` unless this is true.
+   */
+  allowProvisional?: boolean;
+  /**
+   * Definitions with `trust: 'provisional'` (from `interpretProvisional`), by oracle id. Each one
+   * replaces the interpreted definition of a card in a deck only where the interpreter cannot
+   * model that card itself; entries for cards in no deck are ignored.
+   */
+  provisionalDefinitions?: CardDefinition[];
   /**
    * Test hook (ADR 0034 decision 2): rethrow `EngineInvariantError` instead of halting, so a
    * failing test points at the line responsible. Never set in production paths.
