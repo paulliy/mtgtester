@@ -69,6 +69,7 @@ import {
   turnFaceUpCosts,
 } from './legal';
 import { breakYieldsForStop } from '../turn/stops';
+import { announceProvisionalUse, provisionalUseOf } from '../state/provisional-use';
 
 /** Run an activation's cost payment, returning the life paid as part of it (Verrak). */
 function* withLifePaidTally<T>(ctx: GameContext, pay: GameGen<T>): GameGen<[T, number]> {
@@ -156,6 +157,18 @@ function* payActivationCosts(
  * the spell is still countered if ward resolves, and other responses can happen in between.
  */
 export function* applyPriorityAction(
+  ctx: GameContext,
+  player: EnginePlayerState,
+  payload: PriorityActionPayload,
+  outcome: DecisionOutcome,
+): GameGen<void> {
+  // H1: the card is found before the action moves it, and announced once the action took effect.
+  const provisional = provisionalUseOf(ctx, payload);
+  yield* applyPriorityActionBody(ctx, player, payload, outcome);
+  if (provisional !== null) announceProvisionalUse(ctx, player, provisional);
+}
+
+function* applyPriorityActionBody(
   ctx: GameContext,
   player: EnginePlayerState,
   payload: PriorityActionPayload,

@@ -11,7 +11,12 @@ const props = withDefaults(
   defineProps<{
     label: string;
     /** Cards in the zone, top card last (the order zones arrive in). */
-    cards: readonly { id: string; scryfallId?: string | null; name: string }[];
+    cards: readonly {
+      id: string;
+      scryfallId?: string | null;
+      name: string;
+      provisional?: true;
+    }[];
     open: boolean;
     /** A second line under the label, e.g. "4 untapped". */
     detail?: string;
@@ -46,7 +51,12 @@ const shown = computed(() => props.cards.slice(-3));
         class="pile-card"
         :style="{ '--depth': shown.length - 1 - i }"
       >
-        <CardImage :scryfall-id="card.scryfallId ?? null" :name="card.name" size="small" />
+        <CardImage
+          :scryfall-id="card.scryfallId ?? null"
+          :name="card.name"
+          size="small"
+          :provisional="card.provisional === true"
+        />
       </span>
       <span class="pile-count">{{ props.cards.length }}</span>
     </span>

@@ -14,7 +14,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { Engine, RandomDecisionProvider } from '@mtg/engine';
+import { Engine, RandomDecisionProvider, type EnginePlayerConfig } from '@mtg/engine';
 import type {
   DecisionResponse,
   GameEvent,
@@ -29,6 +29,7 @@ import type { ClockTimers } from './decision-clock';
 import { tablePolicy, testerPolicy } from './disclosure';
 import { MatchSession } from './session';
 import type { SeatSetup } from './setup';
+import { provisionalGameConfig, type ProvisionalCatalog } from '../cards/provisional';
 
 // ── The harness ─────────────────────────────────────────────────────────────────────────────
 
@@ -69,6 +70,8 @@ export interface ReplayInput {
   events: readonly GameEvent[];
   /** The sha256 of the card data this process has loaded. */
   currentCardDataSha256: string | null;
+  /** The provisional catalog this process loaded (H1), when it opted in. */
+  provisional?: ProvisionalCatalog;
 }
 
 export interface ReplayResult {
@@ -170,23 +173,43 @@ export function replayFromLog(input: ReplayInput): ReplayResult {
     throw new ReplayRefusedError('the chacha20 key is missing or malformed');
   }
 
+  // A game that played provisional cards (H1) replays only on the exact patch bytes it pinned.
+  for (const pin of config.provisional ?? []) {
+    const admitted = input.provisional?.admitted.find((a) => a.oracleId === pin.oracleId);
+    if (admitted === undefined)
+      throw new ReplayRefusedError(`provisional card ${pin.oracleId} is not loaded`);
+    if (admitted.patchSha256 !== pin.patchSha256 || admitted.source !== pin.source)
+      throw new ReplayRefusedError(
+        `provisional card ${pin.oracleId} differs (stored ${pin.source} ${pin.patchSha256}, current ${admitted.source} ${admitted.patchSha256})`,
+      );
+  }
+  const players: EnginePlayerConfig[] = config.seats.map((seat) => {
+    const deck = input.resolveDeck(seat.deckSnapshotId);
+    return {
+      id: seat.seat,
+      deckId: deck.deckId,
+      commanders: deck.commanders,
+      cards: deck.cards,
+      ...(deck.companion !== undefined ? { companion: deck.companion } : {}),
+      ...(seat.manualMana ? { manualMana: true } : {}),
+    };
+  });
+  const pinned = new Set((config.provisional ?? []).map((pin) => pin.oracleId));
+  const provisional = provisionalGameConfig(input.provisional, players);
   const engine = new Engine(
     {
       gameId: input.gameId,
       seed: input.seed,
       ...(config.rng.kind === 'chacha20' && { rng: 'chacha20' as const, rngKey: config.rng.key }),
       turnCap: config.turnCap,
-      players: config.seats.map((seat) => {
-        const deck = input.resolveDeck(seat.deckSnapshotId);
-        return {
-          id: seat.seat,
-          deckId: deck.deckId,
-          commanders: deck.commanders,
-          cards: deck.cards,
-          ...(deck.companion !== undefined ? { companion: deck.companion } : {}),
-          ...(seat.manualMana ? { manualMana: true } : {}),
-        };
+      // Only the pinned cards: a card admitted since the game was played must not change it.
+      ...(pinned.size > 0 && {
+        allowProvisional: true,
+        provisionalDefinitions: (provisional.provisionalDefinitions ?? []).filter((def) =>
+          pinned.has(def.oracleId),
+        ),
       }),
+      players,
     },
     {
       ...(config.engineOptions.maxStepWork !== undefined && {
@@ -587,6 +610,27 @@ describe('replay from the stored log', () => {
         inputFor(played, { config: { ...played.recorded.config!, cardDataSha256: null } }),
       ),
     ).toThrow(ReplayRefusedError);
+  }, 30_000);
+
+  it('refuses provisional pins (H1) the loaded catalog does not hold at the same bytes', async () => {
+    const played = await playScriptedGame();
+    const pin = { oracleId: 'oracle-pinned', source: 'compiler@test', patchSha256: 'a'.repeat(64) };
+    const config: GameReplayConfig = { ...played.recorded.config!, provisional: [pin] };
+    const catalog = (patchSha256: string): ProvisionalCatalog => ({
+      definitions: new Map(),
+      admitted: [{ name: 'Pinned', oracleId: pin.oracleId, source: pin.source, patchSha256 }],
+      skipped: [],
+    });
+
+    expect(() => replayFromLog(inputFor(played, { config }))).toThrow(/is not loaded/);
+    expect(() =>
+      replayFromLog(inputFor(played, { config, provisional: catalog('b'.repeat(64)) })),
+    ).toThrow(/differs/);
+    // The same bytes pass the check; this game's decks hold no provisional card, so it replays.
+    const replayed = replayFromLog(
+      inputFor(played, { config, provisional: catalog(pin.patchSha256) }),
+    );
+    expect(replayed.hash).toBe(replayStateHash(played.session.engine));
   }, 30_000);
 
   it('refuses a chacha20 config without a usable key', async () => {

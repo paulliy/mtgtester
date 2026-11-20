@@ -5,6 +5,11 @@
  * broadcasts what comes back.
  */
 
+import {
+  provisionalGameConfig,
+  provisionalReplayPins,
+  type ProvisionalCatalog,
+} from '../cards/provisional';
 import { assertNever } from '@mtg/shared';
 import { Engine, formatPlayerLog, formatSpectatorLog } from '@mtg/engine';
 import type { AsyncDecisionProvider, DecisionProvider } from '@mtg/engine';
@@ -171,6 +176,11 @@ export interface MatchSessionOptions {
    * (Card Test Lab), which stores none.
    */
   replay?: ReplayIdentity;
+  /**
+   * The provisional catalog (H1), when the process opted in with `--provisional`. A game whose
+   * decks hold none of its cards is unchanged; one that does opts the engine in for those cards.
+   */
+  provisional?: ProvisionalCatalog;
   /** The one human seat of a `'singlePlayer'` game. */
   humanSeat?: PlayerId;
   /**
@@ -386,6 +396,10 @@ export class MatchSession {
             this.humanSeats.has(s.seat) ? { ...s.config, manualMana: true } : s.config,
           ),
           ...(opts.turnCap !== undefined && { turnCap: opts.turnCap }),
+          ...provisionalGameConfig(
+            opts.provisional,
+            opts.seats.map((s) => s.config),
+          ),
         },
         opts.engineLimits ?? {},
       );
@@ -789,6 +803,10 @@ export class MatchSession {
         turnCap: engineTurnCap(this.engine),
         rng: { kind: this.rngKey === null ? 'legacy' : 'chacha20', key: this.rngKey ?? '' },
         ...(this.opts.engineLimits !== undefined && { engineLimits: this.opts.engineLimits }),
+        provisional: provisionalReplayPins(
+          this.opts.provisional,
+          this.opts.seats.map((s) => s.config),
+        ),
       }),
     };
   }
