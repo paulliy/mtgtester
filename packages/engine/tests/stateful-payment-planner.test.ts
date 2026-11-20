@@ -1,8 +1,9 @@
 /**
  * H7: the stateful mana planner proves an unpayable cast impossible from a capacity bound that
- * gated sources now join, and searches a tap-only board over tapped sets instead of copied games.
- * Both must leave every answer as it was: the same plan (so the same lands are tapped), the same
- * null, the same error. Each agreement test runs the search both ways on one board.
+ * gated sources now join, and solves a board of tap-only and self-sacrificing sources statically
+ * (#46). The bound must leave every answer as it was: the same plan, the same null, the same error.
+ * The static solve picks its own plan, so there the two must agree on whether the cost can be paid.
+ * Each agreement test runs the search both ways on one board.
  */
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
@@ -28,11 +29,14 @@ import {
   copies,
   forest,
   gameConfig,
+  bear,
   island,
+  mountain,
   oracle,
   plains,
   pump,
   spawn,
+  swamp,
 } from './fixtures';
 
 const artifact = (name: string, oracleText: string) =>
@@ -89,6 +93,7 @@ function search(
   cost: ParsedManaCost,
   current: boolean,
   lifeReserved = 0,
+  trace?: { staticSolve?: boolean },
 ): Outcome {
   const player = playerById(ctx, 'P1');
   const allows = allowanceFor(ctx, 'P1', {
@@ -108,6 +113,7 @@ function search(
         lifeReserved,
         0,
         current,
+        trace,
       ),
     };
   } catch (error) {
@@ -115,13 +121,23 @@ function search(
   }
 }
 
-/** Both ways agree on `cost`; returns the shared outcome. */
+/** Both ways agree on `cost` (exactly, unless the static solve answered); returns the current outcome. */
 function agree(ctx: GameContext, manaCost: string, lifeReserved = 0): Outcome {
   const cost = parseManaCost(manaCost).cost!;
   const before = JSON.stringify(ctx.state);
+  const trace: { staticSolve?: boolean } = {};
   const legacy = search(ctx, cost, false, lifeReserved);
-  const current = search(ctx, cost, true, lifeReserved);
-  expect(JSON.stringify(current)).toBe(JSON.stringify(legacy));
+  const current = search(ctx, cost, true, lifeReserved, trace);
+  // The old search ran out of budget: it has no answer to compare.
+  if ('error' in legacy && legacy.error.includes('budget exceeded') && !('error' in current))
+    return current;
+  if (trace.staticSolve) {
+    // The static solve picks its own plan (as `planPayment` does on an ordinary board); what
+    // must agree is whether the cost can be paid.
+    const settled = (outcome: Outcome): string =>
+      'error' in outcome ? outcome.error : outcome.plan === null ? 'unpayable' : 'payable';
+    expect(settled(current)).toBe(settled(legacy));
+  } else expect(JSON.stringify(current)).toBe(JSON.stringify(legacy));
   expect(JSON.stringify(ctx.state)).toBe(before);
   return current;
 }
@@ -362,6 +378,164 @@ describe('Treasure boards', () => {
       for (let i = 0; i < 7; i++) spawn(c, 'P1', treasure());
     });
     expect(agree(ctx, '{4}{W}{U}{B}{R}{G}')).toEqual({ plan: null });
+  });
+
+  /** The plan's sources by name, and whether the static solve answered. */
+  function solve(ctx: GameContext, manaCost: string) {
+    const trace: { staticSolve?: boolean } = {};
+    const outcome = search(ctx, parseManaCost(manaCost).cost!, true, 0, trace);
+    const plan = 'plan' in outcome ? (outcome.plan as { tapCardIds: string[] } | null) : null;
+    return {
+      outcome,
+      static: trace.staticSolve === true,
+      names: plan?.tapCardIds.map((id) => ctx.state.battlefield.find((p) => p.cardId === id)!.name),
+    };
+  }
+
+  it('stateful-planner-treasure-static — ten Treasures pay {4}{W}{U}{B}{R}{G} in one solve, where the search halted (fuzz-173)', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', forest());
+      for (let i = 0; i < 10; i++) spawn(c, 'P1', treasure());
+    });
+    const legacy = search(ctx, parseManaCost('{4}{W}{U}{B}{R}{G}').cost!, false);
+    expect('error' in legacy && legacy.error).toContain('budget exceeded');
+    const { static: wasStatic, names } = solve(ctx, '{4}{W}{U}{B}{R}{G}');
+    expect(wasStatic).toBe(true);
+    // Both lands, then the seven Treasures the other seven pips need: no Treasure to spare.
+    expect(names!.filter((name) => name !== 'Test Treasure').sort()).toEqual([
+      'Exotic Orchard',
+      'Forest',
+    ]);
+    expect(names!.filter((name) => name === 'Test Treasure')).toHaveLength(7);
+  });
+
+  it('stateful-planner-treasure-many — 33 Treasures and an Orchard pay five colors and four more (fuzz-218)', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      for (let i = 0; i < 33; i++) spawn(c, 'P1', treasure());
+    });
+    const { static: wasStatic, names } = solve(ctx, '{4}{W}{U}{B}{R}{G}');
+    expect(wasStatic).toBe(true);
+    expect(names).toHaveLength(9);
+    expect(names).toContain('Exotic Orchard');
+  });
+
+  it('stateful-planner-treasure-keeps — a cast the lands can pay sacrifices no Treasure', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', forest());
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', treasure());
+    });
+    expect(solve(ctx, '{G}').names).toEqual(['Forest']);
+    expect(solve(ctx, '{U}').names).toEqual(['Exotic Orchard']);
+    expect(solve(ctx, '{1}{G}').names!.sort()).toEqual(['Exotic Orchard', 'Forest']);
+  });
+
+  it('stateful-planner-treasure-hand-back — a source that reads the payer’s own board keeps the search', () => {
+    // Reflecting Pool reads P1's own lands. A Treasure leaving cannot change that, but the static
+    // solve only trusts kinds that read nothing of the payer's board once a source sacrifices.
+    const pool = () =>
+      land('Test Pool', '{T}: Add one mana of any type that a land you control could produce.');
+    const withTreasure = board((c) => {
+      spawn(c, 'P1', forest());
+      spawn(c, 'P1', pool());
+      spawn(c, 'P1', treasure());
+    });
+    const tapOnly = board((c) => {
+      spawn(c, 'P1', forest());
+      spawn(c, 'P1', pool());
+    });
+    expect(solve(withTreasure, '{G}{G}').static).toBe(false);
+    expect(solve(tapOnly, '{G}{G}').static).toBe(true);
+    expect(solve(tapOnly, '{G}{G}').names!.sort()).toEqual(['Forest', 'Test Pool']);
+  });
+
+  it('stateful-planner-treasure-cast — a real cast pays from the static plan and sacrifices only what it used', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', forest());
+      for (let i = 0; i < 4; i++) spawn(c, 'P1', treasure());
+    });
+    const spell = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Rainbow',
+        typeLine: 'Creature — Shapeshifter',
+        manaCost: '{W}{U}{B}{G}',
+        power: '2',
+        toughness: '2',
+      }),
+      'hand',
+    );
+    const player = playerById(ctx, 'P1');
+    const cast = computePriorityOptions(ctx, player).find(
+      (action) => action.type === 'castSpell' && action.description.includes(spell.name),
+    );
+    expect(cast).toBeDefined();
+    pump(
+      applyPriorityAction(ctx, player, cast!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+      () => undefined,
+      { strict: true },
+    );
+    expect(ctx.state.stack.some((entry) => entry.description.includes(spell.name))).toBe(true);
+    // Forest makes G, the Orchard U or W, and two Treasures the rest.
+    expect(ctx.state.battlefield.filter((p) => p.name === 'Test Treasure')).toHaveLength(2);
+    expect(
+      ctx.state.battlefield
+        .filter((p) => p.name !== 'Test Treasure' && p.controllerId === 'P1')
+        .every((p) => p.tapped),
+    ).toBe(true);
+    expect(player.manaEntries).toEqual([]);
+  });
+});
+
+describe('a counted amount', () => {
+  const brigid = () =>
+    oracle({
+      name: 'Test Brigid',
+      typeLine: 'Legendary Creature — Kithkin Druid',
+      manaCost: '{1}{G}{W}',
+      power: '2',
+      toughness: '3',
+      oracleText: '{T}: Add X {G} or X {W}, where X is the number of other creatures you control.',
+    });
+  /** Fuzz-200's board: Brigid, Fellwar Stones that make every color, three Plains. */
+  function brigidBoard(tapped: boolean) {
+    return board((c) => {
+      for (const make of [swamp, mountain, forest]) spawn(c, 'P2', make());
+      spawn(c, 'P1', brigid()).tapped = tapped;
+      for (let i = 0; i < 2; i++) spawn(c, 'P1', bear());
+      // Distinct names, so no two are interchangeable and the search must try each.
+      for (let i = 0; i < 4; i++)
+        spawn(
+          c,
+          'P1',
+          artifact(
+            `Test Stone ${i}`,
+            '{T}: Add one mana of any color that a land an opponent controls could produce.',
+          ),
+        );
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', plains());
+    });
+  }
+
+  it('stateful-planner-counted-bound — "X is the number of other creatures" keeps the bound, and an unpayable cast says so (fuzz-200)', () => {
+    const ctx = brigidBoard(true);
+    const legacy = search(ctx, parseManaCost('{6}{W}{G}{G}').cost!, false);
+    expect('error' in legacy && legacy.error).toContain('budget exceeded');
+    expect(search(ctx, parseManaCost('{6}{W}{G}{G}').cost!, true)).toEqual({ plan: null });
+  }, 30_000);
+
+  it('stateful-planner-counted-pays — untapped, Brigid adds her two and the cast is paid', () => {
+    const ctx = brigidBoard(false);
+    const outcome = agree(ctx, '{6}{W}{G}{G}');
+    expect(outcome).not.toEqual({ plan: null });
+    expect('error' in outcome).toBe(false);
   });
 });
 
