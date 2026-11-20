@@ -375,6 +375,15 @@ function* applyPriorityActionBody(
           ...(ctx.state.temporaryGraveyardAbilities[card.cardId] ?? []),
         ][payload.index];
         if (activated === undefined) throw new Error('engine bug: activated ability index invalid');
+        if (
+          activated.condition !== undefined &&
+          !evaluateCondition(ctx, activated.condition, {
+            cardId: card.cardId,
+            controllerId: player.id,
+          })
+        ) {
+          throw new Error('activated ability condition is not met');
+        }
 
         // Every mana component, for the same purpose `computePriorityOptions` priced it with —
         // otherwise mana that may only pay for activations would make an offered action unpayable.
@@ -398,7 +407,9 @@ function* applyPriorityActionBody(
         const id = `o-${s.nextObjectNum++}` as ObjectId;
         const stackEntry: EngineStackObject = {
           id,
-          sourceId: id,
+          // The graveyard object the ability was activated from, so an effect on "this card"
+          // acts only while it is still that object (CR 400.7).
+          sourceId: card.id,
           controllerId: player.id,
           kind: 'activatedAbility' as const,
           description: `${card.name} — ${description}`,

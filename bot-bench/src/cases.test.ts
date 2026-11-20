@@ -79,7 +79,7 @@ describe('parseBenchCase', () => {
   it('refuses a card the engine does not model', async () => {
     const json = valid();
     (json['position'] as { seats: Record<string, { hand?: string[] }> }).seats['P4'] = {
-      hand: ['Steel Leaf Champion'],
+      hand: ['Raphael, the Nightwatcher'],
     };
     const parsed = parseBenchCase(json);
     expect(() => openCase(parsed)).toThrow(/does not model/);

@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "card": "Haunt of the Dead Marshes",
+  "supportCards": [
+    {
+      "name": "Scenario Legend",
+      "typeLine": "Legendary Creature — Human",
+      "manaCost": "{2}{W}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "haunt-of-the-dead-marshes-return",
+      "title": "Haunt of the Dead Marshes: with a legendary creature, return it from your graveyard tapped",
+      "clauses": [2],
+      "instructions": [
+        "With Scenario Legend on the battlefield, activate Haunt of the Dead Marshes from your graveyard.",
+        "Scry 1: keep the top card on top."
+      ],
+      "expectedOutcome": "Haunt of the Dead Marshes returns tapped and its enters trigger scries 1.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Haunt of the Dead Marshes"],
+          "battlefield": ["Scenario Legend", "Swamp", "Swamp", "Swamp"],
+          "libraryTop": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Haunt of the Dead Marshes \\(graveyard\\)/"
+        },
+        {
+          "player": "P1",
+          "choose": "/top/i"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Haunt of the Dead Marshes"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Haunt of the Dead Marshes"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Haunt of the Dead Marshes",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "haunt-of-the-dead-marshes-no-legend",
+      "title": "Haunt of the Dead Marshes: activate only if you control a legendary creature",
+      "clauses": [2],
+      "instructions": [
+        "Without a legendary creature, the ability is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
+      "expectedOutcome": "Haunt of the Dead Marshes stays in your graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Glimpse"],
+          "graveyard": ["Haunt of the Dead Marshes"],
+          "battlefield": ["Scenario Bear", "Swamp", "Swamp", "Swamp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Haunt of the Dead Marshes"]
+          }
+        }
+      ]
+    }
+  ]
+}

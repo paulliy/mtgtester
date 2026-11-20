@@ -9,34 +9,35 @@
         "setup",
         "model",
         "coverage",
-        "authoring"
+        "authoring",
+        "compiler"
       ],
-      "commit": "28d5449c",
+      "commit": "9727a81e",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 54.78,
+      "calibrationMs": 63.75,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 7.03,
+          "value": 6.86,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.391
+          "spread": 0.284
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.89,
+          "value": 7.02,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.288
+          "spread": 0.222
         },
         "setup.msPerGame": {
-          "value": 0.89,
+          "value": 0.81,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.099
+          "spread": 0.046
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -45,7 +46,25 @@
           "kind": "exact"
         },
         "model.default.promptTokensPerTurn": {
-          "value": 9112,
+          "value": 9159,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.default.cacheablePromptSharePct": {
+          "value": 12.25,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.default.longPrefixCacheableSharePct": {
+          "value": 0,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.default.uncachedPromptTokensPerTurn": {
+          "value": 8037,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -57,7 +76,25 @@
           "kind": "exact"
         },
         "model.model.promptTokensPerTurn": {
-          "value": 9112,
+          "value": 9159,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.model.cacheablePromptSharePct": {
+          "value": 12.25,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.model.longPrefixCacheableSharePct": {
+          "value": 0,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.model.uncachedPromptTokensPerTurn": {
+          "value": 8037,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -69,19 +106,67 @@
           "kind": "exact"
         },
         "model.bot.promptTokensPerTurn": {
-          "value": 827,
+          "value": 841,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.bot.cacheablePromptSharePct": {
+          "value": 13.3,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.bot.longPrefixCacheableSharePct": {
+          "value": 0,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.bot.uncachedPromptTokensPerTurn": {
+          "value": 729,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.botCached.callsPerTurn": {
+          "value": 0.4,
+          "unit": "calls",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.botCached.promptTokensPerTurn": {
+          "value": 856,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.botCached.cacheablePromptSharePct": {
+          "value": 28.9,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.botCached.longPrefixCacheableSharePct": {
+          "value": 0,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.botCached.uncachedPromptTokensPerTurn": {
+          "value": 609,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 4952,
+          "value": 5022,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 60.75,
+          "value": 61.214,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -117,19 +202,19 @@
           "kind": "exact"
         },
         "authoring.poolMutantsLeftPct": {
-          "value": 79.79,
+          "value": 78.76,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 39.44,
+          "value": 40.44,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolCardsFullyScaffolded": {
-          "value": 126,
+          "value": 133,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
@@ -141,7 +226,7 @@
           "kind": "exact"
         },
         "authoring.referenceKillsReproducedPct": {
-          "value": 16.67,
+          "value": 20,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -150,6 +235,18 @@
           "value": 0,
           "unit": "drafts",
           "better": "lower",
+          "kind": "exact"
+        },
+        "compiler.textCheckSettledPatches": {
+          "value": 45,
+          "unit": "patches",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "compiler.textCheckPoolMatches": {
+          "value": 1028,
+          "unit": "cards",
+          "better": "higher",
           "kind": "exact"
         }
       },
@@ -167,34 +264,35 @@
         "setup",
         "model",
         "coverage",
-        "authoring"
+        "authoring",
+        "compiler"
       ],
-      "commit": "28d5449c",
+      "commit": "9727a81e",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 65.99,
+      "calibrationMs": 66.94,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 14.21,
+          "value": 13.87,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.08
+          "spread": 0.082
         },
         "engine.medianGameMsPerDecision": {
-          "value": 13.49,
+          "value": 13.09,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.09
+          "spread": 0.118
         },
         "setup.msPerGame": {
-          "value": 1.06,
+          "value": 0.85,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.24
+          "spread": 0.041
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
@@ -203,7 +301,25 @@
           "kind": "exact"
         },
         "model.default.promptTokensPerTurn": {
-          "value": 19148,
+          "value": 19200,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.default.cacheablePromptSharePct": {
+          "value": 8.94,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.default.longPrefixCacheableSharePct": {
+          "value": 0,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.default.uncachedPromptTokensPerTurn": {
+          "value": 17483,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -215,7 +331,25 @@
           "kind": "exact"
         },
         "model.model.promptTokensPerTurn": {
-          "value": 19148,
+          "value": 19200,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.model.cacheablePromptSharePct": {
+          "value": 8.94,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.model.longPrefixCacheableSharePct": {
+          "value": 0,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.model.uncachedPromptTokensPerTurn": {
+          "value": 17483,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
@@ -227,19 +361,67 @@
           "kind": "exact"
         },
         "model.bot.promptTokensPerTurn": {
-          "value": 1898,
+          "value": 1919,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.bot.cacheablePromptSharePct": {
+          "value": 9.66,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.bot.longPrefixCacheableSharePct": {
+          "value": 0,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.bot.uncachedPromptTokensPerTurn": {
+          "value": 1733,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.botCached.callsPerTurn": {
+          "value": 0.605,
+          "unit": "calls",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.botCached.promptTokensPerTurn": {
+          "value": 1942,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.botCached.cacheablePromptSharePct": {
+          "value": 21.34,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.botCached.longPrefixCacheableSharePct": {
+          "value": 0,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.botCached.uncachedPromptTokensPerTurn": {
+          "value": 1527,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 4952,
+          "value": 5022,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 60.75,
+          "value": 61.214,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -275,19 +457,19 @@
           "kind": "exact"
         },
         "authoring.poolMutantsLeftPct": {
-          "value": 79.05,
+          "value": 78.98,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 40.47,
+          "value": 40.45,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolCardsFullyScaffolded": {
-          "value": 1040,
+          "value": 1058,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
@@ -299,7 +481,7 @@
           "kind": "exact"
         },
         "authoring.referenceKillsReproducedPct": {
-          "value": 16.67,
+          "value": 20,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -308,6 +490,18 @@
           "value": 0,
           "unit": "drafts",
           "better": "lower",
+          "kind": "exact"
+        },
+        "compiler.textCheckSettledPatches": {
+          "value": 45,
+          "unit": "patches",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "compiler.textCheckPoolMatches": {
+          "value": 1028,
+          "unit": "cards",
+          "better": "higher",
           "kind": "exact"
         }
       },

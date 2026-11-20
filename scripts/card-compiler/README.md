@@ -56,8 +56,25 @@ model cannot invent primitives.
 5. **Text check** (`render.ts`, free): a deterministic renderer turns the patch back into English
    and compares it with the Oracle lines after normalizing wording. A match settles the meaning
    check with no model call. Anything it cannot render, or renders differently, goes on to 6 and 7.
-   On trial 01 it settled 9 of 20 valid patches, and both wrong patches fell through to the model.
-   `bun run scripts/card-compiler/render.ts --mismatches` reports its coverage on modeled cards.
+   It settles 45 of the 129 committed trial patches (35%; it was 10 before the November 2026
+   widening), and both patches the trial 01 audit found wrong still fall through to the model.
+   `bun run scripts/card-compiler/settle.ts` lists what settles and why the rest do not;
+   `bun run scripts/card-compiler/render.ts --mismatches` reports coverage on modeled pool cards.
+   Where Oracle words one IR several ways ("gain 1 life for each Elf", "gain X life, where X is
+   the number of Elves"), the renderer writes all of them as an alternative group and a printed
+   line may match any; each wording must mean exactly the IR.
+
+   **Soundness guard.** A wrong patch that settles would reach review marked as checked, so
+   `packages/server/src/hill-climb/text-check.test.ts` checks two things. Every settled trial
+   patch must have a hand audit entry in `settle-audit.json` saying it is correct, so a renderer
+   change that settles a new patch fails until someone audits it. And every single-step mutant of
+   a settled patch or a matching pool card (`settle-mutants.ts`: numbers, flags, enum swaps,
+   dropped or reordered list items, deleted keys, and keys added from other nodes of the same
+   shape) that still validates and means something else must fail to settle. When that test names
+   a survivor, either the renderer ignores a field (make it read the field, or refuse the node)
+   or the two definitions really are equivalent (add the rule to `canonicalDefinition`, with the
+   engine fact that makes it true).
+
 6. **Back-translate**: a second call sees only the patch (descriptions removed, card name hidden) and
    writes the rules text it implements.
 7. **Judge**: a third call compares the real lines with the back-translation and lists any difference

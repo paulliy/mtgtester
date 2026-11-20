@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "card": "Tolaria West",
+  "supportCards": [
+    {
+      "name": "Scenario Trinket",
+      "typeLine": "Artifact",
+      "manaCost": "{0}",
+      "oracleText": ""
+    },
+    {
+      "name": "Scenario Sprite",
+      "typeLine": "Creature — Faerie",
+      "manaCost": "{U}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "tolaria-west-transmute",
+      "title": "Tolaria West: transmute finds a card with mana value 0",
+      "clauses": [3],
+      "instructions": [
+        "Activate transmute from your hand, paying with your lands.",
+        "Search your library and take Scenario Trinket."
+      ],
+      "expectedOutcome": "Tolaria West is discarded, Scenario Trinket is revealed and put into your hand, Scenario Sprite (mana value 1) stays in the library, and the library is shuffled.",
+      "seats": {
+        "P1": {
+          "hand": ["Tolaria West"],
+          "battlefield": ["Island", "Island", "Island"],
+          "libraryTop": ["Scenario Sprite", "Scenario Trinket"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Tolaria West \\(hand\\): Transmute/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Scenario Trinket/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Trinket"],
+            "lacks": ["Tolaria West"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Tolaria West"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Scenario Sprite"],
+            "lacks": ["Scenario Trinket"]
+          }
+        },
+        {
+          "event": {
+            "type": "shuffle",
+            "count": 1
+          }
+        },
+        {
+          "event": {
+            "type": "searchFound",
+            "payload": "\"revealed\":true",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "tolaria-west-transmute-finds-land",
+      "title": "Tolaria West: lands have mana value 0, so transmute can find one",
+      "clauses": [3],
+      "instructions": [
+        "Activate transmute with only a mana value 1 nonland card and basic lands in your library.",
+        "Take a Forest."
+      ],
+      "expectedOutcome": "A basic land is offered and put into your hand; Scenario Sprite (mana value 1) is not offered and stays in the library.",
+      "seats": {
+        "P1": {
+          "hand": ["Tolaria West"],
+          "battlefield": ["Island", "Island", "Island"],
+          "libraryTop": ["Scenario Sprite"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Tolaria West \\(hand\\): Transmute/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Put Forest/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Forest"],
+            "lacks": ["Scenario Sprite", "Tolaria West"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Tolaria West"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Scenario Sprite"]
+          }
+        },
+        {
+          "event": {
+            "type": "shuffle",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

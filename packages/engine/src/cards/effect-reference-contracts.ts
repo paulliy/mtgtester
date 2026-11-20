@@ -428,6 +428,8 @@ export const EFFECT_REFERENCE_CONTRACTS = {
   mayPayXThenDealDamage: { target: damage },
   destroyEachNonlandMVFromDamagedControllers: {},
   returnSelfFromGraveyardToHand: {},
+  returnSelfFromGraveyardToBattlefield: {},
+  createTokenCopyOfSourceCard: {},
   returnDiedSourceToBattlefield: {},
   putAnyFromHandOnBottomThenDraw: {},
   putDepartedSourceIntoLibrary: {},

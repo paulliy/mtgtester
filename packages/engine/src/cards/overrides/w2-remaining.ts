@@ -13,7 +13,7 @@ import {
   toughnessAtLeast,
   YOURS,
 } from '../selector';
-import { NINJA_1_1_BLACK, RABBIT_1_1_WHITE, SPIDER_2_2_REACH_GREEN } from '../tokens';
+import { NINJA_1_1_BLACK, SPIDER_2_2_REACH_GREEN } from '../tokens';
 import { constant } from '../value';
 import { mana, manaCost, SAC_SELF, sacOther, spell, TAP, triggered } from '../templates';
 import { defineCard, unsupportedCard } from './index';
@@ -161,36 +161,7 @@ export function registerW2RemainingOverrides(): void {
     },
   );
 
-  defineCard('5a343a5f-3f9b-43c3-8532-8391de7a5443', 'Jacked Rabbit', ['Ravenous'], {
-    ravenous: true,
-    entersWithCounters: { '+1/+1': { kind: 'xValue' } },
-    triggers: [
-      {
-        kind: 'triggered',
-        trigger: {
-          when: 'enters',
-          subject: { kind: 'self' },
-          condition: { kind: 'announcedXAtLeast', n: 5 },
-        },
-        targets: [],
-        effects: [{ op: 'draw', count: constant(1) }],
-        description: 'Ravenous — draw a card if X was 5 or greater',
-      },
-      {
-        kind: 'triggered',
-        trigger: { when: 'attacks', subject: { kind: 'self' } },
-        targets: [],
-        effects: [
-          {
-            op: 'createToken',
-            spec: RABBIT_1_1_WHITE,
-            count: { kind: 'powerOfSource' },
-          },
-        ],
-        description: 'Attack — create Rabbits equal to this creature’s power',
-      },
-    ],
-  });
+  // Jacked Rabbit is interpreted: the ravenous parse rule reproduces this override's shape.
 
   defineCard(
     'fe83087d-c6c1-40be-9295-baaa1c6b2db1',
@@ -329,26 +300,7 @@ export function registerW2RemainingOverrides(): void {
     },
   );
 
-  defineCard('74868bc0-6081-4f46-a2c6-9521cd5465aa', 'Tender Wildguide', ['Offspring {2}'], {
-    optionalAdditionalCost: { mechanic: 'offspring', cost: manaCost('{2}') },
-    triggers: [
-      {
-        kind: 'triggered',
-        trigger: { when: 'enters', subject: { kind: 'self' } },
-        targets: [],
-        effects: [
-          {
-            op: 'createTokenCopyOf',
-            ref: 'source',
-            count: { kind: 'optionalCostCount', mechanic: 'offspring' },
-            powerOverride: 1,
-            toughnessOverride: 1,
-          },
-        ],
-        description: 'Offspring — create a 1/1 token copy',
-      },
-    ],
-  });
+  // Tender Wildguide is interpreted: the offspring parse rule reproduces this override exactly.
 
   defineCard(
     'f8e17f4f-080d-4bba-bd05-ca27e94ccecc',

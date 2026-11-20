@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "card": "Teacher's Pest",
+  "scenarios": [
+    {
+      "id": "teachers-pest-return",
+      "title": "Teacher's Pest: return this card from your graveyard to the battlefield tapped",
+      "clauses": [3],
+      "instructions": ["Activate Teacher's Pest's ability from your graveyard."],
+      "expectedOutcome": "Teacher's Pest returns to the battlefield tapped.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Teacher's Pest"],
+          "battlefield": ["Swamp", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Teacher.s Pest \\(graveyard\\)/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Teacher's Pest"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Teacher's Pest"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Teacher's Pest",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "teachers-pest-from-hand",
+      "title": "Teacher's Pest: the ability works only from the graveyard",
+      "clauses": [3],
+      "instructions": ["With Teacher's Pest in your hand, cast it."],
+      "expectedOutcome": "No return ability is offered from the hand; Teacher's Pest enters untapped the normal way.",
+      "seats": {
+        "P1": {
+          "hand": ["Teacher's Pest"],
+          "battlefield": ["Swamp", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Teacher.s Pest/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Teacher's Pest"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Teacher's Pest",
+            "equals": false
+          }
+        }
+      ]
+    }
+  ]
+}
