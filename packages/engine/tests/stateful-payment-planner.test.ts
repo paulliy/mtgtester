@@ -492,6 +492,32 @@ describe('Treasure boards', () => {
     ).toBe(true);
     expect(player.manaEntries).toEqual([]);
   });
+
+  it('stateful-planner-filter-static — a filter land joins the static solve (fuzz-131, fuzz-144)', () => {
+    const cairns = () =>
+      land('Test Cairns', '{T}: Add {C}.\n{B/R}, {T}: Add {B}{B}, {B}{R}, or {R}{R}.');
+    const lands = (c: GameContext) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', plains());
+      spawn(c, 'P1', swamp());
+      spawn(c, 'P1', mountain());
+      spawn(c, 'P1', cairns());
+    };
+    // Only the filter makes the second R: it is paid for and used.
+    const ctx = board(lands);
+    const { static: wasStatic, names } = solve(ctx, '{W}{B}{R}{R}');
+    expect(wasStatic).toBe(true);
+    expect(names).toContain('Test Cairns');
+    expect(agree(ctx, '{W}{B}{R}{R}')).not.toEqual({ plan: null });
+    // With Treasures too it stays one static solve, payable or not.
+    const withTreasures = board((c) => {
+      lands(c);
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', treasure());
+    });
+    expect(solve(withTreasures, '{1}{W}{B}{R}{R}{G}').static).toBe(true);
+    expect(agree(withTreasures, '{1}{W}{B}{R}{R}{G}')).not.toEqual({ plan: null });
+    expect(agree(withTreasures, '{5}{W}{B}{R}{R}{G}')).toEqual({ plan: null });
+  });
 });
 
 describe('a counted amount', () => {
@@ -894,6 +920,14 @@ describe('sacrifice mana sources', () => {
       // Rule statics are listed as irrelevant or they count against it.
       expect(keeps(holder([], [{ kind: 'attackTax' }]))).toBe(true);
       expect(keeps(holder([], [{ kind: 'triggerAdditionalTime' }]))).toBe(true);
+      // Damage modifiers change only damage (Neriv, Heart of the Storm on a Treasure board, fuzz-26).
+      for (const kind of [
+        'damageDoubled',
+        'damageDoubledToOpponents',
+        'damageHalvedToYou',
+        'preventCombatDamageToSelf',
+      ])
+        expect(keeps(holder([], [{ kind }])), kind).toBe(true);
       expect(keeps(holder([], [{ kind: 'cantActivateAbilities' }]))).toBe(false);
       expect(keeps(holder([], [{ kind: 'lifeGainReplacement' }]))).toBe(false);
       expect(keeps(holder([], [{ kind: 'aKindThatDoesNotExistYet' }]))).toBe(false);

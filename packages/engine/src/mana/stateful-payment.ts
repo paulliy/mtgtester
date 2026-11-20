@@ -256,6 +256,25 @@ export function selfSacrificeSource(source: ManaSource): boolean {
 }
 
 /**
+ * A source that taps and pays mana to make a fixed production (a filter land's "{B/R}, {T}: Add
+ * {B}{B}", Signets): the mana it spends comes from the same payment, which `planPayment` already
+ * sequences (`solveWithCostly`), and activating it changes nothing else.
+ */
+export function manaCostTapSource(source: ManaSource): boolean {
+  return (
+    source.manaCost !== undefined &&
+    source.costs.some((cost) => cost.kind === 'tap') &&
+    source.costs.every((cost) => cost.kind === 'tap' || cost.kind === 'mana') &&
+    (source.onActivate?.length ?? 0) === 0 &&
+    source.convoke !== true &&
+    source.sacrifices === undefined &&
+    source.taps === undefined &&
+    source.resources === undefined &&
+    (source.stateDependentProduction !== true || source.productionSpec !== undefined)
+  );
+}
+
+/**
  * Dynamic production that reads nothing a payer's own permanent leaving could change: the
  * opponents' lands, the commander's identity, a color chosen on entry, cards exiled with it.
  */
@@ -823,20 +842,25 @@ export function searchPayment(
     }
   };
   /**
-   * Under the premise, a board whose every source only taps, or taps and sacrifices itself for a
-   * fixed production, is the ordinary static payment: activating one changes nothing but the pool
+   * Under the premise, a board whose every source only taps, taps and pays mana (a filter land), or
+   * taps and sacrifices itself for a fixed production, is the ordinary static payment: activating one changes nothing but the pool
    * and that one permanent, and nothing left reads it (`leavingBound`; a dynamic source counts
    * only when what it reads is not the payer's own board). `planPayment` solves it exactly, in the
    * keep-value order `manaSourcesFor` gives, as it does when no source on the board is dynamic.
    * Replaying the activations one by one cannot add a payment, and it branched on every color of
    * every Treasure: {4}{W}{U}{B}{R}{G} from ten Treasures halted on the state budget (fuzz-173,
-   * fuzz-218).
+   * fuzz-218), and a filter land kept it searching every order (fuzz-131, fuzz-144).
    */
   const staticSolve = (): PaymentPlan | null | typeof handBack => {
     if (!premise || !fixedCapacity) return handBack;
     const payer = ctx.state.players.find((p) => p.id === player.id)!;
     const rootSources = sourcesFor(ctx, payer);
-    if (!rootSources.every((source) => tapOnlySource(source) || selfSacrificeSource(source)))
+    if (
+      !rootSources.every(
+        (source) =>
+          tapOnlySource(source) || selfSacrificeSource(source) || manaCostTapSource(source),
+      )
+    )
       return handBack;
     // Tapping removes nothing; a sacrifice needs nothing in play to read the permanent leaving.
     const sacrificing = rootSources.some(selfSacrificeSource);

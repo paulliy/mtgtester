@@ -225,6 +225,13 @@ const RULES_IRRELEVANT_TO_PRODUCTION: ReadonlySet<string> = new Set([
   'additionalLandDrops',
   'artifactTokenCreatesThopter',
   'counterPlacementReplacement',
+  // Damage modifiers change only how much damage is dealt. No source's production reads damage,
+  // and ending one never raises a life total, so the life checks keep their premise too (Neriv,
+  // Heart of the Storm on a Treasure board dropped the bound and halted fuzz-26).
+  'damageDoubled',
+  'damageDoubledToOpponents',
+  'damageHalvedToYou',
+  'preventCombatDamageToSelf',
   'spellCastLimit',
   'spellCostIncrease',
   // A trigger waits for the stack, so doubling, adding to or suppressing one changes nothing a
