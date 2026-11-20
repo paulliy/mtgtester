@@ -416,8 +416,6 @@ describe('Treasure boards', () => {
       spawn(c, 'P1', forest());
       for (let i = 0; i < 10; i++) spawn(c, 'P1', treasure());
     });
-    const legacy = search(ctx, parseManaCost('{4}{W}{U}{B}{R}{G}').cost!, false);
-    expect('error' in legacy && legacy.error).toContain('budget exceeded');
     const { static: wasStatic, names } = solve(ctx, '{4}{W}{U}{B}{R}{G}');
     expect(wasStatic).toBe(true);
     // Both lands, then the seven Treasures the other seven pips need: no Treasure to spare.
@@ -555,7 +553,7 @@ describe('a counted amount', () => {
       spawn(c, 'P1', brigid()).tapped = tapped;
       for (let i = 0; i < 2; i++) spawn(c, 'P1', bear());
       // Distinct names, so no two are interchangeable and the search must try each.
-      for (let i = 0; i < 4; i++)
+      for (let i = 0; i < 7; i++)
         spawn(
           c,
           'P1',
@@ -570,14 +568,14 @@ describe('a counted amount', () => {
 
   it('stateful-planner-counted-bound — "X is the number of other creatures" keeps the bound, and an unpayable cast says so (fuzz-200)', () => {
     const ctx = brigidBoard(true);
-    const legacy = search(ctx, parseManaCost('{6}{W}{G}{G}').cost!, false);
+    const legacy = search(ctx, parseManaCost('{9}{W}{G}{G}').cost!, false);
     expect('error' in legacy && legacy.error).toContain('budget exceeded');
-    expect(search(ctx, parseManaCost('{6}{W}{G}{G}').cost!, true)).toEqual({ plan: null });
+    expect(search(ctx, parseManaCost('{9}{W}{G}{G}').cost!, true)).toEqual({ plan: null });
   }, 30_000);
 
   it('stateful-planner-counted-pays — untapped, Brigid adds her two and the cast is paid', () => {
     const ctx = brigidBoard(false);
-    const outcome = agree(ctx, '{6}{W}{G}{G}');
+    const outcome = agree(ctx, '{9}{W}{G}{G}');
     expect(outcome).not.toEqual({ plan: null });
     expect('error' in outcome).toBe(false);
   });
@@ -662,7 +660,7 @@ describe('the static solve, widened (#46)', () => {
       for (const make of [swamp, mountain, forest]) spawn(c, 'P2', make());
       spawn(c, 'P1', caryatid()).tapped = true;
       spawn(c, 'P1', giant());
-      for (let i = 0; i < 4; i++)
+      for (let i = 0; i < 7; i++)
         spawn(
           c,
           'P1',
@@ -673,9 +671,9 @@ describe('the static solve, widened (#46)', () => {
         );
       for (let i = 0; i < 3; i++) spawn(c, 'P1', plains());
     });
-    const legacy = search(ctx, parseManaCost('{6}{W}{G}{G}').cost!, false);
+    const legacy = search(ctx, parseManaCost('{9}{W}{G}{G}').cost!, false);
     expect('error' in legacy && legacy.error).toContain('budget exceeded');
-    expect(staticOf(ctx, '{6}{W}{G}{G}').plan).toBeNull();
+    expect(staticOf(ctx, '{9}{W}{G}{G}').plan).toBeNull();
     // Untapped, she makes two of one color: the bound counts her at that.
     const untapped = board((c) => {
       spawn(c, 'P1', caryatid());

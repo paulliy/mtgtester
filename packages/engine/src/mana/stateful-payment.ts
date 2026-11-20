@@ -15,7 +15,7 @@ import { payManaCost } from '../effects/resolve';
 import { UnmodeledCardError } from '../errors';
 import type { PendingDecision } from '../decisions';
 import { battlefieldCharacteristics } from '../effects/continuous';
-import type { ManaAbilitySpec } from '../cards/ability';
+import type { ManaAbilitySpec, ManaEntry } from '../cards/ability';
 import { activationInvariantProduction } from '../cards/mana-production';
 import { totalPips } from './cost';
 import {
@@ -393,8 +393,8 @@ export function searchPayment(
   let withSacrifice = false;
   /** Searched states, by the activations that were left when they were searched. */
   const seen = new Map<string, number>();
-  /** The current iteration's activation limit, and whether it cut a branch short. */
-  let limit = bounds.activations;
+  /** The activation limit, and whether it cut a branch short. */
+  const limit = bounds.activations;
   let cut = false;
   const unsupported = (reason: string): never => {
     throw new UnmodeledCardError(
@@ -491,6 +491,37 @@ export function searchPayment(
       ),
     ),
   );
+  /**
+   * A source's symbol choices, those the cost still needs first: the colored pips it asks for
+   * beyond what the pool already holds. A depth-first search that tried each source's first
+   * symbol first paid {B} from an Exotic Orchard and four Treasures by making U, W, W, W and only
+   * then B, and on 36 Treasures went 32 deep making W over a {U} one Treasure pays (fuzz-26).
+   * Order only: every choice is still tried, so whether a plan exists does not change.
+   */
+  /** How many of `units` pay a colored pip the cost still needs beyond what `pool` holds. */
+  const usefulUnits =
+    (pool: readonly ManaEntry[]) =>
+    (units: readonly { symbol: string }[]): number => {
+      const left = new Map<string, number>(
+        Object.entries(cost.colored).filter(([, count]) => count > 0),
+      );
+      for (const entry of pool)
+        if (left.has(entry.symbol)) left.set(entry.symbol, left.get(entry.symbol)! - 1);
+      let count = 0;
+      for (const { symbol } of units)
+        if ((left.get(symbol) ?? 0) > 0) {
+          left.set(symbol, left.get(symbol)! - 1);
+          count++;
+        }
+      return count;
+    };
+  const byNeed = <T extends readonly { symbol: string }[]>(
+    choices: readonly T[],
+    pool: readonly ManaEntry[],
+  ): T[] => {
+    const useful = usefulUnits(pool);
+    return [...choices].sort((a, b) => useful(b) - useful(a));
+  };
   const productions = (source: ManaSource, activation: number): ProducedMana[][] => {
     let choices: ProducedMana[][] = [[]];
     for (const unit of source.units) {
@@ -705,7 +736,23 @@ export function searchPayment(
             candidates.map((candidate) => candidate.cardId),
           )
         : new Map<string, string>();
-    for (const candidate of candidates) {
+    // Sources that can make a color the cost still needs go first (see `byNeed`); order only.
+    const needed = new Set(
+      Object.entries(cost.colored)
+        .filter(([, count]) => count > 0)
+        .map(([color]) => color),
+    );
+    const helps = (source: ManaSource): number =>
+      usefulUnits(payer.manaEntries)(
+        source.units.map((unit) => ({
+          symbol: unit.find((symbol) => needed.has(symbol)) ?? unit[0] ?? 'C',
+        })),
+      );
+    const ordered = candidates
+      .map((candidate, index) => ({ candidate, index, helps: helps(candidate) }))
+      .sort((a, b) => b.helps - a.helps || a.index - b.index)
+      .map(({ candidate }) => candidate);
+    for (const candidate of ordered) {
       const { activation: _activation, ...signature } = candidate;
       const sourceKey = JSON.stringify(signature);
       if (deduplicated.has(sourceKey)) continue;
@@ -813,7 +860,10 @@ export function searchPayment(
       }
       if (currentProduction === undefined)
         throw new Error('mana production probe did not reach production');
-      for (const units of knownChoices ?? choicesFor(currentProduction)) {
+      for (const units of byNeed(
+        knownChoices ?? choicesFor(currentProduction),
+        payer.manaEntries,
+      )) {
         const single: PaymentPlan = {
           tapSources: [source],
           tapCardIds: [source.cardId],
@@ -841,21 +891,16 @@ export function searchPayment(
     }
     return null;
   };
-  // The search deepens iteratively: every plan of one activation, then of two, up to
-  // `bounds.activations`. A depth-first search to the full depth takes the first symbol of each
-  // source first, so it paid {B} from an Exotic Orchard and four Treasures by making U, W, W, W
-  // and only then B, sacrificing four Treasures, and on a board of 36 Treasures it went 32 deep
-  // making W and halted over a {U} one Treasure pays (fuzz-26). The first plan found now uses the
-  // fewest activations; among those, the order is the one the depth-first search used. Only a
-  // payment that would still need more than `bounds.activations` activations halts.
+  // One depth-first pass to `bounds.activations`. A payment that would need more halts. (Deepening
+  // one activation at a time found the fewest activations, but re-searched every shallower depth
+  // against the same state budget, and a payment needing five or six activations on a board the
+  // static solve cannot take halted before it got there: fuzz-199, 206, 211, 227, 235.)
   const attempt = (): PaymentPlan | null => {
-    for (limit = 1; ; limit++) {
-      cut = false;
-      seen.clear();
-      const result = visit(clone(ctx));
-      if (result !== null || !cut) return result;
-      if (limit >= bounds.activations) unsupported('mana activation depth budget exceeded');
-    }
+    cut = false;
+    seen.clear();
+    const result = visit(clone(ctx));
+    if (result === null && cut) unsupported('mana activation depth budget exceeded');
+    return result;
   };
   /**
    * Under the premise, a board whose every source only taps, taps and pays mana (a filter land), or
