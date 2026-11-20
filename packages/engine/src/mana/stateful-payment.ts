@@ -138,6 +138,67 @@ function describeOutcome(outcome: Outcome): string {
 /** `searchTapOnly`'s answer when it cannot mirror the copying search exactly. */
 const handBack = Symbol('hand back to the copying search');
 
+/** How many times `needle` occurs in `text`. */
+function occurrences(text: string, needle: string): number {
+  let count = 0;
+  for (let at = text.indexOf(needle); at >= 0; at = text.indexOf(needle, at + needle.length))
+    count++;
+  return count;
+}
+
+/**
+ * Classes of interchangeable permanents among `cardIds`, by card id: two permanents share a class
+ * when nothing in the game can tell them apart. Their state is identical once their own ids and
+ * timestamps are set aside, their definition has no static ability (whose timestamp order could
+ * matter), and nothing else in the game state names either one: no effect, Aura, stack object,
+ * trigger, combat assignment or choice. Activating one of them then leads to a game the same as
+ * activating the other, up to which id is which, so a search that has tried one need not try the
+ * other: it finds the same first plan, without the work of failing again. Thirty-six Treasures
+ * are one choice instead of thirty-six (fuzz-26, fuzz-218). A permanent with no partner, or one
+ * something names, has no class. The event log is history, not a reference, and is left out.
+ */
+export function interchangeablePermanents(
+  ctx: GameContext,
+  cardIds: readonly string[],
+): Map<string, string> {
+  const wanted = new Set(cardIds);
+  const groups = new Map<string, { cardId: string; text: string; id: string }[]>();
+  for (const perm of ctx.state.battlefield) {
+    if (!wanted.has(perm.cardId)) continue;
+    const def = ctx.defs.get(perm.oracleId);
+    if (def === undefined || def.staticEffects.length > 0 || (def.ruleStatics?.length ?? 0) > 0)
+      continue;
+    const text = JSON.stringify(perm, (key, value: unknown) =>
+      key === 'timestamp' || key === 'counterTimestamps' ? undefined : value,
+    );
+    const masked = text
+      .split(`"${perm.id}"`)
+      .join('"#self-object"')
+      .split(`"${perm.cardId}"`)
+      .join('"#self-card"');
+    const group = groups.get(masked) ?? [];
+    group.push({ cardId: perm.cardId, text, id: perm.id });
+    groups.set(masked, group);
+  }
+  const classes = new Map<string, string>();
+  let state: string | undefined;
+  for (const [masked, group] of groups) {
+    if (group.length < 2) continue;
+    state ??= JSON.stringify({ ...ctx.state, eventLog: [], sequenceSnapshots: undefined });
+    for (const member of group) {
+      const unreferenced = [`"${member.id}"`, `"${member.cardId}"`].every(
+        (needle) => occurrences(state!, needle) === occurrences(member.text, needle),
+      );
+      if (unreferenced) classes.set(member.cardId, masked);
+    }
+  }
+  // A class needs two members: one whose partners are all referenced stands alone.
+  const sizes = new Map<string, number>();
+  for (const key of classes.values()) sizes.set(key, (sizes.get(key) ?? 0) + 1);
+  for (const [cardId, key] of classes) if (sizes.get(key)! < 2) classes.delete(cardId);
+  return classes;
+}
+
 /**
  * A source whose activation only taps its permanent and adds the mana chosen for it: a `{T}` cost
  * and nothing else, no rider, no convoke, nothing it consumes. Activating one changes the game
@@ -268,7 +329,11 @@ export function searchPayment(
   let outsideScope = false;
   /** Second phase: sacrifice sources join the final payment (see `sacrificeSource`). */
   let withSacrifice = false;
-  const seen = new Set<string>();
+  /** Searched states, by the activations that were left when they were searched. */
+  const seen = new Map<string, number>();
+  /** The current iteration's activation limit, and whether it cut a branch short. */
+  let limit = bounds.activations;
+  let cut = false;
   const unsupported = (reason: string): never => {
     throw new UnmodeledCardError(
       'mana payment',
@@ -296,15 +361,24 @@ export function searchPayment(
   // fixed-capacity cost too, once nothing in play can give production back when a permanent leaves.
   // Its victim is the player's choice, so the search never makes it (see `outsideScope` below);
   // the bound only has to know that no sacrifice can make another source produce more.
-  const sacrificeBound =
-    ownAbilities.some((ability) => ability.costs?.some((cost) => cost.kind === 'sacrificeOther')) &&
+  const leavingBound =
     characteristicsFixedDuringPayment(definitionsInPlay(ctx)) &&
     leavingPermanentsKeepProduction(
       definitionsInPlay(ctx),
       ownAbilities.some((ability) => ability.condition !== undefined),
     );
+  const sacrificeBound =
+    leavingBound &&
+    ownAbilities.some((ability) => ability.costs?.some((cost) => cost.kind === 'sacrificeOther'));
+  // A source that sacrifices itself (a Treasure, Lotus Petal) is activated once and counted once,
+  // and under the same premise its leaving gives no other source more production. Without this, one
+  // Treasure on the board dropped the bound, and seven Treasures searched every order and color
+  // trying to pay nine pips before the state budget halted the game (fuzz-173).
   const keepsCapacity = (kind: string): boolean =>
-    kind === 'tap' || kind === 'mana' || (sacrificeBound && kind === 'sacrificeOther');
+    kind === 'tap' ||
+    kind === 'mana' ||
+    (sacrificeBound && kind === 'sacrificeOther') ||
+    (leavingBound && kind === 'sacrificeSelf');
   const fixedCapacity = ownAbilities.every(
     (ability) =>
       ability.amount === undefined &&
@@ -313,7 +387,10 @@ export function searchPayment(
         (gatedBound && gateCannotOpenDuringPayment(ability.condition))) &&
       (ability.costs === undefined ||
         (ability.costs.some(
-          (cost) => cost.kind === 'tap' || (sacrificeBound && cost.kind === 'sacrificeOther'),
+          (cost) =>
+            cost.kind === 'tap' ||
+            (sacrificeBound && cost.kind === 'sacrificeOther') ||
+            (leavingBound && cost.kind === 'sacrificeSelf'),
         ) &&
           ability.costs.every((cost) => keepsCapacity(cost.kind)))) &&
       (ability.onActivate ?? []).every(
@@ -475,8 +552,11 @@ export function searchPayment(
       snapshot.state.battlefield,
       snapshot.state.exile,
     ]);
-    if (seen.has(key)) return null;
-    seen.add(key);
+    // Depth-aware: a state already searched with at least as many activations left has no plan
+    // within this limit. One reached before with fewer left may still have one now.
+    const left = limit - sources.length;
+    if ((seen.get(key) ?? -1) >= left) return null;
+    seen.set(key, left);
     const candidates = availableSources.filter(
       (source) => source.convoke !== true && !(withSacrifice && sacrificeSource(source)),
     );
@@ -529,16 +609,34 @@ export function searchPayment(
         return null;
     }
     if (++states > bounds.states) unsupported('mana activation state budget exceeded');
-    if (sources.length >= bounds.activations) {
-      if (candidates.length) unsupported('mana activation depth budget exceeded');
+    // The iteration's activation limit (see `attempt`): stop this branch, and note that a longer
+    // plan could still exist.
+    if (sources.length >= limit) {
+      if (candidates.length) cut = true;
       return null;
     }
     const deduplicated = new Set<string>();
+    // Only worth the state's serialization when two candidates could share a class.
+    const classOf =
+      candidates.length > 1
+        ? interchangeablePermanents(
+            snapshot,
+            candidates.map((candidate) => candidate.cardId),
+          )
+        : new Map<string, string>();
     for (const candidate of candidates) {
       const { activation: _activation, ...signature } = candidate;
       const sourceKey = JSON.stringify(signature);
       if (deduplicated.has(sourceKey)) continue;
       deduplicated.add(sourceKey);
+      // The same ability of an interchangeable permanent already tried at this step.
+      const permanentClass = classOf.get(candidate.cardId);
+      if (permanentClass !== undefined) {
+        const { cardId: _cardId, ...ability } = signature;
+        const classKey = `${permanentClass}\n${JSON.stringify(ability)}`;
+        if (deduplicated.has(classKey)) continue;
+        deduplicated.add(classKey);
+      }
       if (
         (candidate.stateDependentProduction && candidate.productionSpec === undefined) ||
         candidate.costs.some(
@@ -719,7 +817,7 @@ export function searchPayment(
       return handBack;
     const tapped: string[] = [];
     const pool: ManaEntry[] = [...payer.manaEntries];
-    const seenStates = new Set<string>();
+    const seenStates = new Map<string, number>();
     let visited = 0;
     const tapOnlyVisit = (): PaymentPlan | null | typeof handBack => {
       const availableSources = orderByKeepValue(
@@ -755,8 +853,9 @@ export function searchPayment(
         [...tapped].sort(),
         pool.map((entry) => JSON.stringify(entry)).sort(),
       ]);
-      if (seenStates.has(key)) return null;
-      seenStates.add(key);
+      const left = limit - sources.length;
+      if ((seenStates.get(key) ?? -1) >= left) return null;
+      seenStates.set(key, left);
       const ceilings = availableSources.map(ceilingUnits);
       if (ceilings.every((units) => units !== null)) {
         const remaining = new Map<string, number>();
@@ -782,7 +881,10 @@ export function searchPayment(
           return null;
       }
       if (++visited > bounds.states) return handBack;
-      if (sources.length >= bounds.activations) return availableSources.length ? handBack : null;
+      if (sources.length >= limit) {
+        if (availableSources.length) cut = true;
+        return null;
+      }
       const deduplicated = new Set<string>();
       for (const candidate of availableSources) {
         const { activation: _activation, ...signature } = candidate;
@@ -819,12 +921,24 @@ export function searchPayment(
   // The same search over tapped sets instead of copied games, for a board where activating a
   // source only taps it and adds its mana (see `tapOnlySource`). It mirrors `visit` step for step
   // and gives the same plan; anything it cannot mirror exactly hands the payment back to `visit`.
+  //
+  // Both searches deepen iteratively: every plan of one activation, then of two, up to
+  // `bounds.activations`. A depth-first search to the full depth takes the first symbol of each
+  // source first, so it paid {B} from an Exotic Orchard and four Treasures by making U, W, W, W
+  // and only then B, sacrificing four Treasures, and on a board of 36 Treasures it went 32 deep
+  // making W and halted over a {U} one Treasure pays (fuzz-26). The first plan found now uses the
+  // fewest activations; among those, the order is the one the depth-first search used. Only a
+  // payment that would still need more than `bounds.activations` activations halts.
   const attempt = (): PaymentPlan | null => {
-    if (premise) {
-      const light = searchTapOnly();
-      if (light !== handBack) return light;
+    for (limit = 1; ; limit++) {
+      cut = false;
+      seen.clear();
+      let result: PaymentPlan | null | typeof handBack = handBack;
+      if (premise) result = searchTapOnly();
+      if (result === handBack) result = visit(clone(ctx));
+      if (result !== null || !cut) return result;
+      if (limit >= bounds.activations) unsupported('mana activation depth budget exceeded');
     }
-    return visit(clone(ctx));
   };
   let result = attempt();
   // A cast that only a sacrifice can pay for stopped the search above at the sacrifice source

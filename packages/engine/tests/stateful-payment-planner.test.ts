@@ -14,7 +14,11 @@ import {
   gateCannotOpenDuringPayment,
   leavingPermanentsKeepProduction,
 } from '../src/mana/payment-stability';
-import { searchPayment, tapOnlySource } from '../src/mana/stateful-payment';
+import {
+  interchangeablePermanents,
+  searchPayment,
+  tapOnlySource,
+} from '../src/mana/stateful-payment';
 import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
 import { allowanceFor, manaSourcesFor } from '../src/state/queries';
@@ -319,6 +323,93 @@ describe('old and new planner agree', () => {
   });
 });
 
+describe('shortest plan first', () => {
+  /** The plan's activations, by name and symbol. */
+  const steps = (ctx: GameContext, outcome: Outcome): string[] => {
+    const plan = (outcome as { plan: { tapCardIds: string[]; produced: { symbol: string }[] } })
+      .plan;
+    return plan.tapCardIds.map(
+      (cardId, i) =>
+        `${ctx.state.battlefield.find((p) => p.cardId === cardId)!.name}:${plan.produced[i]!.symbol}`,
+    );
+  };
+
+  it('stateful-planner-shortest — {B} from an Orchard and four Treasures sacrifices one Treasure', () => {
+    // A depth-first search to full depth made U, W, W, W and then B: four Treasures for {B}.
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      for (let i = 0; i < 4; i++) spawn(c, 'P1', treasure());
+    });
+    expect(steps(ctx, agree(ctx, '{B}'))).toEqual(['Test Treasure:B']);
+    expect(steps(ctx, agree(ctx, '{1}{B}'))).toEqual(['Exotic Orchard:U', 'Test Treasure:B']);
+  });
+
+  it('stateful-planner-deep-board — 36 Treasures pay {U} with one, where the search once went 32 deep and halted (fuzz-26)', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      for (let i = 0; i < 36; i++) spawn(c, 'P1', treasure());
+    });
+    expect(steps(ctx, agree(ctx, '{U}'))).toEqual(['Exotic Orchard:U']);
+    expect(steps(ctx, agree(ctx, '{B}'))).toEqual(['Test Treasure:B']);
+  });
+});
+
+describe('Treasure boards', () => {
+  it('stateful-planner-treasure-bound — seven Treasures cannot pay nine pips, and say so without a halt (fuzz-173)', () => {
+    // A Treasure sacrifices only itself, so under the leaving premise it keeps the capacity bound.
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      for (let i = 0; i < 7; i++) spawn(c, 'P1', treasure());
+    });
+    expect(agree(ctx, '{4}{W}{U}{B}{R}{G}')).toEqual({ plan: null });
+  });
+});
+
+describe('interchangeable permanents', () => {
+  /** P1's Treasures on a fresh board, and the classes the planner puts them in. */
+  function classes(edit?: (ctx: GameContext, treasures: string[]) => void) {
+    const ctx = board((c) => {
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', treasure());
+    });
+    const ids = ctx.state.battlefield
+      .filter((p) => p.name === 'Test Treasure')
+      .map((p) => p.cardId);
+    edit?.(ctx, ids);
+    const byCard = interchangeablePermanents(ctx, ids);
+    return ids.map((id) => byCard.get(id) ?? null);
+  }
+
+  it('stateful-planner-interchangeable — identical, unreferenced Treasures share a class', () => {
+    const [a, b, c] = classes();
+    expect(a).not.toBeNull();
+    expect(b).toBe(a);
+    expect(c).toBe(a);
+  });
+
+  it('stateful-planner-not-interchangeable — a counter or a reference keeps a Treasure apart', () => {
+    const withCounter = classes((ctx, ids) => {
+      ctx.state.battlefield.find((p) => p.cardId === ids[1])!.counters['charge'] = 1;
+    });
+    expect(withCounter[1]).not.toBe(withCounter[0]);
+    expect(withCounter[2]).toBe(withCounter[0]);
+
+    // An effect that names the third Treasure: anything could read that one in particular.
+    const referenced = classes((ctx, ids) => {
+      ctx.state.effects.push({
+        id: 'eff-test',
+        sourceId: 'test',
+        description: 'names one Treasure',
+        targetCardIds: [ids[2]!],
+        kind: 'grantKeyword',
+        keyword: 'hexproof',
+        timestamp: ctx.state.nextTimestamp++,
+      } as never);
+    });
+    expect(referenced[2]).toBeNull();
+    expect(referenced[1]).toBe(referenced[0]);
+  });
+});
+
 describe('a tap that changes other sources', () => {
   /**
    * Found in review: artifact A taps for {G}, and while A is untapped lands P1 controls lose all
@@ -489,12 +580,15 @@ describe('sacrifice mana sources', () => {
     });
     const player = playerById(ctx, 'P1');
     for (let i = 0; i < 4; i++) player.manaEntries.push({ symbol: 'C' });
-    const outcome = agree(ctx, '{W}{W}');
+    // {W}{W}{W}: the Orchard makes one W, so the Converter must fire twice. The plan is exactly
+    // those three activations (the shortest), where a depth-first order once also tapped the
+    // Orchard for a U nothing spent.
+    const outcome = agree(ctx, '{W}{W}{W}');
     expect(outcome).not.toEqual({ plan: null });
     const tapped = (outcome as { plan: { tapCardIds: string[] } }).plan.tapCardIds.map(
       (cardId) => ctx.state.battlefield.find((p) => p.cardId === cardId)!.name,
     );
-    expect(tapped.filter((name) => name === 'Test Converter')).toHaveLength(2);
+    expect(tapped).toEqual(['Exotic Orchard', 'Test Converter', 'Test Converter']);
   });
 
   it('stateful-planner-sacrifice-payable — a cast only a sacrifice can pay for is found, victim unpinned', () => {
