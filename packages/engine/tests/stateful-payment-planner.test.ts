@@ -536,6 +536,61 @@ describe('Treasure boards', () => {
   });
 });
 
+describe('restricted mana with a filter source', () => {
+  it('stateful-planner-restricted-filter — a creature-only source and a Signet together stay on the search (Codex review)', () => {
+    // Ancient Ziggurat's mana pays only for creature spells, and a Signet needs {1} first:
+    // {2}{U}{U} takes Wastes into the Signet for G and U, the Forest for G, the Ziggurat for U.
+    // `planPayment`'s mana-costing pass sets restricted mana aside, so a static solve said no.
+    const ctx = board((c) => {
+      spawn(c, 'P1', land('Test Wastes', '{T}: Add {C}.'));
+      spawn(c, 'P1', forest());
+      spawn(
+        c,
+        'P1',
+        land(
+          'Test Ziggurat',
+          '{T}: Add one mana of any color. Spend this mana only to cast a creature spell.',
+        ),
+      );
+      spawn(c, 'P1', artifact('Test Signet', '{1}, {T}: Add {G}{U}.'));
+    });
+    const creature = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Drake',
+        typeLine: 'Creature — Drake',
+        manaCost: '{2}{U}{U}',
+        power: '3',
+        toughness: '3',
+      }),
+      'hand',
+    );
+    const trace: { staticSolve?: boolean } = {};
+    const plan = searchPayment(
+      ctx,
+      playerById(ctx, 'P1'),
+      parseManaCost('{2}{U}{U}').cost!,
+      allowanceFor(ctx, 'P1', {
+        kind: 'castSpell',
+        oracleId: creature.oracleId,
+        isCommander: false,
+      }),
+      (context, payer) => manaSourcesFor(context, payer.id, true),
+      new Set(),
+      0,
+      0,
+      true,
+      trace,
+    );
+    expect(trace.staticSolve).not.toBe(true);
+    expect(plan).not.toBeNull();
+    expect(
+      plan!.tapCardIds.map((id) => ctx.state.battlefield.find((p) => p.cardId === id)!.name).sort(),
+    ).toEqual(['Forest', 'Test Signet', 'Test Wastes', 'Test Ziggurat']);
+  });
+});
+
 describe('a counted amount', () => {
   const brigid = () =>
     oracle({

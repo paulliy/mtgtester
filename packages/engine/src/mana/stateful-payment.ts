@@ -290,6 +290,24 @@ export function manaCostTapSource(source: ManaSource): boolean {
 }
 
 /**
+ * Whether `planPayment` can miss a payment from these sources and this pool: its pass for sources
+ * that cost mana to activate sets restricted mana aside (see `solveWithCostly`), so where both are
+ * present its "no" proves nothing. A creature-only Ancient Ziggurat and a Signet pay {2}{U}{U}
+ * that it rejects (found by Codex review). Neither the static solve nor the colored capacity bound
+ * may then stand in for the search.
+ */
+function staticSolverIncomplete(
+  sources: readonly ManaSource[],
+  pool: readonly { restriction?: unknown }[],
+): boolean {
+  return (
+    sources.some((source) => source.manaCost !== undefined) &&
+    (sources.some((source) => source.restriction !== undefined) ||
+      pool.some((entry) => entry.restriction !== undefined))
+  );
+}
+
+/**
  * Dynamic production that reads nothing a payer's own permanent leaving could change: the
  * opponents' lands, the commander's identity, a color chosen on entry, cards exiled with it.
  */
@@ -700,6 +718,7 @@ export function searchPayment(
       // no order of activations can, and the search would only exhaust its budget proving so.
       if (
         (cost.phyrexian?.length ?? 0) === 0 &&
+        !staticSolverIncomplete(availableSources, payer.manaEntries) &&
         planPayment(
           cost,
           payer.manaEntries,
@@ -930,6 +949,7 @@ export function searchPayment(
       })
     )
       return handBack;
+    if (staticSolverIncomplete(rootSources, payer.manaEntries)) return handBack;
     // Tapping removes nothing; a sacrifice needs nothing in play to read the permanent leaving.
     const sacrificing = rootSources.some(selfSacrificeSource);
     if (sacrificing && !leavingBound) return handBack;
