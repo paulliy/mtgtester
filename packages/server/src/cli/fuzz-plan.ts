@@ -91,7 +91,12 @@ export function failureOf(
   const { reply } = outcome;
   const heuristicOnly = providers.every((provider) => provider === 'heuristic');
   if (reply.error !== null) return `threw: ${reply.error}`;
-  if (reply.halt !== null && (!reply.halt.turnCap || heuristicOnly))
+  // A draw the final state confirms is a result, not a failure (`verifyDraw`).
+  if (
+    reply.halt !== null &&
+    reply.halt.draw === undefined &&
+    (!reply.halt.turnCap || heuristicOnly)
+  )
     return `halted: ${reply.halt.reason}${reply.halt.site === undefined ? '' : ` at ${reply.halt.site}`}`;
   if (reply.budgetExhausted) return `decision budget exhausted at turn ${reply.turns}`;
   if (reply.emptyVetoes > 0 && heuristicOnly)
