@@ -768,3 +768,74 @@ describe('identical sources in the stateful payment search', () => {
     });
   });
 });
+
+describe('a pay-life mana source keeps the capacity bound on', () => {
+  // `MTG_VERIFY_MANA_PLAN=1` also runs the old search, so the state counts differ.
+  const runs = process.env['MTG_VERIFY_MANA_PLAN'] === '1' ? 2 : 1;
+  const ANY: ManaAbilitySpec['units'] = [[...ANY_COLOR]];
+  /** "{T}, Pay 1 life: Add one mana of any color. Activate only if you control an artifact." */
+  const spireOfIndustry: ManaAbilitySpec = {
+    units: ANY,
+    costs: [{ kind: 'tap' }, { kind: 'payLife', amount: 1 }],
+    condition: countPermanents(ofType('Artifact'), 'you', '>=', 1),
+  };
+  const painland: ManaAbilitySpec = {
+    units: [['R'], ['G']],
+    onActivate: [{ op: 'damageController', amount: 1 }],
+  };
+
+  /** A board shaped like fuzz-77: no blue source but the Spire, every other source a land. */
+  function fuzz77Board(manaCost: string, withArtifact: boolean) {
+    const state = setup(manaCost);
+    const land = (name: string, abilities: ManaAbilitySpec[]) => {
+      const permanent = spawn(state.ctx, state.player.id, oracle({ name, typeLine: 'Land' }));
+      state.ctx.defs.set(permanent.oracleId, {
+        ...state.ctx.defs.get(permanent.oracleId)!,
+        manaAbilities: abilities,
+      });
+      return permanent;
+    };
+    land('Spire of Industry', [spireOfIndustry]);
+    for (let i = 0; i < 2; i++) land(`Forest ${i}`, [{ units: [['G']] }]);
+    for (let i = 0; i < 2; i++) land(`Mountain ${i}`, [{ units: [['R']] }]);
+    land('Sheltered Thicket', [{ units: [['R'], ['G']] }]);
+    for (let i = 0; i < 2; i++) land(`Karplusan Forest ${i}`, [{ units: [['C']] }, painland]);
+    if (withArtifact)
+      spawn(state.ctx, state.player.id, oracle({ name: 'Trinket', typeLine: 'Artifact' }));
+    return state;
+  }
+
+  it('proves {1}{U} impossible while the Spire gate is shut, in a handful of states', () => {
+    const state = fuzz77Board('{1}{U}', false);
+    const before = engineWork();
+    expect(state.offered()).toBeUndefined();
+    const work = engineWorkSince(before);
+    // Unbounded, the search tries every subset of the seven other lands (1031 states before the
+    // fix). The verify run also runs the old search, which keeps the gated source unbounded.
+    if (runs === 1) {
+      expect(work.manaPlannerStates).toBeLessThan(20);
+      expect(work.stateCopies).toBeLessThan(20);
+    }
+  });
+
+  it('pays {1}{U} with the Spire, losing 1 life, once an artifact opens its gate', () => {
+    const state = fuzz77Board('{1}{U}', true);
+    const life = state.player.life;
+    state.cast();
+    expect(state.player.life).toBe(life - 1);
+    expect(state.ctx.state.stack[0]?.triggerScope?.manaSpent).toBe(2);
+  });
+
+  it('follows the engine rule that a life payment may take the payer to 0', () => {
+    const state = fuzz77Board('{1}{U}', true);
+    state.player.life = 1;
+    state.cast();
+    expect(state.player.life).toBe(0);
+  });
+
+  it('does not offer the {U} when the payer has no life to pay', () => {
+    const state = fuzz77Board('{1}{U}', true);
+    state.player.life = 0;
+    expect(state.offered()).toBeUndefined();
+  });
+});

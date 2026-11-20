@@ -15,7 +15,7 @@ import { payManaCost } from '../effects/resolve';
 import { UnmodeledCardError } from '../errors';
 import type { PendingDecision } from '../decisions';
 import { battlefieldCharacteristics } from '../effects/continuous';
-import type { ManaAbilitySpec } from '../cards/ability';
+import type { AbilityCost, ManaAbilitySpec } from '../cards/ability';
 import { activationInvariantProduction } from '../cards/mana-production';
 import { totalPips } from './cost';
 import type { ManaEntry } from '../cards/ability';
@@ -72,8 +72,8 @@ function clone(ctx: GameContext): GameContext {
  * The most a source can produce while no activation can raise production: its units. That holds
  * for a dynamic source too (Exotic Orchard, Reflecting Pool, Mox Amber): `manaSourcesFor` has
  * already resolved its symbols in this state. They are read from permanents' characteristics,
- * exile contents, entry choices and commander identity, and a fixed-capacity activation (tap and
- * mana costs, a life gain or damage rider) changes none of them. That is the same premise the
+ * exile contents, entry choices and commander identity, and a fixed-capacity activation (tap, mana and fixed life costs,
+ * a life gain or damage rider) changes none of them. That is the same premise the
  * count bound rests on: if an activation could change a characteristic, it could add a mana
  * ability too. Counting the dynamic source as "any type" instead let an Orchard that makes only
  * {G} pass for a white source, and the search tried every subset of the other lands to disprove
@@ -501,25 +501,6 @@ export function searchPayment(
       definitionsInPlay(ctx),
       ownAbilities.some((ability) => ability.condition !== undefined),
     );
-  const keepsCapacity = (kind: string): boolean =>
-    kind === 'tap' ||
-    kind === 'mana' ||
-    (sacrificeBound && kind === 'sacrificeOther') ||
-    (sacrificeSelfBound && kind === 'sacrificeSelf');
-  const fixedCapacity = ownAbilities.every(
-    (ability) =>
-      ability.amount === undefined &&
-      (ability.condition === undefined ||
-        (gatedBound && gateCannotOpenDuringPayment(ability.condition))) &&
-      (ability.costs === undefined ||
-        (ability.costs.some(
-          (cost) => cost.kind === 'tap' || (sacrificeBound && cost.kind === 'sacrificeOther'),
-        ) &&
-          ability.costs.every((cost) => keepsCapacity(cost.kind)))) &&
-      (ability.onActivate ?? []).every(
-        (effect) => effect.op === 'gainLife' || effect.op === 'damageController',
-      ),
-  );
   // Under fixed capacity no cost pays energy and the only riders gain life or deal damage to the
   // controller, so energy never changes and life rises only through a life-gain rider or a
   // damage rider from a lifelink source (with infect it gives poison, not life loss). A
@@ -535,6 +516,45 @@ export function searchPayment(
       ),
     ),
   );
+  // "{T}, Pay 1 life: Add one mana of any color" (Spire of Industry, Mana Confluence) is fixed
+  // capacity too, while no life can come back (`!lifeCanRise`). Paying life only lowers the life
+  // total (a negative or unsafe amount is no payment: `payLife` throws), so it never raises
+  // production, never opens a gate (a gate that reads life is excluded by `PAYMENT_STATE_KINDS`,
+  // and `gateCannotOpenDuringPayment` admits only board counts), and never makes a life
+  // reservation easier to meet. A source the payer cannot afford now is not listed, and with no
+  // way to gain life it stays unaffordable, so leaving it out of the ceiling is exact. With a
+  // life-gain rider it is not: a source hidden now (pay 2 at 1 life) can appear after the gain
+  // (fuzz-contract "discovers a later activation"), so there the cost keeps the bound off, as it
+  // did. `payLifeValue` stays outside: its amount is evaluated from the state when it is paid,
+  // and nothing here proves that value is never negative or that reading it is inert.
+  const keepsCapacity = (cost: AbilityCost): boolean =>
+    cost.kind === 'tap' ||
+    cost.kind === 'mana' ||
+    (cost.kind === 'payLife' &&
+      !lifeCanRise &&
+      Number.isSafeInteger(cost.amount) &&
+      cost.amount >= 0) ||
+    (sacrificeBound && cost.kind === 'sacrificeOther') ||
+    (sacrificeSelfBound && cost.kind === 'sacrificeSelf');
+  const fixedCapacity = ownAbilities.every(
+    (ability) =>
+      ability.amount === undefined &&
+      (ability.condition === undefined ||
+        (gatedBound && gateCannotOpenDuringPayment(ability.condition))) &&
+      (ability.costs === undefined ||
+        (ability.costs.some(
+          (cost) => cost.kind === 'tap' || (sacrificeBound && cost.kind === 'sacrificeOther'),
+        ) &&
+          ability.costs.every(keepsCapacity))) &&
+      (ability.onActivate ?? []).every(
+        (effect) => effect.op === 'gainLife' || effect.op === 'damageController',
+      ),
+  );
+  // The life the colored bound lets a pay-life source spend: what the payer has beyond the spell's
+  // own life (no life comes back when this bound runs). The solver reads a `payLife` cost against
+  // this total, and its default of 0 would call every such source unpayable.
+  const lifeCeiling = (state: GameContext, payer: EnginePlayerState): number =>
+    playerLifeLocked(state, payer.id) ? 0 : Math.max(0, payer.life - lifeReserved);
   const productions = (source: ManaSource, activation: number): ProducedMana[][] => {
     let choices: ProducedMana[][] = [[]];
     for (const unit of source.units) {
@@ -725,6 +745,7 @@ export function searchPayment(
           payer.manaEntries,
           availableSources.map((source, index) => ceilingSource(source, ceilings[index]!)),
           allows,
+          lifeCeiling(snapshot, payer),
         ) === null
       )
         return null;
