@@ -14,6 +14,12 @@ import {
   RULES_PRIMER,
   STRATEGIST_PRIMER,
 } from './primer';
+import {
+  applyStrategistDelta,
+  compactStrategistPayload,
+  STRATEGIST_DELTA_PRIMER_TEXT,
+  type StrategistDeltaInput,
+} from './strategist-delta';
 
 export type StrategyContextVersion = 'v1' | 'v2';
 
@@ -30,6 +36,12 @@ export interface StrategyContextOptions {
   botSteering?: boolean;
   /** Bot-led mode only: offer the strategist's typed tactician request (ADR 0045, shadow). */
   tacticianFlag?: boolean;
+  /**
+   * Bot-led mode only (hill-climb S6): delta prompts are on for this seat. `true` adds the delta
+   * note to the primer (on every call, so the cacheable prefix stays one string); an input also
+   * rewrites the observation against the seat's last plan.
+   */
+  delta?: StrategistDeltaInput | true;
 }
 
 function botSteeringTask(hasProfile: boolean): Record<string, unknown> {
@@ -123,6 +135,11 @@ Use only information in this PlayerView. Other players' hidden cards, decklists,
   payload['strategyTask'] =
     options.botSteering === true ? botSteeringTask(hasProfile) : strategyTask(hasProfile);
   if (options.diplomacy !== undefined) payload['tableDiplomacy'] = options.diplomacy;
+  const delta = options.botSteering === true ? options.delta : undefined;
+  if (delta !== undefined) {
+    compactStrategistPayload(payload);
+    if (delta !== true) applyStrategistDelta(payload, view, delta);
+  }
   const budgeted =
     options.context?.useBudgeter === true
       ? budgetContext(payload, options.context.inputTokenBudget ?? 6_000)
@@ -140,7 +157,8 @@ Use only information in this PlayerView. Other players' hidden cards, decklists,
   const primer =
     options.botSteering === true
       ? BOT_STRATEGIST_PRIMER +
-        (options.tacticianFlag === true ? BOT_STRATEGIST_TACTICIAN_FLAG_TEXT : '')
+        (options.tacticianFlag === true ? BOT_STRATEGIST_TACTICIAN_FLAG_TEXT : '') +
+        (delta === undefined ? '' : STRATEGIST_DELTA_PRIMER_TEXT)
       : STRATEGIST_PRIMER;
   return {
     messages: [
