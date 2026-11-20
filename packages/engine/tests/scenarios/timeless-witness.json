@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "card": "Timeless Witness",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "timeless-witness-eternalize",
+      "title": "Timeless Witness: eternalize makes a black Zombie token copy",
+      "clauses": [2],
+      "instructions": [
+        "Activate eternalize from your graveyard.",
+        "The token's enters trigger returns Scenario Bear to your hand."
+      ],
+      "expectedOutcome": "Timeless Witness is exiled and a 4/4 black Zombie token copy of it enters with no mana cost.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Timeless Witness", "Scenario Bear"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Timeless Witness \\(graveyard\\): Eternalize/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Timeless Witness"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Timeless Witness"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Timeless Witness"]
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "count": 1
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "timeless-witness-eternalize-sorcery-speed",
+      "title": "Timeless Witness: eternalize only as a sorcery",
+      "clauses": [2],
+      "turn": {
+        "player": "P2"
+      },
+      "instructions": [
+        "On P2's turn, eternalize is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
+      "expectedOutcome": "Timeless Witness stays in your graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Glimpse"],
+          "graveyard": ["Timeless Witness"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Timeless Witness"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Timeless Witness"]
+          }
+        }
+      ]
+    }
+  ]
+}

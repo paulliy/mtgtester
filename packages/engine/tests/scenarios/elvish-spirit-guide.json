@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "card": "Elvish Spirit Guide",
+  "supportCards": [
+    {
+      "name": "Scenario Sapling",
+      "typeLine": "Creature — Plant",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "elvish-spirit-guide-pays-from-hand",
+      "title": "Elvish Spirit Guide: exile it from your hand to add {G}",
+      "clauses": [1],
+      "instructions": [
+        "With no lands, cast Scenario Sapling; Elvish Spirit Guide pays for it from your hand."
+      ],
+      "expectedOutcome": "Elvish Spirit Guide is exiled from your hand and Scenario Sapling resolves.",
+      "seats": {
+        "P1": {
+          "hand": ["Elvish Spirit Guide", "Scenario Sapling"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Sapling/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Sapling"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Elvish Spirit Guide"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Elvish Spirit Guide"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "elvish-spirit-guide-board-first",
+      "title": "Elvish Spirit Guide: an untapped Forest pays before the hand card is spent",
+      "clauses": [1],
+      "instructions": ["With a Forest, cast Scenario Sapling."],
+      "expectedOutcome": "The Forest pays; Elvish Spirit Guide stays in your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Elvish Spirit Guide", "Scenario Sapling"],
+          "battlefield": ["Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Sapling/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Scenario Sapling"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Elvish Spirit Guide"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Forest",
+            "equals": true
+          }
+        }
+      ]
+    }
+  ]
+}

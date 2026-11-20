@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "card": "Beloved Princess",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature — Ogre",
+      "manaCost": "{2}{R}",
+      "power": "3",
+      "toughness": "3"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "beloved-princess-unblockable-by-power-three",
+      "title": "Beloved Princess: a creature with power 3 or greater can't block it",
+      "clauses": [2],
+      "instructions": [
+        "Attack P2 with Beloved Princess while P2 controls only Scenario Ogre (power 3)."
+      ],
+      "expectedOutcome": "P2 is never asked to block; Beloved Princess deals 1 damage to P2 and you gain 1 life.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Beloved Princess"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        },
+        {
+          "life": {
+            "player": "P1",
+            "equals": 41
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Ogre"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "beloved-princess-blocked-by-power-two",
+      "title": "Beloved Princess: a creature with power 2 may block it",
+      "clauses": [2],
+      "instructions": [
+        "Attack P2 with Beloved Princess.",
+        "P2 blocks with Scenario Bear (power 2)."
+      ],
+      "expectedOutcome": "The block is legal: Scenario Bear kills Beloved Princess; P2 takes no damage and you gain 1 life from lifelink.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Beloved Princess"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Beloved Princess"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "life": {
+            "player": "P1",
+            "equals": 41
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Beloved Princess"]
+          }
+        }
+      ]
+    }
+  ]
+}

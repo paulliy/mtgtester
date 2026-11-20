@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "card": "Vorrac Battlehorns",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature — Ogre",
+      "manaCost": "{2}{R}",
+      "power": "3",
+      "toughness": "3"
+    },
+    {
+      "name": "Scenario Wall",
+      "typeLine": "Creature — Wall",
+      "manaCost": "{2}",
+      "power": "0",
+      "toughness": "4"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "vorrac-battlehorns-two-blockers-repaired",
+      "title": "Vorrac Battlehorns: two blockers on the creature are rejected and repaired to one",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with the equipped Scenario Bear while P2 controls Scenario Ogre and Scenario Wall.",
+        "P2 declares both as blockers (twice, since the first declaration is rejected)."
+      ],
+      "expectedOutcome": "The engine accepts only one blocker: a single block event is recorded and P2 takes no damage.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Scenario Bear",
+            {
+              "card": "Vorrac Battlehorns",
+              "attachedTo": {
+                "player": "P1",
+                "card": "Scenario Bear"
+              }
+            }
+          ]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre", "Scenario Wall"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Scenario Bear", "Scenario Bear"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Scenario Bear", "Scenario Bear"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "event": {
+            "type": "block",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "vorrac-battlehorns-one-blocker-allowed",
+      "title": "Vorrac Battlehorns: a single blocker may still block the creature",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with the Scenario Bear while P2 controls only Scenario Ogre.",
+        "P2 blocks with Scenario Ogre."
+      ],
+      "expectedOutcome": "The single block is legal: Scenario Bear dies and P2 takes no damage.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Scenario Bear",
+            {
+              "card": "Vorrac Battlehorns",
+              "attachedTo": {
+                "player": "P1",
+                "card": "Scenario Bear"
+              }
+            }
+          ]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Scenario Bear"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "event": {
+            "type": "block",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

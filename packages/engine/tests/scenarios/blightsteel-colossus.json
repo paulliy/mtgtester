@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "card": "Blightsteel Colossus",
+  "scenarios": [
+    {
+      "id": "blightsteel-colossus-discard-shuffles",
+      "title": "Blightsteel Colossus: discarded, it is revealed and shuffled into the library instead",
+      "clauses": [2],
+      "instructions": ["Cast Thoughtseize targeting yourself and choose Blightsteel Colossus."],
+      "expectedOutcome": "Blightsteel Colossus never reaches the graveyard: it is revealed and shuffled into your library.",
+      "seats": {
+        "P1": {
+          "hand": ["Thoughtseize", "Blightsteel Colossus", "Counterspell"],
+          "battlefield": ["Swamp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Thoughtseize/",
+          "targets": ["P1"]
+        },
+        {
+          "player": "P1",
+          "choose": "/Blightsteel Colossus/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Blightsteel Colossus"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Thoughtseize"],
+            "lacks": ["Blightsteel Colossus"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Blightsteel Colossus"]
+          }
+        },
+        {
+          "event": {
+            "type": "shuffle",
+            "count": 1
+          }
+        },
+        {
+          "event": {
+            "type": "revealCard"
+          }
+        }
+      ]
+    },
+    {
+      "id": "blightsteel-colossus-rest-in-peace-exile",
+      "title": "Blightsteel Colossus: with Rest in Peace, its owner chooses exile",
+      "clauses": [2],
+      "instructions": [
+        "With Rest in Peace on the battlefield, cast Thoughtseize targeting yourself and choose Blightsteel Colossus.",
+        "Choose to exile it."
+      ],
+      "expectedOutcome": "Both replacements apply; the owner picks Rest in Peace and Blightsteel Colossus is exiled.",
+      "seats": {
+        "P1": {
+          "hand": ["Thoughtseize", "Blightsteel Colossus", "Counterspell"],
+          "battlefield": ["Swamp", "Rest in Peace"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Thoughtseize/",
+          "targets": ["P1"]
+        },
+        {
+          "player": "P1",
+          "choose": "/Blightsteel Colossus/"
+        },
+        {
+          "player": "P1",
+          "choose": "/^Exile Blightsteel Colossus/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Blightsteel Colossus"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "lacks": ["Blightsteel Colossus"]
+          }
+        }
+      ]
+    }
+  ]
+}

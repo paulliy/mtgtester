@@ -2,8 +2,9 @@
  * The Oracle pin store's maintenance (ADR 0034 decision 10; `packages/engine/tests/scenario/
  * pin-store.ts` reads it).
  *
- *   bun run pin-store add "<name>" [...]   pin cards from the committed Oracle fixture, or from
- *                                           the Scryfall bulk file when it is present
+ *   bun run pin-store add "<name>" [...]   pin cards from the committed Oracle fixture, a committed
+ *                                           fixture file that holds one Oracle object for the name,
+ *                                           or the Scryfall bulk file when it is present
  *   bun run pin-store seed                  pin every manifest card from the fixture files that
  *                                           already hold its exact Oracle object
  *
@@ -102,8 +103,21 @@ function add(names: string[]): void {
   const file = readStore();
   const pool = JSON.parse(readFileSync(COVERAGE_ORACLE, 'utf8')) as OracleCard[];
   let bulk: RawScryfallCard[] | null = null;
+  let fixtures: OracleCard[] | undefined;
   for (const name of names) {
     let card = pool.find((candidate) => candidate.name === name) ?? null;
+    // A card pinned in a committed engine or server fixture file (one batch's Oracle fixture).
+    if (card === null) {
+      fixtures ??= [...new Set(fixtureCards().values())];
+      const matches = fixtures.filter((candidate) => candidate.name === name);
+      const distinct = new Set(matches.map((candidate) => oracleSha256(candidate)));
+      if (distinct.size === 1) card = matches[0]!;
+      else if (distinct.size > 1) {
+        console.error(`"${name}" has ${distinct.size} different Oracle objects in fixture files`);
+        process.exitCode = 1;
+        continue;
+      }
+    }
     if (card === null) {
       if (bulk === null && existsSync(BULK))
         bulk = JSON.parse(readFileSync(BULK, 'utf8')) as RawScryfallCard[];
