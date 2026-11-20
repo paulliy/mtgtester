@@ -236,6 +236,45 @@ function sourceClassKeys(
   };
 }
 
+/**
+ * Try first the symbol choices that cover a colored pip the cost still has unmet (the cost less
+ * what the pool and the mana already produced cover). Without it a Treasure's first choice is
+ * always {W}, and the depth-first search piled up white mana to the activation bound before it
+ * ever tried another color: it sacrificed 32 Treasures to pay one {U}. The sort is stable, so the
+ * existing order stays the tie-break, and it changes only the order in which a search tries
+ * choices, never which ones it tries.
+ */
+function unmetColorsFirst(
+  choices: ProducedMana[][],
+  cost: ParsedManaCost,
+  pool: readonly { symbol: string }[],
+  produced: readonly { symbol: string }[],
+): ProducedMana[][] {
+  if (choices.length < 2) return choices;
+  const unmet = new Map<string, number>();
+  for (const [color, pips] of Object.entries(cost.colored)) if (pips > 0) unmet.set(color, pips);
+  for (const { symbol } of [...pool, ...produced]) {
+    const left = unmet.get(symbol);
+    if (left !== undefined) unmet.set(symbol, left - 1);
+  }
+  const covered = (units: ProducedMana[]): number => {
+    const used = new Map<string, number>();
+    let count = 0;
+    for (const { symbol } of units) {
+      const left = (unmet.get(symbol) ?? 0) - (used.get(symbol) ?? 0);
+      if (left > 0) {
+        used.set(symbol, (used.get(symbol) ?? 0) + 1);
+        count += 1;
+      }
+    }
+    return count;
+  };
+  return choices
+    .map((units, index) => ({ units, index, score: covered(units) }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map(({ units }) => units);
+}
+
 export function needsStatefulManaPayment(
   ctx: GameContext,
   player: EnginePlayerState,
@@ -802,7 +841,12 @@ export function searchPayment(
       }
       if (currentProduction === undefined)
         throw new Error('mana production probe did not reach production');
-      for (const units of knownChoices ?? choicesFor(currentProduction)) {
+      for (const units of unmetColorsFirst(
+        knownChoices ?? choicesFor(currentProduction),
+        cost,
+        payer.manaEntries,
+        produced,
+      )) {
         const single: PaymentPlan = {
           tapSources: [source],
           tapCardIds: [source.cardId],
@@ -981,7 +1025,7 @@ export function searchPayment(
           return handBack;
         }
         if (choices.length === 0) return handBack;
-        for (const units of choices) {
+        for (const units of unmetColorsFirst(choices, cost, pool, produced)) {
           const entries = entriesFor(source, units, treasure.get(source.cardId)!);
           tapped.push(source.cardId);
           pool.push(...entries);

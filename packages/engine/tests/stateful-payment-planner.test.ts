@@ -489,7 +489,8 @@ describe('sacrifice mana sources', () => {
     });
     const player = playerById(ctx, 'P1');
     for (let i = 0; i < 4; i++) player.manaEntries.push({ symbol: 'C' });
-    const outcome = agree(ctx, '{W}{W}');
+    // The Orchard makes one {W} and the converter must make the other two, so it fires twice.
+    const outcome = agree(ctx, '{W}{W}{W}');
     expect(outcome).not.toEqual({ plan: null });
     const tapped = (outcome as { plan: { tapCardIds: string[] } }).plan.tapCardIds.map(
       (cardId) => ctx.state.battlefield.find((p) => p.cardId === cardId)!.name,

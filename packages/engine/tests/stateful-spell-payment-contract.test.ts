@@ -618,6 +618,10 @@ describe('stateful payment search limits', () => {
     expect(state.offered()).toBeDefined();
     state.cast();
     expect(state.ctx.state.stack[0]?.triggerScope?.manaSpent).toBe(1);
+    // One pip costs one Treasure, not the 32 a search that piles up {W} first would sacrifice.
+    expect(state.ctx.state.battlefield.filter((p) => p.name.startsWith('Treasure '))).toHaveLength(
+      32,
+    );
   });
 
   it('still throws the depth error when the cost needs more than 32 replayed activations', () => {
@@ -696,8 +700,7 @@ describe('identical sources in the stateful payment search', () => {
     const work = engineWorkSince(before);
     expect(work.manaPlannerStates).toBeLessThan(500 * runs);
     state.cast();
-    // The plan the depth-first search finds pays with more Treasures than the nine the cost needs.
-    expect(treasures(state).length).toBeLessThan(48);
+    expect(treasures(state)).toHaveLength(39);
     expect(state.ctx.state.stack[0]?.triggerScope?.manaSpent).toBe(9);
   }, 60_000);
 
