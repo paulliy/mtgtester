@@ -12,32 +12,32 @@
         "authoring",
         "compiler"
       ],
-      "commit": "5bcca572",
+      "commit": "31a3cb81",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 53.87,
+      "calibrationMs": 62.08,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.65,
+          "value": 6.41,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.243
+          "spread": 0.401
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.79,
+          "value": 6.18,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.176
+          "spread": 0.477
         },
         "setup.msPerGame": {
-          "value": 0.81,
+          "value": 0.76,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.796
+          "spread": 0.84
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -267,32 +267,32 @@
         "authoring",
         "compiler"
       ],
-      "commit": "5bcca572",
+      "commit": "31a3cb81",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 62.76,
+      "calibrationMs": 63.53,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 13.79,
+          "value": 13.88,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.078
+          "spread": 0.07
         },
         "engine.medianGameMsPerDecision": {
-          "value": 13.56,
+          "value": 14.04,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.152
+          "spread": 0.145
         },
         "setup.msPerGame": {
-          "value": 0.84,
+          "value": 0.78,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.228
+          "spread": 0.184
         },
         "model.default.callsPerTurn": {
           "value": 6.735,
@@ -509,7 +509,7 @@
         "0": "d1963e8e9fcd1922",
         "3": "6480edc04ec77666",
         "6": "c3936556f219bda4",
-        "9": "e2f3f0017ad90f8f",
+        "9": "da0981e41e57aad7",
         "12": "9c2f1534dfbb640e",
         "15": "456c808d894412fe"
       }

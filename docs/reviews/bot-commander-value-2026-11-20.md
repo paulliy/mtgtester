@@ -96,10 +96,20 @@ Both loops now share one rejection check, and a target whose legality reads no o
 is judged once per candidate. `packages/engine/tests/new-targets-search.test.ts` covers six and
 twelve targets; both hung before. Offered menus are unchanged.
 
+## Attack taxes and attackers that tap for mana
+
+The gauntlet's one engine error ("cost for P1 became unpayable at application time", pod 0, seat 4,
+without the two fixes) was an attack tax. Citanul Hierophants gave P1's creatures "{T}: Add {G}";
+P1 attacked a free defender and one behind Ghostly Prison. The declaration check counted the
+attackers as mana sources, and the application paid each defender's tax before tapping that
+defender's attackers, so the taxed defender's payment found its mana already tapped. CR 508.1f taps
+the attackers before 508.1g-h determines and pays the costs: the check now leaves out sources that
+tap a non-vigilant attacker, and every attacker is committed before any tax is paid
+(`combat/combat.ts`, three tests in `combat.test.ts`). One benchmark game (seed 9, with Ghostly
+Prison) plays differently; no hill-climb metric moved, and the baseline was rewritten.
+
 ## Still open
 
 - **Payment search cost:** pod 46's seat 3 spent minutes in `searchPayment` proving a spell
   castable twelve to fifteen activations deep, each activation queueing triggers and recomputing
   the layers, before the state budget halted it. Same machinery as the gauntlet review's halts.
-- **"Cost became unpayable at application time":** pod 0, seat 4, without the two fixes, at the
-  first decision (0 turns), reproducible.
