@@ -25,9 +25,12 @@ import {
 } from '../state/queries';
 import {
   characteristicsFixedDuringPayment,
+  countFixedWhileNothingLeaves,
   gateCannotOpenDuringPayment,
   leavingPermanentsKeepProduction,
+  stableSelector,
 } from './payment-stability';
+import type { Condition } from '../cards/condition';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 
 const bounds = { states: 2048, activations: 32, productions: 256, lifeGainOrders: 64 };
@@ -71,17 +74,26 @@ function clone(ctx: GameContext): GameContext {
  * count bound rests on: if an activation could change a characteristic, it could add a mana
  * ability too. Counting the dynamic source as "any type" instead let an Orchard that makes only
  * {G} pass for a white source, and the search tried every subset of the other lands to disprove
- * it. An amount counts the same way when `fixedAmount` says no activation can change it. Null for
- * production no ceiling covers: any other state-dependent amount or a rider's addition.
+ * it. An amount, or production replaced "instead if" a condition holds, counts the same way when
+ * `fixedAmount` or `fixedCondition` says no activation can change it. Null for production no
+ * ceiling covers: any other state-dependent amount or condition, or a rider's addition.
  */
 function ceilingUnits(
   source: ManaSource,
   fixedAmount: (amount: NonNullable<ManaAbilitySpec['amount']>) => boolean,
+  fixedCondition: (condition: Condition) => boolean,
 ): ManaUnit[] | null {
   if (source.stateDependentProduction !== true) return source.units;
   const spec = source.productionSpec;
-  if (spec === undefined || spec.conditionalUnits !== undefined) return null;
-  if (spec.amount !== undefined ? !fixedAmount(spec.amount) : spec.dynamic === undefined)
+  if (spec === undefined) return null;
+  if (spec.conditionalUnits !== undefined && !fixedCondition(spec.conditionalUnits.condition))
+    return null;
+  if (spec.amount !== undefined && !fixedAmount(spec.amount)) return null;
+  if (
+    spec.amount === undefined &&
+    spec.conditionalUnits === undefined &&
+    spec.dynamic === undefined
+  )
     return null;
   return source.units;
 }
@@ -441,11 +453,15 @@ export function searchPayment(
     premise &&
     nothingLeaves &&
     amount.kind === 'countPermanents' &&
-    !JSON.stringify(amount.selector).includes('"kind":"tapped"');
+    stableSelector(amount.selector);
+  // "Add {G}{G} instead if you control ..." the same way: its condition is fixed with the count.
+  const fixedCondition = (condition: Condition): boolean =>
+    premise && nothingLeaves && countFixedWhileNothingLeaves(condition);
   const fixedCapacity = ownAbilities.every(
     (ability) =>
       (ability.amount === undefined || fixedAmount(ability.amount)) &&
-      ability.conditionalUnits === undefined &&
+      (ability.conditionalUnits === undefined ||
+        fixedCondition(ability.conditionalUnits.condition)) &&
       (ability.condition === undefined ||
         (gatedBound && gateCannotOpenDuringPayment(ability.condition))) &&
       (ability.costs === undefined ||
@@ -640,7 +656,7 @@ export function searchPayment(
       outsideScope = true;
     const bounded = fixedCapacity && (premise || !current);
     const ceilings = bounded
-      ? availableSources.map((source) => ceilingUnits(source, fixedAmount))
+      ? availableSources.map((source) => ceilingUnits(source, fixedAmount, fixedCondition))
       : [];
     if (bounded && ceilings.every((units) => units !== null)) {
       // Alternative abilities of one permanent count at the most any one makes. A sacrifice source
@@ -855,11 +871,28 @@ export function searchPayment(
     if (!premise || !fixedCapacity) return handBack;
     const payer = ctx.state.players.find((p) => p.id === player.id)!;
     const rootSources = sourcesFor(ctx, payer);
-    if (
-      !rootSources.every(
-        (source) =>
-          tapOnlySource(source) || selfSacrificeSource(source) || manaCostTapSource(source),
+    // A life rider (a painland's damage, a life-gain land) matters to a payment only through a
+    // life total it must keep or spend: with no life reserved and no Phyrexian pip, the ordinary
+    // payment ignores it too (`needsStatefulManaPayment`), and `payManaCost` still applies it.
+    const lifeBlind = lifeReserved === 0 && (cost.phyrexian?.length ?? 0) === 0;
+    const bare = (source: ManaSource): ManaSource =>
+      lifeBlind &&
+      (source.onActivate ?? []).every(
+        (effect) => effect.op === 'gainLife' || effect.op === 'damageController',
       )
+        ? { ...source, onActivate: [] }
+        : source;
+    // A convoke creature taps for one symbol of its colors; the final payment already solves it.
+    if (
+      !rootSources.every((source) => {
+        const shape = bare(source);
+        return (
+          shape.convoke === true ||
+          tapOnlySource(shape) ||
+          selfSacrificeSource(shape) ||
+          manaCostTapSource(shape)
+        );
+      })
     )
       return handBack;
     // Tapping removes nothing; a sacrifice needs nothing in play to read the permanent leaving.
@@ -867,7 +900,7 @@ export function searchPayment(
     if (sacrificing && !leavingBound) return handBack;
     const permanentOf = new Map(ctx.state.battlefield.map((p) => [p.cardId, p]));
     for (const source of rootSources) {
-      if (source.productionSpec === undefined) continue;
+      if (source.convoke === true || source.productionSpec === undefined) continue;
       if (sacrificing && !BOARD_BLIND_DYNAMIC.has(source.productionSpec.dynamic ?? ''))
         return handBack;
       const perm = permanentOf.get(source.cardId);

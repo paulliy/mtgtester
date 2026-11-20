@@ -35,11 +35,20 @@ const STABLE_SELECTOR_KINDS: ReadonlySet<Selector['kind']> = new Set<Selector['k
   'isMonocolored',
 ]);
 
-function stableSelector(selector: Selector): boolean {
+export function stableSelector(selector: Selector): boolean {
   if (selector.kind === 'allOf' || selector.kind === 'anyOf')
     return selector.of.every(stableSelector);
   if (selector.kind === 'not') return stableSelector(selector.of);
   return STABLE_SELECTOR_KINDS.has(selector.kind);
+}
+
+/**
+ * True when a board count stays what it is now through a payment in which no permanent leaves:
+ * a count of permanents over a stable selector, which a tap, a mana payment or a life rider cannot
+ * change. The caller must know that nothing in the payment sacrifices.
+ */
+export function countFixedWhileNothingLeaves(condition: Condition): boolean {
+  return condition.kind === 'countPermanents' && stableSelector(condition.selector);
 }
 
 /**
@@ -232,6 +241,21 @@ const RULES_IRRELEVANT_TO_PRODUCTION: ReadonlySet<string> = new Set([
   'damageDoubledToOpponents',
   'damageHalvedToYou',
   'preventCombatDamageToSelf',
+  // Neither changes a source's production when it ends: a cost the opponents pay to target
+  // (Terror of the Peaks, fuzz-26), rules for cards off the battlefield or not yet drawn, how a
+  // token's or another permanent's entry is replaced (no fixed-capacity activation makes one), or
+  // an untap step.
+  'targetLifeTax',
+  'alsoTypesOffBattlefield',
+  'beginOnBattlefieldFromOpeningHand',
+  'createClueFoodAndTreasure',
+  'effectDiscardMayGoToLibraryTop',
+  'graveyardToExile',
+  'lookTopLibrary',
+  'revealTopLibrary',
+  'otherPermanentsEnterTapped',
+  'tokenCountMultiplier',
+  'untapDuringOthersUntapSteps',
   'spellCastLimit',
   'spellCostIncrease',
   // A trigger waits for the stack, so doubling, adding to or suppressing one changes nothing a

@@ -22,7 +22,7 @@ import {
 } from '../src/mana/stateful-payment';
 import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
-import { allowanceFor, manaSourcesFor } from '../src/state/queries';
+import { allowanceFor, convokeSourcesFor, manaSourcesFor } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
 import {
   conjure,
@@ -565,6 +565,110 @@ describe('a counted amount', () => {
   });
 });
 
+describe('the static solve, widened (#46)', () => {
+  function staticOf(
+    ctx: GameContext,
+    manaCost: string,
+    lifeReserved = 0,
+    sourcesFor = (context: GameContext, payer: { id: string }) =>
+      manaSourcesFor(context, payer.id as 'P1', true),
+  ) {
+    const trace: { staticSolve?: boolean } = {};
+    const player = playerById(ctx, 'P1');
+    const plan = searchPayment(
+      ctx,
+      player,
+      parseManaCost(manaCost).cost!,
+      allowanceFor(ctx, 'P1', { kind: 'castSpell', oracleId: 'none', isCommander: false }),
+      sourcesFor,
+      new Set(),
+      lifeReserved,
+      0,
+      true,
+      trace,
+    );
+    return { plan, static: trace.staticSolve === true };
+  }
+
+  it('stateful-planner-static-pain — a painland rides along when no life is reserved, and keeps the search when it is (fuzz-131, fuzz-144)', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', painland());
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', treasure());
+    });
+    const free = staticOf(ctx, '{G}{U}');
+    expect(free.static).toBe(true);
+    expect(free.plan).not.toBeNull();
+    expect(staticOf(ctx, '{G}{U}', 5).static).toBe(false);
+    expect(staticOf(ctx, '{G}{W/P}').static).toBe(false);
+  });
+
+  it('stateful-planner-static-convoke — convoke creatures join the static solve (fuzz-200)', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', forest());
+      for (let i = 0; i < 2; i++) spawn(c, 'P1', bear());
+    });
+    const withConvoke = (context: GameContext, payer: { id: string }) => [
+      ...manaSourcesFor(context, payer.id as 'P1', true),
+      ...convokeSourcesFor(context, payer.id as 'P1'),
+    ];
+    // The fixture bears are colorless: each convokes for one generic.
+    const paid = staticOf(ctx, '{2}{G}{U}', 0, withConvoke);
+    expect(paid.static).toBe(true);
+    expect(paid.plan).not.toBeNull();
+    expect(staticOf(ctx, '{3}{G}{U}', 0, withConvoke).plan).toBeNull();
+    expect(staticOf(ctx, '{1}{G}{G}', 0, withConvoke).plan).toBeNull();
+  });
+
+  it('stateful-planner-static-conditional — "two mana instead if you control a 4-power creature" keeps the bound (fuzz-169, fuzz-173, fuzz-185)', () => {
+    const caryatid = () =>
+      oracle({
+        name: 'Test Caryatid',
+        typeLine: 'Creature — Plant',
+        manaCost: '{1}{G}',
+        power: '0',
+        toughness: '2',
+        oracleText:
+          '{T}: Add one mana of any color. If you control a creature with power 4 or greater, add two mana of any one color instead.',
+      });
+    const giant = () =>
+      oracle({
+        name: 'Test Giant',
+        typeLine: 'Creature — Giant',
+        manaCost: '{4}',
+        power: '4',
+        toughness: '4',
+      });
+    const ctx = board((c) => {
+      for (const make of [swamp, mountain, forest]) spawn(c, 'P2', make());
+      spawn(c, 'P1', caryatid()).tapped = true;
+      spawn(c, 'P1', giant());
+      for (let i = 0; i < 4; i++)
+        spawn(
+          c,
+          'P1',
+          artifact(
+            `Test Stone ${i}`,
+            '{T}: Add one mana of any color that a land an opponent controls could produce.',
+          ),
+        );
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', plains());
+    });
+    const legacy = search(ctx, parseManaCost('{6}{W}{G}{G}').cost!, false);
+    expect('error' in legacy && legacy.error).toContain('budget exceeded');
+    expect(staticOf(ctx, '{6}{W}{G}{G}').plan).toBeNull();
+    // Untapped, she makes two of one color: the bound counts her at that.
+    const untapped = board((c) => {
+      spawn(c, 'P1', caryatid());
+      spawn(c, 'P1', giant());
+      spawn(c, 'P1', orchard());
+    });
+    expect(staticOf(untapped, '{G}{G}{U}').plan).not.toBeNull();
+    expect(staticOf(untapped, '{G}{G}{G}{U}').plan).toBeNull();
+  }, 30_000);
+});
+
 describe('interchangeable permanents', () => {
   /** P1's Treasures on a fresh board, and the classes the planner puts them in. */
   function classes(edit?: (ctx: GameContext, treasures: string[]) => void) {
@@ -926,6 +1030,11 @@ describe('sacrifice mana sources', () => {
         'damageDoubledToOpponents',
         'damageHalvedToYou',
         'preventCombatDamageToSelf',
+        // Terror of the Peaks (fuzz-26) and other rules no source's production reads.
+        'targetLifeTax',
+        'graveyardToExile',
+        'tokenCountMultiplier',
+        'untapDuringOthersUntapSteps',
       ])
         expect(keeps(holder([], [{ kind }])), kind).toBe(true);
       expect(keeps(holder([], [{ kind: 'cantActivateAbilities' }]))).toBe(false);
