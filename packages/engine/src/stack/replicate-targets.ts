@@ -142,12 +142,31 @@ export function* chooseNewTargets(
     }
     return true;
   };
-  const domains = positions.map((position) => [
-    position.old,
-    ...targetDomainCandidates(ctx, ability.targets[position.slot]!.kind).filter(
-      (id) => id !== position.old && !excluded.has(id),
-    ),
-  ]);
+  // A target whose legality reads no other chosen target (no differentFrom/differentPlayer slots,
+  // no graveyard owner slot) is legal or not regardless of the positions still to be decided, so
+  // an illegal changed candidate can be dropped up front instead of after a search over every
+  // later position. finalIsLegal still checks each position, and the cross-slot rules
+  // (distinctness, total mana value, the slot-reading specs) stay there.
+  const independent = positions.map((position) => {
+    const spec = ability.targets[position.slot]!;
+    return (
+      spec.differentPlayerTargetSlots === undefined &&
+      spec.differentFromSlots === undefined &&
+      spec.graveyardOwnerSlot === undefined
+    );
+  });
+  const domains = positions.map((position, index) => {
+    const spec = ability.targets[position.slot]!;
+    return [
+      position.old,
+      ...targetDomainCandidates(ctx, spec.kind).filter(
+        (id) =>
+          id !== position.old &&
+          !excluded.has(id) &&
+          (!independent[index] || targetIsLegal(ctx, spec, id, context(originalTargets))),
+      ),
+    ];
+  });
   const canComplete = (index: number): boolean => {
     if (index === positions.length) return finalIsLegal();
     const position = positions[index]!;
@@ -175,6 +194,13 @@ export function* chooseNewTargets(
     String(id);
   for (const [index, position] of positions.entries()) {
     const choices = domains[index]!.filter((id) => {
+      // A counted slot's targets are distinct; an earlier position already holding `id` makes
+      // every completion fail, so skip the search (the same prefix rule canComplete applies).
+      const group =
+        ability.targets[position.slot]!.count === undefined
+          ? undefined
+          : countTargets[position.slot]!;
+      if (group !== undefined && group.slice(0, position.ordinal).includes(id)) return false;
       set(position, id);
       const result = canComplete(index + 1);
       set(position, position.old);
