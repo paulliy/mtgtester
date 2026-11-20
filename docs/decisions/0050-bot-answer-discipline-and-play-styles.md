@@ -146,3 +146,25 @@ Full tables and commands: [review](../reviews/bot-answer-discipline-2026-11-19.m
   too passive to close a game), and combo has no deck in the repo to test it on.
 - A style is mostly a way to lose when it is wrong. Any later wiring needs a guard, for example
   allowing only a style that matches the deck's profile.
+
+## Update 2026-11-20: the gauntlet
+
+Mirrors only show whether a preset beats itself. `bun run bot-gauntlet` seats four different
+premade decks played by the old bot and switches one seat at a time to the new bot, same seed and
+table, so each seat is a paired comparison in the field
+([review](../reviews/bot-gauntlet-2026-11-20.md)). Two runs of 80 pods, 1,040 games each:
+
+- the aggro preset wins in the field (+35 / −12 discordant pairs over both runs, styled and
+  proxy-steered together);
+- the control preset stops losing once its knob defaults are removed (+1/−5 → +4/−4): it now sets
+  no knobs and keeps only its scales;
+- the value preset (+2 / −9) and proxy-steered midrange (+4 / −15) still lose;
+- the production bot is neutral to slightly positive in the field.
+
+Changes from a review of the games that changed: holding up mana never blocks casting the commander
+or casting from a hand that would discard; a risky attack needs a reason (an attack trigger, a
+second creature, more than 1 power, not the commander); value thresholds return to 1; aggro and
+tempo stop scaling ramp down; combo's draw scale drops to 1.25; the strategist's target-order bonus
+drops from 3 to 1 per place. `fixed-0043` now names its seven fixes, so a later fix cannot leak
+into the old bot. The style knob stays away from the strategist until value and the classifier
+are fixed.
