@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "card": "Elvish Champion",
+  "supportCards": [
+    {
+      "name": "Scenario Elf",
+      "typeLine": "Creature — Elf",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature — Ogre",
+      "manaCost": "{2}{R}",
+      "power": "3",
+      "toughness": "3"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "elvish-champion-walker-unblockable",
+      "title": "Elvish Champion: another Elf gains the landwalk and can't be blocked",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with Scenario Elf only; Elvish Champion stays home.",
+        "P2 controls a Forest and Scenario Ogre."
+      ],
+      "expectedOutcome": "P2 is never asked to block; Scenario Elf deals 2 damage.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Elvish Champion", "Scenario Elf"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["__no_attack__", "P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Ogre"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "elvish-champion-no-matching-land",
+      "title": "Elvish Champion: without a Forest the Elf can be blocked",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with Scenario Elf only; P2 controls a Island (not a Forest) and Scenario Ogre.",
+        "P2 blocks with Scenario Ogre."
+      ],
+      "expectedOutcome": "The block is legal: Scenario Elf dies and P2 takes no damage.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Elvish Champion", "Scenario Elf"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["__no_attack__", "P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Scenario Elf"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Scenario Elf"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "elvish-champion-lord-itself-blockable",
+      "title": "Elvish Champion: the lord itself does not gain the landwalk",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with Elvish Champion only; P2 controls a Forest and Scenario Ogre.",
+        "P2 blocks with Scenario Ogre."
+      ],
+      "expectedOutcome": "\"Other\" excludes the lord: it is blockable, so P2 is asked to block and takes no damage.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Elvish Champion", "Scenario Elf"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2", "__no_attack__"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Elvish Champion"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "event": {
+            "type": "block",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

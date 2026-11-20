@@ -8,7 +8,9 @@
     "docs/reviews/card-compiler-trial-02"
   ],
   "multiFeatureCards": 6,
-  "clearedFeatures": [],
+  "clearedFeatures": [
+    "Blocker restriction by creature selector"
+  ],
   "features": [
     {
       "rank": 1,
@@ -578,58 +580,6 @@
     },
     {
       "rank": 10,
-      "feature": "Grant landwalk, horsemanship and afflict keywords",
-      "description": "Add landwalk (forestwalk, mountainwalk), horsemanship and afflict to IMPLEMENTED_KEYWORDS so addKeyword/static grants work.",
-      "cards": 5,
-      "weightedCards": 5,
-      "weightedDecks": 160538,
-      "slotShare": 0.00019095,
-      "xmageKnown": 5,
-      "members": [
-        {
-          "name": "Cyberman Patrol",
-          "rank": 2745,
-          "decks": 60430,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "Afflict is not in IMPLEMENTED_KEYWORDS and cannot be granted to artifact creatures through addKeyword."
-        },
-        {
-          "name": "Elvish Champion",
-          "rank": 3086,
-          "decks": 53685,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "Forestwalk is a landwalk ability that is not in IMPLEMENTED_KEYWORDS and the schema has no landwalk construct to grant to other Elf creatures."
-        },
-        {
-          "name": "Dwarven Grunt",
-          "rank": 8139,
-          "decks": 16880,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "Mountainwalk (an evasion keyword that makes the creature unblockable while the defending player controls a Mountain) is not in IMPLEMENTED_KEYWORDS and the schema has no landwalk construct."
-        },
-        {
-          "name": "Sun Quan, Lord of Wu",
-          "rank": 8798,
-          "decks": 15005,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "Horsemanship is not a KeywordAbility and cannot be granted through the keyword layer."
-        },
-        {
-          "name": "Eladamri, Lord of Leaves",
-          "rank": 8971,
-          "decks": 14538,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "Forestwalk is a landwalk ability that is not in IMPLEMENTED_KEYWORDS and the schema has no landwalk construct to grant to other Elf creatures."
-        }
-      ]
-    },
-    {
-      "rank": 11,
       "feature": "Cast a card from other zones with a rider",
       "description": "Add cast-from-opponent-graveyard and reveal-top-then-cast-if-equal-mana-value ops.",
       "cards": 4,
@@ -674,7 +624,7 @@
       ]
     },
     {
-      "rank": 12,
+      "rank": 11,
       "feature": "Conditions on the triggering object or event player",
       "description": "Add conditions on the trigger object/event player: power equals toughness, 'other than the entering permanent', event player's own turn, defending player poisoned, cast from hand.",
       "cards": 6,
@@ -735,7 +685,7 @@
       ]
     },
     {
-      "rank": 13,
+      "rank": 12,
       "feature": "Dynamic mana-value comparand in selectors",
       "description": "Let manaValueAtMost/AtLeast/equals take a Value (announced X, count of Shrines, graveyard permanent count, dead target's mana value) instead of a fixed number.",
       "cards": 6,
@@ -795,7 +745,7 @@
       ]
     },
     {
-      "rank": 14,
+      "rank": 13,
       "feature": "Hand-size rule changes",
       "description": "Add maximum-hand-size reduction and time-limited no-maximum-hand-size.",
       "cards": 2,
@@ -823,7 +773,7 @@
       ]
     },
     {
-      "rank": 15,
+      "rank": 14,
       "feature": "Mana production variants",
       "description": "Add single-shared-color X mana and optional addMana.",
       "cards": 2,
@@ -851,7 +801,7 @@
       ]
     },
     {
-      "rank": 16,
+      "rank": 15,
       "feature": "Damage prevention variants",
       "description": "Add permanent prevent combat damage dealt by self and colored-source damage shields.",
       "cards": 3,
@@ -887,7 +837,7 @@
       ]
     },
     {
-      "rank": 17,
+      "rank": 16,
       "feature": "Variable-count target slots and chosen-count value",
       "description": "Support 'any number of target' slots, distributing counters among them, and a Value counting the cards/targets chosen.",
       "cards": 5,
@@ -939,7 +889,7 @@
       ]
     },
     {
-      "rank": 18,
+      "rank": 17,
       "feature": "Global alternative cost for spells",
       "description": "Add a static alternative cost for all/some spells (pay WUBRG, pay {0} once per turn for colorless from hand).",
       "cards": 2,
@@ -967,7 +917,7 @@
       ]
     },
     {
-      "rank": 19,
+      "rank": 18,
       "feature": "Division/halving Value",
       "description": "Add Value division with round-down (half the Zombies, half the non-God creatures).",
       "cards": 2,
@@ -995,7 +945,7 @@
       ]
     },
     {
-      "rank": 20,
+      "rank": 19,
       "feature": "Reveal/exile/mill-until loops with leftovers handling",
       "description": "Add a repeat-until-predicate reveal/exile/mill op (until creature/land/instant card or N cards) with rest to bottom/graveyard and optional cast or hand.",
       "cards": 5,
@@ -1048,7 +998,7 @@
       ]
     },
     {
-      "rank": 21,
+      "rank": 20,
       "feature": "Announced X where a fixed number is required",
       "description": "Allow announced X (or a Value) for look-at-top counts, target counts and repeat counts (populate X times).",
       "cards": 4,
@@ -1092,7 +1042,7 @@
       ]
     },
     {
-      "rank": 22,
+      "rank": 21,
       "feature": "Ability and spell copying with source filters",
       "description": "Allow copying activated and triggered abilities filtered by source (enchantment, other legendary non-commander) and a copied permanent spell rider.",
       "cards": 2,
@@ -1120,7 +1070,7 @@
       ]
     },
     {
-      "rank": 23,
+      "rank": 22,
       "feature": "Devour",
       "description": "Add devour N: choose creatures to sacrifice on entry and count them for counters.",
       "cards": 2,
@@ -1148,7 +1098,7 @@
       ]
     },
     {
-      "rank": 24,
+      "rank": 23,
       "feature": "Conditional spell cost modification",
       "description": "Extend costReduction/tax with conditions: spell cast from graveyard, target is tapped, spells targeting this creature, spells the drawing player casts.",
       "cards": 5,
@@ -1201,7 +1151,7 @@
       ]
     },
     {
-      "rank": 25,
+      "rank": 24,
       "feature": "Cross-player hand and graveyard comparison values",
       "description": "Add Values for hand-size difference vs a chosen opponent, opponents with more cards in hand, and a single opponent's graveyard count.",
       "cards": 4,
@@ -1245,7 +1195,7 @@
       ]
     },
     {
-      "rank": 26,
+      "rank": 25,
       "feature": "Sacrificed cost object's power/mana value",
       "description": "Add a Value reading the power or mana value of the permanent sacrificed as a cost or additional cost.",
       "cards": 4,
@@ -1289,7 +1239,7 @@
       ]
     },
     {
-      "rank": 27,
+      "rank": 26,
       "feature": "Protection from creature types and players",
       "description": "Let protection name a creature type (Dogs) or a player set (each of your opponents), not only a color, multicolored or creatures.",
       "cards": 2,
@@ -1317,7 +1267,7 @@
       ]
     },
     {
-      "rank": 28,
+      "rank": 27,
       "feature": "Put onto battlefield tapped and attacking or attached",
       "description": "Add ops to put a card onto the battlefield tapped and attacking, or attached to a chosen creature.",
       "cards": 3,
@@ -1353,7 +1303,7 @@
       ]
     },
     {
-      "rank": 29,
+      "rank": 28,
       "feature": "Grant retrace and umbra armor",
       "description": "Add static grants of retrace (cast from graveyard by discarding a land) and umbra armor to cards/Auras.",
       "cards": 3,
@@ -1389,7 +1339,7 @@
       ]
     },
     {
-      "rank": 30,
+      "rank": 29,
       "feature": "Voting generalization",
       "description": "Add per-vote effects for council's dilemma and a players-finish-voting trigger.",
       "cards": 2,
@@ -1413,6 +1363,34 @@
           "xmageBucket": "xmage-custom-classes",
           "trial": "docs/reviews/card-compiler-trial-02",
           "reason": "The schema has no trigger for players finishing a vote, and no way to read which opponents voted for a choice the controller did not vote for."
+        }
+      ]
+    },
+    {
+      "rank": 30,
+      "feature": "Grant landwalk, horsemanship and afflict keywords",
+      "description": "Add landwalk (forestwalk, mountainwalk), horsemanship and afflict to IMPLEMENTED_KEYWORDS so addKeyword/static grants work.",
+      "cards": 2,
+      "weightedCards": 2,
+      "weightedDecks": 75435,
+      "slotShare": 0.00008973,
+      "xmageKnown": 2,
+      "members": [
+        {
+          "name": "Cyberman Patrol",
+          "rank": 2745,
+          "decks": 60430,
+          "xmageBucket": "xmage-known-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Afflict is not in IMPLEMENTED_KEYWORDS and cannot be granted to artifact creatures through addKeyword."
+        },
+        {
+          "name": "Sun Quan, Lord of Wu",
+          "rank": 8798,
+          "decks": 15005,
+          "xmageBucket": "xmage-known-classes",
+          "trial": "docs/reviews/card-compiler-trial-02",
+          "reason": "Horsemanship is not a KeywordAbility and cannot be granted through the keyword layer."
         }
       ]
     },
@@ -1579,34 +1557,6 @@
     },
     {
       "rank": 35,
-      "feature": "Blocker restriction by creature selector",
-      "description": "Add can't-be-blocked-except-by / by-creatures-matching restrictions (Walls only, power 2 or less).",
-      "cards": 2,
-      "weightedCards": 2,
-      "weightedDecks": 57169,
-      "slotShare": 0.000068,
-      "xmageKnown": 2,
-      "members": [
-        {
-          "name": "Prowler's Helm",
-          "rank": 3430,
-          "decks": 47962,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "Restricting which creatures may block the equipped creature to Walls has no schema form; the only blocker restrictions are a minimum-blocker count and a power comparison."
-        },
-        {
-          "name": "Greater Sandwurm",
-          "rank": 11704,
-          "decks": 9207,
-          "xmageBucket": "xmage-known-classes",
-          "trial": "docs/reviews/card-compiler-trial-02",
-          "reason": "The only blocker-restriction selectors that read power (powerAtMost) are event-only, so a static 'can't be blocked by creatures with power 2 or less' cannot be said."
-        }
-      ]
-    },
-    {
-      "rank": 36,
       "feature": "Mana spend restrictions by spell/cost predicate",
       "description": "Extend ManaRestriction with predicates: costs containing X, colored spells without X, nonartifact spells only (abilities/artifact spells allowed).",
       "cards": 4,
@@ -1651,7 +1601,7 @@
       ]
     },
     {
-      "rank": 37,
+      "rank": 36,
       "feature": "Shares-a-creature-type selector",
       "description": "Add a selector for cards sharing a creature type with the source or dying creature.",
       "cards": 2,
@@ -1679,7 +1629,7 @@
       ]
     },
     {
-      "rank": 38,
+      "rank": 37,
       "feature": "Selector predicates in targets and statics",
       "description": "Make powerAtMost and hasKeyword predicates usable in target filters and continuous statics (layer-aware).",
       "cards": 3,
@@ -1715,7 +1665,7 @@
       ]
     },
     {
-      "rank": 39,
+      "rank": 38,
       "feature": "Counterspell riders",
       "description": "Add counter variants: counter then put on battlefield under your control, counter unless pay X with tap-lands penalty, lose life per creature for countered object's controller.",
       "cards": 3,
@@ -1751,7 +1701,7 @@
       ]
     },
     {
-      "rank": 40,
+      "rank": 39,
       "feature": "Modern keyword actions (venture, ring tempts, suspect, crime)",
       "description": "Add venture, the Ring tempts you, suspect state and commit-a-crime trigger.",
       "cards": 4,
@@ -1795,7 +1745,7 @@
       ]
     },
     {
-      "rank": 41,
+      "rank": 40,
       "feature": "Select-by-target-player scope",
       "description": "Let selectors/ops scope to a targeted player's permanents (tap all, destroy all, return each commander).",
       "cards": 3,
@@ -1832,7 +1782,7 @@
       ]
     },
     {
-      "rank": 42,
+      "rank": 41,
       "feature": "Incubate",
       "description": "Add an incubate effect creating an Incubator token with X +1/+1 counters and its {2} transform into a 0/0 artifact creature.",
       "cards": 3,
@@ -1868,7 +1818,7 @@
       ]
     },
     {
-      "rank": 43,
+      "rank": 42,
       "feature": "Face-down pile split with opponent choice",
       "description": "Add two-pile split where an opponent chooses which pile goes to hand.",
       "cards": 2,
@@ -1896,7 +1846,7 @@
       ]
     },
     {
-      "rank": 44,
+      "rank": 43,
       "feature": "Damage-would-kill replacement: exile instead",
       "description": "Add a this-turn replacement exiling creatures damaged by the effect that would die.",
       "cards": 2,
@@ -1924,7 +1874,7 @@
       ]
     },
     {
-      "rank": 45,
+      "rank": 44,
       "feature": "Unless-you-do non-mana payments",
       "description": "Support 'unless you return a land / tap two creatures' as a choice with sacrifice-or-draw fallback.",
       "cards": 2,
@@ -1952,7 +1902,7 @@
       ]
     },
     {
-      "rank": 46,
+      "rank": 45,
       "feature": "Count of distinct names/powers",
       "description": "Add Values counting differently named lands and different powers among creatures.",
       "cards": 2,
@@ -1980,7 +1930,7 @@
       ]
     },
     {
-      "rank": 47,
+      "rank": 46,
       "feature": "Static permission to cast spells with flash",
       "description": "Add static rule letting players cast (matching) spells as though they had flash, optionally only during a given step.",
       "cards": 1,
@@ -2000,7 +1950,7 @@
       ]
     },
     {
-      "rank": 48,
+      "rank": 47,
       "feature": "Counters read from events and other permanents",
       "description": "Add Values for number/kind of counters placed in the triggering event and counters on another permanent (token P/T).",
       "cards": 2,
@@ -2357,11 +2307,31 @@
       "by": "modeled"
     },
     {
+      "name": "Dwarven Grunt",
+      "by": "modeled"
+    },
+    {
+      "name": "Eladamri, Lord of Leaves",
+      "by": "modeled"
+    },
+    {
+      "name": "Elvish Champion",
+      "by": "modeled"
+    },
+    {
       "name": "Ganax, Astral Hunter",
       "by": "modeled"
     },
     {
       "name": "Grand Arbiter Augustin IV",
+      "by": "modeled"
+    },
+    {
+      "name": "Greater Sandwurm",
+      "by": "modeled"
+    },
+    {
+      "name": "Prowler's Helm",
       "by": "modeled"
     },
     {

@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "card": "Aberrant",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "aberrant-x5",
+      "title": "Aberrant: X=5 gives 5 +1/+1 counters and draws a card",
+      "clauses": [1],
+      "instructions": ["Cast Aberrant with X=5."],
+      "expectedOutcome": "Aberrant enters with 5 +1/+1 counters; X is 5 or more, so P1 draws the top card of their library, Scenario Bear.",
+      "seats": {
+        "P1": {
+          "hand": ["Aberrant"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest"],
+          "libraryTop": ["Scenario Bear"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Aberrant .* with X=5$/"
+        }
+      ],
+      "expect": [
+        {
+          "counters": {
+            "card": "Aberrant",
+            "counter": "+1/+1",
+            "equals": 5
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "aberrant-x4",
+      "title": "Aberrant: X=4 gives 4 +1/+1 counters and no card",
+      "clauses": [1],
+      "instructions": ["Cast Aberrant with X=4."],
+      "expectedOutcome": "Aberrant enters with 4 +1/+1 counters; X is below 5, so P1 draws no card and Scenario Bear stays on top of the library.",
+      "seats": {
+        "P1": {
+          "hand": ["Aberrant"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest", "Forest"],
+          "libraryTop": ["Scenario Bear"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Aberrant .* with X=4$/"
+        }
+      ],
+      "expect": [
+        {
+          "counters": {
+            "card": "Aberrant",
+            "counter": "+1/+1",
+            "equals": 4
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Scenario Bear"]
+          }
+        }
+      ]
+    }
+  ]
+}

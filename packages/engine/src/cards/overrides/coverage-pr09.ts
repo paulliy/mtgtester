@@ -5,7 +5,6 @@ import {
   activated,
   targetSlots,
   mana,
-  manaCost,
   TAP,
   spell,
   ATTACHED,
@@ -533,27 +532,7 @@ export function registerCoveragePr09Overrides(): void {
     },
     'PR09 composes exact library, casting, and keyword instructions through the production engine.',
   );
-  replaceCard(
-    'e7ae3ee7-824f-4dcb-8f28-7de99e4d8c3e',
-    "New Generation's Technique",
-    ['unrecognized rules text: "Sneak {2}{G}"'],
-    {
-      alternativeCasts: [
-        {
-          kind: 'nonMana',
-          manaCost: manaCost('{2}{G}'),
-          costs: [{ kind: 'returnUnblockedAttacker' }],
-          instantTiming: true,
-          condition: {
-            kind: 'allOf',
-            of: [{ kind: 'yourTurn' }, { kind: 'duringStep', step: 'declareBlockers' }],
-          },
-          description: 'Sneak {2}{G} — return an unblocked attacker you control',
-        },
-      ],
-    },
-    'PR09 implements the exact alternate mana and return cost with declare-blockers timing.',
-  );
+  // New Generation's Technique is interpreted: the sneak parse rule reproduces this override.
   replaceCard(
     'd51136fa-3c13-48a5-83fd-51fe00010a4b',
     'Celebrate the Mountain-king',

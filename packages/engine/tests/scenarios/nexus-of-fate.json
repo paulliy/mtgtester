@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "card": "Nexus of Fate",
+  "scenarios": [
+    {
+      "id": "nexus-of-fate-resolves-shuffles",
+      "title": "Nexus of Fate: after it resolves, it is shuffled into the library instead of the graveyard",
+      "clauses": [2],
+      "instructions": ["Cast Nexus of Fate."],
+      "expectedOutcome": "Nexus of Fate is shuffled into your library and you take an extra turn.",
+      "seats": {
+        "P1": {
+          "hand": ["Nexus of Fate"],
+          "battlefield": ["Island", "Island", "Island", "Island", "Island", "Island", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Nexus of Fate/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Nexus of Fate"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Nexus of Fate"]
+          }
+        },
+        {
+          "event": {
+            "type": "shuffle",
+            "count": 1
+          }
+        },
+        {
+          "event": {
+            "type": "revealCard"
+          }
+        }
+      ]
+    },
+    {
+      "id": "nexus-of-fate-countered-shuffles",
+      "title": "Nexus of Fate: countered, it is still shuffled into the library",
+      "clauses": [2],
+      "instructions": ["Cast Nexus of Fate.", "P2 counters it with Counterspell."],
+      "expectedOutcome": "Nexus of Fate goes to the library, not the graveyard; Counterspell goes to P2's graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Nexus of Fate"],
+          "battlefield": ["Island", "Island", "Island", "Island", "Island", "Island", "Island"]
+        },
+        "P2": {
+          "hand": ["Counterspell"],
+          "battlefield": ["Island", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Nexus of Fate/"
+        },
+        {
+          "player": "P2",
+          "choose": "/^Cast Counterspell/",
+          "targets": ["Nexus of Fate"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Nexus of Fate"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Nexus of Fate"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Counterspell"]
+          }
+        }
+      ]
+    }
+  ]
+}

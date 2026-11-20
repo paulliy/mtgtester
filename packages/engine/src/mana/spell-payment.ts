@@ -203,6 +203,8 @@ export function planSpellPayment(
         currentSources.flatMap((manaSource): ManaSource[] => {
           if (taps.has(manaSource.cardId) && manaSource.costs.some((cost) => cost.kind === 'tap'))
             return [];
+          // A card discarded or exiled from hand for this cost cannot also make its mana.
+          if (manaSource.fromHand === true && consumed.has(manaSource.cardId)) return [];
           if (
             reserved.has(manaSource.cardId) &&
             manaSource.costs.some(
@@ -244,7 +246,9 @@ export function planSpellPayment(
             allows,
             (context, payer) =>
               usableFrom(payer, [
-                ...manaSourcesFor(context, payer.id, true),
+                // The replay planner proves board activations only; a card in hand that makes
+                // mana (Spirit Guide) is not offered to it (fail closed).
+                ...manaSourcesFor(context, payer.id, true, 'payment', false),
                 ...(request.spellDefinition !== undefined &&
                 spellHasConvoke(request.spellDefinition)
                   ? convokeSourcesFor(context, payer.id)

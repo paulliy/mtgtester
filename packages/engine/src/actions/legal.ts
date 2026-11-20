@@ -2227,6 +2227,15 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
       if (activated.zone !== 'graveyard') continue;
       if (activated.timing === 'sorcery' && !sorcerySpeed) continue;
       if (activated.timing === 'yourTurn' && !isActive) continue;
+      // "Activate only if …" (CR 602.5b), judged for the card's owner, who controls the ability.
+      if (
+        activated.condition !== undefined &&
+        !evaluateCondition(ctx, activated.condition, {
+          cardId: card.cardId,
+          controllerId: player.id,
+        })
+      )
+        continue;
       const allows = allowanceFor(ctx, player.id, {
         kind: 'activateAbility',
         sourceOracleId: card.oracleId,

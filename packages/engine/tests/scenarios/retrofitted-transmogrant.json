@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "card": "Retrofitted Transmogrant",
+  "scenarios": [
+    {
+      "id": "retrofitted-transmogrant-return",
+      "title": "Retrofitted Transmogrant: return this card from your graveyard to the battlefield tapped",
+      "clauses": [1],
+      "instructions": ["Activate Retrofitted Transmogrant's ability from your graveyard."],
+      "expectedOutcome": "Retrofitted Transmogrant returns to the battlefield tapped with 2 +1/+1 counters.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Retrofitted Transmogrant"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Retrofitted Transmogrant \\(graveyard\\)/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Retrofitted Transmogrant"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Retrofitted Transmogrant"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Retrofitted Transmogrant",
+            "equals": true
+          }
+        },
+        {
+          "counters": {
+            "card": "Retrofitted Transmogrant",
+            "counter": "+1/+1",
+            "equals": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "retrofitted-transmogrant-from-hand",
+      "title": "Retrofitted Transmogrant: the ability works only from the graveyard",
+      "clauses": [1],
+      "instructions": ["With Retrofitted Transmogrant in your hand, cast it."],
+      "expectedOutcome": "No return ability is offered from the hand; Retrofitted Transmogrant enters untapped the normal way.",
+      "seats": {
+        "P1": {
+          "hand": ["Retrofitted Transmogrant"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Retrofitted Transmogrant/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Retrofitted Transmogrant"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Retrofitted Transmogrant",
+            "equals": false
+          }
+        }
+      ]
+    }
+  ]
+}

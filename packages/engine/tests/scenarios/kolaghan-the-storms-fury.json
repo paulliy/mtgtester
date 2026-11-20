@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "card": "Kolaghan, the Storm's Fury",
+  "scenarios": [
+    {
+      "id": "kolaghan-the-storms-fury-dash",
+      "title": "Kolaghan, the Storm's Fury: dashed, it has haste and returns to hand at the end step",
+      "clauses": [3],
+      "instructions": [
+        "Cast Kolaghan, the Storm's Fury for its dash cost {3}{B}{R}.",
+        "Attack P2 with it."
+      ],
+      "expectedOutcome": "Kolaghan has haste, attacks, and its own attack trigger gives it +1/+0, so P2 takes 5; at the end step it returns to P1's hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Kolaghan, the Storm's Fury"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Mountain", "Mountain"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Kolaghan, the Storm's Fury .*\\(dash\\)$/"
+        },
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 35
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Kolaghan, the Storm's Fury"]
+          }
+        }
+      ],
+      "continue": {
+        "throughCombat": true,
+        "toEndStep": true
+      }
+    },
+    {
+      "id": "kolaghan-the-storms-fury-cast-normally",
+      "title": "Kolaghan, the Storm's Fury: cast for its normal cost, it has no haste and stays",
+      "clauses": [3],
+      "instructions": [
+        "Cast Kolaghan, the Storm's Fury for its normal cost.",
+        "Attack with whatever can attack, then pass to the end step."
+      ],
+      "expectedOutcome": "Kolaghan has no haste, so no attack is offered; it stays on the battlefield through the end step and P2 takes no damage.",
+      "seats": {
+        "P1": {
+          "hand": ["Kolaghan, the Storm's Fury"],
+          "battlefield": ["Swamp", "Swamp", "Swamp", "Mountain", "Mountain"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Kolaghan, the Storm's Fury \\(\\{3\\}\\{B\\}\\{R\\}\\)$/"
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Kolaghan, the Storm's Fury"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Kolaghan, the Storm's Fury"]
+          }
+        }
+      ],
+      "continue": {
+        "throughCombat": true,
+        "toEndStep": true
+      }
+    }
+  ]
+}

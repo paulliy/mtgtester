@@ -5642,7 +5642,7 @@
     },
     {
       "sourceFile": "packages/engine/src/cards/overrides/w2-remaining.ts",
-      "uniqueOracleIds": 18,
+      "uniqueOracleIds": 16,
       "reviewedOracleIds": 18,
       "grandfatheredOracleIds": 0,
       "status": "reviewed"
@@ -7026,6 +7026,27 @@
       "sourceFile": "packages/engine/src/cards/overrides/silverquill-influence.ts",
       "restoredIn": "hill-climb-s3",
       "note": "Registration deleted: the interpreter reads \"exile target player's graveyard\" as an effect sentence, so the enters trigger is interpreted with the same target and op; behavior evidence in packages/engine/tests/silverquill-main-engine-batch1.test.ts and the Card Test Lab Bojuka Bog scenario."
+    },
+    {
+      "oracleId": "5a343a5f-3f9b-43c3-8532-8391de7a5443",
+      "name": "Jacked Rabbit",
+      "sourceFile": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "restoredIn": "engine-features-pr2",
+      "note": "Registration deleted: the ravenous parse rule produces the same entry counters and X>=5 draw trigger, and the attack trigger parses; behavior evidence in packages/engine/tests/w2-remaining-engine-batch1.test.ts and packages/engine/tests/evasion-blocking.test.ts."
+    },
+    {
+      "oracleId": "74868bc0-6081-4f46-a2c6-9521cd5465aa",
+      "name": "Tender Wildguide",
+      "sourceFile": "packages/engine/src/cards/overrides/w2-remaining.ts",
+      "restoredIn": "engine-features-pr2",
+      "note": "Registration deleted: the offspring parse rule reproduces the override exactly; behavior evidence in packages/engine/tests/w2-remaining-engine-batch2.test.ts and packages/engine/tests/evasion-blocking.test.ts."
+    },
+    {
+      "oracleId": "e7ae3ee7-824f-4dcb-8f28-7de99e4d8c3e",
+      "name": "New Generation's Technique",
+      "sourceFile": "packages/engine/src/cards/overrides/coverage-pr09.ts",
+      "restoredIn": "engine-features-pr2",
+      "note": "Registration deleted: the sneak parse rule reproduces the override exactly; behavior evidence in packages/engine/tests/pr09-sneak.test.ts and packages/engine/tests/evasion-blocking.test.ts."
     }
   ]
 }

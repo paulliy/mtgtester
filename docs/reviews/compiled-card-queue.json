@@ -22953,9 +22953,9 @@
         }
       ],
       "review": {
-        "verdict": "accepted",
-        "by": "main-thread",
-        "note": "Full audit: read against Oracle text and the engine."
+        "verdict": "rejected",
+        "by": "retired",
+        "note": "Retired: PR #94's grammar now parses the claimed line (evasion/blocking batch); the interpreter models the card"
       }
     },
     {
