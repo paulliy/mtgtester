@@ -7,6 +7,8 @@ import { createGame } from '../src/state/game';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 import { countPermanents } from '../src/cards/condition';
 import { OTHER, YOURS, allOf, ofType, powerAtLeast } from '../src/cards/selector';
+import { needsStatefulManaPayment } from '../src/mana/stateful-payment';
+import { parseManaCost } from '../src/mana/cost';
 import { engineWork, engineWorkSince } from '../src/work-counters';
 import { cloneContractContext } from './helpers/contract-harness';
 import { leavingPermanentsKeepProduction } from '../src/mana/payment-stability';
@@ -54,6 +56,12 @@ function setup(manaCost: string, costs: AbilityCost[] = [], targeted = false) {
     );
   };
   return { ctx, player, card, source, offered, cast };
+}
+
+function parsedCost(cost: string) {
+  const parsed = parseManaCost(cost as never);
+  if (parsed.cost === null) throw new Error(`bad cost ${cost}`);
+  return parsed.cost;
 }
 
 describe('actual changing-resource spell payment contracts', () => {
@@ -677,24 +685,19 @@ describe('identical sources in the stateful payment search', () => {
   // `MTG_VERIFY_MANA_PLAN=1` runs every search twice, so the work counters double.
   const runs = process.env['MTG_VERIFY_MANA_PLAN'] === '1' ? 2 : 1;
   const orchard: ManaAbilitySpec = { units: [], dynamic: 'opponentLandColors' };
-  /** The state-dependent source that makes the stateful search run (Exotic Orchard). */
-  function withOrchard(state: ReturnType<typeof setup>, tapped = false) {
-    const opponent = state.ctx.state.players[1]!;
-    spawn(
-      state.ctx,
-      opponent.id,
-      oracle({ name: 'Opposing Forest', typeLine: 'Basic Land — Forest', manaCost: null }),
-    );
-    const rock = state.source('Exotic Orchard', orchard);
-    rock.tapped = tapped;
-    return rock;
+  /**
+   * The state-dependent source that makes the stateful search run (Exotic Orchard), untapped and
+   * with no opposing land, so it makes no mana itself. A tapped one no longer does (bug 12).
+   */
+  function withOrchard(state: ReturnType<typeof setup>) {
+    return state.source('Exotic Orchard', orchard);
   }
   const treasures = (state: ReturnType<typeof setup>) =>
     state.ctx.state.battlefield.filter((p) => p.name === 'Treasure');
 
   it('casts a nine-pip cost from 48 Treasures in few states', () => {
     const state = setup('{4}{W}{U}{B}{R}{G}');
-    withOrchard(state, true);
+    withOrchard(state);
     for (let i = 0; i < 48; i++) state.source('Treasure', treasure);
     const before = engineWork();
     expect(state.offered()).toBeDefined();
@@ -707,7 +710,7 @@ describe('identical sources in the stateful payment search', () => {
 
   it('does not offer an eight-mana cast from seven Treasures, and does not throw', () => {
     const state = setup('{8}');
-    withOrchard(state, true);
+    withOrchard(state);
     for (let i = 0; i < 7; i++) state.source('Treasure', treasure);
     const before = engineWork();
     expect(state.offered()).toBeUndefined();
@@ -717,9 +720,8 @@ describe('identical sources in the stateful payment search', () => {
   });
 
   it('keeps the capacity bound off when an own dynamic source reads the permanents sacrificed', () => {
-    const state = setup('{8}');
-    const reader = state.source('Color reader', { units: [], dynamic: 'oneColorAmongPermanents' });
-    reader.tapped = true;
+    const state = setup('{9}');
+    state.source('Color reader', { units: [], dynamic: 'oneColorAmongPermanents' });
     for (let i = 0; i < 7; i++) state.source('Treasure', treasure);
     const before = engineWork();
     // Not pruned at the root: a sacrifice can change what that source makes.
@@ -849,14 +851,9 @@ describe('the capacity bound on small boards (bug 09)', () => {
   const ANY: ManaAbilitySpec['units'] = [[...ANY_COLOR]];
   type Board = ReturnType<typeof setup>;
 
-  /** A tapped Exotic Orchard: it makes the payment stateful and offers no mana itself. */
-  function tappedOrchard(state: Board) {
-    spawn(
-      state.ctx,
-      state.ctx.state.players[1]!.id,
-      oracle({ name: 'Opposing Forest', typeLine: 'Basic Land — Forest', manaCost: null }),
-    );
-    state.source('Exotic Orchard', { units: [], dynamic: 'opponentLandColors' }).tapped = true;
+  /** An untapped Exotic Orchard with no opposing land: stateful, and it offers no mana itself. */
+  function inertOrchard(state: Board) {
+    state.source('Exotic Orchard', { units: [], dynamic: 'opponentLandColors' });
   }
   /** Distinct plain rocks: no two merge, so an unbounded search walks their subsets. */
   function rocks(state: Board, count: number) {
@@ -981,7 +978,7 @@ describe('the capacity bound on small boards (bug 09)', () => {
 
   it('counts a source that sacrifices itself with no {T} once (Reckless Barbarian)', () => {
     const state = setup('{11}');
-    tappedOrchard(state);
+    inertOrchard(state);
     state.source('Reckless Barbarian', barbarian);
     rocks(state, 8);
     provesImpossible(state);
@@ -989,7 +986,7 @@ describe('the capacity bound on small boards (bug 09)', () => {
 
   it('still pays a cost exactly at a self-sacrifice source and the rocks', () => {
     const state = setup('{10}');
-    tappedOrchard(state);
+    inertOrchard(state);
     state.source('Reckless Barbarian', barbarian);
     rocks(state, 8);
     state.cast();
@@ -1001,7 +998,7 @@ describe('the capacity bound on small boards (bug 09)', () => {
   function withTransformer(manaCost: string) {
     const state = setup(manaCost);
     state.player.energy = 3;
-    tappedOrchard(state);
+    inertOrchard(state);
     const permanent = spawn(
       state.ctx,
       state.player.id,
@@ -1054,7 +1051,7 @@ describe('the capacity bound on small boards (bug 09)', () => {
   } as const;
   function withStatic(manaCost: string, rule: unknown) {
     const state = setup(manaCost);
-    tappedOrchard(state);
+    inertOrchard(state);
     const holder = spawn(
       state.ctx,
       state.player.id,
@@ -1112,13 +1109,52 @@ describe('the capacity bound on small boards (bug 09)', () => {
     expect(leavingPermanentsKeepProduction(holder({ kind: 'enteredThisTurn' }), false)).toBe(true);
   });
 
-  it('still halts on a budget for {32}{R} from 36 Treasures: 33 activations are over the depth limit', () => {
-    const state = setup('{32}{R}');
-    tappedOrchard(state);
-    for (let i = 0; i < 36; i++) state.source('Treasure', treasure);
-    // 36 units pay 33 pips, but 33 replayed activations are one over the depth budget of 32. The
-    // search halts on a budget (the state budget, trying colors at the dead end before it reports
-    // the depth); no bound can prune a payment that is possible. The budgets are not this fix's.
-    expect(state.offered).toThrow('budget exceeded');
-  }, 60_000);
+  describe('a tapped dynamic source (bug 12, fuzz-392)', () => {
+    const orchard: ManaAbilitySpec = { units: [], dynamic: 'opponentLandColors' };
+    function opposingForest(state: Board) {
+      spawn(
+        state.ctx,
+        state.ctx.state.players[1]!.id,
+        oracle({ name: 'Opposing Forest', typeLine: 'Basic Land — Forest', manaCost: null }),
+      );
+    }
+    function board(orchardAbility: ManaAbilitySpec, tapped: boolean) {
+      const state = setup('{32}{R}');
+      opposingForest(state);
+      state.source('Exotic Orchard', orchardAbility).tapped = tapped;
+      for (let i = 0; i < 36; i++) state.source('Treasure', treasure);
+      return state;
+    }
+
+    it('offers and casts {32}{R} from 36 Treasures beside a tapped Exotic Orchard', () => {
+      const state = board(orchard, true);
+      expect(state.offered()).toBeDefined();
+      state.cast();
+      expect(manaSpent(state)).toBe(33);
+      expect(state.ctx.state.battlefield.filter((p) => p.name === 'Treasure')).toHaveLength(3);
+    });
+
+    it('still takes the stateful path for an untapped Exotic Orchard (33 activations are over the depth limit)', () => {
+      const state = board(orchard, false);
+      expect(state.offered).toThrow('budget exceeded');
+    });
+
+    it('keeps the stateful path when a mana ability could untap the Orchard', () => {
+      // The pool has no mana ability that untaps (a rider is damage, life or counters), and the
+      // engine refuses to list one, so ask the predicate directly with an inline ability.
+      const needs = (extra?: ManaAbilitySpec) => {
+        const state = setup('{2}');
+        opposingForest(state);
+        state.source('Exotic Orchard', orchard).tapped = true;
+        if (extra) state.source('Untapper', extra);
+        return needsStatefulManaPayment(state.ctx, state.player, parsedCost('{2}'), 0);
+      };
+      const untapper = {
+        units: [[...ANY_COLOR]],
+        onActivate: [{ op: 'untapEach', selector: ofType('Land') }],
+      } as unknown as ManaAbilitySpec;
+      expect(needs()).toBe(false);
+      expect(needs(untapper)).toBe(true);
+    });
+  });
 });

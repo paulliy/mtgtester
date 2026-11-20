@@ -322,9 +322,19 @@ export function needsStatefulManaPayment(
   lifeReserved: number,
 ): boolean {
   const charsOf = battlefieldCharacteristics(ctx);
-  const abilities = ctx.state.battlefield
+  const controlled = ctx.state.battlefield
     .filter((p) => p.controllerId === player.id)
-    .flatMap((p) => charsOf(p).manaAbilities);
+    .map((p) => ({ tapped: p.tapped, abilities: charsOf(p).manaAbilities }));
+  // Nothing a payment does can untap a permanent unless some mana ability's cost or rider names an
+  // untap op (`untapEach`, `untapUpTo`, `untapTarget`, ... all contain "untap"); then keep all.
+  const mayUntap = controlled.some(({ abilities }) =>
+    abilities.some((a) => /untap/i.test(JSON.stringify([a.costs ?? null, a.onActivate ?? null]))),
+  );
+  const abilities = controlled.flatMap(({ tapped, abilities: list }) =>
+    tapped && !mayUntap
+      ? list.filter((a) => a.costs !== undefined && !a.costs.some((c) => c.kind === 'tap'))
+      : list,
+  );
   return (
     abilities.some((a) => !activationInvariantProduction(a)) ||
     (abilities.some((a) => (a.onActivate?.length ?? 0) > 0) &&
