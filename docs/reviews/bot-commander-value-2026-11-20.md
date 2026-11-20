@@ -75,6 +75,9 @@ Clever Concealment and takes 346 model calls instead of 197 (copy targets, trigg
 Mister Fantastic's optional draws); games 0 and 2 get cheaper (−63 and −13 calls) and game 3 is
 identical. The engine fixes below change no census game.
 
+The regression was accepted as a behaviour change and the baseline rewritten at `5bcca572`
+(`bun run hill-climb --write-baseline`, clean tree).
+
 ## Engine bugs the runs exposed
 
 The hill-climb census hung on that game, and two gauntlet games timed out on the same spell.
@@ -100,4 +103,3 @@ twelve targets; both hung before. Offered menus are unchanged.
   the layers, before the state budget halted it. Same machinery as the gauntlet review's halts.
 - **"Cost became unpayable at application time":** pod 0, seat 4, without the two fixes, at the
   first decision (0 turns), reproducible.
-- **Hill-climb baseline:** not rewritten until the `model` census regression above is accepted.
