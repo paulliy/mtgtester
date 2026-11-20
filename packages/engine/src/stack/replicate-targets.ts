@@ -148,6 +148,27 @@ export function* chooseNewTargets(
       (id) => id !== position.old && !excluded.has(id),
     ),
   ]);
+  // A target whose legality reads no other chosen target (no "different from", "different
+  // player" or "card in that player's graveyard" link) is judged the same in every completion, so
+  // `finalIsLegal` would reject it at every leaf. Rejecting it when it is set keeps the search
+  // linear in the candidates: Clever Concealment's six counted targets against forty permanents
+  // otherwise walked every completion behind each illegal first pick.
+  const standsAlone = positions.map((position) => {
+    const spec = ability.targets[position.slot]!;
+    return (
+      spec.differentPlayerTargetSlots === undefined &&
+      spec.differentFromSlots === undefined &&
+      spec.graveyardOwnerSlot === undefined
+    );
+  });
+  const illegalAlone = (index: number, id: ObjectId): boolean => {
+    const position = positions[index]!;
+    return (
+      standsAlone[index]! &&
+      (id !== position.old || originallyLegal[index]!) &&
+      !targetIsLegal(ctx, ability.targets[position.slot]!, id, context(targets))
+    );
+  };
   const canComplete = (index: number): boolean => {
     if (index === positions.length) return finalIsLegal();
     const position = positions[index]!;
@@ -160,6 +181,7 @@ export function* chooseNewTargets(
           : countTargets[position.slot]!;
       // Only earlier fixed positions constrain this prefix; later targets may themselves change.
       if (group !== undefined && group.slice(0, position.ordinal).includes(id)) continue;
+      if (illegalAlone(index, id)) continue;
       if (canComplete(index + 1)) {
         set(position, previous);
         return true;
@@ -176,7 +198,7 @@ export function* chooseNewTargets(
   for (const [index, position] of positions.entries()) {
     const choices = domains[index]!.filter((id) => {
       set(position, id);
-      const result = canComplete(index + 1);
+      const result = !illegalAlone(index, id) && canComplete(index + 1);
       set(position, position.old);
       return result;
     });
