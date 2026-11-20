@@ -812,7 +812,7 @@ describe('StrategyCoordinator — table diplomacy (ADR 0035 phase 4)', () => {
     const prompt = (client.requestDecision as ReturnType<typeof vi.fn>).mock.calls[0]![0] as {
       messages: Array<{ content: string }>;
     };
-    expect(JSON.parse(prompt.messages[1]!.content).tableDiplomacy).toEqual(dealContext);
+    expect(JSON.parse(prompt.messages.at(-1)!.content).tableDiplomacy).toEqual(dealContext);
     expect(roles).toContain('strategist');
     expect(proposals).toEqual([{ turn: 1, seat: 'P1', raw: proposal }]);
   });
@@ -1100,6 +1100,68 @@ describe('StrategyCoordinator — wake reasons under everyTurn (ADR 0045)', () =
       ['reuse limit'],
       [],
     ]);
+  });
+});
+
+/**
+ * S5 (2026-11-15): the stable-prefix layout used to delete `yourStrategyProfile` from the
+ * observation and re-add it only when a versioned profile existed, so a seat that had only the
+ * legacy archetype tag lost it. These guard the layout for when it is turned on.
+ */
+describe('StrategyCoordinator with the stable-prefix layout', () => {
+  const LAYOUT = { ...DEFAULT_AI_CONFIG, providerPromptCacheLayoutEnabled: true };
+
+  async function promptFor(config = LAYOUT) {
+    const client = strategist();
+    const engine = {
+      view: vi.fn().mockReturnValue(view),
+      addDebug: vi.fn(),
+    } as unknown as Engine;
+    const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };
+    const coordinator = new StrategyCoordinator(
+      client,
+      queue,
+      engine,
+      config,
+      undefined,
+      undefined,
+      new Map([['P1', 'Gruul dragon tribal aggro']]),
+    );
+    coordinator.prepare(request());
+    await coordinator.settled();
+    const call = vi.mocked(client.requestDecision).mock.calls[0]!;
+    return call[0];
+  }
+
+  it('stays off by default until a paid run shows provider cache reads', () => {
+    expect(DEFAULT_AI_CONFIG.providerPromptCacheLayoutEnabled).toBe(false);
+  });
+
+  it('keeps the legacy archetype tag, in the stable prefix', async () => {
+    const prompt = await promptFor();
+    expect(prompt.promptCache?.version).toBe('stable-prefix-v2');
+    const prefix = JSON.parse(prompt.messages[1]!.content);
+    expect(prefix.immutableContext.yourStrategyProfile.archetype).toBe('Gruul dragon tribal aggro');
+    expect(prefix.immutableContext.strategyTask.requirements[0]).toContain('yourStrategyProfile');
+    const observation = JSON.parse(prompt.messages.at(-1)!.content);
+    expect(observation).not.toHaveProperty('yourStrategyProfile');
+    expect(observation).not.toHaveProperty('strategyTask');
+  });
+
+  it('sends the same payload values as the plain layout, only moved', async () => {
+    const plain = await promptFor({
+      ...DEFAULT_AI_CONFIG,
+      providerPromptCacheLayoutEnabled: false,
+    });
+    const cached = await promptFor();
+    const plainPayload = JSON.parse(plain.messages[1]!.content);
+    const merged = {
+      ...JSON.parse(cached.messages.at(-1)!.content),
+      ...JSON.parse(cached.messages[1]!.content).immutableContext,
+    };
+    expect(cached.messages[0]).toEqual(plain.messages[0]);
+    expect(Object.keys(merged).sort()).toEqual(Object.keys(plainPayload).sort());
+    for (const key of Object.keys(plainPayload)) expect(merged[key]).toEqual(plainPayload[key]);
   });
 });
 

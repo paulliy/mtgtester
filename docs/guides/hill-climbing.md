@@ -11,8 +11,11 @@ played differently. It uses no network and no paid model.
 | `engine.msPerDecision`                                   | Engine time per decision over the seeded benchmark games (`engine-bench` pods). The mean, so the slowest game dominates it.                                                                             | timed |
 | `engine.medianGameMsPerDecision`                         | The same, for the median game: what a typical game costs.                                                                                                                                               | timed |
 | `setup.msPerGame`                                        | Time to construct a four-player game: card interpretation, shuffles, opening hands.                                                                                                                     | timed |
-| `model.<mode>.callsPerTurn`                              | Tactician plus strategist calls per turn, from the call census on fixed decks. Modes: `default` (what a new game uses), `model`, `bot`.                                                                 | exact |
+| `model.<mode>.callsPerTurn`                              | Tactician plus strategist calls per turn, from the call census on fixed decks. Modes: `default` (what a new game uses), `model`, `bot`, and `botCached` (bot mode with the stable-prefix layout).       | exact |
 | `model.<mode>.promptTokensPerTurn`                       | Prompt tokens those calls would send per turn.                                                                                                                                                          | exact |
+| `model.<mode>.cacheablePromptSharePct`                   | Share of that prompt text that repeats, in whole 256-character blocks, the start of an earlier prompt to the same role in the same game.                                                                | exact |
+| `model.<mode>.longPrefixCacheableSharePct`               | The same share, counting a repeated prefix only when it reaches 1,024 tokens, the minimum several provider caches need.                                                                                 | exact |
+| `model.<mode>.uncachedPromptTokensPerTurn`               | Prompt tokens per turn left once that share is read from a provider prefix cache: the input you pay full price for.                                                                                     | exact |
 | `coverage.edhrecModeledCards`                            | Pinned EDHREC cards the interpreter models with no reasons, computed live.                                                                                                                              | exact |
 | `coverage.edhrecSlotSharePct`                            | Share of all EDHREC deck slots those cards fill.                                                                                                                                                        | exact |
 | `coverage.fixtureDeckCardsModeledPct`                    | Share of the coverage decks' cards that model.                                                                                                                                                          | exact |
@@ -33,6 +36,13 @@ Exact metrics repeat to the last digit on any machine, so any move in the wrong 
 Timed metrics only count as changed when they move by more than the noise: 10% when both sides
 were measured with `--repeat 3` on one machine, 30% with fewer repeats or across machines
 (scaled by a calibration run), and never less than twice the spread between repeats.
+
+The two cache metrics replay every census prompt through `PrefixCacheModel`
+(`packages/server/src/ai/prompt-cache.ts`), which never forgets a prompt. They score how
+cache-friendly the prompt layout is, so they are an upper bound: whether a provider really serves
+those tokens from cache (its time-to-live, routing, minimum sizes) is only measured by a paid run,
+for example the `cacheReadSharePct` that `bun run ai-mode-duel` reports per mode. The census gives
+each seat's strategist its inferred archetype, as a live match does.
 
 ## The loop
 

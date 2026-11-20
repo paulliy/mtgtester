@@ -64,6 +64,8 @@ export interface Tally {
   strategistCalls: number;
   promptTokens: number;
   responseTokens: number;
+  /** Prompt tokens the provider reported serving from its prompt cache, over every attempt. */
+  cacheReadTokens: number;
   costUsd: number;
   costKnown: boolean;
   /** Calls that failed after the client's own retries; the seat fell back to the bot. */
@@ -88,6 +90,7 @@ export function emptyTally(): Tally {
     strategistCalls: 0,
     promptTokens: 0,
     responseTokens: 0,
+    cacheReadTokens: 0,
     costUsd: 0,
     costKnown: true,
     failedCalls: 0,
@@ -157,6 +160,7 @@ export function counting<M extends string = ModeName>(
   };
   inner.setAttemptObserver(async (attempt) => {
     const mode = modeByRequest.get(attempt.logicalRequestId);
+    if (mode !== undefined) tallies[mode].cacheReadTokens += attempt.usage.cacheReadTokens ?? 0;
     if (mode !== undefined && attempt.backend !== undefined) {
       const providers = tallies[mode].providers;
       providers[attempt.backend] = (providers[attempt.backend] ?? 0) + 1;
@@ -575,6 +579,10 @@ async function main(): Promise<void> {
             // model seats, the duel is not a fair test of the model tactician (ADR 0039).
             tacticianFallbackShare: fallbackShare(t),
             promptTokensPerTurn: Math.round(t.promptTokens / Math.max(1, turns)),
+            cacheReadSharePct:
+              t.promptTokens === 0
+                ? 0
+                : Number(((t.cacheReadTokens / t.promptTokens) * 100).toFixed(1)),
           },
         ];
       }),

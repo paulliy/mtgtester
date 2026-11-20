@@ -485,12 +485,12 @@ export class StrategyCoordinator {
         },
       },
     );
-    const profile = this.deckProfiles?.get(activePlayer);
+    // The profile (or the legacy archetype tag standing in for one) and the task text are fixed
+    // for this seat all game, so they belong in the cacheable prefix, not after the observation.
     const prompt = this.config.providerPromptCacheLayoutEnabled
       ? preparePromptForCaching(assembledPrompt, {
           role: 'strategist',
-          ...(profile === undefined ? {} : { staticContext: { yourStrategyProfile: profile } }),
-          removeDynamicKeys: ['yourStrategyProfile'],
+          staticKeys: ['strategyTask', 'yourStrategyProfile'],
         })
       : assembledPrompt;
 

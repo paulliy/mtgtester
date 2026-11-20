@@ -197,7 +197,12 @@ export interface AiConfig {
   planLifecycleScopedInvalidationEnabled: boolean;
   /** Log an interpretable route while retaining the fixed production policy. */
   strategyRouterShadowEnabled: boolean;
-  /** Use the stable-prefix prompt layout. Off until measured cache experiments pass. */
+  /**
+   * Use the stable-prefix prompt layout: per-game constants (commander texts, strategy task and
+   * profile) ahead of the changing observation, so provider prefix caches can serve them. Off
+   * until a paid run shows provider cache reads worth more than the extra prefix tokens; the
+   * hill-climb `botCached` census mode measures it offline.
+   */
   providerPromptCacheLayoutEnabled: boolean;
   /** Reserved feature flag for exact engine-derived combat previews. */
   combatRolloutsEnabled: boolean;
