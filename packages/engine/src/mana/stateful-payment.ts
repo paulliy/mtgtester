@@ -28,6 +28,7 @@ import {
 } from '../state/queries';
 import {
   characteristicsFixedDuringPayment,
+  departuresCannotAddCapacity,
   gateCannotOpenDuringPayment,
   leavingPermanentsKeepProduction,
 } from './payment-stability';
@@ -303,8 +304,21 @@ export function searchPayment(
       definitionsInPlay(ctx),
       ownAbilities.some((ability) => ability.condition !== undefined),
     );
+  // A source that sacrifices itself (a Treasure, Lotus Petal) leaves the battlefield and may put a
+  // card in a graveyard. It joins the bound only when, besides the leaving premise above, no static
+  // in play reads a count, a zone or a graveyard (`departuresCannotAddCapacity`). Without this, one
+  // Treasure sent every unpayable spell on the menu through the full search, about 0.1 s each.
+  const gatedOwn = ownAbilities.some((ability) => ability.condition !== undefined);
+  const selfSacrificeBound =
+    premise &&
+    ownAbilities.some((ability) => ability.costs?.some((cost) => cost.kind === 'sacrificeSelf')) &&
+    leavingPermanentsKeepProduction(definitionsInPlay(ctx), gatedOwn) &&
+    departuresCannotAddCapacity(definitionsInPlay(ctx), gatedOwn);
   const keepsCapacity = (kind: string): boolean =>
-    kind === 'tap' || kind === 'mana' || (sacrificeBound && kind === 'sacrificeOther');
+    kind === 'tap' ||
+    kind === 'mana' ||
+    (sacrificeBound && kind === 'sacrificeOther') ||
+    (selfSacrificeBound && kind === 'sacrificeSelf');
   const fixedCapacity = ownAbilities.every(
     (ability) =>
       ability.amount === undefined &&
