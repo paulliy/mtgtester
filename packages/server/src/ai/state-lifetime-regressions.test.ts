@@ -13,11 +13,14 @@ import {
   plains,
   spawn,
 } from '../../../engine/tests/fixtures';
-import { DEFAULT_AI_CONFIG } from './config';
+import { DEFAULT_AI_CONFIG as BASE_AI_CONFIG } from './config';
 import type { AiClient } from './client';
 import { OpenAiDecisionProvider } from './provider';
 import { StrategyCoordinator } from './strategy-coordinator';
 import { digestDecision } from './decision-cache';
+
+// These tests exercise the model tactician; pin it, since bot-led tactics are the default (ADR 0039).
+const DEFAULT_AI_CONFIG = { ...BASE_AI_CONFIG, tacticalMode: 'model' as const };
 
 type AiResult = Awaited<ReturnType<AiClient['requestDecision']>>;
 const queue = { enqueue: <T>(fn: () => Promise<T>) => fn() };

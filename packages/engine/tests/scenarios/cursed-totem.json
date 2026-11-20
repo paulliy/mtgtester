@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "card": "Cursed Totem",
+  "supportCards": [
+    {
+      "name": "Scenario Pinger",
+      "typeLine": "Creature — Wizard",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1",
+      "oracleText": "{1}: Target player loses 1 life."
+    },
+    {
+      "name": "Scenario Relic",
+      "typeLine": "Artifact",
+      "manaCost": "{1}",
+      "oracleText": "{1}: Target player loses 1 life."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "cursed-totem-creature-ability-cannot-be-activated",
+      "title": "Cursed Totem: a creature with an activated ability cannot activate it",
+      "clauses": [1],
+      "instructions": [
+        "Control Cursed Totem, Scenario Pinger and two Forests.",
+        "Scenario Pinger's {1} ability is not offered."
+      ],
+      "expectedOutcome": "The ability cannot be activated: P2 stays at 40 life.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Cursed Totem", "Scenario Pinger", "Forest", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        }
+      ]
+    },
+    {
+      "id": "cursed-totem-artifact-ability-still-works",
+      "title": "Cursed Totem: an artifact ability can still be activated",
+      "clauses": [1],
+      "instructions": [
+        "Control Cursed Totem, Scenario Relic and two Forests.",
+        "Activate Scenario Relic's ability targeting P2."
+      ],
+      "expectedOutcome": "Cursed Totem stops only creatures: P2 loses 1 life.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Cursed Totem", "Scenario Relic", "Forest", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Scenario Relic: \\{1\\}: Target player loses 1 life/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        }
+      ]
+    },
+    {
+      "id": "cursed-totem-no-totem-creature-ability-works",
+      "title": "Cursed Totem: without it the same creature ability can be activated",
+      "clauses": [1],
+      "instructions": [
+        "Control Scenario Pinger and two Forests (no Cursed Totem).",
+        "Activate Scenario Pinger's ability targeting P2."
+      ],
+      "expectedOutcome": "The creature ability works: P2 loses 1 life.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Scenario Pinger", "Forest", "Forest"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Scenario Pinger: \\{1\\}: Target player loses 1 life/",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        }
+      ]
+    }
+  ]
+}

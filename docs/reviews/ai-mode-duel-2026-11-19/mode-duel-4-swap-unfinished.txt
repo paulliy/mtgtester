@@ -1,0 +1,12 @@
+$ bun run packages/server/src/cli/ai-mode-duel.ts --seed "mode-duel-4" --swap --json "/tmp/claude-0/-home-user-mtgtester/d846ea7f-849f-5d32-a5b4-e599f522ae71/scratchpad/duel/mode-duel-4-swap.json"
+Seed mode-duel-4, turn cap 60
+  P1 [model]  Ruby, Daring Tracker
+  P2 [bot]  Mister Fantastic
+  P3 [model]  Cadira, Caller of the Small
+  P4 [bot]  Sram, Senior Edificer
+  Endpoint: https://openrouter.ai/api/v1
+  Strategist: z-ai/glm-5.3-flash → deepseek/deepseek-v4-flash
+  Tactician: particle-ai/particle-1 → deepseek/deepseek-v4-flash
+
+  turn 34  error: script "ai-mode-duel" was terminated by signal SIGTERM (Polite quit request)
+(progress lines of the form 'turn N' are omitted; the game stayed on turn 34 for over 30 minutes and was stopped by hand)

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "card": "Cyan, Vengeful Samurai",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Relic",
+      "typeLine": "Artifact",
+      "manaCost": "{1}"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "cyan-vengeful-samurai-cost-reduced-per-creature-card",
+      "title": "Cyan, Vengeful Samurai: costs {1} less for each creature card in your graveyard",
+      "clauses": [1],
+      "instructions": [
+        "With three creature cards in your graveyard and four Plains, cast Cyan (cost {6}{W} reduced by 3 to {3}{W})."
+      ],
+      "expectedOutcome": "Cyan is cast for {3}{W} and enters the battlefield.",
+      "seats": {
+        "P1": {
+          "hand": ["Cyan, Vengeful Samurai"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains"],
+          "graveyard": ["Scenario Bear", "Scenario Bear", "Scenario Bear"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Cyan/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Cyan, Vengeful Samurai"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cyan-vengeful-samurai-noncreature-cards-do-not-reduce",
+      "title": "Cyan, Vengeful Samurai: noncreature cards in your graveyard do not reduce the cost",
+      "clauses": [1],
+      "instructions": [
+        "With three noncreature cards in your graveyard and four Plains, try to cast Cyan."
+      ],
+      "expectedOutcome": "Cyan still costs {6}{W}, so it can't be cast with four lands and stays in your hand.",
+      "seats": {
+        "P1": {
+          "hand": ["Cyan, Vengeful Samurai"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains"],
+          "graveyard": ["Scenario Relic", "Scenario Relic", "Scenario Relic"]
+        },
+        "P2": {}
+      },
+      "script": [],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Cyan, Vengeful Samurai"]
+          }
+        }
+      ]
+    }
+  ]
+}

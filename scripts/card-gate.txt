@@ -260,3 +260,4 @@ packages/engine/tests/phase4-batch6-grammar.test.ts
 packages/engine/tests/phase4-batch7-grammar.test.ts
 packages/engine/tests/cards/natures-claim.test.ts
 packages/engine/tests/cards/vapor-snag.test.ts
+packages/engine/tests/cards/common-lines
