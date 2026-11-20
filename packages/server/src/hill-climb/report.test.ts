@@ -74,6 +74,56 @@ describe('compareReports: exact metrics', () => {
   });
 });
 
+const work = (value: number, extra: Partial<Metric> = {}): Metric => ({
+  value,
+  unit: 'passes',
+  better: 'lower',
+  kind: 'exact',
+  sameGames: true,
+  ...extra,
+});
+
+describe('compareReports: engine work counters', () => {
+  it('credits and fails work counts exactly when the games are identical', () => {
+    const baseline = report({
+      'engine.work.layerPasses': work(2853),
+      'engine.work.stateCopies': work(120),
+    });
+    const current = report({
+      'engine.work.layerPasses': work(2852),
+      'engine.work.stateCopies': work(121),
+    });
+    expect(verdicts(baseline, current)).toEqual({
+      'engine.work.layerPasses': 'improved',
+      'engine.work.stateCopies': 'regressed',
+    });
+    expect(compareReports(baseline, current).failures).toEqual([
+      'engine.work.stateCopies regressed: 120 -> 121 passes',
+    ]);
+  });
+
+  it('does not compare work counts when the games differ, even when that is allowed', () => {
+    const baseline = report({ 'engine.work.layerPasses': work(2853) });
+    const current = report(
+      { 'engine.work.layerPasses': work(9000) },
+      { fingerprints: { '0': 'aaaa', '3': 'cccc' } },
+    );
+    const comparison = compareReports(baseline, current, { allowBehaviorChange: true });
+    expect(comparison.rows.map((row) => row.verdict)).toEqual(['incomparable']);
+    expect(comparison.ok).toBe(true);
+    expect(renderComparison(comparison)).toContain('INCOMPARABLE');
+  });
+
+  it('shows an informational counter moving, but never as a win or a failure', () => {
+    const baseline = report({ 'engine.work.layerCacheHits': work(1000, { informational: true }) });
+    const up = report({ 'engine.work.layerCacheHits': work(1400, { informational: true }) });
+    const comparison = compareReports(baseline, up);
+    expect(comparison.rows.map((row) => row.verdict)).toEqual(['changed']);
+    expect(comparison.ok).toBe(true);
+    expect(verdicts(baseline, baseline)).toEqual({ 'engine.work.layerCacheHits': 'unchanged' });
+  });
+});
+
 describe('compareReports: timed metrics', () => {
   it('ignores a change inside the same-machine floor', () => {
     const baseline = report({ 'engine.msPerDecision': timed(50) });

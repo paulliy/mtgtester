@@ -12,32 +12,103 @@
         "authoring",
         "compiler"
       ],
-      "commit": "9727a81e",
+      "commit": "8048e500",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 63.75,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 39.11,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.86,
+          "value": 4.61,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.284
+          "spread": 0.402
         },
         "engine.medianGameMsPerDecision": {
-          "value": 7.02,
+          "value": 4.66,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.222
+          "spread": 0.227
+        },
+        "engine.work.layerPasses": {
+          "value": 2670,
+          "unit": "passes",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.layerCacheHits": {
+          "value": 107417,
+          "unit": "hits",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true,
+          "informational": true
+        },
+        "engine.work.layerDigests": {
+          "value": 36629,
+          "unit": "digests",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.castCheckpoints": {
+          "value": 57,
+          "unit": "checkpoints",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.castPreviews": {
+          "value": 12682,
+          "unit": "previews",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.manaSourceListings": {
+          "value": 3555,
+          "unit": "listings",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.spellPaymentSearches": {
+          "value": 1024,
+          "unit": "searches",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.manaPlannerSearches": {
+          "value": 0,
+          "unit": "searches",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.manaPlannerStates": {
+          "value": 0,
+          "unit": "states",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.stateCopies": {
+          "value": 0,
+          "unit": "copies",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 0.81,
+          "value": 0.6,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.046
+          "spread": 0.028
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -267,32 +338,103 @@
         "authoring",
         "compiler"
       ],
-      "commit": "9727a81e",
+      "commit": "8048e500",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 66.94,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 48.43,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 13.87,
+          "value": 10.37,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.082
+          "spread": 0.074
         },
         "engine.medianGameMsPerDecision": {
-          "value": 13.09,
+          "value": 9,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.118
+          "spread": 0.117
+        },
+        "engine.work.layerPasses": {
+          "value": 11807,
+          "unit": "passes",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.layerCacheHits": {
+          "value": 1547748,
+          "unit": "hits",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true,
+          "informational": true
+        },
+        "engine.work.layerDigests": {
+          "value": 293405,
+          "unit": "digests",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.castCheckpoints": {
+          "value": 275,
+          "unit": "checkpoints",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.castPreviews": {
+          "value": 58244,
+          "unit": "previews",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.manaSourceListings": {
+          "value": 21282,
+          "unit": "listings",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.spellPaymentSearches": {
+          "value": 5466,
+          "unit": "searches",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.manaPlannerSearches": {
+          "value": 1244,
+          "unit": "searches",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.manaPlannerStates": {
+          "value": 3719,
+          "unit": "states",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.stateCopies": {
+          "value": 1181,
+          "unit": "copies",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 0.85,
+          "value": 0.99,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.041
+          "spread": 0.029
         },
         "model.default.callsPerTurn": {
           "value": 5.675,
