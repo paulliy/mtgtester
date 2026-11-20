@@ -40,7 +40,6 @@ import { pinStore } from '../../../engine/tests/scenario/pin-store';
 import { baseCommit, changedCards } from '../../../../scripts/cards/changed-cards';
 import { PINNED_ORACLE_PATH, type PinnedCard } from '../cards/edhrec-pins';
 import type { FuzzReply, FuzzRequest } from './fuzz-game';
-import type { OracleCard } from '@mtg/shared';
 import {
   demotionReason,
   failureOf,
