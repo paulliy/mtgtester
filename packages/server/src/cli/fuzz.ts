@@ -4,6 +4,7 @@
  *   bun run fuzz [--from N] [--games N] [--card "<name>"]... [--changed [--base SHA]]
  *                [--card-games N] [--turn-cap N] [--decisions N] [--game-timeout SECONDS]
  *                [--jobs N] [--json PATH] [--report PATH] [--liveness PATH]
+ *                [--provisional [--demote PATH]]
  *
  * Seed N maps to a fixed pod: four of the committed coverage decks, resolved against the pinned
  * `coverage-oracle.json` (the bulk file is gitignored), and a provider mix: heuristic bots in every
@@ -20,9 +21,16 @@
  * failures as Markdown for an issue. The per-game time is reported, with the liveness report
  * (`--liveness` writes it whole): each card's ops that only ever exited early. The exit code is 1
  * when any game failed.
+ *
+ * `--provisional` (H1) also plays every provisional card admitted from the review queue
+ * (`cards/provisional.ts`), `--card-games` pods each, substituted for basic lands the same way, with
+ * the game opted in to that card's provisional definition. `--demote PATH` then adds each
+ * provisional card whose game threw, broke an invariant or halted (not on the turn cap) to the
+ * demotion list the catalog honours, pinned to the patch's bytes, so the card leaves play until its
+ * patch changes. A card is demoted only when the same pod without it passed (`demotionReason`).
  */
 import { spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,7 +40,25 @@ import { pinStore } from '../../../engine/tests/scenario/pin-store';
 import { baseCommit, changedCards } from '../../../../scripts/cards/changed-cards';
 import { PINNED_ORACLE_PATH, type PinnedCard } from '../cards/edhrec-pins';
 import type { FuzzReply, FuzzRequest } from './fuzz-game';
-import { failureOf, liveness, loadDecks, pod, withCard, type Outcome } from './fuzz-plan';
+import type { OracleCard } from '@mtg/shared';
+import {
+  demotionReason,
+  failureOf,
+  liveness,
+  loadDecks,
+  pod,
+  withCard,
+  type Outcome,
+} from './fuzz-plan';
+import {
+  describeCatalog,
+  loadProvisionalCatalog,
+  type ProvisionalAdmission,
+  type ProvisionalDemotion,
+} from '../cards/provisional';
+
+/** Real Oracle data for the EDHREC pool, which holds every review-queue card. */
+const PINNED_ORACLE = 'packages/server/fixtures/edhrec-pinned-oracle.json';
 
 const GAME = fileURLToPath(new URL('./fuzz-game.ts', import.meta.url));
 
@@ -50,6 +76,8 @@ interface Args {
   json: string | null;
   report: string | null;
   liveness: string | null;
+  provisional: boolean;
+  demote: string | null;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -67,6 +95,8 @@ function parseArgs(argv: string[]): Args {
     json: null,
     report: null,
     liveness: null,
+    provisional: false,
+    demote: null,
   };
   const count = (flag: string, value: string | undefined): number => {
     const parsed = Number.parseInt(value ?? '', 10);
@@ -89,6 +119,8 @@ function parseArgs(argv: string[]): Args {
     else if (arg === '--json') args.json = value() ?? null;
     else if (arg === '--report') args.report = value() ?? null;
     else if (arg === '--liveness') args.liveness = value() ?? null;
+    else if (arg === '--provisional') args.provisional = true;
+    else if (arg === '--demote') args.demote = value() ?? null;
     else throw new Error(`unknown argument ${arg}`);
   }
   return args;
@@ -98,6 +130,8 @@ interface Game {
   n: number;
   card: string | null;
   request: FuzzRequest;
+  /** The provisional card this game exercises (H1), for `--demote`. */
+  provisional?: ProvisionalAdmission;
 }
 
 /** One game in a child process, killed if it outlives `timeoutMs`. */
@@ -132,6 +166,8 @@ function runGame(game: Game, dir: string, timeoutMs: number): Promise<Outcome> {
 }
 
 function replay(game: Game, args: Args): string {
+  if (game.provisional !== undefined)
+    return `bun run fuzz --from ${game.n} --games 0 --card-games ${args.cardGames} --provisional --turn-cap ${args.turnCap} --decisions ${args.decisions}`;
   const card =
     game.card === null
       ? '--card-games 0'
@@ -190,6 +226,41 @@ async function main(): Promise<void> {
           decks: picked.decks.map((deck) => withCard(deck, card)),
         }),
       });
+    }
+  }
+
+  if (args.provisional && args.demote !== null) {
+    // A demotion needs the same pod without the card as a control, so play every base pod the
+    // provisional games use even when `--games` did not ask for it.
+    for (let n = args.from; n < args.from + args.cardGames; n++)
+      if (!games.some((game) => game.card === null && game.n === n))
+        games.push({ n, card: null, request: request(n, `fuzz-${n}`, pod(decks, n)) });
+  }
+  if (args.provisional) {
+    const pinned = JSON.parse(readFileSync(PINNED_ORACLE, 'utf8')) as Array<{ card: OracleCard }>;
+    const cards = pinned.map((row) => row.card);
+    const catalog = loadProvisionalCatalog(cards);
+    console.log(`fuzz: ${describeCatalog(catalog)}`);
+    const byOracleId = new Map(cards.map((card) => [card.oracleId, card]));
+    const admitted = [...catalog.admitted].sort((a, b) => a.name.localeCompare(b.name));
+    for (const entry of admitted) {
+      const card = byOracleId.get(entry.oracleId)!;
+      const definition = catalog.definitions.get(entry.oracleId)!;
+      for (let n = args.from; n < args.from + args.cardGames; n++) {
+        const picked = pod(decks, n);
+        games.push({
+          n,
+          card: `${entry.name} (provisional)`,
+          provisional: entry,
+          request: {
+            ...request(n, `fuzz-${n}-provisional-${entry.name}`, {
+              ...picked,
+              decks: picked.decks.map((deck) => withCard(deck, card)),
+            }),
+            provisionalDefinitions: [definition],
+          },
+        });
+      }
     }
   }
 
@@ -278,7 +349,46 @@ async function main(): Promise<void> {
         ]),
       ].join('\n'),
     );
+  if (args.demote !== null) writeDemotions(args.demote, results);
   if (failed.length > 0) process.exitCode = 1;
+}
+
+/**
+ * Add each provisional card whose game failed to the demotion list (H1), keeping the entries
+ * already there. A demotion is pinned to the patch's bytes: a changed patch is a new candidate.
+ */
+function writeDemotions(
+  path: string,
+  results: ReadonlyArray<{ game: Game; outcome: Outcome }>,
+): void {
+  const controlPassed = new Set(
+    results
+      .filter(({ game, outcome }) => game.card === null && demotionReason(outcome) === null)
+      .map(({ game }) => game.n),
+  );
+  const existing: ProvisionalDemotion[] = existsSync(path)
+    ? ((JSON.parse(readFileSync(path, 'utf8')) as { cards?: ProvisionalDemotion[] }).cards ?? [])
+    : [];
+  const seen = new Set(existing.map((d) => `${d.oracleId}|${d.patchSha256}`));
+  const added: ProvisionalDemotion[] = [];
+  for (const { game, outcome } of results) {
+    const entry = game.provisional;
+    if (entry === undefined || !controlPassed.has(game.n)) continue;
+    const failure = demotionReason(outcome);
+    if (failure === null) continue;
+    const key = `${entry.oracleId}|${entry.patchSha256}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    added.push({
+      oracleId: entry.oracleId,
+      name: entry.name,
+      patchSha256: entry.patchSha256,
+      reason: `${game.request.seed}: ${failure.split('\n')[0]!.slice(0, 300)}`,
+    });
+  }
+  const cards = [...existing, ...added].sort((a, b) => a.name.localeCompare(b.name));
+  writeFileSync(path, `${JSON.stringify({ schemaVersion: 1, cards }, null, 2)}\n`);
+  console.log(`demote: ${added.length} provisional card(s) added to ${path}`);
 }
 
 await main();

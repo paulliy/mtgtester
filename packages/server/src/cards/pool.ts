@@ -13,6 +13,7 @@
 
 import type { Color, OracleCard } from '@mtg/shared';
 import { interpretCard } from '@mtg/engine';
+import type { ProvisionalCatalog } from './provisional';
 
 /** A commander-legal, fully-modeled card, tagged with what a deck builder needs. */
 export interface PoolCard {
@@ -25,12 +26,19 @@ export interface PoolCard {
   canBeCommander: boolean;
   /** Exempt from the singleton rule (CR 903.5b). */
   unlimited: boolean;
+  /** Playable only as a provisional card (H1): a machine-checked patch nobody has reviewed. */
+  provisional?: true;
 }
 
 export interface SupportedPool {
   cards: PoolCard[];
   /** Cards considered (commander-legal), for reporting the modeled fraction. */
   considered: number;
+  /**
+   * The provisional catalog this pool admitted cards from (H1), when the process opted in.
+   * Setup reads it to pre-flight decks and to opt each game in; absent by default.
+   */
+  provisional?: ProvisionalCatalog;
 }
 
 const identityOf = (card: OracleCard): string => [...card.colorIdentity].sort().join('');
@@ -44,14 +52,19 @@ function isUnlimited(card: OracleCard): boolean {
  * Filter a card set down to what the engine can actually play. Banned and non-legal cards are
  * excluded first so the modeled fraction reported is against a commander-legal denominator.
  */
-export function buildSupportedPool(cards: Iterable<OracleCard>): SupportedPool {
+export function buildSupportedPool(
+  cards: Iterable<OracleCard>,
+  provisional?: ProvisionalCatalog,
+): SupportedPool {
   const pool: PoolCard[] = [];
   let considered = 0;
 
   for (const card of cards) {
     if (card.commanderLegality !== 'legal' && card.commanderLegality !== 'restricted') continue;
     considered++;
-    if (!interpretCard(card).modeled) continue;
+    const modeled = interpretCard(card).modeled;
+    const isProvisional = !modeled && provisional?.definitions.has(card.oracleId) === true;
+    if (!modeled && !isProvisional) continue;
 
     pool.push({
       card,
@@ -60,10 +73,15 @@ export function buildSupportedPool(cards: Iterable<OracleCard>): SupportedPool {
       isBasicLand: card.isBasicLand,
       canBeCommander: card.supertypes.includes('Legendary') && card.types.includes('Creature'),
       unlimited: isUnlimited(card),
+      ...(isProvisional && { provisional: true as const }),
     });
   }
 
-  return { cards: pool, considered };
+  return {
+    cards: pool,
+    considered,
+    ...(provisional !== undefined && { provisional }),
+  };
 }
 
 /** Is `card` playable in a deck of `identity`? CR 903.4 — its identity must be a subset. */

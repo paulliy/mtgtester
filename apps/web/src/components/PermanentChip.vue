@@ -7,6 +7,7 @@ import { useBoardFlash } from '../composables/useBoardFlash';
 import { STRIKE_MS, useCombatStrikes } from '../composables/useCombatStrikes';
 import { scryfallImageUrl } from '../lib/card';
 import type { TokenArtKey } from '../lib/tokenArt';
+import ProvisionalBadge from './ProvisionalBadge.vue';
 import { useCardPreviewStore } from '../stores/cardPreview';
 import { useTokenArtStore } from '../stores/tokenArt';
 
@@ -255,6 +256,7 @@ function onLeave(): void {
     >
       ×{{ count }}
     </div>
+    <ProvisionalBadge v-if="permanent.provisional === true" />
     <!-- Everything on the card turns with it when it taps, name and P/T included. -->
     <div class="card">
       <div class="frame" role="img" :aria-label="permanent.name">

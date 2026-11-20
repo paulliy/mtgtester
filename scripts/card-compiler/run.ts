@@ -15,6 +15,8 @@
  *   bun run scripts/card-compiler/run.ts resmoke <trial-dir>       # validate again, replay smoke
  *   bun run scripts/card-compiler/run.ts import <trial-dir> <dir>  # check patches made elsewhere
  *   bun run scripts/card-compiler/run.ts queue <trial-dir>...      # rebuild the review queue
+ *   bun run scripts/card-compiler/run.ts audit [--seed S] [--count N]  # sample provisional cards
+ *   bun run scripts/card-compiler/run.ts audit-verdict "<name>" <source> accepted|rejected --by <who>
  *
  *   bun run scripts/card-compiler/run.ts ledger [<trial-dir>...]   # every card any trial has taken
  *
@@ -57,6 +59,7 @@ import {
   type CalibrationCase,
 } from './calibration';
 import { textCheck } from './render';
+import { audit, review } from './audit';
 import {
   loadScreen,
   screenLines,
@@ -1114,6 +1117,14 @@ const batchSize = numberFlag('size', 25);
 const noScreenFlag = argv.indexOf('--no-screen');
 if (noScreenFlag >= 0) argv.splice(noScreenFlag, 1);
 const [command, trial, stage] = argv;
+if (command === 'audit') {
+  audit(argv.slice(1));
+  process.exit(0);
+}
+if (command === 'audit-verdict') {
+  review(argv.slice(1));
+  process.exit(0);
+}
 if (command === 'ledger') {
   ledger(argv.slice(1));
   process.exit(0);
@@ -1131,7 +1142,7 @@ if (command === 'promote' || command === 'retire' || command === 'review' || com
 }
 if (trial === undefined)
   throw new Error(
-    'usage: run.ts <prepare|calibrate|batches|exec|check|report|recheck|resmoke|import|queue|review|promote|retire|verify> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity] [--no-screen]',
+    'usage: run.ts <prepare|calibrate|batches|exec|check|report|recheck|resmoke|import|queue|review|promote|retire|verify|audit|audit-verdict> <trial-dir> [stage|patch-dir] [--executor api|claude|codex|antigravity] [--no-screen]',
   );
 if (command === 'queue') queue(process.argv.slice(3));
 else if (command === 'import') {

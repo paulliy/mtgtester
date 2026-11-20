@@ -6,6 +6,7 @@
  */
 import { computed, ref, watch } from 'vue';
 import { scryfallImageUrl } from '../lib/card';
+import ProvisionalBadge from './ProvisionalBadge.vue';
 
 const props = withDefaults(
   defineProps<{
@@ -17,8 +18,10 @@ const props = withDefaults(
     tapped?: boolean;
     /** True token/emblem with no real printing — always shows the striped placeholder. */
     isToken?: boolean;
+    /** A provisional card (H1): machine-checked rules nobody has reviewed. Shows a mark. */
+    provisional?: boolean;
   }>(),
-  { face: 'front', tapped: false, isToken: false },
+  { face: 'front', tapped: false, isToken: false, provisional: false },
 );
 
 const failed = ref(false);
@@ -71,6 +74,7 @@ const placeholderLabel = computed(() =>
     <div v-else class="fallback" role="img" :aria-label="name">
       <span class="fallback-label">{{ placeholderLabel }}</span>
     </div>
+    <ProvisionalBadge v-if="provisional" />
   </div>
 </template>
 

@@ -76,6 +76,11 @@ export interface GameReplayConfig {
    * game, the engine's work limits (ADR 0031 decision 9). Absent limits mean unlimited.
    */
   engineOptions: { maxDecisions: number; maxStepWork?: number; maxObjects?: number };
+  /**
+   * The provisional patches (H1) the game played, pinned to their bytes, so a replay can refuse
+   * a queue that has changed. Absent for a game with no provisional card.
+   */
+  provisional?: Array<{ oracleId: string; source: string; patchSha256: string }>;
 }
 
 /** The `games` row's replay columns. Absent for Card Test Lab games, which store none. */
