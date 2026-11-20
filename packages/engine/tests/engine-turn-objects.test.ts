@@ -7,7 +7,10 @@ import { readFileSync } from 'node:fs';
 import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
+import { TREASURE } from '../src/cards/tokens';
 import { DEFAULT_MAX_TURN_OBJECTS, Engine } from '../src/engine';
+import { createGame } from '../src/state/game';
+import { createTokens } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { installDefinitionTransform } from '../src/testing/definition-transform';
 import { cardMutants, mutate } from './mutation/operators';
@@ -47,8 +50,30 @@ describe('per-turn object budget', () => {
     expect(result.haltReason).toBe('one turn created more than 1 objects');
   });
 
+  // Regression (fuzz-203, fuzz-212): the guard counted `nextObjectNum` ids, which a token spends
+  // about three of, so a legal turn of ~330 tokens halted at "1000 objects".
+  it('counts objects, not ids: 600 Treasures in one turn do not halt under a limit of 1000', () => {
+    const ctx = createGame(gameConfig(forestsPod(8), { seed: 'turn-objects-ids' }));
+    ctx.budget = {
+      stepWork: { count: 0 },
+      objectsAtStart: ctx.state.nextObjectNum,
+      maxTurnObjects: 1_000,
+    };
+    const idsAtStart = ctx.state.nextObjectNum;
+    const created = createTokens(ctx, TREASURE, 600, 'P1');
+    expect(created).toHaveLength(600);
+    // The id counter advanced past the limit, yet only 600 objects were made.
+    expect(ctx.state.nextObjectNum - idsAtStart).toBeGreaterThan(1_000);
+    expect(ctx.budget.turnObjects?.created).toBe(600);
+    // The limit still bites on real objects: 400 more reach 1000, the 1001st halts.
+    createTokens(ctx, TREASURE, 400, 'P1');
+    expect(() => createTokens(ctx, TREASURE, 1, 'P1')).toThrow(
+      'one turn created more than 1000 objects',
+    );
+  });
+
   // The runner checks invariants strictly, which multiplies the loop's cost, so this uses a lower
-  // limit than a table's; the default's timing is measured in DEFAULT_MAX_TURN_OBJECTS's comment.
+  // limit than a table's (100 objects, about the 300 ids it was before the guard counted objects); the default's timing is measured in DEFAULT_MAX_TURN_OBJECTS's comment.
   it('halts a board-growing token loop quickly, which the table limits alone would not', () => {
     // Mechan Assembler without "This ability triggers only once each turn" retriggers on its own
     // Robot token forever, emitting a few events per token.
@@ -69,9 +94,9 @@ describe('per-turn object budget', () => {
           resolve,
           maxStepWork: 50_000,
           maxObjects: 20_000,
-          maxTurnObjects: 300,
+          maxTurnObjects: 100,
         }),
-      ).toThrow('one turn created more than 300 objects');
+      ).toThrow('one turn created more than 100 objects');
       expect(Date.now() - started).toBeLessThan(15_000);
     } finally {
       installDefinitionTransform(previous);

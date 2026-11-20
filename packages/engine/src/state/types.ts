@@ -1100,8 +1100,8 @@ export interface EngineBudget {
   objectsAtStart: number;
   /** Objects one turn may create; see `EngineOptions.maxTurnObjects`. */
   maxTurnObjects?: number;
-  /** The turn being counted and `nextObjectNum` when its first object was created. */
-  turnObjects?: { turn: number; atStart: number };
+  /** The turn being counted and how many objects it has created (`newObjectId` calls, not ids). */
+  turnObjects?: { turn: number; created: number };
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */

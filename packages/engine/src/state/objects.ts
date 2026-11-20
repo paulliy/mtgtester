@@ -77,19 +77,26 @@ import type {
   GameContext,
 } from './types';
 
-export function newObjectId(ctx: GameContext): ObjectId {
+/**
+ * `countsTowardTurn` is false only for a token's placeholder id (`createToken` builds a stub that
+ * `makePermanent` re-ids), so a token is one object to the per-turn guard while its ids stay
+ * exactly as allocated.
+ */
+export function newObjectId(ctx: GameContext, countsTowardTurn = true): ObjectId {
   const budget = ctx.budget;
   if (
     budget?.maxObjects !== undefined &&
     ctx.state.nextObjectNum - budget.objectsAtStart >= budget.maxObjects
   )
     throw new EngineBudgetError('objects', budget.maxObjects);
-  if (budget?.maxTurnObjects !== undefined) {
+  if (budget?.maxTurnObjects !== undefined && countsTowardTurn) {
     const turn = ctx.state.turnNumber;
-    if (budget.turnObjects?.turn !== turn)
-      budget.turnObjects = { turn, atStart: ctx.state.nextObjectNum };
-    else if (ctx.state.nextObjectNum - budget.turnObjects.atStart >= budget.maxTurnObjects)
+    // Count objects (calls here), not ids: `nextObjectNum` is also bumped for token card ids,
+    // effect ids and stack ids, so a plain Treasure costs about 3 ids but is one object.
+    if (budget.turnObjects?.turn !== turn) budget.turnObjects = { turn, created: 0 };
+    else if (budget.turnObjects.created >= budget.maxTurnObjects)
       throw new EngineBudgetError('turnObjects', budget.maxTurnObjects);
+    budget.turnObjects.created += 1;
   }
   return `o-${ctx.state.nextObjectNum++}`;
 }
@@ -1923,7 +1930,7 @@ export function createToken(
         )
       : oracleId;
   const stub: EngineObject = {
-    id: newObjectId(ctx),
+    id: newObjectId(ctx, false),
     // Tokens need a stable `cardId` like any other object — commander damage, until-EOT effect
     // sets and the layer cache are all keyed by it — but no two tokens ever share one.
     cardId: `tok-${ctx.state.nextObjectNum++}`,
