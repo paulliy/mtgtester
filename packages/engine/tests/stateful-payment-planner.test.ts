@@ -223,6 +223,24 @@ describe('payment premise', () => {
         ),
       ]),
     ).toBe(false);
+    // Zurgo and Ojutai: "has hexproof as long as it entered this turn" (fuzz-26, fuzz-169). Turn,
+    // step and entry facts cannot change during a payment; inside a combinator, each child counts.
+    const fixed = (condition: unknown) =>
+      characteristicsFixedDuringPayment([
+        holder([
+          { affects: { kind: 'self' }, op: { layer: 6, addKeyword: 'hexproof' }, condition },
+        ]),
+      ]);
+    expect(fixed({ kind: 'enteredThisTurn' })).toBe(true);
+    expect(fixed({ kind: 'allOf', of: [{ kind: 'yourTurn' }, { kind: 'enteredThisTurn' }] })).toBe(
+      true,
+    );
+    expect(
+      fixed({ kind: 'anyOf', of: [{ kind: 'yourTurn' }, { kind: 'anyPlayerLifeAtMost', n: 10 }] }),
+    ).toBe(false);
+    expect(fixed({ kind: 'not', of: { kind: 'isUntapped' } })).toBe(false);
+    // What happened this turn may include the cast the payment belongs to.
+    expect(fixed({ kind: 'castSpellThisTurn' })).toBe(false);
     // Death's Shadow: a damage rider lowers life and so raises power, which a gate can read.
     expect(
       characteristicsFixedDuringPayment([
