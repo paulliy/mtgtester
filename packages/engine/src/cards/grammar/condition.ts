@@ -122,6 +122,13 @@ function parseActivationConditionUntraced(text: string, card: OracleCard): Condi
     return selector === null ? null : { kind: 'opponentControlsMore', selector };
   }
   if (text === 'you created a token this turn') return { kind: 'createdTokenThisTurn' };
+  if (text === 'you attacked this turn') return { kind: 'youAttackedThisTurn' };
+  // "you control a legendary creature" (Haunt of the Dead Marshes): at least one such permanent.
+  const controlsOne = text.match(/^you control an? (.+)$/);
+  if (controlsOne !== null) {
+    const selector = parseSubject(controlsOne[1] as string, card);
+    return selector === null ? null : countPermanents(selector, 'you', '>=', 1);
+  }
   const counted = text.match(/^you control (\w+) or more (.+)$/);
   if (counted !== null) {
     const n = parseAmount(counted[1] as string);

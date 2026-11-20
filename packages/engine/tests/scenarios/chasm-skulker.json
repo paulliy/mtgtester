@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "card": "Chasm Skulker",
+  "supportCards": [
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature — Ogre",
+      "manaCost": "{2}{R}",
+      "power": "3",
+      "toughness": "3"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "chasm-skulker-dies-with-counters-makes-squids",
+      "title": "Chasm Skulker: dying with two +1/+1 counters creates two Squid tokens with islandwalk",
+      "clauses": [2],
+      "instructions": [
+        "Attack P2 with Chasm Skulker (two +1/+1 counters, 3/3).",
+        "P2 blocks it with Scenario Ogre; Chasm Skulker dies."
+      ],
+      "expectedOutcome": "Two 1/1 blue Squid tokens with islandwalk are created.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            {
+              "card": "Chasm Skulker",
+              "counters": {
+                "+1/+1": 2
+              }
+            }
+          ]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Chasm Skulker"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Chasm Skulker"]
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "payload": "/\"name\":\"Squid\"/",
+            "count": 2
+          }
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      }
+    },
+    {
+      "id": "chasm-skulker-squid-has-islandwalk",
+      "title": "Chasm Skulker: the Squid token has islandwalk",
+      "clauses": [2],
+      "instructions": [
+        "Attack P2 with Chasm Skulker (one +1/+1 counter, 2/2).",
+        "P2 blocks it with Scenario Ogre; Chasm Skulker dies."
+      ],
+      "expectedOutcome": "One Squid token is created and it has islandwalk.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            {
+              "card": "Chasm Skulker",
+              "counters": {
+                "+1/+1": 1
+              }
+            }
+          ]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Chasm Skulker"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Chasm Skulker"]
+          }
+        },
+        {
+          "keywords": {
+            "card": "Squid",
+            "has": ["islandwalk"],
+            "player": "P1"
+          }
+        },
+        {
+          "counters": {
+            "card": "Squid",
+            "counter": "+1/+1",
+            "equals": 0,
+            "player": "P1"
+          }
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      }
+    },
+    {
+      "id": "chasm-skulker-dies-without-counters-makes-none",
+      "title": "Chasm Skulker: dying with no counters creates no Squid tokens",
+      "clauses": [2],
+      "instructions": [
+        "Attack P2 with Chasm Skulker (no counters, 1/1).",
+        "P2 blocks it with Scenario Ogre; Chasm Skulker dies."
+      ],
+      "expectedOutcome": "X is 0: no Squid tokens are created.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Chasm Skulker"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Chasm Skulker"]
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Chasm Skulker"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Squid"]
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "count": 0
+          }
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      }
+    }
+  ]
+}

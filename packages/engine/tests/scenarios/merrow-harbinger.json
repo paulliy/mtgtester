@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "card": "Merrow Harbinger",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "merrow-harbinger-unblockable-with-island",
+      "title": "Merrow Harbinger: can't be blocked while the defender controls a Island",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with Merrow Harbinger while P2 controls a Island and Scenario Bear."
+      ],
+      "expectedOutcome": "P2 is never asked to block; Merrow Harbinger deals 2 damage to P2.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Merrow Harbinger"]
+        },
+        "P2": {
+          "battlefield": ["Island", "Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "merrow-harbinger-blockable-without-island",
+      "title": "Merrow Harbinger: may be blocked when the defender controls no Island",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with Merrow Harbinger while P2 controls only Scenario Bear and a Plains.",
+        "P2 blocks with Scenario Bear."
+      ],
+      "expectedOutcome": "The block is legal: Merrow Harbinger is blocked by Scenario Bear and P2 takes no combat damage from it.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Merrow Harbinger"]
+        },
+        "P2": {
+          "battlefield": ["Plains", "Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Merrow Harbinger"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Merrow Harbinger"]
+          }
+        }
+      ]
+    }
+  ]
+}

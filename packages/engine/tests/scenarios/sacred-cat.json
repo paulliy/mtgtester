@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "card": "Sacred Cat",
+  "supportCards": [
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "sacred-cat-embalm",
+      "title": "Sacred Cat: embalm makes a white Zombie token copy",
+      "clauses": [2],
+      "instructions": ["Activate embalm from your graveyard."],
+      "expectedOutcome": "Sacred Cat is exiled and a 1/1 white Zombie token copy of it enters with no mana cost.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Sacred Cat"],
+          "battlefield": ["Plains"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Sacred Cat \\(graveyard\\): Embalm/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Sacred Cat"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Sacred Cat"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Sacred Cat"]
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "sacred-cat-embalm-sorcery-speed",
+      "title": "Sacred Cat: embalm only as a sorcery",
+      "clauses": [2],
+      "turn": {
+        "player": "P2"
+      },
+      "instructions": [
+        "On P2's turn, embalm is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
+      "expectedOutcome": "Sacred Cat stays in your graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Glimpse"],
+          "graveyard": ["Sacred Cat"],
+          "battlefield": ["Plains"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Sacred Cat"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Sacred Cat"]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -933,11 +933,6 @@
     },
     {
       "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
-      "sha256": "eb76669e35223bfef6134c0496a3d8f8158e946e8b5eda70ef34790248e1dc8a",
-      "description": "Jacked Rabbit"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
       "sha256": "76c583ca12816bbca59b84589bedeb66d5ada8aa141381e2a0cd56a2c59767c6",
       "description": "Mondrak, Glory Dominus"
     },
@@ -950,11 +945,6 @@
       "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
       "sha256": "07c640227539e4654daa9d505fd8cea2b1c112566f94c22ee1baf6ce5db76c65",
       "description": "Study Hall"
-    },
-    {
-      "file": "packages/engine/src/cards/overrides/w2-remaining.ts",
-      "sha256": "9142a217a9620b160380acfa54fd78d4ed0c85b3eb392e4a785f2fea30d878a3",
-      "description": "Tender Wildguide"
     },
     {
       "file": "packages/engine/src/cards/overrides/w2-remaining.ts",

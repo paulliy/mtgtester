@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "card": "Dizzy Spell",
+  "supportCards": [
+    {
+      "name": "Scenario Sprite",
+      "typeLine": "Creature — Faerie",
+      "manaCost": "{U}",
+      "power": "1",
+      "toughness": "1"
+    },
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "dizzy-spell-transmute",
+      "title": "Dizzy Spell: transmute finds a card with the same mana value (1)",
+      "clauses": [2],
+      "instructions": [
+        "Activate transmute from your hand, paying with your lands.",
+        "Search your library and take Scenario Sprite."
+      ],
+      "expectedOutcome": "Dizzy Spell is discarded, Scenario Sprite is revealed and put into your hand, Scenario Bear (mana value 2) stays in the library, and the library is shuffled.",
+      "seats": {
+        "P1": {
+          "hand": ["Dizzy Spell"],
+          "battlefield": ["Island", "Island", "Island"],
+          "libraryTop": ["Scenario Bear", "Scenario Sprite"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Dizzy Spell \\(hand\\): Transmute/"
+        },
+        {
+          "player": "P1",
+          "choose": "/Scenario Sprite/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Sprite"],
+            "lacks": ["Dizzy Spell"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Dizzy Spell"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Scenario Bear"],
+            "lacks": ["Scenario Sprite"]
+          }
+        },
+        {
+          "event": {
+            "type": "shuffle",
+            "count": 1
+          }
+        },
+        {
+          "event": {
+            "type": "searchFound",
+            "payload": "\"revealed\":true",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "dizzy-spell-transmute-no-match",
+      "title": "Dizzy Spell: transmute offers nothing of another mana value",
+      "clauses": [2],
+      "instructions": ["Activate transmute with only a mana value 2 card in your library."],
+      "expectedOutcome": "Dizzy Spell is still discarded, Scenario Bear is not offered and stays in the library, and the library is shuffled.",
+      "seats": {
+        "P1": {
+          "hand": ["Dizzy Spell"],
+          "battlefield": ["Island", "Island", "Island"],
+          "libraryTop": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Dizzy Spell \\(hand\\): Transmute/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Scenario Bear", "Dizzy Spell"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Dizzy Spell"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "library",
+            "has": ["Scenario Bear"]
+          }
+        },
+        {
+          "event": {
+            "type": "shuffle",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

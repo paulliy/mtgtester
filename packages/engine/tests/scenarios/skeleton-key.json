@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "card": "Skeleton Key",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Ogre",
+      "typeLine": "Creature — Ogre",
+      "manaCost": "{2}{R}",
+      "power": "3",
+      "toughness": "3"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "skeleton-key-unblockable",
+      "title": "Skeleton Key: a creature with greater power can't block the equipped creature",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with the equipped Scenario Bear (power 2) while P2 controls only Scenario Ogre (power 3).",
+        "Accept the loot trigger and discard the Island."
+      ],
+      "expectedOutcome": "P2 is never asked to block and takes 2 damage; P1 draws a Forest and discards the Island.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Scenario Bear",
+            {
+              "card": "Skeleton Key",
+              "attachedTo": {
+                "player": "P1",
+                "card": "Scenario Bear"
+              }
+            }
+          ],
+          "libraryTop": ["Forest"],
+          "hand": ["Island"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Ogre"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "Yes"
+        },
+        {
+          "player": "P1",
+          "choose": "Island"
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 38
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Island"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "skeleton-key-blockable",
+      "title": "Skeleton Key: a creature with equal power may block the equipped creature",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with the equipped Scenario Bear while P2 controls only a Scenario Bear (also power 2).",
+        "P2 blocks."
+      ],
+      "expectedOutcome": "Equal power is not greater: the block is legal, so P2 takes no damage.",
+      "seats": {
+        "P1": {
+          "battlefield": [
+            "Scenario Bear",
+            {
+              "card": "Skeleton Key",
+              "attachedTo": {
+                "player": "P1",
+                "card": "Scenario Bear"
+              }
+            }
+          ],
+          "libraryTop": ["Forest"],
+          "hand": ["Island"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Scenario Bear"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "card": "Reassembling Skeleton",
+  "scenarios": [
+    {
+      "id": "reassembling-skeleton-return",
+      "title": "Reassembling Skeleton: return this card from your graveyard to the battlefield tapped",
+      "clauses": [1],
+      "instructions": ["Activate Reassembling Skeleton's ability from your graveyard."],
+      "expectedOutcome": "Reassembling Skeleton returns to the battlefield tapped.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Reassembling Skeleton"],
+          "battlefield": ["Swamp", "Swamp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Reassembling Skeleton \\(graveyard\\)/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Reassembling Skeleton"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Reassembling Skeleton"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Reassembling Skeleton",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "reassembling-skeleton-from-hand",
+      "title": "Reassembling Skeleton: the ability works only from the graveyard",
+      "clauses": [1],
+      "instructions": ["With Reassembling Skeleton in your hand, cast it."],
+      "expectedOutcome": "No return ability is offered from the hand; Reassembling Skeleton enters untapped the normal way.",
+      "seats": {
+        "P1": {
+          "hand": ["Reassembling Skeleton"],
+          "battlefield": ["Swamp", "Swamp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Reassembling Skeleton/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Reassembling Skeleton"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Reassembling Skeleton",
+            "equals": false
+          }
+        }
+      ]
+    }
+  ]
+}

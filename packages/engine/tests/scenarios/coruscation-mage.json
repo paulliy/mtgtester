@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "card": "Coruscation Mage",
+  "scenarios": [
+    {
+      "id": "coruscation-mage-offspring-paid",
+      "title": "Coruscation Mage: paying the offspring cost makes a 1/1 token copy",
+      "clauses": [1],
+      "instructions": ["Cast Coruscation Mage paying its offspring cost ({3}{R})."],
+      "expectedOutcome": "Two Coruscation Mage are on the battlefield: the original and a 1/1 token copy.",
+      "seats": {
+        "P1": {
+          "hand": ["Coruscation Mage"],
+          "battlefield": ["Mountain", "Mountain", "Mountain", "Mountain"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Coruscation Mage \\(\\{3\\}\\{R\\}\\) — offspring 1$/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Coruscation Mage", "Coruscation Mage"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coruscation-mage-offspring-declined",
+      "title": "Coruscation Mage: casting it for its normal cost makes no token",
+      "clauses": [1],
+      "instructions": [
+        "Cast Coruscation Mage for {1}{R} without the offspring cost, with enough mana to have paid it."
+      ],
+      "expectedOutcome": "Only the original Coruscation Mage is on the battlefield; no token copy is created.",
+      "seats": {
+        "P1": {
+          "hand": ["Coruscation Mage"],
+          "battlefield": ["Mountain", "Mountain", "Mountain", "Mountain"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Coruscation Mage \\(\\{1\\}\\{R\\}\\)$/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Coruscation Mage"]
+          }
+        }
+      ]
+    }
+  ]
+}

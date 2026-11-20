@@ -7,7 +7,7 @@
  */
 
 import type { Color, OracleId } from '@mtg/shared';
-import type { ParsedManaCost } from '../mana/cost';
+import type { ManaUnit, ParsedManaCost } from '../mana/cost';
 import type {
   Ability,
   AbilityCost,
@@ -157,6 +157,19 @@ export interface CardDefinition {
    * discard a card matching `filter` from their hand; declining sends it to its owner's graveyard.
    */
   entersUnlessDiscard?: { filter: Selector };
+  /**
+   * "If this would be put into a graveyard from anywhere, reveal it and shuffle it into its
+   * owner's library instead." (Darksteel Colossus, Nexus of Fate): a replacement (CR 614.1a) that
+   * functions in every zone, judged on the object as it is about to move. On the battlefield it
+   * needs the permanent to still have the ability (not face down, not losing abilities).
+   */
+  shuffleIntoLibraryInsteadOfGraveyard?: true;
+  /**
+   * "Exile this card from your hand: Add {R}." (Simian Spirit Guide): a mana ability that works
+   * only from its owner's hand (CR 605.1a), its cost exiling the card. The payment solver offers
+   * it as a source (`ManaSource.fromHand`) and spends it only when a payment needs it.
+   */
+  handManaAbility?: { units: ManaUnit[] };
   entersChoosingOption?: {
     prompt: string;
     /** A printed, closed list — Caged Sun's five colors, Frontier Siege's two modes. */

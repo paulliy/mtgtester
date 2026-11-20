@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "card": "Agate Instigator",
+  "scenarios": [
+    {
+      "id": "agate-instigator-offspring-paid",
+      "title": "Agate Instigator: paying the offspring cost makes a 1/1 token copy",
+      "clauses": [1],
+      "instructions": ["Cast Agate Instigator paying its offspring cost ({2}{R}{R})."],
+      "expectedOutcome": "Two Agate Instigator are on the battlefield: the original and a 1/1 token copy. The token entering is another creature, so Agate Instigator deals 1 damage to P2.",
+      "seats": {
+        "P1": {
+          "hand": ["Agate Instigator"],
+          "battlefield": ["Mountain", "Mountain", "Mountain", "Mountain"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Agate Instigator \\(\\{2\\}\\{R\\}\\{R\\}\\) — offspring 1$/"
+        },
+        {
+          "player": "P1",
+          "choose": "Offspring"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Agate Instigator", "Agate Instigator"]
+          }
+        },
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        }
+      ]
+    },
+    {
+      "id": "agate-instigator-offspring-declined",
+      "title": "Agate Instigator: casting it for its normal cost makes no token",
+      "clauses": [1],
+      "instructions": [
+        "Cast Agate Instigator for {1}{R} without the offspring cost, with enough mana to have paid it."
+      ],
+      "expectedOutcome": "Only the original Agate Instigator is on the battlefield; no token copy is created. No other creature entered, so P2 takes no damage.",
+      "seats": {
+        "P1": {
+          "hand": ["Agate Instigator"],
+          "battlefield": ["Mountain", "Mountain", "Mountain", "Mountain"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Agate Instigator \\(\\{1\\}\\{R\\}\\)$/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Agate Instigator"]
+          }
+        },
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        }
+      ]
+    }
+  ]
+}

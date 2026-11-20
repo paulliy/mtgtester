@@ -269,6 +269,11 @@ export interface ManaSource {
    * rather than the single-choice fast path, because the fast path treats units independently.
    */
   linked?: true;
+  /**
+   * A mana ability of a card in its owner's hand, whose cost is exiling that card (Simian Spirit
+   * Guide). `planPayment` uses one only when the payment fails without it.
+   */
+  fromHand?: true;
 }
 
 /** One mana produced by tapping a source, and which source produced it. */
@@ -470,10 +475,55 @@ export function planPayment(
   // Sources that cost mana to activate are held back for a second pass (see `solveWithCostly`):
   // the first pass is byte-identical to the payment this function has always planned, so every
   // existing card's tap choices are unchanged and a filter land is only reached for.
-  const freeSources = usableSources.filter((s) => s.manaCost === undefined);
+  const freeSources = usableSources.filter((s) => s.manaCost === undefined && s.fromHand !== true);
   const firstPass = solveFrom(paymentCost, usableEntries, freeSources, lifeTotal, cost);
   if (firstPass !== null || freeSources.length === usableSources.length) return firstPass;
-  return solveWithCostly(paymentCost, usableEntries, usableSources, lifeTotal, cost);
+  const boardSources = usableSources.filter((s) => s.fromHand !== true);
+  if (boardSources.length !== freeSources.length) {
+    const costly = solveWithCostly(paymentCost, usableEntries, boardSources, lifeTotal, cost);
+    if (costly !== null || boardSources.length === usableSources.length) return costly;
+  }
+  return solveWithHandSources(
+    paymentCost,
+    usableEntries,
+    boardSources,
+    usableSources.filter((s) => s.fromHand === true),
+    lifeTotal,
+    cost,
+  );
+}
+
+/**
+ * The last pass: add cards in hand that make mana by exiling themselves (Spirit Guides), the
+ * fewest that work. A card is a real resource, so a payment never exiles one it does not need:
+ * every smaller set is tried first, and the board alone has already failed.
+ */
+function solveWithHandSources(
+  cost: ParsedManaCost,
+  usableEntries: readonly ManaEntry[],
+  boardSources: readonly ManaSource[],
+  handSources: readonly ManaSource[],
+  lifeTotal: number,
+  executionCost: ParsedManaCost,
+): PaymentPlan | null {
+  const costly = boardSources.some((s) => s.manaCost !== undefined);
+  const solve = (extra: readonly ManaSource[]): PaymentPlan | null =>
+    costly
+      ? solveWithCostly(cost, usableEntries, [...boardSources, ...extra], lifeTotal, executionCost)
+      : solveFrom(cost, usableEntries, [...boardSources, ...extra], lifeTotal, executionCost);
+  const choose = (start: number, size: number, chosen: ManaSource[]): PaymentPlan | null => {
+    if (chosen.length === size) return solve(chosen);
+    for (let i = start; i < handSources.length; i++) {
+      const plan = choose(i + 1, size, [...chosen, handSources[i]!]);
+      if (plan !== null) return plan;
+    }
+    return null;
+  };
+  for (let size = 1; size <= handSources.length; size++) {
+    const plan = choose(0, size, []);
+    if (plan !== null) return plan;
+  }
+  return null;
 }
 
 /**

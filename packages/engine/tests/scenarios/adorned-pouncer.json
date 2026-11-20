@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "card": "Adorned Pouncer",
+  "supportCards": [
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "adorned-pouncer-eternalize",
+      "title": "Adorned Pouncer: eternalize makes a black Zombie token copy",
+      "clauses": [2],
+      "instructions": ["Activate eternalize from your graveyard."],
+      "expectedOutcome": "Adorned Pouncer is exiled and a 4/4 black Zombie token copy of it enters with no mana cost.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Adorned Pouncer"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Adorned Pouncer \\(graveyard\\): Eternalize/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Adorned Pouncer"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Adorned Pouncer"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Adorned Pouncer"]
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "adorned-pouncer-eternalize-sorcery-speed",
+      "title": "Adorned Pouncer: eternalize only as a sorcery",
+      "clauses": [2],
+      "turn": {
+        "player": "P2"
+      },
+      "instructions": [
+        "On P2's turn, eternalize is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
+      "expectedOutcome": "Adorned Pouncer stays in your graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Glimpse"],
+          "graveyard": ["Adorned Pouncer"],
+          "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Adorned Pouncer"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Adorned Pouncer"]
+          }
+        }
+      ]
+    }
+  ]
+}
