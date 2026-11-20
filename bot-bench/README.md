@@ -263,6 +263,17 @@ position per bot fix, written after the fixes were tuned and never tuned against
 | one decision | `hold-the-ground-at-five`                  | `attackReserve` | At five life, every creature stays home to block                |
 | one decision | `two-home-to-live`                         | `attackReserve` | Surviving takes two blockers home, so no single recall helps    |
 
+### Added with commander seats
+
+Held-out positions for the two fixes from the bot gauntlet review
+(`docs/reviews/bot-gauntlet-2026-11-20.md`). Two of them seat a commander (`position.commanders`).
+
+| Kind         | Case                                | For              | What it tests                                               |
+| ------------ | ----------------------------------- | ---------------- | ----------------------------------------------------------- |
+| one decision | `altar-the-bears-not-the-angel`     | `costChoices`    | Ashnod's Altar eats the 2/2, not Serra Angel                |
+| one decision | `altar-the-beast-not-the-commander` | `commanderValue` | Ashnod's Altar eats a vanilla 3/3, not the commander        |
+| one decision | `swords-the-commander`              | `commanderValue` | The last Swords on the opposing commander, not a bigger 3/3 |
+
 ### Added with ADR 0044
 
 Four positions per escalation trigger. For `scarce-answer`, two where the last answer should be
@@ -326,7 +337,11 @@ that window and shown to judges; what the run covers comes from the window itsel
 1. Copy the nearest case in `cases/tactician/single/` or `turn/` and rename it to `<id>.json`.
 2. Arrange `position` with cards from the pinned Oracle fixtures
    (`packages/server/fixtures/coverage-oracle.json`, `edhrec-pinned-oracle.json`). A card the
-   engine does not model is refused.
+   engine does not model is refused. `position.commanders` names a seat's commander or two
+   partners, `{"P2": ["Talrand, Sky Summoner"]}`: one on that seat's battlefield is put there from
+   the command zone with commander status, one named nowhere else waits in the command zone, and
+   either way `PlayerView.commanders` and `opponents[].commanders` show it. A commander cannot also
+   be in a hand, graveyard or library.
 3. Script `setup` up to the decision under test (for example the opponent's attack). `focus`
    picks the decision when it is not the seat's first one.
 4. Run `bun run bot-bench inspect <id>` and read what the engine says each answer leads to. Write

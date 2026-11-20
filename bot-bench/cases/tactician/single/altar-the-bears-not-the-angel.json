@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "altar-the-bears-not-the-angel",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Ashnod's Altar eats the smaller creature",
+  "skills": ["costs", "card-value"],
+  "briefing": "Held out for `costChoices` (written before the fix was tuned, never tuned against). P1 cast Wheel of Fortune with one Mountain and Ashnod's Altar, so the Altar must eat a creature to pay {C}{C}. The choice is Grizzly Bears or Serra Angel. The engine asks this as an activation-cost choice, a menu the bot used to leave to its seeded tie-break.",
+  "actor": "P1",
+  "position": {
+    "turn": { "player": "P1", "phase": "precombatMain", "step": null, "number": 7 },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Wheel of Fortune"],
+        "battlefield": ["Mountain", "Ashnod's Altar", "Serra Angel", "Grizzly Bears"]
+      },
+      "P2": { "life": 30, "battlefield": ["Forest", "Forest"] },
+      "P3": { "life": 30, "battlefield": ["Plains", "Plains"] },
+      "P4": { "life": 30, "battlefield": ["Swamp", "Swamp"] }
+    }
+  },
+  "setup": [{ "player": "P1", "choose": "Cast Wheel of Fortune" }],
+  "reference": {
+    "analysis": "Wheel of Fortune is already cast; the Altar's {C}{C} needs one creature. Grizzly Bears is a vanilla 2/2; Serra Angel is a 4/4 flier with vigilance that attacks and blocks in the same turn. The Bears go.",
+    "options": [
+      {
+        "label": "Sacrifice Grizzly Bears",
+        "when": { "choose": "Sacrifice Grizzly Bears" },
+        "grade": "best",
+        "why": "The 2/2 is the cheapest body to give up."
+      },
+      {
+        "label": "Sacrifice Serra Angel",
+        "when": { "choose": "Sacrifice Serra Angel" },
+        "grade": "blunder",
+        "why": "Gives up the best creature on the board for the same two mana."
+      }
+    ],
+    "otherwise": { "grade": "blunder", "why": "There is no other legal answer." }
+  }
+}

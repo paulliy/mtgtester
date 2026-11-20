@@ -138,7 +138,22 @@ export function traitsFor(ctx: PolicyContext, name: string | undefined): CardTra
 
 // --- Values of things on the table -----------------------------------------------------------
 
-/** Whether `name` is a commander at this table, ours or an opponent's. */
+/** A permanent's worth in LEP to whoever controls it. */
+export function permanentValue(p: PermanentView, ctx: PolicyContext): number {
+  return (
+    permanentBaseValue(p, ctx) + (isCommanderName(p.name, ctx) ? P.commanderPermanentBonus : 0)
+  );
+}
+
+/**
+ * `commanderValue`: whether `name` is a commander at this table, ours or an opponent's, so worth
+ * more than its body: it comes back taxed, and it is what the deck is built around.
+ */
+function isCommanderName(name: string, ctx: PolicyContext): boolean {
+  return fixOn(ctx, 'commanderValue') && commanderNamed(name, ctx);
+}
+
+/** Whether `name` is a commander at this table, whatever the fixes. */
 function commanderNamed(name: string, ctx: PolicyContext): boolean {
   const names = once(ctx, 'commanderNames', () => {
     const { view } = ctx;
@@ -150,8 +165,7 @@ function commanderNamed(name: string, ctx: PolicyContext): boolean {
   return names.has(name);
 }
 
-/** A permanent's worth in LEP to whoever controls it. */
-export function permanentValue(p: PermanentView, ctx: PolicyContext): number {
+function permanentBaseValue(p: PermanentView, ctx: PolicyContext): number {
   if (isCreaturePermanent(p)) {
     const w = WEIGHTS.combat;
     return (
@@ -1306,7 +1320,8 @@ function answerThreat(kind: AnswerKind, action: LegalAction, ctx: PolicyContext)
       // A spell is shown by its card name; an ability's description is not one.
       const traits = traitsFor(ctx, item.description);
       if (traits === undefined) return null;
-      best = Math.max(best, spellThreat(traits));
+      const commander = isCommanderName(item.description, ctx) ? P.commanderPermanentBonus : 0;
+      best = Math.max(best, spellThreat(traits) + commander);
     }
     return best;
   }
@@ -1554,6 +1569,14 @@ const GAIN_CHOICES: ReadonlySet<string> = new Set([
   'returnToHand',
   'castFree',
 ]);
+/**
+ * `costChoices`: a permanent sacrificed to pay an activation cost (Ashnod's Altar's victim) is a
+ * loss like any other sacrifice. Without it the bot has no opinion and its seeded tie-break picks.
+ */
+function isLossChoice(type: string, ctx: PolicyContext): boolean {
+  return LOSS_CHOICES.has(type) || (type === 'sacrificeCost' && fixOn(ctx, 'costChoices'));
+}
+
 /** Opt-out choices that score below opting in. */
 const DECLINES: ReadonlySet<string> = new Set([
   'findNothing',
@@ -1614,7 +1637,7 @@ export function choiceValue(action: LegalAction, ctx: PolicyContext): number | n
   const id = subjectOf(action, ctx);
   if (id !== undefined) {
     const value = subjectValue(id, action, ctx);
-    if (value !== null && LOSS_CHOICES.has(action.type)) return P.choiceBase - value;
+    if (value !== null && isLossChoice(action.type, ctx)) return P.choiceBase - value;
     if (value !== null && GAIN_CHOICES.has(action.type)) return P.choiceBase + value;
   }
   if (GAIN_CHOICES.has(action.type)) return P.choiceBase;

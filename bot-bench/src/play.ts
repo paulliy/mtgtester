@@ -280,6 +280,9 @@ export function openCase(benchCase: BenchCase): OpenedCase {
   const { file, scenario } = caseScenario(benchCase);
   const { engine } = buildCardScenario(file, scenario, benchCard, {
     gameId: `bot-bench-${benchCase.id}` as GameId,
+    ...(benchCase.position.commanders !== undefined && {
+      commanders: benchCase.position.commanders,
+    }),
   });
   const setup = benchCase.setup ?? [];
   let next = 0;
