@@ -12,13 +12,13 @@ import { bear, choose, pod } from './pr10-helpers';
 import { pinned } from './pr11-helpers';
 
 /** P1's copy of Clever Concealment aimed at six of P1's eight permanents; P2 has thirty. */
-function concealmentCopy(seed: string) {
+function concealmentCopy(seed: string, owned = 8, aimed = 6) {
   const ctx = pod(seed);
-  const mine = Array.from({ length: 8 }, (_, i) => spawn(ctx, 'P1', bear(`Mine ${i + 1}`)));
+  const mine = Array.from({ length: owned }, (_, i) => spawn(ctx, 'P1', bear(`Mine ${i + 1}`)));
   for (let i = 0; i < 30; i++) spawn(ctx, 'P2', bear(`Theirs ${i + 1}`));
   const def = interpretCard(pinned('Clever Concealment'));
   const ability = def.spellAbility!;
-  const targeted = mine.slice(0, 6).map((perm) => perm.id);
+  const targeted = mine.slice(0, aimed).map((perm) => perm.id);
   const search = chooseNewTargets(ctx, 'P1', {
     name: 'Clever Concealment',
     subject: 'copy 1 of 1',
@@ -66,5 +66,15 @@ describe('choosing new targets for a copy with many counted targets', () => {
       mine[6]!.id,
       ...mine.slice(1, 6).map((perm) => perm.id),
     ]);
+  });
+
+  it('twelve targets among thirty-five own permanents settle quickly', () => {
+    const { search, targeted } = concealmentCopy('new-targets-twelve', 35, 12);
+    const began = performance.now();
+    const { value, decisions } = pump(search, choose(/^Keep /));
+    expect(performance.now() - began).toBeLessThan(5_000);
+    expect(decisions).toHaveLength(12);
+    expect(decisions[0]!.options).toHaveLength(35);
+    expect(value.countTargets).toEqual({ 0: targeted });
   });
 });

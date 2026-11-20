@@ -112,16 +112,38 @@ export function* chooseNewTargets(
   const originallyLegal = positions.map((position) =>
     targetIsLegal(ctx, ability.targets[position.slot]!, position.old, context(originalTargets)),
   );
+  // A target whose legality reads no other chosen target (no "different from", "different
+  // player" or "card in that player's graveyard" link) is judged the same in every completion:
+  // nothing changes the game while the targets are chosen. So it is judged once per candidate,
+  // and a pick `finalIsLegal` would reject at every leaf is rejected when it is set. Clever
+  // Concealment's counted targets otherwise walked every completion behind each illegal pick.
+  const standsAlone = positions.map((position) => {
+    const spec = ability.targets[position.slot]!;
+    return (
+      spec.differentPlayerTargetSlots === undefined &&
+      spec.differentFromSlots === undefined &&
+      spec.graveyardOwnerSlot === undefined
+    );
+  });
+  const judged = new Map<string, boolean>();
+  const legalAt = (index: number, id: ObjectId): boolean => {
+    const position = positions[index]!;
+    const spec = ability.targets[position.slot]!;
+    if (!standsAlone[index]!) return targetIsLegal(ctx, spec, id, context(targets));
+    const key = `${position.slot}:${id}`;
+    let legal = judged.get(key);
+    if (legal === undefined) {
+      legal = targetIsLegal(ctx, spec, id, context(targets));
+      judged.set(key, legal);
+    }
+    return legal;
+  };
   const finalIsLegal = () => {
     // CR 115.7d-e: unchanged illegal targets may remain; newly chosen targets and the FINAL
     // collective assignment must be legal. A change may not invalidate another kept target.
     for (const [index, position] of positions.entries()) {
       const id = valueAt(position);
-      if (
-        (id !== position.old || originallyLegal[index]) &&
-        !targetIsLegal(ctx, ability.targets[position.slot]!, id, context(targets))
-      )
-        return false;
+      if ((id !== position.old || originallyLegal[index]) && !legalAt(index, id)) return false;
     }
     for (const [slot, ids] of Object.entries(countTargets)) {
       if (new Set(ids).size !== ids.length) return false;
@@ -148,25 +170,21 @@ export function* chooseNewTargets(
       (id) => id !== position.old && !excluded.has(id),
     ),
   ]);
-  // A target whose legality reads no other chosen target (no "different from", "different
-  // player" or "card in that player's graveyard" link) is judged the same in every completion, so
-  // `finalIsLegal` would reject it at every leaf. Rejecting it when it is set keeps the search
-  // linear in the candidates: Clever Concealment's six counted targets against forty permanents
-  // otherwise walked every completion behind each illegal first pick.
-  const standsAlone = positions.map((position) => {
-    const spec = ability.targets[position.slot]!;
-    return (
-      spec.differentPlayerTargetSlots === undefined &&
-      spec.differentFromSlots === undefined &&
-      spec.graveyardOwnerSlot === undefined
-    );
-  });
-  const illegalAlone = (index: number, id: ObjectId): boolean => {
+  /**
+   * A pick no completion can save: the same object as an earlier target of its group (those are
+   * fixed by now; later targets may still change), or a standalone target that is illegal. The
+   * menu-building loop needs this as much as the search does: an earlier duplicate offered there
+   * walked every completion of the later targets before failing at each leaf.
+   */
+  const rejected = (index: number, id: ObjectId): boolean => {
     const position = positions[index]!;
+    const group =
+      ability.targets[position.slot]!.count === undefined
+        ? undefined
+        : countTargets[position.slot]!;
+    if (group !== undefined && group.slice(0, position.ordinal).includes(id)) return true;
     return (
-      standsAlone[index]! &&
-      (id !== position.old || originallyLegal[index]!) &&
-      !targetIsLegal(ctx, ability.targets[position.slot]!, id, context(targets))
+      standsAlone[index]! && (id !== position.old || originallyLegal[index]!) && !legalAt(index, id)
     );
   };
   const canComplete = (index: number): boolean => {
@@ -175,13 +193,7 @@ export function* chooseNewTargets(
     const previous = valueAt(position);
     for (const id of domains[index]!) {
       set(position, id);
-      const group =
-        ability.targets[position.slot]!.count === undefined
-          ? undefined
-          : countTargets[position.slot]!;
-      // Only earlier fixed positions constrain this prefix; later targets may themselves change.
-      if (group !== undefined && group.slice(0, position.ordinal).includes(id)) continue;
-      if (illegalAlone(index, id)) continue;
+      if (rejected(index, id)) continue;
       if (canComplete(index + 1)) {
         set(position, previous);
         return true;
@@ -198,7 +210,7 @@ export function* chooseNewTargets(
   for (const [index, position] of positions.entries()) {
     const choices = domains[index]!.filter((id) => {
       set(position, id);
-      const result = !illegalAlone(index, id) && canComplete(index + 1);
+      const result = !rejected(index, id) && canComplete(index + 1);
       set(position, position.old);
       return result;
     });
