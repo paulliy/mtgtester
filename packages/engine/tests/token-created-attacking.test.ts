@@ -80,6 +80,7 @@ function resolve(
         targets: new Map(),
       };
     },
+    { strict: true },
   );
   const tokens = ctx.state.battlefield.filter((perm) => perm.isToken && perm.name === 'Soldier');
   return { asked, tokens };
@@ -186,19 +187,25 @@ describe('tokens created attacking', () => {
     registerCustomDef(ctx, def);
     const blocker = spawn(ctx, 'P4', BEAR('P4 Bear'));
     const askedToBlock: string[] = [];
-    pump(runCombatAndExtraCombats(ctx), (decision) => {
-      if (decision.presentationAttackDeclaration !== undefined)
-        return declareAttacks(decision, (id) => (id === attacker.id ? 'P2' : null));
-      if (decision.presentationBlockDeclaration !== undefined) {
-        askedToBlock.push(decision.player);
-        const token = ctx.state.battlefield.find((perm) => perm.isToken && perm.name === 'Soldier');
-        return declareBlocks(decision, (id) => (id === blocker.id ? (token?.id ?? null) : null));
-      }
-      const attack = decision.options.findIndex((option) => option.description === 'Attack P4');
-      if (attack >= 0) return { index: attack, targets: new Map() };
-      const pass = decision.options.findIndex((option) => option.type === 'pass');
-      return { index: Math.max(pass, 0), targets: new Map() };
-    });
+    pump(
+      runCombatAndExtraCombats(ctx),
+      (decision) => {
+        if (decision.presentationAttackDeclaration !== undefined)
+          return declareAttacks(decision, (id) => (id === attacker.id ? 'P2' : null));
+        if (decision.presentationBlockDeclaration !== undefined) {
+          askedToBlock.push(decision.player);
+          const token = ctx.state.battlefield.find(
+            (perm) => perm.isToken && perm.name === 'Soldier',
+          );
+          return declareBlocks(decision, (id) => (id === blocker.id ? (token?.id ?? null) : null));
+        }
+        const attack = decision.options.findIndex((option) => option.description === 'Attack P4');
+        if (attack >= 0) return { index: attack, targets: new Map() };
+        const pass = decision.options.findIndex((option) => option.type === 'pass');
+        return { index: Math.max(pass, 0), targets: new Map() };
+      },
+      { strict: true },
+    );
     // P4 was never declared against, yet is asked to block and kills the 1/1 Soldier.
     expect(askedToBlock).toContain('P4');
     expect(ctx.state.battlefield.some((perm) => perm.isToken && perm.name === 'Soldier')).toBe(

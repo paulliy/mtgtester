@@ -19,6 +19,9 @@ import { compiledCards } from '../../packages/engine/src/cards/overrides/compile
 import { withPatch } from './lib';
 import { DETECTORS as ALL_DETECTORS } from './known-gaps';
 
+/** A patch's IR, read as plain JSON. */
+type Json = unknown;
+
 // A closed gap no longer makes its shape wrong, so the sweep reports open ones only.
 const DETECTORS = ALL_DETECTORS.filter((detector) => detector.open);
 
