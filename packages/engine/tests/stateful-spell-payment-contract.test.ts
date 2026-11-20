@@ -667,3 +667,101 @@ describe('stateful payment search limits', () => {
     expect(state.ctx.state.stack[0]?.triggerScope?.manaSpent).toBe(11);
   });
 });
+
+describe('identical sources in the stateful payment search', () => {
+  // `MTG_VERIFY_MANA_PLAN=1` runs every search twice, so the work counters double.
+  const runs = process.env['MTG_VERIFY_MANA_PLAN'] === '1' ? 2 : 1;
+  const orchard: ManaAbilitySpec = { units: [], dynamic: 'opponentLandColors' };
+  /** The state-dependent source that makes the stateful search run (Exotic Orchard). */
+  function withOrchard(state: ReturnType<typeof setup>, tapped = false) {
+    const opponent = state.ctx.state.players[1]!;
+    spawn(
+      state.ctx,
+      opponent.id,
+      oracle({ name: 'Opposing Forest', typeLine: 'Basic Land — Forest', manaCost: null }),
+    );
+    const rock = state.source('Exotic Orchard', orchard);
+    rock.tapped = tapped;
+    return rock;
+  }
+  const treasures = (state: ReturnType<typeof setup>) =>
+    state.ctx.state.battlefield.filter((p) => p.name === 'Treasure');
+
+  it('casts a nine-pip cost from 48 Treasures in few states', () => {
+    const state = setup('{4}{W}{U}{B}{R}{G}');
+    withOrchard(state, true);
+    for (let i = 0; i < 48; i++) state.source('Treasure', treasure);
+    const before = engineWork();
+    expect(state.offered()).toBeDefined();
+    const work = engineWorkSince(before);
+    expect(work.manaPlannerStates).toBeLessThan(500 * runs);
+    state.cast();
+    // The plan the depth-first search finds pays with more Treasures than the nine the cost needs.
+    expect(treasures(state).length).toBeLessThan(48);
+    expect(state.ctx.state.stack[0]?.triggerScope?.manaSpent).toBe(9);
+  }, 60_000);
+
+  it('does not offer an eight-mana cast from seven Treasures, and does not throw', () => {
+    const state = setup('{8}');
+    withOrchard(state, true);
+    for (let i = 0; i < 7; i++) state.source('Treasure', treasure);
+    const before = engineWork();
+    expect(state.offered()).toBeUndefined();
+    // The capacity bound proves 7 < 8 at the root: no search at all.
+    // The root of the {8} search is pruned; the rest is the probe spell's own {1}{G} search.
+    expect(engineWorkSince(before).manaPlannerStates).toBeLessThan(40 * runs);
+  });
+
+  it('keeps the capacity bound off when an own dynamic source reads the permanents sacrificed', () => {
+    const state = setup('{8}');
+    const reader = state.source('Color reader', { units: [], dynamic: 'oneColorAmongPermanents' });
+    reader.tapped = true;
+    for (let i = 0; i < 7; i++) state.source('Treasure', treasure);
+    const before = engineWork();
+    // Not pruned at the root: a sacrifice can change what that source makes.
+    expect(state.offered()).toBeUndefined();
+    expect(engineWorkSince(before).manaPlannerStates).toBeGreaterThan(300 * runs);
+  });
+
+  describe('what keeps two Treasures apart', () => {
+    /**
+     * Seven Treasures make one mana less than {9}; the counted rock turns the capacity bound off,
+     * so the search must walk every branch it cannot merge. Identical Treasures are one branch per
+     * level and the search ends inside its budget; a Treasure that differs is a branch of its own
+     * and brings the search past the budget (the planner halts rather than guess).
+     */
+    function impossibleBoard(mark: (state: ReturnType<typeof setup>) => void) {
+      const state = setup('{9}');
+      state.source('Counting rock', countedRock);
+      for (let i = 0; i < 7; i++) state.source('Treasure', treasure);
+      mark(state);
+      return state;
+    }
+
+    it('searches identical Treasures as one branch per level', () => {
+      const state = impossibleBoard(() => undefined);
+      const before = engineWork();
+      expect(state.offered()).toBeUndefined();
+      expect(engineWorkSince(before).manaPlannerStates).toBeLessThan(2048 * 3 * runs);
+    });
+
+    it('does not merge a Treasure that has a counter', () => {
+      const state = impossibleBoard((board) => {
+        treasures(board)[0]!.counters['+1/+1'] = 1;
+      });
+      expect(state.offered).toThrow('state budget exceeded');
+    });
+
+    it('does not merge a Treasure that something is attached to', () => {
+      const state = impossibleBoard((board) => {
+        const aura = spawn(
+          board.ctx,
+          board.player.id,
+          oracle({ name: 'Aura probe', typeLine: 'Enchantment — Aura' }),
+        );
+        aura.attachedTo = treasures(board)[0]!.id;
+      });
+      expect(state.offered).toThrow('state budget exceeded');
+    });
+  });
+});

@@ -111,6 +111,131 @@ function ceilingSource(source: ManaSource, units: ManaUnit[]): ManaSource {
   return { ...unlinked, units };
 }
 
+/** Dynamic mana kinds that read nothing a sacrifice of the player's own permanent changes. */
+const DYNAMIC_KINDS_OUTSIDE_OWN_BOARD: ReadonlySet<string> = new Set([
+  'commanderIdentity',
+  'chosenColor',
+  'opponentLandColors',
+]);
+
+/**
+ * Fields of a permanent that are only its identity: two permanents equal in everything else are
+ * interchangeable to the payment search. `timestamp` orders continuous effects (CR 613.7), which
+ * matters only while characteristics can change during the payment (see `classKeyOf`).
+ */
+const IDENTITY_FIELDS = new Set(['id', 'cardId']);
+
+/** A permanent-shaped or card-shaped object, whose own `id` and `cardId` name only itself. */
+function isGameObject(holder: unknown): boolean {
+  return (
+    typeof holder === 'object' &&
+    holder !== null &&
+    'oracleId' in holder &&
+    ('controllerId' in holder || 'ownerId' in holder)
+  );
+}
+
+/**
+ * Whether any state outside a permanent's own `id` and `cardId` fields names it: an Aura or
+ * Equipment attached to it, a delayed trigger, a stack object, a continuous effect, a sacrifice
+ * list. Such a permanent is not interchangeable with a lookalike, because a rule can single it
+ * out. The log of events and the spectator snapshots are left out: no payment reads them, and
+ * they are the bulk of the state.
+ */
+function referencedElsewhere(
+  ctx: GameContext,
+): (permanent: { id: string; cardId: string }) => boolean {
+  let text: string | undefined;
+  return (permanent) => {
+    if (text === undefined) {
+      const { sequenceSnapshots: _snapshots, eventLog: _log, ...state } = ctx.state;
+      text = JSON.stringify(state, function (this: unknown, key: string, value: unknown) {
+        return IDENTITY_FIELDS.has(key) && isGameObject(this) ? undefined : value;
+      });
+    }
+    return text.includes(`"${permanent.id}"`) || text.includes(`"${permanent.cardId}"`);
+  };
+}
+
+/**
+ * Symmetry reduction for the payment search. Two untapped sources are interchangeable when
+ * swapping their permanents maps the game onto itself, so the search needs to try only the first
+ * of them at a level: what it explores under the second is isomorphic to what it explored under
+ * the first, which found no plan (or it would have returned). The class key lists everything the
+ * search and the payment can observe, and anything unlisted keeps two sources apart:
+ *
+ * - the permanent itself, every field but `id` and `cardId`: definition (`oracleId`), name,
+ *   token or not, controller, tapped and summoning-sick status, counters, attachment, face,
+ *   chosen option, copy and combat fields, `enteredTurnNumber`. `timestamp` is dropped only while
+ *   characteristics are fixed during the payment (`characteristicsFixedDuringPayment`, the
+ *   same answer in the verify run's old search, so both explore the same classes): then no effect can be reordered
+ *   against it, and what the layers made of the permanent is in the key below. Where that
+ *   fails, a later tap may re-run the layers, so the timestamp stays.
+ * - what the layer pass makes of it (`characteristics`): types, subtypes, colors, keywords,
+ *   power and toughness, and the mana abilities and their gates.
+ * - every source it offers, not only this one (a permanent with two abilities is not like one
+ *   with one), each without `cardId` and `activation`: units, costs, mana cost, production spec,
+ *   riders, restriction, spend trigger and the rest of `ManaSource`.
+ * - whether it is reserved (`reservedObjectIds`).
+ * - that nothing else names it (`referencedElsewhere`).
+ *
+ * Where a source lists permanents by id (`sacrifices`, `taps`), spends a shared resource keyed by
+ * its card, is convoke, or comes from the hand, nothing is merged at that level: a swap would
+ * have to carry those lists along.
+ */
+function sourceClassKeys(
+  snapshot: GameContext,
+  available: readonly ManaSource[],
+  reservedObjectIds: ReadonlySet<string>,
+  fixedCharacteristics: boolean,
+  referenced: (permanent: { id: string; cardId: string }) => boolean,
+): (source: ManaSource) => string {
+  const charsOf = battlefieldCharacteristics(snapshot);
+  const exact = (source: ManaSource): string => {
+    const { activation: _activation, ...signature } = source;
+    return JSON.stringify(signature);
+  };
+  const bare = (source: ManaSource): string => {
+    const { activation: _activation, cardId: _cardId, ...signature } = source;
+    return JSON.stringify(signature);
+  };
+  const entangled = available.some(
+    (source) =>
+      source.sacrifices !== undefined ||
+      source.taps !== undefined ||
+      source.resources !== undefined ||
+      source.convoke === true ||
+      source.fromHand === true,
+  );
+  const siblings = new Map<string, string[]>();
+  for (const source of available)
+    siblings.set(source.cardId, [...(siblings.get(source.cardId) ?? []), bare(source)]);
+  const cache = new Map<string, string>();
+  return (source) => {
+    if (entangled) return exact(source);
+    const cached = cache.get(source.cardId);
+    const own = bare(source);
+    if (cached !== undefined) return `${cached}${own}`;
+    const permanent = snapshot.state.battlefield.find((p) => p.cardId === source.cardId);
+    let key: string;
+    if (permanent === undefined || referenced(permanent)) key = `unique:${source.cardId}`;
+    else
+      key = JSON.stringify([
+        JSON.stringify(permanent, function (this: unknown, field: string, value: unknown) {
+          if (this !== permanent) return value;
+          return IDENTITY_FIELDS.has(field) || (fixedCharacteristics && field === 'timestamp')
+            ? undefined
+            : value;
+        }),
+        JSON.stringify(charsOf(permanent)),
+        siblings.get(source.cardId),
+        reservedObjectIds.has(permanent.id) || reservedObjectIds.has(permanent.cardId),
+      ]);
+    cache.set(source.cardId, key);
+    return `${key}${own}`;
+  };
+}
+
 export function needsStatefulManaPayment(
   ctx: GameContext,
   player: EnginePlayerState,
@@ -270,7 +395,8 @@ export function searchPayment(
   /** The bound with gated sources and the copy-free search; false is the search as it was. */
   current: boolean,
 ): PaymentPlan | null {
-  const premise = current && characteristicsFixedDuringPayment(definitionsInPlay(ctx));
+  const fixedCharacteristics = characteristicsFixedDuringPayment(definitionsInPlay(ctx));
+  const premise = current && fixedCharacteristics;
   const gatedBound = premise;
   let states = 0;
   let outsideScope = false;
@@ -280,6 +406,7 @@ export function searchPayment(
   /** Second phase: sacrifice sources join the final payment (see `sacrificeSource`). */
   let withSacrifice = false;
   const seen = new Set<string>();
+  const referenced = referencedElsewhere(ctx);
   const unsupported = (reason: string): never => {
     throw new UnmodeledCardError(
       'mana payment',
@@ -314,8 +441,32 @@ export function searchPayment(
       definitionsInPlay(ctx),
       ownAbilities.some((ability) => ability.condition !== undefined),
     );
+  // "{T}, Sacrifice this artifact: Add one mana of any color" (Treasure, Lotus Petal) takes its own
+  // permanent off the battlefield, which is no more than the other sacrifice does: nothing in play
+  // gives production back when a permanent leaves, so every source still makes at most what it
+  // makes now, and a Treasure counts once, at its ceiling, like any {T} source. Without this the
+  // capacity bound was off for every Treasure board, and a cost seven Treasures could not pay
+  // (fuzz-84: {5}{U}{R}{G}) was searched until the state budget threw. A source with no {T} cost
+  // still needs the `sacrificeOther` bound (the check below), as it did. A sacrifice also changes
+  // what a dynamic source reads when it reads this player's own permanents ("one color among
+  // permanents you control"), so its symbols are no ceiling any more: only the kinds that read
+  // the commander, an entry choice or the opponents' lands keep the bound.
+  const sacrificeSelfBound =
+    ownAbilities.some((ability) => ability.costs?.some((cost) => cost.kind === 'sacrificeSelf')) &&
+    ownAbilities.every(
+      (ability) =>
+        ability.dynamic === undefined || DYNAMIC_KINDS_OUTSIDE_OWN_BOARD.has(ability.dynamic),
+    ) &&
+    characteristicsFixedDuringPayment(definitionsInPlay(ctx)) &&
+    leavingPermanentsKeepProduction(
+      definitionsInPlay(ctx),
+      ownAbilities.some((ability) => ability.condition !== undefined),
+    );
   const keepsCapacity = (kind: string): boolean =>
-    kind === 'tap' || kind === 'mana' || (sacrificeBound && kind === 'sacrificeOther');
+    kind === 'tap' ||
+    kind === 'mana' ||
+    (sacrificeBound && kind === 'sacrificeOther') ||
+    (sacrificeSelfBound && kind === 'sacrificeSelf');
   const fixedCapacity = ownAbilities.every(
     (ability) =>
       ability.amount === undefined &&
@@ -545,9 +696,15 @@ export function searchPayment(
       return null;
     }
     const deduplicated = new Set<string>();
+    const classKeyOf = sourceClassKeys(
+      snapshot,
+      availableSources,
+      reservedObjectIds,
+      fixedCharacteristics,
+      referenced,
+    );
     for (const candidate of candidates) {
-      const { activation: _activation, ...signature } = candidate;
-      const sourceKey = JSON.stringify(signature);
+      const sourceKey = classKeyOf(candidate);
       if (deduplicated.has(sourceKey)) continue;
       deduplicated.add(sourceKey);
       if (
@@ -732,6 +889,15 @@ export function searchPayment(
       JSON.stringify(orderByKeepValue(boardOrder, tierOf, demandOf)) !== JSON.stringify(rootSources)
     )
       return handBack;
+    // The board never changes in this search but for taps, and a tapped source is gone from the
+    // list, so the classes of the root listing hold at every level.
+    const classKeyOf = sourceClassKeys(
+      ctx,
+      rootSources,
+      reservedObjectIds,
+      fixedCharacteristics,
+      referenced,
+    );
     const tapped: string[] = [];
     const pool: ManaEntry[] = [...payer.manaEntries];
     const seenStates = new Set<string>();
@@ -804,8 +970,7 @@ export function searchPayment(
       }
       const deduplicated = new Set<string>();
       for (const candidate of availableSources) {
-        const { activation: _activation, ...signature } = candidate;
-        const sourceKey = JSON.stringify(signature);
+        const sourceKey = classKeyOf(candidate);
         if (deduplicated.has(sourceKey)) continue;
         deduplicated.add(sourceKey);
         const source = { ...candidate, activation: sources.length };
