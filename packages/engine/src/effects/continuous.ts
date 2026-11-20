@@ -50,6 +50,7 @@ import type { EnginePermanent, GameContext } from '../state/types';
 import { cardZoneCandidate } from '../state/queries';
 import { getCached, sampleCacheHit, scopedDigestOf, setCached } from './layer-cache';
 import { countWork } from '../work-counters';
+import { readsOf, writesOf } from './layer-dependency';
 
 /** Basic-land subtype → intrinsic mana ability (CR 305.6), for Blood Moon's mana override. */
 const BASIC_LAND_MANA: Record<string, ManaUnit> = {
@@ -879,6 +880,12 @@ function cloneWork(work: WorkMap): WorkMap {
   return out;
 }
 
+/** Set `MTG_VERIFY_LAYER_DEPENDENCY=1` to also run the full probe and assert the prefilter never skips a real dependency. */
+const VERIFY_DEPENDENCY =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[
+    'MTG_VERIFY_LAYER_DEPENDENCY'
+  ] === '1';
+
 /**
  * CR 613.8a: would applying `other` first change what `effect` does? One instance answers for
  * one state of `work`: each effect's fingerprint there, and each trial state with one other
@@ -889,6 +896,7 @@ function cloneWork(work: WorkMap): WorkMap {
 function dependencyProbe(
   ctx: GameContext,
   work: WorkMap,
+  counted = true,
 ): (effect: LayerEffect, other: LayerEffect) => boolean {
   const before = new Map<LayerEffect, string>();
   const trials = new Map<LayerEffect, WorkMap>();
@@ -900,6 +908,7 @@ function dependencyProbe(
     }
     let trial = trials.get(other);
     if (trial === undefined) {
+      if (counted) countWork('layerDependencyProbes');
       trial = cloneWork(work);
       applyOne(ctx, trial, other);
       trials.set(other, trial);
@@ -939,9 +948,34 @@ function applyGroup(
   }
 
   const remaining = [...group].sort((a, b) => a.timestamp - b.timestamp);
+  // CR 613.8a prefilter: `other` can change `effect` only if what `other` writes is something
+  // `effect` reads (see layer-dependency.ts). With no such pair the order is plain timestamp.
+  const reads = new Map<LayerEffect, number>();
+  const writes = new Map<LayerEffect, number>();
+  for (const effect of remaining) {
+    reads.set(effect, readsOf(effect));
+    writes.set(effect, writesOf(effect.op));
+  }
+  const mayDepend = (effect: LayerEffect, other: LayerEffect): boolean =>
+    ((reads.get(effect) as number) & (writes.get(other) as number)) !== 0;
+  const verify = VERIFY_DEPENDENCY;
+  if (!verify && !remaining.some((e) => remaining.some((o) => o !== e && mayDepend(e, o)))) {
+    for (const effect of remaining) applyOne(ctx, work, effect);
+    return;
+  }
   while (remaining.length > 0) {
     // 613.8b: the earliest-timestamped effect that depends on nothing still unapplied.
-    const dependsOn = dependencyProbe(ctx, work);
+    const probe = dependencyProbe(ctx, work);
+    const check = verify ? dependencyProbe(ctx, work, false) : probe;
+    const dependsOn = (effect: LayerEffect, other: LayerEffect): boolean => {
+      const may = mayDepend(effect, other);
+      if (verify && !may && check(effect, other)) {
+        throw new Error(
+          `engine bug: layer dependency prefilter said independent, probe says dependent.\neffect: ${JSON.stringify(effect.op)}\nother:  ${JSON.stringify(other.op)}`,
+        );
+      }
+      return may && probe(effect, other);
+    };
     const next = remaining.findIndex((effect, i) =>
       remaining.every((other, j) => j === i || !dependsOn(effect, other)),
     );
