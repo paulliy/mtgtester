@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "card": "Persistent Specimen",
+  "scenarios": [
+    {
+      "id": "persistent-specimen-return",
+      "title": "Persistent Specimen: return this card from your graveyard to the battlefield tapped",
+      "clauses": [1],
+      "instructions": ["Activate Persistent Specimen's ability from your graveyard."],
+      "expectedOutcome": "Persistent Specimen returns to the battlefield tapped.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Persistent Specimen"],
+          "battlefield": ["Swamp", "Swamp", "Swamp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Persistent Specimen \\(graveyard\\)/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Persistent Specimen"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Persistent Specimen"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Persistent Specimen",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "persistent-specimen-from-hand",
+      "title": "Persistent Specimen: the ability works only from the graveyard",
+      "clauses": [1],
+      "instructions": ["With Persistent Specimen in your hand, cast it."],
+      "expectedOutcome": "No return ability is offered from the hand; Persistent Specimen enters untapped the normal way.",
+      "seats": {
+        "P1": {
+          "hand": ["Persistent Specimen"],
+          "battlefield": ["Swamp", "Swamp", "Swamp"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Persistent Specimen/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Persistent Specimen"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Persistent Specimen",
+            "equals": false
+          }
+        }
+      ]
+    }
+  ]
+}

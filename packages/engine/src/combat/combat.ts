@@ -68,6 +68,7 @@ import {
   triggersOf,
 } from '../state/queries';
 import type { RuleStaticEntry } from '../state/queries';
+import type { KeywordAbility } from '../cards/ability';
 import { evaluateCondition } from '../cards/condition';
 import type {
   AttackRequirementEntry,
@@ -648,9 +649,108 @@ function canBlock(ctx: GameContext, blocker: EnginePermanent, attacker: EnginePe
   // (its colors, or creatures) cannot be blocked by it.
   if (hasProtectionFrom(ctx, attacker, computeCharacteristics(ctx, blocker))) return false;
   if (hasKeyword(ctx, attacker, 'flying')) {
-    return hasKeyword(ctx, blocker, 'flying') || hasKeyword(ctx, blocker, 'reach');
+    if (!hasKeyword(ctx, blocker, 'flying') && !hasKeyword(ctx, blocker, 'reach')) return false;
+  }
+  if (!evasionAllows(ctx, blocker, attacker)) return false;
+  return blockRestrictionsAllow(ctx, blocker, attacker);
+}
+
+/** Basic landwalk keywords and the land subtype each one looks for (CR 702.14c). */
+const LANDWALK: readonly (readonly [KeywordAbility, string])[] = [
+  ['plainswalk', 'Plains'],
+  ['islandwalk', 'Island'],
+  ['swampwalk', 'Swamp'],
+  ['mountainwalk', 'Mountain'],
+  ['forestwalk', 'Forest'],
+];
+
+/**
+ * The evasion keywords other than flying, read as blockers are declared (CR 509.1b): fear
+ * (702.36b), intimidate (702.13b), skulk (702.118b), shadow both ways (702.28b) and landwalk
+ * against the lands of the player the attacker attacks, or the controller of the planeswalker it
+ * attacks (702.14c; a nonbasic Island counts as an Island).
+ */
+function evasionAllows(
+  ctx: GameContext,
+  blocker: EnginePermanent,
+  attacker: EnginePermanent,
+): boolean {
+  const a = computeCharacteristics(ctx, attacker);
+  const b = computeCharacteristics(ctx, blocker);
+  if (a.keywords.includes('shadow') !== b.keywords.includes('shadow')) return false;
+  const artifactBlocker = b.types.includes('Artifact');
+  if (a.keywords.includes('fear') && !artifactBlocker && !b.colors.includes('B')) return false;
+  if (
+    a.keywords.includes('intimidate') &&
+    !artifactBlocker &&
+    !b.colors.some((color) => a.colors.includes(color))
+  )
+    return false;
+  if (a.keywords.includes('skulk') && b.power > a.power) return false;
+  const walks = LANDWALK.filter(([keyword]) => a.keywords.includes(keyword));
+  const nonbasicWalk = a.keywords.includes('nonbasic landwalk');
+  if ((walks.length > 0 || nonbasicWalk) && attacker.attacking !== null) {
+    for (const land of controlledPermanents(ctx, attacker.attacking)) {
+      const chars = computeCharacteristics(ctx, land);
+      if (!chars.types.includes('Land')) continue;
+      if (walks.some(([, subtype]) => chars.subtypes.includes(subtype))) return false;
+      if (nonbasicWalk && !chars.supertypes.includes('Basic')) return false;
+    }
   }
   return true;
+}
+
+/** The selector view of a rule static's source, with the creature it is attached to. */
+function ruleStaticView(
+  ctx: GameContext,
+  entry: RuleStaticEntry,
+): { cardId: string; controllerId: PlayerId; attachedToCardId?: string } {
+  const source = ctx.state.battlefield.find((perm) => perm.cardId === entry.sourceCardId);
+  const attachedToCardId =
+    source === undefined || source.attachedTo === null
+      ? undefined
+      : ctx.state.battlefield.find((perm) => perm.id === source.attachedTo)?.cardId;
+  return {
+    cardId: entry.sourceCardId,
+    controllerId: entry.controllerId,
+    ...(attachedToCardId !== undefined ? { attachedToCardId } : {}),
+  };
+}
+
+/** `blockRestriction` rule statics (Prowler's Helm, Steel Leaf Champion, Ant-Man), per blocker. */
+function blockRestrictionsAllow(
+  ctx: GameContext,
+  blocker: EnginePermanent,
+  attacker: EnginePermanent,
+): boolean {
+  for (const entry of gatherRuleStatics(ctx)) {
+    const rule = entry.static;
+    if (rule.kind !== 'blockRestriction') continue;
+    const view = ruleStaticView(ctx, entry);
+    if (!matchesSelector(ctx, attacker, rule.attackers, view)) continue;
+    if (rule.onlyBy !== undefined && !matchesSelector(ctx, blocker, rule.onlyBy, view))
+      return false;
+    if (rule.notBy !== undefined && matchesSelector(ctx, blocker, rule.notBy, view)) return false;
+    if (
+      rule.notByGreaterPower === true &&
+      effectivePT(ctx, blocker).power > effectivePT(ctx, attacker).power
+    )
+      return false;
+  }
+  return true;
+}
+
+/** "Can't be blocked by more than N creatures" (Alpha Authority): the smallest such N, or null. */
+function maxBlockersOf(ctx: GameContext, attacker: EnginePermanent): number | null {
+  let most: number | null = null;
+  for (const entry of gatherRuleStatics(ctx)) {
+    const rule = entry.static;
+    if (rule.kind !== 'blockRestriction' || rule.maxBlockers === undefined) continue;
+    const view = ruleStaticView(ctx, entry);
+    if (!matchesSelector(ctx, attacker, rule.attackers, view)) continue;
+    most = most === null ? rule.maxBlockers : Math.min(most, rule.maxBlockers);
+  }
+  return most;
 }
 
 function attackers(ctx: GameContext): EnginePermanent[] {
@@ -1292,6 +1392,7 @@ function* declareAttackers(ctx: GameContext): GameGen<void> {
     perm.attackedThisTurn = true;
     perm.timesAttackedThisTurn = (perm.timesAttackedThisTurn ?? 0) + 1;
   }
+  if (declared.length > 0) (ctx.state.attackedThisTurnPlayers ??= {})[ap.id] = true;
   const defendingPlayers = [...new Set(declared.map((a) => a.attacking as PlayerId))];
   for (const defId of defendingPlayers) {
     // The defending player is woken for an attack on their planeswalker too (CR 509.1).
@@ -1446,6 +1547,16 @@ function validateBlockDeclaration(
           message: `${attacker.name} has menace and can't be blocked by only one creature`,
         });
       }
+    // "Can't be blocked by more than one creature": the blockers past the limit are flagged.
+    const most = maxBlockersOf(ctx, attacker);
+    if (most !== null && blockers.length > most)
+      for (const blocker of blockers) {
+        violations.push({
+          subjectId: blocker.id,
+          kind: 'maxBlockers',
+          message: `${attacker.name} can't be blocked by more than ${most === 1 ? 'one creature' : `${most} creatures`}`,
+        });
+      }
     // "Can't be blocked except by N or more creatures": none, or at least N.
     const needed = minBlockersOf(ctx, attacker);
     if (needed > 2 && blockers.length < needed)
@@ -1580,6 +1691,14 @@ function repairBlockDeclaration(
       )[0];
     if (pick === undefined) break; // unreachable: every violation names a candidate
     const currentAttackerId = repaired.get(pick.blocker.id);
+    // A redirect or a recruited partner never lands on an attacker already at its blocker limit.
+    const hasRoom = (attacker: EnginePermanent): boolean => {
+      const most = maxBlockersOf(ctx, attacker);
+      return (
+        most === null ||
+        candidates.filter((c) => repaired.get(c.blocker.id) === attacker.id).length < most
+      );
+    };
     // A lone blocker that can't block alone stands down; no other attacker fixes that.
     const alone = violations.some(
       (v) => v.subjectId === pick.blocker.id && v.kind === 'blockAlone',
@@ -1591,14 +1710,18 @@ function repairBlockDeclaration(
       const idle = candidates.filter(
         (c) => c.blocker.id !== pick.blocker.id && (repaired.get(c.blocker.id) ?? null) === null,
       );
-      const beside = idle.find((c) => c.blockable.some((a) => a.id === currentAttackerId));
+      const current = pick.blockable.find((a) => a.id === currentAttackerId);
+      const beside =
+        current !== undefined && hasRoom(current)
+          ? idle.find((c) => c.blockable.some((a) => a.id === currentAttackerId))
+          : undefined;
       const elsewhere =
         beside === undefined
           ? idle
               .map((c) => ({
                 c,
                 attacker: c.blockable.find(
-                  (a) => !hasKeyword(ctx, a, 'menace') && minBlockersOf(ctx, a) === 0,
+                  (a) => !hasKeyword(ctx, a, 'menace') && minBlockersOf(ctx, a) === 0 && hasRoom(a),
                 ),
               }))
               .find((entry) => entry.attacker !== undefined)
@@ -1611,16 +1734,46 @@ function repairBlockDeclaration(
         continue;
       }
     }
+    // A required blocker over a "can't be blocked by more than N" limit keeps its block when an
+    // optional blocker on the same attacker can stand down instead (CR 509.1c).
+    const overMax = violations.some(
+      (v) => v.subjectId === pick.blocker.id && v.kind === 'maxBlockers',
+    );
+    if (overMax && pick.blocker.mustBlockThisTurn === true && currentAttackerId != null) {
+      const optional = candidates.find(
+        (c) =>
+          c.blocker.id !== pick.blocker.id &&
+          c.blocker.mustBlockThisTurn !== true &&
+          repaired.get(c.blocker.id) === currentAttackerId,
+      );
+      if (optional !== undefined) {
+        repaired.set(optional.blocker.id, null);
+        violations = validateBlockDeclaration(ctx, candidates, repaired);
+        continue;
+      }
+    }
     const alternative =
       pick.blocker.mustBlockThisTurn === true && !alone
         ? pick.blockable.find(
             (a) =>
               a.id !== currentAttackerId &&
               !hasKeyword(ctx, a, 'menace') &&
-              minBlockersOf(ctx, a) === 0,
+              minBlockersOf(ctx, a) === 0 &&
+              hasRoom(a),
           )
         : undefined;
     repaired.set(pick.blocker.id, alternative?.id ?? null);
+    violations = validateBlockDeclaration(ctx, candidates, repaired);
+  }
+  // Out of guard with violations left: stand down every flagged blocker until the declaration is
+  // legal. Each pass removes at least one block, so this ends (no blocks is always reachable).
+  while (violations.length > 0) {
+    const flagged = new Set(violations.map((v) => v.subjectId));
+    const standDown = candidates.filter(
+      (c) => flagged.has(c.blocker.id) && (repaired.get(c.blocker.id) ?? null) !== null,
+    );
+    if (standDown.length === 0) break;
+    for (const c of standDown) repaired.set(c.blocker.id, null);
     violations = validateBlockDeclaration(ctx, candidates, repaired);
   }
   return repaired;

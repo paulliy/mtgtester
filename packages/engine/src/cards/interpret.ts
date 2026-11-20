@@ -97,6 +97,8 @@ import {
   ofSubtype,
   ofSupertype,
   ofType,
+  manaValueAtLeast,
+  manaValueAtMost,
   powerAtLeast,
   withKeyword,
 } from './selector';
@@ -1334,6 +1336,39 @@ function parseActivatedLine(line: string, card: OracleCard): ActivatedAbility | 
     oncePerTurn = true;
   }
 
+  // "{1}{B}: Return this card from your graveyard to the battlefield [tapped] [with two +1/+1
+  // counters on it]." (Reassembling Skeleton, Retrofitted Transmogrant) — an ability that
+  // functions only from the graveyard (CR 113.6). The graveyard activation path pays mana only,
+  // so a sacrifice or other cost (Cauldron Familiar, Grafted Butcher) stays unmodeled.
+  {
+    const m = split.effectText.match(
+      /^return this card from your graveyard to the battlefield( tapped)?(?: with (\w+) ([+-]\d+\/[+-]\d+) counters? on it)?$/,
+    );
+    if (m !== null) {
+      if (oncePerTurn || costs.some((c) => c.kind !== 'mana')) return null;
+      const counterCount = m[2] === undefined ? undefined : parseAmount(m[2]);
+      if (counterCount === null || (m[2] !== undefined && m[3] === undefined)) return null;
+      return {
+        costs,
+        timing,
+        zone: 'graveyard',
+        ...(condition === undefined ? {} : { condition }),
+        ability: {
+          kind: 'activated',
+          targets: [],
+          effects: [
+            {
+              op: 'returnSelfFromGraveyardToBattlefield',
+              ...(m[1] === undefined ? {} : { tapped: true as const }),
+              ...(counterCount === undefined ? {} : { counter: m[3] as string, counterCount }),
+            },
+          ],
+          description: line,
+        },
+      };
+    }
+  }
+
   const modal = parseModalSpellBlock(split.effectText, card);
   if (modal !== null) {
     return {
@@ -2232,6 +2267,110 @@ function parseLifeGainReplacement(lower: string): RuleStatic[] | null {
  * can't cast spells", casting from a non-hand zone. These have no permanent to apply a layer op
  * to (`rule-statics.ts`), so they are collected separately from `parseStaticLine`.
  */
+/**
+ * The attackers a block restriction covers, from the source's view: itself, the creature it is
+ * attached to, a list of creature types ("Krakens, Leviathans, Octopuses, and Serpents you
+ * control"), "each creature you control with a counter on it", or another subject phrase.
+ */
+function parseBlockRestrictionAttackers(text: string, card: OracleCard): Selector | null {
+  if (text === '~' || text === 'this creature') return SELF;
+  if (text === 'equipped creature' || text === 'enchanted creature')
+    return { kind: 'attachedToSource' };
+  const counter = text.match(/^(?:each )?creatures? you control with a counter on (?:it|them)$/);
+  if (counter !== null) return allOf(ofType('Creature'), YOURS, { kind: 'hasAnyCounter' });
+  const list = text.match(/^(.+?)( you control)?$/);
+  if (list !== null && / and /.test(list[1] as string)) {
+    const types = parseSubtypeList(list[1] as string, card);
+    if (types === null) return null;
+    return list[2] === undefined ? types : allOf(types, YOURS);
+  }
+  return parseSubject(text, card);
+}
+
+/** "Krakens, Leviathans, Octopuses, and Serpents" as any one of those subtypes, or null. */
+function parseSubtypeList(text: string, card: OracleCard): Selector | null {
+  const words = text.split(/, and |, or | and | or |, /).map((word) => word.trim());
+  if (words.length < 2) return null;
+  const selectors: Selector[] = [];
+  for (const word of words) {
+    if (!/^[a-z-]+$/.test(word)) return null;
+    const subtype = resolveSubtype(titleCase(word), card);
+    if (subtype === null) return null;
+    selectors.push(ofSubtype(subtype));
+  }
+  return anyOf(...selectors);
+}
+
+/** The blockers a block restriction names: "Walls", "creatures with power 2 or less", "Oxen". */
+function parseBlockRestrictionBlockers(text: string, card: OracleCard): Selector | null {
+  const power = text.match(/^creatures with power (\d+) or (less|greater)$/);
+  if (power !== null) {
+    const n = Number(power[1]);
+    return allOf(
+      ofType('Creature'),
+      power[2] === 'less' ? { kind: 'powerAtMost', n } : { kind: 'powerAtLeast', n },
+    );
+  }
+  if (/ and | or |, /.test(text)) return parseSubtypeList(text, card);
+  if (/^[a-z-]+$/.test(text)) {
+    const subtype = resolveSubtype(titleCase(text), card);
+    if (subtype !== null) return ofSubtype(subtype);
+  }
+  return parseMassSubject(text, card);
+}
+
+/**
+ * Block restrictions (CR 509.1b): "<attackers> can't be blocked except by <blockers>" (Prowler's
+ * Helm, Shifting Sliver, Silhana Ledgewalker), "... can't be blocked by <blockers>" (Steel Leaf
+ * Champion, Ox Drover), "... by creatures with greater power" (Ant-Man), "... by more than one
+ * creature" (Sunder Shaman, Flopsie), and "~ can't be blocked except by N or more creatures"
+ * (Troll of Khazad-dum, N of three or more). An attached-creature line may lead with keywords
+ * ("Enchanted creature has hexproof and can't be blocked by more than one creature", Alpha
+ * Authority). Conditional forms ("as long as", "this turn", "that player controls") stay unparsed.
+ */
+function parseBlockRestrictionLine(
+  lower: string,
+  card: OracleCard,
+): { statics: StaticEffect[]; rules: RuleStatic[] } | null {
+  const m = lower.match(
+    /^(.+?) (?:(has|have) ([a-z ,]+) and )?can't be blocked (except )?by (.+)$/,
+  );
+  if (m === null) return null;
+  const subject = m[1] as string;
+  const attackers = parseBlockRestrictionAttackers(subject, card);
+  if (attackers === null) return null;
+  const statics: StaticEffect[] = [];
+  if (m[3] !== undefined) {
+    if (attackers.kind !== 'attachedToSource') return null;
+    const kw = parseKeywordLine(m[3] as string);
+    if (kw === null || kw.keywords.length === 0 || kw.ward !== undefined) return null;
+    if (kw.protectionFrom !== undefined) return null;
+    for (const keyword of kw.keywords)
+      statics.push({ affects: attackers, op: { layer: 6, addKeyword: keyword } });
+  }
+  const except = m[4] !== undefined;
+  const blockers = m[5] as string;
+  if (except) {
+    const many = blockers.match(/^(three|four|five|six|seven|eight|nine|ten) or more creatures$/);
+    if (many !== null) {
+      if (attackers.kind !== 'self') return null;
+      const n = parseAmount(many[1] as string);
+      if (n === null) return null;
+      return { statics, rules: [{ kind: 'minBlockers', minimum: n }] };
+    }
+    const onlyBy = parseBlockRestrictionBlockers(blockers, card);
+    if (onlyBy === null) return null;
+    return { statics, rules: [{ kind: 'blockRestriction', attackers, onlyBy }] };
+  }
+  if (blockers === 'more than one creature')
+    return { statics, rules: [{ kind: 'blockRestriction', attackers, maxBlockers: 1 }] };
+  if (blockers === 'creatures with greater power')
+    return { statics, rules: [{ kind: 'blockRestriction', attackers, notByGreaterPower: true }] };
+  const notBy = parseBlockRestrictionBlockers(blockers, card);
+  if (notBy === null) return null;
+  return { statics, rules: [{ kind: 'blockRestriction', attackers, notBy }] };
+}
+
 function parseRuleStaticLine(lower: string, card: OracleCard): RuleStatic[] | null {
   {
     const parsed =
@@ -3217,6 +3356,7 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
   let commanderFreeCast = false;
   let spellModes: NonNullable<Ability['modes']> | undefined;
   let announcesX = false;
+  let ravenous = false;
   let castFromGraveyard = false;
   let optionalAdditionalCost: CardDefinition['optionalAdditionalCost'];
   let morphCost: ParsedManaCost | undefined;
@@ -3224,6 +3364,8 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
   let toxic = 0;
   let doesntUntapDuringUntapStep = false;
   let asTurnedFaceUpCounters: Record<string, number> | undefined;
+  let shuffleIntoLibraryInsteadOfGraveyard = false;
+  let handManaAbility: { units: ManaUnit[] } | undefined;
   let entersAsCopy: CardDefinition['entersAsCopy'];
   let alternativeCasts: import('./ability').AlternativeCast[] | undefined =
     mdfcLandFace === null ? undefined : [mdfcLandFace];
@@ -3913,6 +4055,95 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         }
       }
     }
+    // Offspring [cost] (CR 702.175a): an optional additional cost paid once, and an enters
+    // trigger making a 1/1 token copy of the creature if it was paid. Same shape as the authored
+    // Tender Wildguide definition.
+    {
+      const m = lower.match(/^offspring ((?:\{[^}]+\})+)$/);
+      if (m !== null && optionalAdditionalCost === undefined && card.types.includes('Creature')) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          optionalAdditionalCost = { mechanic: 'offspring', cost: cost.cost };
+          triggers.push(
+            triggered(onEtb(), {
+              effects: [
+                {
+                  op: 'createTokenCopyOf',
+                  ref: 'source',
+                  count: { kind: 'optionalCostCount', mechanic: 'offspring' },
+                  powerOverride: 1,
+                  toughnessOverride: 1,
+                },
+              ],
+              description: 'Offspring — create a 1/1 token copy',
+            }),
+          );
+          continue;
+        }
+      }
+    }
+    // Ravenous (CR 702.181a): enters with X +1/+1 counters, and draws a card on entry if X was 5
+    // or more. Only for a creature whose mana cost announces X (Jacked Rabbit's authored shape).
+    if (
+      lower === 'ravenous' &&
+      card.types.includes('Creature') &&
+      card.manaCost?.includes('{X}') === true &&
+      entersWithCounters['+1/+1'] === undefined
+    ) {
+      ravenous = true;
+      entersWithCounters['+1/+1'] = { kind: 'xValue' };
+      triggers.push(
+        triggered(onEtb(), {
+          condition: { kind: 'announcedXAtLeast', n: 5 },
+          effects: [{ op: 'draw', count: constant(1) }],
+          description: 'Ravenous — draw a card if X was 5 or greater',
+        }),
+      );
+      continue;
+    }
+    // Dash [cost] (CR 702.109a): an alternative cost that marks the permanent dashed; haste and
+    // the return at the next end step follow from that flag (Ragavan's authored shape).
+    {
+      const m = lower.match(/^dash ((?:\{[^}]+\})+)$/);
+      if (m !== null && card.types.includes('Creature')) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          if (alternativeCasts === undefined) alternativeCasts = [];
+          alternativeCasts.push({
+            kind: 'nonMana',
+            manaCost: cost.cost,
+            dashed: true,
+            description: `Dash ${m[1]!.toUpperCase()}`,
+          });
+          continue;
+        }
+      }
+    }
+    // Sneak [cost] on an instant or sorcery: an alternative cost of returning an unblocked attacker
+    // you control, castable only in your declare blockers step (New Generation's Technique's
+    // authored shape). A permanent with sneak also enters tapped and attacking, which the engine
+    // does not model, so creature sneak stays unparsed.
+    {
+      const m = lower.match(/^sneak ((?:\{[^}]+\})+)$/);
+      if (m !== null && (card.types.includes('Sorcery') || card.types.includes('Instant'))) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          if (alternativeCasts === undefined) alternativeCasts = [];
+          alternativeCasts.push({
+            kind: 'nonMana',
+            manaCost: cost.cost,
+            costs: [{ kind: 'returnUnblockedAttacker' }],
+            instantTiming: true,
+            condition: {
+              kind: 'allOf',
+              of: [{ kind: 'yourTurn' }, { kind: 'duringStep', step: 'declareBlockers' }],
+            },
+            description: `Sneak ${m[1]!.toUpperCase()} — return an unblocked attacker you control`,
+          });
+          continue;
+        }
+      }
+    }
     // Modular N (CR 702.43a): "This permanent enters with N +1/+1 counters on it" and "When this
     // permanent is put into a graveyard from the battlefield, you may put a +1/+1 counter on
     // target artifact creature for each +1/+1 counter on this permanent."
@@ -4210,6 +4441,14 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
       continue;
     }
     {
+      const block = parseBlockRestrictionLine(lower, card);
+      if (block !== null) {
+        staticEffects.push(...block.statics);
+        ruleStatics.push(...block.rules);
+        continue;
+      }
+    }
+    {
       const stat = parseStaticLine(lower, card);
       if (stat !== null) {
         staticEffects.push(...stat);
@@ -4378,6 +4617,40 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         }
       }
     }
+    // "Transmute {1}{U}{U}" (CR 702.53a): "{cost}, Discard this card: Search your library for a
+    // card with the same mana value as the discarded card, reveal that card, put it into your
+    // hand, then shuffle. Transmute only as a sorcery." The discard is a cost, and the mana value
+    // is this card's printed one (an {X} in it counts as 0, which `cmc` already reflects).
+    {
+      const m = lower.match(/^transmute ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
+      if (m) {
+        const cost = parseManaCost((m[1] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          const mv = card.cmc;
+          activatedAbilities.push({
+            costs: [{ kind: 'mana', cost: cost.cost }, { kind: 'discardSelf' }],
+            timing: 'sorcery',
+            zone: 'hand',
+            ability: {
+              kind: 'activated',
+              targets: [],
+              effects: [
+                {
+                  op: 'searchLibrary',
+                  filter: allOf(manaValueAtLeast(mv), manaValueAtMost(mv)),
+                  destinations: [{ zone: 'hand' }],
+                  reveal: true,
+                  allowFailToFind: true,
+                },
+                { op: 'shuffle' },
+              ],
+              description: line,
+            },
+          });
+          continue;
+        }
+      }
+    }
     /*
      * KICKER IS DELIBERATELY NOT PARSED - it falls through to `unrecognized rules text`.
      *
@@ -4420,6 +4693,27 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         continue;
       }
     }
+    // "If ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's
+    // library instead." (Darksteel Colossus, Nexus of Fate): its own replacement, applied by
+    // `moveObject` in every zone (CR 614.1a).
+    if (
+      /^if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead\.?$/.test(
+        lower,
+      )
+    ) {
+      shuffleIntoLibraryInsteadOfGraveyard = true;
+      continue;
+    }
+    // "Exile this card from your hand: Add {R}." (Simian Spirit Guide, CR 605.1a): a mana ability
+    // that works only from the hand. One fixed mana; the payment solver spends it only when a
+    // payment needs it (`ManaSource.fromHand`).
+    {
+      const m = lower.match(/^exile this card from your hand: add \{([wubrgc])\}\.?$/);
+      if (m !== null && handManaAbility === undefined) {
+        handManaAbility = { units: [[(m[1] as string).toUpperCase() as ManaUnit[number]]] };
+        continue;
+      }
+    }
     // "Replicate {2}" (CR 702.56a): an additional cost payable any number of times, and a cast
     // trigger copying the spell once per payment (`queueKeywordCastTriggers`).
     {
@@ -4428,6 +4722,38 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
         const cost = parseManaCost((m[1] as string).toUpperCase() as never);
         if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
           optionalAdditionalCost = { mechanic: 'replicate', cost: cost.cost, repeatable: true };
+          continue;
+        }
+      }
+    }
+    // "Embalm {W}" / "Eternalize {2}{G}{G}" (CR 702.128a, 702.129a): "{cost}, Exile this card
+    // from your graveyard: Create a token that's a copy of it, except it's a white [black] Zombie
+    // [4/4 Zombie] ... and has no mana cost. [Activate] only as a sorcery." The exile is a cost,
+    // so the ability resolves even if the card is gone by then.
+    {
+      const m = lower.match(/^(embalm|eternalize) ((?:\{[^}]+\})+)(?:\s*\(.*\))?\.?$/i);
+      if (m && card.types.includes('Creature')) {
+        const cost = parseManaCost((m[2] as string).toUpperCase() as never);
+        if (cost.cost !== null && cost.unsupportedSymbols.length === 0) {
+          const eternalize = m[1] === 'eternalize';
+          activatedAbilities.push({
+            costs: [{ kind: 'mana', cost: cost.cost }, { kind: 'exileSelfFromGraveyard' }],
+            timing: 'sorcery',
+            zone: 'graveyard',
+            ability: {
+              kind: 'activated',
+              targets: [],
+              effects: [
+                {
+                  op: 'createTokenCopyOfSourceCard',
+                  setColors: [eternalize ? 'B' : 'W'],
+                  addSubtypes: ['Zombie'],
+                  ...(eternalize ? { basePower: 4, baseToughness: 4 } : {}),
+                },
+              ],
+              description: line,
+            },
+          });
           continue;
         }
       }
@@ -4856,12 +5182,17 @@ function interpretOracleCard(card: OracleCard): CardDefinition {
       ...(cantBlock ? { cantBlock: true } : {}),
       ...(castFromGraveyard ? { castFromGraveyard: true as const } : {}),
       ...(announcesX ? { announcesX: true } : {}),
+      ...(ravenous ? { ravenous: true as const } : {}),
       ...(optionalAdditionalCost !== undefined ? { optionalAdditionalCost } : {}),
       ...(morphCost !== undefined ? { morphCost } : {}),
       ...(toxic > 0 ? { toxic } : {}),
       ...(doesntUntapDuringUntapStep ? { doesntUntapDuringUntapStep: true } : {}),
       ...(faceDownVariant !== undefined && morphCost !== undefined ? { faceDownVariant } : {}),
       ...(asTurnedFaceUpCounters !== undefined ? { asTurnedFaceUpCounters } : {}),
+      ...(shuffleIntoLibraryInsteadOfGraveyard
+        ? { shuffleIntoLibraryInsteadOfGraveyard: true as const }
+        : {}),
+      ...(handManaAbility !== undefined ? { handManaAbility } : {}),
       ...(entersAsCopy !== undefined ? { entersAsCopy } : {}),
       modeled: reasons.length === 0,
       unmodeledReasons: reasons,

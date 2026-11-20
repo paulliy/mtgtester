@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "card": "Ant-Man, Elusive Avenger",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    },
+    {
+      "name": "Scenario Mite",
+      "typeLine": "Creature — Insect",
+      "manaCost": "{1}",
+      "power": "1",
+      "toughness": "1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "ant-man-greater-power-cannot-block",
+      "title": "Ant-Man: a creature with greater power can't block it",
+      "clauses": [1],
+      "instructions": [
+        "Attack P2 with Ant-Man (power 1) while P2 controls only Scenario Bear (power 2)."
+      ],
+      "expectedOutcome": "P2 is never asked to block; Ant-Man deals 1 damage.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Ant-Man, Elusive Avenger"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 39
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "battlefield",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      }
+    },
+    {
+      "id": "ant-man-equal-power-may-block",
+      "title": "Ant-Man: a creature with equal power may block it",
+      "clauses": [1],
+      "instructions": ["Attack P2 with Ant-Man.", "P2 blocks it with Scenario Mite (power 1)."],
+      "expectedOutcome": "The block is legal: Scenario Mite dies and P2 takes no damage.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Ant-Man, Elusive Avenger"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Mite"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Ant-Man, Elusive Avenger"]
+        }
+      ],
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Mite"]
+          }
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      }
+    }
+  ]
+}

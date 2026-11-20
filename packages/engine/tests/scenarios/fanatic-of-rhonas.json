@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "card": "Fanatic of Rhonas",
+  "supportCards": [
+    {
+      "name": "Scenario Glimpse",
+      "typeLine": "Instant",
+      "manaCost": "{1}",
+      "oracleText": "Draw a card."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "fanatic-of-rhonas-eternalize",
+      "title": "Fanatic of Rhonas: eternalize makes a black Zombie token copy",
+      "clauses": [3],
+      "instructions": ["Activate eternalize from your graveyard."],
+      "expectedOutcome": "Fanatic of Rhonas is exiled and a 4/4 black Zombie token copy of it enters with no mana cost.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Fanatic of Rhonas"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Fanatic of Rhonas \\(graveyard\\): Eternalize/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Fanatic of Rhonas"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Fanatic of Rhonas"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "exile",
+            "has": ["Fanatic of Rhonas"]
+          }
+        },
+        {
+          "event": {
+            "type": "tokenCreated",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "fanatic-of-rhonas-eternalize-sorcery-speed",
+      "title": "Fanatic of Rhonas: eternalize only as a sorcery",
+      "clauses": [3],
+      "turn": {
+        "player": "P2"
+      },
+      "instructions": [
+        "On P2's turn, eternalize is not offered.",
+        "Cast Scenario Glimpse to end the scenario."
+      ],
+      "expectedOutcome": "Fanatic of Rhonas stays in your graveyard.",
+      "seats": {
+        "P1": {
+          "hand": ["Scenario Glimpse"],
+          "graveyard": ["Fanatic of Rhonas"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Scenario Glimpse/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "has": ["Fanatic of Rhonas"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "lacks": ["Fanatic of Rhonas"]
+          }
+        }
+      ]
+    }
+  ]
+}

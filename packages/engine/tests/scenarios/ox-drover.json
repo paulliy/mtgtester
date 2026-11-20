@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "card": "Ox Drover",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "ox-drover-unblockable-by-ox",
+      "title": "Ox Drover: the Ox token it makes can't block it",
+      "clauses": [2],
+      "instructions": [
+        "Attack P2 with Ox Drover; its attack trigger gives P2 a 2/4 Ox token. P2 controls no other creature."
+      ],
+      "expectedOutcome": "P2 is never asked to block; Ox Drover deals 4 damage to P2.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Ox Drover"],
+          "libraryTop": ["Island"]
+        },
+        "P2": {
+          "battlefield": []
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "Targets for Ox Drover",
+          "targets": ["P2"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 36
+          }
+        }
+      ]
+    },
+    {
+      "id": "ox-drover-blockable-by-non-ox",
+      "title": "Ox Drover: a non-Ox creature may block it",
+      "clauses": [2],
+      "instructions": [
+        "Attack P2 with Ox Drover; P2 also controls Scenario Bear.",
+        "P2 blocks with Scenario Bear (the Ox token cannot block)."
+      ],
+      "expectedOutcome": "The block is legal: Scenario Bear may block Ox Drover (the Oxen cannot); P2 takes no damage.",
+      "seats": {
+        "P1": {
+          "battlefield": ["Ox Drover"],
+          "libraryTop": ["Island"]
+        },
+        "P2": {
+          "battlefield": ["Scenario Bear"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "Declare attackers",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P1",
+          "choose": "Targets for Ox Drover",
+          "targets": ["P2"]
+        },
+        {
+          "player": "P2",
+          "choose": "Declare blockers",
+          "targets": ["Ox Drover"]
+        }
+      ],
+      "continue": {
+        "throughCombat": true
+      },
+      "expect": [
+        {
+          "life": {
+            "player": "P2",
+            "equals": 40
+          }
+        },
+        {
+          "zone": {
+            "player": "P2",
+            "zone": "graveyard",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    }
+  ]
+}

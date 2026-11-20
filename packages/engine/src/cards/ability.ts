@@ -411,6 +411,17 @@ export const IMPLEMENTED_KEYWORDS = [
   'storm',
   'rebound',
   'split second',
+  // Evasion (CR 509.1b): checked in `canBlock` as blockers are declared.
+  'fear',
+  'intimidate',
+  'skulk',
+  'shadow',
+  'plainswalk',
+  'islandwalk',
+  'swampwalk',
+  'mountainwalk',
+  'forestwalk',
+  'nonbasic landwalk',
 ] as const;
 export type KeywordAbility = (typeof IMPLEMENTED_KEYWORDS)[number];
 
@@ -1489,6 +1500,20 @@ export type Effect =
        */
       goadedForRestOfGame?: true;
     }
+  /**
+   * Embalm and eternalize (CR 702.128a, 702.129a): "Create a token that's a copy of it, except
+   * it's a white Zombie [with base power and toughness 4/4] and has no mana cost." "It" is the
+   * ability's source CARD, already exiled as the cost, so the copy takes the card's printed values
+   * whatever happened to the exiled card since. `setColors` replaces its colors, `addSubtypes`
+   * joins its creature types, and the token has no mana cost (mana value 0).
+   */
+  | {
+      op: 'createTokenCopyOfSourceCard';
+      setColors: Color[];
+      addSubtypes: string[];
+      basePower?: number;
+      baseToughness?: number;
+    }
   /** Source permanent becomes a copy of the referent's copiable values (CR 707.2). */
   | {
       op: 'becomeCopyOf';
@@ -2103,6 +2128,19 @@ export type Effect =
    * OWN source, already in the graveyard (`functionsInGraveyard`).
    */
   | { op: 'returnSelfFromGraveyardToHand' }
+  /**
+   * "Return this card from your graveyard to the battlefield [tapped] [with two +1/+1 counters on
+   * it]" (Reassembling Skeleton, Retrofitted Transmogrant): acts on the ability's OWN source, and
+   * only while it is the same graveyard object that the ability was activated from (CR 400.7).
+   * It enters under the control of the ability's controller, who owns that graveyard.
+   */
+  | {
+      op: 'returnSelfFromGraveyardToBattlefield';
+      tapped?: true;
+      /** A counter kind put on it as it enters, `counterCount` of them (default 1). */
+      counter?: string;
+      counterCount?: number;
+    }
   /**
    * Persist and undying (CR 702.79a, 702.93a): "return it to the battlefield under its owner's
    * control with a `counter` counter on it". "It" is the card the dying source became in the

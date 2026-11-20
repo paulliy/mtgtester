@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "card": "Termagant Swarm",
+  "supportCards": [
+    {
+      "name": "Scenario Bear",
+      "typeLine": "Creature — Bear",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "termagant-swarm-x5",
+      "title": "Termagant Swarm: X=5 gives 5 +1/+1 counters and draws a card",
+      "clauses": [1],
+      "instructions": ["Cast Termagant Swarm with X=5."],
+      "expectedOutcome": "Termagant Swarm enters with 5 +1/+1 counters; X is 5 or more, so P1 draws the top card of their library, Scenario Bear.",
+      "seats": {
+        "P1": {
+          "hand": ["Termagant Swarm"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest", "Forest"],
+          "libraryTop": ["Scenario Bear"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Termagant Swarm .* with X=5$/"
+        }
+      ],
+      "expect": [
+        {
+          "counters": {
+            "card": "Termagant Swarm",
+            "counter": "+1/+1",
+            "equals": 5
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "has": ["Scenario Bear"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "termagant-swarm-x4",
+      "title": "Termagant Swarm: X=4 gives 4 +1/+1 counters and no card",
+      "clauses": [1],
+      "instructions": ["Cast Termagant Swarm with X=4."],
+      "expectedOutcome": "Termagant Swarm enters with 4 +1/+1 counters; X is below 5, so P1 draws no card and Scenario Bear stays on top of the library.",
+      "seats": {
+        "P1": {
+          "hand": ["Termagant Swarm"],
+          "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest"],
+          "libraryTop": ["Scenario Bear"]
+        },
+        "P2": {}
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Cast Termagant Swarm .* with X=4$/"
+        }
+      ],
+      "expect": [
+        {
+          "counters": {
+            "card": "Termagant Swarm",
+            "counter": "+1/+1",
+            "equals": 4
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "hand",
+            "lacks": ["Scenario Bear"]
+          }
+        }
+      ]
+    }
+  ]
+}

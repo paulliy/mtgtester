@@ -2417,73 +2417,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "0826cf7d-7ccc-459b-a92f-29dc169628f8",
-    "name": "Muddle the Mixture",
-    "handledLines": [
-      "Transmute {1}{U}{U}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 2
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 2
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 2,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "08377424-619e-48ae-bc3c-fb199cd77cf9",
     "name": "Llanowar Loamspeaker",
     "handledLines": [
@@ -11413,22 +11346,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "222fd9fc-7af4-4269-bbb9-cd7b8ac029bd",
-    "name": "Troll of Khazad-dûm",
-    "handledLines": [
-      "~ can't be blocked except by three or more creatures."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "minBlockers",
-          "minimum": 3
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "223504ba-174a-46f2-a4a2-5d663a82dfd3",
     "name": "Alicia Masters, Skilled Sculptor",
     "handledLines": [
@@ -17759,28 +17676,9 @@
     "oracleId": "37108cd4-bbab-4ce3-9ed6-f60e8422e703",
     "name": "Ragavan, Nimble Pilferer",
     "handledLines": [
-      "Dash {1}{R}",
       "Whenever ~ deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card."
     ],
     "def": {
-      "alternativeCasts": [
-        {
-          "dashed": true,
-          "description": "Dash {1}{R}",
-          "kind": "nonMana",
-          "manaCost": {
-            "colored": {
-              "B": 0,
-              "G": 0,
-              "R": 1,
-              "U": 0,
-              "W": 0
-            },
-            "colorless": 0,
-            "generic": 1
-          }
-        }
-      ],
       "triggers": [
         {
           "description": "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card",
@@ -28715,81 +28613,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "5a343a5f-3f9b-43c3-8532-8391de7a5443",
-    "name": "Jacked Rabbit",
-    "handledLines": [
-      "Ravenous"
-    ],
-    "def": {
-      "entersWithCounters": {
-        "+1/+1": {
-          "kind": "xValue"
-        }
-      },
-      "ravenous": true,
-      "triggers": [
-        {
-          "description": "Ravenous — draw a card if X was 5 or greater",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "draw"
-            }
-          ],
-          "kind": "triggered",
-          "targets": [],
-          "trigger": {
-            "condition": {
-              "kind": "announcedXAtLeast",
-              "n": 5
-            },
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        },
-        {
-          "description": "Attack — create Rabbits equal to this creature’s power",
-          "effects": [
-            {
-              "count": {
-                "kind": "powerOfSource"
-              },
-              "op": "createToken",
-              "spec": {
-                "colors": [
-                  "W"
-                ],
-                "name": "Rabbit",
-                "power": 1,
-                "subtypes": [
-                  "Rabbit"
-                ],
-                "toughness": 1,
-                "typeLine": "Creature — Rabbit",
-                "types": [
-                  "Creature"
-                ]
-              }
-            }
-          ],
-          "kind": "triggered",
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "attacks"
-          }
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "5a57fba3-01e3-4852-8c45-7c910502bd03",
     "name": "Bitterthorn, Nissa's Animus",
     "handledLines": [
@@ -33107,34 +32930,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "688a559d-249f-4d03-98e6-581843e7ddc3",
-    "name": "Riders of Rohan",
-    "handledLines": [
-      "Dash {4}{R}{W}"
-    ],
-    "def": {
-      "alternativeCasts": [
-        {
-          "dashed": true,
-          "description": "Dash {4}{R}{W}",
-          "kind": "nonMana",
-          "manaCost": {
-            "colored": {
-              "B": 0,
-              "G": 0,
-              "R": 1,
-              "U": 0,
-              "W": 1
-            },
-            "colorless": 0,
-            "generic": 4
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "698e79ec-c2bc-4973-a095-f3c57b50e39c",
     "name": "Mutilate",
     "handledLines": [
@@ -34792,73 +34587,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "6ee51134-c4ad-4101-8ce2-23dde9359cd4",
-    "name": "Drift of Phantasms",
-    "handledLines": [
-      "Transmute {1}{U}{U}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 3
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 3
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 2,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "6ef46fd7-82db-45d3-b02e-7312384577f3",
@@ -36534,54 +36262,6 @@
       }
     },
     "compose": "append"
-  },
-  {
-    "oracleId": "74868bc0-6081-4f46-a2c6-9521cd5465aa",
-    "name": "Tender Wildguide",
-    "handledLines": [
-      "Offspring {2}"
-    ],
-    "def": {
-      "optionalAdditionalCost": {
-        "cost": {
-          "colored": {
-            "B": 0,
-            "G": 0,
-            "R": 0,
-            "U": 0,
-            "W": 0
-          },
-          "colorless": 0,
-          "generic": 2
-        },
-        "mechanic": "offspring"
-      },
-      "triggers": [
-        {
-          "description": "Offspring — create a 1/1 token copy",
-          "effects": [
-            {
-              "count": {
-                "kind": "optionalCostCount",
-                "mechanic": "offspring"
-              },
-              "op": "createTokenCopyOf",
-              "powerOverride": 1,
-              "ref": "source",
-              "toughnessOverride": 1
-            }
-          ],
-          "kind": "triggered",
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    }
   },
   {
     "oracleId": "749d2994-44e7-40d3-8630-7bebed239e9e",
@@ -38750,73 +38430,6 @@
             }
           ],
           "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "7de04284-dcaa-4b63-a734-fcfe2698f83c",
-    "name": "Dizzy Spell",
-    "handledLines": [
-      "Transmute {1}{U}{U}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 1
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 1
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 2,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
         }
       ]
     },
@@ -44463,22 +44076,6 @@
             },
             "when": "castsSpell"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "91d01119-9b3e-4629-8cf0-bbca2c19a7cc",
-    "name": "Rampaging Ceratops",
-    "handledLines": [
-      "~ can't be blocked except by three or more creatures."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "minBlockers",
-          "minimum": 3
         }
       ]
     },
@@ -65776,73 +65373,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "d215127b-5f1d-4d3c-935b-c228c9c7f874",
-    "name": "Dimir Infiltrator",
-    "handledLines": [
-      "Transmute {1}{U}{B}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 2
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 2
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 1,
-                  "G": 0,
-                  "R": 0,
-                  "U": 1,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "d22ff377-d282-4a28-9dce-96f25913dc96",
     "name": "Grazilaxx, Illithid Scholar",
     "handledLines": [
@@ -73580,77 +73110,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "e7286688-ffbe-4d25-ad55-27990f005368",
-    "name": "Sliver Hive",
-    "handledLines": [
-      "{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver.",
-            "effects": [
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "createToken",
-                "spec": {
-                  "colors": [],
-                  "name": "Sliver",
-                  "power": 1,
-                  "subtypes": [
-                    "Sliver"
-                  ],
-                  "toughness": 1,
-                  "typeLine": "Token Creature — Sliver",
-                  "types": [
-                    "Creature"
-                  ]
-                }
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Sliver"
-            }
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 5
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "e75cee5d-ab02-4227-b36e-61c5d2f564a8",
     "name": "Wingspan Stride",
     "handledLines": [
@@ -73691,50 +73150,6 @@
       ]
     },
     "compose": "append"
-  },
-  {
-    "oracleId": "e7ae3ee7-824f-4dcb-8f28-7de99e4d8c3e",
-    "name": "New Generation's Technique",
-    "handledLines": [
-      "unrecognized rules text: \"Sneak {2}{G}\""
-    ],
-    "def": {
-      "alternativeCasts": [
-        {
-          "condition": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "yourTurn"
-              },
-              {
-                "kind": "duringStep",
-                "step": "declareBlockers"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "kind": "returnUnblockedAttacker"
-            }
-          ],
-          "description": "Sneak {2}{G} — return an unblocked attacker you control",
-          "instantTiming": true,
-          "kind": "nonMana",
-          "manaCost": {
-            "colored": {
-              "B": 0,
-              "G": 1,
-              "R": 0,
-              "U": 0,
-              "W": 0
-            },
-            "colorless": 0,
-            "generic": 2
-          }
-        }
-      ]
-    }
   },
   {
     "oracleId": "e7bb8160-0a4b-4e46-b196-7a19fb388d8e",
@@ -77773,73 +77188,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "f33ce38a-34ec-4b65-a0fc-160484a02007",
-    "name": "Bonders' Enclave",
-    "handledLines": [
-      "{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater.",
-            "effects": [
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "draw"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "powerAtLeast",
-                  "n": 4
-                },
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                }
-              ]
-            }
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 3
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "f36d1d8b-8303-44a9-ab56-531931641ea2",
     "name": "Academy Manufactor",
     "handledLines": [
@@ -79056,34 +78404,6 @@
               }
             },
             "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "f6e160c1-b29f-4f3d-ab55-43ffe3ab4acf",
-    "name": "Kolaghan, the Storm's Fury",
-    "handledLines": [
-      "Dash {3}{B}{R}"
-    ],
-    "def": {
-      "alternativeCasts": [
-        {
-          "dashed": true,
-          "description": "Dash {3}{B}{R}",
-          "kind": "nonMana",
-          "manaCost": {
-            "colored": {
-              "B": 1,
-              "G": 0,
-              "R": 1,
-              "U": 0,
-              "W": 0
-            },
-            "colorless": 0,
-            "generic": 3
           }
         }
       ]
@@ -90154,73 +89474,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-bonders-enclave",
-    "name": "Bonders' Enclave",
-    "handledLines": [
-      "{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater.",
-            "effects": [
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "draw"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "allOf",
-              "of": [
-                {
-                  "kind": "powerAtLeast",
-                  "n": 4
-                },
-                {
-                  "kind": "type",
-                  "value": "Creature"
-                }
-              ]
-            }
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 3
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-boomer-scrapper",
     "name": "Boomer Scrapper",
     "handledLines": [
@@ -100455,73 +99708,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-dimir-infiltrator",
-    "name": "Dimir Infiltrator",
-    "handledLines": [
-      "Transmute {1}{U}{B}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 2
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 2
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 1,
-                  "G": 0,
-                  "R": 0,
-                  "U": 1,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-dimir-keyrune",
     "name": "Dimir Keyrune",
     "handledLines": [
@@ -100973,73 +100159,6 @@
             "sublayer": "d",
             "toughness": 4
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-dizzy-spell",
-    "name": "Dizzy Spell",
-    "handledLines": [
-      "Transmute {1}{U}{U}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 1
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 1
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 2,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
         }
       ]
     },
@@ -102289,73 +101408,6 @@
             }
           ],
           "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-drift-of-phantasms",
-    "name": "Drift of Phantasms",
-    "handledLines": [
-      "Transmute {1}{U}{U}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 3
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 3
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 2,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
         }
       ]
     },
@@ -119045,81 +118097,6 @@
     }
   },
   {
-    "oracleId": "oracle-jacked-rabbit",
-    "name": "Jacked Rabbit",
-    "handledLines": [
-      "Ravenous"
-    ],
-    "def": {
-      "entersWithCounters": {
-        "+1/+1": {
-          "kind": "xValue"
-        }
-      },
-      "ravenous": true,
-      "triggers": [
-        {
-          "description": "Ravenous — draw a card if X was 5 or greater",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "draw"
-            }
-          ],
-          "kind": "triggered",
-          "targets": [],
-          "trigger": {
-            "condition": {
-              "kind": "announcedXAtLeast",
-              "n": 5
-            },
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        },
-        {
-          "description": "Attack — create Rabbits equal to this creature’s power",
-          "effects": [
-            {
-              "count": {
-                "kind": "powerOfSource"
-              },
-              "op": "createToken",
-              "spec": {
-                "colors": [
-                  "W"
-                ],
-                "name": "Rabbit",
-                "power": 1,
-                "subtypes": [
-                  "Rabbit"
-                ],
-                "toughness": 1,
-                "typeLine": "Creature — Rabbit",
-                "types": [
-                  "Creature"
-                ]
-              }
-            }
-          ],
-          "kind": "triggered",
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "attacks"
-          }
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-jade-avenger",
     "name": "Jade Avenger",
     "handledLines": [
@@ -121431,34 +120408,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-kolaghan-the-storm-s-fury",
-    "name": "Kolaghan, the Storm's Fury",
-    "handledLines": [
-      "Dash {3}{B}{R}"
-    ],
-    "def": {
-      "alternativeCasts": [
-        {
-          "dashed": true,
-          "description": "Dash {3}{B}{R}",
-          "kind": "nonMana",
-          "manaCost": {
-            "colored": {
-              "B": 1,
-              "G": 0,
-              "R": 1,
-              "U": 0,
-              "W": 0
-            },
-            "colorless": 0,
-            "generic": 3
-          }
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "oracle-kor-haven",
@@ -129064,73 +128013,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-muddle-the-mixture",
-    "name": "Muddle the Mixture",
-    "handledLines": [
-      "Transmute {1}{U}{U}"
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
-            "effects": [
-              {
-                "destinations": [
-                  {
-                    "zone": "hand"
-                  }
-                ],
-                "filter": {
-                  "kind": "allOf",
-                  "of": [
-                    {
-                      "kind": "manaValueAtMost",
-                      "n": 2
-                    },
-                    {
-                      "kind": "manaValueAtLeast",
-                      "n": 2
-                    }
-                  ]
-                },
-                "op": "searchLibrary",
-                "reveal": true
-              },
-              {
-                "op": "shuffle"
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 2,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 1
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "discardSelf"
-            }
-          ],
-          "timing": "sorcery",
-          "zone": "hand"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-munitions-expert",
     "name": "Munitions Expert",
     "handledLines": [
@@ -131061,50 +129943,6 @@
       ]
     },
     "compose": "append"
-  },
-  {
-    "oracleId": "oracle-new-generation-s-technique",
-    "name": "New Generation's Technique",
-    "handledLines": [
-      "unrecognized rules text: \"Sneak {2}{G}\""
-    ],
-    "def": {
-      "alternativeCasts": [
-        {
-          "condition": {
-            "kind": "allOf",
-            "of": [
-              {
-                "kind": "yourTurn"
-              },
-              {
-                "kind": "duringStep",
-                "step": "declareBlockers"
-              }
-            ]
-          },
-          "costs": [
-            {
-              "kind": "returnUnblockedAttacker"
-            }
-          ],
-          "description": "Sneak {2}{G} — return an unblocked attacker you control",
-          "instantTiming": true,
-          "kind": "nonMana",
-          "manaCost": {
-            "colored": {
-              "B": 0,
-              "G": 1,
-              "R": 0,
-              "U": 0,
-              "W": 0
-            },
-            "colorless": 0,
-            "generic": 2
-          }
-        }
-      ]
-    }
   },
   {
     "oracleId": "oracle-new-horizons",
@@ -137057,28 +135895,9 @@
     "oracleId": "oracle-ragavan-nimble-pilferer",
     "name": "Ragavan, Nimble Pilferer",
     "handledLines": [
-      "Dash {1}{R}",
       "Whenever ~ deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card."
     ],
     "def": {
-      "alternativeCasts": [
-        {
-          "dashed": true,
-          "description": "Dash {1}{R}",
-          "kind": "nonMana",
-          "manaCost": {
-            "colored": {
-              "B": 0,
-              "G": 0,
-              "R": 1,
-              "U": 0,
-              "W": 0
-            },
-            "colorless": 0,
-            "generic": 1
-          }
-        }
-      ],
       "triggers": [
         {
           "description": "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card",
@@ -137640,22 +136459,6 @@
             },
             "when": "attacks"
           }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-rampaging-ceratops",
-    "name": "Rampaging Ceratops",
-    "handledLines": [
-      "~ can't be blocked except by three or more creatures."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "minBlockers",
-          "minimum": 3
         }
       ]
     },
@@ -139316,34 +138119,6 @@
               }
             },
             "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-riders-of-rohan",
-    "name": "Riders of Rohan",
-    "handledLines": [
-      "Dash {4}{R}{W}"
-    ],
-    "def": {
-      "alternativeCasts": [
-        {
-          "dashed": true,
-          "description": "Dash {4}{R}{W}",
-          "kind": "nonMana",
-          "manaCost": {
-            "colored": {
-              "B": 0,
-              "G": 0,
-              "R": 1,
-              "U": 0,
-              "W": 1
-            },
-            "colorless": 0,
-            "generic": 4
           }
         }
       ]
@@ -145665,77 +144440,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-sliver-hive",
-    "name": "Sliver Hive",
-    "handledLines": [
-      "{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver."
-    ],
-    "def": {
-      "activatedAbilities": [
-        {
-          "ability": {
-            "description": "{5}, {T}: Create a 1/1 colorless Sliver creature token. Activate only if you control a Sliver.",
-            "effects": [
-              {
-                "count": {
-                  "kind": "const",
-                  "n": 1
-                },
-                "op": "createToken",
-                "spec": {
-                  "colors": [],
-                  "name": "Sliver",
-                  "power": 1,
-                  "subtypes": [
-                    "Sliver"
-                  ],
-                  "toughness": 1,
-                  "typeLine": "Token Creature — Sliver",
-                  "types": [
-                    "Creature"
-                  ]
-                }
-              }
-            ],
-            "kind": "activated",
-            "targets": []
-          },
-          "condition": {
-            "cmp": ">=",
-            "kind": "countPermanents",
-            "n": 1,
-            "scope": "you",
-            "selector": {
-              "kind": "subtype",
-              "value": "Sliver"
-            }
-          },
-          "costs": [
-            {
-              "cost": {
-                "colored": {
-                  "B": 0,
-                  "G": 0,
-                  "R": 0,
-                  "U": 0,
-                  "W": 0
-                },
-                "colorless": 0,
-                "generic": 5
-              },
-              "kind": "mana"
-            },
-            {
-              "kind": "tap"
-            }
-          ],
-          "timing": "any"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-sliver-overlord",
     "name": "Sliver Overlord",
     "handledLines": [
@@ -151677,54 +150381,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-tender-wildguide",
-    "name": "Tender Wildguide",
-    "handledLines": [
-      "Offspring {2}"
-    ],
-    "def": {
-      "optionalAdditionalCost": {
-        "cost": {
-          "colored": {
-            "B": 0,
-            "G": 0,
-            "R": 0,
-            "U": 0,
-            "W": 0
-          },
-          "colorless": 0,
-          "generic": 2
-        },
-        "mechanic": "offspring"
-      },
-      "triggers": [
-        {
-          "description": "Offspring — create a 1/1 token copy",
-          "effects": [
-            {
-              "count": {
-                "kind": "optionalCostCount",
-                "mechanic": "offspring"
-              },
-              "op": "createTokenCopyOf",
-              "powerOverride": 1,
-              "ref": "source",
-              "toughnessOverride": 1
-            }
-          ],
-          "kind": "triggered",
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    }
-  },
-  {
     "oracleId": "oracle-teneb-the-harvester",
     "name": "Teneb, the Harvester",
     "handledLines": [
@@ -156579,22 +155235,6 @@
         "kind": "spell",
         "targets": []
       }
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-troll-of-khazad-d-m",
-    "name": "Troll of Khazad-dûm",
-    "handledLines": [
-      "~ can't be blocked except by three or more creatures."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "kind": "minBlockers",
-          "minimum": 3
-        }
-      ]
     },
     "compose": "append"
   },

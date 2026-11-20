@@ -303,6 +303,7 @@ const conditionShapes = {
   eventPlayerHandSize: { cmp: oneOf('>=', '<=', '=='), n: finite },
   castSpellThisTurn: { category: oneOf('any', 'noncreature'), cmp: oneOf('>=', '<='), n: finite },
   modifiedCreatureDiedUnderYourControlThisTurn: {},
+  youAttackedThisTurn: {},
   not: { of: condition },
 } satisfies Shapes<Condition>;
 
@@ -731,6 +732,17 @@ const effectExpressions = {
   mayPayXThenDealDamage: {},
   destroyEachNonlandMVFromDamagedControllers: { mv: numberValue },
   returnSelfFromGraveyardToHand: {},
+  createTokenCopyOfSourceCard: {
+    setColors: arrayOf(color),
+    addSubtypes: arrayOf(text),
+    basePower: optional(nonnegativeInteger),
+    baseToughness: optional(nonnegativeInteger),
+  },
+  returnSelfFromGraveyardToBattlefield: {
+    tapped: optional(flag),
+    counter: optional(text),
+    counterCount: optional(positiveInteger),
+  },
   returnDiedSourceToBattlefield: { counter: optional(text), tapped: optional(flag) },
   putDepartedSourceIntoLibrary: { fromTop: finite },
   returnDepartedSourceToHand: {},

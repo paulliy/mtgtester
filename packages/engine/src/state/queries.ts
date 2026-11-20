@@ -1038,9 +1038,16 @@ export function manaSourcesFor(
   playerId: PlayerId,
   includeZeroProduction = false,
   order: 'payment' | 'board' = 'payment',
+  /**
+   * Mana abilities of cards in hand (Spirit Guides). Payments include them; a description of the
+   * board (a view, the manual-mana list in board order) and the stateful planner do not.
+   */
+  includeHand = true,
 ): ManaSource[] {
   // Reads only: one layer digest serves every source's queries (`withReadScope`).
-  return withReadScope(ctx, () => manaSources(ctx, playerId, includeZeroProduction, order));
+  return withReadScope(ctx, () =>
+    manaSources(ctx, playerId, includeZeroProduction, order, includeHand),
+  );
 }
 
 function manaSources(
@@ -1048,6 +1055,7 @@ function manaSources(
   playerId: PlayerId,
   includeZeroProduction: boolean,
   order: 'payment' | 'board',
+  includeHand: boolean,
 ): ManaSource[] {
   const sources: ManaSource[] = [];
   // Preserve creatures for combat whenever a land or noncreature source can do the job.
@@ -1252,7 +1260,7 @@ function manaSources(
           (cardId) => tierByCard.get(cardId) ?? 0,
           () => otherManaDemand(ctx, playerId),
         );
-  return preferred.flatMap((source) => {
+  const boardSources = preferred.flatMap((source) => {
     if (source.costs.every((cost) => cost.kind === 'tap' || cost.kind === 'mana')) return [source];
     const perm = ctx.state.battlefield.find((p) => p.cardId === source.cardId)!;
     const player = ctx.state.players.find((p) => p.id === playerId)!;
@@ -1322,6 +1330,25 @@ function manaSources(
     if (!Number.isFinite(limit) || limit <= 1) return [{ ...source, ...shared }];
     return Array.from({ length: limit }, (_, activation) => ({ ...source, ...shared, activation }));
   });
+  if (!includeHand || order === 'board') return boardSources;
+  return [...boardSources, ...handManaSources(ctx, playerId)];
+}
+
+/**
+ * "Exile this card from your hand: Add {R}." (Simian Spirit Guide, CR 605.1a): a mana ability of a
+ * card in its owner's hand. Listed after every permanent, and `planPayment` reaches for one only
+ * when the payment cannot be made without it, fewest first, so a spare card is never exiled.
+ */
+function handManaSources(ctx: GameContext, playerId: PlayerId): ManaSource[] {
+  const player = ctx.state.players.find((p) => p.id === playerId);
+  if (player === undefined) return [];
+  const sources: ManaSource[] = [];
+  for (const card of player.hand) {
+    const ability = ctx.defs.get(card.oracleId)?.handManaAbility;
+    if (ability === undefined) continue;
+    sources.push({ cardId: card.cardId, units: ability.units, costs: [], fromHand: true });
+  }
+  return sources;
 }
 
 /**

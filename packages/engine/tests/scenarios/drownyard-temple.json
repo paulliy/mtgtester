@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "card": "Drownyard Temple",
+  "scenarios": [
+    {
+      "id": "drownyard-temple-return",
+      "title": "Drownyard Temple: return this card from your graveyard to the battlefield tapped",
+      "clauses": [2],
+      "instructions": ["Activate Drownyard Temple's ability from your graveyard."],
+      "expectedOutcome": "Drownyard Temple returns to the battlefield tapped.",
+      "seats": {
+        "P1": {
+          "graveyard": ["Drownyard Temple"],
+          "battlefield": ["Island", "Island", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Drownyard Temple \\(graveyard\\)/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Drownyard Temple"]
+          }
+        },
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "graveyard",
+            "lacks": ["Drownyard Temple"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Drownyard Temple",
+            "equals": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "drownyard-temple-from-hand",
+      "title": "Drownyard Temple: the ability works only from the graveyard",
+      "clauses": [2],
+      "instructions": ["With Drownyard Temple in your hand, play it as your land."],
+      "expectedOutcome": "No return ability is offered from the hand; Drownyard Temple enters untapped the normal way.",
+      "seats": {
+        "P1": {
+          "hand": ["Drownyard Temple"],
+          "battlefield": ["Island", "Island", "Island"]
+        }
+      },
+      "script": [
+        {
+          "player": "P1",
+          "choose": "/^Play Drownyard Temple/"
+        }
+      ],
+      "expect": [
+        {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Drownyard Temple"]
+          }
+        },
+        {
+          "tapped": {
+            "card": "Drownyard Temple",
+            "equals": false
+          }
+        }
+      ]
+    }
+  ]
+}
