@@ -82,6 +82,17 @@ describe('cardTraits', () => {
     expect(traits('Blasphemous Act').wipeDamage).toBe(13);
   });
 
+  it('records damage a spell deals to every player, its controller included', () => {
+    expect(traits('Earthquake').damagesEachPlayer).toBe('X');
+    expect(traits('Hurricane').damagesEachPlayer).toBe('X');
+    expect(traits('Flame Rift').damagesEachPlayer).toBe(4);
+    expect(traits('Volcanic Fallout').damagesEachPlayer).toBe(2);
+    // Opponent-only burn, a creature sweeper and a permanent with an each-player ability do not.
+    expect(traits('Boltwave').damagesEachPlayer).toBeUndefined();
+    expect(traits('Blasphemous Act').damagesEachPlayer).toBeUndefined();
+    expect(traits('Pestilence Demon').damagesEachPlayer).toBeUndefined();
+  });
+
   it('records pump and mana facts for ADR 0043', () => {
     expect(traits('Giant Growth').spellPump).toEqual([{ power: 3, toughness: 3 }]);
     expect(traits('Overrun').massPump).toEqual({ power: 3, toughness: 3, keywords: ['trample'] });
