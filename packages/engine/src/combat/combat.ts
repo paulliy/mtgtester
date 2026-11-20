@@ -39,7 +39,7 @@ import {
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { payLife, payManaCost } from '../effects/resolve';
 import { canPay, emptyCost, totalPips } from '../mana/cost';
-import type { ParsedManaCost } from '../mana/cost';
+import type { ManaSource, ParsedManaCost } from '../mana/cost';
 import { emit, debug } from '../log/log';
 import { counterCount } from '../state/counters';
 import { playerLifeLocked } from '../state/phasing';
@@ -385,6 +385,7 @@ function canPayAttackCosts(
   attackingPlayerId: PlayerId,
   cost: ParsedManaCost,
   life: number,
+  attackers: readonly EnginePermanent[],
 ): boolean {
   const player = playerById(ctx, attackingPlayerId);
   if (life > 0 && (player.life < life || playerLifeLocked(ctx, attackingPlayerId))) return false;
@@ -392,10 +393,45 @@ function canPayAttackCosts(
   return canPay(
     cost,
     player.manaEntries,
-    manaSourcesFor(ctx, attackingPlayerId),
+    withoutAttackTappedSources(manaSourcesFor(ctx, attackingPlayerId), ctx, attackers),
     allowanceFor(ctx, attackingPlayerId, { kind: 'other' }),
     player.life - life,
   );
+}
+
+/** Does declaring this creature as an attacker tap it (CR 508.1f)? The one predicate `commitAttacker` uses. */
+function attackerTaps(ctx: GameContext, creature: EnginePermanent): boolean {
+  return !hasKeyword(ctx, creature, 'vigilance');
+}
+
+/**
+ * Card ids of the attackers that the attack itself taps and that have a `{T}` mana ability among
+ * `sources`. CR 508.1f taps the declared attackers before 508.1g/h pay the attack costs, so such a
+ * creature cannot pay with that ability. The check (`canPayAttackCosts`) and the payment
+ * (`payAttackTax`, through `excludedSourceCardIds`) both use this set, so they cannot disagree.
+ * Whole cards are excluded, not single abilities: `payManaCost` filters by card.
+ */
+function attackTappedSourceIds(
+  ctx: GameContext,
+  sources: readonly ManaSource[],
+  attackers: readonly EnginePermanent[],
+): string[] {
+  const ids = new Set<string>();
+  for (const source of sources) {
+    if (!source.costs.some((cost) => cost.kind === 'tap')) continue;
+    if (attackers.some((a) => a.cardId === source.cardId && attackerTaps(ctx, a)))
+      ids.add(source.cardId);
+  }
+  return [...ids];
+}
+
+function withoutAttackTappedSources(
+  sources: ManaSource[],
+  ctx: GameContext,
+  attackers: readonly EnginePermanent[],
+): ManaSource[] {
+  const excluded = new Set(attackTappedSourceIds(ctx, sources, attackers));
+  return sources.filter((source) => !excluded.has(source.cardId));
 }
 
 /**
@@ -415,6 +451,7 @@ function canPayAttackTax(
     creature.controllerId,
     attackCost(ctx, defendingPlayerId, atPlaneswalker, [creature]),
     attackLifeTax(ctx, defendingPlayerId),
+    [creature],
   );
 }
 
@@ -599,13 +636,21 @@ function* payAttackTax(
   defendingPlayerId: PlayerId,
   atPlaneswalker: boolean,
   creatures: readonly EnginePermanent[],
+  /** Every creature in the declaration: the ones tapped by attacking can't pay with `{T}`. */
+  declared: readonly EnginePermanent[],
 ): GameGen<void> {
   const cost = attackCost(ctx, defendingPlayerId, atPlaneswalker, creatures);
   const life = attackLifeTax(ctx, defendingPlayerId) * creatures.length;
   // The life is paid first, so Phyrexian pips can only spend what is left (CR 601.2h).
   if (life > 0) payLife(ctx, playerById(ctx, attackingPlayerId), life);
   if (totalPips(cost) === 0) return;
-  yield* payManaCost(ctx, playerById(ctx, attackingPlayerId), cost, { kind: 'other' });
+  yield* payManaCost(
+    ctx,
+    playerById(ctx, attackingPlayerId),
+    cost,
+    { kind: 'other' },
+    attackTappedSourceIds(ctx, manaSourcesFor(ctx, attackingPlayerId), declared),
+  );
 }
 
 /** Evasion check: may `blocker` block `attacker`? (flying/reach, protection — CR 509.1b.) */
@@ -776,7 +821,7 @@ function commitAttacker(
   creature.attackingPlaneswalker = planeswalkerId;
   creature.attackedPlaneswalkerRemoved = false;
   creature.statuses.push('attacking');
-  if (!hasKeyword(ctx, creature, 'vigilance')) {
+  if (attackerTaps(ctx, creature)) {
     creature.tapped = true; // CR 508.1f
     queueTriggersForObject(ctx, 'becomesTapped', creature);
   }
@@ -1009,7 +1054,7 @@ function validateAttackDeclaration(
     totalLife += attackLifeTax(ctx, defenderId) * creatures.length;
   }
   if (totalPips(totalCost) === 0 && totalLife === 0) return [];
-  if (canPayAttackCosts(ctx, attackingPlayerId, totalCost, totalLife)) return [];
+  if (canPayAttackCosts(ctx, attackingPlayerId, totalCost, totalLife, declared)) return [];
   const violations: CombatViolation[] = [];
   for (const { defenderId, atPlaneswalker, creatures } of groups) {
     for (const creature of creatures) {
@@ -1034,8 +1079,11 @@ function* applyAttackDeclaration(
   opponents: readonly EnginePlayerState[],
   assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
 ): GameGen<void> {
+  const declared = eligible.filter((creature) => (assignment.get(creature.id) ?? null) !== null);
   for (const { defenderId, atPlaneswalker, creatures } of groupByDefender(eligible, assignment)) {
-    yield* payAttackTax(ctx, ap.id, defenderId, atPlaneswalker, creatures);
+    // The costs are paid as if every attacker were already tapped (CR 508.1f -> 508.1h), while
+    // events and triggers keep their order: pay, then commit, group by group.
+    yield* payAttackTax(ctx, ap.id, defenderId, atPlaneswalker, creatures, declared);
     // War's Toll: every attacker that could attack for free was required to (Firkraag reads it).
     const allMustAttack = attacksWithAll(ctx, ap.id);
     for (const creature of creatures) {
