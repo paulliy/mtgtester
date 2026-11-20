@@ -1,4 +1,5 @@
 import { copyData } from '../state/copy-data';
+import type { Selector } from '../cards/selector';
 import { getCached, setCached, shareDefinitionIds } from '../effects/layer-cache';
 import { playerLifeLocked } from '../state/phasing';
 import type { EnginePlayerState, GameContext } from '../state/types';
@@ -27,10 +28,12 @@ import {
   resolveDynamicUnits,
 } from '../state/queries';
 import {
+  amountCannotRiseDuringPayment,
   characteristicsFixedDuringPayment,
   definitionsInPlay,
   gateCannotOpenDuringPayment,
   leavingPermanentsKeepProduction,
+  selectorReadsPowerOrToughness,
 } from './payment-stability';
 import { countWork } from '../work-counters';
 
@@ -77,19 +80,56 @@ function clone(ctx: GameContext): GameContext {
  * count bound rests on: if an activation could change a characteristic, it could add a mana
  * ability too. Counting the dynamic source as "any type" instead let an Orchard that makes only
  * {G} pass for a white source, and the search tried every subset of the other lands to disprove
- * it. A conditional amount (`conditionalUnits`) is bounded by its largest alternative. Null for
- * production no ceiling covers: a counted amount or a rider's addition.
+ * it. A conditional amount (`conditionalUnits`) is bounded by its largest alternative, or, once
+ * `frozen` (see `searchPayment`), by the two the payment can still reach. A counted amount is
+ * bounded by its value now when `frozen` and the count can only fall. Null for production no
+ * ceiling covers: any other counted amount or a rider's addition.
+ *
+ * `frozen` says, for a selector, that no activation of this payment can make a count or a gate over
+ * the board that reads it rise (see `searchPayment`).
  */
-function ceilingUnits(source: ManaSource): ManaUnit[] | null {
+function ceilingUnits(
+  source: ManaSource,
+  frozen: (selector: Selector) => boolean,
+): ManaUnit[] | null {
   if (source.stateDependentProduction !== true) return source.units;
   const spec = source.productionSpec;
-  if (spec === undefined || spec.amount !== undefined) return null;
+  if (spec === undefined) return null;
+  if (spec.amount !== undefined) {
+    // "Add X mana ... where X is the number of other creatures you control" (Brigid): `units` is
+    // X copies of the unit, resolved in this state. No payment adds a permanent and none makes
+    // one that stays start to match the selector, so X never rises: this X is the most.
+    return spec.dynamic === undefined &&
+      spec.conditionalUnits === undefined &&
+      spec.amount.kind === 'countPermanents' &&
+      amountCannotRiseDuringPayment(spec.amount) &&
+      frozen(spec.amount.selector)
+      ? source.units
+      : null;
+  }
   if (spec.conditionalUnits !== undefined) {
+    const gate = spec.conditionalUnits.condition;
+    if (
+      gate.kind === 'countPermanents' &&
+      gateCannotOpenDuringPayment(gate) &&
+      frozen(gate.selector)
+    ) {
+      // The gate ("you control a creature with power 4 or greater") cannot open: while it is shut
+      // the source makes its base units, which `source.units` is; open now, it makes the
+      // conditional ones, and a sacrifice may shut it again, back to the base. Only those two
+      // are reachable, so bound by both, not by the conditional alternative alone.
+      const reachable = [source.units, spec.units];
+      const most = Math.max(...reachable.map((units) => units.length));
+      return Array.from({ length: most }, (_unused, position) => [
+        ...new Set(reachable.flatMap((units) => units[position] ?? [])),
+      ]);
+    }
     // "Add one mana of any color; two of any one color if you control a power 4+ creature"
-    // (Ilysian Caryatid): which alternative applies can change with the board, so bound it by
-    // all of them. Each position offers every symbol any alternative offers there (the units
-    // resolved in this state are one of the alternatives), and the source makes as many units
-    // as its largest alternative. An overestimate can only prune an impossible payment.
+    // (Ilysian Caryatid): which alternative applies can change with the board, so, unless the gate
+    // is frozen, bound it by all of them. Each position offers every symbol any alternative
+    // offers there (the units resolved in this state are one of the alternatives), and the source
+    // makes as many units as its largest alternative. An overestimate can only prune an
+    // impossible payment.
     const alternatives = [source.units, spec.units, spec.conditionalUnits.units];
     const count = Math.max(...alternatives.map((units) => units.length));
     return Array.from({ length: count }, (_unused, position) => [
@@ -409,6 +449,15 @@ export function planStatefulManaPayment(
   if (!characteristicsFixedDuringPayment(definitionsInPlay(ctx))) return run(true);
   const legacy = outcomeOf(() => run(false));
   const current = outcomeOf(() => run(true));
+  // The old search halting on a budget gave no answer, so a plan, or a proof of none, from the
+  // current one contradicts nothing. Any other difference is a bug.
+  if (
+    'error' in legacy &&
+    !('error' in current) &&
+    legacy.error instanceof UnmodeledCardError &&
+    legacy.error.reasons.some((reason) => reason.endsWith('budget exceeded'))
+  )
+    return current.plan;
   const [was, now] = [describeOutcome(legacy), describeOutcome(current)];
   if (was !== now)
     throw new Error(
@@ -437,6 +486,15 @@ export function searchPayment(
   const fixedCharacteristics = characteristicsFixedDuringPayment(definitionsInPlay(ctx));
   const premise = current && fixedCharacteristics;
   const gatedBound = premise;
+  // A gate or a count over the board that the payment cannot raise: the premise holds and no
+  // permanent leaving (a sacrifice) can give an ability, a type or a mana rule back, and, for a
+  // selector that reads power or toughness, no power either. Then a conditional amount whose gate
+  // is shut stays shut, and a counted amount stays at most what it is now (`ceilingUnits`).
+  const leavingKeeps = premise && leavingPermanentsKeepProduction(definitionsInPlay(ctx), false);
+  const leavingKeepsPower =
+    premise && leavingPermanentsKeepProduction(definitionsInPlay(ctx), true);
+  const frozen = (selector: Selector): boolean =>
+    selectorReadsPowerOrToughness(selector) ? leavingKeepsPower : leavingKeeps;
   let states = 0;
   let outsideScope = false;
   // The depth bound cut a branch that still had sources to try. That is no proof the payment is
@@ -501,8 +559,8 @@ export function searchPayment(
       definitionsInPlay(ctx),
       ownAbilities.some((ability) => ability.condition !== undefined),
     );
-  // Under fixed capacity no cost pays energy and the only riders gain life or deal damage to the
-  // controller, so energy never changes and life rises only through a life-gain rider or a
+  // Under fixed capacity the only cost that touches energy pays it and the only riders gain life or
+  // deal damage to the controller, so energy never rises and life rises only through a life-gain rider or a
   // damage rider from a lifelink source (with infect it gives poison, not life loss). A
   // reservation the payer cannot meet now then stays unmet in every state, and the search would
   // only try every subset of activations proving so (fuzz-11: {2}{B} and 32 life at 29 life,
@@ -527,23 +585,42 @@ export function searchPayment(
   // (fuzz-contract "discovers a later activation"), so there the cost keeps the bound off, as it
   // did. `payLifeValue` stays outside: its amount is evaluated from the state when it is paid,
   // and nothing here proves that value is never negative or that reading it is inert.
+  // "{T}, Pay {E}: Add one mana of any color" (Solar Transformer) is fixed capacity for the same
+  // reason, with energy for life: no cost or rider here gives energy back (the riders gain life
+  // or deal damage), so it only falls. It never raises production or opens a gate (`energyAvailable`
+  // is in `PAYMENT_STATE_KINDS`, so no gate or static in play reads it), and a source the payer
+  // cannot afford now is not listed and stays unaffordable; counting it would only overestimate.
   const keepsCapacity = (cost: AbilityCost): boolean =>
     cost.kind === 'tap' ||
     cost.kind === 'mana' ||
+    (cost.kind === 'payEnergy' && Number.isSafeInteger(cost.amount) && cost.amount >= 0) ||
     (cost.kind === 'payLife' &&
       !lifeCanRise &&
       Number.isSafeInteger(cost.amount) &&
       cost.amount >= 0) ||
     (sacrificeBound && cost.kind === 'sacrificeOther') ||
     (sacrificeSelfBound && cost.kind === 'sacrificeSelf');
+  // A counted amount ("X where X is the number of other creatures you control", Brigid) is fixed
+  // capacity when the count can only fall (`amountCannotRiseDuringPayment`, under `frozen`): the
+  // source then makes at most what it makes now, once per `{T}`, like any fixed-count source.
   const fixedCapacity = ownAbilities.every(
     (ability) =>
-      ability.amount === undefined &&
+      (ability.amount === undefined ||
+        (amountCannotRiseDuringPayment(ability.amount) &&
+          ability.amount.kind === 'countPermanents' &&
+          frozen(ability.amount.selector))) &&
       (ability.condition === undefined ||
         (gatedBound && gateCannotOpenDuringPayment(ability.condition))) &&
       (ability.costs === undefined ||
+        // Each activation needs a `{T}`, or takes a permanent off the battlefield for good: a
+        // source that sacrifices itself (Reckless Barbarian: "Sacrifice this creature: Add {R}{R}")
+        // has no `{T}`, but pays out once, as a tapped one does. A sacrifice of other permanents
+        // without a `{T}` repeats, one activation per victim, and is counted that way below.
         (ability.costs.some(
-          (cost) => cost.kind === 'tap' || (sacrificeBound && cost.kind === 'sacrificeOther'),
+          (cost) =>
+            cost.kind === 'tap' ||
+            (sacrificeBound && cost.kind === 'sacrificeOther') ||
+            (sacrificeSelfBound && cost.kind === 'sacrificeSelf'),
         ) &&
           ability.costs.every(keepsCapacity))) &&
       (ability.onActivate ?? []).every(
@@ -717,7 +794,7 @@ export function searchPayment(
     )
       outsideScope = true;
     const bounded = fixedCapacity && (premise || !current);
-    const ceilings = bounded ? availableSources.map(ceilingUnits) : [];
+    const ceilings = bounded ? availableSources.map((source) => ceilingUnits(source, frozen)) : [];
     if (bounded && ceilings.every((units) => units !== null)) {
       // Alternative abilities of one permanent count at the most any one makes. A sacrifice source
       // with no {T} is different: each copy `manaSourcesFor` lists is one more creature it can
@@ -1004,7 +1081,7 @@ export function searchPayment(
       ]);
       if (seenStates.has(key)) return null;
       seenStates.add(key);
-      const ceilings = availableSources.map(ceilingUnits);
+      const ceilings = availableSources.map((source) => ceilingUnits(source, frozen));
       if (ceilings.every((units) => units !== null)) {
         const remaining = new Map<string, number>();
         for (const [index, source] of availableSources.entries())

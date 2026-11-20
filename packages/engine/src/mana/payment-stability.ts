@@ -1,5 +1,6 @@
 import type { Condition } from '../cards/condition';
 import type { Selector } from '../cards/selector';
+import type { Value } from '../cards/value';
 import { selectedPermanentDefinition } from '../cards/spell-faces';
 import type { GameContext } from '../state/types';
 
@@ -44,6 +45,39 @@ function stableSelector(selector: Selector): boolean {
   return STABLE_SELECTOR_KINDS.has(selector.kind);
 }
 
+/** Like `stableSelector`, but with no negation: a negated count can rise as permanents leave. */
+function positiveStableSelector(selector: Selector): boolean {
+  if (selector.kind === 'allOf' || selector.kind === 'anyOf')
+    return selector.of.every(positiveStableSelector);
+  return selector.kind !== 'not' && STABLE_SELECTOR_KINDS.has(selector.kind);
+}
+
+/** Whether a selector reads power or toughness, which a permanent leaving may change. */
+export function selectorReadsPowerOrToughness(selector: Selector): boolean {
+  if (selector.kind === 'allOf' || selector.kind === 'anyOf')
+    return selector.of.some(selectorReadsPowerOrToughness);
+  if (selector.kind === 'not') return selectorReadsPowerOrToughness(selector.of);
+  return (
+    selector.kind === 'powerAtLeast' ||
+    selector.kind === 'powerAtMost' ||
+    selector.kind === 'toughnessAtLeast' ||
+    selector.kind === 'basePowerToughness'
+  );
+}
+
+/**
+ * True when a counted mana amount ("add X mana, where X is the number of other creatures you
+ * control", Brigid) can only fall during a payment whose activations tap permanents, pay mana, pay
+ * life or energy, sacrifice and gain life or deal damage to their controller, so that the amount
+ * resolved now is the most the source can make: a payment adds no permanent, and with
+ * `characteristicsFixedDuringPayment` and `leavingPermanentsKeepProduction` holding no permanent
+ * that stays starts to match a negation-free stable selector. Any other value (a life total, a
+ * count of cards, a product) is not proven here.
+ */
+export function amountCannotRiseDuringPayment(amount: Value): boolean {
+  return amount.kind === 'countPermanents' && positiveStableSelector(amount.selector);
+}
+
 /**
  * True when an activation gate that is false now stays false through any payment whose
  * activations only tap permanents, pay mana, and gain life or deal damage to their controller
@@ -83,6 +117,25 @@ const PAYMENT_STATE_KINDS: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * Condition and value kinds, under a static's condition, that a payment's own activations never
+ * change: a board count; whether this permanent entered this turn (the turn and the permanent's
+ * entry turn are fixed); whether its controller controls their own commander (a fact about which
+ * permanents are on the battlefield: only a sacrifice can change it, from true to false); and a
+ * comparison of constants and devotion, which reads the mana costs of the controller's permanents
+ * (CR 700.5). A tap, a mana payment, a life or energy payment and a life or damage rider change
+ * none of these. A permanent leaving can: `leavingKeepsProduction` handles that, and lets only the
+ * kinds that can only stop holding through (`conditionOnlyEnds`).
+ */
+const PAYMENT_INERT_CONDITION_KINDS: ReadonlySet<string> = new Set([
+  'countPermanents',
+  'enteredThisTurn',
+  'controlsYourCommander',
+  'compareValues',
+  'devotionTo',
+  'const',
+]);
+
+/**
  * Whether anything in `value` could read state that a fixed-capacity payment changes: a kind in
  * `PAYMENT_STATE_KINDS`, or any condition other than a board count (a life total, a turn fact, a
  * source's own status).
@@ -92,7 +145,11 @@ function readsPaymentState(value: unknown, underCondition = false): boolean {
   if (value === null || typeof value !== 'object') return false;
   const record = value as Record<string, unknown>;
   if (typeof record['kind'] === 'string' && PAYMENT_STATE_KINDS.has(record['kind'])) return true;
-  if (underCondition && record['kind'] !== undefined && record['kind'] !== 'countPermanents')
+  if (
+    underCondition &&
+    record['kind'] !== undefined &&
+    !PAYMENT_INERT_CONDITION_KINDS.has(String(record['kind']))
+  )
     return true;
   return Object.entries(record).some(([key, child]) =>
     readsPaymentState(child, key === 'condition' ? true : underCondition && key !== 'selector'),
@@ -218,6 +275,9 @@ const RULES_IRRELEVANT_TO_PRODUCTION: ReadonlySet<string> = new Set([
   'cantAttackOwner',
   'cantBeCountered',
   'cantBeSacrificed',
+  // "Can't be the target of abilities your opponents control" (Shanna) restricts targeting by
+  // opponents' abilities on its own holder. A payment targets nothing, so ending it gives no
+  // source anything back.
   'cantBeTargetedByOpponentAbilities',
   'cantBlockAlone',
   'cantBlockCreatures',
@@ -280,6 +340,23 @@ interface LeavingAnswer {
   power: boolean;
 }
 
+/**
+ * Whether a static's condition, once it stops holding, is the only change a permanent leaving can
+ * make to it: "you control a Dragon" (`>=`), "entered this turn", "you control your commander"
+ * only turn false as permanents leave. A `<=` or `==` count and a devotion comparison can turn
+ * true, which starts the effect: it may take an ability away or give a keyword a gate reads, so
+ * its static keeps the sacrifice bounds off.
+ */
+function conditionOnlyEnds(condition: unknown): boolean {
+  if (condition === undefined) return true;
+  const { kind, cmp } = condition as { kind?: string; cmp?: string };
+  return (
+    kind === 'enteredThisTurn' ||
+    kind === 'controlsYourCommander' ||
+    (kind === 'countPermanents' && cmp === '>=')
+  );
+}
+
 function leavingKeepsProduction(
   staticEffects: readonly unknown[],
   ruleStatics: readonly unknown[],
@@ -288,6 +365,9 @@ function leavingKeepsProduction(
   return {
     general:
       ops.every((op) => !endingCanRaise(op)) &&
+      staticEffects.every((effect) =>
+        conditionOnlyEnds((effect as { condition?: unknown }).condition),
+      ) &&
       ruleStatics.every((rule) =>
         RULES_IRRELEVANT_TO_PRODUCTION.has(String((rule as { kind?: unknown }).kind)),
       ),

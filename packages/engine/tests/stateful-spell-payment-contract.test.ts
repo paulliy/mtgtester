@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { enforceCardDefinition } from '../src/cards/authoring-validation';
 import { applyPriorityAction } from '../src/actions/apply';
 import { computePriorityOptions, type PriorityActionPayload } from '../src/actions/legal';
@@ -6,9 +6,10 @@ import type { AbilityCost, ManaAbilitySpec } from '../src/cards/ability';
 import { createGame } from '../src/state/game';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 import { countPermanents } from '../src/cards/condition';
-import { allOf, ofType, powerAtLeast } from '../src/cards/selector';
+import { OTHER, YOURS, allOf, ofType, powerAtLeast } from '../src/cards/selector';
 import { engineWork, engineWorkSince } from '../src/work-counters';
 import { cloneContractContext } from './helpers/contract-harness';
+import { leavingPermanentsKeepProduction } from '../src/mana/payment-stability';
 
 function setup(manaCost: string, costs: AbilityCost[] = [], targeted = false) {
   const ctx = createGame(gameConfig([{ cards: copies(8, forest) }, { cards: copies(8, forest) }]));
@@ -838,4 +839,286 @@ describe('a pay-life mana source keeps the capacity bound on', () => {
     state.player.life = 0;
     expect(state.offered()).toBeUndefined();
   });
+});
+
+describe('the capacity bound on small boards (bug 09)', () => {
+  // `MTG_VERIFY_MANA_PLAN=1` runs every search twice, so the work counters double.
+  const runs = process.env['MTG_VERIFY_MANA_PLAN'] === '1' ? 2 : 1;
+  // The verify run walks the old search's whole state budget on each impossible board here.
+  vi.setConfig({ testTimeout: 30_000 });
+  const ANY: ManaAbilitySpec['units'] = [[...ANY_COLOR]];
+  type Board = ReturnType<typeof setup>;
+
+  /** A tapped Exotic Orchard: it makes the payment stateful and offers no mana itself. */
+  function tappedOrchard(state: Board) {
+    spawn(
+      state.ctx,
+      state.ctx.state.players[1]!.id,
+      oracle({ name: 'Opposing Forest', typeLine: 'Basic Land — Forest', manaCost: null }),
+    );
+    state.source('Exotic Orchard', { units: [], dynamic: 'opponentLandColors' }).tapped = true;
+  }
+  /** Distinct plain rocks: no two merge, so an unbounded search walks their subsets. */
+  function rocks(state: Board, count: number) {
+    for (let i = 0; i < count; i++) state.source(`Plain rock ${i}`, { units: ANY });
+  }
+  const manaSpent = (state: Board) => state.ctx.state.stack[0]?.triggerScope?.manaSpent;
+  /** The impossible cost is not offered, with no throw and next to no search. */
+  function provesImpossible(state: Board) {
+    const before = engineWork();
+    expect(state.offered()).toBeUndefined();
+    // The verify run also runs the old search, which has no bound for the counted, conditional
+    // and self-sacrifice sources here and halts on its budget; the answer must not change.
+    if (runs === 1) expect(engineWorkSince(before).manaPlannerStates).toBeLessThan(100);
+  }
+
+  const caryatid: ManaAbilitySpec = {
+    units: ANY,
+    conditionalUnits: {
+      condition: countPermanents(allOf(ofType('Creature'), powerAtLeast(4)), 'you', '>=', 1),
+      units: [ANY[0]!, ANY[0]!],
+      linked: true,
+    },
+  };
+
+  it('counts a conditional source at its base units while its gate cannot open (Ilysian Caryatid)', () => {
+    const state = setup('{11}');
+    state.source('Caryatid', caryatid);
+    rocks(state, 9);
+    // Ten units, with no creature of power 4 to make the Caryatid's second one.
+    provesImpossible(state);
+  });
+
+  it('still pays a cost exactly at the conditional source base units', () => {
+    const state = setup('{10}');
+    state.source('Caryatid', caryatid);
+    rocks(state, 9);
+    state.cast();
+    expect(manaSpent(state)).toBe(10);
+  });
+
+  /** Brigid, Doun's Mind: "Add X mana in any combination of {G} and/or {W}, X = other creatures". */
+  const brigid: ManaAbilitySpec = {
+    units: [['G', 'W']],
+    amount: {
+      kind: 'countPermanents',
+      selector: allOf(ofType('Creature'), YOURS, OTHER),
+      scope: 'all',
+    },
+    linked: true,
+  };
+  const withBrigid = (manaCost: string) => {
+    const state = setup(manaCost);
+    state.source('Brigid', brigid);
+    for (let i = 0; i < 2; i++)
+      spawn(
+        state.ctx,
+        state.player.id,
+        oracle({ name: `Friend ${i}`, typeLine: 'Creature — Bear', power: '1', toughness: '1' }),
+      );
+    rocks(state, 8);
+    return state;
+  };
+
+  it('counts a counted amount at its value now: Brigid makes two, so ten units pay at most {10}', () => {
+    provesImpossible(withBrigid('{11}'));
+  });
+
+  /** Shanna, Sisay's Legacy: power and toughness equal to the creatures you control. */
+  function withShanna(manaCost: string) {
+    const state = withBrigid(manaCost);
+    const count = {
+      kind: 'countPermanents',
+      selector: allOf(YOURS, ofType('Creature')),
+      scope: 'you',
+    };
+    const shanna = spawn(
+      state.ctx,
+      state.player.id,
+      oracle({
+        name: 'Shanna',
+        typeLine: 'Legendary Creature — Human',
+        power: '0',
+        toughness: '0',
+      }),
+    );
+    state.ctx.defs.set(shanna.oracleId, {
+      ...state.ctx.defs.get(shanna.oracleId)!,
+      staticEffects: [
+        {
+          affects: { kind: 'self' },
+          op: {
+            layer: 7,
+            sublayer: 'd',
+            power: { kind: 'times', of: count, n: 1 },
+            toughness: { kind: 'times', of: count, n: 1 },
+          },
+        },
+      ] as never,
+      ruleStatics: [{ kind: 'cantBeTargetedByOpponentAbilities' }] as never,
+    });
+    return state;
+  }
+
+  it('keeps the count at its value now beside a creature whose power is the creature count (Shanna)', () => {
+    // Brigid counts three other creatures now: eleven units, so {12} is impossible, {11} payable.
+    provesImpossible(withShanna('{12}'));
+  });
+
+  it('still pays exactly at the counted amount beside Shanna', () => {
+    const state = withShanna('{11}');
+    state.cast();
+    expect(manaSpent(state)).toBe(11);
+  });
+
+  it('still pays a cost exactly at the counted amount', () => {
+    const state = withBrigid('{10}');
+    state.cast();
+    expect(manaSpent(state)).toBe(10);
+  });
+
+  const barbarian: ManaAbilitySpec = { units: [['R'], ['R']], costs: [{ kind: 'sacrificeSelf' }] };
+
+  it('counts a source that sacrifices itself with no {T} once (Reckless Barbarian)', () => {
+    const state = setup('{11}');
+    tappedOrchard(state);
+    state.source('Reckless Barbarian', barbarian);
+    rocks(state, 8);
+    provesImpossible(state);
+  });
+
+  it('still pays a cost exactly at a self-sacrifice source and the rocks', () => {
+    const state = setup('{10}');
+    tappedOrchard(state);
+    state.source('Reckless Barbarian', barbarian);
+    rocks(state, 8);
+    state.cast();
+    expect(manaSpent(state)).toBe(10);
+    expect(state.ctx.state.battlefield.some((p) => p.name === 'Reckless Barbarian')).toBe(false);
+  });
+
+  /** Solar Transformer: "{T}: Add {C}." and "{T}, Pay {E}: Add one mana of any color." */
+  function withTransformer(manaCost: string) {
+    const state = setup(manaCost);
+    state.player.energy = 3;
+    tappedOrchard(state);
+    const permanent = spawn(
+      state.ctx,
+      state.player.id,
+      oracle({ name: 'Solar Transformer', typeLine: 'Artifact' }),
+    );
+    state.ctx.defs.set(permanent.oracleId, {
+      ...state.ctx.defs.get(permanent.oracleId)!,
+      manaAbilities: [
+        { units: [['C']] },
+        { units: ANY, costs: [{ kind: 'tap' }, { kind: 'payEnergy', amount: 1 }] },
+      ],
+    });
+    rocks(state, 9);
+    return state;
+  }
+
+  it('counts a card with two mana abilities, one of them paying energy, as one activation', () => {
+    // The Transformer is one `{T}`: ten units, not eleven.
+    provesImpossible(withTransformer('{11}'));
+  });
+
+  it('still pays a cost exactly at capacity with the energy ability', () => {
+    const state = withTransformer('{10}');
+    state.cast();
+    expect(manaSpent(state)).toBe(10);
+  });
+
+  /** Statics that read the turn, the commander or devotion, never what a payment changes. */
+  const premiseStatics = {
+    'enteredThisTurn (Zurgo and Ojutai)': {
+      affects: { kind: 'self' },
+      op: { layer: 6, addKeyword: 'hexproof' },
+      condition: { kind: 'enteredThisTurn' },
+    },
+    'controlsYourCommander (Thunderfoot Baloth)': {
+      affects: { kind: 'self' },
+      op: { layer: 7, sublayer: 'd', power: 2, toughness: 2 },
+      condition: { kind: 'controlsYourCommander' },
+    },
+    'devotion (Xenagos, God of Revels)': {
+      affects: { kind: 'self' },
+      op: { layer: 4, removeCreatureType: true },
+      condition: {
+        kind: 'compareValues',
+        left: { kind: 'devotionTo', color: 'R', and: 'G' },
+        cmp: '<=',
+        right: { kind: 'const', n: 6 },
+      },
+    },
+  } as const;
+  function withStatic(manaCost: string, rule: unknown) {
+    const state = setup(manaCost);
+    tappedOrchard(state);
+    const holder = spawn(
+      state.ctx,
+      state.player.id,
+      oracle({ name: 'Static holder', typeLine: 'Creature — God', power: '3', toughness: '3' }),
+    );
+    state.ctx.defs.set(holder.oracleId, {
+      ...state.ctx.defs.get(holder.oracleId)!,
+      staticEffects: [rule] as never,
+    });
+    rocks(state, 12);
+    return state;
+  }
+
+  it.each(Object.entries(premiseStatics))(
+    'keeps the premise, so the bound runs, with a %s static in play',
+    (_name, rule) => {
+      provesImpossible(withStatic('{13}', rule));
+    },
+  );
+
+  it.each(Object.entries(premiseStatics))(
+    'still pays exactly at capacity with a %s static in play',
+    (_name, rule) => {
+      const state = withStatic('{12}', rule);
+      state.cast();
+      expect(manaSpent(state)).toBe(12);
+    },
+  );
+
+  it('keeps the sacrifice bounds off for a static that a permanent leaving can start', () => {
+    const holder = (condition: unknown) => [
+      {
+        staticEffects: [
+          { affects: { kind: 'self' }, op: { layer: 6, addKeyword: 'flying' }, condition },
+        ],
+        ruleStatics: [],
+      },
+    ];
+    const count = (cmp: string) => ({
+      kind: 'countPermanents',
+      selector: ofType('Dragon'),
+      scope: 'you',
+      cmp,
+      n: 1,
+    });
+    const devotion = {
+      kind: 'compareValues',
+      left: { kind: 'devotionTo', color: 'R' },
+      cmp: '<=',
+      right: { kind: 'const', n: 2 },
+    };
+    expect(leavingPermanentsKeepProduction(holder(devotion), false)).toBe(false);
+    expect(leavingPermanentsKeepProduction(holder(count('<=')), false)).toBe(false);
+    expect(leavingPermanentsKeepProduction(holder(count('>=')), false)).toBe(true);
+    expect(leavingPermanentsKeepProduction(holder({ kind: 'enteredThisTurn' }), false)).toBe(true);
+  });
+
+  it('still halts on a budget for {32}{R} from 36 Treasures: 33 activations are over the depth limit', () => {
+    const state = setup('{32}{R}');
+    tappedOrchard(state);
+    for (let i = 0; i < 36; i++) state.source('Treasure', treasure);
+    // 36 units pay 33 pips, but 33 replayed activations are one over the depth budget of 32. The
+    // search halts on a budget (the state budget, trying colors at the dead end before it reports
+    // the depth); no bound can prune a payment that is possible. The budgets are not this fix's.
+    expect(state.offered).toThrow('budget exceeded');
+  }, 60_000);
 });
