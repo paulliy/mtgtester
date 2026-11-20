@@ -9,7 +9,8 @@
         "setup",
         "model",
         "coverage",
-        "authoring"
+        "authoring",
+        "compiler"
       ],
       "commit": "1a1b33a1",
       "dirty": false,
@@ -151,6 +152,18 @@
           "unit": "drafts",
           "better": "lower",
           "kind": "exact"
+        },
+        "compiler.textCheckSettledPatches": {
+          "value": 45,
+          "unit": "patches",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "compiler.textCheckPoolMatches": {
+          "value": 951,
+          "unit": "cards",
+          "better": "higher",
+          "kind": "exact"
         }
       },
       "fingerprints": {
@@ -167,7 +180,8 @@
         "setup",
         "model",
         "coverage",
-        "authoring"
+        "authoring",
+        "compiler"
       ],
       "commit": "1a1b33a1",
       "dirty": false,
@@ -308,6 +322,18 @@
           "value": 0,
           "unit": "drafts",
           "better": "lower",
+          "kind": "exact"
+        },
+        "compiler.textCheckSettledPatches": {
+          "value": 45,
+          "unit": "patches",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "compiler.textCheckPoolMatches": {
+          "value": 951,
+          "unit": "cards",
+          "better": "higher",
           "kind": "exact"
         }
       },
