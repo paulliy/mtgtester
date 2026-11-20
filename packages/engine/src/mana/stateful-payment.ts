@@ -77,18 +77,38 @@ function clone(ctx: GameContext): GameContext {
  * count bound rests on: if an activation could change a characteristic, it could add a mana
  * ability too. Counting the dynamic source as "any type" instead let an Orchard that makes only
  * {G} pass for a white source, and the search tried every subset of the other lands to disprove
- * it. Null for production no ceiling covers: a state-dependent amount or a rider's addition.
+ * it. A conditional amount (`conditionalUnits`) is bounded by its largest alternative. Null for
+ * production no ceiling covers: a counted amount or a rider's addition.
  */
 function ceilingUnits(source: ManaSource): ManaUnit[] | null {
   if (source.stateDependentProduction !== true) return source.units;
   const spec = source.productionSpec;
-  if (
-    spec?.dynamic === undefined ||
-    spec.amount !== undefined ||
-    spec.conditionalUnits !== undefined
-  )
-    return null;
+  if (spec === undefined || spec.amount !== undefined) return null;
+  if (spec.conditionalUnits !== undefined) {
+    // "Add one mana of any color; two of any one color if you control a power 4+ creature"
+    // (Ilysian Caryatid): which alternative applies can change with the board, so bound it by
+    // all of them. Each position offers every symbol any alternative offers there (the units
+    // resolved in this state are one of the alternatives), and the source makes as many units
+    // as its largest alternative. An overestimate can only prune an impossible payment.
+    const alternatives = [source.units, spec.units, spec.conditionalUnits.units];
+    const count = Math.max(...alternatives.map((units) => units.length));
+    return Array.from({ length: count }, (_unused, position) => [
+      ...new Set(alternatives.flatMap((units) => units[position] ?? [])),
+    ]);
+  }
+  if (spec.dynamic === undefined) return null;
   return source.units;
+}
+
+/**
+ * The source as the colored bound sees it: at its ceiling units. A conditional source's
+ * alternatives disagree on `linked` (and an activation can flip which one applies), so its ceiling
+ * must not keep the constraint of the alternative resolved now.
+ */
+function ceilingSource(source: ManaSource, units: ManaUnit[]): ManaSource {
+  if (source.productionSpec?.conditionalUnits === undefined) return { ...source, units };
+  const { linked: _linked, ...unlinked } = source;
+  return { ...unlinked, units };
 }
 
 export function needsStatefulManaPayment(
@@ -254,6 +274,9 @@ export function searchPayment(
   const gatedBound = premise;
   let states = 0;
   let outsideScope = false;
+  // The depth bound cut a branch that still had sources to try. That is no proof the payment is
+  // impossible, so it is an error only if the whole search (both phases) then finds no plan.
+  let depthPruned = false;
   /** Second phase: sacrifice sources join the final payment (see `sacrificeSource`). */
   let withSacrifice = false;
   const seen = new Set<string>();
@@ -296,7 +319,6 @@ export function searchPayment(
   const fixedCapacity = ownAbilities.every(
     (ability) =>
       ability.amount === undefined &&
-      ability.conditionalUnits === undefined &&
       (ability.condition === undefined ||
         (gatedBound && gateCannotOpenDuringPayment(ability.condition))) &&
       (ability.costs === undefined ||
@@ -511,7 +533,7 @@ export function searchPayment(
         planPayment(
           cost,
           payer.manaEntries,
-          availableSources.map((source, index) => ({ ...source, units: ceilings[index]! })),
+          availableSources.map((source, index) => ceilingSource(source, ceilings[index]!)),
           allows,
         ) === null
       )
@@ -519,7 +541,7 @@ export function searchPayment(
     }
     if (++states > bounds.states) unsupported('mana activation state budget exceeded');
     if (sources.length >= bounds.activations) {
-      if (candidates.length) unsupported('mana activation depth budget exceeded');
+      if (candidates.length) depthPruned = true;
       return null;
     }
     const deduplicated = new Set<string>();
@@ -664,6 +686,10 @@ export function searchPayment(
     const payer = ctx.state.players.find((p) => p.id === player.id)!;
     const rootSources = sourcesFor(ctx, payer);
     if (!rootSources.every(tapOnlySource)) return handBack;
+    // A conditional amount is read after the tap, and its condition can read that tap
+    // (`isUntapped`): the copying search replays it, this one does not.
+    if (rootSources.some((source) => source.productionSpec?.conditionalUnits !== undefined))
+      return handBack;
     const lifeLocked = playerLifeLocked(ctx, payer.id);
     const { life, energy } = payer;
     const permanentOf = new Map(ctx.state.battlefield.map((p) => [p.cardId, p]));
@@ -765,14 +791,17 @@ export function searchPayment(
           planPayment(
             cost,
             pool,
-            availableSources.map((source, index) => ({ ...source, units: ceilings[index]! })),
+            availableSources.map((source, index) => ceilingSource(source, ceilings[index]!)),
             allows,
           ) === null
         )
           return null;
       }
       if (++visited > bounds.states) return handBack;
-      if (sources.length >= bounds.activations) return availableSources.length ? handBack : null;
+      if (sources.length >= bounds.activations) {
+        if (availableSources.length) depthPruned = true;
+        return null;
+      }
       const deduplicated = new Set<string>();
       for (const candidate of availableSources) {
         const { activation: _activation, ...signature } = candidate;
@@ -830,6 +859,7 @@ export function searchPayment(
     withSacrifice = true;
     result = attempt();
   }
+  if (!result && depthPruned) unsupported('mana activation depth budget exceeded');
   if (!result && outsideScope)
     unsupported(
       'payment requires a static production rider or strategic activation-cost continuation outside the proven scope',

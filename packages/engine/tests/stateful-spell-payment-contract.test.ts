@@ -5,6 +5,9 @@ import { computePriorityOptions, type PriorityActionPayload } from '../src/actio
 import type { AbilityCost, ManaAbilitySpec } from '../src/cards/ability';
 import { createGame } from '../src/state/game';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
+import { countPermanents } from '../src/cards/condition';
+import { allOf, ofType, powerAtLeast } from '../src/cards/selector';
+import { engineWork, engineWorkSince } from '../src/work-counters';
 import { cloneContractContext } from './helpers/contract-harness';
 
 function setup(manaCost: string, costs: AbilityCost[] = [], targeted = false) {
@@ -597,4 +600,70 @@ it('prunes an impossible fixed-production replay before the activation state bud
   expect(state.offered()).toBeUndefined();
   expect(state.ctx.state).toEqual(before.state);
   expect(state.ctx.rng.nextUint32()).toBe(before.rng.nextUint32());
+});
+
+const ANY_COLOR = ['W', 'U', 'B', 'R', 'G'] as const;
+const treasure: ManaAbilitySpec = {
+  units: [[...ANY_COLOR]],
+  costs: [{ kind: 'tap' }, { kind: 'sacrificeSelf' }],
+};
+const countedRock: ManaAbilitySpec = { units: [['C']], amount: { kind: 'const', n: 1 } };
+
+describe('stateful payment search limits', () => {
+  it('offers a {U} cast with 33 Treasures instead of throwing at the first deep dead end', () => {
+    const state = setup('{U}');
+    // A counted amount makes the payment stateful; the Treasures are tried before it.
+    for (let i = 0; i < 33; i++) state.source(`Treasure ${i}`, treasure);
+    state.source('Counting rock', countedRock);
+    expect(state.offered()).toBeDefined();
+    state.cast();
+    expect(state.ctx.state.stack[0]?.triggerScope?.manaSpent).toBe(1);
+  });
+
+  it('still throws the depth error when the cost needs more than 32 replayed activations', () => {
+    const state = setup('{33}');
+    state.player.life = 100;
+    // One repeatable source: the plan needs 33 activations, one more than the search replays.
+    state.source('Repeatable source', {
+      units: [['G']],
+      costs: [{ kind: 'payLife', amount: 1 }],
+      onActivate: [{ op: 'gainLife', amount: { kind: 'const', n: 1 } }],
+    });
+    expect(state.offered).toThrow('depth budget exceeded');
+  });
+
+  const conditionalRock: ManaAbilitySpec = {
+    units: [[...ANY_COLOR]],
+    conditionalUnits: {
+      condition: countPermanents(allOf(ofType('Creature'), powerAtLeast(4)), 'you', '>=', 1),
+      units: [[...ANY_COLOR], [...ANY_COLOR]],
+      linked: true,
+    },
+  };
+  const board = (state: ReturnType<typeof setup>) => {
+    state.source('Conditional rock', conditionalRock);
+    for (let i = 0; i < 9; i++) state.source(`Plain rock ${i}`, { units: [[...ANY_COLOR]] });
+  };
+
+  it('proves a cost one mana above conditional capacity impossible without a search or error', () => {
+    const state = setup('{12}');
+    board(state);
+    const before = engineWork();
+    expect(state.offered()).toBeUndefined();
+    const work = engineWorkSince(before);
+    // The unbounded search walks its whole 2048-state budget before giving up.
+    expect(work.manaPlannerStates).toBeLessThan(100);
+  });
+
+  it('still pays a cost exactly at capacity once the conditional source makes two', () => {
+    const state = setup('{11}');
+    board(state);
+    spawn(
+      state.ctx,
+      state.player.id,
+      oracle({ name: 'Big Bear', typeLine: 'Creature — Bear', power: '4', toughness: '4' }),
+    );
+    state.cast();
+    expect(state.ctx.state.stack[0]?.triggerScope?.manaSpent).toBe(11);
+  });
 });
