@@ -77,6 +77,76 @@ import type {
   GameContext,
 } from './types';
 
+/**
+ * The depth a token created now starts at: one more than the stack object resolving (see
+ * `resolutionDepth`), so a token an ability made because an earlier token triggered it sits one
+ * step further down the chain.
+ */
+function noteTokenDepth(ctx: GameContext, cardId: string): void {
+  const budget = ctx.budget;
+  if (budget?.maxTokenChainDepth === undefined) return;
+  const turn = ctx.state.turnNumber;
+  if (budget.tokenChain?.turn !== turn)
+    budget.tokenChain = { turn, depths: new Map(), resolving: 0 };
+  budget.tokenChain.depths.set(cardId, budget.tokenChain.resolving + 1);
+}
+
+/**
+ * How deep in this turn's token chain a stack object resolving now sits: the depth of the token
+ * whose event triggered it, or 0 for a spell, an ability no token triggered, or a token from an
+ * earlier turn. Throws when it runs past the limit: an ability that its own token retriggers,
+ * directly or through other abilities, adds one step per round, while a large legal turn (Rabble
+ * Rousing's tokens each triggering Champion of Lambholt, fuzz-203) stays a step or two deep.
+ */
+export function resolutionDepth(ctx: GameContext, triggerObjectCardId: string | undefined): number {
+  const budget = ctx.budget;
+  if (budget?.maxTokenChainDepth === undefined || triggerObjectCardId === undefined) return 0;
+  const chain = budget.tokenChain;
+  const depth =
+    chain?.turn === ctx.state.turnNumber ? (chain.depths.get(triggerObjectCardId) ?? 0) : 0;
+  if (depth > budget.maxTokenChainDepth)
+    throw new EngineBudgetError('tokenChain', budget.maxTokenChainDepth);
+  return depth;
+}
+
+/**
+ * A stack object's depth in this turn's token chain: the depth of the token whose event triggered
+ * it, or for a triggered ability, of its source when that is a token in the chain, whichever is
+ * deeper. A trigger whose subject is its own source records no trigger object ("whenever this is
+ * dealt damage, create a token that's a copy of it"), so without the source a token copying
+ * itself would restart the chain at every step.
+ */
+export function stackObjectDepth(
+  ctx: GameContext,
+  top: { kind: string; sourceCardId: string; triggerObjectCardId?: string },
+): number {
+  return Math.max(
+    resolutionDepth(ctx, top.triggerObjectCardId),
+    top.kind === 'triggeredAbility' ? resolutionDepth(ctx, top.sourceCardId) : 0,
+  );
+}
+
+/** Run `resolve` with `depth` as the resolving object's chain depth (see `noteTokenDepth`). */
+export function* atResolutionDepth<T>(
+  ctx: GameContext,
+  depth: number,
+  resolve: () => GameGen<T>,
+): GameGen<T> {
+  const budget = ctx.budget;
+  if (budget?.maxTokenChainDepth === undefined) return yield* resolve();
+  const turn = ctx.state.turnNumber;
+  if (budget.tokenChain?.turn !== turn)
+    budget.tokenChain = { turn, depths: new Map(), resolving: 0 };
+  const chain = budget.tokenChain;
+  const previous = chain.resolving;
+  chain.resolving = depth;
+  try {
+    return yield* resolve();
+  } finally {
+    chain.resolving = previous;
+  }
+}
+
 export function newObjectId(ctx: GameContext): ObjectId {
   const budget = ctx.budget;
   if (
@@ -1941,6 +2011,7 @@ export function createToken(
     isCommander: false,
     zone: 'battlefield',
   };
+  noteTokenDepth(ctx, stub.cardId);
   const perm = makePermanent(ctx, stub, controllerId, entersTapped ? true : undefined);
   perm.oracleId = oracleId;
   perm.transformed = copySpec.startsTransformed === true;
@@ -2044,6 +2115,17 @@ export function canAttach(
  * when the definition carries no enchant restriction to check.
  */
 export function enchantAllows(
+  ctx: GameContext,
+  aura: EnginePermanent,
+  host: EnginePermanent,
+): boolean | undefined {
+  // Reads only: one layer digest serves every candidate the enchant restriction checks
+  // (`withReadScope`). Without it, each candidate re-digested the whole board, so the SBA Aura
+  // check was quadratic in board size on every pass (fuzz-203, hundreds of tokens).
+  return withReadScope(ctx, () => enchantAllowsIn(ctx, aura, host));
+}
+
+function enchantAllowsIn(
   ctx: GameContext,
   aura: EnginePermanent,
   host: EnginePermanent,

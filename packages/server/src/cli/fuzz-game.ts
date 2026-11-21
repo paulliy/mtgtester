@@ -29,6 +29,7 @@ import { HeuristicDecisionProvider } from '@mtg/bot';
 import { installDefaultDiagnostics } from '../../../engine/src/testing/diagnostics';
 import { installStateInvariants } from '../../../engine/src/testing/invariants';
 import { TABLE_ENGINE_LIMITS } from '../match/engine-limits';
+import { DRAW_HALT_REASON, verifyDraw } from './fuzz-draw';
 
 export type FuzzProvider = 'heuristic' | 'random';
 
@@ -58,7 +59,13 @@ export interface FuzzReply {
    * Set when the game halted: the engine's reason, the site of an invariant halt, and whether it
    * was the turn cap.
    */
-  halt: { reason: string; site?: string; turnCap: boolean } | null;
+  halt: {
+    reason: string;
+    site?: string;
+    turnCap: boolean;
+    /** A drawn game the final state confirms (`verifyDraw`): who lost together, and why. */
+    draw?: Array<{ player: PlayerId; reason: string }>;
+  } | null;
   /** A thrown error, an invariant violation among them, with the top of its stack. */
   error: string | null;
   budgetExhausted: boolean;
@@ -135,6 +142,11 @@ export function playFuzzGame(request: FuzzRequest): FuzzReply {
               step.result.turnCount >= request.turnCap &&
               (step.result.haltReason ?? '').startsWith('turn cap'),
           };
+        if (reply.halt !== null && reply.halt.reason === DRAW_HALT_REASON) {
+          const draw = verifyDraw(engine.getState());
+          if ('players' in draw) reply.halt.draw = draw.players;
+          else reply.halt.reason = `${DRAW_HALT_REASON}, unverified: ${draw.unverified}`;
+        }
         break;
       }
       if (step.kind === 'continue') continue;

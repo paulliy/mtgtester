@@ -17,7 +17,8 @@
  * A game fails on a thrown error or invariant violation, a halted result (an unmodeled card, the
  * table's step and object limits), an exhausted decision budget or the wall clock; a
  * heuristic-only game also fails on the turn cap and on the bot's empty-veto fallback
- * (`fuzz-plan.ts`). Each failure prints the command that replays it, and `--report` writes the
+ * (`fuzz-plan.ts`). A drawn game passes when the final state confirms the players lost together
+ * (`fuzz-draw.ts`). Each failure prints the command that replays it, and `--report` writes the
  * failures as Markdown for an issue. The per-game time is reported, with the liveness report
  * (`--liveness` writes it whole): each card's ops that only ever exited early. The exit code is 1
  * when any game failed.
@@ -277,7 +278,12 @@ async function main(): Promise<void> {
         const what = `${game.request.seed} [${game.request.providers.join(' ')}] ${game.request.decks.map((deck) => deck.label).join(', ')}`;
         if (outcome.kind === 'played') {
           const { reply } = outcome;
-          const end = reply.winner === null ? 'no winner' : `${reply.winner} won`;
+          const end =
+            reply.halt?.draw !== undefined
+              ? `draw (${reply.halt.draw.map((d) => `${d.player}: ${d.reason}`).join(', ')})`
+              : reply.winner === null
+                ? 'no winner'
+                : `${reply.winner} won`;
           console.log(
             `${failure === null ? 'ok  ' : 'FAIL'} ${what}: ${end}, turn ${reply.turns}, ${reply.decisions} decisions, ${(reply.ms / 1000).toFixed(1)}s`,
           );
