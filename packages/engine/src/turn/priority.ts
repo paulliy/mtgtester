@@ -25,6 +25,45 @@ import { playersInApnapOrder } from '../state/queries';
 import { playerById } from '../state/objects';
 import type { EnginePlayerState, GameContext } from '../state/types';
 
+/**
+ * CR 732.4: a loop of optional actions by one player is repeated a number of times the player
+ * chooses, then they must stop. The engine cannot see a loop, so it backstops a decider that
+ * keeps taking the same action from the same menu: after this many identical choices in a row
+ * within one priority sequence, that option is withheld from the identical menu.
+ */
+export const OPTIONAL_LOOP_ITERATIONS = 10;
+
+interface RepeatRecord {
+  player: PlayerId;
+  /** The full (pre-filter) menu the player last acted from and the option they took. */
+  options: readonly EngineActionOption[];
+  chosen: EngineActionOption;
+  /** Consecutive identical (menu, option) actions ending with that one. */
+  count: number;
+}
+
+function optionSignature(option: EngineActionOption): string {
+  let payload = '';
+  try {
+    payload = JSON.stringify([option.payload, option.data]) ?? '';
+  } catch {
+    payload = '';
+  }
+  return `${option.description}\u0000${payload}`;
+}
+
+function menuSignature(options: readonly EngineActionOption[]): string {
+  return options.map(optionSignature).join('\u0001');
+}
+
+function isPassPayload(payload: PriorityActionPayload): boolean {
+  return (
+    payload.kind === 'pass' ||
+    payload.kind === 'passAndYieldTurn' ||
+    payload.kind === 'yieldToAbility'
+  );
+}
+
 function shouldAutoPassPriority(ctx: GameContext, player: EnginePlayerState): boolean {
   if (player.yieldUntilEndOfTurn === true) {
     return true;
@@ -72,6 +111,7 @@ export function* runPrioritySequence(ctx: GameContext): GameGen<void> {
 
   let holder: PlayerId | null = null; // null → (re)start from the active player
   let passesInARow = 0;
+  let lastAction = null as RepeatRecord | null; // last non-pass priority action in this sequence
 
   for (;;) {
     // Checkpoint before anyone receives priority (CR 117.5). Anything happening (SBAs,
@@ -111,7 +151,28 @@ export function* runPrioritySequence(ctx: GameContext): GameGen<void> {
       continue;
     }
 
-    const options = computePriorityOptions(ctx, player);
+    let options = computePriorityOptions(ctx, player);
+    // Signature work only when this player's own non-pass action came last (no cost otherwise).
+    const fullMenu = options;
+    let sameMenu = false;
+    if (lastAction !== null && lastAction.player === player.id) {
+      sameMenu = menuSignature(options) === menuSignature(lastAction.options);
+      if (sameMenu && lastAction.count >= OPTIONAL_LOOP_ITERATIONS) {
+        const blocked = optionSignature(lastAction.chosen);
+        const kept = options.filter(
+          (o) =>
+            isPassPayload(o.payload as PriorityActionPayload) || optionSignature(o) !== blocked,
+        );
+        if (kept.length < options.length) {
+          debug(
+            ctx,
+            'priority',
+            `${player.id} repeated the same action ${lastAction.count} times from an identical menu; withholding it (CR 732.4)`,
+          );
+          options = kept;
+        }
+      }
+    }
     debug(
       ctx,
       'legalActions',
@@ -128,11 +189,7 @@ export function* runPrioritySequence(ctx: GameContext): GameGen<void> {
     const chosen = options[outcome.index] as EngineActionOption;
     const payload = chosen.payload as PriorityActionPayload;
 
-    if (
-      payload.kind === 'pass' ||
-      payload.kind === 'passAndYieldTurn' ||
-      payload.kind === 'yieldToAbility'
-    ) {
+    if (isPassPayload(payload)) {
       if (payload.kind === 'passAndYieldTurn') {
         player.yieldUntilEndOfTurn = true;
         debug(ctx, 'priority', `${player.id} passes priority and yields until end of turn`);
@@ -163,6 +220,17 @@ export function* runPrioritySequence(ctx: GameContext): GameGen<void> {
         holder = (players[(idx + 1) % players.length] as (typeof players)[number]).id;
       }
     } else {
+      const previous: RepeatRecord | null = lastAction;
+      const repeat =
+        sameMenu &&
+        previous !== null &&
+        optionSignature(previous.chosen) === optionSignature(chosen);
+      lastAction = {
+        player: player.id,
+        options: fullMenu,
+        chosen,
+        count: repeat && previous !== null ? previous.count + 1 : 1,
+      };
       yield* applyPriorityAction(ctx, player, payload, outcome);
       passesInARow = 0;
       // CR 117.3c: the actor retains priority; holder unchanged.
