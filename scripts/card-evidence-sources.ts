@@ -225,6 +225,7 @@ export const SOURCE_FILES = [
   'packages/engine/src/effects/continuous.ts',
   'packages/engine/src/effects/damage-modifiers.ts',
   'packages/engine/src/effects/layer-cache.ts',
+  'packages/engine/src/effects/layer-dependency.ts',
   'packages/engine/src/effects/values.ts',
   'packages/engine/src/errors.ts',
   'packages/engine/src/exits.ts',

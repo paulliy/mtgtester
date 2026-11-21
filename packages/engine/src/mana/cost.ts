@@ -796,13 +796,33 @@ function solveFrom(
   const chosen: ManaSource[] = [];
   const produced: ProducedMana[] = [];
 
-  // Optimistic suffix bounds: alternative abilities and linked production may be
-  // double-counted here, which only weakens pruning and cannot reject a legal payment.
+  // A permanent's alternative abilities (a creature that taps for mana AND convokes) share one
+  // (cardId, activation) group, and `solveAt` taps at most one entry per group. Every bound below
+  // therefore counts a group once, at its best entry, which can only over-estimate what the
+  // search can still produce. Linked production and mana costs are still counted at face value,
+  // which only weakens pruning and cannot reject a legal payment.
+  const groupKey = (s: ManaSource): string => `${s.cardId}\u0000${s.activation ?? ''}`;
+  const groupIds = new Map<string, number>();
+  const groupOf = usableSources.map((s) => {
+    const key = groupKey(s);
+    let id = groupIds.get(key);
+    if (id === undefined) groupIds.set(key, (id = groupIds.size));
+    return id;
+  });
+  const groupBest = Array.from({ length: groupIds.size }, () => emptyPool());
   const suffix = Array.from({ length: usableSources.length + 1 }, () => emptyPool());
   for (let i = usableSources.length - 1; i >= 0; i--) {
     Object.assign(suffix[i]!, suffix[i + 1]!);
+    const best = groupBest[groupOf[i]!]!;
+    const here = emptyPool();
     for (const unit of usableSources[i]!.units) {
-      for (const symbol of new Set(unit)) suffix[i]![symbol]++;
+      for (const symbol of new Set(unit)) here[symbol]++;
+    }
+    for (const symbol of ['C', ...ALL_COLORS] as const) {
+      if (here[symbol] > best[symbol]) {
+        suffix[i]![symbol] += here[symbol] - best[symbol];
+        best[symbol] = here[symbol];
+      }
     }
   }
   // Failed states, remembered. Whether `solve` can finish depends only on where it starts, what
@@ -915,9 +935,21 @@ function solveFrom(
     }
     if (need2.colorless > suffix[srcIdx]!.C) return false;
     // Prune: remaining sources cannot produce enough units.
+    // Each (cardId, activation) group counts once, at its largest remaining entry, and not at all
+    // once one of its entries is tapped.
+    const tappedGroups = new Set(chosen.map((s) => groupIds.get(groupKey(s))));
+    const groupMax = new Map<number, number>();
     let unitsLeft = 0;
-    for (let i = srcIdx; i < usableSources.length; i++)
-      unitsLeft += (usableSources[i] as ManaSource).units.length;
+    for (let i = srcIdx; i < usableSources.length; i++) {
+      const group = groupOf[i]!;
+      if (tappedGroups.has(group)) continue;
+      const units = (usableSources[i] as ManaSource).units.length;
+      const before = groupMax.get(group) ?? 0;
+      if (units > before) {
+        groupMax.set(group, units);
+        unitsLeft += units - before;
+      }
+    }
     if (unitsLeft < totalPips(need2)) return false;
 
     const src = usableSources[srcIdx] as ManaSource;
