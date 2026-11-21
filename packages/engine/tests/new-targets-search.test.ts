@@ -46,7 +46,7 @@ describe('choosing new targets for a copy with many counted targets', () => {
   it("offers only the controller's own permanents, and finishes", () => {
     const { search, targeted } = concealmentCopy('new-targets-own-only');
     const began = performance.now();
-    const { value, decisions } = pump(search, choose(/^Keep /));
+    const { value, decisions } = pump(search, choose(/^Keep /), { strict: true });
     expect(performance.now() - began).toBeLessThan(5_000);
     expect(decisions).toHaveLength(6);
     for (const decision of decisions) {
@@ -59,8 +59,11 @@ describe('choosing new targets for a copy with many counted targets', () => {
 
   it('a target may change to another permanent the controller controls', () => {
     const { search, mine } = concealmentCopy('new-targets-change');
-    const { value } = pump(search, (decision, count) =>
-      count === 1 ? choose('Target Mine 7')(decision) : choose(/^Keep /)(decision),
+    const { value } = pump(
+      search,
+      (decision, count) =>
+        count === 1 ? choose('Target Mine 7')(decision) : choose(/^Keep /)(decision),
+      { strict: true },
     );
     expect(value.countTargets[0]).toEqual([
       mine[6]!.id,
@@ -71,7 +74,7 @@ describe('choosing new targets for a copy with many counted targets', () => {
   it('twelve targets among thirty-five own permanents settle quickly', () => {
     const { search, targeted } = concealmentCopy('new-targets-twelve', 35, 12);
     const began = performance.now();
-    const { value, decisions } = pump(search, choose(/^Keep /));
+    const { value, decisions } = pump(search, choose(/^Keep /), { strict: true });
     expect(performance.now() - began).toBeLessThan(5_000);
     expect(decisions).toHaveLength(12);
     expect(decisions[0]!.options).toHaveLength(35);
