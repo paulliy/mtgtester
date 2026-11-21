@@ -1,5 +1,5 @@
 {
-  "description": "Real Archidekt decks adapted to the modeled card pool for bot-league style tests (ADR 0050). Every unmodeled card was replaced by the modeled card of the same primary type, in the commander colour identity, within one mana value, sharing the most bot roles; unmodeled lands became basics. These are test decks, not the source decks.",
+  "description": "Real Archidekt decks adapted to the modeled card pool for bot-league style tests (ADR 0051). Every unmodeled card was replaced by the modeled card of the same primary type, in the commander colour identity, within one mana value, sharing the most bot roles; unmodeled lands became basics. These are test decks, not the source decks.",
   "decks": [
     {
       "deck": "aggro-purphoros-god-of-the-forge",

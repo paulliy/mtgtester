@@ -13,7 +13,7 @@
  * was skipped.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
-import { playGame, type GameRun } from './engine-bench-game';
+import { playGame, sumWork, type GameRun } from './engine-bench-game';
 import { loadDecks, pod } from './fuzz-plan';
 
 interface Args {
@@ -78,6 +78,8 @@ async function main(): Promise<void> {
     `total: engine ${engineMs} ms over ${decisions} decisions ` +
       `(${(engineMs / Math.max(1, decisions)).toFixed(2)} ms per decision)`,
   );
+  const work = Object.entries(sumWork(runs.map((run) => run.work)));
+  console.log(`work: ${work.map(([kind, count]) => `${kind} ${count}`).join(', ')}`);
   if (args.json !== null) writeFileSync(args.json, JSON.stringify(runs, null, 2));
   if (args.compare !== null) {
     const saved = JSON.parse(readFileSync(args.compare, 'utf8')) as GameRun[];

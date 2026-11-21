@@ -5,6 +5,8 @@
  *   bun run serve --port 4000
  *   bun run serve --no-db         # run without persisting games (nothing is scrubbable
  *                                 # beyond what is in memory, and imports are unavailable)
+ *   bun run serve --provisional   # also play machine-checked cards from the review queue,
+ *                                 # marked provisional (H1); off by default
  *   bun run serve --oracle-fixture packages/server/fixtures/coverage-oracle.json
  *                                 # card data from a committed engine-form fixture instead of
  *                                 # the gitignored Scryfall bulk file (CI, offline checks)
@@ -22,6 +24,7 @@ import {
   type OracleIndex,
 } from '../cards/oracle-index';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
+import { describeCatalog, loadProvisionalCatalog } from '../cards/provisional';
 import { toOracleCard, type RawScryfallCard } from '../cards/scryfall';
 import { GameStore } from '../db';
 import { loadBannedList, type BannedList } from '../decks/banned';
@@ -39,6 +42,8 @@ interface Args {
   dbPath: string;
   /** A JSON array of `OracleCard`s to load instead of the Scryfall bulk file. */
   oracleFixture: string | null;
+  /** Admit machine-checked cards from the review queue as provisional (H1). Off by default. */
+  provisional: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -48,6 +53,7 @@ function parseArgs(argv: string[]): Args {
     cardTestLab: false,
     dbPath: DB_PATH,
     oracleFixture: null,
+    provisional: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -55,6 +61,7 @@ function parseArgs(argv: string[]): Args {
     else if (arg === '--db-path') args.dbPath = argv[++i] ?? DB_PATH;
     else if (arg === '--no-db') args.db = false;
     else if (arg === '--oracle-fixture') args.oracleFixture = argv[++i] ?? null;
+    else if (arg === '--provisional') args.provisional = true;
     else if (arg === '--card-test-lab') {
       args.cardTestLab = true;
       args.db = false;
@@ -94,7 +101,7 @@ function loadCards(args: Args): {
     console.log(`Loading oracle fixture from ${args.oracleFixture} …`);
     const { parsed, cardData } = readCardFile(args.oracleFixture);
     const cards = parsed as OracleCard[];
-    return { pool: buildSupportedPool(cards), index: buildOracleIndexFromCards(cards), cardData };
+    return { pool: supportedPool(cards, args), index: buildOracleIndexFromCards(cards), cardData };
   }
   const path = resolve(BULK_PATH);
   if (!existsSync(path)) {
@@ -114,7 +121,15 @@ function loadCards(args: Args): {
     if (card !== null) cards.push(card);
   }
 
-  return { pool: buildSupportedPool(cards), index: buildOracleIndex(raw), cardData };
+  return { pool: supportedPool(cards, args), index: buildOracleIndex(raw), cardData };
+}
+
+/** The supported pool, with the provisional catalog admitted when `--provisional` is given. */
+function supportedPool(cards: OracleCard[], args: Args): SupportedPool {
+  if (!args.provisional) return buildSupportedPool(cards);
+  const catalog = loadProvisionalCatalog(cards);
+  console.log(`  ${describeCatalog(catalog)}`);
+  return buildSupportedPool(cards, catalog);
 }
 
 function loadBanned(): BannedList {
@@ -150,6 +165,10 @@ function main(): void {
   console.log('─'.repeat(45));
   console.log(`  HTTP/WS:        http://localhost:${handle.port}  (WebSocket at /ws)`);
   console.log(`  Supported pool: ${pool.cards.length.toLocaleString()} cards`);
+  if (pool.provisional !== undefined)
+    console.log(
+      `  Provisional:    ${pool.provisional.definitions.size} unreviewed cards admitted (--provisional)`,
+    );
   console.log(`  Oracle index:   ${index.size.toLocaleString()} cards`);
   console.log(`  Database:       ${args.db ? args.dbPath : '(disabled)'}`);
   console.log(`  Card Test Lab:  ${args.cardTestLab ? 'enabled' : 'disabled'}`);

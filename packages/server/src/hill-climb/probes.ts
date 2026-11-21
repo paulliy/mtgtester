@@ -5,7 +5,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { cpus } from 'node:os';
-import { Engine } from '@mtg/engine';
+import { Engine, type EngineWork } from '@mtg/engine';
 import type { AiConfig } from '../ai/config';
 import {
   compilerTrials,
@@ -18,7 +18,7 @@ import { measureCoverage } from '../cards/coverage';
 import { PINNED_ORACLE_PATH, type PinnedCard } from '../cards/edhrec-pins';
 import type { EdhrecRanking } from '../cards/edhrec-ranking';
 import { censusPod } from '../cli/ai-call-census';
-import { playGame } from '../cli/engine-bench-game';
+import { playGame, sumWork } from '../cli/engine-bench-game';
 import type { FuzzDeck } from '../cli/fuzz-game';
 import { loadDecks, pod } from '../cli/fuzz-plan';
 import { TABLE_ENGINE_LIMITS } from '../match/engine-limits';
@@ -95,6 +95,36 @@ const exact = (value: number, unit: string, better: Metric['better']): Metric =>
   kind: 'exact',
 });
 
+/** Units for the engine work counters (`engineWork` in @mtg/engine), by counter. */
+const WORK_UNITS: Record<keyof EngineWork, string> = {
+  layerPasses: 'passes',
+  layerCacheHits: 'hits',
+  layerDigests: 'digests',
+  castCheckpoints: 'checkpoints',
+  castPreviews: 'previews',
+  manaSourceListings: 'listings',
+  spellPaymentSearches: 'searches',
+  manaPlannerSearches: 'searches',
+  manaPlannerStates: 'states',
+  stateCopies: 'copies',
+};
+
+/**
+ * The engine work counters over the benchmark games, as exact metrics. They count the work the
+ * games needed, so they compare only when both sides played the same games (`sameGames`). Cache
+ * hits are reported but count neither way: a cheaper design can need fewer lookups.
+ */
+export function workMetrics(work: EngineWork): Metrics {
+  const metrics: Metrics = {};
+  for (const kind of Object.keys(WORK_UNITS) as Array<keyof EngineWork>)
+    metrics[`engine.work.${kind}`] = {
+      ...exact(work[kind], WORK_UNITS[kind], 'lower'),
+      sameGames: true,
+      ...(kind === 'layerCacheHits' ? { informational: true } : {}),
+    };
+  return metrics;
+}
+
 /** The first `count` seeds whose pod is all heuristic players, as `engine-bench` picks them. */
 function heuristicSeeds(decks: FuzzDeck[], count: number): number[] {
   const seeds: number[] = [];
@@ -117,6 +147,7 @@ export function engineProbe(
   const perDecision: number[] = [];
   const medianGame: number[] = [];
   let fingerprints: Record<string, string> = {};
+  let work: EngineWork | undefined;
   // One untimed game first, so the first timed game is not charged for JIT warm-up.
   playGame(seeds[0]!, pod(decks, seeds[0]!).decks, pod(decks, seeds[0]!).providers, 10);
   for (let repeat = 0; repeat < repeats; repeat++) {
@@ -124,13 +155,23 @@ export function engineProbe(
       const plan = pod(decks, seed);
       const run = playGame(seed, plan.decks, plan.providers, profile.engineTurnCap);
       if (run.outcome.startsWith('error:')) throw new Error(`seed ${seed}: ${run.outcome}`);
-      log(`  engine seed ${seed}: ${run.decisions} decisions, ${run.engineMs} ms`);
+      log(
+        `  engine seed ${seed}: ${run.decisions} decisions, ${run.engineMs} ms, ` +
+          `${run.work.layerPasses} layer passes, ${run.work.stateCopies} state copies`,
+      );
       return run;
     });
     const played = Object.fromEntries(runs.map((run) => [String(run.seed), run.fingerprint]));
     if (repeat > 0 && JSON.stringify(played) !== JSON.stringify(fingerprints))
       throw new Error('the same seeds played differently on a repeat: the games are not seeded');
     fingerprints = played;
+    // The counts are exact: a repeat that did different work did not run the same code path.
+    const total = sumWork(runs.map((run) => run.work));
+    if (work !== undefined && JSON.stringify(total) !== JSON.stringify(work))
+      throw new Error(
+        'the same games did different engine work on a repeat: a counter is not exact',
+      );
+    work = total;
     const engineMs = runs.reduce((sum, run) => sum + run.engineMs, 0);
     const decisions = runs.reduce((sum, run) => sum + run.decisions, 0);
     perDecision.push(engineMs / Math.max(1, decisions));
@@ -141,6 +182,7 @@ export function engineProbe(
       // The mean is dominated by the slowest game; the median says what a typical game costs.
       'engine.msPerDecision': timed(perDecision, 'ms'),
       'engine.medianGameMsPerDecision': timed(medianGame, 'ms'),
+      ...workMetrics(work!),
     },
     fingerprints,
   };
@@ -192,6 +234,17 @@ const CENSUS_MODES: Array<{ key: string; config: Partial<AiConfig> }> = [
       botEscalation: [],
       strategistReplan: 'onChange',
       providerPromptCacheLayoutEnabled: true,
+    },
+  },
+  {
+    // Hill-climb S6: delta prompts are the default since 2026-11-18, so `bot` measures them; this
+    // keeps the full-prompt strategist measured for comparison.
+    key: 'botNoDelta',
+    config: {
+      tacticalMode: 'bot',
+      botEscalation: [],
+      strategistReplan: 'onChange',
+      strategistDeltaEnabled: false,
     },
   },
 ];

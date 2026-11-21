@@ -1,5 +1,7 @@
 import type { Condition } from '../cards/condition';
 import type { Selector } from '../cards/selector';
+import { selectedPermanentDefinition } from '../cards/spell-faces';
+import type { GameContext } from '../state/types';
 
 /**
  * Selector kinds whose answer for one permanent depends only on that permanent's own
@@ -171,6 +173,21 @@ function definitionKeepsCharacteristics(definition: StaticHolder): boolean {
 
 export function characteristicsFixedDuringPayment(definitions: readonly StaticHolder[]): boolean {
   return definitions.every(definitionKeepsCharacteristics);
+}
+
+/**
+ * Every definition whose statics are in play. The capacity bound and the copy-free search rest
+ * on activations leaving every characteristic as it is; a static that reads tapped status or life
+ * breaks that ("while this is untapped, lands you control lose all abilities": tapping it gives the
+ * lands their mana abilities back), and then the search copies the game with no bound at all.
+ */
+export function definitionsInPlay(ctx: GameContext) {
+  return ctx.state.battlefield.flatMap((permanent) => {
+    if (permanent.faceDown) return [];
+    const printed = ctx.defs.get(permanent.oracleId);
+    if (printed === undefined) return [];
+    return [printed, selectedPermanentDefinition(printed, permanent.face, permanent.unlockedDoors)];
+  });
 }
 
 /** Layer-4 keys that replace or strip what a permanent is, so that ending them can give it back. */

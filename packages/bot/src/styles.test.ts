@@ -14,7 +14,7 @@ describe('play styles', () => {
       avoidOverextending: false,
     });
     expect(resolveSteering({ style: 'aggro', aggression: 0.4 })?.aggression).toBe(0.4);
-    // Control sets no knobs: its passive defaults cost games (ADR 0050 gauntlet).
+    // Control sets no knobs: its passive defaults cost games (ADR 0051 gauntlet).
     expect(resolveSteering({ style: 'control' })).toEqual({ style: 'control' });
     expect(resolveSteering({ aggression: 0.4 })).toEqual({ aggression: 0.4 });
     expect(resolveSteering(undefined)).toBeUndefined();

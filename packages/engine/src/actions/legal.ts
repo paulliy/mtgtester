@@ -17,6 +17,7 @@ import { castingPreviewContext } from '../casting/preview';
 import { mayCastCommanderFromCommand } from '../casting/permissions';
 import { legalTargetMenus, type TargetMenu } from '../targets/announcement';
 import { planSpellPayment } from '../mana/spell-payment';
+import { fixedManaCapacity } from '../mana/capacity';
 import { targetCandidates, targetIsLegal } from '../targets/legality';
 export {
   permanentMatchesKind,
@@ -734,6 +735,11 @@ export function computePriorityOptions(
   return withReadScope(ctx, () => priorityOptions(ctx, player));
 }
 
+const VERIFY_MANA_CAPACITY =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[
+    'MTG_VERIFY_MANA_CAPACITY'
+  ] === '1';
+
 function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineActionOption[] {
   const s = ctx.state;
   const options: EngineActionOption[] = [
@@ -1098,10 +1104,6 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
       paymentCtx = castCtx;
       paymentPlayer = castCtx.state.players.find((p) => p.id === player.id)!;
       paymentDefinition = castingDef;
-      const castSources = spellHasConvoke(castingDef)
-        ? [...manaSourcesFor(castCtx, player.id), ...convokeSourcesFor(castCtx, player.id)]
-        : manaSourcesFor(castCtx, player.id);
-      paymentSources = castSources;
       const reduction = costReductionFor(castCtx, player.id, obj.oracleId, obj.cardId, castingDef);
 
       const additionalManaCost = manaPortionOf(spellAdditionalCosts);
@@ -1131,6 +1133,32 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
       const bestTargeted = targeted.reduce((sum, entry) => sum + entry.generic, 0);
       const reduceBest = (c: ParsedManaCost): ParsedManaCost =>
         subtractGeneric(reduce(c), bestTargeted);
+
+      // Most priority windows offer only "pass", and nearly all the work of building one went to
+      // proving that each instant in hand cannot be paid for: gathering the preview's mana sources
+      // and searching for a payment. Every option below pays at least this floor in mana (X = 0,
+      // no mode or optional costs, the best target-dependent reduction, Phyrexian pips paid with
+      // life; each of those only adds), so a spell whose floor exceeds the most mana the player
+      // could make is ruled out here at the same verdict. Convoke adds creatures as sources and an
+      // additional X is enumerated (and refused) differently, so those take the full path.
+      // `MTG_VERIFY_MANA_CAPACITY=1` runs the full check anyway and throws if it offers the spell.
+      // One read scope, so the bound and the sources share one layer digest of the preview.
+      let ruledOutAt: number | null = null;
+      const castSources = withReadScope(castCtx, (): ManaSource[] | null => {
+        if (!spellHasConvoke(castingDef) && castingDef.announcesX !== true) {
+          const floor = reduceBest(addManaCosts(costWithX(0), additionalManaCost));
+          const capacity = fixedManaCapacity(castCtx, paymentPlayer);
+          if (capacity !== null && totalPips(floor) - (floor.phyrexian?.length ?? 0) > capacity) {
+            if (!VERIFY_MANA_CAPACITY) return null;
+            ruledOutAt = options.length;
+          }
+        }
+        return spellHasConvoke(castingDef)
+          ? [...manaSourcesFor(castCtx, player.id), ...convokeSourcesFor(castCtx, player.id)]
+          : manaSourcesFor(castCtx, player.id);
+      });
+      if (castSources === null) return;
+      paymentSources = castSources;
 
       // {X} is announced as part of casting (CR 601.2b), so each affordable value of X is its own
       // option. Enumerated rather than asked as a follow-up decision because the option menu is
@@ -1430,6 +1458,10 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
           }
         }
       }
+      if (ruledOutAt !== null && options.length > ruledOutAt)
+        throw new Error(
+          `engine bug: the mana capacity bound ruled out ${castName}, which the full check offers`,
+        );
     };
     // A split card is cast as one half or both, never as the combined card (CR 709.3).
     const splitCard = def.alternativeCasts?.some((alt) => alt.kind === 'split') === true;

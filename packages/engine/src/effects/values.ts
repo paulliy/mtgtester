@@ -20,7 +20,7 @@ import {
   devotionTo,
 } from '../cards/value';
 import type { Selector } from '../cards/selector';
-import { selectMatches } from '../cards/selector';
+import { selectMatches, tappedState } from '../cards/selector';
 import type { EngineCardObject, EnginePermanent, GameContext } from '../state/types';
 import {
   computeCharacteristics,
@@ -81,8 +81,8 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
     case 'countPermanents':
       return scopedPermanents(ctx, scope, value.selector, value.scope).length;
     case 'countTappedPermanents':
-      return scopedPermanents(ctx, scope, value.selector, value.scope).filter(
-        (permanent) => permanent.tapped,
+      return scopedPermanents(ctx, scope, value.selector, value.scope).filter((permanent) =>
+        tappedState(permanent),
       ).length;
     case 'countPermanentsControlledByTarget': {
       const targetId = typeof value.target === 'number' ? scope.targets?.[value.target] : undefined;
@@ -339,7 +339,7 @@ export function evaluateValueIn(ctx: GameContext, value: Value, scope: ValueScop
       return ctx.state.battlefield.filter(
         (permanent) =>
           permanent.controllerId === targetId &&
-          permanent.tapped &&
+          tappedState(permanent) &&
           computeCharacteristics(ctx, permanent).types.includes('Creature'),
       ).length;
     }

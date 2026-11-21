@@ -20,10 +20,8 @@ import { measureCoverage } from './coverage';
 
 /**
  * Whether an unmodeled card has a provisional definition. This is the one seam the provisional
- * column depends on: today the CLI builds it from the compiled-card review queue
- * (`provisionalFromQueue`), and the provisional trust tier can replace it with its own loader
- * without touching anything else here. `NO_PROVISIONAL` turns the column into a copy of the
- * exact one.
+ * column depends on: the CLI builds it from the provisional catalog (`loadProvisionalCatalog`,
+ * ADR 0050). `NO_PROVISIONAL` turns the column into a copy of the exact one.
  */
 export type ProvisionalLookup = (card: OracleCard) => boolean;
 
@@ -179,47 +177,6 @@ export interface PopulationReport extends DeckCoverageReport {
   name: string;
   /** Where the decks came from, for the report's reader. */
   source: string;
-}
-
-/** A queue entry, as far as this metric reads it. The full type lives in scripts/card-compiler. */
-export interface QueueEntryView {
-  oracleId: string;
-  status: string;
-  patch: string | null;
-  patchSha256: string | null;
-  review: { verdict: 'accepted' | 'rejected' } | null;
-  crossCheck?: { verdict: string };
-}
-
-/**
- * Provisional lookup from the compiled-card review queue: a card is provisional when some entry
- * for its Oracle id is `compiled-checked`, was not rejected, and its patch file still hashes to
- * the recorded `patchSha256` (a changed patch is no longer the one that was checked). Entries whose
- * independent cross-check `differs`, and entries in `demoted` (`<oracleId>|<patchSha256>` keys of
- * patches pulled out after a fuzz failure), are left out, matching what the provisional trust tier refuses to load.
- * `hashPatch` returns null for a missing file. The tier also re-validates each patch against the
- * current engine; that check arrives when the CLI switches to the tier's loader.
- */
-export function provisionalFromQueue(
-  entries: readonly QueueEntryView[],
-  hashPatch: (path: string) => string | null,
-  demoted: ReadonlySet<string> = new Set(),
-): ProvisionalLookup {
-  const ids = new Set(
-    entries
-      .filter(
-        (entry) =>
-          entry.status === 'compiled-checked' &&
-          entry.review?.verdict !== 'rejected' &&
-          entry.crossCheck?.verdict !== 'differs' &&
-          !demoted.has(`${entry.oracleId}|${entry.patchSha256}`) &&
-          entry.patch !== null &&
-          entry.patchSha256 !== null &&
-          hashPatch(entry.patch) === entry.patchSha256,
-      )
-      .map((entry) => entry.oracleId),
-  );
-  return (card) => ids.has(card.oracleId);
 }
 
 /** The headline as one line, for `bun run coverage` and `bun run staples`. */

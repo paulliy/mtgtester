@@ -440,7 +440,7 @@ export const WEIGHTS = {
     },
     /**
      * No knob defaults: holding up mana and playing passively cost games in the mirrors and in the
-     * gauntlet (`bot-gauntlet`, ADR 0050). Control is how it values cards and answers.
+     * gauntlet (`bot-gauntlet`, ADR 0051). Control is how it values cards and answers.
      */
     control: {
       defaults: {},

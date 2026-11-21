@@ -10,10 +10,8 @@ import {
   committedHeadlines,
   measureDeckCoverage,
   NO_PROVISIONAL,
-  provisionalFromQueue,
   renderDeckCoverageJson,
   renderDeckCoverageMarkdown,
-  type QueueEntryView,
 } from './deck-coverage';
 import {
   averageDeckInputs,
@@ -134,43 +132,6 @@ describe('measureDeckCoverage', () => {
       'Deck coverage (test): 1/5 playable exactly, 2/5 with provisional cards, 4/5 within 2 unmodeled cards.',
     ]);
     expect(renderDeckCoverageMarkdown([population])).toContain('| Quirk *(p)* | 1 | 1 | 3 |');
-  });
-});
-
-describe('provisionalFromQueue', () => {
-  const entry = (overrides: Partial<QueueEntryView>): QueueEntryView => ({
-    oracleId: quirk.oracleId,
-    status: 'compiled-checked',
-    patch: 'p.json',
-    patchSha256: 'abc',
-    review: null,
-    ...overrides,
-  });
-  const hash = (path: string) => (path === 'p.json' ? 'abc' : null);
-
-  it('accepts a compiled-checked entry whose patch is unchanged', () => {
-    expect(provisionalFromQueue([entry({})], hash)(quirk)).toBe(true);
-    expect(provisionalFromQueue([entry({})], hash)(glitch)).toBe(false);
-  });
-
-  it('leaves out a patch demoted by fuzz, but not another patch for the same card', () => {
-    const demoted = new Set([`${quirk.oracleId}|abc`]);
-    expect(provisionalFromQueue([entry({})], hash, demoted)(quirk)).toBe(false);
-    const other = entry({ patch: 'q.json', patchSha256: 'def' });
-    const hashBoth = (path: string) => ({ 'p.json': 'abc', 'q.json': 'def' })[path] ?? null;
-    expect(provisionalFromQueue([entry({}), other], hashBoth, demoted)(quirk)).toBe(true);
-  });
-
-  it('rejects other statuses, rejected reviews, changed and missing patches', () => {
-    for (const overrides of [
-      { status: 'meaning-differs' },
-      { review: { verdict: 'rejected' as const } },
-      { patchSha256: 'changed' },
-      { patch: 'missing.json' },
-      { patch: null },
-      { crossCheck: { verdict: 'differs' } },
-    ])
-      expect(provisionalFromQueue([entry(overrides)], hash)(quirk)).toBe(false);
   });
 });
 

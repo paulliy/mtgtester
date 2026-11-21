@@ -1,5 +1,5 @@
 /**
- * Knob persistence (bot-led mode, ADR 0039 and ADR 0050): the strategist's knobs stay in force
+ * Knob persistence (bot-led mode, ADR 0039 and ADR 0051): the strategist's knobs stay in force
  * across turns, and a new answer changes only the knobs it names. A knob it leaves out keeps its
  * value; an empty list clears `targetOrder`, `prioritize` or `hold`. The strategist is shown the
  * knobs in force (`yourCurrentKnobs`), so leaving one out is a choice to keep it.

@@ -108,11 +108,21 @@ function fanStyle(index: number): Record<string, string> {
             :aria-label="`Put ${card.name} on the bottom`"
             @click="bottomActionFor(card) !== null && emit('choose', bottomActionFor(card)!)"
           >
-            <CardImage :scryfall-id="card.scryfallId" :name="card.name" size="normal" />
+            <CardImage
+              :scryfall-id="card.scryfallId"
+              :name="card.name"
+              size="normal"
+              :provisional="card.provisional === true"
+            />
             <span class="pick-label" aria-hidden="true">To bottom</span>
           </button>
           <div v-else class="fan-card" :style="fanStyle(index)">
-            <CardImage :scryfall-id="card.scryfallId" :name="card.name" size="normal" />
+            <CardImage
+              :scryfall-id="card.scryfallId"
+              :name="card.name"
+              size="normal"
+              :provisional="card.provisional === true"
+            />
           </div>
         </template>
       </div>
