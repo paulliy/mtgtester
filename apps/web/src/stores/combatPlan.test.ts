@@ -364,3 +364,51 @@ describe('combatPlan — blockers (batched, ADR 0023 Phase 4)', () => {
     expect(store.kind).toBeNull();
   });
 });
+
+describe('assignFromBoardClick (clicks on the board while composing)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
+  it('assigns a clicked seat that is a legal defender', () => {
+    const store = useCombatPlanStore();
+    store.onRequest(attackRequest(['A']));
+    expect(store.assignFromBoardClick('A', 'P2')).toBe(true);
+    expect(store.assignment.get('A')).toBe('P2');
+  });
+
+  it("attacks a permanent's controller when the permanent itself is not a legal target", () => {
+    const store = useCombatPlanStore();
+    store.onRequest(attackRequest(['A']));
+    // A non-attackable permanent controlled by P3: clicking it attacks P3.
+    expect(store.assignFromBoardClick('A', 'creature-on-p3', 'P3')).toBe(true);
+    expect(store.assignment.get('A')).toBe('P3');
+  });
+
+  it('prefers the clicked target over the controller fallback when both are legal', () => {
+    const store = useCombatPlanStore();
+    store.onRequest(attackRequest(['A']));
+    expect(store.assignFromBoardClick('A', 'P2', 'P3')).toBe(true);
+    expect(store.assignment.get('A')).toBe('P2');
+  });
+
+  it('does nothing when neither the clicked permanent nor its controller is a legal target', () => {
+    const store = useCombatPlanStore();
+    store.onRequest(attackRequest(['A']));
+    expect(store.assignFromBoardClick('A', 'creature-on-p9', 'P9')).toBe(false);
+    expect(store.assignment.has('A')).toBe(false);
+  });
+
+  it('does nothing without a selected creature', () => {
+    const store = useCombatPlanStore();
+    store.onRequest(attackRequest(['A']));
+    expect(store.assignFromBoardClick(null, 'P2', 'P2')).toBe(false);
+    expect(store.assignment.size).toBe(0);
+  });
+
+  it('does nothing outside composing mode', () => {
+    const store = useCombatPlanStore();
+    expect(store.assignFromBoardClick('A', 'P2', 'P2')).toBe(false);
+    expect(store.assignment.size).toBe(0);
+  });
+});

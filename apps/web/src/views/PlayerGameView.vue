@@ -858,17 +858,17 @@ function pileGlow(ids: readonly string[], targetIds: readonly string[]) {
 }
 
 /** During composing, a click assigns to the plan instead of selecting a real engine action. */
-function tryPlanAssign(target: ObjectId | string): boolean {
-  if (combatPlan.mode !== 'composing' || focusedSourceId.value === null) return false;
-  if (!combatPlan.isLegalTarget(focusedSourceId.value, target)) return false;
-  combatPlan.assign(focusedSourceId.value, target);
+function tryPlanAssign(target: ObjectId | string, ownerSeat?: string): boolean {
+  if (!combatPlan.assignFromBoardClick(focusedSourceId.value, target, ownerSeat)) return false;
   focusedSourceId.value = null;
   return true;
 }
 
-function selectSource(id: ObjectId): void {
+/** `ownerSeat` is the seat that controls a clicked permanent: while composing, a click on a
+ * permanent that is not itself a legal target attacks that seat instead. */
+function selectSource(id: ObjectId, ownerSeat?: string): void {
   if (combatPlan.mode === 'composing') {
-    if (tryPlanAssign(id)) return;
+    if (tryPlanAssign(id, ownerSeat)) return;
     if (combatPlan.order.some((entry) => entry.subjectId === id)) {
       focusedSourceId.value = focusedSourceId.value === id ? null : id;
     }
@@ -1125,14 +1125,13 @@ function dropToBattlefield(): void {
   if (action !== undefined) chooseAction(action);
 }
 
-function dropOn(target: ObjectId | string): void {
+function dropOn(target: ObjectId | string, ownerSeat?: string): void {
   const source = draggedId.value;
   draggedId.value = null;
   dragPointer.value = null;
   if (source === null) return;
   if (combatPlan.mode === 'composing') {
-    if (combatPlan.isLegalTarget(source, target as string))
-      combatPlan.assign(source, target as string);
+    combatPlan.assignFromBoardClick(source, target as string, ownerSeat);
     return;
   }
   const action = (request.value?.legalActions ?? []).find((candidate) => {
@@ -1432,8 +1431,8 @@ function abandon(): void {
                 @dragstart="dragStart(group.permanent.id, $event)"
                 @dragend="dragEnd"
                 @dragover.prevent
-                @drop.stop="dropOn(group.permanent.id)"
-                @click.stop="selectSource(group.permanent.id)"
+                @drop.stop="dropOn(group.permanent.id, opponent.seat)"
+                @click.stop="selectSource(group.permanent.id, opponent.seat)"
               >
                 <PermanentChip
                   :permanent="group.permanent"
