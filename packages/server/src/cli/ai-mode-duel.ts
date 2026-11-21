@@ -7,7 +7,7 @@
  *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]
  *                        [--escalation T1,T2] [--shadow T1,T2] [--opponents model|bot-never|bot-v1]
  *                        [--delta] [--await-strategist]
- *                        [--offline]
+ *                        [--offline] [--trace out.jsonl]
  *
  * ADR 0044's game step: `--escalation` makes triggers live for the bot seats (default `never`),
  * `--shadow` logs others, and `--opponents bot-never` seats the bot-led bot with no escalation in
@@ -37,6 +37,9 @@
  * `--swap` seats the modes the other way round, for a second game on the same decks. The report
  * counts real model calls, prompt and response tokens and reported cost per mode, and who won.
  * Nothing here prints or stores the API key.
+ *
+ * `--trace` writes one JSON line per decision (`decision-trace.ts`): the seat, its menu, the answer,
+ * who answered it, the triggers that fired and the knobs in force, so a lost game can be reviewed.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -48,6 +51,7 @@ import { decide as botDecide, Rng } from '@mtg/bot';
 import { TABLE_ENGINE_LIMITS } from '../match/engine-limits';
 import { buildSupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
+import { DecisionTraceWriter, decisionTraceLine } from './decision-trace';
 import { parseTriggerList, type LiveEscalationTrigger } from '../ai/config';
 import {
   AiCallLogger,
@@ -368,6 +372,7 @@ async function main(): Promise<void> {
   const swap = argv.includes('--swap');
   const json = arg(argv, '--json');
   const offline = argv.includes('--offline');
+  const tracePath = arg(argv, '--trace');
   const budget: Budget = {
     maxUsd: Number(arg(argv, '--max-usd') ?? 2),
     maxCalls: Number(arg(argv, '--max-calls') ?? 1500),
@@ -499,6 +504,16 @@ async function main(): Promise<void> {
       others,
     );
   }
+  const trace = tracePath === undefined ? undefined : new DecisionTraceWriter(tracePath);
+  const lifeNow = (): Record<string, number> =>
+    Object.fromEntries(
+      engine.getState().players.map((p) => [p.id, p.hasLost === true ? 0 : p.life]),
+    );
+  // What the bot-led tactician reported for each decision it was consulted on.
+  const botOutcomes = new Map<
+    string,
+    { escalated: boolean; reasons: readonly string[]; escalatedBy?: string }
+  >();
   const providers = new Map<PlayerId, AsyncDecisionProvider>();
   const tracker = new SeatTracker();
   const lostSeats = (): PlayerId[] =>
@@ -521,8 +536,44 @@ async function main(): Promise<void> {
           logger,
           undefined,
           coordinators[mode],
+          undefined,
+          undefined,
+          undefined,
+          {
+            onBotDecision(request, outcome) {
+              if (trace !== undefined) botOutcomes.set(request.requestId, outcome);
+            },
+          },
         );
-        provider = awaitStrategist ? awaitingStrategist(live, coordinators[mode]) : live;
+        const coordinator = coordinators[mode];
+        // `--trace`: one line per decision, with the view as the seat saw it when deciding.
+        const traced: AsyncDecisionProvider =
+          trace === undefined
+            ? live
+            : {
+                async decide(request) {
+                  const view = engine.view(request.decidingPlayer);
+                  const life = lifeNow();
+                  const response = await live.decide(request);
+                  const bot = botOutcomes.get(request.requestId);
+                  botOutcomes.delete(request.requestId);
+                  const steering = coordinator.steeringFor(request.decidingPlayer);
+                  trace.write(
+                    decisionTraceLine({
+                      request,
+                      response,
+                      view,
+                      mode: modeOf(seat),
+                      source: logger.sourceFor(request.requestId) ?? 'unknown',
+                      ...(bot !== undefined && { bot }),
+                      ...(steering !== undefined && { steering }),
+                      life,
+                    }),
+                  );
+                  return response;
+                },
+              };
+        provider = awaitStrategist ? awaitingStrategist(traced, coordinator) : traced;
         providers.set(seat, provider);
       }
       return provider;
@@ -550,6 +601,14 @@ async function main(): Promise<void> {
   }
   const turns = result.turnCount;
   tracker.finish(turns, lostSeats());
+  trace?.write({
+    kind: 'end',
+    turns,
+    winner: result.winnerSeat,
+    winnerMode: result.winnerSeat === null ? null : modeOf(result.winnerSeat),
+    finishingOrder: result.finishingOrder,
+    life,
+  });
   const report = {
     seed,
     swap,

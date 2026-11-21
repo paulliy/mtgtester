@@ -48,6 +48,14 @@ export interface LayerCacheEntry {
   /** Identity of the off-battlefield permanent folded into this pass, if any. */
   extraCardId: string | null;
   map: Map<string, Characteristics>;
+  /** Set once a sampled hit has recomputed this pass and found it fresh (`sampleCacheHit`). */
+  verified?: true;
+  /**
+   * For a verified pass that read no tapped status: the digest with tapped status folded in, as
+   * it was when the pass was verified. The key leaves tapped status out, so a tap alone reuses
+   * the pass; when this digest changes, the pass is sampled again.
+   */
+  verifiedTappedDigest?: number;
 }
 
 /** Per-game, garbage-collected with the context. */
@@ -65,11 +73,22 @@ export function setCached(ctx: GameContext, entry: LayerCacheEntry): void {
  * Under `strictInvariants` (ADR 0034 decision 8) one cache hit in `SAMPLE_EVERY` is recomputed
  * and compared, as `MTG_VERIFY_LAYER_CACHE=1` does for every hit. A per-game count picks the
  * sample, so it draws no randomness and a game plays the same with it on or off.
+ *
+ * Each cached pass is verified at most once: hits on an entry already found fresh neither sample
+ * nor count. A sample costs a whole layer pass, and loops that query every permanent hit one
+ * entry once per permanent, so sampling every hit made the checking grow with board size squared:
+ * a 300-token fuzz board (fuzz-203) hit each entry about 1,200 times and spent more time
+ * verifying than playing. Now the checking costs at most one extra pass per pass computed.
+ *
+ * A pass that read no tapped status is reused across taps (ADR 0007, amendment 2), which is an
+ * input the key leaves out on that pass's word. So such a pass is verified once per tapped state
+ * of the board: `computeAllCharacteristics` clears `verified` when the tapped digest moves.
  */
 const SAMPLE_EVERY = 64;
 const HITS = new WeakMap<GameContext, number>();
 
-export function sampleCacheHit(ctx: GameContext): boolean {
+export function sampleCacheHit(ctx: GameContext, entry: LayerCacheEntry): boolean {
+  if (entry.verified === true) return false;
   return sampleHit(HITS, ctx);
 }
 
@@ -449,6 +468,7 @@ export function withReadScope<T>(ctx: GameContext, read: () => T): T {
     result = read();
   } finally {
     SCOPES.delete(ctx);
+    SCOPE_BATTLEFIELDS.delete(ctx);
   }
   if (ctx.strictInvariants === true || VERIFY_SCOPES) {
     for (const [key, digest] of digests) {
@@ -460,6 +480,60 @@ export function withReadScope<T>(ctx: GameContext, read: () => T): T {
     }
   }
   return result;
+}
+
+/**
+ * The card ids on the battlefield, built once per read scope. Battlefield membership is a digest
+ * input (each permanent's timestamp), so it cannot change inside a scope, and the closing check
+ * under `strictInvariants` would catch it if it did.
+ */
+const SCOPE_BATTLEFIELDS = new WeakMap<GameContext, Set<string>>();
+
+/**
+ * Whether a permanent with `cardId` is on the battlefield: a set lookup inside a read scope, a
+ * scan outside one. `computeCharacteristics` asks this on every query, and the scan made each
+ * loop over the board quadratic in its size.
+ */
+export function battlefieldHasCard(ctx: GameContext, cardId: string): boolean {
+  if (!SCOPES.has(ctx)) return ctx.state.battlefield.some((p) => p.cardId === cardId);
+  let ids = SCOPE_BATTLEFIELDS.get(ctx);
+  if (ids === undefined) {
+    ids = new Set(ctx.state.battlefield.map((p) => p.cardId));
+    SCOPE_BATTLEFIELDS.set(ctx, ids);
+  }
+  return ids.has(cardId);
+}
+
+/** Digests only the strict checks read, kept apart so they leave the scope and counters alone. */
+const CHECK_DIGESTS = new WeakMap<Map<string, number>, Map<string, number>>();
+
+/**
+ * The digest with tapped status folded in, for the strict sampling check in
+ * `computeAllCharacteristics` (see `LayerCacheEntry.verifiedTappedDigest`). Checking is not engine
+ * work, so it is not counted (`countWork`), and it does not enter the read scope's digests, which
+ * the scope re-checks as it closes; inside a scope it is still computed once per key.
+ */
+export function tappedDigestForChecks(
+  ctx: GameContext,
+  extra: EnginePermanent | undefined,
+  includeGraveyards: boolean,
+): number {
+  const scope = SCOPES.get(ctx);
+  if (scope === undefined) return digestOf(ctx, extra, includeGraveyards, true);
+  let checks = CHECK_DIGESTS.get(scope);
+  if (checks === undefined) {
+    checks = new Map();
+    CHECK_DIGESTS.set(scope, checks);
+  }
+  const key =
+    (extra === undefined ? '-' : `${extra.cardId}:${extra.timestamp}:${extra.oracleId}`) +
+    (includeGraveyards ? '|g' : '|n');
+  let digest = checks.get(key);
+  if (digest === undefined) {
+    digest = digestOf(ctx, extra, includeGraveyards, true);
+    checks.set(key, digest);
+  }
+  return digest;
 }
 
 /** `digestOf`, computed once per read scope for each distinct `extra` and pair of flags. */

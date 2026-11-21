@@ -9,6 +9,8 @@ const MAX_NAMES = 8;
 
 function names(raw: unknown): string[] | undefined {
   if (!Array.isArray(raw)) return undefined;
+  // An empty list is an instruction: clear the knob (knobs persist, `knob-persistence.ts`).
+  if (raw.length === 0) return [];
   const out = raw
     .filter((n): n is string => typeof n === 'string' && n.trim().length > 0)
     .map((n) => n.trim().slice(0, 120))
@@ -33,6 +35,7 @@ export function cleanSteering(raw: unknown, opponents: readonly string[]): BotSt
       (s): s is string => typeof s === 'string' && opponents.includes(s),
     );
     if (order.length > 0) out.targetOrder = [...new Set(order)];
+    else if (r['targetOrder'].length === 0) out.targetOrder = [];
   }
   const prioritize = names(r['prioritize']);
   if (prioritize !== undefined) out.prioritize = prioritize;

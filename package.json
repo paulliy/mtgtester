@@ -36,6 +36,7 @@
     "play-decks": "bun run packages/server/src/cli/play-decks.ts",
     "combat-sweep": "bun run packages/server/src/cli/combat-sweep.ts",
     "bot-league": "bun run packages/server/src/cli/bot-league.ts",
+    "bot-gauntlet": "bun run packages/server/src/cli/bot-gauntlet.ts",
     "ai-mode-duel": "bun run packages/server/src/cli/ai-mode-duel.ts",
     "strategist-capture": "bun run packages/server/src/cli/strategist-capture.ts",
     "strategist-study": "bun run packages/server/src/cli/strategist-study.ts",

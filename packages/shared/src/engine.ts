@@ -405,7 +405,25 @@ export interface BotSteering {
   holdUpMana?: number;
   /** Keep creatures in hand beyond what the plan needs, because a board wipe is likely. */
   avoidOverextending?: boolean;
+  /**
+   * How the seat plays overall. Each style sets defaults for the knobs above (a knob set explicitly
+   * wins) and shifts a few of the bot's weights: what an answer is kept for, what damage at a player
+   * is worth, which card roles it values. `midrange` is the bot's plain weights.
+   */
+  style?: PlayStyle;
 }
+
+/** The play styles a strategist can set (`BotSteering.style`). */
+export const PLAY_STYLES = [
+  'aggro',
+  'tempo',
+  'midrange',
+  'value',
+  'control',
+  'ramp',
+  'combo',
+] as const;
+export type PlayStyle = (typeof PLAY_STYLES)[number];
 
 /**
  * A player's decision (brief §7.3). Must reference a `LegalAction.id`. Anything not on the

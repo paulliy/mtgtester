@@ -355,6 +355,26 @@ function wipeShape(nodes: unknown[]): { selector?: WipeSelector; damage?: number
   };
 }
 
+/** Damage the spell ability deals to each player: a constant, 'X' for the spell's X, or absent. */
+function damagesEachPlayer(def: CardDefinition): number | 'X' | undefined {
+  const ops = collectOps([def.spellAbility]).filter((r) => r.op === 'damageEachPlayer');
+  let total: number | 'X' | undefined;
+  for (const record of ops) {
+    const amount = record.raw['amount'];
+    const constant = constantAmount(amount);
+    const isX =
+      typeof amount === 'object' &&
+      amount !== null &&
+      (amount as { kind?: unknown }).kind === 'xValue';
+    // Only a lone op has a shape the veto can read; several ops, or any other amount, stay absent.
+    if (ops.length !== 1) return undefined;
+    if (constant !== null) total = constant;
+    else if (isX) total = 'X';
+    else return undefined;
+  }
+  return total;
+}
+
 function rolesOf(nodes: unknown[], ability?: AbilityLike | null): CardRole[] {
   const roles = new Set<CardRole>();
   const ops = collectOps(nodes);
@@ -405,6 +425,7 @@ export function cardTraits(def: CardDefinition): CardTraits {
   if (!def.types.includes('Land') && def.manaAbilities.length > 0) roles.add('ramp');
   const abilities = def.activatedAbilities.map((a) => a.ability as AbilityLike);
   const wipe = roles.has('wipe') ? wipeShape([def.spellAbility, def.triggers]) : {};
+  const eachPlayer = isPermanentSpell ? undefined : damagesEachPlayer(def);
   const team = isPermanentSpell ? undefined : massPump(def.spellAbility as AbilityLike);
   const unclassified =
     def.modeled === false ||
@@ -418,10 +439,13 @@ export function cardTraits(def: CardDefinition): CardTraits {
     spellTargets: targetPolarities(main),
     abilityTargets: abilities.map((a) => targetPolarities(a)),
     abilitySorcery: def.activatedAbilities.map((a) => a.timing === 'sorcery'),
+    // The engine's own instant-speed test reads the same keyword (`state/queries.ts`).
+    ...(def.keywords.includes('flash') ? { flash: true } : {}),
     spellDamage: targetDamage(main),
     abilityDamage: abilities.map((a) => targetDamage(a)),
     ...(wipe.selector !== undefined ? { wipeSelector: wipe.selector } : {}),
     ...(wipe.damage !== undefined ? { wipeDamage: wipe.damage } : {}),
+    ...(eachPlayer !== undefined ? { damagesEachPlayer: eachPlayer } : {}),
     spellPump: targetPump(main),
     abilitySelfPump: abilities.map((a) => selfPump(a)),
     ...(team !== undefined ? { massPump: team } : {}),

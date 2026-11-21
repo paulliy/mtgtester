@@ -105,6 +105,10 @@ Knobs, all optional:
 - holdUpMana: mana to leave untapped through opponents' turns for instant-speed answers.
 - avoidOverextending: true to keep extra creatures in hand when a board wipe seems likely.
 
+Knobs stay in force until you change them. yourCurrentKnobs, when present, shows the ones in force
+now: send only the knobs you want to change, and any you leave out keep their current values. Send
+an empty list to clear targetOrder, prioritize or hold.
+
 Return ONLY this JSON envelope, preserving actionId 0 for parser compatibility:
 {"actionId":0,"turnStrategy":{"intent":"concise objective","steering":{"aggression":0.5,"targetOrder":["P2"],"prioritize":["Card name"],"hold":[],"holdUpMana":0,"avoidOverextending":false}}}`;
 

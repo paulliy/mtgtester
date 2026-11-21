@@ -54,6 +54,7 @@ import {
   pinnedPool,
   type PinnedRow,
 } from './lib';
+import { knownGapIssues } from './known-gaps';
 import type { PatchFile, QueueEntry } from './run';
 
 export const COMPILED_DIR = 'packages/engine/src/cards/overrides/compiled';
@@ -328,6 +329,11 @@ export function selectForPromotion(
     const applied = applyPatch(target, patch.def);
     if (!applied.ok || applied.definition === null) {
       refuse(`the patch no longer validates: ${applied.issues.join('; ')}`);
+      continue;
+    }
+    const gaps = knownGapIssues(target, patch.def);
+    if (gaps.length > 0) {
+      refuse(`the patch uses a shape an open engine gap runs wrongly: ${gaps.join('; ')}`);
       continue;
     }
     cards.push({

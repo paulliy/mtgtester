@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "altar-the-beast-not-the-commander",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Ashnod's Altar eats the beast, not the commander",
+  "skills": ["commander", "costs", "card-value"],
+  "briefing": "Held out for `commanderValue` (written before the fix was tuned, never tuned against), after the gauntlet's pod 17, where the bot fed Kiki-Jiki to Ashnod's Altar. P1's commander Kiki-Jiki, Mirror Breaker is on the battlefield, tapped from its ability earlier in the turn. P1 cast Wheel of Fortune with one Mountain and the Altar, so the Altar must eat a creature: Kiki-Jiki, a 2/2, or Kalonian Tusker, a vanilla 3/3. On power and toughness alone the commander looks cheaper.",
+  "actor": "P1",
+  "position": {
+    "turn": { "player": "P1", "phase": "precombatMain", "step": null, "number": 7 },
+    "commanders": { "P1": ["Kiki-Jiki, Mirror Breaker"] },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Wheel of Fortune"],
+        "battlefield": [
+          "Mountain",
+          "Ashnod's Altar",
+          { "card": "Kiki-Jiki, Mirror Breaker", "tapped": true },
+          "Kalonian Tusker"
+        ]
+      },
+      "P2": { "life": 30, "battlefield": ["Forest", "Forest"] },
+      "P3": { "life": 30, "battlefield": ["Plains", "Plains"] },
+      "P4": { "life": 30, "battlefield": ["Swamp", "Swamp"] }
+    }
+  },
+  "setup": [{ "player": "P1", "choose": "Cast Wheel of Fortune" }],
+  "reference": {
+    "analysis": "Wheel of Fortune is already cast; the Altar's {C}{C} needs one creature. Kiki-Jiki is P1's commander: the deck is built around its copy ability, and a sacrificed commander comes back only by recasting it for {2} more (CR 903.8). Kalonian Tusker is a vanilla 3/3. The Tusker goes.",
+    "options": [
+      {
+        "label": "Sacrifice Kalonian Tusker",
+        "when": { "choose": "Sacrifice Kalonian Tusker" },
+        "grade": "best",
+        "why": "Keeps the commander and its engine on the battlefield."
+      },
+      {
+        "label": "Sacrifice Kiki-Jiki",
+        "when": { "choose": "Sacrifice Kiki-Jiki" },
+        "grade": "blunder",
+        "why": "Feeds the commander to a mana cost: it returns only by recasting it with commander tax."
+      }
+    ],
+    "otherwise": { "grade": "blunder", "why": "There is no other legal answer." }
+  }
+}

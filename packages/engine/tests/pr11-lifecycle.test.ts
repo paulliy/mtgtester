@@ -906,6 +906,11 @@ describe('Gut, True Soul Zealot', () => {
           return { index: Math.max(0, index), targets: new Map() };
         }
         if (decision.decisionType === 'declareBlockers') return declareBlocks(decision, () => null);
+        // The Skeleton's controller chooses which opponent it attacks (CR 508.4, 802.2): P2 too.
+        if (decision.prompt.includes('choose who the token attacks')) {
+          const index = decision.options.findIndex((option) => option.description === 'Attack P2');
+          return { index, targets: new Map() };
+        }
         // Two of Gut's triggers at once (a per-attacker trigger) ask for an order; any order will do.
         if (decision.decisionType === 'orderTriggers') return { index: 0, targets: new Map() };
         return undefined;
