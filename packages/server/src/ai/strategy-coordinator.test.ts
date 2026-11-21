@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Engine } from '@mtg/engine';
 import type { DecisionRequest, PlayerView } from '@mtg/shared';
 import type { AiClient } from './client';
+import type { AiPrompt } from './context';
 
 type AiCallResult = Awaited<ReturnType<AiClient['requestDecision']>>;
 import { DEFAULT_AI_CONFIG as BASE_AI_CONFIG } from './config';
@@ -955,6 +956,58 @@ describe('StrategyCoordinator — bot-led knobs (ADR 0039)', () => {
       aggression: 1,
       targetOrder: ['P2'],
     });
+  });
+
+  it('keeps knobs an answer leaves out, clears a list sent empty, and shows the knobs in force', async () => {
+    const answers = [
+      { aggression: 0.8, hold: ['Wrath of God'], targetOrder: ['P2'] },
+      { aggression: 0.4, hold: [] },
+    ];
+    const prompts: AiPrompt[] = [];
+    const client: AiClient = {
+      activeModel: 'm',
+      requestDecision: vi.fn().mockImplementation(async (prompt: AiPrompt) => {
+        prompts.push(prompt);
+        return {
+          response: {
+            requestId: 'strategy',
+            actionId: 0,
+            turnStrategy: { intent: 'Hold the table.', steering: answers[prompts.length - 1] },
+          },
+          meta: {
+            model: 'm',
+            promptTokens: 1,
+            responseTokens: 1,
+            latencyMs: 1,
+            wasRetry: false,
+            wasFallback: false,
+            rawResponse: '{}',
+          },
+        } as AiCallResult;
+      }),
+    };
+    const coordinator = new StrategyCoordinator(client, queue, engine, {
+      ...botConfig,
+      strategistReplan: 'everyTurn',
+    });
+    coordinator.prepare(request({ turn: 1, activePlayer: 'P1' }));
+    await coordinator.settled();
+    expect(coordinator.steeringFor('P1')).toEqual({
+      aggression: 0.8,
+      hold: ['Wrath of God'],
+      targetOrder: ['P2'],
+    });
+    coordinator.prepare(request({ turn: 5, activePlayer: 'P1' }));
+    await coordinator.settled();
+    expect(coordinator.steeringFor('P1')).toEqual({ aggression: 0.4, targetOrder: ['P2'] });
+    const second = JSON.parse(prompts[1]!.messages.at(-1)!.content) as Record<string, unknown>;
+    expect(second['yourCurrentKnobs']).toEqual({
+      aggression: 0.8,
+      hold: ['Wrath of God'],
+      targetOrder: ['P2'],
+    });
+    const first = JSON.parse(prompts[0]!.messages.at(-1)!.content) as Record<string, unknown>;
+    expect(first['yourCurrentKnobs']).toBeUndefined();
   });
 
   it('accepts a knobs-only answer in bot mode but not in model mode', async () => {

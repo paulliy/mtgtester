@@ -35,20 +35,22 @@ export class IllegalDecisionError extends Error {
 /**
  * Thrown when a game exceeds a work limit set through `EngineOptions` (ADR 0031 decision 9): too
  * many events in one `advance()`, a loop that never yields, too many objects in one game, or too
- * many in one turn.
+ * many in one turn, or a chain of tokens that trigger abilities making more tokens that runs too deep.
  * `Engine.advance` turns it into a halted `GameResult`.
  */
 export class EngineBudgetError extends Error {
-  readonly budget: 'stepWork' | 'objects' | 'turnObjects';
+  readonly budget: 'stepWork' | 'objects' | 'turnObjects' | 'tokenChain';
   readonly limit: number;
 
-  constructor(budget: 'stepWork' | 'objects' | 'turnObjects', limit: number) {
+  constructor(budget: 'stepWork' | 'objects' | 'turnObjects' | 'tokenChain', limit: number) {
     super(
       budget === 'stepWork'
         ? `the engine emitted more than ${limit} events in one step`
         : budget === 'objects'
           ? `the game created more than ${limit} objects`
-          : `one turn created more than ${limit} objects`,
+          : budget === 'turnObjects'
+            ? `one turn created more than ${limit} objects`
+            : `a chain of tokens triggering abilities that create tokens ran more than ${limit} deep in one turn`,
     );
     this.name = 'EngineBudgetError';
     this.budget = budget;

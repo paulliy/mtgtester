@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "id": "bolt-the-tusker-not-the-face",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Burn that cannot kill a player goes at a creature it kills",
+  "skills": ["removal-targeting", "burn"],
+  "briefing": "Held out for the `faceDamage` bot fix (written after it was tuned, never tuned against). P1 holds Lightning Bolt in its own main phase with a Mountain open. P2 has Kalonian Tusker, a 3/3 that Bolt kills. Every opponent is above 30 life, so three damage at a player changes little.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 6
+    },
+    "seats": {
+      "P1": {
+        "life": 31,
+        "hand": ["Lightning Bolt"],
+        "battlefield": ["Mountain", "Mountain", "Island"]
+      },
+      "P2": {
+        "life": 34,
+        "battlefield": ["Forest", "Forest", "Forest", "Kalonian Tusker"]
+      },
+      "P3": {
+        "life": 33,
+        "battlefield": ["Plains", "Plains"]
+      },
+      "P4": {
+        "life": 36,
+        "battlefield": ["Swamp", "Swamp"]
+      }
+    }
+  },
+  "focus": {
+    "decisionType": "priority"
+  },
+  "reference": {
+    "analysis": "Lightning Bolt kills Kalonian Tusker, the only creature on the table. Three damage at a player on 33 to 36 life is close to nothing. Holding Bolt for a better target is fine.",
+    "options": [
+      {
+        "label": "Bolt the Kalonian Tusker",
+        "when": {
+          "choose": "Cast Lightning Bolt",
+          "targets": ["Kalonian Tusker"]
+        },
+        "grade": "best",
+        "why": "Trades one card for the only creature on the table."
+      },
+      {
+        "label": "Pass and keep Bolt",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "good",
+        "why": "Keeps Bolt for a later target."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Bolt at a player's face, where three damage barely matters."
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import type { DecisionRequest, PlayerView } from '@mtg/shared';
+import type { BotSteering, DecisionRequest, PlayerView } from '@mtg/shared';
 import type { StrategyProfile } from '../decks/strategy-profile';
 import { budgetContext } from './context-budget';
 import {
@@ -36,6 +36,11 @@ export interface StrategyContextOptions {
   botSteering?: boolean;
   /** Bot-led mode only: offer the strategist's typed tactician request (ADR 0045, shadow). */
   tacticianFlag?: boolean;
+  /**
+   * Bot-led mode only: the knobs in force for this seat now. They persist, and an answer only
+   * changes the knobs it names, so the strategist is shown what it would be keeping.
+   */
+  currentKnobs?: BotSteering;
   /**
    * Bot-led mode only (hill-climb S6): delta prompts are on for this seat. `true` adds the delta
    * note to the primer (on every call, so the cacheable prefix stays one string); an input also
@@ -132,6 +137,9 @@ Use only information in this PlayerView. Other players' hidden cards, decklists,
     payload['yourStrategyProfile'] = { archetype, provenance: 'legacy-archetype-tag' };
   }
   const hasProfile = payload['yourStrategyProfile'] !== undefined;
+  if (options.botSteering === true && options.currentKnobs !== undefined) {
+    payload['yourCurrentKnobs'] = options.currentKnobs;
+  }
   payload['strategyTask'] =
     options.botSteering === true ? botSteeringTask(hasProfile) : strategyTask(hasProfile);
   if (options.diplomacy !== undefined) payload['tableDiplomacy'] = options.diplomacy;

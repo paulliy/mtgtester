@@ -82,6 +82,17 @@ describe('cardTraits', () => {
     expect(traits('Blasphemous Act').wipeDamage).toBe(13);
   });
 
+  it('records damage a spell deals to every player, its controller included', () => {
+    expect(traits('Earthquake').damagesEachPlayer).toBe('X');
+    expect(traits('Hurricane').damagesEachPlayer).toBe('X');
+    expect(traits('Flame Rift').damagesEachPlayer).toBe(4);
+    expect(traits('Volcanic Fallout').damagesEachPlayer).toBe(2);
+    // Opponent-only burn, a creature sweeper and a permanent with an each-player ability do not.
+    expect(traits('Boltwave').damagesEachPlayer).toBeUndefined();
+    expect(traits('Blasphemous Act').damagesEachPlayer).toBeUndefined();
+    expect(traits('Pestilence Demon').damagesEachPlayer).toBeUndefined();
+  });
+
   it('records pump and mana facts for ADR 0043', () => {
     expect(traits('Giant Growth').spellPump).toEqual([{ power: 3, toughness: 3 }]);
     expect(traits('Overrun').massPump).toEqual({ power: 3, toughness: 3, keywords: ['trample'] });
@@ -135,5 +146,28 @@ describe('buildCardKnowledge', () => {
     expect(knowledge('sol ring')?.roles).toContain('ramp');
     expect(knowledge('Counterspell')?.manaValue).toBe(2);
     expect(knowledge('Not A Card')).toBeUndefined();
+  });
+});
+
+describe('flash', () => {
+  const reviewed = (
+    JSON.parse(
+      readFileSync(new URL('../../fixtures/flash-creatures.json', import.meta.url), 'utf8'),
+    ) as { cards: Array<{ name: string; label: 'flash' | 'grants-only' }> }
+  ).cards;
+
+  it('flags exactly the reviewed creatures that have flash, not those that only grant it', () => {
+    const wrong = reviewed.filter((c) => (traits(c.name).flash === true) !== (c.label === 'flash'));
+    expect(wrong).toEqual([]);
+    expect(reviewed.filter((c) => c.label === 'flash').length).toBe(155);
+  });
+
+  it('flags no other creature in the coverage pool', () => {
+    const listed = new Set(reviewed.map((c) => c.name));
+    const extra = cards
+      .filter((c) => c.typeLine.includes('Creature') && !listed.has(c.name))
+      .filter((c) => cardTraits(interpretCard(c)).flash === true)
+      .map((c) => c.name);
+    expect(extra).toEqual([]);
   });
 });

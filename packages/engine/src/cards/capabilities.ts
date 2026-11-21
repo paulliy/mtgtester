@@ -289,6 +289,7 @@ const shapes = {
     powerOverride: { union: [leaf, { node: 'Value' }] },
     toughnessOverride: { union: [leaf, { node: 'Value' }] },
     tapped: leaf,
+    untapped: leaf,
     attacking: leaf,
     orPlaneswalker: leaf,
     defender: leaf,

@@ -26,6 +26,17 @@ export {
   untappedCreatures,
 } from './tactics';
 export type { CombatBody } from './tactics';
+export {
+  answerKinds,
+  defensiveLethal,
+  incomingTotal,
+  lastAnswerKinds,
+  offensiveLethal,
+  publicLethal,
+  stackDamageToSeat,
+  stackPumps,
+} from './answers';
+export type { AnswerKind } from './answers';
 export { passesVeto, totalLifeCost, totalSacrificeCount, totalDiscardCount } from './veto';
 export { WEIGHTS } from './weights';
 export { Rng } from './rng';
