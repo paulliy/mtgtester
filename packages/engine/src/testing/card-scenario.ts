@@ -453,7 +453,16 @@ export function buildCardScenario(
   file: CardScenarioFile,
   scenario: CardScenario,
   resolve: CardResolver,
-  options: { gameId: string; strictInvariants?: boolean },
+  options: {
+    gameId: string;
+    strictInvariants?: boolean;
+    /**
+     * Each seat's commanders by card name (CR 903.3). One its seat's battlefield names is put
+     * there from the command zone and keeps its commander identity; one named nowhere else waits
+     * in the command zone. A commander cannot also be named in a hand, graveyard or library.
+     */
+    commanders?: Partial<Record<Seat, readonly string[]>>;
+  },
 ): BuiltScenario {
   const lookup = (name: string): OracleCard => {
     const support = file.supportCards?.find((spec) => spec.name === name);
@@ -461,9 +470,30 @@ export function buildCardScenario(
   };
   const players: EnginePlayerConfig[] = CARD_SCENARIO_SEATS.map((id) => {
     const spec = scenario.seats[id] ?? {};
+    const commanders = options.commanders?.[id] ?? [];
+    const elsewhere = [
+      ...(spec.hand ?? []),
+      ...(spec.graveyard ?? []),
+      ...(spec.libraryTop ?? []),
+      ...(spec.foretold?.cards ?? []),
+    ];
+    for (const name of commanders)
+      if (elsewhere.includes(name))
+        throw new Error(
+          `scenario ${scenario.id}: ${id}'s commander ${name} must be on the battlefield or in the command zone`,
+        );
+    // A battlefield commander comes from the command zone, so the library holds no copy of it.
+    const unplaced = [...commanders];
+    const fromLibrary = (spec.battlefield ?? [])
+      .map((entry) => placedOf(entry).card)
+      .filter((name) => {
+        const index = unplaced.indexOf(name);
+        if (index >= 0) unplaced.splice(index, 1);
+        return index < 0;
+      });
     const names = [
       ...(spec.hand ?? []),
-      ...(spec.battlefield ?? []).map((entry) => placedOf(entry).card),
+      ...fromLibrary,
       ...(spec.graveyard ?? []),
       ...(spec.libraryTop ?? []),
       ...(spec.foretold?.cards ?? []),
@@ -471,7 +501,7 @@ export function buildCardScenario(
     return {
       id,
       deckId: `scenario-${scenario.id}-${id}`,
-      commanders: [],
+      commanders: commanders.map(lookup),
       cards: [
         ...names.map(lookup),
         ...Array.from({ length: FILLER_COUNT }, (_, index) => lookup(FILLER[index % 3]!)),

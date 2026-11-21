@@ -1,0 +1,92 @@
+# A Twat of a Deck (adapted to the modeled card pool)
+# source: https://archidekt.com/decks/3449844
+# 15 unmodeled cards replaced (see archetype-decks/manifest.json)
+
+Commander
+1 Grand Arbiter Augustin IV
+
+Deck
+1 Frozen Aether
+1 Idyllic Beachfront
+1 Floodfarm Verge
+1 Meticulous Archive
+1 Teferi's Protection
+1 Esper Sentinel
+1 Fierce Guardianship
+1 Flooded Strand
+1 Aura of Silence
+1 Propaganda
+1 Deserted Beach
+1 Glacial Fortress
+13 Plains
+1 Sea of Clouds
+1 Azorius Chancery
+1 Azorius Guildgate
+4 Island
+1 Reliquary Tower
+1 Command Tower
+1 Azorius Signet
+1 Talisman of Progress
+1 Ghostly Prison
+1 Prairie Stream
+1 Spellseeker
+1 Grand Abolisher
+1 Thalia, Guardian of Thraben
+1 Counterspell
+1 Restoration Angel
+1 Swords to Plowshares
+1 Lightning Greaves
+1 Jace Beleren
+1 Path to Exile
+1 Angel of the Ruins
+1 Archon of Absolution
+1 Keeper of the Nine Gales
+1 Hushbringer
+1 Filigree Vector
+1 Azami, Lady of Scrolls
+1 Blind Obedience
+1 Thalia, Heretic Cathar
+1 Deafening Silence
+1 Extravagant Replication
+1 Rhystic Study
+1 Smothering Tithe
+1 Negate
+1 Dovin's Veto
+1 Port Town
+1 Hour of Reckoning
+1 Supreme Verdict
+1 Cursed Totem
+1 Sun Titan
+1 Mystical Tutor
+1 Nimbus Maze
+1 Reprieve
+1 Arcane Signet
+1 Sol Ring
+1 Geist-Honored Monk
+1 Baird, Steward of Argive
+1 An Offer You Can't Refuse
+1 Cyclonic Rift
+1 Hallowed Fountain
+1 Hall of Heliod's Generosity
+1 Irrigated Farmland
+1 Commander's Sphere
+1 Mind Stone
+1 Windborn Muse
+1 God-Pharaoh's Statue
+1 Dune Mover
+1 Distinguished Conjurer
+1 Spelltithe Enforcer
+1 Mother of Runes
+1 Stroke of Midnight
+1 Swan Song
+1 Disallow
+1 Enlightened Tutor
+1 Generous Gift
+1 Mystic Sanctuary
+1 Sink into Stupor // Soporific Springs
+1 Farewell
+1 Ponder
+1 Ledger Shredder
+1 Anointed Procession
+1 Faerie Mastermind
+1 Clarion Conqueror

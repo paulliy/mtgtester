@@ -418,6 +418,8 @@ export function cardTraits(def: CardDefinition): CardTraits {
     spellTargets: targetPolarities(main),
     abilityTargets: abilities.map((a) => targetPolarities(a)),
     abilitySorcery: def.activatedAbilities.map((a) => a.timing === 'sorcery'),
+    // The engine's own instant-speed test reads the same keyword (`state/queries.ts`).
+    ...(def.keywords.includes('flash') ? { flash: true } : {}),
     spellDamage: targetDamage(main),
     abilityDamage: abilities.map((a) => targetDamage(a)),
     ...(wipe.selector !== undefined ? { wipeSelector: wipe.selector } : {}),

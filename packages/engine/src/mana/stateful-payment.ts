@@ -29,6 +29,7 @@ import {
 import {
   characteristicsFixedDuringPayment,
   definitionsInPlay,
+  departuresCannotAddCapacity,
   gateCannotOpenDuringPayment,
   leavingPermanentsKeepProduction,
 } from './payment-stability';
@@ -291,8 +292,21 @@ export function searchPayment(
       definitionsInPlay(ctx),
       ownAbilities.some((ability) => ability.condition !== undefined),
     );
+  // A source that sacrifices itself (a Treasure) only leaves: it joins the bound when nothing in
+  // play reads a departure (`departuresCannotAddCapacity`). Without this, one Treasure sent every
+  // unpayable spell on the menu through the full search, about a tenth of a second each.
+  const selfSacrificeBounded =
+    premise &&
+    ownAbilities.some((ability) => ability.costs?.some((cost) => cost.kind === 'sacrificeSelf')) &&
+    departuresCannotAddCapacity(
+      definitionsInPlay(ctx),
+      ownAbilities.some((ability) => ability.condition !== undefined),
+    );
   const keepsCapacity = (kind: string): boolean =>
-    kind === 'tap' || kind === 'mana' || (sacrificeBound && kind === 'sacrificeOther');
+    kind === 'tap' ||
+    kind === 'mana' ||
+    (sacrificeBound && kind === 'sacrificeOther') ||
+    (selfSacrificeBounded && kind === 'sacrificeSelf');
   const fixedCapacity = ownAbilities.every(
     (ability) =>
       ability.amount === undefined &&

@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "id": "swords-the-commander",
+  "role": "tactician",
+  "scope": "single",
+  "title": "The last Swords goes to the opposing commander",
+  "skills": ["commander", "removal-targeting"],
+  "briefing": "Held out for `commanderValue` (written before the fix was tuned, never tuned against). P1's only removal is Swords to Plowshares. P2's commander Talrand, Sky Summoner (a 2/2 that makes a 2/2 flying Drake for every instant or sorcery P2 casts) faces P3's Kalonian Tusker, a vanilla 3/3. On power and toughness alone the Tusker is the bigger target.",
+  "actor": "P1",
+  "position": {
+    "turn": { "player": "P1", "phase": "precombatMain", "step": null, "number": 7 },
+    "commanders": { "P2": ["Talrand, Sky Summoner"] },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Swords to Plowshares"],
+        "battlefield": ["Plains", "Plains", "Island"]
+      },
+      "P2": {
+        "life": 30,
+        "hand": ["Divination"],
+        "battlefield": ["Island", "Island", "Island", "Island", "Talrand, Sky Summoner"]
+      },
+      "P3": { "life": 30, "battlefield": ["Forest", "Forest", "Kalonian Tusker"] },
+      "P4": { "life": 30, "battlefield": ["Swamp", "Swamp"] }
+    }
+  },
+  "reference": {
+    "analysis": "Talrand is P2's commander and engine: every instant or sorcery P2 casts adds a 2/2 flier, and P2 has four Islands and a card in hand. Kalonian Tusker is a vanilla 3/3 that threatens nothing a blocker cannot handle. Exiling Talrand sends it to the command zone, so P2 must pay {2} more to recast it. Nobody threatens lethal, so the last answer is best spent on the commander.",
+    "options": [
+      {
+        "label": "Swords to Plowshares on Talrand",
+        "when": { "choose": "Cast Swords to Plowshares", "targets": ["Talrand, Sky Summoner"] },
+        "grade": "best",
+        "why": "Removes the engine the opposing deck is built around and taxes its return."
+      },
+      {
+        "label": "Swords to Plowshares on Kalonian Tusker",
+        "when": { "choose": "Cast Swords to Plowshares", "targets": ["Kalonian Tusker"] },
+        "grade": "weak",
+        "why": "Spends the last answer on a vanilla body and leaves the commander's engine running."
+      },
+      {
+        "label": "Pass and keep Swords",
+        "when": { "choose": "Pass priority" },
+        "grade": "weak",
+        "why": "Holds the answer while Talrand starts making fliers on P2's turn."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Spends the turn on something else while Talrand stays."
+    }
+  }
+}

@@ -123,6 +123,8 @@ export interface CardTraits {
    * nothing notable (a vanilla creature, a basic land), which has no effect ops (ADR 0044).
    */
   unclassified?: boolean;
+  /** The card can be cast any time it could cast an instant: the Flash keyword (CR 702.8). */
+  flash?: boolean;
   /** Printed power and toughness for creatures. */
   power?: number | null;
   toughness?: number | null;

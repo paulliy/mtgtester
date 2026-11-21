@@ -189,8 +189,18 @@ export const WEIGHTS = {
     wipeOwnLossWeight: 1.3,
     /** A pump or protection instant cast with nothing on the stack and no combat. */
     idleTrickPenalty: 8,
-    /** A sorcery-speed cast that drops untapped mana below the strategist's `holdUpMana`. */
+    /**
+     * A sorcery-speed cast that drops untapped mana below what the seat should keep up: the
+     * strategist's `holdUpMana`, but only for instant-speed interaction it actually holds.
+     */
     holdUpPenalty: 10,
+    /** Interaction dearer than this is not worth keeping mana up for every turn. */
+    holdUpMaxInteractionCost: 3,
+    /**
+     * Mana that must stay free to develop: holding mana up never stops a three-drop, so turns one
+     * to three play out normally and holding 2 starts with a fifth mana source.
+     */
+    holdUpDevelopMana: 3,
     /** Strategist steering by card name. */
     prioritizeBonus: 6,
     holdPenalty: 12,
@@ -201,7 +211,7 @@ export const WEIGHTS = {
     /** Opponent threat: board value share plus life lost share, plus the steering order bonus. */
     threatBoardWeight: 0.1,
     threatLowLifeWeight: 0.15,
-    steeringTargetBonus: 3,
+    steeringTargetBonus: 1,
     /** How much opponent threat counts when choosing among hostile targets. */
     targetPressureWeight: 0.3,
 
@@ -261,6 +271,34 @@ export const WEIGHTS = {
     landColorNeedBonus: 0.5,
     /** On a turn no land unlocks anything, the tapped land is free to play. */
     idleTappedLandBonus: 0.25,
+
+    // --- Answer discipline and face damage (`scarceAnswer`, `faceDamage` fixes) ---
+    /**
+     * The last counterspell or hard removal of its kind in hand (ADR 0044's `scarce-answer`) is
+     * kept for a real threat unless lethal is on the public board. Below these thresholds the cast
+     * scores just under passing, so the bot keeps the card; a strategist `prioritize` still lifts it.
+     */
+    scarceAnswer: {
+      /** A countered spell must reach this: its mana value plus `bigEffectBonus` if it has one. */
+      minCounterThreat: 4,
+      /** Hard removal's best target must reach this in LEP, lethal and clear-the-blocker bonuses included. */
+      minRemovalThreat: 9,
+      /** Added for a wipe, an extra turn or a team pump: effects that swing a game whatever their cost. */
+      bigEffectBonus: 3,
+      /** How far below passing a held answer scores. */
+      holdMargin: 1,
+    },
+    /**
+     * Damage at a player that does not kill is worth this per point (times 0.5 + aggression), in
+     * place of the flat value of a player target. Killing damage keeps the flat value.
+     */
+    faceDamagePerLife: 1,
+    /** `commanderValue`: added to a commander's permanent value, on either side of the table. */
+    commanderPermanentBonus: 4,
+    /** An unsafe attacker at or below this power needs an attack trigger. */
+    riskyAttackMinPower: 1,
+    /** `holdUpMana` lapses from this many cards in hand, cleanup would discard, so the mana is spent. */
+    holdUpFullHand: 7,
   },
 
   /**
@@ -358,5 +396,75 @@ export const WEIGHTS = {
     breakPenalty: 10,
     /** Propose when one seat's predicted attack could take at least this share of our life. */
     proposePressureShare: 0.25,
+  },
+
+  /**
+   * Play styles (`BotSteering.style`, `styles.ts`). `defaults` fill knobs the strategist left
+   * unset; the scales multiply policy weights. Starting values, not measured ones: the bot league
+   * (`bot-league --a styled ...`) is the gate, as for every other weight here.
+   */
+  styles: {
+    aggro: {
+      defaults: { aggression: 0.85, holdUpMana: 0, avoidOverextending: false },
+      /** Multiplies `policy.faceDamagePerLife`. */
+      faceDamage: 1.5,
+      /** Multiply `policy.scarceAnswer.minCounterThreat` and `minRemovalThreat`. */
+      counterThreshold: 1.25,
+      removalThreshold: 1.25,
+      /** Multiply flat role values in `policy.roles`, and the removal target share. */
+      roles: { pump: 2, burn: 1.5, tokens: 1.3, draw: 0.75 },
+    },
+    /** Between aggro and midrange: presses the attack without giving up card value. */
+    tempo: {
+      defaults: { aggression: 0.7 },
+      faceDamage: 1.25,
+      counterThreshold: 1.1,
+      removalThreshold: 1.1,
+      roles: { pump: 1.5, burn: 1.25, tokens: 1.15, draw: 0.9 },
+    },
+    midrange: {
+      defaults: {},
+      faceDamage: 1,
+      counterThreshold: 1,
+      removalThreshold: 1,
+      roles: {},
+    },
+    /**
+     * Between midrange and control: values cards and answers like control but plays at the plain
+     * bot's pace. The control ablation found the passive knobs, not the weights, cost games.
+     */
+    value: {
+      defaults: {},
+      faceDamage: 0.75,
+      counterThreshold: 1,
+      removalThreshold: 1,
+      roles: { draw: 1.25, removal: 1.15, recursion: 1.15 },
+    },
+    /**
+     * No knob defaults: holding up mana and playing passively cost games in the mirrors and in the
+     * gauntlet (`bot-gauntlet`, ADR 0051). Control is how it values cards and answers.
+     */
+    control: {
+      defaults: {},
+      faceDamage: 0.5,
+      counterThreshold: 0.75,
+      removalThreshold: 0.8,
+      roles: { draw: 1.5, removal: 1.3, recursion: 1.3 },
+    },
+    /** Between midrange and combo: builds mana and cards first, keeps answers for big threats. */
+    ramp: {
+      defaults: { aggression: 0.4 },
+      faceDamage: 0.75,
+      counterThreshold: 1.1,
+      removalThreshold: 1,
+      roles: { ramp: 1.5, draw: 1.25, tutor: 1.25 },
+    },
+    combo: {
+      defaults: { aggression: 0.2 },
+      faceDamage: 0.5,
+      counterThreshold: 1.25,
+      removalThreshold: 1,
+      roles: { tutor: 2, draw: 1.25, ramp: 1.3 },
+    },
   },
 } as const;

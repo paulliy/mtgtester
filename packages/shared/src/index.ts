@@ -29,7 +29,7 @@ export {
   isClientToServerMessage,
   isPlayerSeatId,
 } from './protocol';
-export { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET } from './engine';
+export { ATTACKS_TARGET, NO_ATTACK_TARGET, NO_BLOCK_TARGET, PLAY_STYLES } from './engine';
 export { parseStrictJson, STRICT_JSON_MAX_DEPTH } from './json';
 export { assertNever } from './assert-never';
 
@@ -97,6 +97,7 @@ export type {
   PlanPrecondition,
   TurnStrategy,
   BotSteering,
+  PlayStyle,
   LegalAction,
   ActionInteraction,
   TargetSlot,
