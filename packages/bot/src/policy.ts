@@ -352,21 +352,18 @@ function optionScore(
     const player = ctx.view.opponents.find((o) => o.seat === option);
     if (player !== undefined && pending > 0 && player.life - pending <= 0) return -1;
     // Damage that leaves the player alive is worth the damage, not a whole player: two points at
-    // someone on 30 life must not outrank killing a creature. Aggression scales it for racing.
-    if (
-      player !== undefined &&
-      damage !== null &&
-      fixOn(ctx, 'faceDamage') &&
-      damage + pending < player.life
-    ) {
+    // someone on 30 life must not outrank killing a creature. Aggression and the style scale it
+    // for racing. Damage that kills the player is worth the player on top of that damage, so no
+    // scale ever ranks five points at a healthy player above finishing one in reach.
+    if (player !== undefined && damage !== null && fixOn(ctx, 'faceDamage')) {
       const aggression = clamp01(ctx.steering?.aggression ?? P.defaultAggression);
-      return (
+      const racing =
         damage *
-          P.faceDamagePerLife *
-          styleProfile(ctx.steering?.style).faceDamage *
-          (0.5 + aggression) +
-        (pressure.get(c.owner) ?? 0) * P.targetPressureWeight
-      );
+        P.faceDamagePerLife *
+        styleProfile(ctx.steering?.style).faceDamage *
+        (0.5 + aggression);
+      const kill = damage + pending >= player.life ? c.value : 0;
+      return racing + kill + (pressure.get(c.owner) ?? 0) * P.targetPressureWeight;
     }
     // Damage that leaves a creature alive takes only a sliver of its worth (Bolt on a 10/10).
     const creature = ctx.view.battlefield.find((p) => p.id === option);
