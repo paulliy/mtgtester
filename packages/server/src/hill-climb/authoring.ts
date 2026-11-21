@@ -123,13 +123,18 @@ export function summarize(cards: readonly CardAuthoring[]): AuthoringSummary {
   };
 }
 
-/** The modeled EDHREC pinned cards, every `stride`-th one. */
+/**
+ * The modeled cards among every `stride`-th EDHREC pin. The sample is taken over the pins before
+ * the modeled filter, so a card that starts or stops modeling adds or removes only itself: taking
+ * every `stride`-th modeled card instead would shift the whole sample when one card changes, and
+ * the gate would compare different cards (retiring 10 compiled cards once moved 452 of 628).
+ */
 export function poolCards(stride = 1): OracleCard[] {
   const pins = JSON.parse(readFileSync(PINNED_ORACLE_PATH, 'utf8')) as PinnedCard[];
   return pins
+    .filter((_, index) => index % stride === 0)
     .map((pin) => pin.card)
-    .filter((card) => interpretCard(card).modeled)
-    .filter((_, index) => index % stride === 0);
+    .filter((card) => interpretCard(card).modeled);
 }
 
 export interface ReferenceCard {

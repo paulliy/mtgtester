@@ -35,7 +35,7 @@ export interface Profile {
   /** Census games per tactical mode, and their turn cap. */
   censusGames: number;
   censusTurnCap: number;
-  /** The authoring probe measures every `authoringStride`-th modeled EDHREC card. */
+  /** The authoring probe measures the modeled cards among every `authoringStride`-th EDHREC pin. */
   authoringStride: number;
 }
 
