@@ -1,0 +1,21 @@
+{
+  "_comment": "The play style each premade test deck is built for, by deck file name. bot-gauntlet seats a styled arm with this style; the archetype classifier (styleForDeck) calls almost all of these midrange.",
+  "ruby-the-most-daring-of-trackers": "aggro",
+  "brigid-clachans-heart": "aggro",
+  "aggro-purphoros-god-of-the-forge": "aggro",
+  "token-triumph": "aggro",
+  "white-black-control": "control",
+  "pramikon-sky-rampart": "control",
+  "control-grand-arbiter-augustin-iv": "control",
+  "living-energy": "ramp",
+  "urdragon": "ramp",
+  "ramp-aesi-tyrant-of-gyre-strait": "ramp",
+  "combo-niv-mizzet-parun": "combo",
+  "combo-kiki-jiki-mirror-breaker": "combo",
+  "marchesa-the-black-rose": "value",
+  "necron-dynasties": "value",
+  "silverquill-influence": "value",
+  "queen-marchesa-queens-gambit": "midrange",
+  "draconic-destruction": "midrange",
+  "the-fantastic-four-marvel-super-heroes-commander-precon-decklist": "midrange"
+}

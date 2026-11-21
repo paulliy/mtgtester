@@ -27,6 +27,7 @@ import {
   characteristicsFixedDuringPayment,
   countFixedWhileNothingLeaves,
   definitionsInPlay,
+  departuresCannotAddCapacity,
   gateCannotOpenDuringPayment,
   leavingPermanentsKeepProduction,
   stableSelector,
@@ -438,15 +439,24 @@ export function searchPayment(
   const sacrificeBound =
     leavingBound &&
     ownAbilities.some((ability) => ability.costs?.some((cost) => cost.kind === 'sacrificeOther'));
-  // A source that sacrifices itself (a Treasure, Lotus Petal) is activated once and counted once,
-  // and under the same premise its leaving gives no other source more production. Without this, one
-  // Treasure on the board dropped the bound, and seven Treasures searched every order and color
-  // trying to pay nine pips before the state budget halted the game (fuzz-173).
+  // A source that sacrifices itself (a Treasure, Lotus Petal) is activated once and counted once.
+  // Its leaving must give no other source more production: nothing strips what a departure would
+  // give back (`leavingBound`), and no static reads a count, a zone or a graveyard that a departure
+  // changes (`departuresCannotAddCapacity`). Without it, one Treasure on the board dropped the
+  // bound, and seven Treasures searched every order and color trying to pay nine pips before the
+  // state budget halted the game (fuzz-173); an unpayable spell on the menu cost about a tenth of
+  // a second each.
+  const selfSacrificeBounded =
+    leavingBound &&
+    departuresCannotAddCapacity(
+      definitionsInPlay(ctx),
+      ownAbilities.some((ability) => ability.condition !== undefined),
+    );
   const keepsCapacity = (kind: string): boolean =>
     kind === 'tap' ||
     kind === 'mana' ||
     (sacrificeBound && kind === 'sacrificeOther') ||
-    (leavingBound && kind === 'sacrificeSelf');
+    (selfSacrificeBounded && kind === 'sacrificeSelf');
   // A count of permanents ("X is the number of other creatures you control", Brigid, Doun's Mind)
   // stays what it is now when no mana ability sacrifices anything and the count does not read
   // tapped status: under the premise nothing else an activation does can enter, leave or change a
@@ -475,7 +485,7 @@ export function searchPayment(
           (cost) =>
             cost.kind === 'tap' ||
             (sacrificeBound && cost.kind === 'sacrificeOther') ||
-            (leavingBound && cost.kind === 'sacrificeSelf'),
+            (selfSacrificeBounded && cost.kind === 'sacrificeSelf'),
         ) &&
           ability.costs.every((cost) => keepsCapacity(cost.kind)))) &&
       (ability.onActivate ?? []).every(
@@ -914,7 +924,7 @@ export function searchPayment(
   /**
    * Under the premise, a board whose every source only taps, taps and pays mana (a filter land), or
    * taps and sacrifices itself for a fixed production, is the ordinary static payment: activating one changes nothing but the pool
-   * and that one permanent, and nothing left reads it (`leavingBound`; a dynamic source counts
+   * and that one permanent, and nothing left reads it (`selfSacrificeBounded`; a dynamic source counts
    * only when what it reads is not the payer's own board). `planPayment` solves it exactly, in the
    * keep-value order `manaSourcesFor` gives, as it does when no source on the board is dynamic.
    * Replaying the activations one by one cannot add a payment, and it branched on every color of
@@ -952,7 +962,7 @@ export function searchPayment(
     if (staticSolverIncomplete(rootSources, payer.manaEntries)) return handBack;
     // Tapping removes nothing; a sacrifice needs nothing in play to read the permanent leaving.
     const sacrificing = rootSources.some(selfSacrificeSource);
-    if (sacrificing && !leavingBound) return handBack;
+    if (sacrificing && !selfSacrificeBounded) return handBack;
     const permanentOf = new Map(ctx.state.battlefield.map((p) => [p.cardId, p]));
     for (const source of rootSources) {
       if (source.convoke === true || source.productionSpec === undefined) continue;

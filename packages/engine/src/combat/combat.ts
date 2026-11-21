@@ -39,7 +39,7 @@ import {
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
 import { payLife, payManaCost } from '../effects/resolve';
 import { canPay, emptyCost, totalPips } from '../mana/cost';
-import type { ParsedManaCost } from '../mana/cost';
+import type { ManaSource, ParsedManaCost } from '../mana/cost';
 import { emit, debug } from '../log/log';
 import { counterCount } from '../state/counters';
 import { playerLifeLocked } from '../state/phasing';
@@ -385,6 +385,8 @@ function canPayAttackCosts(
   attackingPlayerId: PlayerId,
   cost: ParsedManaCost,
   life: number,
+  /** The creatures declared as attackers: those without vigilance are tapped by now. */
+  attacking: readonly EnginePermanent[],
 ): boolean {
   const player = playerById(ctx, attackingPlayerId);
   if (life > 0 && (player.life < life || playerLifeLocked(ctx, attackingPlayerId))) return false;
@@ -392,10 +394,35 @@ function canPayAttackCosts(
   return canPay(
     cost,
     player.manaEntries,
-    manaSourcesFor(ctx, attackingPlayerId),
+    withoutTappedAttackers(ctx, manaSourcesFor(ctx, attackingPlayerId), attacking),
     allowanceFor(ctx, attackingPlayerId, { kind: 'other' }),
     player.life - life,
   );
+}
+
+/**
+ * CR 508.1f taps the attackers before their costs are paid (508.1g-h), so an attacker without
+ * vigilance can't tap for mana to pay them, nor be the creature another source taps (Citanul
+ * Hierophants' creatures, Springleaf Drum). `applyAttackDeclaration` taps them first; this is the
+ * same exclusion for judging a declaration before it is made.
+ */
+function withoutTappedAttackers(
+  ctx: GameContext,
+  sources: readonly ManaSource[],
+  attacking: readonly EnginePermanent[],
+): ManaSource[] {
+  const tapped = new Set(
+    attacking
+      .filter((creature) => !hasKeyword(ctx, creature, 'vigilance'))
+      .map((creature) => creature.cardId),
+  );
+  if (tapped.size === 0) return [...sources];
+  return sources.flatMap((source) => {
+    if (tapped.has(source.cardId) && source.costs.some((cost) => cost.kind === 'tap')) return [];
+    if (source.taps === undefined) return [source];
+    const taps = source.taps.map((group) => group.filter((id) => !tapped.has(id)));
+    return taps.some((group) => group.length === 0) ? [] : [{ ...source, taps }];
+  });
 }
 
 /**
@@ -415,6 +442,7 @@ function canPayAttackTax(
     creature.controllerId,
     attackCost(ctx, defendingPlayerId, atPlaneswalker, [creature]),
     attackLifeTax(ctx, defendingPlayerId),
+    [creature],
   );
 }
 
@@ -1009,7 +1037,8 @@ function validateAttackDeclaration(
     totalLife += attackLifeTax(ctx, defenderId) * creatures.length;
   }
   if (totalPips(totalCost) === 0 && totalLife === 0) return [];
-  if (canPayAttackCosts(ctx, attackingPlayerId, totalCost, totalLife)) return [];
+  const attacking = groups.flatMap((group) => group.creatures);
+  if (canPayAttackCosts(ctx, attackingPlayerId, totalCost, totalLife, attacking)) return [];
   const violations: CombatViolation[] = [];
   for (const { defenderId, atPlaneswalker, creatures } of groups) {
     for (const creature of creatures) {
@@ -1034,23 +1063,32 @@ function* applyAttackDeclaration(
   opponents: readonly EnginePlayerState[],
   assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
 ): GameGen<void> {
-  for (const { defenderId, atPlaneswalker, creatures } of groupByDefender(eligible, assignment)) {
-    yield* payAttackTax(ctx, ap.id, defenderId, atPlaneswalker, creatures);
-    // War's Toll: every attacker that could attack for free was required to (Firkraag reads it).
-    const allMustAttack = attacksWithAll(ctx, ap.id);
-    for (const creature of creatures) {
-      const hadToAttack =
+  const groups = groupByDefender(eligible, assignment);
+  // War's Toll: every attacker that could attack for free was required to (Firkraag reads it).
+  // Judged against the declaration as made, before any attacker taps (CR 508.1d).
+  const allMustAttack = attacksWithAll(ctx, ap.id);
+  const hadToAttack = new Map(
+    groups.flatMap(({ creatures }) =>
+      creatures.map((creature) => [
+        creature.id,
         mustAttackNow(ctx, creature, eligible, opponents) ||
-        (allMustAttack && freeAttackTargetsFor(ctx, creature, opponents).length > 0);
+          (allMustAttack && freeAttackTargetsFor(ctx, creature, opponents).length > 0),
+      ]),
+    ),
+  );
+  // CR 508.1f taps every attacker before 508.1g-h determines and pays the costs, so no attacker
+  // without vigilance pays an attack tax, for its own defender or another.
+  for (const { creatures } of groups)
+    for (const creature of creatures)
       commitAttacker(
         ctx,
         creature,
         assignment.get(creature.id) as AttackChoice,
         ap.id,
-        hadToAttack,
+        hadToAttack.get(creature.id) === true,
       );
-    }
-  }
+  for (const { defenderId, atPlaneswalker, creatures } of groups)
+    yield* payAttackTax(ctx, ap.id, defenderId, atPlaneswalker, creatures);
 }
 
 /**

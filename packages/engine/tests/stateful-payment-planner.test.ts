@@ -12,6 +12,7 @@ import type { Condition } from '../src/cards/condition';
 import { parseManaCost, type ParsedManaCost } from '../src/mana/cost';
 import {
   characteristicsFixedDuringPayment,
+  departuresCannotAddCapacity,
   gateCannotOpenDuringPayment,
   leavingPermanentsKeepProduction,
 } from '../src/mana/payment-stability';
@@ -276,6 +277,111 @@ describe('payment premise', () => {
   });
 });
 
+describe('departures and the capacity bound', () => {
+  const holder = (staticEffects: unknown[], ruleStatics: unknown[] = []) => ({
+    staticEffects,
+    ruleStatics,
+  });
+  const lands = { kind: 'type', value: 'Land' };
+  const artifacts = { kind: 'type', value: 'Artifact' };
+  const perArtifact = {
+    affects: { kind: 'self' },
+    op: {
+      layer: 7,
+      sublayer: 'c',
+      power: { kind: 'countPermanents', selector: artifacts, scope: 'you' },
+      toughness: { kind: 'const', n: 0 },
+    },
+  };
+  it('stateful-planner-departures — a Treasure may join the bound unless a static reads what leaving changes', () => {
+    expect(departuresCannotAddCapacity([holder([])], false)).toBe(true);
+    expect(
+      departuresCannotAddCapacity(
+        [holder([{ affects: lands, op: { layer: 6, loseAllAbilities: true } }])],
+        false,
+      ),
+    ).toBe(true);
+    // "As long as you control three or fewer artifacts, lands lose all abilities": a Treasure
+    // leaving can switch it on or off, so the copying search decides.
+    expect(
+      departuresCannotAddCapacity(
+        [
+          holder([
+            {
+              affects: lands,
+              op: { layer: 6, loseAllAbilities: true },
+              condition: {
+                kind: 'countPermanents',
+                selector: artifacts,
+                scope: 'you',
+                cmp: '<=',
+                n: 3,
+              },
+            },
+          ]),
+        ],
+        false,
+      ),
+    ).toBe(false);
+    // Power from a count reaches a payment only through a gate.
+    expect(departuresCannotAddCapacity([holder([perArtifact])], false)).toBe(true);
+    expect(departuresCannotAddCapacity([holder([perArtifact])], true)).toBe(false);
+    // A rule no production reads stays out of it, whatever it counts: Nils, Discipline
+    // Enforcer's attack tax counts counters (fuzz-131).
+    expect(
+      departuresCannotAddCapacity(
+        [
+          holder(
+            [],
+            [
+              {
+                kind: 'attackRestriction',
+                filter: {
+                  kind: 'allOf',
+                  of: [{ kind: 'type', value: 'Creature' }, { kind: 'hasAnyCounter' }],
+                },
+                cost: { perCounterOnCreature: true },
+              },
+            ],
+          ),
+        ],
+        false,
+      ),
+    ).toBe(true);
+    // Threshold-style graveyard counts stay out whatever the gates.
+    expect(
+      departuresCannotAddCapacity(
+        [
+          holder([
+            {
+              affects: lands,
+              op: { layer: 6, loseAllAbilities: true },
+              condition: { kind: 'countCardsInZone', zone: 'graveyard', cmp: '>=', n: 7 },
+            },
+          ]),
+        ],
+        false,
+      ),
+    ).toBe(false);
+  });
+
+  it('stateful-planner-treasure-bound — an unpayable cost with Treasures out is null, not a budget halt', () => {
+    const ctx = board((c) => {
+      for (let i = 0; i < 6; i++) spawn(c, 'P1', forest());
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', painland());
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', treasure());
+    });
+    const cost = parseManaCost('{6}{W}{W}{W}{W}{W}').cost!;
+    const before = JSON.stringify(ctx.state);
+    expect(search(ctx, cost, true)).toEqual({ plan: null });
+    expect(JSON.stringify(ctx.state)).toBe(before);
+    // Payable costs still come out of the copying search, as before.
+    for (const payable of ['{G}', '{3}{G}', '{W}{W}{W}'])
+      expect(search(ctx, parseManaCost(payable).cost!, true)).not.toEqual({ plan: null });
+  });
+});
+
 describe('tap-only source shapes', () => {
   it('stateful-planner-tap-only — a plain or dynamic {T} source is tap-only; riders and sacrifices are not', () => {
     const ctx = board((c) => {
@@ -446,6 +552,38 @@ describe('Treasure boards', () => {
     expect(solve(ctx, '{G}').names).toEqual(['Forest']);
     expect(solve(ctx, '{U}').names).toEqual(['Exotic Orchard']);
     expect(solve(ctx, '{1}{G}').names!.sort()).toEqual(['Exotic Orchard', 'Forest']);
+  });
+
+  it('stateful-planner-treasure-departure — a static that reads an artifact count keeps a Treasure board on the search', () => {
+    // "As long as you control three or fewer artifacts, lands you control have flying": it strips
+    // nothing, so a leaving Treasure gives nothing back, but sacrificing one changes the count it
+    // reads (`departuresCannotAddCapacity`). Main's bound refuses that board; so does the static solve.
+    const treasures = (withStatic: boolean) =>
+      board((c) => {
+        spawn(c, 'P1', orchard());
+        spawn(c, 'P1', forest());
+        for (let i = 0; i < 3; i++) spawn(c, 'P1', treasure());
+        if (!withStatic) return;
+        const counter = spawn(c, 'P1', artifact('Test Counter', 'Flying'));
+        c.defs.set(counter.oracleId, {
+          ...c.defs.get(counter.oracleId)!,
+          staticEffects: [
+            {
+              affects: { kind: 'type', value: 'Land' },
+              op: { layer: 6, addKeyword: 'flying' },
+              condition: {
+                kind: 'countPermanents',
+                selector: { kind: 'type', value: 'Artifact' },
+                scope: 'you',
+                cmp: '<=',
+                n: 3,
+              },
+            },
+          ],
+        } as never);
+      });
+    expect(solve(treasures(false), '{1}{G}{B}').static).toBe(true);
+    expect(solve(treasures(true), '{1}{G}{B}').static).toBe(false);
   });
 
   it('stateful-planner-treasure-hand-back — a source that reads the payer’s own board keeps the search', () => {

@@ -23,6 +23,7 @@ import {
 } from './diplomacy/play';
 import type { CardKnowledge } from './card-knowledge';
 import { DEFAULT_POLICY_FIXES, type PolicyFix } from './fixes';
+import { resolveSteering } from './styles';
 import {
   actionValue,
   chooseAttacks,
@@ -77,7 +78,7 @@ function policyContext(
     request,
     view,
     ...(opts.knowledge === undefined ? {} : { knowledge: opts.knowledge }),
-    ...(opts.steering === undefined ? {} : { steering: opts.steering }),
+    ...(opts.steering === undefined ? {} : { steering: resolveSteering(opts.steering)! }),
     ...(opts.mulligansTaken === undefined ? {} : { mulligansTaken: opts.mulligansTaken }),
     ...(opts.repeatCount === undefined ? {} : { repeatCount: opts.repeatCount }),
     fixes: new Set(opts.fixes ?? DEFAULT_POLICY_FIXES),

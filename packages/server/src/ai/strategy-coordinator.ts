@@ -16,6 +16,7 @@ import type { AiClient } from './client';
 import type { AiConfig } from './config';
 import { type RecentSeatDecision, type TacticalGuidance } from './context';
 import { assembleStrategistPrompt } from './strategy-context';
+import { mergeSteering } from './knob-persistence';
 import { RequestCancelledError } from './errors';
 import type { AiCallLogger, DecisionSource } from './logger';
 import type { StrategyProfile } from '../decks/strategy-profile';
@@ -481,6 +482,9 @@ export class StrategyCoordinator {
           : { profile: this.deckProfiles.get(activePlayer)! }),
         ...(diplomacy === null ? {} : { diplomacy }),
         ...(this.botLed() ? { botSteering: true } : {}),
+        ...(this.botLed() && this.steeringBySeat.get(activePlayer) !== undefined
+          ? { currentKnobs: this.steeringBySeat.get(activePlayer)!.steering }
+          : {}),
         ...(this.botLed() && this.config.strategistTacticianFlag === 'shadow'
           ? { tacticianFlag: true }
           : {}),
@@ -551,8 +555,10 @@ export class StrategyCoordinator {
       // seat's turn usually ends before the strategist answers, so install them even when the
       // staleness check below drops the plan; otherwise every answer is paid for and thrown away.
       if (this.botLed() && strategy.steering !== undefined && !this.cancelled) {
+        // Knobs persist: an answer changes only the knobs it names (an empty list clears one).
+        const kept = this.steeringBySeat.get(activePlayer)?.steering;
         this.steeringBySeat.set(activePlayer, {
-          steering: strategy.steering,
+          steering: mergeSteering(kept, strategy.steering),
           table: tableSnapshot(view),
           reusedTurns: 0,
         });
