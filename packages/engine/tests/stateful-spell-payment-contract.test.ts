@@ -977,6 +977,19 @@ describe('the mana planner on the stops main still had (bug 16)', () => {
       expect(tappedNames(state)).toEqual(['Bystander 2', 'Elf 0', 'Elf 1', 'Elf 2', 'Holdout']);
     });
 
+    it('keeps halting where the creature to tap could also be sacrificed for mana', () => {
+      // Sentinel taps Wild Cantor for its cost, then the tapped Cantor is sacrificed for {G}:
+      // payable, but only in that order, which the final payment does not explore. A halt, not
+      // a "not payable".
+      const state = setup('{G}{G}');
+      inertOrchard(state);
+      sentinel(state);
+      withDefinition(state, 'Wild Cantor', 'Creature', {
+        manaAbilities: [{ units: ANY, costs: [{ kind: 'sacrificeSelf' }] }],
+      });
+      expect(state.offered).toThrow('outside the proven scope');
+    });
+
     it('keeps halting for a tap-a-creature source with a rider', () => {
       const state = setup('{G}{G}');
       inertOrchard(state);

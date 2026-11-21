@@ -457,6 +457,35 @@ export function searchPayment(
   /** A source a later phase leaves to the final payment instead of replaying. */
   const leftToFinal = (source: ManaSource): boolean =>
     (withSacrifice && sacrificeSource(source)) || (withTapOther && tapOtherSource(source));
+  /**
+   * Some permanent a tapOther source could tap for its cost can also leave the battlefield during
+   * the payment: a replayed candidate sacrifices or exiles itself, or a sacrifice source left to
+   * the final payment may take it as a victim.
+   */
+  const tapCandidatesCanLeave = (
+    availableSources: readonly ManaSource[],
+    candidates: readonly ManaSource[],
+  ): boolean => {
+    const tappable = new Set(
+      availableSources
+        .filter((source) => tapOtherSource(source))
+        .flatMap((source) => (source.taps ?? []).flat()),
+    );
+    if (tappable.size === 0) return false;
+    return (
+      candidates.some(
+        (source) =>
+          tappable.has(source.cardId) &&
+          source.costs.some((cost) => cost.kind === 'sacrificeSelf' || cost.kind === 'exileSelf'),
+      ) ||
+      (withSacrifice &&
+        availableSources.some(
+          (source) =>
+            sacrificeSource(source) &&
+            (source.sacrifices ?? []).some((group) => group.some((id) => tappable.has(id))),
+        ))
+    );
+  };
   /** Thrown from the search once `provablyImpossible` holds: the answer is "not payable". */
   const rootImpossible = {};
   /** The depth bound cut a branch that still had sources to try, in some phase. */
@@ -840,6 +869,12 @@ export function searchPayment(
       )
     )
       outsideScope = true;
+    // A tapOther source's cost is paid in the final payment, after every replayed activation, so
+    // the search never tries tapping a creature for that cost before the creature leaves. Where a
+    // permanent it could tap can also leave during the payment (a replayed "Sacrifice this:" source
+    // such as Wild Cantor, or a victim of a sacrifice source left to the final payment), the order
+    // "tap it for the cost, then sacrifice it" is legal and unexplored: keep the halt.
+    if (withTapOther && tapCandidatesCanLeave(availableSources, candidates)) outsideScope = true;
     const bounded =
       (boundedCapacity || (withTapOther && boundedCapacityWithTaps)) && (premise || !current);
     const ceilings = bounded
@@ -1231,6 +1266,10 @@ export function searchPayment(
    *     whose tap candidates were tapped has them dropped from its `taps` groups. Tapping for the
    *     cost of a left-over source is never replayed, so no replayed activation can have used a
    *     creature the final payment still needs: the final payment owns every cost of its sources.
+   *     A tapped creature can still be sacrificed, though, so "tap it for the cost, then sacrifice
+   *     it" is an order the final payment never sees: where a creature a tapOther source could tap
+   *     can also leave (a replayed self-sacrifice, a sacrifice source's victim), phase 3 sets
+   *     `outsideScope` and halts (`tapCandidatesCanLeave`).
    *   - (c) `planPayment` models `taps` groups: each tapOther cost gets a distinct untapped
    *     creature that no source of the same payment taps for mana or for another cost (the
    *     `plannedIds` check; a creature that taps for its own cost does not also tap for mana), and
