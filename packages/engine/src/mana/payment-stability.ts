@@ -118,6 +118,19 @@ const PAYMENT_FIXED_CONDITION_KINDS: ReadonlySet<string> = new Set([
   'chosenOptionIs',
   'opponentIsMonarch',
   'opponentCount',
+  // Also fixed by a payment's own activations (a tap, a mana, life or energy payment, a life or
+  // damage rider: none adds, removes or changes a permanent): whether its controller controls
+  // their own commander; a comparison of constants and devotion, which reads the mana costs of
+  // the controller's permanents (CR 700.5, "isn't a creature unless your devotion to red and
+  // green is 7 or more", Purphoros-style gods). A comparison of any other value is still caught
+  // by its operands (`lifeTotal`, `countTappedPermanents`, `energyAvailable` ... are in
+  // `PAYMENT_STATE_KINDS`; an unlisted operand kind is not in this set). A permanent leaving can
+  // change these: `leavingKeepsProduction` lets through only the conditions that can only stop
+  // holding (`conditionOnlyEnds`).
+  'controlsYourCommander',
+  'compareValues',
+  'devotionTo',
+  'const',
 ]);
 
 /**
@@ -289,6 +302,14 @@ const RULES_IRRELEVANT_TO_PRODUCTION: ReadonlySet<string> = new Set([
   // Heart of the Storm on a Treasure board dropped the bound and halted fuzz-26).
   'damageDoubled',
   'damageDoubledToOpponents',
+  // "If a source you control would deal damage to an opponent, it deals double that damage
+  // instead" (Fiery Emancipation, Torbran): a replacement of how much damage is dealt, `factor`
+  // (at least 2) and `plus` (at least 1) only multiply or add: authoring validation admits no other. The only damage a payment deals is a source's rider to its own
+  // controller, and no mana ability, gate, selector or dynamic production reads damage dealt. Ending
+  // the replacement can only make that rider hurt less, and life never rises past what it is now
+  // under the premise of a payment (`lifeCanRise` is false where a bound uses life), so no
+  // pay-life source or life reservation is made easier to meet than the root says.
+  'damageReplacement',
   'damageHalvedToYou',
   'preventCombatDamageToSelf',
   // Neither changes a source's production when it ends: a cost the opponents pay to target
@@ -344,6 +365,48 @@ interface LeavingAnswer {
   power: boolean;
 }
 
+/** Condition kinds a permanent leaving can change: a board count, devotion, a commander's presence. */
+const BOARD_CONDITION_KINDS: ReadonlySet<string> = new Set([
+  'countPermanents',
+  'compareValues',
+  'enteredThisTurn',
+  'controlsYourCommander',
+]);
+
+/**
+ * Whether a static's condition can only stop holding as permanents leave. "You control a Dragon"
+ * (`>=`), "entered this turn", "you control your commander" only turn false; a `<=` or `==` count
+ * and a devotion comparison can turn true, which starts the effect: it may take an ability away or
+ * give a keyword a gate reads, so its static keeps the sacrifice bounds off. A condition that reads
+ * no board fact (the turn, the step, kicker, a choice already made) does not move at all. A
+ * negation turns "can only stop holding" into "can only start holding", so it passes only over a
+ * condition that does not move.
+ */
+function conditionOnlyEnds(condition: Condition | undefined): boolean {
+  if (condition === undefined) return true;
+  switch (condition.kind) {
+    case 'allOf':
+    case 'anyOf':
+      return condition.of.every(conditionOnlyEnds);
+    case 'not':
+      return conditionNeverMoves(condition.of);
+    case 'countPermanents':
+      return condition.cmp === '>=';
+    case 'compareValues':
+      return false;
+    default:
+      return true;
+  }
+}
+
+/** A condition no permanent leaving changes: it reads no board fact. */
+function conditionNeverMoves(condition: Condition): boolean {
+  if (condition.kind === 'allOf' || condition.kind === 'anyOf')
+    return condition.of.every(conditionNeverMoves);
+  if (condition.kind === 'not') return conditionNeverMoves(condition.of);
+  return !BOARD_CONDITION_KINDS.has(condition.kind);
+}
+
 function leavingKeepsProduction(
   staticEffects: readonly unknown[],
   ruleStatics: readonly unknown[],
@@ -352,6 +415,9 @@ function leavingKeepsProduction(
   return {
     general:
       ops.every((op) => !endingCanRaise(op)) &&
+      staticEffects.every((effect) =>
+        conditionOnlyEnds((effect as { condition?: Condition }).condition),
+      ) &&
       ruleStatics.every((rule) =>
         RULES_IRRELEVANT_TO_PRODUCTION.has(String((rule as { kind?: unknown }).kind)),
       ),
