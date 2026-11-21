@@ -29,6 +29,7 @@ import { effectivePT, isCreaturePermanent, manaSourcesFor } from '../src/state/q
 import { computeCharacteristics } from '../src/effects/continuous';
 import { NONBASIC_LANDS, ofType } from '../src/cards/selector';
 import { canPay, parseManaCost } from '../src/mana/cost';
+import { engineWork, engineWorkSince } from '../src/work-counters';
 
 function ctx4(): GameContext {
   const c = createGame(
@@ -225,6 +226,58 @@ describe('CR 613 layer engine (ADR 0005)', () => {
 });
 
 describe('CR 613.8 dependency ordering (ADR 0006)', () => {
+  it('layer-dependency-prefilter: 33 keyword grants over 170 permanents run no dependency probe', () => {
+    // CR 613.8a: granting a keyword writes only what a keyword grant writes, and no grant's
+    // selector, condition or existence reads that, so none can depend on another. The pass must
+    // apply them in timestamp order without a trial clone of the board for any pair.
+    const ctx = ctx4();
+    registerCustomDef(
+      ctx,
+      customDef({
+        oracleId: 'haste-giver',
+        name: 'Test Haste Giver',
+        typeLine: 'Enchantment',
+        types: ['Enchantment'],
+        staticEffects: [{ affects: ofType('Creature'), op: { layer: 6, addKeyword: 'haste' } }],
+      }),
+    );
+    for (let i = 0; i < 33; i++) {
+      spawn(
+        ctx,
+        'P1',
+        oracle({
+          name: 'Test Haste Giver',
+          oracleId: 'haste-giver',
+          typeLine: 'Enchantment',
+          manaCost: '{2}',
+          power: null,
+          toughness: null,
+        }),
+      );
+    }
+    const bears = Array.from({ length: 137 }, () => spawn(ctx, 'P1', bear()));
+
+    const before = engineWork();
+    const chars = computeCharacteristics(ctx, bears[0] as ReturnType<typeof spawn>);
+    const work = engineWorkSince(before);
+
+    expect(chars.keywords).toContain('haste');
+    expect(work.layerPasses).toBe(1);
+    expect(work.layerDependencyProbes).toBe(0);
+  });
+
+  it('layer-dependency-prefilter: a real dependency is still probed and ordered', () => {
+    const ctx = ctx4();
+    registerCustomDef(ctx, urborgDef('urborg'));
+    spawn(ctx, 'P1', land('Test Urborg', { oracleId: 'urborg', typeLine: 'Legendary Land' }));
+    spawn(ctx, 'P2', bloodMoon());
+    const forestPerm = spawn(ctx, 'P1', forest());
+
+    const before = engineWork();
+    expect(computeCharacteristics(ctx, forestPerm).subtypes).toEqual(['Forest']);
+    expect(engineWorkSince(before).layerDependencyProbes).toBeGreaterThan(0);
+  });
+
   it('Blood Moon shuts off Urborg regardless of which entered first', () => {
     // Urborg's effect DEPENDS on Blood Moon's: Blood Moon turns Urborg (a nonbasic land) into
     // a Mountain, which removes the rules text generating Urborg's effect (CR 305.7). Blood
