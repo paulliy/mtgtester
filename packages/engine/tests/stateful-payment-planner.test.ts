@@ -20,7 +20,10 @@ import {
   interchangeablePermanents,
   searchPayment,
   tapOnlySource,
+  tapOtherSource,
 } from '../src/mana/stateful-payment';
+import type { AbilityCost } from '../src/cards/ability';
+import type { ManaUnit } from '../src/mana/cost';
 import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
 import { allowanceFor, convokeSourcesFor, manaSourcesFor } from '../src/state/queries';
@@ -1328,5 +1331,28 @@ describe('sacrifice mana sources', () => {
     ).toEqual(['Fodder 1', 'Fodder 3']);
     expect(ctx.state.stack.some((entry) => entry.description.includes(hulk.name))).toBe(true);
     expect(player.manaEntries).toEqual([]);
+  });
+});
+
+describe('tap-a-creature sources the final payment solves', () => {
+  it('leaves out a source that costs mana: the final solver sets restricted mana aside there (Codex review)', () => {
+    const cost = parseManaCost('{1}').cost!;
+    const source = {
+      cardId: 'engine',
+      units: [['U'], ['U']] as ManaUnit[],
+      costs: [
+        { kind: 'tap' },
+        { kind: 'tapOther', selector: { kind: 'type', value: 'Creature' } },
+      ] as AbilityCost[],
+      taps: [['bear']],
+    };
+    expect(tapOtherSource(source)).toBe(true);
+    expect(
+      tapOtherSource({
+        ...source,
+        costs: [...source.costs, { kind: 'mana', cost }] as AbilityCost[],
+        manaCost: cost,
+      }),
+    ).toBe(false);
   });
 });

@@ -321,8 +321,10 @@ export function manaCostTapSource(source: ManaSource): boolean {
  * `taps` groups name the eligible creatures, and `planPayment` gives each source its own
  * distinct one that no other source of the payment taps for its cost or its mana, which a replay
  * would have to pin to one creature. It has a `{T}` of its own (so it makes its mana once, like
- * every source the capacity argument counts), no rider, and exactly one tapOther group per
- * `tapOther` cost; `tapOthers`, `tapXOthers` and crew-style costs stay outside.
+ * every source the capacity argument counts), no rider, no mana cost (the final solver sets
+ * restricted pool mana aside for sources that cost mana, `solveWithCostly`, so it is not exact
+ * there), and exactly one tapOther group per `tapOther` cost; `tapOthers`, `tapXOthers` and
+ * crew-style costs stay outside.
  */
 export function tapOtherSource(source: ManaSource): boolean {
   const tapOthers = source.costs.filter((cost) => cost.kind === 'tapOther').length;
@@ -331,9 +333,8 @@ export function tapOtherSource(source: ManaSource): boolean {
     source.taps !== undefined &&
     source.taps.length === tapOthers &&
     source.costs.some((cost) => cost.kind === 'tap') &&
-    source.costs.every(
-      (cost) => cost.kind === 'tap' || cost.kind === 'mana' || cost.kind === 'tapOther',
-    ) &&
+    source.costs.every((cost) => cost.kind === 'tap' || cost.kind === 'tapOther') &&
+    source.manaCost === undefined &&
     source.convoke !== true &&
     source.sacrifices === undefined &&
     source.resources === undefined &&
