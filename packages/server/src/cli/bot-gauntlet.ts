@@ -209,6 +209,16 @@ export function runConfig(
   };
 }
 
+/**
+ * The configuration to save after a run: the current one, but keeping a longer saved schedule, so
+ * the rows of pods a shorter resume left in the file stay covered by it.
+ */
+export function coveringConfig(saved: RunConfig | null, current: RunConfig): RunConfig {
+  return saved !== null && saved.schedule.length > current.schedule.length
+    ? { ...current, schedule: saved.schedule }
+    : current;
+}
+
 /** Why rows saved under `saved` cannot be resumed as `current`, or null when they can. */
 export function resumeConflict(saved: RunConfig | null, current: RunConfig): string | null {
   if (saved === null)
@@ -422,16 +432,20 @@ async function main(): Promise<void> {
   const jobKey = (pod: number, game: string, hero: number | null) => `${pod}/${game}/${hero}`;
   const configPath = args.json?.replace(/\.json$/, '') + '.config.json';
   const config = runConfig(args, pods);
+  let savedConfig: RunConfig | null = null;
   if (args.resume && args.json !== undefined && existsSync(rowsPath)) {
     const saved = existsSync(configPath)
       ? (JSON.parse(readFileSync(configPath, 'utf8')) as RunConfig)
       : null;
     const conflict = resumeConflict(saved, config);
     if (conflict !== null) throw new Error(`--resume: ${conflict}`);
+    if (saved !== null) savedConfig = saved;
     for (const line of readFileSync(rowsPath, 'utf8').split('\n')) {
       if (line.trim().length === 0) continue;
       const row = JSON.parse(line) as Row;
       if (row.seed !== `${args.seed}-${row.pod}`) continue;
+      // A resume with fewer pods leaves the later pods' rows in the file but out of this summary.
+      if (row.pod >= args.pods) continue;
       rows.push(row);
       done.add(jobKey(row.pod, row.game, row.hero));
     }
@@ -439,7 +453,8 @@ async function main(): Promise<void> {
   } else if (args.json !== undefined) {
     writeFileSync(rowsPath, '');
   }
-  if (args.json !== undefined) writeFileSync(configPath, `${JSON.stringify(config)}\n`);
+  if (args.json !== undefined)
+    writeFileSync(configPath, `${JSON.stringify(coveringConfig(savedConfig, config))}\n`);
   const todo = jobs.filter((job) => !done.has(jobKey(job.pod, job.game, job.hero)));
   let next = 0;
   const worker = async (): Promise<void> => {

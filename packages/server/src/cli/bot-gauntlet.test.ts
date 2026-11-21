@@ -3,7 +3,7 @@
  * the same seed, old arm, turn cap and pod schedule.
  */
 import { describe, expect, it } from 'vitest';
-import { resumeConflict, runConfig, type RunConfig } from './bot-gauntlet';
+import { coveringConfig, resumeConflict, runConfig, type RunConfig } from './bot-gauntlet';
 
 const pods = [
   [{ name: 'urdragon' }, { name: 'token-triumph' }, { name: 'necron-dynasties' }, { name: 'ruby' }],
@@ -38,5 +38,12 @@ describe('bot-gauntlet --resume', () => {
 
   it('refuses rows saved before the configuration was recorded', () => {
     expect(resumeConflict(null, saved)).toMatch(/no recorded configuration/);
+  });
+
+  it('keeps the longer saved schedule when a shorter run resumes', () => {
+    const shorter = runConfig(args, pods.slice(0, 1));
+    expect(resumeConflict(saved, shorter)).toBeNull();
+    expect(coveringConfig(saved, shorter).schedule).toEqual(saved.schedule);
+    expect(coveringConfig(null, shorter)).toEqual(shorter);
   });
 });
