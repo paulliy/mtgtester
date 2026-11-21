@@ -869,6 +869,40 @@ describe('the mana planner on the stops main still had (bug 16)', () => {
       provesImpossible(board('{11}'));
     });
 
+    it('keeps the larger alternative when a departure can make the condition start', () => {
+      // "Two mana instead if you control a creature with power 1 or less": a 1/1 under a +1/+1
+      // anthem does not count, until the anthem is sacrificed for mana. Then the source makes two,
+      // and {3} is paid in that order only (Codex review).
+      const state = setup('{3}');
+      withDefinition(state, 'Anthem', 'Artifact', {
+        staticEffects: [
+          {
+            affects: ofType('Creature'),
+            op: { layer: 7, sublayer: 'd', power: 1, toughness: 1 },
+          },
+        ],
+        manaAbilities: [{ units: [['C']], costs: [{ kind: 'tap' }, { kind: 'sacrificeSelf' }] }],
+      });
+      spawn(
+        state.ctx,
+        state.player.id,
+        oracle({ name: 'Small Bear', typeLine: 'Creature — Bear', power: '1', toughness: '1' }),
+      );
+      state.source('Small-gated source', {
+        units: [['C']],
+        conditionalUnits: {
+          condition: countPermanents(
+            allOf(ofType('Creature'), { kind: 'powerAtMost', n: 1 }),
+            'you',
+            '>=',
+            1,
+          ),
+          units: [['C'], ['C']],
+        },
+      });
+      expect(state.offered()).toBeDefined();
+    });
+
     it('still pays exactly at the most the Caryatid can make', () => {
       const state = board('{11}');
       spawn(

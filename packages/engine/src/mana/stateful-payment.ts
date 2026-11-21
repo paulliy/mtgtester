@@ -30,6 +30,7 @@ import {
   departuresCannotAddCapacity,
   gateCannotOpenDuringPayment,
   leavingPermanentsKeepProduction,
+  selectorOnlyFallsAsPermanentsLeave,
   stableSelector,
 } from './payment-stability';
 import type { Condition } from '../cards/condition';
@@ -567,13 +568,24 @@ export function searchPayment(
   // raises no other permanent's power, type or abilities, because nothing that leaves can end an
   // effect that holds one back (`leavingPermanentsKeepProduction` with power counted) and no static
   // in play reads a count, a zone or a graveyard a departure moves (`departuresCannotAddCapacity`
-  // with power counted). So a condition false now stays false.
+  // with power counted). The selector must also be one whose matches only shrink as effects end
+  // (`selectorOnlyFallsAsPermanentsLeave`: not `powerAtMost`, not a negation), and no permanent may
+  // be controlled only while another is on the battlefield, since that control ends with it.
+  // So a condition false now stays false.
   const departuresLowerCounts =
     premise &&
+    !ctx.state.battlefield.some((permanent) =>
+      (permanent.controlChanges ?? []).some(
+        (change) => change.duration.kind === 'whileSourceOnBattlefield',
+      ),
+    ) &&
     leavingPermanentsKeepProduction(definitionsInPlay(ctx), true) &&
     departuresCannotAddCapacity(definitionsInPlay(ctx), true);
   const conditionCannotStart = (condition: Condition): boolean =>
-    departuresLowerCounts && gateCannotOpenDuringPayment(condition);
+    departuresLowerCounts &&
+    gateCannotOpenDuringPayment(condition) &&
+    condition.kind === 'countPermanents' &&
+    selectorOnlyFallsAsPermanentsLeave(condition.selector);
   // Under fixed capacity the only cost that touches energy pays it and the only riders gain life or
   // deal damage to the controller, so energy never rises and life rises only through a life-gain
   // rider or a damage rider from a lifelink source (with infect it gives poison, not life loss). A
