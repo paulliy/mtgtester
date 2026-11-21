@@ -139,7 +139,7 @@ describe('engineProbe', () => {
     // The work counters are exact: the same games count the same work in another probe run.
     const work = (metrics: Report['metrics']) =>
       Object.fromEntries(Object.entries(metrics).filter(([id]) => id.startsWith('engine.work.')));
-    expect(Object.keys(work(first.metrics))).toHaveLength(11);
+    expect(Object.keys(work(first.metrics))).toHaveLength(12);
     expect(first.metrics['engine.work.layerPasses']!.value).toBeGreaterThan(0);
     expect(work(second.metrics)).toEqual(work(first.metrics));
   }, 120_000);

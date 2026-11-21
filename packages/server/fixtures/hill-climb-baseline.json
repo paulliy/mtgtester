@@ -356,6 +356,13 @@
           "better": "lower",
           "kind": "exact",
           "sameGames": true
+        },
+        "engine.work.layerValueCounts": {
+          "value": 63,
+          "unit": "valueCounts",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
         }
       },
       "fingerprints": {
@@ -716,6 +723,13 @@
         "engine.work.layerDependencyProbes": {
           "value": 0,
           "unit": "probes",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.layerValueCounts": {
+          "value": 220,
+          "unit": "valueCounts",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
