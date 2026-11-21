@@ -86,6 +86,7 @@ function ceilingUnits(
   source: ManaSource,
   fixedAmount: (amount: NonNullable<ManaAbilitySpec['amount']>) => boolean,
   fixedCondition: (condition: Condition) => boolean,
+  cannotStart: (condition: Condition) => boolean,
 ): ManaUnit[] | null {
   if (source.stateDependentProduction !== true) return source.units;
   const spec = source.productionSpec;
@@ -99,7 +100,14 @@ function ceilingUnits(
     // can only prune an impossible payment. A source whose symbols are also dynamic or counted
     // has no such list.
     if (spec.amount !== undefined || spec.dynamic !== undefined) return null;
-    const alternatives = [source.units, spec.units, spec.conditionalUnits.units];
+    // A condition that can only stop holding (`cannotStart`) never reaches its "instead" units
+    // unless it holds now, and then they are the units resolved now: the source makes what it
+    // makes now or its base units. Counting the "instead" units anyway let an Ilysian Caryatid with
+    // no power 4 creature in play count as two mana, and an unpayable eleven-pip spell searched
+    // every order of nine sources until the state budget halted the game (fuzz-123).
+    const alternatives = cannotStart(spec.conditionalUnits.condition)
+      ? [source.units, spec.units]
+      : [source.units, spec.units, spec.conditionalUnits.units];
     const count = Math.max(...alternatives.map((units) => units.length));
     return Array.from({ length: count }, (_unused, position) => [
       ...new Set(alternatives.flatMap((units) => units[position] ?? [])),
@@ -549,6 +557,23 @@ export function searchPayment(
   // "Add {G}{G} instead if you control ..." the same way: its condition is fixed with the count.
   const fixedCondition = (condition: Condition): boolean =>
     premise && nothingLeaves && countFixedWhileNothingLeaves(condition);
+  // "Two mana of any one color instead if you control a creature with power 4 or greater" (Ilysian
+  // Caryatid) can only stop holding during a payment that may sacrifice (a Treasure): an `>=` count
+  // over a stable selector (`gateCannotOpenDuringPayment`) moves only when a permanent enters, a
+  // characteristic a selector reads changes, or a permanent leaves. Under the bounds that call this
+  // (`boundedCapacity`, `tapBound`) every cost and rider only taps, pays mana, life or energy, or
+  // sacrifices, so nothing enters; `premise` keeps a tap, a mana payment or a life payment from
+  // changing a characteristic; and a departure lowers the count by the permanent that leaves and
+  // raises no other permanent's power, type or abilities, because nothing that leaves can end an
+  // effect that holds one back (`leavingPermanentsKeepProduction` with power counted) and no static
+  // in play reads a count, a zone or a graveyard a departure moves (`departuresCannotAddCapacity`
+  // with power counted). So a condition false now stays false.
+  const departuresLowerCounts =
+    premise &&
+    leavingPermanentsKeepProduction(definitionsInPlay(ctx), true) &&
+    departuresCannotAddCapacity(definitionsInPlay(ctx), true);
+  const conditionCannotStart = (condition: Condition): boolean =>
+    departuresLowerCounts && gateCannotOpenDuringPayment(condition);
   // Under fixed capacity the only cost that touches energy pays it and the only riders gain life or
   // deal damage to the controller, so energy never rises and life rises only through a life-gain
   // rider or a damage rider from a lifelink source (with infect it gives poison, not life loss). A
@@ -871,10 +896,17 @@ export function searchPayment(
     // activation in a legal order the final payment never tries. Sacrifice sources stay candidates
     // there, outside the scope of `visit`.
     if (withTapOther && replayedChangesBoard(candidates)) outsideScope = true;
+    // The bound with tapOther costs holds in every phase: it is about the game, not about which
+    // sources a phase replays (see the invariants above `heldBudget`). It only cuts states from
+    // which no payment exists, so the first plan a search finds is the same; before, the first two
+    // phases had no bound on such a board and an unpayable {1}{G} from twelve colorless lands, a
+    // tap-a-creature white source and an Ashnod's Altar spent all their states (S5).
     const bounded =
-      (boundedCapacity || (withTapOther && boundedCapacityWithTaps)) && (premise || !current);
+      (boundedCapacity || (premise && boundedCapacityWithTaps)) && (premise || !current);
     const ceilings = bounded
-      ? availableSources.map((source) => ceilingUnits(source, fixedAmount, fixedCondition))
+      ? availableSources.map((source) =>
+          ceilingUnits(source, fixedAmount, fixedCondition, conditionCannotStart),
+        )
       : [];
     if (bounded && ceilings.every((units) => units !== null)) {
       // Alternative abilities of one permanent count at the most any one makes. A sacrifice source
@@ -1132,7 +1164,9 @@ export function searchPayment(
     const payer = ctx.state.players.find((p) => p.id === player.id)!;
     const listed = sourcesFor(ctx, payer);
     if (listed.some((source) => !source.costs.some((c) => c.kind === 'tap'))) return false;
-    const ceilings = listed.map((source) => ceilingUnits(source, fixedAmount, fixedCondition));
+    const ceilings = listed.map((source) =>
+      ceilingUnits(source, fixedAmount, fixedCondition, conditionCannotStart),
+    );
     if (ceilings.some((units) => units === null)) return false;
     const mostPerCard = new Map<string, number>();
     for (const [index, source] of listed.entries())
@@ -1169,9 +1203,48 @@ export function searchPayment(
    * Replaying the activations one by one cannot add a payment, and it branched on every color of
    * every Treasure: {4}{W}{U}{B}{R}{G} from ten Treasures halted on the state budget (fuzz-173,
    * fuzz-218), and a filter land kept it searching every order (fuzz-131, fuzz-144).
+   *
+   * `extended` (S4, S5) also admits sources that tap another creature (`tapOtherSource`, under
+   * `tapOtherBound`) and sources that sacrifice other permanents (`sacrificeSource`, under
+   * `sacrificeBound`), and runs only where the ordinary solve handed back. Before it, such a board
+   * went to the searches, which replay at most `bounds.activations` sources: a 34-pip cost from 38
+   * sources with a Holdout Settlement spent 2048 states in two phases each and halted (fuzz-407), and
+   * twelve lands, a tapOther white source and an Ashnod's Altar against {12}{W} ran all three
+   * phases out of states. The stages try the board without those sources, then with the tapOther
+   * ones, then with the sacrifice ones too, so a creature is tapped or sacrificed only when the
+   * cost needs it, as the searches' phases do.
+   *
+   * A plan it finds is a legal payment. Under `premise` no activation changes a characteristic, so
+   * every source makes what `manaSourcesFor` resolved now (dynamic production is checked again
+   * below, and with a sacrifice only board-blind kinds are kept). A tapOther cost taps a creature
+   * that then makes no mana: `planPayment` gives each `taps` group a distinct creature that no
+   * planned source uses (`plannedIds`), and `tapOtherBound` says a tap moves no gate, counted amount
+   * or conditional "instead" of the payer's abilities. A sacrifice removes a permanent:
+   * `planPayment` gives each sacrifice a distinct victim that no later source of the plan needs,
+   * `sacrificeBound` and `selfSacrificeBounded` say no departure gives any source more or other
+   * production, and no ability may then be gated at all, since a departure can close a `>=` gate
+   * and the solver does not order around one. `extendedCapacity` admits only costs and riders of
+   * these kinds, with every counted amount and condition fixed (`fixedCondition` already needs a
+   * board with no sacrifice ability). `orderForActivation` orders and checks the plan, and when it
+   * is applied `payAbilityCosts` asks the player which creature to tap or sacrifice among those
+   * that leave the rest payable, as in the searches' later phases.
+   *
+   * Its "no" is a proof only when every source needs a `{T}` (so no sacrifice-other source, which
+   * repeats without one): then a creature tapped for a tapOther cost can activate nothing, a
+   * creature activated for mana cannot be tapped for a cost, and the board is the ordinary static
+   * payment plus tapOther costs, which `planPayment` matches exactly (the searches' third phase
+   * relies on the same, see the invariants below). A source with no `{T}` breaks that: Wild Cantor
+   * tapped for a Sentinel's cost can still be sacrificed for its own mana, an order `planPayment`
+   * never tries (`plannedIds`), so there a "no" hands back to the searches.
    */
-  const staticSolve = (): PaymentPlan | null | typeof handBack => {
-    if (!premise || !fixedCapacity) return handBack;
+  const extendedCapacity = capacityHolds(
+    true,
+    (cost) => (tapOtherBound && cost.kind === 'tapOther') || keepsCapacity(cost),
+    keepsActivation,
+    gatedBound,
+  );
+  const staticSolve = (extended = false): PaymentPlan | null | typeof handBack => {
+    if (!premise || !(extended ? extendedCapacity : fixedCapacity)) return handBack;
     const payer = ctx.state.players.find((p) => p.id === player.id)!;
     const rootSources = sourcesFor(ctx, payer);
     // A life rider (a painland's damage, a life-gain land) matters to a payment only through a
@@ -1193,15 +1266,23 @@ export function searchPayment(
           shape.convoke === true ||
           tapOnlySource(shape) ||
           selfSacrificeSource(shape) ||
-          manaCostTapSource(shape)
+          manaCostTapSource(shape) ||
+          (extended && tapOtherBound && tapOtherSource(shape)) ||
+          (extended && sacrificeBound && sacrificeSource(shape))
         );
       })
     )
       return handBack;
     if (staticSolverIncomplete(rootSources, payer.manaEntries)) return handBack;
     // Tapping removes nothing; a sacrifice needs nothing in play to read the permanent leaving.
-    const sacrificing = rootSources.some(selfSacrificeSource);
+    const sacrificing = rootSources.some(
+      (source) => selfSacrificeSource(source) || (extended && sacrificeSource(source)),
+    );
     if (sacrificing && !selfSacrificeBounded) return handBack;
+    // The extended solve does not order activations around a gate a departure could close
+    // ("activate only if you control three or more artifacts" after a Treasure is sacrificed).
+    if (extended && sacrificing && ownAbilities.some((ability) => ability.condition !== undefined))
+      return handBack;
     const permanentOf = new Map(ctx.state.battlefield.map((p) => [p.cardId, p]));
     for (const source of rootSources) {
       if (source.convoke === true || source.productionSpec === undefined) continue;
@@ -1226,17 +1307,42 @@ export function searchPayment(
       (lifeReserved > 0 && (lifeLocked || payer.life < lifeReserved))
     )
       return null;
-    if (trace) trace.staticSolve = true;
-    return planPayment(
-      cost,
-      payer.manaEntries,
+    const solve = (stage: readonly ManaSource[]): PaymentPlan | null =>
+      planPayment(
+        cost,
+        payer.manaEntries,
+        stage,
+        allows,
+        lifeLocked ? 0 : Math.max(0, payer.life - lifeReserved),
+      );
+    if (!extended) {
+      if (trace) trace.staticSolve = true;
+      return solve(rootSources);
+    }
+    // Tap another creature only where the board cannot pay without it, and sacrifice one only
+    // where neither can: the same preference the searches keep by running in phases.
+    const taps = (source: ManaSource): boolean => tapOtherSource(bare(source));
+    const stages = [
+      rootSources.filter((source) => !taps(source) && !sacrificeSource(source)),
+      rootSources.filter((source) => !sacrificeSource(source)),
       rootSources,
-      allows,
-      lifeLocked ? 0 : Math.max(0, payer.life - lifeReserved),
-    );
+    ];
+    for (const [index, stage] of stages.entries()) {
+      if (index > 0 && stage.length === stages[index - 1]!.length) continue;
+      const plan = solve(stage);
+      if (plan !== null) {
+        if (trace) trace.staticSolve = true;
+        return plan;
+      }
+    }
+    if (!rootSources.every((source) => source.costs.some((c) => c.kind === 'tap'))) return handBack;
+    if (trace) trace.staticSolve = true;
+    return null;
   };
   const solved = staticSolve();
   if (solved !== handBack) return solved;
+  const extendedSolved = staticSolve(true);
+  if (extendedSolved !== handBack) return extendedSolved;
   /**
    * Invariants of the three searches (bug 15). Phase 1 is the search as it always was and runs
    * first. A later phase runs only when phase 1 found no plan and stopped at a source it cannot

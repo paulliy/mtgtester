@@ -398,13 +398,31 @@ export function planPayment(
   lifeTotal = Math.max(0, lifeTotal);
   if ((cost.phyrexian?.length ?? 0) > 0) {
     const pips = cost.phyrexian as Color[];
+    // Each pip is paid with its mana or 2 life, so the choices form a binary tree, but the rest of
+    // the search depends only on where it stands: the pip reached, the colored pips so far and the
+    // life so far. Two pips of one color reach the same place in either order, so a failed place
+    // is remembered and never searched again, and life past the total fails at once (it only
+    // grows). Only failures are skipped, so the first plan found is the one found before. Without
+    // this, thirty-one {W/P} pips walked 2^31 leaves and a game ran past its wall clock (fuzz-599).
+    const failed = new Set<string>();
     const expand = (
       index: number,
       colored: ParsedManaCost['colored'],
       lifePaid: number,
     ): PaymentPlan | null => {
+      if (lifePaid > lifeTotal) return null;
+      const key = `${index}|${ALL_COLORS.map((c) => colored[c]).join(',')}|${lifePaid}`;
+      if (failed.has(key)) return null;
+      const plan = expandAt(index, colored, lifePaid);
+      if (plan === null) failed.add(key);
+      return plan;
+    };
+    const expandAt = (
+      index: number,
+      colored: ParsedManaCost['colored'],
+      lifePaid: number,
+    ): PaymentPlan | null => {
       if (index === pips.length) {
-        if (lifePaid > lifeTotal) return null;
         const resolvedCost: ParsedManaCost = {
           ...cost,
           colored,

@@ -70,6 +70,21 @@ describe('mana cost parsing', () => {
 });
 
 describe('payment solver', () => {
+  it('solves thirty-one Phyrexian pips without trying every mana-or-life order (fuzz-599)', () => {
+    const cost = parseManaCost('{W/P}'.repeat(31)).cost!;
+    const started = Date.now();
+    // 40 life pays twenty pips; eleven white mana pay the rest, and ten cannot.
+    expect(planPayment(cost, pool(...Array<Sym>(10).fill('W')), [], undefined, 40)).toBeNull();
+    const plan = planPayment(cost, pool(...Array<Sym>(11).fill('W')), [], undefined, 40);
+    expect(plan?.lifePaid).toBe(40);
+    expect(plan?.fromPool.W).toBe(11);
+    // The same plan as before: every pip it can pays with mana first.
+    expect(planPayment(cost, pool(...Array<Sym>(31).fill('W')), [], undefined, 40)?.lifePaid).toBe(
+      0,
+    );
+    expect(Date.now() - started).toBeLessThan(2000);
+  });
+
   it('pays colored pips from matching sources only', () => {
     const cost = parseManaCost('{G}{G}').cost!;
     expect(canPay(cost, pool(), [src('a', 'G'), src('b', 'G')])).toBe(true);
