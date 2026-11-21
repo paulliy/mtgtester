@@ -663,12 +663,20 @@ export function searchPayment(
   // needs no `leavingPermanentsKeepProduction`; it needs only that a tap changes nothing a source
   // reads, which `premise` gives for statics and this gives for the gates of the payer's own mana
   // abilities: a gate that can neither open nor, being a count over a stable selector, close by a
-  // tap.
+  // tap. The same holds for what a source makes: a counted amount or a conditional "instead" must
+  // be a count over a stable selector too ("{G}{G} instead if you control a tapped creature" would
+  // make more once the deferred tapOther cost taps a creature, an order the final payment never
+  // tries). Dynamic production (`DynamicManaKind`) reads colors, lands and choices, never tapped
+  // status, and `premise` keeps a tap from changing a color.
   const tapOtherBound =
     premise &&
     ownAbilities.every(
       (ability) =>
-        ability.condition === undefined || gateCannotOpenDuringPayment(ability.condition),
+        (ability.condition === undefined || gateCannotOpenDuringPayment(ability.condition)) &&
+        (ability.conditionalUnits === undefined ||
+          countFixedWhileNothingLeaves(ability.conditionalUnits.condition)) &&
+        (ability.amount === undefined ||
+          (ability.amount.kind === 'countPermanents' && stableSelector(ability.amount.selector))),
     );
   // The life the colored bound lets a pay-life source spend: what the payer has beyond the spell's
   // own life (no life comes back when this bound runs). The solver reads a `payLife` cost against

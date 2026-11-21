@@ -977,6 +977,25 @@ describe('the mana planner on the stops main still had (bug 16)', () => {
       expect(tappedNames(state)).toEqual(['Bystander 2', 'Elf 0', 'Elf 1', 'Elf 2', 'Holdout']);
     });
 
+    it('keeps halting where a tap for the cost would raise another source', () => {
+      // Tapping the Bystander for the Sentinel's cost first makes the other source add {G}{G}:
+      // payable, but only in that order, which the final payment does not explore.
+      const state = setup('{G}{G}{G}');
+      inertOrchard(state);
+      withDefinition(state, 'Green Sentinel', 'Artifact', {
+        manaAbilities: [{ units: [['G']], costs: tapACreature }],
+      });
+      bystander(state, 'Bystander');
+      state.source('Tapped-creature source', {
+        units: [['G']],
+        conditionalUnits: {
+          condition: countPermanents(allOf(ofType('Creature'), { kind: 'tapped' }), 'you', '>=', 1),
+          units: [['G'], ['G']],
+        },
+      });
+      expect(state.offered).toThrow('outside the proven scope');
+    });
+
     it('keeps halting where the creature to tap could also be sacrificed for mana', () => {
       // Sentinel taps Wild Cantor for its cost, then the tapped Cantor is sacrificed for {G}:
       // payable, but only in that order, which the final payment does not explore. A halt, not
