@@ -50,7 +50,7 @@ import type { EnginePermanent, GameContext } from '../state/types';
 import { cardZoneCandidate } from '../state/queries';
 import { getCached, sampleCacheHit, scopedDigestOf, setCached } from './layer-cache';
 import { countWork } from '../work-counters';
-import { readsOf, writesOf } from './layer-dependency';
+import { EVERYTHING, readsOf, SUBTYPES, selectorReads, TYPES, writesOf } from './layer-dependency';
 
 /** Basic-land subtype → intrinsic mana ability (CR 305.6), for Blood Moon's mana override. */
 const BASIC_LAND_MANA: Record<string, ManaUnit> = {
@@ -643,28 +643,67 @@ function affects(ctx: GameContext, effect: LayerEffect, entry: Working): boolean
   );
 }
 
+const SCAN_GREATEST_MV = Symbol('greatestNoncreatureManaValue');
+const SCAN_AURAS_ON_CREATURES = Symbol('aurasYouControlAttachedToCreatures');
+const SCAN_AURAS_ON_SOURCE = Symbol('aurasAttachedToSource');
+
+/** Set `MTG_VERIFY_LAYER_VALUE_CACHE=1` to rescan on every reused board count and assert they agree. */
+const VERIFY_VALUE_CACHE =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[
+    'MTG_VERIFY_LAYER_VALUE_CACHE'
+  ] === '1';
+
 /** The static effect source's controller — the only scope the layer engine can offer a `Value`. */
 /** The static effect scope, including counts over the current layer working set. */
 function scopeOf(
   ctx: GameContext,
   work: WorkMap,
   effect: LayerEffect,
+  /** Within one `applyOne`: reuse a board count the effect's own op cannot change. */
+  memoize = false,
 ): LayerValueScope | undefined {
   if (effect.applies.kind !== 'selector') return undefined;
   const source = effect.applies.source;
+  const writes = memoize ? writesOf(effect.op) : EVERYTHING;
+  /**
+   * A board scan, answered from the first result while applying the effect to one object cannot
+   * change what the scan reads (`reads` shares no characteristic kind with `writesOf(op)`).
+   * Otherwise it is scanned afresh, exactly as before. `MTG_VERIFY_LAYER_VALUE_CACHE=1` rescans
+   * on every reuse and throws on a difference.
+   */
+  const memo = new Map<unknown, Map<string, number>>();
+  const counted = (key: unknown, variant: string, reads: number, scan: () => number): number => {
+    const scanned = (): number => {
+      countWork('layerValueCounts');
+      return scan();
+    };
+    if ((writes & reads) !== 0) return scanned();
+    let byVariant = memo.get(key);
+    if (byVariant === undefined) memo.set(key, (byVariant = new Map()));
+    const known = byVariant.get(variant);
+    if (known === undefined) {
+      const fresh = scanned();
+      byVariant.set(variant, fresh);
+      return fresh;
+    }
+    if (VERIFY_VALUE_CACHE && scan() !== known)
+      throw new Error(`engine bug: layer value cache disagrees for ${variant}`);
+    return known;
+  };
   return {
     controllerId: source.controllerId,
     sourceCounters: work.get(source.cardId)?.perm.counters ?? {},
-    countPermanents: (selector, who) => {
-      let count = 0;
-      for (const entry of work.values()) {
-        if (!selectMatches(candidateOf(ctx, entry.perm, entry.chars), selector, source)) continue;
-        if (who === 'you' && entry.perm.controllerId !== source.controllerId) continue;
-        if (who === 'opponents' && entry.perm.controllerId === source.controllerId) continue;
-        count += 1;
-      }
-      return count;
-    },
+    countPermanents: (selector, who) =>
+      counted(selector, who, selectorReads(selector), () => {
+        let count = 0;
+        for (const entry of work.values()) {
+          if (!selectMatches(candidateOf(ctx, entry.perm, entry.chars), selector, source)) continue;
+          if (who === 'you' && entry.perm.controllerId !== source.controllerId) continue;
+          if (who === 'opponents' && entry.perm.controllerId === source.controllerId) continue;
+          count += 1;
+        }
+        return count;
+      }),
     // "for each creature card in your graveyard" (Wight of the Reliquary): cards in a zone
     // read as they are, no layer dependency (CR 613.1 applies to permanents only).
     countCardsInZone: (zone, selector, owner) => {
@@ -679,33 +718,38 @@ function scopeOf(
       return count;
     },
     greatestNoncreatureManaValue: () =>
-      greatestNoncreatureManaValue(
-        ctx,
-        source.controllerId,
-        [...work.values()].map((entry) => ({ perm: entry.perm, types: entry.chars.types })),
+      counted(SCAN_GREATEST_MV, '', TYPES, () =>
+        greatestNoncreatureManaValue(
+          ctx,
+          source.controllerId,
+          [...work.values()].map((entry) => ({ perm: entry.perm, types: entry.chars.types })),
+        ),
       ),
-    countAurasYouControlAttachedToCreatures: () => {
-      let count = 0;
-      for (const entry of work.values()) {
-        if (entry.perm.controllerId !== source.controllerId) continue;
-        if (!entry.chars.subtypes.includes('Aura')) continue;
-        if (entry.perm.attachedTo === null) continue;
-        const attached = [...work.values()].find(
-          (candidate) => candidate.perm.id === entry.perm.attachedTo,
-        );
-        if (attached?.chars.types.includes('Creature') === true) count += 1;
-      }
-      return count;
-    },
-    countAurasAttachedToSource: () => {
-      const host = work.get(source.cardId)?.perm;
-      if (host === undefined) return 0;
-      let count = 0;
-      for (const entry of work.values()) {
-        if (entry.perm.attachedTo === host.id && entry.chars.subtypes.includes('Aura')) count += 1;
-      }
-      return count;
-    },
+    countAurasYouControlAttachedToCreatures: () =>
+      counted(SCAN_AURAS_ON_CREATURES, '', TYPES | SUBTYPES, () => {
+        let count = 0;
+        for (const entry of work.values()) {
+          if (entry.perm.controllerId !== source.controllerId) continue;
+          if (!entry.chars.subtypes.includes('Aura')) continue;
+          if (entry.perm.attachedTo === null) continue;
+          const attached = [...work.values()].find(
+            (candidate) => candidate.perm.id === entry.perm.attachedTo,
+          );
+          if (attached?.chars.types.includes('Creature') === true) count += 1;
+        }
+        return count;
+      }),
+    countAurasAttachedToSource: () =>
+      counted(SCAN_AURAS_ON_SOURCE, '', SUBTYPES, () => {
+        const host = work.get(source.cardId)?.perm;
+        if (host === undefined) return 0;
+        let count = 0;
+        for (const entry of work.values()) {
+          if (entry.perm.attachedTo === host.id && entry.chars.subtypes.includes('Aura'))
+            count += 1;
+        }
+        return count;
+      }),
   };
 }
 function applyOpTo(
@@ -804,7 +848,7 @@ function applyOpTo(
 
 function applyOne(ctx: GameContext, work: WorkMap, effect: LayerEffect): void {
   if (!effectExists(ctx, work, effect)) return;
-  const scope = scopeOf(ctx, work, effect);
+  const scope = scopeOf(ctx, work, effect, true);
   // "For each time it has attacked this turn" reads the affected object, not the source.
   const op = effect.op;
   const perObject =
