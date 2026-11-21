@@ -133,8 +133,9 @@ every IR mutant of a card (`bun run mutate-cards`); each mutant no test kills is
 still writes. The probe drafts every modeled EDHREC card's promotion scaffold
 (`packages/engine/tests/scenario/scaffold.ts`, the same drafts `bun run card:scaffold` writes),
 runs the passing drafts under each mutant in process, and counts what is left. Only an expectation
-failure counts as a kill, as in `mutate-cards`. The quick profile samples every 8th card; the
-standard profile measures all of them. `packages/server/src/hill-climb/authoring.test.ts` gates the
+failure counts as a kill, as in `mutate-cards`. The quick profile samples the modeled cards among
+every 8th EDHREC pin, so a card that starts or stops modeling moves only itself in or out of the
+sample; the standard profile measures all of them. `packages/server/src/hill-climb/authoring.test.ts` gates the
 quick sample in the normal suite. A part counts as scaffolded only when every unit of it has a
 passing draft: a modal spell with one mode drafted and another not does not count.
 
