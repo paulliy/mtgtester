@@ -16,8 +16,9 @@
  * A deck-styled arm (`styled`, `proxy-v2-styled`) plays each deck in the style
  * `fixtures/deck-styles.json` pins for it, not the classifier's guess.
  *
- * `--resume` reuses the rows (`out.rows.jsonl`) a stopped run with the same `--json` and seed
- * wrote, and plays only the games missing from them.
+ * `--resume` reuses the rows (`out.rows.jsonl`) a stopped run with the same `--json` wrote, and
+ * plays only the games missing from them. It refuses rows saved under a different seed, old arm,
+ * turn cap or pod schedule (`out.config.json`).
  *
  * `--trace-dir` keeps a compact trace of each game (`game-trace.ts`): every seat in a baseline
  * game, the switched seat in the others, for reviewing where the bots' play differed.
@@ -180,6 +181,46 @@ function schedule(decks: Deck[], pods: number, seed: string): Deck[][] {
     result.push(pod);
   }
   return result;
+}
+
+/**
+ * What a run's rows depend on, saved beside them (`<json>.config.json`) so `--resume` cannot pair
+ * rows from one experiment with games from another. The new arms are not part of it: rows are
+ * keyed by arm name, so adding an arm resumes cleanly. More pods are fine too, because the schedule
+ * is drawn in order and the earlier pods do not change.
+ */
+export interface RunConfig {
+  seed: string;
+  old: string;
+  turnCap: number;
+  /** Each pod's decks, by seat. */
+  schedule: string[][];
+}
+
+export function runConfig(
+  args: Pick<Args, 'seed' | 'old' | 'turnCap'>,
+  pods: ReadonlyArray<ReadonlyArray<{ name: string }>>,
+): RunConfig {
+  return {
+    seed: args.seed,
+    old: args.old,
+    turnCap: args.turnCap,
+    schedule: pods.map((pod) => pod.map((deck) => deck.name)),
+  };
+}
+
+/** Why rows saved under `saved` cannot be resumed as `current`, or null when they can. */
+export function resumeConflict(saved: RunConfig | null, current: RunConfig): string | null {
+  if (saved === null)
+    return 'the saved rows have no recorded configuration; rerun without --resume';
+  for (const key of ['seed', 'old', 'turnCap'] as const)
+    if (saved[key] !== current[key])
+      return `${key} was ${String(saved[key])}, now ${String(current[key])}`;
+  const shared = Math.min(saved.schedule.length, current.schedule.length);
+  for (let pod = 0; pod < shared; pod++)
+    if (saved.schedule[pod]!.join(',') !== current.schedule[pod]!.join(','))
+      return `pod ${pod} seated ${saved.schedule[pod]!.join(', ')}, now ${current.schedule[pod]!.join(', ')}`;
+  return null;
 }
 
 interface Row {
@@ -379,7 +420,14 @@ async function main(): Promise<void> {
   const rows: Row[] = [];
   const done = new Set<string>();
   const jobKey = (pod: number, game: string, hero: number | null) => `${pod}/${game}/${hero}`;
+  const configPath = args.json?.replace(/\.json$/, '') + '.config.json';
+  const config = runConfig(args, pods);
   if (args.resume && args.json !== undefined && existsSync(rowsPath)) {
+    const saved = existsSync(configPath)
+      ? (JSON.parse(readFileSync(configPath, 'utf8')) as RunConfig)
+      : null;
+    const conflict = resumeConflict(saved, config);
+    if (conflict !== null) throw new Error(`--resume: ${conflict}`);
     for (const line of readFileSync(rowsPath, 'utf8').split('\n')) {
       if (line.trim().length === 0) continue;
       const row = JSON.parse(line) as Row;
@@ -391,6 +439,7 @@ async function main(): Promise<void> {
   } else if (args.json !== undefined) {
     writeFileSync(rowsPath, '');
   }
+  if (args.json !== undefined) writeFileSync(configPath, `${JSON.stringify(config)}\n`);
   const todo = jobs.filter((job) => !done.has(jobKey(job.pod, job.game, job.hero)));
   let next = 0;
   const worker = async (): Promise<void> => {
@@ -422,9 +471,12 @@ async function main(): Promise<void> {
 }
 
 const entryPoint = process.argv[1];
+// `import.meta.path` is Bun's; under the test runner the module is only imported, never run.
+const modulePath = (import.meta as { path?: string }).path;
 if (
   entryPoint !== undefined &&
+  modulePath !== undefined &&
   existsSync(entryPoint) &&
-  resolve(entryPoint) === resolve(import.meta.path)
+  resolve(entryPoint) === resolve(modulePath)
 )
   void main();
