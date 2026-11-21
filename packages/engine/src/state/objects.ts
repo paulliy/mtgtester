@@ -2119,6 +2119,17 @@ export function enchantAllows(
   aura: EnginePermanent,
   host: EnginePermanent,
 ): boolean | undefined {
+  // Reads only: one layer digest serves every candidate the enchant restriction checks
+  // (`withReadScope`). Without it, each candidate re-digested the whole board, so the SBA Aura
+  // check was quadratic in board size on every pass (fuzz-203, hundreds of tokens).
+  return withReadScope(ctx, () => enchantAllowsIn(ctx, aura, host));
+}
+
+function enchantAllowsIn(
+  ctx: GameContext,
+  aura: EnginePermanent,
+  host: EnginePermanent,
+): boolean | undefined {
   const chars = computeCharacteristics(ctx, aura);
   if (hasProtectionFrom(ctx, host, chars)) return false;
   // A bestowed Aura has "enchant creature" (CR 702.103b).
