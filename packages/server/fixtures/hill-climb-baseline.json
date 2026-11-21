@@ -12,25 +12,25 @@
         "authoring",
         "compiler"
       ],
-      "commit": "19e94f2e",
+      "commit": "d0b39926",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 56.15,
+      "calibrationMs": 64.94,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.84,
+          "value": 7.27,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.616
+          "spread": 0.226
         },
         "engine.medianGameMsPerDecision": {
-          "value": 6.7,
+          "value": 6.52,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.56
+          "spread": 0.277
         },
         "engine.work.layerPasses": {
           "value": 2650,
@@ -48,15 +48,8 @@
           "informational": true
         },
         "engine.work.layerDigests": {
-          "value": 36406,
+          "value": 39027,
           "unit": "digests",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
-        "engine.work.layerDependencyProbes": {
-          "value": 0,
-          "unit": "probes",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
@@ -111,11 +104,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 1.6,
+          "value": 0.8,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.372
+          "spread": 0.244
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -268,13 +261,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 5012,
+          "value": 5022,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 61.183,
+          "value": 61.214,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -310,25 +303,25 @@
           "kind": "exact"
         },
         "authoring.poolMutantsLeftPct": {
-          "value": 79.41,
+          "value": 78.76,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 39.98,
+          "value": 40.44,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolCardsFullyScaffolded": {
-          "value": 116,
+          "value": 133,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolDraftFailures": {
-          "value": 1,
+          "value": 0,
           "unit": "drafts",
           "better": "lower",
           "kind": "exact"
@@ -356,6 +349,13 @@
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
+        },
+        "engine.work.layerDependencyProbes": {
+          "value": 0,
+          "unit": "probes",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
         }
       },
       "fingerprints": {
@@ -375,35 +375,35 @@
         "authoring",
         "compiler"
       ],
-      "commit": "19e94f2e",
+      "commit": "d0b39926",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 63.11,
+      "calibrationMs": 63.4,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 12.94,
+          "value": 13.34,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.163
+          "spread": 0.091
         },
         "engine.medianGameMsPerDecision": {
-          "value": 12.56,
+          "value": 14.05,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.185
+          "spread": 0.057
         },
         "engine.work.layerPasses": {
-          "value": 11369,
+          "value": 11124,
           "unit": "passes",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
         "engine.work.layerCacheHits": {
-          "value": 1186367,
+          "value": 1237476,
           "unit": "hits",
           "better": "lower",
           "kind": "exact",
@@ -411,74 +411,67 @@
           "informational": true
         },
         "engine.work.layerDigests": {
-          "value": 251486,
+          "value": 266085,
           "unit": "digests",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
-        "engine.work.layerDependencyProbes": {
-          "value": 0,
-          "unit": "probes",
-          "better": "lower",
-          "kind": "exact",
-          "sameGames": true
-        },
         "engine.work.castCheckpoints": {
-          "value": 245,
+          "value": 242,
           "unit": "checkpoints",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
         "engine.work.castPreviews": {
-          "value": 55662,
+          "value": 54348,
           "unit": "previews",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
         "engine.work.manaSourceListings": {
-          "value": 18270,
+          "value": 19727,
           "unit": "listings",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
         "engine.work.spellPaymentSearches": {
-          "value": 4999,
+          "value": 4824,
           "unit": "searches",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
         "engine.work.manaPlannerSearches": {
-          "value": 41,
+          "value": 827,
           "unit": "searches",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
         "engine.work.manaPlannerStates": {
-          "value": 158,
+          "value": 2574,
           "unit": "states",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
         "engine.work.stateCopies": {
-          "value": 158,
+          "value": 1330,
           "unit": "copies",
           "better": "lower",
           "kind": "exact",
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 0.91,
+          "value": 0.79,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.106
+          "spread": 0.17
         },
         "model.default.callsPerTurn": {
           "value": 6.735,
@@ -631,13 +624,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 5012,
+          "value": 5022,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 61.183,
+          "value": 61.214,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -673,13 +666,13 @@
           "kind": "exact"
         },
         "authoring.poolMutantsLeftPct": {
-          "value": 78.93,
+          "value": 78.98,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 40.49,
+          "value": 40.45,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -719,15 +712,22 @@
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
+        },
+        "engine.work.layerDependencyProbes": {
+          "value": 0,
+          "unit": "probes",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
         }
       },
       "fingerprints": {
         "0": "d1963e8e9fcd1922",
         "3": "6480edc04ec77666",
         "6": "c3936556f219bda4",
-        "9": "cd04168bfdaaa77a",
+        "9": "da0981e41e57aad7",
         "12": "9c2f1534dfbb640e",
-        "15": "cf0762f181e1ce2d"
+        "15": "456c808d894412fe"
       }
     }
   }
