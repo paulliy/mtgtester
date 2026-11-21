@@ -998,6 +998,37 @@ describe('the mana planner on the stops main still had (bug 16)', () => {
       expect(state.offered).toThrow('outside the proven scope');
     });
 
+    it('keeps halting where removing a counter would close a tap-an-artifact source gate', () => {
+      // The gated land must activate before the creature loses its counter (its gate needs power
+      // 2): payable in that order only, which the final payment does not explore.
+      const state = setup('{G}{G}');
+      inertOrchard(state);
+      withDefinition(state, 'Trinket', 'Artifact', { manaAbilities: [] });
+      // A 1/1 with one +1/+1 counter: removing it drops its power to 1.
+      const grower = spawn(
+        state.ctx,
+        state.player.id,
+        oracle({ name: 'Grower', typeLine: 'Creature', power: '1', toughness: '1' }),
+      );
+      state.ctx.defs.set(grower.oracleId, {
+        ...state.ctx.defs.get(grower.oracleId)!,
+        manaAbilities: [
+          { units: [['G']], costs: [{ kind: 'removeCounters', counter: '+1/+1', count: 1 }] },
+        ],
+      });
+      grower.counters['+1/+1'] = 1;
+      withDefinition(state, 'Gated Engine', 'Land', {
+        manaAbilities: [
+          {
+            units: [['G']],
+            costs: [{ kind: 'tap' }, tapOther(ofType('Artifact'))],
+            condition: countPermanents(allOf(ofType('Creature'), powerAtLeast(2)), 'you', '>=', 1),
+          },
+        ],
+      });
+      expect(state.offered).toThrow('outside the proven scope');
+    });
+
     it('keeps halting where a tap for the cost would raise another source', () => {
       // Tapping the Bystander for the Sentinel's cost first makes the other source add {G}{G}:
       // payable, but only in that order, which the final payment does not explore.

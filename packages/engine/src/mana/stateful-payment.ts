@@ -459,14 +459,21 @@ export function searchPayment(
   const leftToFinal = (source: ManaSource): boolean =>
     (withSacrifice && sacrificeSource(source)) || (withTapOther && tapOtherSource(source));
   /**
-   * A replayed candidate takes a permanent off the battlefield ("Sacrifice this:", Treasure, Wild
-   * Cantor). The final payment pays every tapOther cost after the replayed activations, so it never
-   * tries "tap it for the cost, then sacrifice it", nor activating a tapOther source before a
-   * departure closes its gate or changes a static.
+   * A replayed candidate does more than tap, pay mana, pay life or pay energy: it takes a
+   * permanent off the battlefield ("Sacrifice this:", Treasure, Wild Cantor) or removes counters.
+   * The final payment pays every tapOther cost after the replayed activations, so it never tries
+   * "tap it for the cost, then sacrifice it", nor activating a tapOther source before a departure
+   * or a lost counter closes its gate or changes a static.
    */
-  const replayedLeaves = (candidates: readonly ManaSource[]): boolean =>
+  const replayedChangesBoard = (candidates: readonly ManaSource[]): boolean =>
     candidates.some((source) =>
-      source.costs.some((cost) => cost.kind === 'sacrificeSelf' || cost.kind === 'exileSelf'),
+      source.costs.some(
+        (cost) =>
+          cost.kind !== 'tap' &&
+          cost.kind !== 'mana' &&
+          cost.kind !== 'payLife' &&
+          cost.kind !== 'payEnergy',
+      ),
     );
   /** Thrown from the search once `provablyImpossible` holds: the answer is "not payable". */
   const rootImpossible = {};
@@ -859,10 +866,11 @@ export function searchPayment(
       )
     )
       outsideScope = true;
-    // Phase 3 covers only payments in which no permanent leaves (see `replayedLeaves`): a
-    // departure could come after a deferred tapOther activation in a legal order the final payment
-    // never tries. Sacrifice sources stay candidates there, outside the scope of `visit`.
-    if (withTapOther && replayedLeaves(candidates)) outsideScope = true;
+    // Phase 3 covers only payments whose replayed activations tap, pay mana, life or energy (see
+    // `replayedChangesBoard`): a departure or a lost counter could come after a deferred tapOther
+    // activation in a legal order the final payment never tries. Sacrifice sources stay candidates
+    // there, outside the scope of `visit`.
+    if (withTapOther && replayedChangesBoard(candidates)) outsideScope = true;
     const bounded =
       (boundedCapacity || (withTapOther && boundedCapacityWithTaps)) && (premise || !current);
     const ceilings = bounded
@@ -1256,9 +1264,10 @@ export function searchPayment(
    *     creature the final payment still needs: the final payment owns every cost of its sources.
    *     A departure is different: "tap it for the cost, then sacrifice it", or "activate the
    *     tapOther source, then sacrifice the creature its gate counts", are orders the final
-   *     payment never sees. So phase 3 leaves no sacrifice source to the final payment and halts
-   *     (`outsideScope`) when a replayed candidate sacrifices or exiles itself (`replayedLeaves`):
-   *     it covers only payments in which no permanent leaves, where taps are all that happen.
+   *     payment never sees, nor is "activate it before a counter is removed". So phase 3 leaves no
+   *     sacrifice source to the final payment and halts (`outsideScope`) when a replayed
+   *     candidate does more than tap or pay mana, life or energy (`replayedChangesBoard`): it
+   *     covers only payments in which taps are all that happen to the board.
    *   - (c) `planPayment` models `taps` groups: each tapOther cost gets a distinct untapped
    *     creature that no source of the same payment taps for mana or for another cost (the
    *     `plannedIds` check; a creature that taps for its own cost does not also tap for mana), and
