@@ -414,6 +414,36 @@ export function sacrificeSource(source: ManaSource): boolean {
   );
 }
 
+/**
+ * A source that pays by tapping its own permanent and another untapped one ("{T}, Tap an untapped
+ * creature you control: Add one mana of any color", Jaspera Sentinel, Holdout Settlement) and
+ * makes a fixed amount of mana. Like `sacrificeSource`, the final payment solves it exactly: its
+ * `taps` groups name the eligible creatures, and `planPayment` gives each source its own
+ * distinct one that no other source of the payment taps for its cost or its mana, which a replay
+ * would have to pin to one creature. It has a `{T}` of its own (so it makes its mana once, like
+ * every source the capacity argument counts), no rider, and exactly one tapOther group per
+ * `tapOther` cost; `tapOthers`, `tapXOthers` and crew-style costs stay outside.
+ */
+export function tapOtherSource(source: ManaSource): boolean {
+  const tapOthers = source.costs.filter((cost) => cost.kind === 'tapOther').length;
+  return (
+    tapOthers > 0 &&
+    source.taps !== undefined &&
+    source.taps.length === tapOthers &&
+    source.costs.some((cost) => cost.kind === 'tap') &&
+    source.costs.every(
+      (cost) => cost.kind === 'tap' || cost.kind === 'mana' || cost.kind === 'tapOther',
+    ) &&
+    source.convoke !== true &&
+    source.sacrifices === undefined &&
+    source.resources === undefined &&
+    source.fromHand !== true &&
+    (source.onActivate?.length ?? 0) === 0 &&
+    source.productionSpec === undefined &&
+    source.stateDependentProduction !== true
+  );
+}
+
 /** Mirror of the entries `payManaCost` adds for one activation. */
 function entriesFor(
   source: ManaSource,
@@ -468,16 +498,18 @@ export function planStatefulManaPayment(
     legacy.error.reasons.some((reason) => reason.endsWith('budget exceeded'))
   )
     return current.plan;
-  // The old search also halted on a source it cannot replay (tapOther) where nothing could pay;
-  // the current one may prove the cost impossible (`provablyImpossible`) and answer "no plan".
+  // The old search also halted on a source it cannot replay (tapOther) where nothing could pay, or
+  // where only that source could. The current one may prove the cost impossible
+  // (`provablyImpossible`) and answer "no plan", or leave the source to the final payment (the
+  // third phase, which needs the premise the old search lacks) and answer with a plan. Only that
+  // direction is accepted: the old search finding a plan the current one does not is still a bug.
   if (
     'error' in legacy &&
     !('error' in current) &&
-    current.plan === null &&
     legacy.error instanceof UnmodeledCardError &&
     legacy.error.reasons.some((reason) => reason.includes('outside the proven scope'))
   )
-    return null;
+    return current.plan;
   const [was, now] = [describeOutcome(legacy), describeOutcome(current)];
   if (was !== now)
     throw new Error(
@@ -522,6 +554,11 @@ export function searchPayment(
   let depthPruned = false;
   /** Second phase: sacrifice sources join the final payment (see `sacrificeSource`). */
   let withSacrifice = false;
+  /** Second phase: tapOther sources join the final payment (see `tapOtherSource`). */
+  let withTapOther = false;
+  /** A source the second phase leaves to the final payment instead of replaying. */
+  const leftToFinal = (source: ManaSource): boolean =>
+    (withSacrifice && sacrificeSource(source)) || (withTapOther && tapOtherSource(source));
   const seen = new Set<string>();
   /** Thrown from the search once `provablyImpossible` holds: the answer is "not payable". */
   const rootImpossible = {};
@@ -559,6 +596,18 @@ export function searchPayment(
     leavingPermanentsKeepProduction(
       definitionsInPlay(ctx),
       ownAbilities.some((ability) => ability.condition !== undefined),
+    );
+  // The premise for leaving tapOther sources to the final payment (see the invariants block
+  // above `heldBudget`). Tapping takes no permanent off the battlefield, so, unlike a
+  // sacrifice, it needs no `leavingPermanentsKeepProduction`; it needs only that a tap changes
+  // nothing a source reads, which `premise` gives for statics and this gives for the gates of the
+  // payer's own mana abilities: a gate that can neither open nor, being a count over a stable
+  // selector, close by a tap.
+  const tapOtherBound =
+    premise &&
+    ownAbilities.every(
+      (ability) =>
+        ability.condition === undefined || gateCannotOpenDuringPayment(ability.condition),
     );
   // "{T}, Sacrifice this artifact: Add one mana of any color" (Treasure, Lotus Petal) takes its own
   // permanent off the battlefield, which is no more than the other sacrifice does: nothing in play
@@ -651,6 +700,18 @@ export function searchPayment(
     );
   const fixedCapacity = capacityHolds(
     keepsCapacity,
+    (cost) =>
+      cost.kind === 'tap' ||
+      (sacrificeBound && cost.kind === 'sacrificeOther') ||
+      (sacrificeSelfBound && cost.kind === 'sacrificeSelf'),
+    gatedBound,
+  );
+  // The same capacity with a tapOther cost allowed, for the third search only (`withTapOther`). The
+  // cost taps another untapped permanent, which makes no mana and gives no source anything back
+  // (`premise`), so a source with it still pays out once per card, at its ceiling, and the count
+  // and colored bounds stay overestimates. The colored bound drops its `taps` groups (see `visit`).
+  const fixedCapacityWithTaps = capacityHolds(
+    (cost) => cost.kind === 'tapOther' || keepsCapacity(cost),
     (cost) =>
       cost.kind === 'tap' ||
       (sacrificeBound && cost.kind === 'sacrificeOther') ||
@@ -776,9 +837,7 @@ export function searchPayment(
       const final = planPayment(
         cost,
         payer.manaEntries,
-        availableSources.filter(
-          (source) => source.convoke === true || (withSacrifice && sacrificeSource(source)),
-        ),
+        availableSources.filter((source) => source.convoke === true || leftToFinal(source)),
         allows,
         playerLifeLocked(snapshot, payer.id) ? 0 : Math.max(0, payer.life - lifeReserved),
       );
@@ -818,24 +877,26 @@ export function searchPayment(
     if (seen.has(key)) return null;
     seen.add(key);
     const candidates = availableSources.filter(
-      (source) => source.convoke !== true && !(withSacrifice && sacrificeSource(source)),
+      (source) => source.convoke !== true && !leftToFinal(source),
     );
     // Sacrifice mana is only spent in the final payment, after every replayed activation. Two
     // things the search cannot order or tell apart then stay outside its scope: a source that costs
     // mana to activate, which could need that mana first, and a permanent that has both a replayed
     // ability and a sacrifice ability (Phyrexian Tower), whose activations would share an index.
     if (
-      withSacrifice &&
+      (withSacrifice || withTapOther) &&
       candidates.some(
         (source) =>
           source.manaCost !== undefined ||
-          availableSources.some(
-            (other) => sacrificeSource(other) && other.cardId === source.cardId,
-          ),
+          (withSacrifice &&
+            availableSources.some(
+              (other) => sacrificeSource(other) && other.cardId === source.cardId,
+            )),
       )
     )
       outsideScope = true;
-    const bounded = fixedCapacity && (premise || !current);
+    const bounded =
+      (fixedCapacity || (withTapOther && fixedCapacityWithTaps)) && (premise || !current);
     const ceilings = bounded ? availableSources.map((source) => ceilingUnits(source, frozen)) : [];
     if (bounded && ceilings.every((units) => units !== null)) {
       // Alternative abilities of one permanent count at the most any one makes. A sacrifice source
@@ -862,7 +923,11 @@ export function searchPayment(
         planPayment(
           cost,
           payer.manaEntries,
-          availableSources.map((source, index) => ceilingSource(source, ceilings[index]!)),
+          availableSources.map((source, index) => {
+            // A tapOther source's creature to tap is dropped from the bound: an overestimate.
+            const { taps: _taps, ...withoutTaps } = ceilingSource(source, ceilings[index]!);
+            return withoutTaps;
+          }),
           allows,
           lifeCeiling(snapshot, payer),
         ) === null
@@ -1266,21 +1331,115 @@ export function searchPayment(
       throw error;
     }
   };
-  let result = attemptOrImpossible();
+  /**
+   * Invariants of the three searches (bug 15). Phase 1 is the search as it always was and runs
+   * first. A later phase runs only when phase 1 found no plan and stopped at a source it cannot
+   * replay (`outsideScope`) or at its state budget (`heldBudget`), so a payment phase 1 finds is
+   * found exactly as before; every later change can only turn a halt into a plan or a proof.
+   *
+   * Phase 2 (`withSacrifice`, needs `sacrificeBound`) and phase 3 (`withTapOther`, needs
+   * `tapOtherBound`) leave a source to the final `planPayment` instead of replaying it. That is
+   * sound when, for every source left to the final payment, (a) the amount and symbols it makes
+   * are already resolved and no activation of the payment can change them, (b) no activation
+   * changes whether another source is listed, and (c) the final solver is exact for the cost:
+   *   - (a) A left-over source has no `productionSpec`, is not state dependent, has no rider and
+   *     no convoke, so its units are what `manaSourcesFor` read. `premise` says no static in play
+   *     reads tapped status, life or energy, and no activation changes a characteristic, so a tap,
+   *     a mana payment or a life payment changes no source's production. `tapOtherBound` adds that
+   *     every gate on the payer's own mana abilities is a board count over a stable selector,
+   *     which a tap cannot move either way. A sacrifice can move a gate or a count, which is why
+   *     `sacrificeBound` also needs `leavingPermanentsKeepProduction`; tapping takes no permanent
+   *     off the battlefield, so phase 3 needs no such premise of its own.
+   *   - (b) A replayed activation runs on a copy, so the state the final payment is solved in has
+   *     its permanents tapped, its pool and its life, and the sources are listed again there: a
+   *     tapOther source whose own permanent a replayed source tapped is not listed, and one
+   *     whose tap candidates were tapped has them dropped from its `taps` groups. Tapping for the
+   *     cost of a left-over source is never replayed, so no replayed activation can have used a
+   *     creature the final payment still needs: the final payment owns every cost of its sources.
+   *   - (c) `planPayment` models `taps` groups: each tapOther cost gets a distinct untapped
+   *     creature that no source of the same payment taps for mana or for another cost (the
+   *     `plannedIds` check; a creature that taps for its own cost does not also tap for mana), and
+   *     each sacrifice a distinct victim. When the plan is applied, `payAbilityCosts` asks the
+   *     player which creature to tap or sacrifice, offering only those that leave the rest of the
+   *     plan payable, so the victim is the player's choice and the plan's `tapCardIds` and
+   *     `produced` entries stay those of the sources it lists.
+   * So a plan found in a later phase is a legal payment. A phase that finds nothing is no proof
+   * unless it ended with neither `outsideScope` nor `depthPruned`: then every activation
+   * order of the replayed sources was tried against an exact final solve, which covers every
+   * payment (a payment's left-over sources are solved together, and its replayed ones are tried
+   * in each order), and the answer is "not payable". Anything else halts as before. A source the
+   * phases do not cover (a tapOther source with a rider, `tapOthers`, `tapXOthers`, a cost with
+   * no `{T}`, a production spec) stays a candidate, sets `outsideScope`, and halts.
+   *
+   * `heldBudget`: phase 1 running out of states is no answer, so where a later phase may pay it is
+   * held rather than thrown; the later phase gets a fresh count (`states`, `seen`, and the
+   * replayed stacks are reset) and the held halt is thrown if no phase pays or proves.
+   *
+   * Phase 3 prunes with `fixedCapacityWithTaps`, the capacity argument of `fixedCapacity` with a
+   * tapOther cost allowed: such a cost taps a permanent that is not a source of this activation,
+   * so the source still pays out once per card at its ceiling, and the colored bound drops the
+   * `taps` groups, which can only overestimate.
+   */
+  // The first search running out of states proves nothing, and it can do so only because the
+  // sources the second phase leaves to the final payment multiply its branches (fuzz-495: ten lands
+  // and an Ashnod's Altar, 14 mana, 2048 states spent before the second phase ran). Where such a
+  // source exists and its phase may run, a state-budget halt is held, the second phase gets a fresh
+  // count, and the held halt is thrown only if neither phase pays. The search above is untouched,
+  // so a payment it finds, or a halt on any other budget, is as before.
+  let heldBudget: unknown;
+  /** Restart the search with `enable` changing which sources it leaves to the final payment. */
+  const secondPhase = (enable: () => void): PaymentPlan | null => {
+    states = 0;
+    outsideScope = false;
+    seen.clear();
+    enable();
+    return attemptOrImpossible();
+  };
+  const isStateBudget = (error: UnmodeledCardError): boolean =>
+    error.reasons.includes('mana activation state budget exceeded');
+  /** Some listed source is one a later phase would hand to the final payment. */
+  const secondPhaseMayPay = (): boolean => {
+    const payer = ctx.state.players.find((p) => p.id === player.id)!;
+    return sourcesFor(ctx, payer).some(
+      (source) =>
+        (sacrificeBound && sacrificeSource(source)) || (tapOtherBound && tapOtherSource(source)),
+    );
+  };
+  let result: PaymentPlan | null;
+  try {
+    result = attemptOrImpossible();
+  } catch (error) {
+    if (!(error instanceof UnmodeledCardError && isStateBudget(error) && secondPhaseMayPay()))
+      throw error;
+    heldBudget = error;
+    result = null;
+    sources.length = 0;
+    produced.length = 0;
+    orders.length = 0;
+  }
   if (result === null && impossibleProof === true) return null;
   // A cast that only a sacrifice can pay for stopped the search above at the sacrifice source
   // (`outsideScope`). Where nothing in play can give production back when a permanent leaves, solve
   // those sources with the final payment instead. The first search runs unchanged and comes first,
   // so a cast it could already pay is paid the same way, and no creature is sacrificed that did
   // not have to be.
-  if (result === null && outsideScope && sacrificeBound) {
-    states = 0;
-    outsideScope = false;
-    seen.clear();
-    withSacrifice = true;
-    result = attemptOrImpossible();
+  if (result === null && (outsideScope || heldBudget !== undefined) && sacrificeBound) {
+    result = secondPhase(() => {
+      withSacrifice = true;
+    });
   }
+  // A cast that needs "tap an untapped creature you control" (a tapOther source) is solved the same
+  // way, by a third search that leaves those sources to the final payment too. It comes last, after
+  // the two searches that never saw such a source, so a cast they could pay is paid as before.
+  if (result === null && (outsideScope || heldBudget !== undefined) && tapOtherBound) {
+    result = secondPhase(() => {
+      withSacrifice = sacrificeBound;
+      withTapOther = true;
+    });
+  }
+  if (result === null && impossibleProof === true) return null;
   if (!result && (depthPruned || outsideScope) && provablyImpossible()) return null;
+  if (!result && heldBudget !== undefined && (depthPruned || outsideScope)) throw heldBudget;
   if (!result && depthPruned) unsupported('mana activation depth budget exceeded');
   if (!result && outsideScope)
     unsupported(

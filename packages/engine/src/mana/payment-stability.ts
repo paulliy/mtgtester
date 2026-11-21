@@ -313,6 +313,11 @@ const RULES_IRRELEVANT_TO_PRODUCTION: ReadonlySet<string> = new Set([
   'spellCostIncrease',
   // A trigger waits for the stack, so doubling, adding to or suppressing one changes nothing a
   // payment reads (Harmonic Prodigy, Panharmonicon, Torbran-style riders).
+  // "Spells your opponents cast that target this creature cost an additional 3 life" (Terror of
+  // the Peaks) is owed by a spell that targets it: the life is part of the spell's cost, fixed
+  // before the mana is paid (`lifeReserved`), and the tax says nothing about a source. Ending it
+  // only lowers what is owed, so it gives no source anything back.
+  'targetLifeTax',
   'suppressObjectTriggers',
   'triggerAdditionalForShamanOrOtherWizard',
   'triggerAdditionalOnArtifactOrCreatureEntry',

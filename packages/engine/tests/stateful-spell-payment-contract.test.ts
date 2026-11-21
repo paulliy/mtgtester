@@ -11,6 +11,7 @@ import { tapOther } from '../src/cards/templates';
 import { needsStatefulManaPayment } from '../src/mana/stateful-payment';
 import { parseManaCost } from '../src/mana/cost';
 import { engineWork, engineWorkSince } from '../src/work-counters';
+import { script } from './script';
 import { cloneContractContext } from './helpers/contract-harness';
 import { leavingPermanentsKeepProduction } from '../src/mana/payment-stability';
 
@@ -1231,12 +1232,12 @@ describe('an unpayable cost is not offered instead of halting (bug 14)', () => {
     expect(state.offered()).toBeDefined();
   });
 
-  it('still halts, as before, where the cost needs the tap-a-creature ability', () => {
+  it('pays, since bug 15, where the cost needs the tap-a-creature ability', () => {
     const state = setup('{G}{G}');
     sentinel(state);
     state.source('Forest', { units: [['G']] });
     creature(state);
-    expect(state.offered).toThrow('outside the proven scope');
+    expect(state.offered()).toBeDefined();
   });
 
   it('does not prove a board with a sacrifice-another source impossible', () => {
@@ -1271,5 +1272,254 @@ describe('an unpayable cost is not offered instead of halting (bug 14)', () => {
     state.source('Treasure', treasure);
     restInPeace(state);
     expect(state.offered()).toBeDefined();
+  });
+});
+
+describe('tap-a-creature and sacrifice sources join the final payment (bug 15)', () => {
+  type Board = ReturnType<typeof setup>;
+  const ANY: ManaAbilitySpec['units'] = [[...ANY_COLOR]];
+  const tapACreature: AbilityCost[] = [{ kind: 'tap' }, tapOther(ofType('Creature'))];
+  const permanent = (
+    state: Board,
+    name: string,
+    typeLine: string,
+    abilities: ManaAbilitySpec[],
+  ) => {
+    const spawned = spawn(state.ctx, state.player.id, oracle({ name, typeLine }));
+    state.ctx.defs.set(spawned.oracleId, {
+      ...state.ctx.defs.get(spawned.oracleId)!,
+      manaAbilities: abilities,
+    });
+    return spawned;
+  };
+  /** A tapped-out dynamic source: it makes no mana, but it sends the payment to the stateful search. */
+  const stateful = (state: Board) => {
+    state.source('Exotic Orchard', { units: [], dynamic: 'opponentLandColors' });
+  };
+  /** A creature with "{T}: Add {G}". */
+  const elf = (state: Board, name: string) =>
+    permanent(state, name, 'Creature', [{ units: [['G']] }]);
+  /** A creature that makes no mana, so it is only ever tapped or sacrificed as a cost. */
+  const bystander = (state: Board, name: string) => permanent(state, name, 'Creature', []);
+  /** Holdout Settlement: "{T}: Add {C}. {T}, Tap an untapped creature you control: any color." */
+  const holdout = (state: Board) =>
+    permanent(state, 'Holdout', 'Land', [{ units: [['C']] }, { units: ANY, costs: tapACreature }]);
+  const sentinel = (state: Board) =>
+    permanent(state, 'Sentinel', 'Artifact', [{ units: ANY, costs: tapACreature }]);
+  /** Casts the offered spell, answering each unforced decision from the script. */
+  const castWith = (
+    state: Board,
+    steps: Parameters<typeof script>[0] = [],
+  ): ReturnType<typeof pump> => {
+    const option = state.offered();
+    expect(option).toBeDefined();
+    return pump(
+      applyPriorityAction(state.ctx, state.player, option!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+      script(steps),
+    );
+  };
+  const tappedNames = (state: Board) =>
+    state.ctx.state.battlefield
+      .filter((p) => p.tapped && p.controllerId === state.player.id && p.name !== 'Exotic Orchard')
+      .map((p) => p.name)
+      .sort();
+  const present = (state: Board, name: string) =>
+    state.ctx.state.battlefield.some((p) => p.name === name);
+
+  it.each(['Bystander', 'Bystander 2'])(
+    'fuzz-407 shape: Holdout is the only white, and the player picks %s to tap',
+    (chosen) => {
+      const state = setup('{3}{W}');
+      stateful(state);
+      holdout(state);
+      for (let i = 0; i < 3; i++) elf(state, `Elf ${i}`);
+      bystander(state, 'Bystander');
+      bystander(state, 'Bystander 2');
+      castWith(state, [
+        {
+          prompt: 'choose a permanent to tap as an activation cost',
+          choose: new RegExp(`^Tap ${chosen}$`),
+        },
+      ]);
+      const other = chosen === 'Bystander' ? 'Bystander 2' : 'Bystander';
+      expect(tappedNames(state)).toEqual(['Elf 0', 'Elf 1', 'Elf 2', 'Holdout', chosen].sort());
+      expect(tappedNames(state)).not.toContain(other);
+      expect(state.ctx.state.stack).toHaveLength(1);
+    },
+  );
+
+  it('fuzz-407 shape: the cost taps the one creature that makes no mana, with no choice to ask', () => {
+    const state = setup('{3}{W}');
+    stateful(state);
+    holdout(state);
+    for (let i = 0; i < 3; i++) elf(state, `Elf ${i}`);
+    bystander(state, 'Bystander');
+    castWith(state);
+    expect(tappedNames(state)).toEqual(['Bystander', 'Elf 0', 'Elf 1', 'Elf 2', 'Holdout']);
+  });
+
+  it('Jaspera Sentinel shape: pays {2}{G} from the Sentinel, two elves and a third creature', () => {
+    const state = setup('{2}{G}');
+    stateful(state);
+    sentinel(state);
+    elf(state, 'Elf 0');
+    elf(state, 'Elf 1');
+    bystander(state, 'Bystander');
+    castWith(state);
+    expect(tappedNames(state)).toEqual(['Bystander', 'Elf 0', 'Elf 1', 'Sentinel']);
+  });
+
+  it('Jaspera Sentinel shape: does not offer a cost that needs one creature twice, and does not halt', () => {
+    const state = setup('{2}{G}');
+    stateful(state);
+    sentinel(state);
+    elf(state, 'Elf 0');
+    elf(state, 'Elf 1');
+    // The Sentinel must tap an elf, which then cannot make its own mana: two mana, not three.
+    expect(state.offered()).toBeUndefined();
+  });
+
+  it('keeps halting for a tap-a-creature source with a rider', () => {
+    const state = setup('{G}{G}');
+    stateful(state);
+    permanent(state, 'Rider Sentinel', 'Artifact', [
+      {
+        units: ANY,
+        costs: tapACreature,
+        onActivate: [{ op: 'damageController', amount: 1 }],
+      },
+    ]);
+    state.source('Forest', { units: [['G']] });
+    bystander(state, 'Bystander');
+    expect(state.offered).toThrow('outside the proven scope');
+  });
+
+  it('keeps halting for a source that taps several creatures', () => {
+    const state = setup('{G}{G}');
+    stateful(state);
+    permanent(state, 'Two-tap source', 'Artifact', [
+      {
+        units: ANY,
+        costs: [{ kind: 'tap' }, { kind: 'tapOthers', count: 2, selector: ofType('Creature') }],
+      },
+    ]);
+    state.source('Forest', { units: [['G']] });
+    bystander(state, 'Bystander');
+    bystander(state, 'Bystander 2');
+    expect(state.offered).toThrow('outside the proven scope');
+  });
+
+  it('pays a cost the lands cover as before, leaving the tap-a-creature source alone', () => {
+    const state = setup('{G}{G}');
+    stateful(state);
+    sentinel(state);
+    state.source('Forest 0', { units: [['G']] });
+    state.source('Forest 1', { units: [['G']] });
+    bystander(state, 'Bystander');
+    castWith(state);
+    expect(tappedNames(state)).toEqual(['Forest 0', 'Forest 1']);
+  });
+
+  const altar = (state: Board) =>
+    state.source("Ashnod's Altar", {
+      units: [['C'], ['C']],
+      costs: [{ kind: 'sacrificeOther', selector: ofType('Creature') }],
+    });
+  /** Lands that each make one fixed symbol: `count` of them, cycling through the given symbols. */
+  const lands = (state: Board, count: number, symbols: readonly ('U' | 'B' | 'R' | 'C')[]) => {
+    for (let i = 0; i < count; i++)
+      state.source(`Land ${i}`, { units: [[symbols[i % symbols.length]!]] });
+  };
+
+  it(
+    'fuzz-495 shape: ten lands and an Altar are offered fourteen, though the first search spends its states',
+    // The first search runs out of its 2048 states, each a copy of the game: slow by design.
+    { timeout: 120_000 },
+    () => {
+      const state = setup('{11}{U}{B}{R}');
+      stateful(state);
+      for (let i = 0; i < 10; i++) state.source(`Land ${i}`, { units: [['U', 'B', 'R']] });
+      altar(state);
+      bystander(state, 'Victim 0');
+      bystander(state, 'Victim 1');
+      expect(state.offered()).toBeDefined();
+    },
+  );
+
+  it("pays four from an Altar with two sacrifices, the first victim the player's choice", () => {
+    const state = setup('{4}{U}{B}');
+    stateful(state);
+    lands(state, 2, ['U', 'B']);
+    altar(state);
+    bystander(state, 'Victim 0');
+    bystander(state, 'Victim 1');
+    // The first victim is the player's choice; the second is the only one left, so it is forced.
+    castWith(state, [{ prompt: 'sacrifice', choose: 'Sacrifice Victim 1' }]);
+    expect(present(state, 'Victim 0')).toBe(false);
+    expect(present(state, 'Victim 1')).toBe(false);
+    expect(present(state, "Ashnod's Altar")).toBe(true);
+    expect(tappedNames(state).filter((name) => name.startsWith('Land '))).toHaveLength(2);
+  });
+
+  it('fuzz-495 shape: with one creature the cost is not offered, and nothing halts', () => {
+    const state = setup('{11}{U}{B}{R}');
+    stateful(state);
+    lands(state, 10, ['U', 'B', 'R', 'C']);
+    altar(state);
+    bystander(state, 'Victim 0');
+    expect(state.offered()).toBeUndefined();
+  });
+
+  /** Terror of the Peaks, on the opponent's side: its `targetLifeTax` rule static. */
+  const terror = (state: Board) => {
+    const spawned = spawn(state.ctx, state.ctx.state.players[1]!.id, oracle({ name: 'Terror' }));
+    state.ctx.defs.set(spawned.oracleId, {
+      ...state.ctx.defs.get(spawned.oracleId)!,
+      ruleStatics: [{ kind: 'targetLifeTax', amount: 3 }],
+    });
+  };
+  const castSacrificing = (state: Board, victims: string[]) =>
+    castWith(
+      state,
+      victims.map((victim) => ({ prompt: 'sacrifice', choose: `Sacrifice ${victim}` })),
+    );
+
+  it('fuzz-552 shape: Terror of the Peaks in play does not stop a sacrifice paying eight', () => {
+    const state = setup('{5}{U}{B}{R}');
+    stateful(state);
+    lands(state, 7, ['U', 'B', 'R', 'C']);
+    altar(state);
+    for (let i = 0; i < 3; i++) bystander(state, `Victim ${i}`);
+    terror(state);
+    expect(state.offered()).toBeDefined();
+    castSacrificing(state, ['Victim 0', 'Victim 1']);
+    expect(state.ctx.state.stack).toHaveLength(1);
+    // At least one creature had to go. How many go beyond that is the search's order, which this
+    // change leaves as it was (the second phase takes the first plan it finds).
+    expect([0, 1, 2].filter((i) => present(state, `Victim ${i}`)).length).toBeLessThan(3);
+  });
+
+  it('fuzz-552 shape: with one creature the one sacrifice that pays eight is made', () => {
+    const state = setup('{5}{U}{B}{R}');
+    stateful(state);
+    lands(state, 7, ['U', 'B', 'R', 'C']);
+    altar(state);
+    bystander(state, 'Victim 0');
+    terror(state);
+    castSacrificing(state, []);
+    expect(state.ctx.state.stack).toHaveLength(1);
+    expect(present(state, 'Victim 0')).toBe(false);
+  });
+
+  it('a life tax on targeting gives no production back when it ends', () => {
+    expect(
+      leavingPermanentsKeepProduction(
+        [{ staticEffects: [], ruleStatics: [{ kind: 'targetLifeTax', amount: 3 }] } as never],
+        false,
+      ),
+    ).toBe(true);
   });
 });
