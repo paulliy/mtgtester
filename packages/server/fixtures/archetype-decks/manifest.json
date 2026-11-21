@@ -1,0 +1,442 @@
+{
+  "description": "Real Archidekt decks adapted to the modeled card pool for bot-league style tests (ADR 0050). Every unmodeled card was replaced by the modeled card of the same primary type, in the commander colour identity, within one mana value, sharing the most bot roles; unmodeled lands became basics. These are test decks, not the source decks.",
+  "decks": [
+    {
+      "deck": "aggro-purphoros-god-of-the-forge",
+      "archetype": "aggro",
+      "commander": "Purphoros, God of the Forge",
+      "source": "https://archidekt.com/decks/4698448",
+      "sourceName": "Purphoros cEDH",
+      "substitutions": [
+        {
+          "from": "Ojer Axonil, Deepest Might // Temple of Power",
+          "to": "Thor, Asgard's Avenger"
+        },
+        {
+          "from": "Dungeon Descent",
+          "to": "Mountain"
+        },
+        {
+          "from": "Skirk Fire Marshal",
+          "to": "Battle Squadron"
+        },
+        {
+          "from": "Den of the Bugbear",
+          "to": "Mountain"
+        },
+        {
+          "from": "Goblin Marshal",
+          "to": "Kazuul, Tyrant of the Cliffs"
+        },
+        {
+          "from": "Muxus, Goblin Grandee",
+          "to": "Stormscale Scion"
+        },
+        {
+          "from": "Zo-Zu the Punisher",
+          "to": "Underfoot Underdogs"
+        },
+        {
+          "from": "Goblin Recruiter",
+          "to": "Goblin Engineer"
+        },
+        {
+          "from": "Legion Warboss",
+          "to": "General Kreat, the Boltbringer"
+        },
+        {
+          "from": "Goblin Lackey",
+          "to": "Reckless Lackey"
+        },
+        {
+          "from": "Norin the Wary",
+          "to": "Bloodlust Inciter"
+        },
+        {
+          "from": "Goblin King",
+          "to": "Guttersnipe"
+        },
+        {
+          "from": "Goblin Dark-Dwellers",
+          "to": "Brash Taunter"
+        },
+        {
+          "from": "Conspicuous Snoop",
+          "to": "Goblin Tunneler"
+        },
+        {
+          "from": "Goblin Ringleader",
+          "to": "Boneclub Berserker"
+        },
+        {
+          "from": "Redcap Gutter-Dweller",
+          "to": "Volley Veteran"
+        },
+        {
+          "from": "Breeches, Eager Pillager",
+          "to": "Lightning-Rig Crew"
+        },
+        {
+          "from": "Agate Instigator",
+          "to": "Reckless Fireweaver"
+        },
+        {
+          "from": "Enduring Courage",
+          "to": "Cryptothrall"
+        },
+        {
+          "from": "Raphael, the Nightwatcher",
+          "to": "The Vision and Scarlet Witch"
+        },
+        {
+          "from": "Pompous Battlemage // Improvised Act",
+          "to": "Goblin Bushwhacker"
+        }
+      ]
+    },
+    {
+      "deck": "control-grand-arbiter-augustin-iv",
+      "archetype": "control",
+      "commander": "Grand Arbiter Augustin IV",
+      "source": "https://archidekt.com/decks/3449844",
+      "sourceName": "A Twat of a Deck",
+      "substitutions": [
+        {
+          "from": "Fatespinner",
+          "to": "Spellseeker"
+        },
+        {
+          "from": "Linvala, Keeper of Silence",
+          "to": "Restoration Angel"
+        },
+        {
+          "from": "Narset, Parter of Veils",
+          "to": "Jace Beleren"
+        },
+        {
+          "from": "Angelic Arbiter",
+          "to": "Angel of the Ruins"
+        },
+        {
+          "from": "Aven Mindcensor",
+          "to": "Keeper of the Nine Gales"
+        },
+        {
+          "from": "Silent Arbiter",
+          "to": "Filigree Vector"
+        },
+        {
+          "from": "The Council of Four",
+          "to": "Azami, Lady of Scrolls"
+        },
+        {
+          "from": "Dovescape",
+          "to": "Extravagant Replication"
+        },
+        {
+          "from": "Approach of the Second Sun",
+          "to": "Hour of Reckoning"
+        },
+        {
+          "from": "Azor's Elocutors",
+          "to": "Geist-Honored Monk"
+        },
+        {
+          "from": "Misleading Signpost",
+          "to": "Commander's Sphere"
+        },
+        {
+          "from": "Soulless Jailer",
+          "to": "Dune Mover"
+        },
+        {
+          "from": "Drannith Magistrate",
+          "to": "Distinguished Conjurer"
+        },
+        {
+          "from": "Render Silent",
+          "to": "Generous Gift"
+        },
+        {
+          "from": "Trouble in Pairs",
+          "to": "Anointed Procession"
+        }
+      ]
+    },
+    {
+      "deck": "ramp-aesi-tyrant-of-gyre-strait",
+      "archetype": "ramp",
+      "commander": "Aesi, Tyrant of Gyre Strait",
+      "source": "https://archidekt.com/decks/4145959",
+      "sourceName": "Aesi",
+      "substitutions": [
+        {
+          "from": "Lumra, Bellow of the Woods",
+          "to": "Surrak and Goreclaw"
+        },
+        {
+          "from": "Scapeshift",
+          "to": "Skyshroud Claim"
+        },
+        {
+          "from": "Bristly Bill, Spine Sower",
+          "to": "Paradise Druid"
+        },
+        {
+          "from": "Roil Elemental",
+          "to": "Shinestriker"
+        },
+        {
+          "from": "Glacial Chasm",
+          "to": "Forest"
+        },
+        {
+          "from": "Curse of the Swine",
+          "to": "Nature's Lore"
+        },
+        {
+          "from": "Chord of Calling",
+          "to": "Frantic Search"
+        },
+        {
+          "from": "Field of the Dead",
+          "to": "Island"
+        },
+        {
+          "from": "Green Sun's Zenith",
+          "to": "Ponder"
+        },
+        {
+          "from": "Multani, Yavimaya's Avatar",
+          "to": "Ulvenwald Hydra"
+        },
+        {
+          "from": "Kodama of the East Tree",
+          "to": "Kairi, the Swirling Sky"
+        },
+        {
+          "from": "Splendid Reclamation",
+          "to": "Harmonize"
+        },
+        {
+          "from": "Nissa, Resurgent Animist",
+          "to": "District Guide"
+        },
+        {
+          "from": "Shifting Woodland",
+          "to": "Forest"
+        },
+        {
+          "from": "Amulet of Vigor",
+          "to": "Skullclamp"
+        },
+        {
+          "from": "Loot, Exuberant Explorer",
+          "to": "Arwen, Weaver of Hope"
+        },
+        {
+          "from": "Jin-Gitaxias, Progress Tyrant",
+          "to": "Zopandrel, Hunger Dominus"
+        },
+        {
+          "from": "Survival of the Fittest",
+          "to": "Sylvan Library"
+        },
+        {
+          "from": "Talon Gates of Madara",
+          "to": "Island"
+        },
+        {
+          "from": "Ancient Greenwarden",
+          "to": "Thousand Winds"
+        },
+        {
+          "from": "Koma, World-Eater",
+          "to": "Tolarian Terror"
+        }
+      ]
+    },
+    {
+      "deck": "combo-niv-mizzet-parun",
+      "archetype": "combo",
+      "commander": "Niv-Mizzet, Parun",
+      "source": "https://archidekt.com/decks/6085646",
+      "sourceName": "Niv-Mizzet, Parun",
+      "substitutions": [
+        {
+          "from": "Fact or Fiction",
+          "to": "Big Score"
+        },
+        {
+          "from": "Firemind Vessel",
+          "to": "The One Ring"
+        },
+        {
+          "from": "Jeweled Lotus",
+          "to": "Lotus Petal"
+        },
+        {
+          "from": "Crackling Drake",
+          "to": "Solemn Simulacrum"
+        },
+        {
+          "from": "Haughty Djinn",
+          "to": "Prismari Pianist"
+        },
+        {
+          "from": "Ojer Axonil, Deepest Might // Temple of Power",
+          "to": "Thor, Asgard's Avenger"
+        },
+        {
+          "from": "Psychosis Crawler",
+          "to": "Slash, Reptile Rampager"
+        },
+        {
+          "from": "Spellskite",
+          "to": "Thrummingbird"
+        },
+        {
+          "from": "The Locust God",
+          "to": "Sharding Sphinx"
+        },
+        {
+          "from": "Veyran, Voice of Duality",
+          "to": "Frolicking Familiar // Blow Off Steam"
+        },
+        {
+          "from": "Mizzix's Mastery",
+          "to": "Chain Reaction"
+        },
+        {
+          "from": "Treasure Cruise",
+          "to": "Overflowing Insight"
+        },
+        {
+          "from": "Wheel of Misfortune",
+          "to": "Fabricate"
+        },
+        {
+          "from": "Teferi's Ageless Insight",
+          "to": "Reconnaissance Mission"
+        }
+      ]
+    },
+    {
+      "deck": "combo-kiki-jiki-mirror-breaker",
+      "archetype": "combo",
+      "commander": "Kiki-Jiki, Mirror Breaker",
+      "source": "https://archidekt.com/decks/4356805",
+      "sourceName": "Kiki-Jiki, Mirror Breaker",
+      "substitutions": [
+        {
+          "from": "Myr Battlesphere",
+          "to": "Myr Enforcer"
+        },
+        {
+          "from": "Feldon of the Third Path",
+          "to": "Ingenious Artillerist"
+        },
+        {
+          "from": "Impulsive Pilferer",
+          "to": "Wily Goblin"
+        },
+        {
+          "from": "Thousand-Year Elixir",
+          "to": "Commander's Sphere"
+        },
+        {
+          "from": "Imperial Recruiter",
+          "to": "Gleeful Arsonist"
+        },
+        {
+          "from": "Determined Iteration",
+          "to": "Dragon Tempest"
+        },
+        {
+          "from": "Industrial Advancement",
+          "to": "Manabarbs"
+        },
+        {
+          "from": "Into the Fire",
+          "to": "Wheel of Fortune"
+        },
+        {
+          "from": "Wrenn's Resolve",
+          "to": "Grapeshot"
+        },
+        {
+          "from": "Emrakul's Hatcher",
+          "to": "Kozilek's Channeler"
+        },
+        {
+          "from": "Terrain Generator",
+          "to": "Mountain"
+        },
+        {
+          "from": "Coercive Recruiter",
+          "to": "Wandering Archaic // Explore the Vastlands"
+        },
+        {
+          "from": "Cavalier of Flame",
+          "to": "Darksteel Juggernaut"
+        },
+        {
+          "from": "Orthion, Hero of Lavabrink",
+          "to": "Erkenbrand, Lord of Westfold"
+        },
+        {
+          "from": "Mines of Moria",
+          "to": "Mountain"
+        },
+        {
+          "from": "Charming Scoundrel",
+          "to": "Harmonic Prodigy"
+        },
+        {
+          "from": "Wild Magic Surge",
+          "to": "Abrade"
+        },
+        {
+          "from": "Demolition Field",
+          "to": "Mountain"
+        },
+        {
+          "from": "Reckless Handling",
+          "to": "Cathartic Reunion"
+        },
+        {
+          "from": "Molten Duplication",
+          "to": "Tormenting Voice"
+        },
+        {
+          "from": "Agate Instigator",
+          "to": "Reckless Fireweaver"
+        },
+        {
+          "from": "Delina, Wild Mage",
+          "to": "Storm-Kiln Artist"
+        },
+        {
+          "from": "Marvin, Murderous Mimic",
+          "to": "Friendly Teddy"
+        },
+        {
+          "from": "Thornbite Staff",
+          "to": "Sword of the Animist"
+        },
+        {
+          "from": "Illusionist's Bracers",
+          "to": "Blackblade Reforged"
+        },
+        {
+          "from": "Fear of Missing Out",
+          "to": "Memory Worm"
+        },
+        {
+          "from": "Cori Mountain Monastery",
+          "to": "Mountain"
+        }
+      ]
+    }
+  ]
+}

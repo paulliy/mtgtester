@@ -92,6 +92,12 @@ export interface CardTraits {
   /** Fixed damage a damage sweeper deals to each affected creature, when it is a constant. */
   wipeDamage?: number;
   /**
+   * Damage the card's spell deals to every player, its controller included (Earthquake, Hurricane):
+   * the constant, or 'X' when it is the spell's X. Absent when the spell has no such op or the
+   * amount is anything else. Feeds the veto's self-lethal check.
+   */
+  damagesEachPlayer?: number | 'X';
+  /**
    * Fixed boost each spell target slot gets (Giant Growth's +3/+3), or null where the slot gets no
    * constant boost. Lets the bot count what a pump adds to an attack (ADR 0043).
    */
@@ -123,6 +129,8 @@ export interface CardTraits {
    * nothing notable (a vanilla creature, a basic land), which has no effect ops (ADR 0044).
    */
   unclassified?: boolean;
+  /** The card can be cast any time it could cast an instant: the Flash keyword (CR 702.8). */
+  flash?: boolean;
   /** Printed power and toughness for creatures. */
   power?: number | null;
   toughness?: number | null;

@@ -1,0 +1,633 @@
+{
+  "description": "Creatures whose Oracle text mentions flash, in the coverage and EDHREC pinned pools, labelled by reading the text (a Haiku pass, cross-checked line by line): `flash` has the keyword itself, `grants-only` lets other spells be cast as though they had flash. card-traits.test.ts checks the engine's `flash` trait against it.",
+  "cards": [
+    {
+      "name": "Aboleth Spawn",
+      "label": "flash"
+    },
+    {
+      "name": "Activated Sleeper",
+      "label": "flash"
+    },
+    {
+      "name": "Agent Venom",
+      "label": "flash"
+    },
+    {
+      "name": "Alms Collector",
+      "label": "flash"
+    },
+    {
+      "name": "Ambrosia Whiteheart",
+      "label": "flash"
+    },
+    {
+      "name": "Ambush Viper",
+      "label": "flash"
+    },
+    {
+      "name": "Anafenza, Unyielding Lineage",
+      "label": "flash"
+    },
+    {
+      "name": "Ancient Stone Idol",
+      "label": "flash"
+    },
+    {
+      "name": "Angel of the Dire Hour",
+      "label": "flash"
+    },
+    {
+      "name": "Archivist of Oghma",
+      "label": "flash"
+    },
+    {
+      "name": "Armaggon, Future Shark",
+      "label": "flash"
+    },
+    {
+      "name": "Ashcoat Bear",
+      "label": "flash"
+    },
+    {
+      "name": "Aven Interrupter",
+      "label": "flash"
+    },
+    {
+      "name": "Aven Mindcensor",
+      "label": "flash"
+    },
+    {
+      "name": "Bitterbloom Bearer",
+      "label": "flash"
+    },
+    {
+      "name": "Bogardan Hellkite",
+      "label": "flash"
+    },
+    {
+      "name": "Brazen Borrower // Petty Theft",
+      "label": "flash"
+    },
+    {
+      "name": "Brineborn Cutthroat",
+      "label": "flash"
+    },
+    {
+      "name": "Caller of the Claw",
+      "label": "flash"
+    },
+    {
+      "name": "Callidus Assassin",
+      "label": "flash"
+    },
+    {
+      "name": "Cathar Commando",
+      "label": "flash"
+    },
+    {
+      "name": "Commander Sofia Daguerre",
+      "label": "flash"
+    },
+    {
+      "name": "Containment Priest",
+      "label": "flash"
+    },
+    {
+      "name": "Crackling Spellslinger",
+      "label": "flash"
+    },
+    {
+      "name": "Crafty Cutpurse",
+      "label": "flash"
+    },
+    {
+      "name": "Cunning Nightbonder",
+      "label": "flash"
+    },
+    {
+      "name": "Deathleaper, Terror Weapon",
+      "label": "flash"
+    },
+    {
+      "name": "Deep Gnome Terramancer",
+      "label": "flash"
+    },
+    {
+      "name": "Doorkeeper Thrull",
+      "label": "flash"
+    },
+    {
+      "name": "Dragon Turtle",
+      "label": "flash"
+    },
+    {
+      "name": "Dream Eater",
+      "label": "flash"
+    },
+    {
+      "name": "Dualcaster Mage",
+      "label": "flash"
+    },
+    {
+      "name": "Ebondeath, Dracolich",
+      "label": "flash"
+    },
+    {
+      "name": "Enduring Curiosity",
+      "label": "flash"
+    },
+    {
+      "name": "Entity Tracker",
+      "label": "flash"
+    },
+    {
+      "name": "Errant and Giada",
+      "label": "flash"
+    },
+    {
+      "name": "Errant, Street Artist",
+      "label": "flash"
+    },
+    {
+      "name": "Faerie Harbinger",
+      "label": "flash"
+    },
+    {
+      "name": "Faerie Mastermind",
+      "label": "flash"
+    },
+    {
+      "name": "Faerie Vandal",
+      "label": "flash"
+    },
+    {
+      "name": "Fangkeeper's Familiar",
+      "label": "flash"
+    },
+    {
+      "name": "Fear of Impostors",
+      "label": "flash"
+    },
+    {
+      "name": "Final-Word Phantom",
+      "label": "flash"
+    },
+    {
+      "name": "Flock Impostor",
+      "label": "flash"
+    },
+    {
+      "name": "Frilled Mystic",
+      "label": "flash"
+    },
+    {
+      "name": "Galewind Moose",
+      "label": "flash"
+    },
+    {
+      "name": "Garna, the Bloodflame",
+      "label": "flash"
+    },
+    {
+      "name": "Gatta and Luzzu",
+      "label": "flash"
+    },
+    {
+      "name": "Githzerai Monk",
+      "label": "flash"
+    },
+    {
+      "name": "Glamer Gifter",
+      "label": "flash"
+    },
+    {
+      "name": "Glen Elendra Guardian",
+      "label": "flash"
+    },
+    {
+      "name": "Great Oak Guardian",
+      "label": "flash"
+    },
+    {
+      "name": "Guardian of Faith",
+      "label": "flash"
+    },
+    {
+      "name": "Haze Frog",
+      "label": "flash"
+    },
+    {
+      "name": "Head of the Hunt",
+      "label": "flash"
+    },
+    {
+      "name": "Herald of Eternal Dawn",
+      "label": "flash"
+    },
+    {
+      "name": "High Fae Trickster",
+      "label": "flash"
+    },
+    {
+      "name": "Hollowhenge Overlord",
+      "label": "flash"
+    },
+    {
+      "name": "Holy Cow",
+      "label": "flash"
+    },
+    {
+      "name": "Horned Loch-Whale // Lagoon Breach",
+      "label": "flash"
+    },
+    {
+      "name": "Hullbreaker Horror",
+      "label": "flash"
+    },
+    {
+      "name": "Hushwing Gryff",
+      "label": "flash"
+    },
+    {
+      "name": "Hydroelectric Specimen // Hydroelectric Laboratory",
+      "label": "flash"
+    },
+    {
+      "name": "Ice-Fang Coatl",
+      "label": "flash"
+    },
+    {
+      "name": "Illusory Ambusher",
+      "label": "flash"
+    },
+    {
+      "name": "Illvoi Galeblade",
+      "label": "flash"
+    },
+    {
+      "name": "Infested Thrinax",
+      "label": "flash"
+    },
+    {
+      "name": "Invasion Reinforcements",
+      "label": "flash"
+    },
+    {
+      "name": "Jeskai Barricade",
+      "label": "flash"
+    },
+    {
+      "name": "Jin-Gitaxias, Core Augur",
+      "label": "flash"
+    },
+    {
+      "name": "Liliana's Standard Bearer",
+      "label": "flash"
+    },
+    {
+      "name": "Little Bear",
+      "label": "flash"
+    },
+    {
+      "name": "Lobelia Sackville-Baggins",
+      "label": "flash"
+    },
+    {
+      "name": "Malcolm, Alluring Scoundrel",
+      "label": "flash"
+    },
+    {
+      "name": "Malleable Impostor",
+      "label": "flash"
+    },
+    {
+      "name": "Masako the Humorless",
+      "label": "flash"
+    },
+    {
+      "name": "Merfolk Trickster",
+      "label": "flash"
+    },
+    {
+      "name": "Mischievous Pup",
+      "label": "flash"
+    },
+    {
+      "name": "Mocking Doppelganger",
+      "label": "flash"
+    },
+    {
+      "name": "Mouse Trapper",
+      "label": "flash"
+    },
+    {
+      "name": "Munitions Expert",
+      "label": "flash"
+    },
+    {
+      "name": "Mysterious Stranger",
+      "label": "flash"
+    },
+    {
+      "name": "Mystic Snake",
+      "label": "flash"
+    },
+    {
+      "name": "Naru Meha, Master Wizard",
+      "label": "flash"
+    },
+    {
+      "name": "Nebelgast Herald",
+      "label": "flash"
+    },
+    {
+      "name": "Necron Deathmark",
+      "label": "flash"
+    },
+    {
+      "name": "Nimble Obstructionist",
+      "label": "flash"
+    },
+    {
+      "name": "Notion Thief",
+      "label": "flash"
+    },
+    {
+      "name": "Nymris, Oona's Trickster",
+      "label": "flash"
+    },
+    {
+      "name": "Obyra, Dreaming Duelist",
+      "label": "flash"
+    },
+    {
+      "name": "Orcish Bowmasters",
+      "label": "flash"
+    },
+    {
+      "name": "Pestermite",
+      "label": "flash"
+    },
+    {
+      "name": "Phelia, Exuberant Shepherd",
+      "label": "flash"
+    },
+    {
+      "name": "Plumecreed Escort",
+      "label": "flash"
+    },
+    {
+      "name": "Portal Mage",
+      "label": "flash"
+    },
+    {
+      "name": "Quick Sliver",
+      "label": "flash"
+    },
+    {
+      "name": "Quickling",
+      "label": "flash"
+    },
+    {
+      "name": "Radagast of Rhosgobel",
+      "label": "grants-only"
+    },
+    {
+      "name": "Radiant Performer",
+      "label": "flash"
+    },
+    {
+      "name": "Raff Capashen, Ship's Mage",
+      "label": "flash"
+    },
+    {
+      "name": "Rescue Retriever",
+      "label": "flash"
+    },
+    {
+      "name": "Research Thief",
+      "label": "flash"
+    },
+    {
+      "name": "Resolute Reinforcements",
+      "label": "flash"
+    },
+    {
+      "name": "Restoration Angel",
+      "label": "flash"
+    },
+    {
+      "name": "Riptide Turtle",
+      "label": "flash"
+    },
+    {
+      "name": "Rooftop Assassin",
+      "label": "flash"
+    },
+    {
+      "name": "Saiba Cryptomancer",
+      "label": "flash"
+    },
+    {
+      "name": "Sakashima's Protege",
+      "label": "flash"
+    },
+    {
+      "name": "Salvation Swan",
+      "label": "flash"
+    },
+    {
+      "name": "Samut, Voice of Dissent",
+      "label": "flash"
+    },
+    {
+      "name": "Samwise the Stouthearted",
+      "label": "flash"
+    },
+    {
+      "name": "Sautekh Immortal",
+      "label": "flash"
+    },
+    {
+      "name": "Scion of Oona",
+      "label": "flash"
+    },
+    {
+      "name": "Scryb Ranger",
+      "label": "flash"
+    },
+    {
+      "name": "Selfless Safewright",
+      "label": "flash"
+    },
+    {
+      "name": "Selfless Squire",
+      "label": "flash"
+    },
+    {
+      "name": "Shadow Kin",
+      "label": "flash"
+    },
+    {
+      "name": "Shimmer Myr",
+      "label": "flash"
+    },
+    {
+      "name": "Sicarian Infiltrator",
+      "label": "flash"
+    },
+    {
+      "name": "Sigarda's Vanguard",
+      "label": "flash"
+    },
+    {
+      "name": "Sister of Silence",
+      "label": "flash"
+    },
+    {
+      "name": "Slippery Bogbonder",
+      "label": "flash"
+    },
+    {
+      "name": "Slitherwisp",
+      "label": "flash"
+    },
+    {
+      "name": "Snapcaster Mage",
+      "label": "flash"
+    },
+    {
+      "name": "Songcrafter Mage",
+      "label": "flash"
+    },
+    {
+      "name": "Spectacular Spider-Man",
+      "label": "flash"
+    },
+    {
+      "name": "Spectral Sailor",
+      "label": "flash"
+    },
+    {
+      "name": "Spellstutter Sprite",
+      "label": "flash"
+    },
+    {
+      "name": "Sphinx of Forgotten Lore",
+      "label": "flash"
+    },
+    {
+      "name": "Stunt Double",
+      "label": "flash"
+    },
+    {
+      "name": "Sunpearl Kirin",
+      "label": "flash"
+    },
+    {
+      "name": "Surrak Dragonclaw",
+      "label": "flash"
+    },
+    {
+      "name": "Swarm, Being of Bees",
+      "label": "flash"
+    },
+    {
+      "name": "Sweet-Gum Recluse",
+      "label": "flash"
+    },
+    {
+      "name": "The Unagi of Kyoshi Island",
+      "label": "flash"
+    },
+    {
+      "name": "The Wandering Rescuer",
+      "label": "flash"
+    },
+    {
+      "name": "The Wondrous Wasp",
+      "label": "flash"
+    },
+    {
+      "name": "Thryx, the Sudden Storm",
+      "label": "flash"
+    },
+    {
+      "name": "Thunderclap Wyvern",
+      "label": "flash"
+    },
+    {
+      "name": "Tidal Barracuda",
+      "label": "grants-only"
+    },
+    {
+      "name": "Tishana's Tidebinder",
+      "label": "flash"
+    },
+    {
+      "name": "Torrential Gearhulk",
+      "label": "flash"
+    },
+    {
+      "name": "Transcendent Dragon",
+      "label": "flash"
+    },
+    {
+      "name": "Vedalken Aethermage",
+      "label": "flash"
+    },
+    {
+      "name": "Vendilion Clique",
+      "label": "flash"
+    },
+    {
+      "name": "Venser, Shaper Savant",
+      "label": "flash"
+    },
+    {
+      "name": "Vexilus Praetor",
+      "label": "flash"
+    },
+    {
+      "name": "Village Bell-Ringer",
+      "label": "flash"
+    },
+    {
+      "name": "Vodalian Hexcatcher",
+      "label": "flash"
+    },
+    {
+      "name": "Voracious Greatshark",
+      "label": "flash"
+    },
+    {
+      "name": "Waxen Shapethief",
+      "label": "flash"
+    },
+    {
+      "name": "Werefox Bodyguard",
+      "label": "flash"
+    },
+    {
+      "name": "Whirlwing Stormbrood // Dynamic Soar",
+      "label": "flash"
+    },
+    {
+      "name": "Whitemane Lion",
+      "label": "flash"
+    },
+    {
+      "name": "Wildborn Preserver",
+      "label": "flash"
+    },
+    {
+      "name": "Windshaper Planetar",
+      "label": "flash"
+    },
+    {
+      "name": "Yeva, Nature's Herald",
+      "label": "flash"
+    }
+  ]
+}

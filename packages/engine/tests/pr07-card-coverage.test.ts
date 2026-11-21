@@ -3630,8 +3630,13 @@ describe('Combat Calligrapher', () => {
     expect(seen).toEqual(['P3', 'P3']);
   });
 
-  it('combat-calligrapher-defender-gone — the token is made for the attacked opponent only while they are in the game, and never attacking its own controller', () => {
+  it('combat-calligrapher-defender-gone — the token attacks the attacked opponent only while they are in the game, and never its own controller; it is still created (CR 508.4a)', () => {
     const { ctx } = board('calligrapher-gone');
+    // P2's combat: the token attacks only for the attacking player, during combat (CR 506.3b).
+    turnOfPlayer(ctx, 'P2');
+    ctx.state.phase = 'combat';
+    ctx.state.step = 'declareAttackers';
+    ctx.state.combat = { defendingPlayers: ['P3', 'P4'] };
     const [ability] = interpretCard(card).triggers;
     const resolveFor = (eventPlayerId: string, attackedPlayerId: string) =>
       pump(
@@ -3644,18 +3649,22 @@ describe('Combat Calligrapher', () => {
           { eventPlayerId, attackedPlayerId },
         ),
       );
-    // The attacked opponent has left the game: nothing is created.
+    const made = () =>
+      inklings(ctx).map((token) => [token.controllerId, token.attacking ?? null, token.tapped]);
+    // The attacked opponent has left the game: the token is put onto the battlefield, tapped,
+    // but it is never an attacking creature (CR 508.4a).
     playerById(ctx, 'P3').hasLost = true;
     resolveFor('P2', 'P3');
-    expect(inklings(ctx)).toEqual([]);
-    // An attacked player who is the attacking player themselves cannot be attacked by their own token.
+    expect(made()).toEqual([['P2', null, true]]);
+    // The attacking player's own token can never attack its controller.
     resolveFor('P2', 'P2');
-    expect(inklings(ctx)).toEqual([]);
+    expect(made()).toEqual([
+      ['P2', null, true],
+      ['P2', null, true],
+    ]);
     // With the opponent in the game, it is made for the event player and attacks that opponent.
     resolveFor('P2', 'P4');
-    expect(
-      inklings(ctx).map((token) => [token.controllerId, token.attacking, token.tapped]),
-    ).toEqual([['P2', 'P4', true]]);
+    expect(made()[2]).toEqual(['P2', 'P4', true]);
   });
 });
 
@@ -5357,7 +5366,9 @@ describe('Pramikon, Sky Rampart', () => {
         };
       },
     );
-    expect(offered).toEqual(['Attack P2', 'Attack P3']);
+    // Every opponent is a defending player (CR 802.2), so P4 is offered although nothing attacked
+    // P4 yet, and Pramikon's direction limit does not apply to it (CR 508.4c).
+    expect(offered).toEqual(['Attack P2', 'Attack P3', 'Attack P4']);
     const token = ctx.state.battlefield.find((perm) => perm.isToken && perm.name === 'Inkling')!;
     expect(token.attacking).toBe('P3');
   });

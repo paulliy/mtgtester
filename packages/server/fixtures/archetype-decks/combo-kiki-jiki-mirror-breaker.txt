@@ -1,0 +1,84 @@
+# Kiki-Jiki, Mirror Breaker (adapted to the modeled card pool)
+# source: https://archidekt.com/decks/4356805
+# 27 unmodeled cards replaced (see archetype-decks/manifest.json)
+
+Commander
+1 Kiki-Jiki, Mirror Breaker
+
+Deck
+1 Fanatic of Mogis
+1 Priest of Urabrask
+1 Patron of the Arts
+1 Witty Roastmaster
+1 Purphoros, God of the Forge
+1 Myr Enforcer
+1 Ingenious Artillerist
+1 Skyscanner
+1 Solemn Simulacrum
+1 Wily Goblin
+1 Mana Geyser
+1 Chaos Warp
+1 Circuit Mender
+1 Lightning Greaves
+1 Mind Stone
+1 Filigree Familiar
+1 Commander's Sphere
+1 Gleeful Arsonist
+1 Dragon Tempest
+1 Manabarbs
+1 Wheel of Fortune
+1 Valakut Awakening // Valakut Stoneforge
+1 Jeska's Will
+1 Goblin Bombardment
+1 Grapeshot
+1 Ashnod's Altar
+1 Panharmonicon
+1 Kozilek's Channeler
+1 War Room
+1 Mountain
+1 Reliquary Tower
+1 Staff of Domination
+1 Idol of Oblivion
+1 Patriar's Seal
+1 Sol Ring
+1 Wandering Archaic // Explore the Vastlands
+1 Darksteel Juggernaut
+1 Ruby Medallion
+1 Conjurer's Closet
+1 Erkenbrand, Lord of Westfold
+1 Swiftfoot Boots
+1 Mountain
+1 Harmonic Prodigy
+1 Plundering Barbarian
+1 Nykthos, Shrine to Nyx
+1 Terror of the Peaks
+1 Meteor Golem
+1 Abrade
+1 Magus of the Wheel
+1 Buried Ruin
+1 Rapacious Dragon
+1 Ornithopter of Paradise
+1 Scavenger Grounds
+1 Ash Barrens
+1 Mountain
+1 Impact Tremors
+1 Cathartic Reunion
+1 Threefold Thunderhulk
+1 Tibalt's Trickery
+1 Tormenting Voice
+1 Reckless Fireweaver
+1 Scampering Surveyor
+1 Storm-Kiln Artist
+1 Wurmcoil Engine
+1 Blood Moon
+1 Friendly Teddy
+1 Sword of the Animist
+1 Blackblade Reforged
+1 Memory Worm
+1 Goblin Settler
+1 Humble Defector
+1 Devilish Valet
+24 Mountain
+1 Mountain
+1 Red Dragon
+1 Trumpeting Carnosaur

@@ -134,6 +134,51 @@ describe('sampled layer-cache verification', () => {
       else expect(hits).not.toThrow();
     }
   });
+
+  it('verifies each cached pass at most once, and samples the next pass afresh', () => {
+    const ctx = game();
+    ctx.strictInvariants = true;
+    spawn(ctx, 'P1', bear());
+    computeAllCharacteristics(ctx);
+    const hits = () => {
+      for (let hit = 0; hit < 64; hit++) computeAllCharacteristics(ctx);
+    };
+    hits();
+    const verified = getCached(ctx)!;
+    expect(verified.verified).toBe(true);
+    // A pass already found fresh is not recomputed again: emptying it in place goes unseen.
+    verified.map.clear();
+    expect(() => {
+      hits();
+      hits();
+    }).not.toThrow();
+    // A change to the board makes a new pass, which is sampled like any other.
+    spawn(ctx, 'P1', bear());
+    computeAllCharacteristics(ctx);
+    const next = getCached(ctx)!;
+    expect(next.verified).toBeUndefined();
+    setCached(ctx, { ...next, map: new Map() });
+    expect(hits).toThrow(/stale layer cache/);
+  });
+
+  it('samples a verified pass that read no tapped status again once a tap changes the board', () => {
+    const ctx = game();
+    ctx.strictInvariants = true;
+    const creature = spawn(ctx, 'P1', bear());
+    computeAllCharacteristics(ctx);
+    const hits = () => {
+      for (let hit = 0; hit < 64; hit++) computeAllCharacteristics(ctx);
+    };
+    hits();
+    const verified = getCached(ctx)!;
+    expect(verified.verified).toBe(true);
+    expect(verified.usedTapped).toBe(false);
+    // The tap reuses the pass (tapped status is not in its key), but no longer as verified.
+    creature.tapped = true;
+    verified.map.clear();
+    expect(hits).toThrow(/stale layer cache/);
+    expect(getCached(ctx)).toBe(verified);
+  });
 });
 
 describe('checking changes nothing', () => {
