@@ -1,4 +1,5 @@
 import type { LegalAction } from '@mtg/shared';
+import type { CardKnowledge } from './card-knowledge';
 
 /**
  * Structural mirror of `packages/engine/src/cards/ability.ts`'s `AbilityCost` union — only the
@@ -24,11 +25,39 @@ function abilityCostsOf(action: LegalAction): DuckAbilityCost[] {
  * the original bug report — a permanent with a life-payment ability that gets reactivated until
  * its controller dies.
  */
-export function passesVeto(action: LegalAction, life: number): boolean {
+export function passesVeto(action: LegalAction, life: number, knowledge?: CardKnowledge): boolean {
+  if (!survivesEachPlayerDamage(action, life, knowledge)) return false;
   return abilityCostsOf(action).every((cost) => {
     if (cost.kind === 'payLife') return (cost.amount ?? 0) < life;
     return true;
   });
+}
+
+/** The X the engine shows for a cast: `data.x` when present, else the ` with X=N` description suffix. */
+function shownX(action: LegalAction): number | undefined {
+  const data = action.data?.['x'];
+  if (typeof data === 'number') return data;
+  const match = /\bwith X=(\d+)/.exec(action.description);
+  return match === null ? undefined : Number(match[1]);
+}
+
+/**
+ * A spell that damages each player (Earthquake) is never cast for at least the caster's own life:
+ * that is a self-kill, and with every player dying at once a draw. Damage prevention and life
+ * that cannot drop are ignored (conservative); the view does not expose either.
+ */
+function survivesEachPlayerDamage(
+  action: LegalAction,
+  life: number,
+  knowledge: CardKnowledge | undefined,
+): boolean {
+  if (action.type !== 'castSpell' || knowledge === undefined) return true;
+  const name = action.data?.['sourceName'];
+  if (typeof name !== 'string') return true;
+  const damage = knowledge(name)?.damagesEachPlayer;
+  if (damage === undefined) return true;
+  const amount = damage === 'X' ? shownX(action) : damage;
+  return amount === undefined || amount < life;
 }
 
 /** Total life this action's costs would spend, in LEP before weighting (see `weights.ts`). */

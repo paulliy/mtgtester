@@ -27,8 +27,9 @@ import {
 } from './fixtures';
 import { effectivePT, isCreaturePermanent, manaSourcesFor } from '../src/state/queries';
 import { computeCharacteristics } from '../src/effects/continuous';
-import { NONBASIC_LANDS, ofType } from '../src/cards/selector';
+import { NONBASIC_LANDS, ofType, YOURS, type Selector } from '../src/cards/selector';
 import { canPay, parseManaCost } from '../src/mana/cost';
+import { engineWork, engineWorkSince } from '../src/work-counters';
 
 function ctx4(): GameContext {
   const c = createGame(
@@ -225,6 +226,58 @@ describe('CR 613 layer engine (ADR 0005)', () => {
 });
 
 describe('CR 613.8 dependency ordering (ADR 0006)', () => {
+  it('layer-dependency-prefilter: 33 keyword grants over 170 permanents run no dependency probe', () => {
+    // CR 613.8a: granting a keyword writes only what a keyword grant writes, and no grant's
+    // selector, condition or existence reads that, so none can depend on another. The pass must
+    // apply them in timestamp order without a trial clone of the board for any pair.
+    const ctx = ctx4();
+    registerCustomDef(
+      ctx,
+      customDef({
+        oracleId: 'haste-giver',
+        name: 'Test Haste Giver',
+        typeLine: 'Enchantment',
+        types: ['Enchantment'],
+        staticEffects: [{ affects: ofType('Creature'), op: { layer: 6, addKeyword: 'haste' } }],
+      }),
+    );
+    for (let i = 0; i < 33; i++) {
+      spawn(
+        ctx,
+        'P1',
+        oracle({
+          name: 'Test Haste Giver',
+          oracleId: 'haste-giver',
+          typeLine: 'Enchantment',
+          manaCost: '{2}',
+          power: null,
+          toughness: null,
+        }),
+      );
+    }
+    const bears = Array.from({ length: 137 }, () => spawn(ctx, 'P1', bear()));
+
+    const before = engineWork();
+    const chars = computeCharacteristics(ctx, bears[0] as ReturnType<typeof spawn>);
+    const work = engineWorkSince(before);
+
+    expect(chars.keywords).toContain('haste');
+    expect(work.layerPasses).toBe(1);
+    expect(work.layerDependencyProbes).toBe(0);
+  });
+
+  it('layer-dependency-prefilter: a real dependency is still probed and ordered', () => {
+    const ctx = ctx4();
+    registerCustomDef(ctx, urborgDef('urborg'));
+    spawn(ctx, 'P1', land('Test Urborg', { oracleId: 'urborg', typeLine: 'Legendary Land' }));
+    spawn(ctx, 'P2', bloodMoon());
+    const forestPerm = spawn(ctx, 'P1', forest());
+
+    const before = engineWork();
+    expect(computeCharacteristics(ctx, forestPerm).subtypes).toEqual(['Forest']);
+    expect(engineWorkSince(before).layerDependencyProbes).toBeGreaterThan(0);
+  });
+
   it('Blood Moon shuts off Urborg regardless of which entered first', () => {
     // Urborg's effect DEPENDS on Blood Moon's: Blood Moon turns Urborg (a nonbasic land) into
     // a Mountain, which removes the rules text generating Urborg's effect (CR 305.7). Blood
@@ -371,5 +424,105 @@ describe('CR 613.8 dependency ordering (ADR 0006)', () => {
     expect(canPay(parseManaCost('{2}').cost!, [], sources)).toBe(true);
     // …but not both at once: one permanent, one tap.
     expect(canPay(parseManaCost('{2}{G}').cost!, [], sources)).toBe(false);
+  });
+});
+
+describe('layer value counts (a "for each permanent" Value)', () => {
+  const yourCreatures: Selector = { kind: 'allOf', of: [ofType('Creature'), YOURS] };
+
+  /** "Creatures you control get +1/+1 for each <counted> you control." */
+  function registerAnthem(ctx: GameContext, counted: Selector): ReturnType<typeof spawn> {
+    const perCounted = { kind: 'countPermanents', selector: counted, scope: 'you' } as const;
+    registerCustomDef(
+      ctx,
+      customDef({
+        oracleId: 'count-anthem',
+        name: 'Test Count Anthem',
+        typeLine: 'Enchantment',
+        types: ['Enchantment'],
+        staticEffects: [
+          {
+            affects: yourCreatures,
+            op: { layer: 7, sublayer: 'd', power: perCounted, toughness: perCounted },
+          },
+        ],
+      }),
+    );
+    return spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Count Anthem',
+        oracleId: 'count-anthem',
+        typeLine: 'Enchantment',
+        manaCost: '{2}',
+        power: null,
+        toughness: null,
+      }),
+    );
+  }
+
+  it('layer-value-cache: an anthem counting creatures scans the board once for 150 creatures', () => {
+    const ctx = ctx4();
+    registerAnthem(ctx, yourCreatures);
+    const bears = Array.from({ length: 150 }, () => spawn(ctx, 'P1', bear()));
+
+    const before = engineWork();
+    const chars = computeCharacteristics(ctx, bears[0] as ReturnType<typeof spawn>);
+    const work = engineWorkSince(before);
+
+    // A 2/2 bear gets +150/+150 from 150 creatures. Power and toughness are the same selector, so
+    // they share the one scan.
+    expect(chars.power).toBe(152);
+    expect(chars.toughness).toBe(152);
+    expect(work.layerPasses).toBe(1);
+    expect(work.layerValueCounts).toBe(1);
+  });
+
+  it('layer-value-cache: a count the op itself changes is still scanned for every object', () => {
+    // "Creatures you control get +1/+1 for each creature you control with power 2 or more": the
+    // +1/+1 lifts a 1/1 to 2/2, so the count read by the next object has changed. Cached, every
+    // creature would see the first count.
+    const ctx = ctx4();
+    registerAnthem(ctx, { kind: 'allOf', of: [yourCreatures, { kind: 'powerAtLeast', n: 2 }] });
+    const big = spawn(ctx, 'P1', bear());
+    const small1 = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Squire',
+        typeLine: 'Creature — Human',
+        manaCost: '{W}',
+        power: '1',
+        toughness: '1',
+      }),
+    );
+    const small2 = spawn(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Squire',
+        typeLine: 'Creature — Human',
+        manaCost: '{W}',
+        power: '1',
+        toughness: '1',
+      }),
+    );
+
+    const before = engineWork();
+    const first = effectivePT(ctx, big);
+    // The one layer pass; later reads are cache hits (which MTG_VERIFY_LAYER_CACHE recomputes).
+    const work = engineWorkSince(before);
+    const pt = [first, effectivePT(ctx, small1), effectivePT(ctx, small2)];
+
+    // In battlefield order: big sees 1 (itself) and becomes 3/3; small1 sees 1 and becomes 2/2;
+    // small2 sees 2 (big and small1) and becomes 3/3.
+    expect(pt).toEqual([
+      { power: 3, toughness: 3 },
+      { power: 2, toughness: 2 },
+      { power: 3, toughness: 3 },
+    ]);
+    // Power and toughness each scan once per object.
+    expect(work.layerValueCounts).toBe(6);
   });
 });

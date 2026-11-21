@@ -261,13 +261,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 5022,
+          "value": 5012,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 61.214,
+          "value": 61.183,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -303,19 +303,19 @@
           "kind": "exact"
         },
         "authoring.poolMutantsLeftPct": {
-          "value": 78.76,
+          "value": 80.57,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 40.44,
+          "value": 39.15,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
         },
         "authoring.poolCardsFullyScaffolded": {
-          "value": 133,
+          "value": 125,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
@@ -349,6 +349,20 @@
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
+        },
+        "engine.work.layerDependencyProbes": {
+          "value": 0,
+          "unit": "probes",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.layerValueCounts": {
+          "value": 63,
+          "unit": "valueCounts",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
         }
       },
       "fingerprints": {
@@ -617,13 +631,13 @@
           "kind": "exact"
         },
         "coverage.edhrecModeledCards": {
-          "value": 5022,
+          "value": 5012,
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
         },
         "coverage.edhrecSlotSharePct": {
-          "value": 61.214,
+          "value": 61.183,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -659,13 +673,13 @@
           "kind": "exact"
         },
         "authoring.poolMutantsLeftPct": {
-          "value": 78.98,
+          "value": 78.93,
           "unit": "%",
           "better": "lower",
           "kind": "exact"
         },
         "authoring.poolPartsScaffoldedPct": {
-          "value": 40.45,
+          "value": 40.49,
           "unit": "%",
           "better": "higher",
           "kind": "exact"
@@ -705,6 +719,20 @@
           "unit": "cards",
           "better": "higher",
           "kind": "exact"
+        },
+        "engine.work.layerDependencyProbes": {
+          "value": 0,
+          "unit": "probes",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
+        "engine.work.layerValueCounts": {
+          "value": 220,
+          "unit": "valueCounts",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
         }
       },
       "fingerprints": {

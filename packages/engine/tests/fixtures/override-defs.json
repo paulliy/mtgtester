@@ -17550,43 +17550,6 @@
     }
   },
   {
-    "oracleId": "362b7838-3b70-4a00-8c26-1c8b8a3b6acf",
-    "name": "Dawn's Reflection",
-    "handledLines": [
-      "Whenever enchanted land is tapped for mana, its controller adds an additional two mana in any combination of colors."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "add": {
-            "kind": "fixed",
-            "units": [
-              [
-                "W",
-                "U",
-                "B",
-                "R",
-                "G"
-              ],
-              [
-                "W",
-                "U",
-                "B",
-                "R",
-                "G"
-              ]
-            ]
-          },
-          "kind": "manaActivationRider",
-          "source": {
-            "kind": "attachedToSource"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "3640c29b-1534-4952-b297-619ade948431",
     "name": "Roaming Throne",
     "handledLines": [
@@ -37886,58 +37849,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "78e65286-204d-43ab-8929-b8e2191b1fce",
-    "name": "Windrider Wizard",
-    "handledLines": [
-      "Whenever you cast an instant, sorcery, or Wizard spell, you may draw a card. If you do, discard a card."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever you cast an instant, sorcery, or Wizard spell, you may draw a card. If you do, discard a card.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "draw"
-            },
-            {
-              "count": 1,
-              "op": "discard"
-            }
-          ],
-          "kind": "triggered",
-          "optional": true,
-          "targets": [],
-          "trigger": {
-            "caster": "you",
-            "filter": {
-              "kind": "anyOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Instant"
-                },
-                {
-                  "kind": "type",
-                  "value": "Sorcery"
-                },
-                {
-                  "kind": "subtype",
-                  "value": "Wizard"
-                }
-              ]
-            },
-            "when": "castsSpell"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "78f9c223-9982-4282-a496-a6f892f0a5bf",
     "name": "Mind Twist",
     "handledLines": [
@@ -40016,85 +39927,6 @@
               "G"
             ]
           ]
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "83a47724-b8d1-4884-9442-b62aa1510dc3",
-    "name": "Sinkhole Surveyor",
-    "handledLines": [
-      "Whenever this creature attacks, you lose 1 life and this creature endures 1."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever this creature attacks, you lose 1 life and this creature endures 1.",
-          "effects": [
-            {
-              "amount": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "loseLife"
-            },
-            {
-              "op": "chooseOne",
-              "options": [
-                {
-                  "description": "Put a +1/+1 counter on it",
-                  "effects": [
-                    {
-                      "count": {
-                        "kind": "const",
-                        "n": 1
-                      },
-                      "counter": "+1/+1",
-                      "op": "putCounters",
-                      "target": "source"
-                    }
-                  ]
-                },
-                {
-                  "description": "Create a 1/1 white Spirit creature token",
-                  "effects": [
-                    {
-                      "count": {
-                        "kind": "const",
-                        "n": 1
-                      },
-                      "op": "createToken",
-                      "spec": {
-                        "colors": [
-                          "W"
-                        ],
-                        "name": "Spirit",
-                        "power": 1,
-                        "subtypes": [
-                          "Spirit"
-                        ],
-                        "toughness": 1,
-                        "typeLine": "Token Creature — Spirit",
-                        "types": [
-                          "Creature"
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "attacks"
-          }
         }
       ]
     },
@@ -44250,54 +44082,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "9180f77f-c288-4a24-a35d-a16270b3d737",
-    "name": "Skyknight Vanguard",
-    "handledLines": [
-      "Whenever this creature attacks, create a 1/1 white Soldier creature token that's tapped and attacking."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever this creature attacks, create a 1/1 white Soldier creature token that's tapped and attacking.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "createTokenAttacking",
-              "spec": {
-                "colors": [
-                  "W"
-                ],
-                "name": "Soldier",
-                "power": 1,
-                "subtypes": [
-                  "Soldier"
-                ],
-                "toughness": 1,
-                "typeLine": "Token Creature — Soldier",
-                "types": [
-                  "Creature"
-                ]
-              }
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "91e6fb47-59e4-4616-b8dd-3a7e30070074",
     "name": "Bottomless Pit",
     "handledLines": [
@@ -44429,54 +44213,6 @@
             }
           ],
           "timing": "sorcery"
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "9223488e-5206-4d43-90ef-387189dcee16",
-    "name": "Suki, Kyoshi Warrior",
-    "handledLines": [
-      "Whenever ~ attacks, create a 1/1 white Ally creature token that's tapped and attacking."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever Suki attacks, create a 1/1 white Ally creature token that's tapped and attacking.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "createTokenAttacking",
-              "spec": {
-                "colors": [
-                  "W"
-                ],
-                "name": "Ally",
-                "power": 1,
-                "subtypes": [
-                  "Ally"
-                ],
-                "toughness": 1,
-                "typeLine": "Token Creature — Ally",
-                "types": [
-                  "Creature"
-                ]
-              }
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "attacks"
-          }
         }
       ]
     },
@@ -67615,48 +67351,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "d7e2b2ba-cb5e-41f1-ad33-baf56c0b72ed",
-    "name": "Reckless Rage",
-    "handledLines": [
-      "~ deals 4 damage to target creature you don't control and 2 damage to target creature you control."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Reckless Rage deals 4 damage to target creature you don't control and 2 damage to target creature you control.",
-        "effects": [
-          {
-            "amount": {
-              "kind": "const",
-              "n": 4
-            },
-            "op": "dealDamage",
-            "target": 0
-          },
-          {
-            "amount": {
-              "kind": "const",
-              "n": 2
-            },
-            "op": "dealDamage",
-            "target": 1
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "opponent",
-            "kind": "creature"
-          },
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "d8379d8f-df17-4473-938d-7ac198d17980",
     "name": "Galecaster Colossus",
     "handledLines": [
@@ -68201,68 +67895,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "da1c1c70-c2fa-4ba7-89fe-d9af3fb353b9",
-    "name": "General Kreat, the Boltbringer",
-    "handledLines": [
-      "Whenever one or more Goblins you control attack, create a 1/1 red Goblin creature token that's tapped and attacking."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever one or more Goblins you control attack, create a 1/1 red Goblin creature token that's tapped and attacking.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "createTokenAttacking",
-              "spec": {
-                "colors": [
-                  "R"
-                ],
-                "name": "Goblin",
-                "power": 1,
-                "subtypes": [
-                  "Goblin"
-                ],
-                "toughness": 1,
-                "typeLine": "Token Creature — Goblin",
-                "types": [
-                  "Creature"
-                ]
-              }
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "aggregate": true,
-            "subject": {
-              "kind": "permanent",
-              "selector": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "subtype",
-                    "value": "Goblin"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "you"
-                  }
-                ]
-              }
-            },
-            "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "da1d1f64-e239-4b92-9eb9-fe9ea06aa18a",
@@ -73478,65 +73110,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "e74c4001-d958-4d2b-b57d-c3601f01580c",
-    "name": "Battle Cry Goblin",
-    "handledLines": [
-      "Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, create a 1/1 red Goblin creature token that's tapped and attacking."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Pack tactics — Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, create a 1/1 red Goblin creature token that's tapped and attacking.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "createTokenAttacking",
-              "spec": {
-                "colors": [
-                  "R"
-                ],
-                "name": "Goblin",
-                "power": 1,
-                "subtypes": [
-                  "Goblin"
-                ],
-                "toughness": 1,
-                "typeLine": "Token Creature — Goblin",
-                "types": [
-                  "Creature"
-                ]
-              }
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "eventCondition": {
-              "cmp": ">=",
-              "kind": "compareValues",
-              "left": {
-                "kind": "totalPowerOfAttackers"
-              },
-              "right": {
-                "kind": "const",
-                "n": 6
-              }
-            },
-            "subject": {
-              "kind": "self"
-            },
-            "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "e75cee5d-ab02-4227-b36e-61c5d2f564a8",
     "name": "Wingspan Stride",
     "handledLines": [
@@ -77158,81 +76731,6 @@
               }
             },
             "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "f1352a81-6fd5-4c4d-ada4-b81d3a9f74c0",
-    "name": "Dagger Caster",
-    "handledLines": [
-      "When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control.",
-          "effects": [
-            {
-              "amount": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "eachOpponentDamage"
-            },
-            {
-              "amount": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "damageEach",
-              "selector": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  },
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  }
-                ]
-              }
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "f15911a5-f597-452e-a015-b115339f28fc",
-    "name": "Heartbeat of Spring",
-    "handledLines": [
-      "Whenever a player taps a land for mana, that player adds one mana of any type that land produced."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "add": {
-            "kind": "oneOfProducedTypes"
-          },
-          "kind": "manaActivationRider",
-          "source": {
-            "kind": "type",
-            "value": "Land"
           }
         }
       ]
@@ -87991,65 +87489,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-battle-cry-goblin",
-    "name": "Battle Cry Goblin",
-    "handledLines": [
-      "Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, create a 1/1 red Goblin creature token that's tapped and attacking."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Pack tactics — Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, create a 1/1 red Goblin creature token that's tapped and attacking.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "createTokenAttacking",
-              "spec": {
-                "colors": [
-                  "R"
-                ],
-                "name": "Goblin",
-                "power": 1,
-                "subtypes": [
-                  "Goblin"
-                ],
-                "toughness": 1,
-                "typeLine": "Token Creature — Goblin",
-                "types": [
-                  "Creature"
-                ]
-              }
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "eventCondition": {
-              "cmp": ">=",
-              "kind": "compareValues",
-              "left": {
-                "kind": "totalPowerOfAttackers"
-              },
-              "right": {
-                "kind": "const",
-                "n": 6
-              }
-            },
-            "subject": {
-              "kind": "self"
-            },
-            "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-battlefly-swarm",
     "name": "Battlefly Swarm",
     "handledLines": [
@@ -97892,59 +97331,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-dagger-caster",
-    "name": "Dagger Caster",
-    "handledLines": [
-      "When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control.",
-          "effects": [
-            {
-              "amount": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "eachOpponentDamage"
-            },
-            {
-              "amount": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "damageEach",
-              "selector": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "controller",
-                    "who": "opponents"
-                  },
-                  {
-                    "kind": "type",
-                    "value": "Creature"
-                  }
-                ]
-              }
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-dancing-from-dark-to-dawn",
     "name": "Dancing from Dark to Dawn",
     "handledLines": [
@@ -98598,43 +97984,6 @@
         }
       ]
     }
-  },
-  {
-    "oracleId": "oracle-dawn-s-reflection",
-    "name": "Dawn's Reflection",
-    "handledLines": [
-      "Whenever enchanted land is tapped for mana, its controller adds an additional two mana in any combination of colors."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "add": {
-            "kind": "fixed",
-            "units": [
-              [
-                "W",
-                "U",
-                "B",
-                "R",
-                "G"
-              ],
-              [
-                "W",
-                "U",
-                "B",
-                "R",
-                "G"
-              ]
-            ]
-          },
-          "kind": "manaActivationRider",
-          "source": {
-            "kind": "attachedToSource"
-          }
-        }
-      ]
-    },
-    "compose": "append"
   },
   {
     "oracleId": "oracle-dawn-s-truce",
@@ -109701,68 +109050,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-general-kreat-the-boltbringer",
-    "name": "General Kreat, the Boltbringer",
-    "handledLines": [
-      "Whenever one or more Goblins you control attack, create a 1/1 red Goblin creature token that's tapped and attacking."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever one or more Goblins you control attack, create a 1/1 red Goblin creature token that's tapped and attacking.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "createTokenAttacking",
-              "spec": {
-                "colors": [
-                  "R"
-                ],
-                "name": "Goblin",
-                "power": 1,
-                "subtypes": [
-                  "Goblin"
-                ],
-                "toughness": 1,
-                "typeLine": "Token Creature — Goblin",
-                "types": [
-                  "Creature"
-                ]
-              }
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "aggregate": true,
-            "subject": {
-              "kind": "permanent",
-              "selector": {
-                "kind": "allOf",
-                "of": [
-                  {
-                    "kind": "subtype",
-                    "value": "Goblin"
-                  },
-                  {
-                    "kind": "controller",
-                    "who": "you"
-                  }
-                ]
-              }
-            },
-            "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-general-leo-cristophe",
     "name": "General Leo Cristophe",
     "handledLines": [
@@ -113908,28 +113195,6 @@
               "kind": "self"
             },
             "when": "sacrificed"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-heartbeat-of-spring",
-    "name": "Heartbeat of Spring",
-    "handledLines": [
-      "Whenever a player taps a land for mana, that player adds one mana of any type that land produced."
-    ],
-    "def": {
-      "ruleStatics": [
-        {
-          "add": {
-            "kind": "oneOfProducedTypes"
-          },
-          "kind": "manaActivationRider",
-          "source": {
-            "kind": "type",
-            "value": "Land"
           }
         }
       ]
@@ -137600,48 +136865,6 @@
     }
   },
   {
-    "oracleId": "oracle-reckless-rage",
-    "name": "Reckless Rage",
-    "handledLines": [
-      "~ deals 4 damage to target creature you don't control and 2 damage to target creature you control."
-    ],
-    "def": {
-      "spellAbility": {
-        "description": "Reckless Rage deals 4 damage to target creature you don't control and 2 damage to target creature you control.",
-        "effects": [
-          {
-            "amount": {
-              "kind": "const",
-              "n": 4
-            },
-            "op": "dealDamage",
-            "target": 0
-          },
-          {
-            "amount": {
-              "kind": "const",
-              "n": 2
-            },
-            "op": "dealDamage",
-            "target": 1
-          }
-        ],
-        "kind": "spell",
-        "targets": [
-          {
-            "controller": "opponent",
-            "kind": "creature"
-          },
-          {
-            "controller": "you",
-            "kind": "creature"
-          }
-        ]
-      }
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-reclaim",
     "name": "Reclaim",
     "handledLines": [
@@ -144351,85 +143574,6 @@
     "compose": "append"
   },
   {
-    "oracleId": "oracle-sinkhole-surveyor",
-    "name": "Sinkhole Surveyor",
-    "handledLines": [
-      "Whenever this creature attacks, you lose 1 life and this creature endures 1."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever this creature attacks, you lose 1 life and this creature endures 1.",
-          "effects": [
-            {
-              "amount": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "loseLife"
-            },
-            {
-              "op": "chooseOne",
-              "options": [
-                {
-                  "description": "Put a +1/+1 counter on it",
-                  "effects": [
-                    {
-                      "count": {
-                        "kind": "const",
-                        "n": 1
-                      },
-                      "counter": "+1/+1",
-                      "op": "putCounters",
-                      "target": "source"
-                    }
-                  ]
-                },
-                {
-                  "description": "Create a 1/1 white Spirit creature token",
-                  "effects": [
-                    {
-                      "count": {
-                        "kind": "const",
-                        "n": 1
-                      },
-                      "op": "createToken",
-                      "spec": {
-                        "colors": [
-                          "W"
-                        ],
-                        "name": "Spirit",
-                        "power": 1,
-                        "subtypes": [
-                          "Spirit"
-                        ],
-                        "toughness": 1,
-                        "typeLine": "Token Creature — Spirit",
-                        "types": [
-                          "Creature"
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
     "oracleId": "oracle-sire-of-insanity",
     "name": "Sire of Insanity",
     "handledLines": [
@@ -145013,54 +144157,6 @@
               }
             },
             "when": "enters"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-skyknight-vanguard",
-    "name": "Skyknight Vanguard",
-    "handledLines": [
-      "Whenever this creature attacks, create a 1/1 white Soldier creature token that's tapped and attacking."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever this creature attacks, create a 1/1 white Soldier creature token that's tapped and attacking.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "createTokenAttacking",
-              "spec": {
-                "colors": [
-                  "W"
-                ],
-                "name": "Soldier",
-                "power": 1,
-                "subtypes": [
-                  "Soldier"
-                ],
-                "toughness": 1,
-                "typeLine": "Token Creature — Soldier",
-                "types": [
-                  "Creature"
-                ]
-              }
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "attacks"
           }
         }
       ]
@@ -149471,54 +148567,6 @@
               }
             },
             "when": "leavesBattlefield"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-suki-kyoshi-warrior",
-    "name": "Suki, Kyoshi Warrior",
-    "handledLines": [
-      "Whenever ~ attacks, create a 1/1 white Ally creature token that's tapped and attacking."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever Suki attacks, create a 1/1 white Ally creature token that's tapped and attacking.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "createTokenAttacking",
-              "spec": {
-                "colors": [
-                  "W"
-                ],
-                "name": "Ally",
-                "power": 1,
-                "subtypes": [
-                  "Ally"
-                ],
-                "toughness": 1,
-                "typeLine": "Token Creature — Ally",
-                "types": [
-                  "Creature"
-                ]
-              }
-            }
-          ],
-          "kind": "triggered",
-          "optional": false,
-          "targets": [],
-          "trigger": {
-            "subject": {
-              "kind": "self"
-            },
-            "when": "attacks"
           }
         }
       ]
@@ -162763,58 +161811,6 @@
               }
             },
             "when": "attacks"
-          }
-        }
-      ]
-    },
-    "compose": "append"
-  },
-  {
-    "oracleId": "oracle-windrider-wizard",
-    "name": "Windrider Wizard",
-    "handledLines": [
-      "Whenever you cast an instant, sorcery, or Wizard spell, you may draw a card. If you do, discard a card."
-    ],
-    "def": {
-      "triggers": [
-        {
-          "description": "Whenever you cast an instant, sorcery, or Wizard spell, you may draw a card. If you do, discard a card.",
-          "effects": [
-            {
-              "count": {
-                "kind": "const",
-                "n": 1
-              },
-              "op": "draw"
-            },
-            {
-              "count": 1,
-              "op": "discard"
-            }
-          ],
-          "kind": "triggered",
-          "optional": true,
-          "targets": [],
-          "trigger": {
-            "caster": "you",
-            "filter": {
-              "kind": "anyOf",
-              "of": [
-                {
-                  "kind": "type",
-                  "value": "Instant"
-                },
-                {
-                  "kind": "type",
-                  "value": "Sorcery"
-                },
-                {
-                  "kind": "subtype",
-                  "value": "Wizard"
-                }
-              ]
-            },
-            "when": "castsSpell"
           }
         }
       ]

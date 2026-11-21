@@ -1,8 +1,9 @@
 /**
  * H7: the stateful mana planner proves an unpayable cast impossible from a capacity bound that
- * gated sources now join, and searches a tap-only board over tapped sets instead of copied games.
- * Both must leave every answer as it was: the same plan (so the same lands are tapped), the same
- * null, the same error. Each agreement test runs the search both ways on one board.
+ * gated sources now join, and solves a board of tap-only and self-sacrificing sources statically
+ * (#46). The bound must leave every answer as it was: the same plan, the same null, the same error.
+ * The static solve picks its own plan, so there the two must agree on whether the cost can be paid.
+ * Each agreement test runs the search both ways on one board.
  */
 import { describe, expect, it } from 'vitest';
 import { applyPriorityAction } from '../src/actions/apply';
@@ -15,21 +16,31 @@ import {
   gateCannotOpenDuringPayment,
   leavingPermanentsKeepProduction,
 } from '../src/mana/payment-stability';
-import { searchPayment, tapOnlySource } from '../src/mana/stateful-payment';
+import {
+  interchangeablePermanents,
+  searchPayment,
+  tapOnlySource,
+  tapOtherSource,
+} from '../src/mana/stateful-payment';
+import type { AbilityCost } from '../src/cards/ability';
+import type { ManaUnit } from '../src/mana/cost';
 import { createGame } from '../src/state/game';
 import { playerById } from '../src/state/objects';
-import { allowanceFor, manaSourcesFor } from '../src/state/queries';
+import { allowanceFor, convokeSourcesFor, manaSourcesFor } from '../src/state/queries';
 import type { GameContext } from '../src/state/types';
 import {
   conjure,
   copies,
   forest,
   gameConfig,
+  bear,
   island,
+  mountain,
   oracle,
   plains,
   pump,
   spawn,
+  swamp,
 } from './fixtures';
 
 const artifact = (name: string, oracleText: string) =>
@@ -86,6 +97,7 @@ function search(
   cost: ParsedManaCost,
   current: boolean,
   lifeReserved = 0,
+  trace?: { staticSolve?: boolean },
 ): Outcome {
   const player = playerById(ctx, 'P1');
   const allows = allowanceFor(ctx, 'P1', {
@@ -105,6 +117,7 @@ function search(
         lifeReserved,
         0,
         current,
+        trace,
       ),
     };
   } catch (error) {
@@ -112,13 +125,23 @@ function search(
   }
 }
 
-/** Both ways agree on `cost`; returns the shared outcome. */
+/** Both ways agree on `cost` (exactly, unless the static solve answered); returns the current outcome. */
 function agree(ctx: GameContext, manaCost: string, lifeReserved = 0): Outcome {
   const cost = parseManaCost(manaCost).cost!;
   const before = JSON.stringify(ctx.state);
+  const trace: { staticSolve?: boolean } = {};
   const legacy = search(ctx, cost, false, lifeReserved);
-  const current = search(ctx, cost, true, lifeReserved);
-  expect(JSON.stringify(current)).toBe(JSON.stringify(legacy));
+  const current = search(ctx, cost, true, lifeReserved, trace);
+  // The old search ran out of budget: it has no answer to compare.
+  if ('error' in legacy && legacy.error.includes('budget exceeded') && !('error' in current))
+    return current;
+  if (trace.staticSolve) {
+    // The static solve picks its own plan (as `planPayment` does on an ordinary board); what
+    // must agree is whether the cost can be paid.
+    const settled = (outcome: Outcome): string =>
+      'error' in outcome ? outcome.error : outcome.plan === null ? 'unpayable' : 'payable';
+    expect(settled(current)).toBe(settled(legacy));
+  } else expect(JSON.stringify(current)).toBe(JSON.stringify(legacy));
   expect(JSON.stringify(ctx.state)).toBe(before);
   return current;
 }
@@ -204,6 +227,24 @@ describe('payment premise', () => {
         ),
       ]),
     ).toBe(false);
+    // Zurgo and Ojutai: "has hexproof as long as it entered this turn" (fuzz-26, fuzz-169). Turn,
+    // step and entry facts cannot change during a payment; inside a combinator, each child counts.
+    const fixed = (condition: unknown) =>
+      characteristicsFixedDuringPayment([
+        holder([
+          { affects: { kind: 'self' }, op: { layer: 6, addKeyword: 'hexproof' }, condition },
+        ]),
+      ]);
+    expect(fixed({ kind: 'enteredThisTurn' })).toBe(true);
+    expect(fixed({ kind: 'allOf', of: [{ kind: 'yourTurn' }, { kind: 'enteredThisTurn' }] })).toBe(
+      true,
+    );
+    expect(
+      fixed({ kind: 'anyOf', of: [{ kind: 'yourTurn' }, { kind: 'anyPlayerLifeAtMost', n: 10 }] }),
+    ).toBe(false);
+    expect(fixed({ kind: 'not', of: { kind: 'isUntapped' } })).toBe(false);
+    // What happened this turn may include the cast the payment belongs to.
+    expect(fixed({ kind: 'castSpellThisTurn' })).toBe(false);
     // Death's Shadow: a damage rider lowers life and so raises power, which a gate can read.
     expect(
       characteristicsFixedDuringPayment([
@@ -285,9 +326,61 @@ describe('departures and the capacity bound', () => {
         false,
       ),
     ).toBe(false);
+    // A pump while you control your commander, or while your devotion is high, ends when the
+    // commander or a permanent with mana symbols leaves: departures read those too.
+    const pumpWhile = (condition: unknown) => ({
+      affects: { kind: 'type', value: 'Creature' },
+      op: {
+        layer: 7,
+        sublayer: 'c',
+        power: { kind: 'const', n: 1 },
+        toughness: { kind: 'const', n: 1 },
+      },
+      condition,
+    });
+    expect(
+      departuresCannotAddCapacity([holder([pumpWhile({ kind: 'controlsYourCommander' })])], true),
+    ).toBe(false);
+    expect(
+      departuresCannotAddCapacity(
+        [
+          holder([
+            pumpWhile({
+              kind: 'compareValues',
+              left: { kind: 'devotionTo', colors: ['G'] },
+              cmp: '>=',
+              right: { kind: 'const', n: 5 },
+            }),
+          ]),
+        ],
+        true,
+      ),
+    ).toBe(false);
     // Power from a count reaches a payment only through a gate.
     expect(departuresCannotAddCapacity([holder([perArtifact])], false)).toBe(true);
     expect(departuresCannotAddCapacity([holder([perArtifact])], true)).toBe(false);
+    // A rule no production reads stays out of it, whatever it counts: Nils, Discipline
+    // Enforcer's attack tax counts counters (fuzz-131).
+    expect(
+      departuresCannotAddCapacity(
+        [
+          holder(
+            [],
+            [
+              {
+                kind: 'attackRestriction',
+                filter: {
+                  kind: 'allOf',
+                  of: [{ kind: 'type', value: 'Creature' }, { kind: 'hasAnyCounter' }],
+                },
+                cost: { perCounterOnCreature: true },
+              },
+            ],
+          ),
+        ],
+        false,
+      ),
+    ).toBe(true);
     // Threshold-style graveyard counts stay out whatever the gates.
     expect(
       departuresCannotAddCapacity(
@@ -400,6 +493,466 @@ describe('old and new planner agree', () => {
     });
     playerById(ctx, 'P1').manaEntries.push({ symbol: 'U' }, { symbol: 'C' });
     for (const cost of COSTS) agree(ctx, cost);
+  });
+});
+
+describe('shortest plan first', () => {
+  /** The plan's activations, by name and symbol. */
+  const steps = (ctx: GameContext, outcome: Outcome): string[] => {
+    const plan = (outcome as { plan: { tapCardIds: string[]; produced: { symbol: string }[] } })
+      .plan;
+    return plan.tapCardIds.map(
+      (cardId, i) =>
+        `${ctx.state.battlefield.find((p) => p.cardId === cardId)!.name}:${plan.produced[i]!.symbol}`,
+    );
+  };
+
+  it('stateful-planner-shortest — {B} from an Orchard and four Treasures sacrifices one Treasure', () => {
+    // A depth-first search to full depth made U, W, W, W and then B: four Treasures for {B}.
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      for (let i = 0; i < 4; i++) spawn(c, 'P1', treasure());
+    });
+    expect(steps(ctx, agree(ctx, '{B}'))).toEqual(['Test Treasure:B']);
+    expect(steps(ctx, agree(ctx, '{1}{B}'))).toEqual(['Exotic Orchard:U', 'Test Treasure:B']);
+  });
+
+  it('stateful-planner-deep-board — 36 Treasures pay {U} with one, where the search once went 32 deep and halted (fuzz-26)', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      for (let i = 0; i < 36; i++) spawn(c, 'P1', treasure());
+    });
+    expect(steps(ctx, agree(ctx, '{U}'))).toEqual(['Exotic Orchard:U']);
+    expect(steps(ctx, agree(ctx, '{B}'))).toEqual(['Test Treasure:B']);
+  });
+});
+
+describe('Treasure boards', () => {
+  it('stateful-planner-treasure-bound — seven Treasures cannot pay nine pips, and say so without a halt (fuzz-173)', () => {
+    // A Treasure sacrifices only itself, so under the leaving premise it keeps the capacity bound.
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      for (let i = 0; i < 7; i++) spawn(c, 'P1', treasure());
+    });
+    expect(agree(ctx, '{4}{W}{U}{B}{R}{G}')).toEqual({ plan: null });
+  });
+
+  /** The plan's sources by name, and whether the static solve answered. */
+  function solve(ctx: GameContext, manaCost: string) {
+    const trace: { staticSolve?: boolean } = {};
+    const outcome = search(ctx, parseManaCost(manaCost).cost!, true, 0, trace);
+    const plan = 'plan' in outcome ? (outcome.plan as { tapCardIds: string[] } | null) : null;
+    return {
+      outcome,
+      static: trace.staticSolve === true,
+      names: plan?.tapCardIds.map((id) => ctx.state.battlefield.find((p) => p.cardId === id)!.name),
+    };
+  }
+
+  it('stateful-planner-treasure-static — ten Treasures pay {4}{W}{U}{B}{R}{G} in one solve, where the search halted (fuzz-173)', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', forest());
+      for (let i = 0; i < 10; i++) spawn(c, 'P1', treasure());
+    });
+    const { static: wasStatic, names } = solve(ctx, '{4}{W}{U}{B}{R}{G}');
+    expect(wasStatic).toBe(true);
+    // Both lands, then the seven Treasures the other seven pips need: no Treasure to spare.
+    expect(names!.filter((name) => name !== 'Test Treasure').sort()).toEqual([
+      'Exotic Orchard',
+      'Forest',
+    ]);
+    expect(names!.filter((name) => name === 'Test Treasure')).toHaveLength(7);
+  });
+
+  it('stateful-planner-treasure-many — 33 Treasures and an Orchard pay five colors and four more (fuzz-218)', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      for (let i = 0; i < 33; i++) spawn(c, 'P1', treasure());
+    });
+    const { static: wasStatic, names } = solve(ctx, '{4}{W}{U}{B}{R}{G}');
+    expect(wasStatic).toBe(true);
+    expect(names).toHaveLength(9);
+    expect(names).toContain('Exotic Orchard');
+  });
+
+  it('stateful-planner-treasure-keeps — a cast the lands can pay sacrifices no Treasure', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', forest());
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', treasure());
+    });
+    expect(solve(ctx, '{G}').names).toEqual(['Forest']);
+    expect(solve(ctx, '{U}').names).toEqual(['Exotic Orchard']);
+    expect(solve(ctx, '{1}{G}').names!.sort()).toEqual(['Exotic Orchard', 'Forest']);
+  });
+
+  it('stateful-planner-treasure-departure — a static that reads an artifact count keeps a Treasure board on the search', () => {
+    // "As long as you control three or fewer artifacts, lands you control have flying": it strips
+    // nothing, so a leaving Treasure gives nothing back, but sacrificing one changes the count it
+    // reads (`departuresCannotAddCapacity`). Main's bound refuses that board; so does the static solve.
+    const treasures = (withStatic: boolean) =>
+      board((c) => {
+        spawn(c, 'P1', orchard());
+        spawn(c, 'P1', forest());
+        for (let i = 0; i < 3; i++) spawn(c, 'P1', treasure());
+        if (!withStatic) return;
+        const counter = spawn(c, 'P1', artifact('Test Counter', 'Flying'));
+        c.defs.set(counter.oracleId, {
+          ...c.defs.get(counter.oracleId)!,
+          staticEffects: [
+            {
+              affects: { kind: 'type', value: 'Land' },
+              op: { layer: 6, addKeyword: 'flying' },
+              condition: {
+                kind: 'countPermanents',
+                selector: { kind: 'type', value: 'Artifact' },
+                scope: 'you',
+                cmp: '<=',
+                n: 3,
+              },
+            },
+          ],
+        } as never);
+      });
+    expect(solve(treasures(false), '{1}{G}{B}').static).toBe(true);
+    expect(solve(treasures(true), '{1}{G}{B}').static).toBe(false);
+  });
+
+  it('stateful-planner-treasure-hand-back — a source that reads the payer’s own board keeps the search', () => {
+    // Reflecting Pool reads P1's own lands. A Treasure leaving cannot change that, but the static
+    // solve only trusts kinds that read nothing of the payer's board once a source sacrifices.
+    const pool = () =>
+      land('Test Pool', '{T}: Add one mana of any type that a land you control could produce.');
+    const withTreasure = board((c) => {
+      spawn(c, 'P1', forest());
+      spawn(c, 'P1', pool());
+      spawn(c, 'P1', treasure());
+    });
+    const tapOnly = board((c) => {
+      spawn(c, 'P1', forest());
+      spawn(c, 'P1', pool());
+    });
+    expect(solve(withTreasure, '{G}{G}').static).toBe(false);
+    expect(solve(tapOnly, '{G}{G}').static).toBe(true);
+    expect(solve(tapOnly, '{G}{G}').names!.sort()).toEqual(['Forest', 'Test Pool']);
+  });
+
+  it('stateful-planner-treasure-cast — a real cast pays from the static plan and sacrifices only what it used', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', forest());
+      for (let i = 0; i < 4; i++) spawn(c, 'P1', treasure());
+    });
+    const spell = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Rainbow',
+        typeLine: 'Creature — Shapeshifter',
+        manaCost: '{W}{U}{B}{G}',
+        power: '2',
+        toughness: '2',
+      }),
+      'hand',
+    );
+    const player = playerById(ctx, 'P1');
+    const cast = computePriorityOptions(ctx, player).find(
+      (action) => action.type === 'castSpell' && action.description.includes(spell.name),
+    );
+    expect(cast).toBeDefined();
+    pump(
+      applyPriorityAction(ctx, player, cast!.payload as PriorityActionPayload, {
+        index: 0,
+        targets: new Map(),
+      }),
+      () => undefined,
+      { strict: true },
+    );
+    expect(ctx.state.stack.some((entry) => entry.description.includes(spell.name))).toBe(true);
+    // Forest makes G, the Orchard U or W, and two Treasures the rest.
+    expect(ctx.state.battlefield.filter((p) => p.name === 'Test Treasure')).toHaveLength(2);
+    expect(
+      ctx.state.battlefield
+        .filter((p) => p.name !== 'Test Treasure' && p.controllerId === 'P1')
+        .every((p) => p.tapped),
+    ).toBe(true);
+    expect(player.manaEntries).toEqual([]);
+  });
+
+  it('stateful-planner-filter-static — a filter land joins the static solve (fuzz-131, fuzz-144)', () => {
+    const cairns = () =>
+      land('Test Cairns', '{T}: Add {C}.\n{B/R}, {T}: Add {B}{B}, {B}{R}, or {R}{R}.');
+    const lands = (c: GameContext) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', plains());
+      spawn(c, 'P1', swamp());
+      spawn(c, 'P1', mountain());
+      spawn(c, 'P1', cairns());
+    };
+    // Only the filter makes the second R: it is paid for and used.
+    const ctx = board(lands);
+    const { static: wasStatic, names } = solve(ctx, '{W}{B}{R}{R}');
+    expect(wasStatic).toBe(true);
+    expect(names).toContain('Test Cairns');
+    expect(agree(ctx, '{W}{B}{R}{R}')).not.toEqual({ plan: null });
+    // With Treasures too it stays one static solve, payable or not.
+    const withTreasures = board((c) => {
+      lands(c);
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', treasure());
+    });
+    expect(solve(withTreasures, '{1}{W}{B}{R}{R}{G}').static).toBe(true);
+    expect(agree(withTreasures, '{1}{W}{B}{R}{R}{G}')).not.toEqual({ plan: null });
+    expect(agree(withTreasures, '{5}{W}{B}{R}{R}{G}')).toEqual({ plan: null });
+  });
+});
+
+describe('restricted mana with a filter source', () => {
+  it('stateful-planner-restricted-filter — a creature-only source and a Signet together stay on the search (Codex review)', () => {
+    // Ancient Ziggurat's mana pays only for creature spells, and a Signet needs {1} first:
+    // {2}{U}{U} takes Wastes into the Signet for G and U, the Forest for G, the Ziggurat for U.
+    // `planPayment`'s mana-costing pass sets restricted mana aside, so a static solve said no.
+    const ctx = board((c) => {
+      spawn(c, 'P1', land('Test Wastes', '{T}: Add {C}.'));
+      spawn(c, 'P1', forest());
+      spawn(
+        c,
+        'P1',
+        land(
+          'Test Ziggurat',
+          '{T}: Add one mana of any color. Spend this mana only to cast a creature spell.',
+        ),
+      );
+      spawn(c, 'P1', artifact('Test Signet', '{1}, {T}: Add {G}{U}.'));
+    });
+    const creature = conjure(
+      ctx,
+      'P1',
+      oracle({
+        name: 'Test Drake',
+        typeLine: 'Creature — Drake',
+        manaCost: '{2}{U}{U}',
+        power: '3',
+        toughness: '3',
+      }),
+      'hand',
+    );
+    const trace: { staticSolve?: boolean } = {};
+    const plan = searchPayment(
+      ctx,
+      playerById(ctx, 'P1'),
+      parseManaCost('{2}{U}{U}').cost!,
+      allowanceFor(ctx, 'P1', {
+        kind: 'castSpell',
+        oracleId: creature.oracleId,
+        isCommander: false,
+      }),
+      (context, payer) => manaSourcesFor(context, payer.id, true),
+      new Set(),
+      0,
+      0,
+      true,
+      trace,
+    );
+    expect(trace.staticSolve).not.toBe(true);
+    expect(plan).not.toBeNull();
+    expect(
+      plan!.tapCardIds.map((id) => ctx.state.battlefield.find((p) => p.cardId === id)!.name).sort(),
+    ).toEqual(['Forest', 'Test Signet', 'Test Wastes', 'Test Ziggurat']);
+  });
+});
+
+describe('a counted amount', () => {
+  const brigid = () =>
+    oracle({
+      name: 'Test Brigid',
+      typeLine: 'Legendary Creature — Kithkin Druid',
+      manaCost: '{1}{G}{W}',
+      power: '2',
+      toughness: '3',
+      oracleText: '{T}: Add X {G} or X {W}, where X is the number of other creatures you control.',
+    });
+  /** Fuzz-200's board: Brigid, Fellwar Stones that make every color, three Plains. */
+  function brigidBoard(tapped: boolean) {
+    return board((c) => {
+      for (const make of [swamp, mountain, forest]) spawn(c, 'P2', make());
+      spawn(c, 'P1', brigid()).tapped = tapped;
+      for (let i = 0; i < 2; i++) spawn(c, 'P1', bear());
+      // Distinct names, so no two are interchangeable and the search must try each.
+      for (let i = 0; i < 7; i++)
+        spawn(
+          c,
+          'P1',
+          artifact(
+            `Test Stone ${i}`,
+            '{T}: Add one mana of any color that a land an opponent controls could produce.',
+          ),
+        );
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', plains());
+    });
+  }
+
+  it('stateful-planner-counted-bound — "X is the number of other creatures" keeps the bound, and an unpayable cast says so (fuzz-200)', () => {
+    const ctx = brigidBoard(true);
+    const legacy = search(ctx, parseManaCost('{9}{W}{G}{G}').cost!, false);
+    expect('error' in legacy && legacy.error).toContain('budget exceeded');
+    expect(search(ctx, parseManaCost('{9}{W}{G}{G}').cost!, true)).toEqual({ plan: null });
+  }, 30_000);
+
+  it('stateful-planner-counted-pays — untapped, Brigid adds her two and the cast is paid', () => {
+    const ctx = brigidBoard(false);
+    const outcome = agree(ctx, '{9}{W}{G}{G}');
+    expect(outcome).not.toEqual({ plan: null });
+    expect('error' in outcome).toBe(false);
+  });
+});
+
+describe('the static solve, widened (#46)', () => {
+  function staticOf(
+    ctx: GameContext,
+    manaCost: string,
+    lifeReserved = 0,
+    sourcesFor = (context: GameContext, payer: { id: string }) =>
+      manaSourcesFor(context, payer.id as 'P1', true),
+  ) {
+    const trace: { staticSolve?: boolean } = {};
+    const player = playerById(ctx, 'P1');
+    const plan = searchPayment(
+      ctx,
+      player,
+      parseManaCost(manaCost).cost!,
+      allowanceFor(ctx, 'P1', { kind: 'castSpell', oracleId: 'none', isCommander: false }),
+      sourcesFor,
+      new Set(),
+      lifeReserved,
+      0,
+      true,
+      trace,
+    );
+    return { plan, static: trace.staticSolve === true };
+  }
+
+  it('stateful-planner-static-pain — a painland rides along when no life is reserved, and keeps the search when it is (fuzz-131, fuzz-144)', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', painland());
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', treasure());
+    });
+    const free = staticOf(ctx, '{G}{U}');
+    expect(free.static).toBe(true);
+    expect(free.plan).not.toBeNull();
+    expect(staticOf(ctx, '{G}{U}', 5).static).toBe(false);
+    expect(staticOf(ctx, '{G}{W/P}').static).toBe(false);
+  });
+
+  it('stateful-planner-static-convoke — convoke creatures join the static solve (fuzz-200)', () => {
+    const ctx = board((c) => {
+      spawn(c, 'P1', orchard());
+      spawn(c, 'P1', forest());
+      for (let i = 0; i < 2; i++) spawn(c, 'P1', bear());
+    });
+    const withConvoke = (context: GameContext, payer: { id: string }) => [
+      ...manaSourcesFor(context, payer.id as 'P1', true),
+      ...convokeSourcesFor(context, payer.id as 'P1'),
+    ];
+    // The fixture bears are colorless: each convokes for one generic.
+    const paid = staticOf(ctx, '{2}{G}{U}', 0, withConvoke);
+    expect(paid.static).toBe(true);
+    expect(paid.plan).not.toBeNull();
+    expect(staticOf(ctx, '{3}{G}{U}', 0, withConvoke).plan).toBeNull();
+    expect(staticOf(ctx, '{1}{G}{G}', 0, withConvoke).plan).toBeNull();
+  });
+
+  it('stateful-planner-static-conditional — "two mana instead if you control a 4-power creature" keeps the bound (fuzz-169, fuzz-173, fuzz-185)', () => {
+    const caryatid = () =>
+      oracle({
+        name: 'Test Caryatid',
+        typeLine: 'Creature — Plant',
+        manaCost: '{1}{G}',
+        power: '0',
+        toughness: '2',
+        oracleText:
+          '{T}: Add one mana of any color. If you control a creature with power 4 or greater, add two mana of any one color instead.',
+      });
+    const giant = () =>
+      oracle({
+        name: 'Test Giant',
+        typeLine: 'Creature — Giant',
+        manaCost: '{4}',
+        power: '4',
+        toughness: '4',
+      });
+    const ctx = board((c) => {
+      for (const make of [swamp, mountain, forest]) spawn(c, 'P2', make());
+      spawn(c, 'P1', caryatid()).tapped = true;
+      spawn(c, 'P1', giant());
+      for (let i = 0; i < 7; i++)
+        spawn(
+          c,
+          'P1',
+          artifact(
+            `Test Stone ${i}`,
+            '{T}: Add one mana of any color that a land an opponent controls could produce.',
+          ),
+        );
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', plains());
+    });
+    const legacy = search(ctx, parseManaCost('{9}{W}{G}{G}').cost!, false);
+    expect('error' in legacy && legacy.error).toContain('budget exceeded');
+    expect(staticOf(ctx, '{9}{W}{G}{G}').plan).toBeNull();
+    // Untapped, she makes two of one color: the bound counts her at that.
+    const untapped = board((c) => {
+      spawn(c, 'P1', caryatid());
+      spawn(c, 'P1', giant());
+      spawn(c, 'P1', orchard());
+    });
+    expect(staticOf(untapped, '{G}{G}{U}').plan).not.toBeNull();
+    expect(staticOf(untapped, '{G}{G}{G}{U}').plan).toBeNull();
+  }, 30_000);
+});
+
+describe('interchangeable permanents', () => {
+  /** P1's Treasures on a fresh board, and the classes the planner puts them in. */
+  function classes(edit?: (ctx: GameContext, treasures: string[]) => void) {
+    const ctx = board((c) => {
+      for (let i = 0; i < 3; i++) spawn(c, 'P1', treasure());
+    });
+    const ids = ctx.state.battlefield
+      .filter((p) => p.name === 'Test Treasure')
+      .map((p) => p.cardId);
+    edit?.(ctx, ids);
+    const byCard = interchangeablePermanents(ctx, ids);
+    return ids.map((id) => byCard.get(id) ?? null);
+  }
+
+  it('stateful-planner-interchangeable — identical, unreferenced Treasures share a class', () => {
+    const [a, b, c] = classes();
+    expect(a).not.toBeNull();
+    expect(b).toBe(a);
+    expect(c).toBe(a);
+  });
+
+  it('stateful-planner-not-interchangeable — a counter or a reference keeps a Treasure apart', () => {
+    const withCounter = classes((ctx, ids) => {
+      ctx.state.battlefield.find((p) => p.cardId === ids[1])!.counters['charge'] = 1;
+    });
+    expect(withCounter[1]).not.toBe(withCounter[0]);
+    expect(withCounter[2]).toBe(withCounter[0]);
+
+    // An effect that names the third Treasure: anything could read that one in particular.
+    const referenced = classes((ctx, ids) => {
+      ctx.state.effects.push({
+        id: 'eff-test',
+        sourceId: 'test',
+        description: 'names one Treasure',
+        targetCardIds: [ids[2]!],
+        kind: 'grantKeyword',
+        keyword: 'hexproof',
+        timestamp: ctx.state.nextTimestamp++,
+      } as never);
+    });
+    expect(referenced[2]).toBeNull();
+    expect(referenced[1]).toBe(referenced[0]);
   });
 });
 
@@ -573,12 +1126,15 @@ describe('sacrifice mana sources', () => {
     });
     const player = playerById(ctx, 'P1');
     for (let i = 0; i < 4; i++) player.manaEntries.push({ symbol: 'C' });
-    const outcome = agree(ctx, '{W}{W}');
+    // {W}{W}{W}: the Orchard makes one W, so the Converter must fire twice. The plan is exactly
+    // those three activations (the shortest), where a depth-first order once also tapped the
+    // Orchard for a U nothing spent.
+    const outcome = agree(ctx, '{W}{W}{W}');
     expect(outcome).not.toEqual({ plan: null });
     const tapped = (outcome as { plan: { tapCardIds: string[] } }).plan.tapCardIds.map(
       (cardId) => ctx.state.battlefield.find((p) => p.cardId === cardId)!.name,
     );
-    expect(tapped.filter((name) => name === 'Test Converter')).toHaveLength(2);
+    expect(tapped).toEqual(['Exotic Orchard', 'Test Converter', 'Test Converter']);
   });
 
   it('stateful-planner-sacrifice-payable — a cast only a sacrifice can pay for is found, victim unpinned', () => {
@@ -710,6 +1266,19 @@ describe('sacrifice mana sources', () => {
       // Rule statics are listed as irrelevant or they count against it.
       expect(keeps(holder([], [{ kind: 'attackTax' }]))).toBe(true);
       expect(keeps(holder([], [{ kind: 'triggerAdditionalTime' }]))).toBe(true);
+      // Damage modifiers change only damage (Neriv, Heart of the Storm on a Treasure board, fuzz-26).
+      for (const kind of [
+        'damageDoubled',
+        'damageDoubledToOpponents',
+        'damageHalvedToYou',
+        'preventCombatDamageToSelf',
+        // Terror of the Peaks (fuzz-26) and other rules no source's production reads.
+        'targetLifeTax',
+        'graveyardToExile',
+        'tokenCountMultiplier',
+        'untapDuringOthersUntapSteps',
+      ])
+        expect(keeps(holder([], [{ kind }])), kind).toBe(true);
       expect(keeps(holder([], [{ kind: 'cantActivateAbilities' }]))).toBe(false);
       expect(keeps(holder([], [{ kind: 'lifeGainReplacement' }]))).toBe(false);
       expect(keeps(holder([], [{ kind: 'aKindThatDoesNotExistYet' }]))).toBe(false);
@@ -762,5 +1331,28 @@ describe('sacrifice mana sources', () => {
     ).toEqual(['Fodder 1', 'Fodder 3']);
     expect(ctx.state.stack.some((entry) => entry.description.includes(hulk.name))).toBe(true);
     expect(player.manaEntries).toEqual([]);
+  });
+});
+
+describe('tap-a-creature sources the final payment solves', () => {
+  it('leaves out a source that costs mana: the final solver sets restricted mana aside there (Codex review)', () => {
+    const cost = parseManaCost('{1}').cost!;
+    const source = {
+      cardId: 'engine',
+      units: [['U'], ['U']] as ManaUnit[],
+      costs: [
+        { kind: 'tap' },
+        { kind: 'tapOther', selector: { kind: 'type', value: 'Creature' } },
+      ] as AbilityCost[],
+      taps: [['bear']],
+    };
+    expect(tapOtherSource(source)).toBe(true);
+    expect(
+      tapOtherSource({
+        ...source,
+        costs: [...source.costs, { kind: 'mana', cost }] as AbilityCost[],
+        manaCost: cost,
+      }),
+    ).toBe(false);
   });
 });

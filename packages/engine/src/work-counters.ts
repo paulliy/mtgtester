@@ -19,6 +19,10 @@ export interface EngineWork {
   layerCacheHits: number;
   /** Digests of the layer inputs, each a hash over every permanent: once per read scope, else per query. */
   layerDigests: number;
+  /** CR 613.8 dependency trial states (a whole-board clone plus one applied effect): probes the read/write prefilter could not skip. */
+  layerDependencyProbes: number;
+  /** Whole-battlefield scans for a layer effect's `Value` ("for each creature you control"): one per effect, not one per object it applies to, when the op cannot change the count. */
+  layerValueCounts: number;
   /** Casting checkpoints: each captures every object in the game for in-place rollback. */
   castCheckpoints: number;
   /** Casting previews: a shallow projection of the game with the card moved to the stack. */
@@ -39,6 +43,8 @@ const WORK: EngineWork = {
   layerPasses: 0,
   layerCacheHits: 0,
   layerDigests: 0,
+  layerDependencyProbes: 0,
+  layerValueCounts: 0,
   castCheckpoints: 0,
   castPreviews: 0,
   manaSourceListings: 0,

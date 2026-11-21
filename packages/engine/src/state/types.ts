@@ -1102,6 +1102,13 @@ export interface EngineBudget {
   maxTurnObjects?: number;
   /** The turn being counted and `nextObjectNum` when its first object was created. */
   turnObjects?: { turn: number; atStart: number };
+  /** How deep a token chain may run in one turn; see `EngineOptions.maxTokenChainDepth`. */
+  maxTokenChainDepth?: number;
+  /**
+   * This turn's token chain: each token created this turn by its depth, and the depth of the
+   * stack object resolving now (0 between resolutions).
+   */
+  tokenChain?: { turn: number; depths: Map<string, number>; resolving: number };
 }
 
 /** Internal debug log entry (brief §13) — separate from the replayable `GameEvent` log. */

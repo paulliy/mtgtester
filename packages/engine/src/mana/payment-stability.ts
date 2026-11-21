@@ -37,11 +37,20 @@ const STABLE_SELECTOR_KINDS: ReadonlySet<Selector['kind']> = new Set<Selector['k
   'isMonocolored',
 ]);
 
-function stableSelector(selector: Selector): boolean {
+export function stableSelector(selector: Selector): boolean {
   if (selector.kind === 'allOf' || selector.kind === 'anyOf')
     return selector.of.every(stableSelector);
   if (selector.kind === 'not') return stableSelector(selector.of);
   return STABLE_SELECTOR_KINDS.has(selector.kind);
+}
+
+/**
+ * True when a board count stays what it is now through a payment in which no permanent leaves:
+ * a count of permanents over a stable selector, which a tap, a mana payment or a life rider cannot
+ * change. The caller must know that nothing in the payment sacrifices.
+ */
+export function countFixedWhileNothingLeaves(condition: Condition): boolean {
+  return condition.kind === 'countPermanents' && stableSelector(condition.selector);
 }
 
 /**
@@ -83,6 +92,48 @@ const PAYMENT_STATE_KINDS: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * Condition kinds a payment cannot change: a board count (its selector is checked on its own), the
+ * turn and step, a permanent's own entry, cast and kicker history, a choice already made, the
+ * monarch, the number of opponents. "Has hexproof as long as it entered this turn" (Zurgo and
+ * Ojutai) broke the premise for every payment at the table and halted fuzz-26 and fuzz-169.
+ * Combinators pass through, and each child is checked. Counts of what happened this turn are not
+ * here: the payment belongs to a cast that may itself be counted.
+ */
+const PAYMENT_FIXED_CONDITION_KINDS: ReadonlySet<string> = new Set([
+  'countPermanents',
+  'allOf',
+  'anyOf',
+  'not',
+  'enteredThisTurn',
+  'yourTurn',
+  'notYourTurn',
+  'duringStep',
+  'duringYourMainPhase',
+  'beforeAttackersDeclared',
+  'castDuringYourMainPhase',
+  'wasKicked',
+  'sourceWasCast',
+  'escaped',
+  'giftPromised',
+  'chosenOptionIs',
+  'opponentIsMonarch',
+  'opponentCount',
+  // Also fixed by a payment's own activations (a tap, a mana, life or energy payment, a life or
+  // damage rider: none adds, removes or changes a permanent): whether its controller controls
+  // their own commander; a comparison of constants and devotion, which reads the mana costs of
+  // the controller's permanents (CR 700.5, "isn't a creature unless your devotion to red and
+  // green is 7 or more", Purphoros-style gods). A comparison of any other value is still caught
+  // by its operands (`lifeTotal`, `countTappedPermanents`, `energyAvailable` ... are in
+  // `PAYMENT_STATE_KINDS`; an unlisted operand kind is not in this set). A permanent leaving can
+  // change these: `leavingKeepsProduction` lets through only the conditions that can only stop
+  // holding (`conditionOnlyEnds`).
+  'controlsYourCommander',
+  'compareValues',
+  'devotionTo',
+  'const',
+]);
+
+/**
  * Whether anything in `value` could read state that a fixed-capacity payment changes: a kind in
  * `PAYMENT_STATE_KINDS`, or any condition other than a board count (a life total, a turn fact, a
  * source's own status).
@@ -92,7 +143,11 @@ function readsPaymentState(value: unknown, underCondition = false): boolean {
   if (value === null || typeof value !== 'object') return false;
   const record = value as Record<string, unknown>;
   if (typeof record['kind'] === 'string' && PAYMENT_STATE_KINDS.has(record['kind'])) return true;
-  if (underCondition && record['kind'] !== undefined && record['kind'] !== 'countPermanents')
+  if (
+    underCondition &&
+    record['kind'] !== undefined &&
+    !PAYMENT_FIXED_CONDITION_KINDS.has(String(record['kind']))
+  )
     return true;
   return Object.entries(record).some(([key, child]) =>
     readsPaymentState(child, key === 'condition' ? true : underCondition && key !== 'selector'),
@@ -242,6 +297,36 @@ const RULES_IRRELEVANT_TO_PRODUCTION: ReadonlySet<string> = new Set([
   'additionalLandDrops',
   'artifactTokenCreatesThopter',
   'counterPlacementReplacement',
+  // Damage modifiers change only how much damage is dealt. No source's production reads damage,
+  // and ending one never raises a life total, so the life checks keep their premise too (Neriv,
+  // Heart of the Storm on a Treasure board dropped the bound and halted fuzz-26).
+  'damageDoubled',
+  'damageDoubledToOpponents',
+  // "If a source you control would deal damage to an opponent, it deals double that damage
+  // instead" (Fiery Emancipation, Torbran): a replacement of how much damage is dealt, `factor`
+  // (at least 2) and `plus` (at least 1) only multiply or add: authoring validation admits no other. The only damage a payment deals is a source's rider to its own
+  // controller, and no mana ability, gate, selector or dynamic production reads damage dealt. Ending
+  // the replacement can only make that rider hurt less, and life never rises past what it is now
+  // under the premise of a payment (`lifeCanRise` is false where a bound uses life), so no
+  // pay-life source or life reservation is made easier to meet than the root says.
+  'damageReplacement',
+  'damageHalvedToYou',
+  'preventCombatDamageToSelf',
+  // Neither changes a source's production when it ends: a cost the opponents pay to target
+  // (Terror of the Peaks, fuzz-26), rules for cards off the battlefield or not yet drawn, how a
+  // token's or another permanent's entry is replaced (no fixed-capacity activation makes one), or
+  // an untap step.
+  'targetLifeTax',
+  'alsoTypesOffBattlefield',
+  'beginOnBattlefieldFromOpeningHand',
+  'createClueFoodAndTreasure',
+  'effectDiscardMayGoToLibraryTop',
+  'graveyardToExile',
+  'lookTopLibrary',
+  'revealTopLibrary',
+  'otherPermanentsEnterTapped',
+  'tokenCountMultiplier',
+  'untapDuringOthersUntapSteps',
   'spellCastLimit',
   'spellCostIncrease',
   // A trigger waits for the stack, so doubling, adding to or suppressing one changes nothing a
@@ -280,6 +365,48 @@ interface LeavingAnswer {
   power: boolean;
 }
 
+/** Condition kinds a permanent leaving can change: a board count, devotion, a commander's presence. */
+const BOARD_CONDITION_KINDS: ReadonlySet<string> = new Set([
+  'countPermanents',
+  'compareValues',
+  'enteredThisTurn',
+  'controlsYourCommander',
+]);
+
+/**
+ * Whether a static's condition can only stop holding as permanents leave. "You control a Dragon"
+ * (`>=`), "entered this turn", "you control your commander" only turn false; a `<=` or `==` count
+ * and a devotion comparison can turn true, which starts the effect: it may take an ability away or
+ * give a keyword a gate reads, so its static keeps the sacrifice bounds off. A condition that reads
+ * no board fact (the turn, the step, kicker, a choice already made) does not move at all. A
+ * negation turns "can only stop holding" into "can only start holding", so it passes only over a
+ * condition that does not move.
+ */
+function conditionOnlyEnds(condition: Condition | undefined): boolean {
+  if (condition === undefined) return true;
+  switch (condition.kind) {
+    case 'allOf':
+    case 'anyOf':
+      return condition.of.every(conditionOnlyEnds);
+    case 'not':
+      return conditionNeverMoves(condition.of);
+    case 'countPermanents':
+      return condition.cmp === '>=';
+    case 'compareValues':
+      return false;
+    default:
+      return true;
+  }
+}
+
+/** A condition no permanent leaving changes: it reads no board fact. */
+function conditionNeverMoves(condition: Condition): boolean {
+  if (condition.kind === 'allOf' || condition.kind === 'anyOf')
+    return condition.of.every(conditionNeverMoves);
+  if (condition.kind === 'not') return conditionNeverMoves(condition.of);
+  return !BOARD_CONDITION_KINDS.has(condition.kind);
+}
+
 function leavingKeepsProduction(
   staticEffects: readonly unknown[],
   ruleStatics: readonly unknown[],
@@ -288,6 +415,9 @@ function leavingKeepsProduction(
   return {
     general:
       ops.every((op) => !endingCanRaise(op)) &&
+      staticEffects.every((effect) =>
+        conditionOnlyEnds((effect as { condition?: Condition }).condition),
+      ) &&
       ruleStatics.every((rule) =>
         RULES_IRRELEVANT_TO_PRODUCTION.has(String((rule as { kind?: unknown }).kind)),
       ),
@@ -345,7 +475,11 @@ function readsBoardMembership(value: unknown): boolean {
   if (value === null || typeof value !== 'object') return false;
   const record = value as Record<string, unknown>;
   const kind = record['kind'];
-  if (typeof kind === 'string' && /count|zone|graveyard/i.test(kind)) return true;
+  // Devotion (the mana costs of the permanents you control) and whether you control your
+  // commander are board membership too: a departure moves them (`PAYMENT_FIXED_CONDITION_KINDS`
+  // admits them only because a tap or a mana payment does not).
+  if (typeof kind === 'string' && /count|zone|graveyard|devotion|commander/i.test(kind))
+    return true;
   return Object.values(record).some(readsBoardMembership);
 }
 
@@ -364,7 +498,13 @@ function membershipStatics(
     // control a creature with power 4 or greater"); with no gate, a P/T static cannot add capacity.
     return gated || !Object.keys(op).every((key) => PT_ONLY_KEYS.has(key));
   });
-  return !readsBoardMembership(matters) && !readsBoardMembership(ruleStatics);
+  // A rule no source's production reads (an attack tax, a cost increase) cannot add capacity
+  // whatever it counts: Nils, Discipline Enforcer's tax counts counters, and kept every Treasure
+  // board at the table off the bound (fuzz-131).
+  const rules = ruleStatics.filter(
+    (rule) => !RULES_IRRELEVANT_TO_PRODUCTION.has(String((rule as { kind?: unknown }).kind)),
+  );
+  return !readsBoardMembership(matters) && !readsBoardMembership(rules);
 }
 
 const departureSafeByDefinition = new WeakMap<object, boolean>();
