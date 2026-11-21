@@ -3,6 +3,7 @@ import { TAP_COST } from '../src/cards/definition';
 import type { ManaEntry } from '../src/cards/ability';
 import { canPay, parseManaCost, planPayment, withX } from '../src/mana/cost';
 import type { ManaSource, ManaUnit, ProducedMana } from '../src/mana/cost';
+import fuzz381 from './fixtures/fuzz381-plan-payment-args.json';
 
 type Sym = 'W' | 'U' | 'B' | 'R' | 'G' | 'C';
 
@@ -234,5 +235,69 @@ describe('payment plan produced mana', () => {
     const plan2 = planPayment(parseManaCost('{G}{U}').cost!, pool(), [forest, anyColor]);
     expect(plan2).not.toBeNull();
     expect(producedSymbols(plan2!.produced).sort()).toEqual(['G', 'U']);
+  });
+});
+
+describe('planPayment with permanents that are both a mana source and a convoke source', () => {
+  const tapG = (cardId: string): ManaSource => ({ cardId, units: [['G']], costs: TAP_COST });
+  const convokeG = (cardId: string): ManaSource => ({
+    cardId,
+    units: [['G']],
+    costs: TAP_COST,
+    convoke: true,
+  });
+  /** `count` creatures, each listed once as a `{T}: add {G}` source and once as a convoke source. */
+  const creatures = (count: number): ManaSource[] => {
+    const ids = Array.from({ length: count }, (_, i) => `c-${i}`);
+    return [...ids.map(tapG), ...ids.map(convokeG)];
+  };
+  const generic = (n: number) => ({ ...parseManaCost('{0}').cost!, generic: n });
+
+  // Captured from fuzz seed 381: an X spell, {X}{W}{W}{G} with X = 59, against 106 sources over 61
+  // permanents. Counted once per permanent the sources make exactly 62 mana, so the payment is
+  // possible only with every permanent tapped. The solver used to count a creature's two entries
+  // twice, never pruned, and grew past 13 GB.
+  const captured = fuzz381 as unknown as {
+    cost: ReturnType<typeof parseManaCost>['cost'];
+    sources: ManaSource[];
+  };
+
+  it('pays the captured fuzz-381 cost exactly, and quickly', () => {
+    const started = performance.now();
+    const plan = planPayment(captured.cost!, [], captured.sources);
+    expect(performance.now() - started).toBeLessThan(1000);
+    expect(plan).not.toBeNull();
+    // 62 pips, paid by 62 units: nothing floats and nothing is wasted.
+    expect(plan!.produced.length).toBeGreaterThanOrEqual(62);
+    expect(new Set(plan!.tapCardIds).size).toBe(plan!.tapCardIds.length);
+  });
+
+  it('declines the captured board when the cost is one pip higher, quickly', () => {
+    const started = performance.now();
+    const plan = planPayment(
+      { ...captured.cost!, generic: captured.cost!.generic + 1 },
+      [],
+      captured.sources,
+    );
+    expect(performance.now() - started).toBeLessThan(1000);
+    expect(plan).toBeNull();
+  });
+
+  it('declines a cost one above the creature count when each creature is listed twice', () => {
+    const started = performance.now();
+    expect(planPayment(generic(41), [], creatures(40))).toBeNull();
+    expect(performance.now() - started).toBeLessThan(1000);
+    expect(planPayment(generic(40), [], creatures(40))).not.toBeNull();
+  });
+
+  it('still counts two distinct activations of one card', () => {
+    const twice: ManaSource[] = [
+      { cardId: 'rock', activation: 0, units: [['G']], costs: TAP_COST },
+      { cardId: 'rock', activation: 1, units: [['G']], costs: TAP_COST },
+    ];
+    const plan = planPayment(generic(2), [], twice);
+    expect(plan).not.toBeNull();
+    expect(plan!.tapSources).toHaveLength(2);
+    expect(planPayment(generic(3), [], twice)).toBeNull();
   });
 });
