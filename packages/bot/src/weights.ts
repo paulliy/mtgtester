@@ -293,6 +293,8 @@ export const WEIGHTS = {
      * place of the flat value of a player target. Killing damage keeps the flat value.
      */
     faceDamagePerLife: 1,
+    /** `commanderValue`: added to a commander's permanent value, on either side of the table. */
+    commanderPermanentBonus: 4,
     /** An unsafe attacker at or below this power needs an attack trigger. */
     riskyAttackMinPower: 1,
     /** `holdUpMana` lapses from this many cards in hand, cleanup would discard, so the mana is spent. */

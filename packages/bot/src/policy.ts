@@ -15,6 +15,7 @@ import type {
   PermanentView,
   PlayerId,
   PlayerView,
+  StackObjectView,
   TargetChoice,
 } from '@mtg/shared';
 import { NO_ATTACK_TARGET } from '@mtg/shared';
@@ -138,7 +139,22 @@ export function traitsFor(ctx: PolicyContext, name: string | undefined): CardTra
 
 // --- Values of things on the table -----------------------------------------------------------
 
-/** Whether `name` is a commander at this table, ours or an opponent's. */
+/** A permanent's worth in LEP to whoever controls it. */
+export function permanentValue(p: PermanentView, ctx: PolicyContext): number {
+  return (
+    permanentBaseValue(p, ctx) + (isCommanderName(p.name, ctx) ? P.commanderPermanentBonus : 0)
+  );
+}
+
+/**
+ * `commanderValue`: whether `name` is a commander at this table, ours or an opponent's, so worth
+ * more than its body: it comes back taxed, and it is what the deck is built around.
+ */
+function isCommanderName(name: string, ctx: PolicyContext): boolean {
+  return fixOn(ctx, 'commanderValue') && commanderNamed(name, ctx);
+}
+
+/** Whether `name` is a commander at this table, whatever the fixes. */
 function commanderNamed(name: string, ctx: PolicyContext): boolean {
   const names = once(ctx, 'commanderNames', () => {
     const { view } = ctx;
@@ -150,8 +166,7 @@ function commanderNamed(name: string, ctx: PolicyContext): boolean {
   return names.has(name);
 }
 
-/** A permanent's worth in LEP to whoever controls it. */
-export function permanentValue(p: PermanentView, ctx: PolicyContext): number {
+function permanentBaseValue(p: PermanentView, ctx: PolicyContext): number {
   if (isCreaturePermanent(p)) {
     const w = WEIGHTS.combat;
     return (
@@ -337,21 +352,18 @@ function optionScore(
     const player = ctx.view.opponents.find((o) => o.seat === option);
     if (player !== undefined && pending > 0 && player.life - pending <= 0) return -1;
     // Damage that leaves the player alive is worth the damage, not a whole player: two points at
-    // someone on 30 life must not outrank killing a creature. Aggression scales it for racing.
-    if (
-      player !== undefined &&
-      damage !== null &&
-      fixOn(ctx, 'faceDamage') &&
-      damage + pending < player.life
-    ) {
+    // someone on 30 life must not outrank killing a creature. Aggression and the style scale it
+    // for racing. Damage that kills the player is worth the player on top of that damage, so no
+    // scale ever ranks five points at a healthy player above finishing one in reach.
+    if (player !== undefined && damage !== null && fixOn(ctx, 'faceDamage')) {
       const aggression = clamp01(ctx.steering?.aggression ?? P.defaultAggression);
-      return (
+      const racing =
         damage *
-          P.faceDamagePerLife *
-          styleProfile(ctx.steering?.style).faceDamage *
-          (0.5 + aggression) +
-        (pressure.get(c.owner) ?? 0) * P.targetPressureWeight
-      );
+        P.faceDamagePerLife *
+        styleProfile(ctx.steering?.style).faceDamage *
+        (0.5 + aggression);
+      const kill = damage + pending >= player.life ? c.value : 0;
+      return racing + kill + (pressure.get(c.owner) ?? 0) * P.targetPressureWeight;
     }
     // Damage that leaves a creature alive takes only a sliver of its worth (Bolt on a 10/10).
     const creature = ctx.view.battlefield.find((p) => p.id === option);
@@ -1285,6 +1297,25 @@ function wastesLastAnswer(
   });
 }
 
+/**
+ * What countering an opposing spell protects: when it targets the seat's own spells on the stack
+ * (a Negate aimed at our Wrath), the threat of the best of them. A counter war is fought over the
+ * spell being countered, not over the counterspell's own size.
+ */
+function protectedThreat(item: StackObjectView, ctx: PolicyContext): number {
+  const { view } = ctx;
+  let best = -Infinity;
+  for (const id of item.targets) {
+    const ours = view.stack.find((entry) => entry.id === id && entry.controller === view.seat);
+    if (ours === undefined) continue;
+    const traits = traitsFor(ctx, ours.description);
+    if (traits === undefined) continue;
+    const commander = isCommanderName(ours.description, ctx) ? P.commanderPermanentBonus : 0;
+    best = Math.max(best, spellThreat(traits) + commander);
+  }
+  return best;
+}
+
 /** What an answer of `kind` would hit, on its own scale; null when the bot cannot tell. */
 function answerThreat(kind: AnswerKind, action: LegalAction, ctx: PolicyContext): number | null {
   const { view } = ctx;
@@ -1306,7 +1337,8 @@ function answerThreat(kind: AnswerKind, action: LegalAction, ctx: PolicyContext)
       // A spell is shown by its card name; an ability's description is not one.
       const traits = traitsFor(ctx, item.description);
       if (traits === undefined) return null;
-      best = Math.max(best, spellThreat(traits));
+      const commander = isCommanderName(item.description, ctx) ? P.commanderPermanentBonus : 0;
+      best = Math.max(best, spellThreat(traits) + commander, protectedThreat(item, ctx));
     }
     return best;
   }
@@ -1554,6 +1586,14 @@ const GAIN_CHOICES: ReadonlySet<string> = new Set([
   'returnToHand',
   'castFree',
 ]);
+/**
+ * `costChoices`: a permanent sacrificed to pay an activation cost (Ashnod's Altar's victim) is a
+ * loss like any other sacrifice. Without it the bot has no opinion and its seeded tie-break picks.
+ */
+function isLossChoice(type: string, ctx: PolicyContext): boolean {
+  return LOSS_CHOICES.has(type) || (type === 'sacrificeCost' && fixOn(ctx, 'costChoices'));
+}
+
 /** Opt-out choices that score below opting in. */
 const DECLINES: ReadonlySet<string> = new Set([
   'findNothing',
@@ -1614,7 +1654,7 @@ export function choiceValue(action: LegalAction, ctx: PolicyContext): number | n
   const id = subjectOf(action, ctx);
   if (id !== undefined) {
     const value = subjectValue(id, action, ctx);
-    if (value !== null && LOSS_CHOICES.has(action.type)) return P.choiceBase - value;
+    if (value !== null && isLossChoice(action.type, ctx)) return P.choiceBase - value;
     if (value !== null && GAIN_CHOICES.has(action.type)) return P.choiceBase + value;
   }
   if (GAIN_CHOICES.has(action.type)) return P.choiceBase;

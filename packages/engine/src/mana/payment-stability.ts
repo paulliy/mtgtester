@@ -329,7 +329,6 @@ export function leavingPermanentsKeepProduction(
   });
 }
 
-
 /**
  * A self-sacrificing source (a Treasure: "{T}, Sacrifice this artifact: Add one mana of any
  * color") changes the board by more than a tap: it leaves the battlefield, and a card goes to its

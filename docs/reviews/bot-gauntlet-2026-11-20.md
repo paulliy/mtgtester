@@ -102,18 +102,18 @@ Four reviewers (`reviewer`, Sonnet) read the 97 excerpts of the first run where 
 changed the winner, cut at the first decision where the two bots chose differently
 (`divergence.py` in the run's scratch folder). Their findings, with what was done:
 
-| Finding                                                                                                                                                                         | Evidence                       | Done                                                                                                                                                |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The control preset's `holdUpMana: 2` took a flat −10 off every sorcery-speed cast, the commander included: Grand Arbiter was cast on turn 23 by the old bot, turn 27 by the new | pod 21 (styled, proxy), pod 41 | Control preset has no knob defaults; hold-up never blocks casting the commander, nor casting from a hand of 7 or more                               |
-| At aggression 0.85 a lone 1/2 commander attacked into a 5/5 and a 5/7                                                                                                           | pod 47                         | A risky attack now needs an attack trigger, a second creature, more than 1 power, and not the commander                                             |
-| The proxy strategist's target order (+9/+6/+3) swamped the bot's own pressure score (1 to 5), attacking the biggest board instead of the low-life seat                          | pods 5, 19, 45, 75, 79         | Bonus 3 → 1 per place; the proxy ranks low life from 40 life, not 20                                                                                |
-| The proxy always set aggression, overriding the style                                                                                                                           | pods 17, 41, 44, 47            | The proxy sets aggression only when behind on life or ahead on board                                                                                |
-| The aggro preset's ramp discount delayed mana the hand needed                                                                                                                   | pods 47, 52                    | Aggro and tempo no longer scale ramp down                                                                                                           |
-| The value preset's lower answer thresholds spent removal early                                                                                                                  | pods 0, 7, 28, 46              | Value thresholds back to 1                                                                                                                          |
-| Wheel of Fortune cast ahead of deploying, discarding the hand                                                                                                                   | pods 5, 58                     | Combo draw scale 1.5 → 1.25                                                                                                                         |
-| The bot sacrificed its own commander (Kiki-Jiki) to Ashnod's Altar to pay for a spell: `permanentValue` ignores commander status                                                | pod 17                         | Tried as `commanderValue`; no measurable effect (+12/−11) and the bench cannot gate it without commander seats, so it was removed. A follow-up task |
-| `scarceAnswer` held cheap removal from early commanders and engines                                                                                                             | pods 38, 61, 76 (midrange)     | Not changed: the same hold is why `fixed` wins for control (pods 5, 12, 45). Needs a commander-aware threat value first                             |
-| Cheap ramp (Sol Ring) discarded over lands; ramp decks cast one spell a turn on 7 lands                                                                                         | pods 38, 74                    | Not changed: hand-card value and mana use, a core change for its own test                                                                           |
+| Finding                                                                                                                                                                         | Evidence                       | Done                                                                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| The control preset's `holdUpMana: 2` took a flat −10 off every sorcery-speed cast, the commander included: Grand Arbiter was cast on turn 23 by the old bot, turn 27 by the new | pod 21 (styled, proxy), pod 41 | Control preset has no knob defaults; hold-up never blocks casting the commander, nor casting from a hand of 7 or more                |
+| At aggression 0.85 a lone 1/2 commander attacked into a 5/5 and a 5/7                                                                                                           | pod 47                         | A risky attack now needs an attack trigger, a second creature, more than 1 power, and not the commander                              |
+| The proxy strategist's target order (+9/+6/+3) swamped the bot's own pressure score (1 to 5), attacking the biggest board instead of the low-life seat                          | pods 5, 19, 45, 75, 79         | Bonus 3 → 1 per place; the proxy ranks low life from 40 life, not 20                                                                 |
+| The proxy always set aggression, overriding the style                                                                                                                           | pods 17, 41, 44, 47            | The proxy sets aggression only when behind on life or ahead on board                                                                 |
+| The aggro preset's ramp discount delayed mana the hand needed                                                                                                                   | pods 47, 52                    | Aggro and tempo no longer scale ramp down                                                                                            |
+| The value preset's lower answer thresholds spent removal early                                                                                                                  | pods 0, 7, 28, 46              | Value thresholds back to 1                                                                                                           |
+| Wheel of Fortune cast ahead of deploying, discarding the hand                                                                                                                   | pods 5, 58                     | Combo draw scale 1.5 → 1.25                                                                                                          |
+| The bot sacrificed its own commander (Kiki-Jiki) to Ashnod's Altar to pay for a spell: `permanentValue` ignores commander status                                                | pod 17                         | Fixed by `costChoices` and `commanderValue` ([follow-up](bot-commander-value-2026-11-20.md)): the Altar's sacrifice was never scored |
+| `scarceAnswer` held cheap removal from early commanders and engines                                                                                                             | pods 38, 61, 76 (midrange)     | Not changed: the same hold is why `fixed` wins for control (pods 5, 12, 45). Needs a commander-aware threat value first              |
+| Cheap ramp (Sol Ring) discarded over lands; ramp decks cast one spell a turn on 7 lands                                                                                         | pods 38, 74                    | Not changed: hand-card value and mana use, a core change for its own test                                                            |
 
 ## Can combo decks work with the bot?
 
@@ -157,7 +157,8 @@ graveyard, or, when some source is gated, power and toughness. Measured:
 
 Both runs above used `--seed field`: the same 80 pods, replayed with a slightly changed bot, so
 "across both runs" counts most pairs twice. After merging main (its sacrifice-source mana bound),
-the current bot was run again on `field` and once on 80 new pods:
+the bot as of this review, before the commander-value, `faceDamage` and `scarceAnswer` follow-ups,
+was run again on `field` and once on 80 new pods:
 
 `bun run bot-gauntlet --pods 80 --seed field2 --new styled,proxy-v2-styled --jobs 4 --trace-dir <dir> --json <dir>/field.json`
 
@@ -198,8 +199,8 @@ time` (`--seed field`, pod 0, the `styled` arm with P4 switched, a payment by P1
   or a gauntlet option that replays only the seats of one style.
 - **Proxy `targetOrder`:** the knob that actually moves proxy games. Whether its order should only
   break ties in attack targeting is untested.
-- **Commander value:** the Kiki-Jiki sacrifice is a real misplay. It needs commander seats in bench
-  positions to gate.
+- **Commander value:** done in the [follow-up](bot-commander-value-2026-11-20.md); bench positions
+  now seat commanders.
 - **The archetype classifier** calls almost every deck midrange.
 - **Engine halts and errors:** 5 to 9% of games still halt on payment budgets with other sources
   (Exotic Orchard-style dynamic production, filter lands with riders); the

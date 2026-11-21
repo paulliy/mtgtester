@@ -883,6 +883,38 @@ describe('last answer and face damage', () => {
     expect(aim(30)).toEqual([{ slot: 0, choice: 'lions' }]);
     expect(aim(2)).toEqual([{ slot: 0, choice: 'P2' }]);
   });
+
+  it('kills a player in reach before scaling damage at another one, even for an aggro seat', () => {
+    // An aggro seat scales damage to a player it does not kill (1.5x style, high aggression); a
+    // kill must still outrank five points at the opponent on 6 life.
+    const grenadeKnowledge = knowledge({
+      'Test Grenade': {
+        manaValue: 1,
+        roles: ['burn'],
+        spellTargets: ['hostile'],
+        spellDamage: [5],
+      },
+    });
+    const grenade: LegalAction = {
+      id: 1,
+      type: 'castSpell',
+      description: 'Cast Test Grenade',
+      targets: [{ slot: 0, options: ['P3', 'P2'] }],
+      data: { sourceName: 'Test Grenade', manaCost: '{R}' },
+    };
+    const lives: Record<string, number> = { P2: 5, P3: 6 };
+    const table = view({
+      opponents: view().opponents.map((o) => ({ ...o, life: lives[o.seat] ?? o.life })),
+    });
+    const aim = (steering?: BotSteering) =>
+      decide(request([PASS, grenade]), table, new Rng('a'), {
+        knowledge: grenadeKnowledge,
+        ...(steering !== undefined && { steering }),
+      }).targets;
+    expect(aim({ style: 'aggro', aggression: 0.85 })).toEqual([{ slot: 0, choice: 'P2' }]);
+    expect(aim({ style: 'aggro', aggression: 1 })).toEqual([{ slot: 0, choice: 'P2' }]);
+    expect(aim()).toEqual([{ slot: 0, choice: 'P2' }]);
+  });
 });
 
 describe('decideScored', () => {

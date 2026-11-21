@@ -1,5 +1,5 @@
 {
-  "description": "ADR 0043 decision 3.1: the bot's regression gate. Every heuristic and bot-led entry plays once per seed; compare with `bun run bot-bench seeds --run <dir> --baseline <id> --candidate <id>`. `local-heuristic-nofix` is the card-aware bot before ADR 0043's fixes; each `fix-*` entry adds one fix to it. `local-heuristic-0043` is the production bot before `scarceAnswer` and `faceDamage`; their entries carry the earlier fix each builds on (`neverYield`, `ownStack`).",
+  "description": "ADR 0043 decision 3.1: the bot's regression gate. Every heuristic and bot-led entry plays once per seed; compare with `bun run bot-bench seeds --run <dir> --baseline <id> --candidate <id>`. `local-heuristic-nofix` is the card-aware bot before ADR 0043's fixes; each `fix-*` entry adds one fix to it. `local-heuristic-0043` is the production bot before `scarceAnswer` and `faceDamage`; their entries carry the earlier fix each builds on (`neverYield`, `ownStack`). `local-heuristic-0051` is the production bot before `costChoices` and `commanderValue`; `fix-commander-value` carries `costChoices`, which it builds on.",
   "seeds": ["gate-1", "gate-2", "gate-3", "gate-4", "gate-5", "gate-6", "gate-7", "gate-8"],
   "models": [
     {
@@ -85,6 +85,34 @@
       "kind": "local",
       "policy": "heuristic",
       "fixes": ["faceDamage", "ownStack"]
+    },
+    {
+      "id": "local-heuristic-0051",
+      "kind": "local",
+      "policy": "heuristic",
+      "fixes": [
+        "ownStack",
+        "neverYield",
+        "lethalTargets",
+        "lethalValue",
+        "castOrder",
+        "landColors",
+        "attackReserve",
+        "scarceAnswer",
+        "faceDamage"
+      ]
+    },
+    {
+      "id": "fix-cost-choices",
+      "kind": "local",
+      "policy": "heuristic",
+      "fixes": ["costChoices"]
+    },
+    {
+      "id": "fix-commander-value",
+      "kind": "local",
+      "policy": "heuristic",
+      "fixes": ["commanderValue", "costChoices"]
     },
     {
       "id": "bot-led-never",

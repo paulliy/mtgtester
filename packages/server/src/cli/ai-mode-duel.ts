@@ -7,8 +7,7 @@
  *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]
  *                        [--escalation T1,T2] [--shadow T1,T2] [--opponents model|bot-never|bot-v1]
  *                        [--delta] [--await-strategist]
- *                        [--offline]
- *                        [--trace out.jsonl]
+ *                        [--offline] [--trace out.jsonl]
  *
  * ADR 0044's game step: `--escalation` makes triggers live for the bot seats (default `never`),
  * `--shadow` logs others, and `--opponents bot-never` seats the bot-led bot with no escalation in
@@ -542,15 +541,15 @@ async function main(): Promise<void> {
           },
         );
         const coordinator = coordinators[mode];
-        const inner = awaitStrategist ? awaitingStrategist(live, coordinator) : live;
-        provider =
+        // `--trace`: one line per decision, with the view as the seat saw it when deciding.
+        const traced: AsyncDecisionProvider =
           trace === undefined
-            ? inner
+            ? live
             : {
                 async decide(request) {
                   const view = engine.view(request.decidingPlayer);
                   const life = lifeNow();
-                  const response = await inner.decide(request);
+                  const response = await live.decide(request);
                   const bot = botOutcomes.get(request.requestId);
                   botOutcomes.delete(request.requestId);
                   const steering = coordinator.steeringFor(request.decidingPlayer);
@@ -569,6 +568,7 @@ async function main(): Promise<void> {
                   return response;
                 },
               };
+        provider = awaitStrategist ? awaitingStrategist(traced, coordinator) : traced;
         providers.set(seat, provider);
       }
       return provider;

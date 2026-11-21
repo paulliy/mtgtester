@@ -5,4 +5,4 @@
  * scoring rule, a policy fix's default, a tie-break. A run measured against one policy is then
  * never extended with play from another (`bot-bench run --out`).
  */
-export const BOT_POLICY_VERSION = '2026-11-19.adr0050-holdup.2';
+export const BOT_POLICY_VERSION = '2026-11-21.scarce-answer-stack.1';

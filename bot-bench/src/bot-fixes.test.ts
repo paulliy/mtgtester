@@ -40,19 +40,30 @@ const FIXED_BY: Record<PolicyFix, string[]> = {
     'temple-for-next-turn',
   ],
   attackReserve: ['keep-blockers-home', 'hold-the-ground-at-five', 'two-home-to-live'],
-  scarceAnswer: ['hold-negate-for-a-threat', 'hold-the-counter', 'hold-the-swords-for-a-threat'],
+  scarceAnswer: [
+    'hold-negate-for-a-threat',
+    'hold-the-counter',
+    'hold-the-swords-for-a-threat',
+    // The hold's own exemptions: lethal burn on the stack, and a counter war over our spell.
+    'counter-the-lethal-bolt',
+    'win-the-counter-war',
+  ],
   faceDamage: ['shock-the-other-threat'],
+  costChoices: ['altar-the-bears-not-the-angel'],
+  commanderValue: ['altar-the-beast-not-the-commander', 'swords-the-commander'],
 };
 
 /**
  * Fixes whose positions also need an earlier fix. `scarceAnswer` keeps the last counterspell, and
  * only `neverYield` stops the bot yielding the turn away with it, which would waste the hold.
  * `faceDamage` keeps Shock off a player, and only `ownStack` sees that the Bolt already on the
- * stack kills the Bears, so the Lions are the target.
+ * stack kills the Bears, so the Lions are the target. `commanderValue` keeps Kiki-Jiki off Ashnod's
+ * Altar, and only `costChoices` scores the Altar's sacrifice at all.
  */
 const BUILDS_ON: Partial<Record<PolicyFix, PolicyFix[]>> = {
   scarceAnswer: ['neverYield'],
   faceDamage: ['ownStack'],
+  commanderValue: ['costChoices'],
 };
 
 const SEEDS = ['gate-1', 'gate-2'];
