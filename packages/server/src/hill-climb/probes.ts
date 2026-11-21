@@ -101,6 +101,7 @@ const WORK_UNITS: Record<keyof EngineWork, string> = {
   layerCacheHits: 'hits',
   layerDigests: 'digests',
   layerDependencyProbes: 'probes',
+  layerValueCounts: 'valueCounts',
   castCheckpoints: 'checkpoints',
   castPreviews: 'previews',
   manaSourceListings: 'listings',
