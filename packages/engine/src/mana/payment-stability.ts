@@ -45,6 +45,46 @@ export function stableSelector(selector: Selector): boolean {
 }
 
 /**
+ * Selector kinds whose match can only stop holding for a permanent as other permanents leave the
+ * battlefield, given `leavingPermanentsKeepProduction` with power counted (no ending effect strips
+ * a type, color or keyword back, or leaves a power or toughness higher). A type, a keyword or a
+ * power floor can only be lost when a granting effect or a pump ends. `powerAtMost`, a monocolor
+ * test and any negation can start to match as a pump or an added color ends, so they are left out
+ * (found by Codex review: a 1/1 under a sacrificed +1/+1 anthem starts matching `powerAtMost(1)`).
+ */
+const FALLING_SELECTOR_KINDS: ReadonlySet<Selector['kind']> = new Set<Selector['kind']>([
+  'self',
+  'other',
+  'type',
+  'subtype',
+  'supertype',
+  'name',
+  'sameNameAsSource',
+  'color',
+  'chosenColor',
+  'chosenType',
+  'chosenSubtype',
+  'controller',
+  'powerAtLeast',
+  'toughnessAtLeast',
+  'basePowerToughness',
+  'manaValueAtMost',
+  'manaValueAtLeast',
+  'manaCostIs',
+  'hasKeyword',
+  'isToken',
+  'isCommander',
+  'owner',
+]);
+
+/** Whether `selector`'s matches can only shrink as permanents leave (see `FALLING_SELECTOR_KINDS`). */
+export function selectorOnlyFallsAsPermanentsLeave(selector: Selector): boolean {
+  if (selector.kind === 'allOf' || selector.kind === 'anyOf')
+    return selector.of.every(selectorOnlyFallsAsPermanentsLeave);
+  return FALLING_SELECTOR_KINDS.has(selector.kind);
+}
+
+/**
  * True when a board count stays what it is now through a payment in which no permanent leaves:
  * a count of permanents over a stable selector, which a tap, a mana payment or a life rider cannot
  * change. The caller must know that nothing in the payment sacrifices.

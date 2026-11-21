@@ -864,6 +864,45 @@ describe('the mana planner on the stops main still had (bug 16)', () => {
       provesImpossible(board('{12}'));
     });
 
+    it('counts the Caryatid at one unit while no power 4 creature is in play (fuzz-123)', () => {
+      // Its "instead" condition can only stop holding as permanents leave: ten units, not eleven.
+      provesImpossible(board('{11}'));
+    });
+
+    it('keeps the larger alternative when a departure can make the condition start', () => {
+      // "Two mana instead if you control a creature with power 1 or less": a 1/1 under a +1/+1
+      // anthem does not count, until the anthem is sacrificed for mana. Then the source makes two,
+      // and {3} is paid in that order only (Codex review).
+      const state = setup('{3}');
+      withDefinition(state, 'Anthem', 'Artifact', {
+        staticEffects: [
+          {
+            affects: ofType('Creature'),
+            op: { layer: 7, sublayer: 'd', power: 1, toughness: 1 },
+          },
+        ],
+        manaAbilities: [{ units: [['C']], costs: [{ kind: 'tap' }, { kind: 'sacrificeSelf' }] }],
+      });
+      spawn(
+        state.ctx,
+        state.player.id,
+        oracle({ name: 'Small Bear', typeLine: 'Creature — Bear', power: '1', toughness: '1' }),
+      );
+      state.source('Small-gated source', {
+        units: [['C']],
+        conditionalUnits: {
+          condition: countPermanents(
+            allOf(ofType('Creature'), { kind: 'powerAtMost', n: 1 }),
+            'you',
+            '>=',
+            1,
+          ),
+          units: [['C'], ['C']],
+        },
+      });
+      expect(state.offered()).toBeDefined();
+    });
+
     it('still pays exactly at the most the Caryatid can make', () => {
       const state = board('{11}');
       spawn(
@@ -1061,8 +1100,8 @@ describe('the mana planner on the stops main still had (bug 16)', () => {
       expect(state.offered).toThrow('outside the proven scope');
     });
 
-    it('keeps halting for a tap-a-creature source with a rider', () => {
-      const state = setup('{G}{G}');
+    const riderBoard = (lifeCost: AbilityCost[]) => {
+      const state = setup('{G}{G}', lifeCost);
       inertOrchard(state);
       withDefinition(state, 'Rider Sentinel', 'Artifact', {
         manaAbilities: [
@@ -1075,8 +1114,92 @@ describe('the mana planner on the stops main still had (bug 16)', () => {
       });
       state.source('Forest', { units: [['G']] });
       bystander(state, 'Bystander');
+      return state;
+    };
+
+    it('pays with a tap-a-creature source with a damage rider when no life is at stake', () => {
+      // The rider matters only through a life total the payment keeps or spends, as for a
+      // painland in the ordinary static solve; paying still applies it.
+      const state = riderBoard([]);
+      const life = state.player.life;
+      castWith(state);
+      expect(tappedNames(state)).toEqual(['Bystander', 'Forest', 'Rider Sentinel']);
+      expect(state.player.life).toBe(life - 1);
+    });
+
+    it('keeps halting for a tap-a-creature source with a rider when the spell also costs life', () => {
+      const state = riderBoard([{ kind: 'payLife', amount: 1 }]);
       expect(state.offered).toThrow('outside the proven scope');
     });
+
+    // `MTG_VERIFY_MANA_PLAN=1` also runs the old search, which halts on these boards after two
+    // phases of 2048 states on 35 permanents (about a minute each): a halt the verify mode
+    // tolerates, so it has nothing to compare, and the run would time out the test worker.
+    describe('more activations than the search replays (fuzz-407)', () => {
+      /** Holdout Settlement's two abilities, thirty-three elves and one creature to tap. */
+      const board = (manaCost: string) => {
+        const state = setup(manaCost);
+        inertOrchard(state);
+        withDefinition(state, 'Holdout', 'Land', {
+          manaAbilities: [{ units: [['C']] }, { units: ANY, costs: tapACreature }],
+        });
+        for (let i = 0; i < 33; i++) elf(state, `Elf ${i}`);
+        bystander(state, 'Bystander');
+        return state;
+      };
+
+      // allowed-skip: the verify mode's old search only halts here, so it has nothing to compare.
+      it.skipIf(verifying)(
+        'pays thirty-four mana from thirty-four activations without searching',
+        () => {
+          const state = board('{33}{W}');
+          const before = engineWork();
+          castWith(state);
+          expect(engineWorkSince(before).manaPlannerStates).toBe(0);
+          expect(manaSpent(state)).toBe(34);
+          expect(tappedNames(state)).toContain('Bystander');
+          expect(tappedNames(state)).toContain('Holdout');
+        },
+      );
+
+      // allowed-skip: the verify mode's old search only halts here, so it has nothing to compare.
+      it.skipIf(verifying)('proves one more pip impossible, with no halt', () => {
+        provesImpossible(board('{34}{W}'));
+      });
+
+      // allowed-skip: the verify mode's old search only halts here, so it has nothing to compare.
+      it.skipIf(verifying)('pays the colorless pip without tapping a creature for it', () => {
+        const state = board('{33}');
+        castWith(state);
+        expect(tappedNames(state)).not.toContain('Bystander');
+        expect(manaSpent(state)).toBe(33);
+      });
+    });
+
+    // `MTG_VERIFY_MANA_PLAN=1` also runs the old search, which spends its whole state budget here.
+    it(
+      'S5 shape: eight lands, an Altar and a tap-a-creature white source pay {8}{W}',
+      { timeout: 120_000 },
+      () => {
+        // Each of the three searches ran out of states here; one creature can either be tapped for
+        // the white or sacrificed for {C}{C}, and only tapping it pays.
+        const state = setup('{8}{W}');
+        inertOrchard(state);
+        for (let i = 0; i < 8; i++) state.source(`Waste ${i}`, { units: [['C']] });
+        withDefinition(state, 'White Sentinel', 'Artifact', {
+          manaAbilities: [{ units: [['W']], costs: tapACreature }],
+        });
+        state.source("Ashnod's Altar", {
+          units: [['C'], ['C']],
+          costs: [{ kind: 'sacrificeOther', selector: ofType('Creature') }],
+        });
+        bystander(state, 'Bystander');
+        castWith(state);
+        expect(state.ctx.state.stack).toHaveLength(1);
+        expect(tappedNames(state)).toContain('Bystander');
+        expect(tappedNames(state)).toContain('White Sentinel');
+      },
+    );
 
     it('keeps halting for a source that taps several creatures', () => {
       const state = setup('{G}{G}');
