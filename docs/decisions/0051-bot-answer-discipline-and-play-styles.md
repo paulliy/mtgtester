@@ -1,4 +1,4 @@
-# ADR 0050: Bot answer discipline, face damage and play styles
+# ADR 0051: Bot answer discipline, face damage and play styles
 
 Status: Proposed
 

@@ -29,6 +29,7 @@ bun run test:e2e:table                  # Playwright: table games in two browser
 bun run dev                             # server :3001 and UI :5173
 bun run dev --table [--oracle-fixture F] # serve:table --dev :3002 and the table app on :5173
 bun run serve [--port N] [--no-db] [--oracle-fixture packages/server/fixtures/coverage-oracle.json]
+bun run serve --provisional             # also play machine-checked review-queue cards, marked provisional (ADR 0050)
 bun run serve:table --dev [--port N] [--oracle-fixture packages/server/fixtures/coverage-oracle.json]
                                         # multiplayer table server, loopback only
 bun run serve:table [--insecure-lan]    # exposed table server; see docs/guides/table-hosting.md
@@ -62,10 +63,10 @@ bun run modelled-cards
 bun run combat-sweep [--games N] [--seed S] [--json out.json]
 bun run bot-league [--games N] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N] [--deck NAME] [--json F]
                                         # ADR 0039 bot vs bot win rate; arms: legacy, policy, knowledge, fixed, fix-*,
-                                        # aggro, control, proxy-*; ADR 0050: fixed-0043, style-aggro|control|combo, styled
+                                        # aggro, control, proxy-*; ADR 0051: fixed-0043, style-aggro|control|combo, styled
                                         # --deck NAME: one coverage deck in all four seats (a mirror)
 bun run bot-gauntlet [--pods N] [--seed S] [--old ARM] [--new ARM,ARM] [--decks a,b] [--trace-dir D] [--json F]
-                                        # ADR 0050 new bot vs old in the field: pods of four different premade decks
+                                        # ADR 0051 new bot vs old in the field: pods of four different premade decks
                                         # played by --old, replayed with one seat switched to each --new arm; paired
                                         # per (pod, seat). Styled arms use fixtures/deck-styles.json
 bun run ai-call-census [--games N] [--turn-cap N] [--json F]
@@ -79,7 +80,7 @@ bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--
                                         # S7 `bot-v1`: P2/P4 bot-led under wake rule table-v1. The report has each
                                         # seat's own turns and elimination turn, strategist calls per own turn,
                                         # wake reasons per side, and the engine's halt reason;
-                                        # ADR 0050 --trace: one JSON line per decision (menu, answer, source, triggers, knobs)
+                                        # ADR 0051 --trace: one JSON line per decision (menu, answer, source, triggers, knobs)
 bun run strategist-capture [--seed S] [--turn-cap N] [--decks F] [--max-usd N] [--no-diplomacy] [--no-flag] [--offline] [--out F]
                                         # ADR 0045 one bot-led game with a strategist every turn, written as a replay
                                         # transcript plus every seat's knobs and deals per turn; PAID unless --offline
@@ -89,6 +90,8 @@ bun run strategist-study --capture F [--seeds N] [--sample-rate R] [--margin M] 
 bun run jev-duel [--seats bot,bot-jev,model,jev] [--games N] [--offline] [--max-usd N] [--out DIR]
                                         # ADR 0041 Jev seat presets at one table; --offline is free, otherwise PAID
 bun run fuzz [--from N] [--games N] [--changed [--base S]] [--card "<name>"] [--json F] [--report F]
+bun run fuzz --games 0 --card-games 1 --provisional --demote docs/reviews/provisional-demoted.json   # fuzz provisional cards, demote failures
+bun run scripts/card-compiler/run.ts audit --seed S [--count 10]   # sample provisional cards for review; record with run.ts audit-verdict
                                         # ADR 0034 seeded four-player games, invariants on; prints each failure's replay
 bun run engine-bench [--games N] [--turn-cap N] [--json F] [--compare F]
                                         # engine CPU over the heuristic fuzz pods; --compare fails if any game's

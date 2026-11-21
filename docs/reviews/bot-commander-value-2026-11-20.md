@@ -34,7 +34,7 @@ Held-out positions, in `bot-bench/cases/tactician/single/`:
 
 ## Gate
 
-**Bench, 8 seeds** (`bot-gate.json`; `local-heuristic` against `local-heuristic-0050`, the same
+**Bench, 8 seeds** (`bot-gate.json`; `local-heuristic` against `local-heuristic-0051`, the same
 bot without the two fixes): PASS, +3.1 points overall, no position lower on any seed.
 
 | Case                                | Before | After |

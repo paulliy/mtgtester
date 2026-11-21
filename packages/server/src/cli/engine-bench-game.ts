@@ -4,7 +4,14 @@
  */
 import { createHash } from 'node:crypto';
 import type { DecisionResponse, PlayerId } from '@mtg/shared';
-import { Engine, RandomDecisionProvider, type DecisionProvider } from '@mtg/engine';
+import {
+  Engine,
+  RandomDecisionProvider,
+  engineWork,
+  engineWorkSince,
+  type DecisionProvider,
+  type EngineWork,
+} from '@mtg/engine';
 import { HeuristicDecisionProvider } from '@mtg/bot';
 import { TABLE_ENGINE_LIMITS } from '../match/engine-limits';
 import type { FuzzDeck, FuzzProvider } from './fuzz-game';
@@ -17,6 +24,16 @@ export interface GameRun {
   providerMs: number;
   outcome: string;
   fingerprint: string;
+  /** Exact counts of the engine's expensive operations in this game, the bot's queries included. */
+  work: EngineWork;
+}
+
+/** The work of several games, added up counter by counter. */
+export function sumWork(works: readonly EngineWork[]): EngineWork {
+  const total = engineWorkSince(engineWork());
+  for (const work of works)
+    for (const kind of Object.keys(total) as Array<keyof EngineWork>) total[kind] += work[kind];
+  return total;
 }
 
 /**
@@ -30,6 +47,8 @@ export function playGame(
   turnCap: number,
 ): GameRun {
   const seedText = `fuzz-${seed}`;
+  // Taken before construction, so the opening hands and mulligans are counted too.
+  const workBefore = engineWork();
   const engine = new Engine(
     {
       gameId: 'bench',
@@ -91,6 +110,7 @@ export function playGame(
   }
   hash.update(JSON.stringify(engine.eventsSince(0)));
   hash.update(outcome);
+  const work = engineWorkSince(workBefore);
   return {
     seed,
     turns: engine.getState().turnNumber,
@@ -99,5 +119,6 @@ export function playGame(
     providerMs: Math.round(providerMs),
     outcome,
     fingerprint: hash.digest('hex').slice(0, 16),
+    work,
   };
 }

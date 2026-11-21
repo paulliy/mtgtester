@@ -1287,6 +1287,7 @@ describe('StrategyCoordinator — wake rule (hill-climb S7)', () => {
     expect(v2.strategistStats).toEqual({
       calls: 2,
       reused: 1,
+      delta: 1,
       wakes: { 'first knobs': 1, commander: 1 },
     });
   });
@@ -1296,6 +1297,7 @@ describe('StrategyCoordinator — wake rule (hill-climb S7)', () => {
     expect(v1.strategistStats).toEqual({
       calls: 3,
       reused: 0,
+      delta: 2,
       wakes: { 'first knobs': 1, power: 1, commander: 1 },
     });
   });

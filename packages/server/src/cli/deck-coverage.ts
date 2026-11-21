@@ -20,7 +20,6 @@
  * Never uses the network.
  */
 
-import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
@@ -28,15 +27,14 @@ import {
   DECK_COVERAGE_PATH,
   measureDeckCoverage,
   NO_PROVISIONAL,
-  provisionalFromQueue,
   renderDeckCoverageJson,
   renderDeckCoverageMarkdown,
   headline,
   type DeckInput,
   type PopulationReport,
   type ProvisionalLookup,
-  type QueueEntryView,
 } from '../cards/deck-coverage';
+import { loadProvisionalCatalog } from '../cards/provisional';
 import {
   AVERAGE_DECKS_ORACLE_PATH,
   AVERAGE_DECKS_PATH,
@@ -64,9 +62,6 @@ const MARKDOWN_PATH = 'docs/plans/deck-coverage.md';
 const DECK_DIRS = ['packages/server/fixtures/coverage-decks'];
 /** Same exclusion as `bun run coverage` and the known-decks list. */
 const EXCLUDED_DECKS = new Set(['counter-intelligence.txt']);
-const QUEUE_PATH = 'docs/reviews/compiled-card-queue.json';
-/** Patches pulled out of the provisional tier after a fuzz failure (written by that tier's work). */
-const DEMOTED_PATH = 'docs/reviews/provisional-demoted.json';
 const DEFAULT_BANK = 'data/scryfall-oracle-cards.json';
 
 function option(name: string): string | undefined {
@@ -78,31 +73,21 @@ function option(name: string): string | undefined {
 }
 
 /**
- * The provisional column's source. Until the provisional trust tier lands it is the compiled-card
- * review queue read directly; switching to that tier's loader means changing only this function.
+ * The provisional column's source: the server's provisional catalog (ADR 0050), built over the
+ * Oracle files this run reads, so a card counts as provisional exactly when `--provisional` would
+ * admit it in a game.
  */
-function provisionalLookup(): ProvisionalLookup {
-  if (!existsSync(resolve(QUEUE_PATH))) return NO_PROVISIONAL;
-  const queue = JSON.parse(readFileSync(resolve(QUEUE_PATH), 'utf8')) as {
-    cards: QueueEntryView[];
-  };
-  const demoted = existsSync(resolve(DEMOTED_PATH))
-    ? (
-        JSON.parse(readFileSync(resolve(DEMOTED_PATH), 'utf8')) as {
-          cards: { oracleId: string; patchSha256: string }[];
-        }
-      ).cards.map((card) => `${card.oracleId}|${card.patchSha256}`)
-    : [];
-  return provisionalFromQueue(
-    queue.cards,
-    (path) =>
-      existsSync(resolve(path))
-        ? createHash('sha256')
-            .update(readFileSync(resolve(path)))
-            .digest('hex')
-        : null,
-    new Set(demoted),
-  );
+function provisionalLookup(oraclePaths: readonly string[]): ProvisionalLookup {
+  const cards: OracleCard[] = [];
+  for (const path of oraclePaths) {
+    if (!existsSync(resolve(path))) continue;
+    const parsed = JSON.parse(readFileSync(resolve(path), 'utf8')) as
+      OracleCard[] | PinnedAverageDeckOracle;
+    cards.push(...(Array.isArray(parsed) ? parsed : parsed.cards));
+  }
+  if (cards.length === 0) return NO_PROVISIONAL;
+  const catalog = loadProvisionalCatalog(cards);
+  return (card) => catalog.definitions.has(card.oracleId);
 }
 
 function readPinnedOracle(path: string): OracleIndex {
@@ -197,9 +182,14 @@ async function main(): Promise<void> {
     pin();
     return;
   }
-  const lookup = provisionalLookup();
   const decksArg = option('--decks');
   if (decksArg !== undefined) {
+    const lookup = provisionalLookup([
+      option('--oracle') ??
+        (statSync(resolve(decksArg)).isDirectory()
+          ? PINNED_ORACLE_FIXTURE
+          : AVERAGE_DECKS_ORACLE_PATH),
+    ]);
     const decks = statSync(resolve(decksArg)).isDirectory()
       ? await textDecks([decksArg], readPinnedOracle(option('--oracle') ?? PINNED_ORACLE_FIXTURE))
       : averageDecks(decksArg, option('--oracle') ?? AVERAGE_DECKS_ORACLE_PATH);
@@ -216,7 +206,9 @@ async function main(): Promise<void> {
     return;
   }
 
-  const populations = await committedPopulations(lookup);
+  const populations = await committedPopulations(
+    provisionalLookup([PINNED_ORACLE_FIXTURE, AVERAGE_DECKS_ORACLE_PATH]),
+  );
   const json = renderDeckCoverageJson(populations);
   const markdown = renderDeckCoverageMarkdown(populations);
   if (process.argv.includes('--json')) {

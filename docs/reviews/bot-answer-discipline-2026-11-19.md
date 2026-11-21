@@ -1,6 +1,6 @@
 # Bot answer discipline, face damage and play styles: gate results (2026-11-19)
 
-Evidence for [ADR 0050](../decisions/0050-bot-answer-discipline-and-play-styles.md). Everything here
+Evidence for [ADR 0051](../decisions/0051-bot-answer-discipline-and-play-styles.md). Everything here
 is offline: bot-bench and the bot league, no model calls.
 
 ## bot-bench before the change

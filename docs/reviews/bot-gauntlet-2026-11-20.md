@@ -1,6 +1,6 @@
 # Bot gauntlet: the new bot against the old one across archetypes (2026-11-20)
 
-ADR 0050's mirrors showed whether a preset beats the plain bot on its own deck. This review asks
+ADR 0051's mirrors showed whether a preset beats the plain bot on its own deck. This review asks
 the question that matters in a real pod: with three opponents on other decks, all played by the
 old bot, does a seat do better under the new bot? It also records which test decks were found,
 whether combo decks can work with the bot at all, the review of the games that changed, and an
@@ -90,7 +90,7 @@ What holds across both runs:
 - **The value preset still loses** (+2 / −9 over both runs).
 - **Midrange under the proxy strategist loses** (+4 / −15 over both runs), unchanged by the smaller
   target-order bonus. This is the proxy, a stand-in rule set, not the model strategist.
-- **The production bot (`fixed`) is neutral to slightly positive** in the field, as in ADR 0050's
+- **The production bot (`fixed`) is neutral to slightly positive** in the field, as in ADR 0051's
   league gate. Its clearest wins are control decks keeping removal for a real threat.
 
 The totals are small samples: a style row is 5 to 15 discordant pairs. Only the aggro and

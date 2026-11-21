@@ -27,6 +27,7 @@ import { TurnPlanManager, type AcceptedPlanAction } from './turn-plan';
 import { AI_VERSIONS } from './versions';
 import type { SeatDiplomacyContext } from './diplomacy-context';
 import { preparePromptForCaching } from './prompt-cache';
+import { deltaBaseFrom, type StrategistDeltaBase } from './strategist-delta';
 import {
   cleanSteering,
   tableChangeReasons,
@@ -263,15 +264,21 @@ export class StrategyCoordinator {
     { steering: BotSteering; table: TableSnapshot; reusedTurns: number }
   >();
   /**
-   * Strategist calls made and skipped because the knobs still fit, for measurement. `wakes`
-   * counts each call's wake reasons with the seat dropped (`life`, `power`, `first knobs`), so
-   * the census can say which table change drives calls.
+   * Hill-climb S6: what each seat's last installed knobs were drawn from, and how many delta
+   * prompts in a row it has had since its last full one.
    */
-  readonly strategistStats: { calls: number; reused: number; wakes: Record<string, number> } = {
-    calls: 0,
-    reused: 0,
-    wakes: {},
-  };
+  private readonly deltaBySeat = new Map<PlayerId, { base: StrategistDeltaBase; inRow: number }>();
+  /**
+   * Strategist calls made, skipped because the knobs still fit, and sent as deltas, for
+   * measurement. `wakes` counts each call's wake reasons with the seat dropped (`life`, `power`,
+   * `first knobs`), so the census can say which table change drives calls.
+   */
+  readonly strategistStats: {
+    calls: number;
+    reused: number;
+    delta: number;
+    wakes: Record<string, number>;
+  } = { calls: 0, reused: 0, delta: 0, wakes: {} };
   /** Every shadow tactician request this game, in order (ADR 0045). */
   readonly tacticianRequests: TacticianRequestRecord[] = [];
   /**
@@ -457,6 +464,13 @@ export class StrategyCoordinator {
     const recent = this.recentFor(activePlayer);
     const diplomacy = this.diplomacyFor?.(activePlayer, 'strategist') ?? null;
     const dealsKey = this.dealsKey(activePlayer);
+    const deltaOn = this.botLed() && this.config.strategistDeltaEnabled;
+    const deltaState = deltaOn ? this.deltaBySeat.get(activePlayer) : undefined;
+    const delta =
+      deltaState !== undefined && deltaState.inRow < this.config.strategistDeltaRefreshEvery
+        ? { base: deltaState.base, wake }
+        : undefined;
+    if (delta !== undefined) this.strategistStats.delta++;
     const assembledPrompt = assembleStrategistPrompt(
       strategyRequest,
       view,
@@ -474,6 +488,7 @@ export class StrategyCoordinator {
         ...(this.botLed() && this.config.strategistTacticianFlag === 'shadow'
           ? { tacticianFlag: true }
           : {}),
+        ...(deltaOn ? { delta: delta ?? true } : {}),
         context: {
           includeMemory: this.config.contextMemoryEnabled,
           includeFeatures: this.config.contextFeaturesEnabled,
@@ -495,6 +510,7 @@ export class StrategyCoordinator {
       ? preparePromptForCaching(assembledPrompt, {
           role: 'strategist',
           staticKeys: ['strategyTask', 'yourStrategyProfile'],
+          ...(deltaOn ? { splitCommanders: false } : {}),
         })
       : assembledPrompt;
 
@@ -546,6 +562,12 @@ export class StrategyCoordinator {
           table: tableSnapshot(view),
           reusedTurns: 0,
         });
+        if (deltaOn) {
+          this.deltaBySeat.set(activePlayer, {
+            base: deltaBaseFrom(view, strategyRequest.turn, strategy.intent, strategy.steering),
+            inRow: delta === undefined ? 0 : (deltaState?.inRow ?? 0) + 1,
+          });
+        }
       }
       // A turn/player change (or a fresh re-plan) may have superseded this call while it was
       // in flight; don't install a stale plan over what the board now needs.

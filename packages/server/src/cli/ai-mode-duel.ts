@@ -6,17 +6,25 @@
  *
  *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]
  *                        [--escalation T1,T2] [--shadow T1,T2] [--opponents model|bot-never|bot-v1]
+ *                        [--delta] [--await-strategist]
  *                        [--offline] [--trace out.jsonl]
  *
  * ADR 0044's game step: `--escalation` makes triggers live for the bot seats (default `never`),
  * `--shadow` logs others, and `--opponents bot-never` seats the bot-led bot with no escalation in
  * P2 and P4 instead of the model tactician, so a trigger is played against `never`.
  *
+ * `--delta` gives the `bot` seats strategist delta prompts (hill-climb S6) and turns them off for
+ * the others, so with `--opponents bot-never` the two sides differ only in the strategist prompt.
+ * Without it every seat uses the configured default (delta prompts on since 2026-11-18).
+ *
  * Hill-climb S7: `--opponents bot-v1` seats the same bot-led setup in P2 and P4 but waking the
  * strategist under `table-v1`, while P1 and P3 use `table-v2`, so the wake rule is the only
  * difference. The strategist calls per mode are the saving; the winner is the strength check.
- * With no model tactician to pace the game, each decision waits for its seat's pending strategist
- * call, so knobs land before the seat acts.
+ *
+ * `--await-strategist` makes every decision wait for the seat's in-flight strategist call first.
+ * It is on by default with `--opponents bot-never` and `bot-v1`: four bot-led seats finish a game
+ * in seconds, long before a strategist answers, so every call would be cancelled at game end and
+ * the game would measure nothing (2026-11-16: 46 turns, 0 answered calls).
  *
  * Spend caps: once the provider-reported cost reaches `--max-usd` (default 2) or the call count
  * reaches `--max-calls` (default 1500), no further model call is made and every seat plays the
@@ -56,12 +64,30 @@ import {
 } from '../ai';
 import type { AiAttemptObserver, AiClient, CostSettlement } from '../ai/client';
 import type { AiPrompt } from '../ai/context';
+import type { AsyncDecisionProvider } from '@mtg/engine';
 import { knowledgeFor } from '../ai/bot-tactician';
 import { localCallMeta } from '../ai/logger';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
 const SEATS: PlayerId[] = ['P1', 'P2', 'P3', 'P4'];
 export type ModeName = 'bot' | 'model';
+
+/**
+ * A provider that lets the seat's strategist call land before each decision. `prepare` starts the
+ * call if this turn has none yet (it is idempotent per turn), and `settled` waits for the newest.
+ */
+export function awaitingStrategist(
+  provider: AsyncDecisionProvider,
+  coordinator: Pick<StrategyCoordinator, 'prepare' | 'settled'>,
+): AsyncDecisionProvider {
+  return {
+    async decide(request) {
+      coordinator.prepare(request);
+      await coordinator.settled();
+      return provider.decide(request);
+    },
+  };
+}
 
 export interface Tally {
   tacticianCalls: number;
@@ -369,9 +395,12 @@ async function main(): Promise<void> {
   const opponents = arg(argv, '--opponents') ?? 'model';
   if (opponents !== 'model' && opponents !== 'bot-never' && opponents !== 'bot-v1')
     throw new Error('--opponents must be model, bot-never or bot-v1');
+  const delta = argv.includes('--delta');
+  const awaitStrategist = argv.includes('--await-strategist') || opponents !== 'model';
   const configs: Record<ModeName, AiConfig> = {
     bot: {
       ...base,
+      ...(delta ? { strategistDeltaEnabled: true } : {}),
       tacticalMode: 'bot',
       botEscalation: escalation as LiveEscalationTrigger[],
       botEscalationShadow: shadow,
@@ -380,10 +409,11 @@ async function main(): Promise<void> {
     },
     model:
       opponents === 'model'
-        ? { ...base, tacticalMode: 'model' }
+        ? { ...base, tacticalMode: 'model', ...(delta ? { strategistDeltaEnabled: false } : {}) }
         : opponents === 'bot-v1'
           ? {
               ...base,
+              ...(delta ? { strategistDeltaEnabled: false } : {}),
               tacticalMode: 'bot',
               botEscalation: escalation as LiveEscalationTrigger[],
               botEscalationShadow: shadow,
@@ -392,6 +422,7 @@ async function main(): Promise<void> {
             }
           : {
               ...base,
+              ...(delta ? { strategistDeltaEnabled: false } : {}),
               tacticalMode: 'bot',
               botEscalation: [],
               botEscalationShadow: shadow,
@@ -420,7 +451,11 @@ async function main(): Promise<void> {
   );
   // With `--opponents bot-never` the "model" seats play the bot-led bot that never escalates.
   const label = (mode: ModeName): string =>
-    mode === 'model' && opponents !== 'model' ? opponents : mode;
+    mode === 'model' && opponents !== 'model'
+      ? opponents
+      : mode === 'bot' && delta
+        ? 'bot+delta'
+        : mode;
   decks.forEach((d, i) =>
     console.log(`  ${SEATS[i]} [${label(modeOf(SEATS[i]!))}]  ${d.commander.name}`),
   );
@@ -464,10 +499,6 @@ async function main(): Promise<void> {
       others,
     );
   }
-  // All four seats bot-led (`bot-v1`): nothing else waits for the strategist, so a game would end
-  // in seconds before any knobs land. Each decision waits for its coordinator's pending call
-  // instead, so the wake rule is what decides how many calls a game makes.
-  const awaitStrategist = opponents === 'bot-v1';
   const trace = tracePath === undefined ? undefined : new DecisionTraceWriter(tracePath);
   const lifeNow = (): Record<string, number> =>
     Object.fromEntries(
@@ -478,7 +509,7 @@ async function main(): Promise<void> {
     string,
     { escalated: boolean; reasons: readonly string[]; escalatedBy?: string }
   >();
-  const providers = new Map<PlayerId, { decide: OpenAiDecisionProvider['decide'] }>();
+  const providers = new Map<PlayerId, AsyncDecisionProvider>();
   const tracker = new SeatTracker();
   const lostSeats = (): PlayerId[] =>
     engine
@@ -492,7 +523,7 @@ async function main(): Promise<void> {
       let provider = providers.get(seat);
       if (provider === undefined) {
         const mode = modeOf(seat);
-        const inner = new OpenAiDecisionProvider(
+        const live = new OpenAiDecisionProvider(
           tacticianClient,
           queue,
           engine,
@@ -510,34 +541,34 @@ async function main(): Promise<void> {
           },
         );
         const coordinator = coordinators[mode];
-        provider = {
-          async decide(request) {
-            if (awaitStrategist) {
-              coordinator.prepare(request);
-              await coordinator.settled();
-            }
-            if (trace === undefined) return inner.decide(request);
-            const view = engine.view(request.decidingPlayer);
-            const life = lifeNow();
-            const response = await inner.decide(request);
-            const bot = botOutcomes.get(request.requestId);
-            botOutcomes.delete(request.requestId);
-            const steering = coordinator.steeringFor(request.decidingPlayer);
-            trace.write(
-              decisionTraceLine({
-                request,
-                response,
-                view,
-                mode: modeOf(seat),
-                source: logger.sourceFor(request.requestId) ?? 'unknown',
-                ...(bot !== undefined && { bot }),
-                ...(steering !== undefined && { steering }),
-                life,
-              }),
-            );
-            return response;
-          },
-        };
+        // `--trace`: one line per decision, with the view as the seat saw it when deciding.
+        const traced: AsyncDecisionProvider =
+          trace === undefined
+            ? live
+            : {
+                async decide(request) {
+                  const view = engine.view(request.decidingPlayer);
+                  const life = lifeNow();
+                  const response = await live.decide(request);
+                  const bot = botOutcomes.get(request.requestId);
+                  botOutcomes.delete(request.requestId);
+                  const steering = coordinator.steeringFor(request.decidingPlayer);
+                  trace.write(
+                    decisionTraceLine({
+                      request,
+                      response,
+                      view,
+                      mode: modeOf(seat),
+                      source: logger.sourceFor(request.requestId) ?? 'unknown',
+                      ...(bot !== undefined && { bot }),
+                      ...(steering !== undefined && { steering }),
+                      life,
+                    }),
+                  );
+                  return response;
+                },
+              };
+        provider = awaitStrategist ? awaitingStrategist(traced, coordinator) : traced;
         providers.set(seat, provider);
       }
       return provider;
@@ -602,6 +633,10 @@ async function main(): Promise<void> {
     seats: Object.fromEntries(SEATS.map((s) => [s, modeOf(s)])),
     /** What the `model` seats played: the model tactician, or the bot-led bot with no escalation. */
     opponents,
+    /** Whether the `bot` seats' strategist got delta prompts (S6). */
+    delta,
+    /** Whether each decision waited for its seat's strategist call to land. */
+    awaitStrategist,
     escalation,
     shadow,
     perMode: Object.fromEntries(
