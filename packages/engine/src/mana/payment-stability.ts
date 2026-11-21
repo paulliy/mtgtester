@@ -475,7 +475,11 @@ function readsBoardMembership(value: unknown): boolean {
   if (value === null || typeof value !== 'object') return false;
   const record = value as Record<string, unknown>;
   const kind = record['kind'];
-  if (typeof kind === 'string' && /count|zone|graveyard/i.test(kind)) return true;
+  // Devotion (the mana costs of the permanents you control) and whether you control your
+  // commander are board membership too: a departure moves them (`PAYMENT_FIXED_CONDITION_KINDS`
+  // admits them only because a tap or a mana payment does not).
+  if (typeof kind === 'string' && /count|zone|graveyard|devotion|commander/i.test(kind))
+    return true;
   return Object.values(record).some(readsBoardMembership);
 }
 

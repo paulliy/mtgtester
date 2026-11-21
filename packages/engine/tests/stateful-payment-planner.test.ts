@@ -323,6 +323,36 @@ describe('departures and the capacity bound', () => {
         false,
       ),
     ).toBe(false);
+    // A pump while you control your commander, or while your devotion is high, ends when the
+    // commander or a permanent with mana symbols leaves: departures read those too.
+    const pumpWhile = (condition: unknown) => ({
+      affects: { kind: 'type', value: 'Creature' },
+      op: {
+        layer: 7,
+        sublayer: 'c',
+        power: { kind: 'const', n: 1 },
+        toughness: { kind: 'const', n: 1 },
+      },
+      condition,
+    });
+    expect(
+      departuresCannotAddCapacity([holder([pumpWhile({ kind: 'controlsYourCommander' })])], true),
+    ).toBe(false);
+    expect(
+      departuresCannotAddCapacity(
+        [
+          holder([
+            pumpWhile({
+              kind: 'compareValues',
+              left: { kind: 'devotionTo', colors: ['G'] },
+              cmp: '>=',
+              right: { kind: 'const', n: 5 },
+            }),
+          ]),
+        ],
+        true,
+      ),
+    ).toBe(false);
     // Power from a count reaches a payment only through a gate.
     expect(departuresCannotAddCapacity([holder([perArtifact])], false)).toBe(true);
     expect(departuresCannotAddCapacity([holder([perArtifact])], true)).toBe(false);

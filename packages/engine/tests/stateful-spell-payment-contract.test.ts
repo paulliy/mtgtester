@@ -977,6 +977,27 @@ describe('the mana planner on the stops main still had (bug 16)', () => {
       expect(tappedNames(state)).toEqual(['Bystander 2', 'Elf 0', 'Elf 1', 'Elf 2', 'Holdout']);
     });
 
+    it('keeps halting where a sacrifice would close a tap-an-artifact source gate', () => {
+      // The gated source must activate before Wild Cantor is sacrificed (its gate counts
+      // creatures): payable in that order only, which the final payment does not explore.
+      const state = setup('{G}{G}');
+      inertOrchard(state);
+      withDefinition(state, 'Wild Cantor', 'Creature', {
+        manaAbilities: [{ units: ANY, costs: [{ kind: 'sacrificeSelf' }] }],
+      });
+      withDefinition(state, 'Trinket', 'Artifact', { manaAbilities: [] });
+      withDefinition(state, 'Gated Engine', 'Land', {
+        manaAbilities: [
+          {
+            units: [['G']],
+            costs: [{ kind: 'tap' }, tapOther(ofType('Artifact'))],
+            condition: countPermanents(ofType('Creature'), 'you', '>=', 1),
+          },
+        ],
+      });
+      expect(state.offered).toThrow('outside the proven scope');
+    });
+
     it('keeps halting where a tap for the cost would raise another source', () => {
       // Tapping the Bystander for the Sentinel's cost first makes the other source add {G}{G}:
       // payable, but only in that order, which the final payment does not explore.
