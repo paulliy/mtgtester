@@ -40,7 +40,14 @@ const FIXED_BY: Record<PolicyFix, string[]> = {
     'temple-for-next-turn',
   ],
   attackReserve: ['keep-blockers-home', 'hold-the-ground-at-five', 'two-home-to-live'],
-  scarceAnswer: ['hold-negate-for-a-threat', 'hold-the-counter', 'hold-the-swords-for-a-threat'],
+  scarceAnswer: [
+    'hold-negate-for-a-threat',
+    'hold-the-counter',
+    'hold-the-swords-for-a-threat',
+    // The hold's own exemptions: lethal burn on the stack, and a counter war over our spell.
+    'counter-the-lethal-bolt',
+    'win-the-counter-war',
+  ],
   faceDamage: ['shock-the-other-threat'],
   costChoices: ['altar-the-bears-not-the-angel'],
   commanderValue: ['altar-the-beast-not-the-commander', 'swords-the-commander'],

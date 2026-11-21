@@ -101,14 +101,35 @@ export function defensiveLethal(view: PlayerView, knowledge: CardKnowledge): boo
   return poisonous > 0 && (view.poisonCounters ?? 0) + poisonous >= 10;
 }
 
-/** Lethal at stake on the public board, either way (ADR 0044's `scarce-answer` exemption). */
+/**
+ * Constant damage the opponents' spells on the stack would deal to this seat: a Lightning Bolt
+ * aimed at it. A spell's damage is read from the slot whose target is this seat, or from its only
+ * damage slot; an ability, or a spell the bot does not know, adds nothing.
+ */
+export function stackDamageToSeat(view: PlayerView, knowledge: CardKnowledge): number {
+  let total = 0;
+  for (const item of view.stack) {
+    if (item.controller === view.seat) continue;
+    const slot = item.targets.indexOf(view.seat);
+    if (slot < 0) continue;
+    const damage = knowledge(item.description)?.spellDamage ?? [];
+    total += (slot < damage.length ? damage[slot] : damage.length === 1 ? damage[0] : null) ?? 0;
+  }
+  return total;
+}
+
+/**
+ * Lethal at stake on the public board, either way (ADR 0044's `scarce-answer` exemption). Incoming
+ * combat damage and burn already on the stack at this seat count together: they all land before
+ * the seat acts again.
+ */
 export function publicLethal(
   view: PlayerView,
   request: DecisionRequest,
   knowledge: CardKnowledge,
 ): boolean {
   return (
-    incomingTotal(view) >= view.life ||
+    incomingTotal(view) + stackDamageToSeat(view, knowledge) >= view.life ||
     defensiveLethal(view, knowledge) ||
     offensiveLethal(view, request, knowledge).length > 0
   );

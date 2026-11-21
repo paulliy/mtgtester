@@ -274,6 +274,16 @@ Held-out positions for the two fixes from the bot gauntlet review
 | one decision | `altar-the-beast-not-the-commander` | `commanderValue` | Ashnod's Altar eats a vanilla 3/3, not the commander        |
 | one decision | `swords-the-commander`              | `commanderValue` | The last Swords on the opposing commander, not a bigger 3/3 |
 
+### Added for the scarce-answer exemptions
+
+Two positions from the PR 124 review, where `scarceAnswer` held the last counterspell when it
+should not: neither has lethal on the board, so only reading the stack lifts the hold.
+
+| Kind         | Case                      | For            | What it tests                                               |
+| ------------ | ------------------------- | -------------- | ----------------------------------------------------------- |
+| one decision | `counter-the-lethal-bolt` | `scarceAnswer` | At 3 life, the last Counterspell answers a Bolt aimed at P1 |
+| one decision | `win-the-counter-war`     | `scarceAnswer` | The last Counterspell counters a Negate aimed at our Wrath  |
+
 ### Added with ADR 0044
 
 Four positions per escalation trigger. For `scarce-answer`, two where the last answer should be

@@ -15,6 +15,7 @@ import type {
   PermanentView,
   PlayerId,
   PlayerView,
+  StackObjectView,
   TargetChoice,
 } from '@mtg/shared';
 import { NO_ATTACK_TARGET } from '@mtg/shared';
@@ -1299,6 +1300,25 @@ function wastesLastAnswer(
   });
 }
 
+/**
+ * What countering an opposing spell protects: when it targets the seat's own spells on the stack
+ * (a Negate aimed at our Wrath), the threat of the best of them. A counter war is fought over the
+ * spell being countered, not over the counterspell's own size.
+ */
+function protectedThreat(item: StackObjectView, ctx: PolicyContext): number {
+  const { view } = ctx;
+  let best = -Infinity;
+  for (const id of item.targets) {
+    const ours = view.stack.find((entry) => entry.id === id && entry.controller === view.seat);
+    if (ours === undefined) continue;
+    const traits = traitsFor(ctx, ours.description);
+    if (traits === undefined) continue;
+    const commander = isCommanderName(ours.description, ctx) ? P.commanderPermanentBonus : 0;
+    best = Math.max(best, spellThreat(traits) + commander);
+  }
+  return best;
+}
+
 /** What an answer of `kind` would hit, on its own scale; null when the bot cannot tell. */
 function answerThreat(kind: AnswerKind, action: LegalAction, ctx: PolicyContext): number | null {
   const { view } = ctx;
@@ -1321,7 +1341,7 @@ function answerThreat(kind: AnswerKind, action: LegalAction, ctx: PolicyContext)
       const traits = traitsFor(ctx, item.description);
       if (traits === undefined) return null;
       const commander = isCommanderName(item.description, ctx) ? P.commanderPermanentBonus : 0;
-      best = Math.max(best, spellThreat(traits) + commander);
+      best = Math.max(best, spellThreat(traits) + commander, protectedThreat(item, ctx));
     }
     return best;
   }

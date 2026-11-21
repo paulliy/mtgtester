@@ -33,6 +33,7 @@ export {
   lastAnswerKinds,
   offensiveLethal,
   publicLethal,
+  stackDamageToSeat,
   stackPumps,
 } from './answers';
 export type { AnswerKind } from './answers';
