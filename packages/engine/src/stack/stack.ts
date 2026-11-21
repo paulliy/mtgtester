@@ -7,7 +7,7 @@
 import type { GameGen } from '../decisions';
 import { evaluateCondition } from '../cards/condition';
 import { isPermanentCard } from '../cards/definition';
-import { executeAbility, drawCards } from '../effects/resolve';
+import { executeAbility, drawCards, optionalAbilityHasNothingToDo } from '../effects/resolve';
 import { TREASURE } from '../cards/tokens';
 import { captureResolutionTargets } from '../targets/resolution';
 import { emit, debug } from '../log/log';
@@ -123,6 +123,19 @@ function* resolveTop(ctx: GameContext): GameGen<void> {
   // fizzle check — an ability whose targets are all illegal is removed without anyone choosing
   // anything (CR 608.2b).
   if (top.kind === 'triggeredAbility' && top.ability?.optional === true) {
+    // Nothing to choose from (Broodcaller Scourge with no card in hand at or under the damage):
+    // don't ask a question whose every answer does nothing.
+    if (
+      optionalAbilityHasNothingToDo(
+        ctx,
+        { cardId: top.sourceCardId, controllerId: top.controllerId },
+        top.ability,
+        { ...top.triggerScope },
+      )
+    ) {
+      emit(ctx, 'triggerSkippedNoChoice', { description: top.description }, top.controllerId);
+      return;
+    }
     const outcome = yield {
       decisionType: 'optionalTrigger',
       player: top.controllerId,

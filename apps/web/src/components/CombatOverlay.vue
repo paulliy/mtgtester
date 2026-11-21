@@ -12,7 +12,7 @@
  * `attackArrow`), and each blocker a blue line to the attacker it blocks. These are still pictures, not motion, so they stay when
  * motion is reduced.
  */
-import { computed, nextTick, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, watch } from 'vue';
 import type { SpectatorPermanent } from '@mtg/shared';
 import { useBoardAnchors, type AnchorRect } from '../composables/useBoardAnchors';
 import { useCombatPlanStore } from '../stores/combatPlan';
@@ -206,6 +206,27 @@ watch(
   },
   { immediate: true },
 );
+
+/**
+ * A tile can move without anything resizing (a neighbour leaves, the row reflows, a scroll
+ * container moves, a transition runs), and no observer reports that. So while declared combat is
+ * on screen, measure every frame; `remeasureAnchors` only writes rects that changed, so this
+ * costs a few `getBoundingClientRect` calls and no re-render when the board is still.
+ */
+let frame = 0;
+function trackBoard(): void {
+  remeasureAnchors();
+  frame = requestAnimationFrame(trackBoard);
+}
+watch(
+  () => combatPairs.value.length > 0,
+  (active) => {
+    cancelAnimationFrame(frame);
+    if (active && typeof requestAnimationFrame === 'function') trackBoard();
+  },
+  { immediate: true },
+);
+onBeforeUnmount(() => cancelAnimationFrame(frame));
 
 const planLines = computed<Line[]>(() => {
   if (game.reducedMotion) return [];
