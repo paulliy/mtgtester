@@ -153,14 +153,55 @@ graveyard, or, when some source is gated, power and toughness. Measured:
   game has a Treasure beside an unpayable spell);
 - halts in the gauntlet: 81 of 1,040 games → 62.
 
+## Follow-up: a second set of pods (`field2`)
+
+Both runs above used `--seed field`: the same 80 pods, replayed with a slightly changed bot, so
+"across both runs" counts most pairs twice. After merging main (its sacrifice-source mana bound),
+the bot as of this review, before the commander-value, `faceDamage` and `scarceAnswer` follow-ups,
+was run again on `field` and once on 80 new pods:
+
+`bun run bot-gauntlet --pods 80 --seed field2 --new styled,proxy-v2-styled --jobs 4 --trace-dir <dir> --json <dir>/field.json`
+
+| Arm and style   | `field` (merged code) | `field2` | Combined |
+| --------------- | --------------------- | -------- | -------- |
+| proxy, midrange | +2/−5                 | +6/−4    | +8/−9    |
+| styled, value   | +0/−4                 | +3/−1    | +3/−5    |
+| proxy, value    | +3/−4                 | +2/−2    | +5/−6    |
+| styled, aggro   | +6/−2                 | +5/−8    | +11/−10  |
+| proxy, aggro    | +11/−3                | +4/−6    | +15/−9   |
+| styled, all     | +15/−12               | +21/−20  | +36/−32  |
+| proxy, all      | +26/−21               | +21/−18  | +47/−39  |
+
+Neither losing pattern holds on new pods, and the aggro win fades with them. A style row is 5 to
+15 discordant pairs a run, too few to tune a preset against; both arms are neutral to slightly
+positive overall.
+
+On `field`, the first decision where each discordant proxy game left its base game:
+
+- 22 of 47 were an attack declaration, and 20 of those sent the same attackers at a different
+  opponent (the proxy's `targetOrder`). Only 2 attacked where the old bot held back or the reverse,
+  and the proxy seat won both. Retargets came out 10 won, 12 lost.
+- 4 of the 5 proxy-midrange losses were such retargets, pointing in both directions (at the
+  low-life seat and at the board leader).
+
+Lowering the proxy's ahead-on-board aggression from 0.8 to 0.7 (below `riskyAttackAggression` and
+the 0.8 cut-off under which `chooseAttacks` keeps blockers back) changed 29 of 320 proxy games and
+none of the midrange losses: +26/−21 → +25/−22. Not kept.
+
+Halts: `field` 40 of 720 games, `field2` 65 of 720, plus 5 and 7 errors. One error is a
+deterministic engine bug that predates the merge: `cost for P1 became unpayable at application
+time` (`--seed field`, pod 0, the `styled` arm with P4 switched, a payment by P1).
+
 ## Still open
 
-- **Value preset:** loses in both runs. Map value decks to midrange, or retune the role scales
-  against the gauntlet, before the strategist can choose it.
-- **Proxy-steered midrange:** loses in both runs. The proxy's 0.8 aggression and
-  `avoidOverextending` are the next suspects.
+- **Value preset and proxy-steered midrange:** no change is supported by the gauntlet at this
+  sample size (see the follow-up above). A style needs a few hundred pairs of its own: more pods,
+  or a gauntlet option that replays only the seats of one style.
+- **Proxy `targetOrder`:** the knob that actually moves proxy games. Whether its order should only
+  break ties in attack targeting is untested.
 - **Commander value:** done in the [follow-up](bot-commander-value-2026-11-20.md); bench positions
   now seat commanders.
 - **The archetype classifier** calls almost every deck midrange.
-- **Engine halts:** 62 of 1,040 games still halt on payment budgets with other sources (Exotic
-  Orchard-style dynamic production, filter lands with riders).
+- **Engine halts and errors:** 5 to 9% of games still halt on payment budgets with other sources
+  (Exotic Orchard-style dynamic production, filter lands with riders); the
+  "unpayable at application time" error above.
