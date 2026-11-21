@@ -147,6 +147,13 @@ export interface BenchCase {
     turnCap?: number;
     turn?: NonNullable<CardScenario['turn']>;
     seats: CardScenario['seats'];
+    /**
+     * Each seat's commander(s) by card name, one or two (CR 903.3). A commander its seat's
+     * battlefield names starts there with commander status; one named nowhere else waits in the
+     * command zone. Either way the seat's `PlayerView.commanders`, and every opponent's
+     * `opponents[].commanders`, show it.
+     */
+    commanders?: Partial<Record<Seat, string[]>>;
     continue?: NonNullable<CardScenario['continue']>;
   };
   supportCards?: NonNullable<CardScenarioFile['supportCards']>;
@@ -325,6 +332,24 @@ const benchContext = shaped({
   ),
 });
 
+const commanderSeats: Check = (value, path) =>
+  object(
+    value,
+    path,
+    Object.fromEntries(
+      CARD_SCENARIO_SEATS.map((id) => [
+        id,
+        (names: unknown, at: string) => {
+          list(str, 1)(names, at);
+          const named = names as string[];
+          if (named.length > 2) fail(at, 'names one commander, or two partners');
+          if (new Set(named).size !== named.length) fail(at, 'repeats a commander');
+        },
+      ]),
+    ),
+    [],
+  );
+
 const singleReference = shaped(
   {
     analysis: str,
@@ -418,6 +443,7 @@ export function parseBenchCase(json: unknown, path = 'case'): BenchCase {
           turnCap: int,
           turn: scenarioOwned,
           seats: scenarioOwned,
+          commanders: commanderSeats,
           continue: scenarioOwned,
         },
         ['seats'],
@@ -483,6 +509,24 @@ export function parseBenchCase(json: unknown, path = 'case'): BenchCase {
     for (const o of deal.obligations)
       if (!deal.parties.includes(o.by))
         fail(`${path}.context.deals[${index}]`, `an obligation is owed by ${o.by}, not a party`);
+  }
+  for (const [id, names] of Object.entries(benchCase.position.commanders ?? {}) as [
+    Seat,
+    string[],
+  ][]) {
+    const spec = benchCase.position.seats[id] ?? {};
+    const elsewhere = [
+      ...(spec.hand ?? []),
+      ...(spec.graveyard ?? []),
+      ...(spec.libraryTop ?? []),
+      ...(spec.foretold?.cards ?? []),
+    ];
+    for (const name of names)
+      if (elsewhere.includes(name))
+        fail(
+          `${path}.position.commanders.${id}`,
+          `${name} must be on ${id}'s battlefield or in the command zone, not in a hand, graveyard or library`,
+        );
   }
   // The engine's parser owns the position's shape (seats, turn, continuation, support cards).
   parseCardScenarioFile(caseScenario(benchCase).file, `${path}.position`);

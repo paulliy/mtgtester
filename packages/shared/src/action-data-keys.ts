@@ -58,7 +58,7 @@ export const ACTION_DATA_KEYS: Readonly<Record<string, ActionDataKeyInfo>> = {
   sourceZone: {
     meaning: 'Zone the source is in: hand, command, library, graveyard, exile or battlefield.',
     types: ['string'],
-    consumers: ['none'],
+    consumers: ['bot'],
   },
   manaCost: {
     meaning: 'Mana cost to pay as displayed, after reductions; "free" for a free alternative cast.',

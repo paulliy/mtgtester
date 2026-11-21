@@ -840,3 +840,93 @@ describe('combat-damage division in the replay log (browser trial, Turn 49/55)',
     }
   });
 });
+
+describe('attack taxes and attackers that tap for mana (CR 508.1f-h)', () => {
+  /** P1 to attack; P3 controls a Ghostly-Prison-shaped tax of `amount` per attacker. */
+  function taxedTable(oracleId: string, amount: number): GameContext {
+    const ctx = combatContext();
+    registerCustomDef(ctx, attackTaxDef(oracleId, amount));
+    spawn(
+      ctx,
+      'P3',
+      oracle({ name: 'Test Ghostly Prison', oracleId, typeLine: 'Enchantment', manaCost: null }),
+    );
+    return ctx;
+  }
+  const elf = (name: string, keywords = '') =>
+    oracle({
+      name,
+      typeLine: 'Creature — Elf',
+      manaCost: '{G}',
+      cmc: 1,
+      power: '1',
+      toughness: '1',
+      oracleText: `${keywords}{T}: Add {G}.`,
+    });
+
+  it('an attacker without vigilance cannot tap for mana to pay its own tax', () => {
+    const ctx = taxedTable('test-ghostly-prison-own', 1);
+    spawn(ctx, 'P1', elf('Test Tax Elf'));
+    let offered: string[] = [];
+    pump(
+      runCombatPhase(ctx),
+      (d) => {
+        if (d.decisionType === 'declareAttackers' && d.player === 'P1') {
+          offered = subjectDefenders(d, 'Test Tax Elf');
+          return declareNoAttacks(d);
+        }
+        return pick(d, /Pass|does not/);
+      },
+      { strict: true },
+    );
+    // It taps as it attacks (CR 508.1f), before the tax is paid (CR 508.1h).
+    expect(offered).toEqual(expect.arrayContaining(['P2', 'P4']));
+    expect(offered).not.toContain('P3');
+  });
+
+  it('a vigilant attacker stays untapped and can pay its own tax', () => {
+    const ctx = taxedTable('test-ghostly-prison-vigilant', 1);
+    const vigilant = spawn(ctx, 'P1', elf('Test Vigilant Elf', 'Vigilance\n'));
+    pump(
+      runCombatPhase(ctx),
+      (d) => {
+        if (d.decisionType === 'declareAttackers' && d.player === 'P1') {
+          expect(subjectDefenders(d, 'Test Vigilant Elf')).toContain('P3');
+          return declareAttacks(d, () => 'P3');
+        }
+        return pick(d, /Pass|does not/);
+      },
+      { strict: true },
+    );
+    const attack = attackEvents(ctx).find((e) => e.payload['attacker'] === 'Test Vigilant Elf');
+    expect(attack?.payload['defender']).toBe('P3');
+    // It paid the tax with its own mana ability.
+    expect(vigilant.tapped).toBe(true);
+  });
+
+  it('a taxed attack the other attackers would have paid for is not declared, and nothing throws', () => {
+    // Each elf could pay the other's way, but both tap as they attack: nobody is left to pay
+    // P3's tax. The gauntlet threw "cost became unpayable at application time" here.
+    const ctx = taxedTable('test-ghostly-prison-joint', 1);
+    spawn(ctx, 'P1', elf('Test Free Elf'));
+    spawn(ctx, 'P1', elf('Test Taxed Elf'));
+    pump(
+      runCombatPhase(ctx),
+      (d) => {
+        if (d.decisionType === 'declareAttackers' && d.player === 'P1')
+          return declareAttacks(d, (_id, subject) =>
+            subject.name === 'Test Free Elf'
+              ? 'P2'
+              : subject.name === 'Test Taxed Elf'
+                ? 'P3'
+                : null,
+          );
+        return pick(d, /Pass|does not/);
+      },
+      { strict: true },
+    );
+    const attacks = attackEvents(ctx).map((e) => [e.payload['attacker'], e.payload['defender']]);
+    expect(attacks).toContainEqual(['Test Free Elf', 'P2']);
+    expect(attacks.some(([attacker]) => attacker === 'Test Taxed Elf')).toBe(false);
+  });
+});

@@ -1,8 +1,9 @@
 /**
  * A deterministic stand-in for the bot-led strategist (hill-climb S7), so the bot league can
  * measure what reusing knobs costs without a paid model. It reads the same public table the real
- * strategist sees and sets knobs from it: target the biggest board, attack when ahead, hold back
- * when behind on life, and stop overextending when well ahead on permanents.
+ * strategist sees and sets knobs from it: target the biggest threat (board and low life), attack
+ * when ahead, hold back when behind on life, otherwise leave aggression to the play style, and
+ * stop overextending when well ahead on permanents.
  *
  * It is a proxy, not the strategist: a staleness cost it shows is a lower bound on the real one,
  * and the paid `ai-mode-duel` with `AI_STRATEGIST_WAKE_RULE` is the check that counts.
@@ -19,13 +20,14 @@ export function proxyKnobs(view: PlayerView): BotSteering {
     .filter((o) => o.life > 0)
     .map((o) => ({ seat: o.seat, ...me[o.seat]! }));
   const threat = (r: (typeof rivals)[number]): number =>
-    r.power + 2 * r.nonland + (r.commanderOut ? 5 : 0) + Math.max(0, 20 - r.life) / 2;
+    r.power + 2 * r.nonland + (r.commanderOut ? 5 : 0) + (40 - r.life) / 4;
   const order = [...rivals].sort((a, b) => threat(b) - threat(a) || a.seat.localeCompare(b.seat));
   const maxPower = Math.max(0, ...rivals.map((r) => r.power));
   const maxNonland = Math.max(0, ...rivals.map((r) => r.nonland));
-  const aggression = own.life < 15 ? 0.3 : own.power > maxPower ? 0.8 : 0.5;
+  // Only a clear reason moves aggression; otherwise the seat's play style keeps its own.
+  const aggression = own.life < 15 ? 0.3 : own.power > maxPower ? 0.8 : undefined;
   return {
-    aggression,
+    ...(aggression === undefined ? {} : { aggression }),
     ...(order.length > 0 ? { targetOrder: order.map((r) => r.seat) } : {}),
     avoidOverextending: own.nonland >= maxNonland + 3,
   };

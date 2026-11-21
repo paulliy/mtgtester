@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "id": "counter-the-lethal-bolt",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Discipline: the last counterspell answers a lethal burn spell",
+  "skills": ["interaction-discipline", "threat-assessment", "survival"],
+  "briefing": "P1 is at 3 life. No creature on the table can attack it; P3 casts Lightning Bolt at P1. P1 holds Counterspell, its only interaction, with two Islands untapped. Holding the last counterspell for a bigger threat is usually right, but not when the spell on the stack kills P1.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P3",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 3,
+        "hand": ["Counterspell", "Divination"],
+        "battlefield": [
+          "Island",
+          "Island",
+          {
+            "card": "Island",
+            "tapped": true
+          },
+          {
+            "card": "Island",
+            "tapped": true
+          }
+        ]
+      },
+      "P2": {
+        "life": 30,
+        "hand": ["Harmonize", "Forest"],
+        "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest"]
+      },
+      "P3": {
+        "life": 28,
+        "hand": ["Lightning Bolt", "Mountain"],
+        "battlefield": ["Mountain", "Mountain", "Mountain"]
+      },
+      "P4": {
+        "life": 31,
+        "hand": ["Divination"],
+        "battlefield": ["Plains", "Plains", "Island", "Island"]
+      }
+    }
+  },
+  "setup": [
+    {
+      "player": "P3",
+      "choose": "Cast Lightning Bolt",
+      "targets": ["P1"]
+    }
+  ],
+  "reference": {
+    "analysis": "Lightning Bolt deals 3 damage to P1, who is at 3 life: it is lethal as it stands. Counterspell is P1's only answer, and saving it for a bigger threat only matters if P1 survives to face one. Countering the Bolt is the only play that keeps P1 in the game.",
+    "options": [
+      {
+        "label": "Counter the Bolt",
+        "when": {
+          "choose": "Cast Counterspell"
+        },
+        "grade": "best",
+        "why": "The Bolt is lethal; the counterspell is worth nothing once P1 is dead."
+      },
+      {
+        "label": "Pass and hold Counterspell",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "blunder",
+        "why": "P1 dies to the Bolt holding its answer."
+      },
+      {
+        "label": "Yield until end of turn",
+        "when": {
+          "choose": "Pass and yield"
+        },
+        "grade": "blunder",
+        "why": "Same as passing: the Bolt resolves and P1 dies."
+      }
+    ],
+    "otherwise": {
+      "grade": "blunder",
+      "why": "Anything but countering the Bolt lets it resolve."
+    }
+  },
+  "table": {
+    "policy": "passive"
+  }
+}

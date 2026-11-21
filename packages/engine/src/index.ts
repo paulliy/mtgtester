@@ -11,7 +11,7 @@
 export const ENGINE_VERSION = '0.2.0-phase2';
 
 // The driver.
-export { DEFAULT_MAX_TURN_OBJECTS, Engine } from './engine';
+export { DEFAULT_MAX_TOKEN_CHAIN_DEPTH, DEFAULT_MAX_TURN_OBJECTS, Engine } from './engine';
 export { engineWork, engineWorkSince } from './work-counters';
 export type { EngineWork } from './work-counters';
 export type { EngineDriver, EngineOptions } from './engine';

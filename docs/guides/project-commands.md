@@ -61,19 +61,26 @@ bun run pilot:draw [--bank F]          # phase 6 pilot: draw 20 unmodeled cards 
 bun run snapshot:oracle
 bun run modelled-cards
 bun run combat-sweep [--games N] [--seed S] [--json out.json]
-bun run bot-league [--games N] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N] [--json F]
-                                        # ADR 0039 bot vs bot win rate; arms: legacy, policy, knowledge, aggro, control
+bun run bot-league [--games N] [--a ARM] [--b ARM] [--turn-cap N] [--jobs N] [--deck NAME] [--json F]
+                                        # ADR 0039 bot vs bot win rate; arms: legacy, policy, knowledge, fixed, fix-*,
+                                        # aggro, control, proxy-*; ADR 0051: fixed-0043, style-aggro|control|combo, styled
+                                        # --deck NAME: one coverage deck in all four seats (a mirror)
+bun run bot-gauntlet [--pods N] [--seed S] [--old ARM] [--new ARM,ARM] [--decks a,b] [--trace-dir D] [--json F]
+                                        # ADR 0051 new bot vs old in the field: pods of four different premade decks
+                                        # played by --old, replayed with one seat switched to each --new arm; paired
+                                        # per (pod, seat). Styled arms use fixtures/deck-styles.json
 bun run ai-call-census [--games N] [--turn-cap N] [--json F]
                                         # ADR 0039 model calls and prompt tokens per turn by tactical mode, offline;
                                         # ADR 0044 would-fire counts per escalation trigger and one mode per live trigger
 bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json F]
-                     [--escalation T,..] [--shadow T,..] [--opponents model|bot-never|bot-v1] [--offline]
+                     [--escalation T,..] [--shadow T,..] [--opponents model|bot-never|bot-v1] [--offline] [--trace F.jsonl]
                                         # ADR 0039 one PAID game from .env: P1/P3 bot mode, P2/P4 model tactician;
                                         # --offline: same game, no key or network, a free wiring check;
                                         # ADR 0044: live triggers for P1/P3, and bot-led `never` opponents;
                                         # S7 `bot-v1`: P2/P4 bot-led under wake rule table-v1. The report has each
                                         # seat's own turns and elimination turn, strategist calls per own turn,
-                                        # wake reasons per side, and the engine's halt reason
+                                        # wake reasons per side, and the engine's halt reason;
+                                        # ADR 0051 --trace: one JSON line per decision (menu, answer, source, triggers, knobs)
 bun run strategist-capture [--seed S] [--turn-cap N] [--decks F] [--max-usd N] [--no-diplomacy] [--no-flag] [--offline] [--out F]
                                         # ADR 0045 one bot-led game with a strategist every turn, written as a replay
                                         # transcript plus every seat's knobs and deals per turn; PAID unless --offline

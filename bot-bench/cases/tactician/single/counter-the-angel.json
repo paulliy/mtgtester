@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "id": "counter-the-angel",
+  "role": "tactician",
+  "scope": "single",
+  "title": "The only counterspell is for a real threat, and a five-mana flier is one",
+  "skills": ["counterspell", "threat-assessment", "scarce-answer"],
+  "briefing": "Held out for the `scarceAnswer` bot fix (written after it was tuned, never tuned against): the other side of `hold-the-counter`. P2 casts Serra Angel on its own turn. P1 holds Counterspell, its only counterspell, with two Islands open. The rule that keeps the last counter from a ramp spell must still let it answer a 4/4 flying vigilance threat.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 6
+    },
+    "seats": {
+      "P1": {
+        "life": 34,
+        "hand": ["Counterspell", "Divination"],
+        "battlefield": [
+          "Island",
+          "Island",
+          {
+            "card": "Island",
+            "tapped": true
+          },
+          "Wall of Omens"
+        ]
+      },
+      "P2": {
+        "life": 35,
+        "hand": ["Serra Angel", "Plains"],
+        "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains"]
+      },
+      "P3": {
+        "life": 36,
+        "hand": ["Grizzly Bears", "Forest"],
+        "battlefield": ["Forest", "Forest", "Forest", "Grizzly Bears"]
+      },
+      "P4": {
+        "life": 33,
+        "hand": ["Lightning Bolt", "Mountain"],
+        "battlefield": ["Mountain", "Mountain", "Mountain"]
+      }
+    }
+  },
+  "setup": [
+    {
+      "player": "P2",
+      "choose": "Cast Serra Angel"
+    }
+  ],
+  "focus": {
+    "decisionType": "priority"
+  },
+  "reference": {
+    "analysis": "Serra Angel is a 4/4 flier with vigilance that P1's Wall of Omens cannot block, and it is the biggest threat on the table. Counterspell is P1's only answer to it in hand. Holding the counter for something bigger is defensible but lets a clock land.",
+    "options": [
+      {
+        "label": "Counter the Serra Angel",
+        "when": {
+          "choose": "Cast Counterspell"
+        },
+        "grade": "best",
+        "why": "Answers the one real threat for two mana, one for one."
+      },
+      {
+        "label": "Pass",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "good",
+        "why": "Keeps the counter for something bigger, at the cost of a 4/4 flier on board."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Anything else spends the turn without answering the Angel."
+    }
+  }
+}

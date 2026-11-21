@@ -7,7 +7,15 @@ import { readFileSync } from 'node:fs';
 import type { OracleCard } from '@mtg/shared';
 import { describe, expect, it } from 'vitest';
 import { interpretCard } from '../src/cards/interpret';
-import { DEFAULT_MAX_TURN_OBJECTS, Engine } from '../src/engine';
+import { DEFAULT_MAX_TOKEN_CHAIN_DEPTH, DEFAULT_MAX_TURN_OBJECTS, Engine } from '../src/engine';
+import { TREASURE } from '../src/cards/tokens';
+import { createGame } from '../src/state/game';
+import {
+  atResolutionDepth,
+  createToken,
+  resolutionDepth,
+  stackObjectDepth,
+} from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
 import { installDefinitionTransform } from '../src/testing/definition-transform';
 import { cardMutants, mutate } from './mutation/operators';
@@ -29,6 +37,9 @@ describe('per-turn object budget', () => {
     const config = () => gameConfig(forestsPod(8), { seed: 'turn-objects' });
     expect(budgetOf(new Engine(config(), { maxObjects: 20_000 }))?.maxTurnObjects).toBe(
       DEFAULT_MAX_TURN_OBJECTS,
+    );
+    expect(budgetOf(new Engine(config(), { maxObjects: 20_000 }))?.maxTokenChainDepth).toBe(
+      DEFAULT_MAX_TOKEN_CHAIN_DEPTH,
     );
     expect(budgetOf(new Engine(config()))).toBeUndefined();
     expect(
@@ -77,4 +88,103 @@ describe('per-turn object budget', () => {
       installDefinitionTransform(previous);
     }
   }, 60_000);
+  // The runner checks invariants strictly; with the object limits out of reach, the chain depth
+  // alone stops the loop, after about a hundred rounds.
+  it('halts a token loop on its chain depth, long before any object limit', () => {
+    const definition = interpretCard(assembler);
+    const index = cardMutants(definition).findIndex(
+      (mutant) => mutant.label === 'triggers[0]: drop trigger oncePerTurn',
+    );
+    const { file } = scaffoldCard(assembler, resolve);
+    const scenario = file.scenarios[0]!;
+    const previous = installDefinitionTransform((candidate) =>
+      candidate.name === assembler.name ? mutate(candidate, index) : candidate,
+    );
+    try {
+      const started = Date.now();
+      expect(() =>
+        runScenario(file, scenario, {
+          resolve,
+          maxStepWork: 50_000,
+          maxObjects: 100_000,
+          maxTurnObjects: 100_000,
+          maxTokenChainDepth: DEFAULT_MAX_TOKEN_CHAIN_DEPTH,
+        }),
+      ).toThrow(`ran more than ${DEFAULT_MAX_TOKEN_CHAIN_DEPTH} deep in one turn`);
+      expect(Date.now() - started).toBeLessThan(15_000);
+    } finally {
+      installDefinitionTransform(previous);
+    }
+  }, 60_000);
+
+  /** A game with only the chain limit set, in a main phase. */
+  function chainGame(limit = 3): GameContext {
+    const ctx = createGame(gameConfig(forestsPod(8), { seed: 'token-chain' }));
+    ctx.budget = { maxTokenChainDepth: limit, stepWork: { count: 0 }, objectsAtStart: 0 };
+    return ctx;
+  }
+  /** `make` as a generator with nothing to ask, the shape a resolution has. */
+  function* plain<T>(make: () => T): Generator<never, T, unknown> {
+    yield* [];
+    return make();
+  }
+  const run = <T>(gen: Generator<unknown, T, unknown>): T => {
+    for (let step = gen.next(); ; step = gen.next()) if (step.done === true) return step.value;
+  };
+
+  it('counts a token one step deeper than the token that triggered its maker', () => {
+    const ctx = chainGame(3);
+    // A spell (no trigger object) makes the first token: depth 1.
+    let token = run(
+      atResolutionDepth(ctx, resolutionDepth(ctx, undefined), () =>
+        plain(() => createToken(ctx, TREASURE, 'P1')),
+      ),
+    );
+    // Each later token comes from an ability its predecessor triggered.
+    for (let depth = 1; depth <= 3; depth++) {
+      expect(resolutionDepth(ctx, token.cardId)).toBe(depth);
+      token = run(
+        atResolutionDepth(ctx, resolutionDepth(ctx, token.cardId), () =>
+          plain(() => createToken(ctx, TREASURE, 'P1')),
+        ),
+      );
+    }
+    expect(() => resolutionDepth(ctx, token.cardId)).toThrow('ran more than 3 deep in one turn');
+    // A new turn starts a new chain.
+    ctx.state.turnNumber++;
+    expect(resolutionDepth(ctx, token.cardId)).toBe(0);
+  });
+
+  it('follows a token that triggers itself: a self-copying token keeps its depth', () => {
+    const ctx = chainGame(3);
+    // Polyraptor's "whenever this is dealt damage, create a token that's a copy of it": the
+    // trigger's subject is its own source, so it records no trigger object.
+    let token = run(atResolutionDepth(ctx, 0, () => plain(() => createToken(ctx, TREASURE, 'P1'))));
+    for (let depth = 1; depth <= 3; depth++) {
+      const trigger = { kind: 'triggeredAbility', sourceCardId: token.cardId };
+      expect(stackObjectDepth(ctx, trigger)).toBe(depth);
+      token = run(
+        atResolutionDepth(ctx, stackObjectDepth(ctx, trigger), () =>
+          plain(() => createToken(ctx, TREASURE, 'P1')),
+        ),
+      );
+    }
+    expect(() =>
+      stackObjectDepth(ctx, { kind: 'triggeredAbility', sourceCardId: token.cardId }),
+    ).toThrow('ran more than 3 deep in one turn');
+    // A token's activated ability is chosen each time: its source does not count.
+    expect(stackObjectDepth(ctx, { kind: 'activatedAbility', sourceCardId: token.cardId })).toBe(0);
+  });
+
+  it('keeps a wide legal turn shallow: hundreds of tokens each triggering an ability (fuzz-203)', () => {
+    const ctx = chainGame(3);
+    // Rabble Rousing makes many tokens in one resolution; each entering triggers Champion of
+    // Lambholt, whose resolution makes nothing.
+    const tokens = run(
+      atResolutionDepth(ctx, 0, () =>
+        plain(() => Array.from({ length: 600 }, () => createToken(ctx, TREASURE, 'P1'))),
+      ),
+    );
+    for (const token of tokens) expect(resolutionDepth(ctx, token.cardId)).toBe(1);
+  });
 });
