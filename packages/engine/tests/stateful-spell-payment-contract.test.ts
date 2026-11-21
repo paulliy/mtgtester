@@ -7,6 +7,7 @@ import { createGame } from '../src/state/game';
 import { bear, conjure, copies, forest, gameConfig, oracle, pump, spawn } from './fixtures';
 import { countPermanents } from '../src/cards/condition';
 import { OTHER, YOURS, allOf, ofType, powerAtLeast } from '../src/cards/selector';
+import { tapOther } from '../src/cards/templates';
 import { needsStatefulManaPayment } from '../src/mana/stateful-payment';
 import { parseManaCost } from '../src/mana/cost';
 import { engineWork, engineWorkSince } from '../src/work-counters';
@@ -1156,5 +1157,119 @@ describe('the capacity bound on small boards (bug 09)', () => {
       expect(needs()).toBe(false);
       expect(needs(untapper)).toBe(true);
     });
+  });
+});
+
+describe('an unpayable cost is not offered instead of halting (bug 14)', () => {
+  // `MTG_VERIFY_MANA_PLAN=1` also runs the old search, so the state counts differ.
+  const runs = process.env['MTG_VERIFY_MANA_PLAN'] === '1' ? 2 : 1;
+  const ANY: ManaAbilitySpec['units'] = [[...ANY_COLOR]];
+  type Board = ReturnType<typeof setup>;
+  const tapACreature: AbilityCost[] = [{ kind: 'tap' }, tapOther(ofType('Creature'))];
+  /** A permanent with these mana abilities; `typeLine` makes it a creature when it should be one. */
+  const permanent = (
+    state: Board,
+    name: string,
+    typeLine: string,
+    abilities: ManaAbilitySpec[],
+  ) => {
+    const spawned = spawn(state.ctx, state.player.id, oracle({ name, typeLine }));
+    state.ctx.defs.set(spawned.oracleId, {
+      ...state.ctx.defs.get(spawned.oracleId)!,
+      manaAbilities: abilities,
+    });
+  };
+  /** Jaspera Sentinel: "{T}, Tap an untapped creature you control: Add one mana of any color." */
+  const sentinel = (state: Board) =>
+    permanent(state, 'Sentinel', 'Artifact', [{ units: ANY, costs: tapACreature }]);
+  /** The stateful search runs for a dynamic source; an untapped Orchard with no opposing land. */
+  const creature = (state: Board) => {
+    state.source('Exotic Orchard', { units: [], dynamic: 'opponentLandColors' });
+    return spawn(state.ctx, state.player.id, bear());
+  };
+  const holdout = (state: Board) =>
+    permanent(state, 'Holdout', 'Land', [
+      { units: [['G']] },
+      { units: [['G']], costs: tapACreature },
+    ]);
+  const restInPeace = (state: Board) => {
+    const spawned = spawn(
+      state.ctx,
+      state.player.id,
+      oracle({ name: 'Rest in Peace', typeLine: 'Enchantment' }),
+    );
+    state.ctx.defs.set(spawned.oracleId, {
+      ...state.ctx.defs.get(spawned.oracleId)!,
+      ruleStatics: [
+        { kind: 'graveyardToExile', scope: 'all', basis: 'owner', includeTokens: true },
+      ],
+    });
+  };
+
+  it('fuzz-410 shape: a lone tap-a-creature source cannot pay two pips', () => {
+    const state = setup('{G/W}{G/W}');
+    sentinel(state);
+    creature(state);
+    expect(state.offered()).toBeUndefined();
+  });
+
+  it('fuzz-515 shape: one unit per card makes six against seven', () => {
+    const state = setup('{4}{G}{G}{G}');
+    state.source('Forest', { units: [['G']] });
+    holdout(state);
+    state.source('Sol Ring', { units: [['C'], ['C']] });
+    creature(state);
+    expect(state.offered()).toBeUndefined();
+  });
+
+  it('keeps offering a cost the board pays without the tap-a-creature ability', () => {
+    // The test's other castable card costs {1}{G}; two Forests pay it too, so only this cast matters.
+    const state = setup('{G}');
+    sentinel(state);
+    for (let i = 0; i < 2; i++) state.source(`Forest ${i}`, { units: [['G']] });
+    creature(state);
+    expect(state.offered()).toBeDefined();
+  });
+
+  it('still halts, as before, where the cost needs the tap-a-creature ability', () => {
+    const state = setup('{G}{G}');
+    sentinel(state);
+    state.source('Forest', { units: [['G']] });
+    creature(state);
+    expect(state.offered).toThrow('outside the proven scope');
+  });
+
+  it('does not prove a board with a sacrifice-another source impossible', () => {
+    // Forest 1 + two creatures sacrificed to the Altar, 2 each = 5, though one card each gives 4.
+    const state = setup('{5}');
+    sentinel(state);
+    state.source('Forest', { units: [['G']] });
+    state.source("Ashnod's Altar", {
+      units: [['C'], ['C']],
+      costs: [{ kind: 'sacrificeOther', selector: ofType('Creature') }],
+    });
+    creature(state);
+    creature(state);
+    expect(state.offered()).toBeDefined();
+  });
+
+  it('fuzz-490 shape: eight units against nine pips, beside Rest in Peace', () => {
+    const state = setup('{4}{W}{U}{B}{R}{G}');
+    for (let i = 0; i < 7; i++) state.source(`Land ${i}`, { units: ANY });
+    state.source('Fellwar Stone', { units: [], dynamic: 'opponentLandColors' });
+    state.source('Treasure', treasure);
+    restInPeace(state);
+    const before = engineWork();
+    expect(state.offered()).toBeUndefined();
+    expect(engineWorkSince(before).manaPlannerStates).toBeLessThan(100 * runs);
+  });
+
+  it('fuzz-490 shape still pays nine pips from nine units beside Rest in Peace', () => {
+    const state = setup('{4}{W}{U}{B}{R}{G}');
+    for (let i = 0; i < 8; i++) state.source(`Land ${i}`, { units: ANY });
+    state.source('Fellwar Stone', { units: [], dynamic: 'opponentLandColors' });
+    state.source('Treasure', treasure);
+    restInPeace(state);
+    expect(state.offered()).toBeDefined();
   });
 });

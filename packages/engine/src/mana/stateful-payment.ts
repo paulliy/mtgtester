@@ -468,6 +468,16 @@ export function planStatefulManaPayment(
     legacy.error.reasons.some((reason) => reason.endsWith('budget exceeded'))
   )
     return current.plan;
+  // The old search also halted on a source it cannot replay (tapOther) where nothing could pay;
+  // the current one may prove the cost impossible (`provablyImpossible`) and answer "no plan".
+  if (
+    'error' in legacy &&
+    !('error' in current) &&
+    current.plan === null &&
+    legacy.error instanceof UnmodeledCardError &&
+    legacy.error.reasons.some((reason) => reason.includes('outside the proven scope'))
+  )
+    return null;
   const [was, now] = [describeOutcome(legacy), describeOutcome(current)];
   if (was !== now)
     throw new Error(
@@ -513,6 +523,8 @@ export function searchPayment(
   /** Second phase: sacrifice sources join the final payment (see `sacrificeSource`). */
   let withSacrifice = false;
   const seen = new Set<string>();
+  /** Thrown from the search once `provablyImpossible` holds: the answer is "not payable". */
+  const rootImpossible = {};
   const referenced = referencedElsewhere(ctx);
   const unsupported = (reason: string): never => {
     throw new UnmodeledCardError(
@@ -613,30 +625,50 @@ export function searchPayment(
   // A counted amount ("X where X is the number of other creatures you control", Brigid) is fixed
   // capacity when the count can only fall (`amountCannotRiseDuringPayment`, under `frozen`): the
   // source then makes at most what it makes now, once per `{T}`, like any fixed-count source.
-  const fixedCapacity = ownAbilities.every(
-    (ability) =>
-      (ability.amount === undefined ||
-        (amountCannotRiseDuringPayment(ability.amount) &&
-          ability.amount.kind === 'countPermanents' &&
-          frozen(ability.amount.selector))) &&
-      (ability.condition === undefined ||
-        (gatedBound && gateCannotOpenDuringPayment(ability.condition))) &&
-      (ability.costs === undefined ||
-        // Each activation needs a `{T}`, or takes a permanent off the battlefield for good: a
-        // source that sacrifices itself (Reckless Barbarian: "Sacrifice this creature: Add {R}{R}")
-        // has no `{T}`, but pays out once, as a tapped one does. A sacrifice of other permanents
-        // without a `{T}` repeats, one activation per victim, and is counted that way below.
-        (ability.costs.some(
-          (cost) =>
-            cost.kind === 'tap' ||
-            (sacrificeBound && cost.kind === 'sacrificeOther') ||
-            (sacrificeSelfBound && cost.kind === 'sacrificeSelf'),
-        ) &&
-          ability.costs.every(keepsCapacity))) &&
-      (ability.onActivate ?? []).every(
-        (effect) => effect.op === 'gainLife' || effect.op === 'damageController',
-      ),
+  const capacityHolds = (
+    keeps: (cost: AbilityCost) => boolean,
+    needsActivation: (cost: AbilityCost) => boolean,
+    amountsAndGatesHold: boolean,
+  ): boolean =>
+    ownAbilities.every(
+      (ability) =>
+        (ability.amount === undefined ||
+          (amountCannotRiseDuringPayment(ability.amount) &&
+            ability.amount.kind === 'countPermanents' &&
+            frozen(ability.amount.selector))) &&
+        (ability.condition === undefined ||
+          (amountsAndGatesHold && gateCannotOpenDuringPayment(ability.condition))) &&
+        (ability.costs === undefined ||
+          // Each activation needs a `{T}`, or takes a permanent off the battlefield for good: a
+          // source that sacrifices itself (Reckless Barbarian: "Sacrifice this creature: Add
+          // {R}{R}") has no `{T}`, but pays out once, as a tapped one does. A sacrifice of other
+          // permanents without a `{T}` repeats, one activation per victim, and is counted that
+          // way below.
+          (ability.costs.some(needsActivation) && ability.costs.every(keeps))) &&
+        (ability.onActivate ?? []).every(
+          (effect) => effect.op === 'gainLife' || effect.op === 'damageController',
+        ),
+    );
+  const fixedCapacity = capacityHolds(
+    keepsCapacity,
+    (cost) =>
+      cost.kind === 'tap' ||
+      (sacrificeBound && cost.kind === 'sacrificeOther') ||
+      (sacrificeSelfBound && cost.kind === 'sacrificeSelf'),
+    gatedBound,
   );
+  // The premise of the impossibility proof below (`provablyImpossible`): every ability needs a
+  // `{T}`, and its other costs only tap, pay mana, energy or life, or sacrifice the source itself,
+  // or tap another untapped permanent ("{T}, Tap an untapped creature you control: Add one mana of
+  // any color", Jaspera Sentinel). A sacrifice of another permanent (Ashnod's Altar) is not here:
+  // it repeats, one activation per victim, and this proof counts one activation per card.
+  const tapBound =
+    premise &&
+    capacityHolds(
+      (cost) => cost.kind === 'tapOther' || (cost.kind !== 'sacrificeOther' && keepsCapacity(cost)),
+      (cost) => cost.kind === 'tap',
+      gatedBound,
+    );
   // The life the colored bound lets a pay-life source spend: what the payer has beyond the spell's
   // own life (no life comes back when this bound runs). The solver reads a `payLife` cost against
   // this total, and its default of 0 would call every such source unpayable.
@@ -837,7 +869,10 @@ export function searchPayment(
       )
         return null;
     }
-    if (++states > bounds.states) unsupported('mana activation state budget exceeded');
+    if (++states > bounds.states) {
+      if (provablyImpossible()) throw rootImpossible;
+      unsupported('mana activation state budget exceeded');
+    }
     if (sources.length >= bounds.activations) {
       if (candidates.length) depthPruned = true;
       return null;
@@ -1152,6 +1187,66 @@ export function searchPayment(
     return tapOnlyVisit();
   }
 
+  /**
+   * The cost cannot be paid from the sources listed now, whatever the search could still try. It
+   * runs only where the search would otherwise halt (a budget, a source it cannot replay), so a
+   * payment the search finds is found as it always was; a proof here turns a halt into "not
+   * payable". Soundness, in three steps:
+   * 1. The premise is `tapBound`: every ability of the payer's permanents needs a `{T}`, its other
+   *    costs only tap another permanent, pay mana, energy or life, or sacrifice the source, and
+   *    its riders only gain life or damage the controller. No activation then adds a permanent,
+   *    changes a characteristic, opens a gate or raises a counted amount (`premise`, `frozen`),
+   *    and tapping a permanent can only take a source away (a static that reads tapped status is
+   *    excluded by `premise`). So a source not listed now never appears, and a listed one makes
+   *    at most its ceiling (`ceilingUnits`).
+   * 2. Every ability has a `{T}` and nothing in the payment untaps, so a card is activated at
+   *    most once; a card with several abilities (Holdout Settlement) counts at the most any one
+   *    makes. A source with no `{T}` and a sacrifice of other permanents (Ashnod's Altar) repeats
+   *    and fails the premise, so a board with one is never proven here.
+   * 3. Pool plus the sum of those maxima is an upper bound on the mana the payer can ever have.
+   *    A tapOther source's `taps` requirement is dropped from the colored check (an
+   *    overestimate), and each source counts at its ceiling symbols, so the static solver
+   *    failing means no order of activations could succeed. A missed proof costs a halt, as
+   *    before; a wrong one would hide a castable spell, so any source or ceiling the argument
+   *    does not cover (a source with no `{T}`, a counted amount no ceiling bounds) leaves the
+   *    halt in place.
+   */
+  let impossibleProof: boolean | undefined;
+  const provablyImpossible = (): boolean => {
+    if (impossibleProof !== undefined) return impossibleProof;
+    impossibleProof = false;
+    if (!tapBound) return false;
+    const payer = ctx.state.players.find((p) => p.id === player.id)!;
+    const listed = sourcesFor(ctx, payer);
+    if (listed.some((source) => !source.costs.some((c) => c.kind === 'tap'))) return false;
+    const ceilings = listed.map((source) => ceilingUnits(source, frozen));
+    if (ceilings.some((units) => units === null)) return false;
+    const mostPerCard = new Map<string, number>();
+    for (const [index, source] of listed.entries())
+      mostPerCard.set(
+        source.cardId,
+        Math.max(mostPerCard.get(source.cardId) ?? 0, ceilings[index]!.length),
+      );
+    const capacity = [...mostPerCard.values()].reduce((sum, count) => sum + count, 0);
+    const pips = totalPips(cost) - (cost.phyrexian?.length ?? 0);
+    if (payer.manaEntries.length + capacity < pips) return (impossibleProof = true);
+    if (
+      (cost.phyrexian?.length ?? 0) === 0 &&
+      planPayment(
+        cost,
+        payer.manaEntries,
+        listed.map((source, index) => {
+          const { taps: _taps, ...withoutTaps } = ceilingSource(source, ceilings[index]!);
+          return withoutTaps;
+        }),
+        allows,
+        lifeCeiling(ctx, payer),
+      ) === null
+    )
+      return (impossibleProof = true);
+    return false;
+  };
+
   // The same search over tapped sets instead of copied games, for a board where activating a
   // source only taps it and adds its mana (see `tapOnlySource`). It mirrors `visit` step for step
   // and gives the same plan; anything it cannot mirror exactly hands the payment back to `visit`.
@@ -1163,7 +1258,16 @@ export function searchPayment(
     }
     return visit(clone(ctx));
   };
-  let result = attempt();
+  const attemptOrImpossible = (): PaymentPlan | null => {
+    try {
+      return attempt();
+    } catch (error) {
+      if (error === rootImpossible) return null;
+      throw error;
+    }
+  };
+  let result = attemptOrImpossible();
+  if (result === null && impossibleProof === true) return null;
   // A cast that only a sacrifice can pay for stopped the search above at the sacrifice source
   // (`outsideScope`). Where nothing in play can give production back when a permanent leaves, solve
   // those sources with the final payment instead. The first search runs unchanged and comes first,
@@ -1174,8 +1278,9 @@ export function searchPayment(
     outsideScope = false;
     seen.clear();
     withSacrifice = true;
-    result = attempt();
+    result = attemptOrImpossible();
   }
+  if (!result && (depthPruned || outsideScope) && provablyImpossible()) return null;
   if (!result && depthPruned) unsupported('mana activation depth budget exceeded');
   if (!result && outsideScope)
     unsupported(

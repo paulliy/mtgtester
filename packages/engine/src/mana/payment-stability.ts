@@ -287,6 +287,13 @@ const RULES_IRRELEVANT_TO_PRODUCTION: ReadonlySet<string> = new Set([
   'castFromZone',
   'convoke',
   'costReduction',
+  // "If a card would be put into a graveyard from anywhere, exile it instead" (Rest in Peace) and
+  // "you may put a discarded card on top of your library" (Library of Leng) only redirect where a
+  // card goes. A payment moves a card to a graveyard only by sacrificing it; no mana ability, gate
+  // (a battlefield count), selector or dynamic production reads a graveyard (the one reading
+  // exile, Chrome Mox, reads the cards exiled with itself), so ending either gives nothing back.
+  'graveyardToExile',
+  'effectDiscardMayGoToLibraryTop',
   'grantForetell',
   'improvise',
   'kicker',
