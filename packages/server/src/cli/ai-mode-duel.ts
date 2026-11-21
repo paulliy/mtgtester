@@ -48,6 +48,7 @@ import { fileURLToPath } from 'node:url';
 import type { DecisionRequest, OracleCard, PlayerId } from '@mtg/shared';
 import { Engine, runToCompletionAsync } from '@mtg/engine';
 import { decide as botDecide, Rng } from '@mtg/bot';
+import { TABLE_ENGINE_LIMITS } from '../match/engine-limits';
 import { buildSupportedPool } from '../cards/pool';
 import { generateCommanderDeck } from '../decks/generate';
 import { DecisionTraceWriter, decisionTraceLine } from './decision-trace';
@@ -434,17 +435,21 @@ async function main(): Promise<void> {
     JSON.parse(readFileSync(resolve(FIXTURE), 'utf8')) as OracleCard[],
   );
   const decks = SEATS.map((_, i) => generateCommanderDeck(pool, { seed: `${seed}-seat${i + 1}` }));
-  const engine = new Engine({
-    gameId: `mode-duel-${seed}`,
-    seed,
-    turnCap,
-    players: decks.map((d, i) => ({
-      id: SEATS[i]!,
-      deckId: `duel-${i + 1}`,
-      commanders: [d.commander],
-      cards: d.cards,
-    })),
-  });
+  // Table limits, so a runaway loop halts the game (and is reported) instead of eating memory.
+  const engine = new Engine(
+    {
+      gameId: `mode-duel-${seed}`,
+      seed,
+      turnCap,
+      players: decks.map((d, i) => ({
+        id: SEATS[i]!,
+        deckId: `duel-${i + 1}`,
+        commanders: [d.commander],
+        cards: d.cards,
+      })),
+    },
+    TABLE_ENGINE_LIMITS,
+  );
 
   console.log(
     `${offline ? 'OFFLINE (no network, numbers are a wiring check) — ' : ''}Seed ${seed}, turn cap ${turnCap}`,
