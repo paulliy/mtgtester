@@ -40,6 +40,33 @@ interface RepeatRecord {
   chosen: EngineActionOption;
   /** Consecutive identical (menu, option) actions ending with that one. */
   count: number;
+  /** The player's finite resources when they took it (see `resourcesOf`). */
+  resources: readonly number[];
+}
+
+/**
+ * What a repeated action could use up: life, energy, cards in hand and library, permanents, and
+ * untapped permanents. An action that lowers any of them cannot repeat forever, so it is a finite
+ * choice the player may keep making ("Pay 1 life: +1/+1" until they stop), not a loop CR 732.4
+ * asks them to number. A repeat that lowers none of them (an untap loop paid from the creatures it
+ * untaps, a free life gain) can go on forever, and only that is counted toward the limit.
+ */
+function resourcesOf(ctx: GameContext, player: EnginePlayerState): number[] {
+  let permanents = 0;
+  let untapped = 0;
+  for (const perm of ctx.state.battlefield) {
+    if (perm.controllerId !== player.id) continue;
+    permanents += 1;
+    if (!perm.tapped) untapped += 1;
+  }
+  return [
+    player.life,
+    player.energy ?? 0,
+    player.hand.length,
+    player.library.length,
+    permanents,
+    untapped,
+  ];
 }
 
 function optionSignature(option: EngineActionOption): string {
@@ -156,7 +183,10 @@ export function* runPrioritySequence(ctx: GameContext): GameGen<void> {
     const fullMenu = options;
     let sameMenu = false;
     if (lastAction !== null && lastAction.player === player.id) {
-      sameMenu = menuSignature(options) === menuSignature(lastAction.options);
+      const before = lastAction.resources;
+      sameMenu =
+        menuSignature(options) === menuSignature(lastAction.options) &&
+        !resourcesOf(ctx, player).some((value, i) => value < (before[i] ?? value));
       if (sameMenu && lastAction.count >= OPTIONAL_LOOP_ITERATIONS) {
         const blocked = optionSignature(lastAction.chosen);
         const kept = options.filter(
@@ -230,6 +260,7 @@ export function* runPrioritySequence(ctx: GameContext): GameGen<void> {
         options: fullMenu,
         chosen,
         count: repeat && previous !== null ? previous.count + 1 : 1,
+        resources: resourcesOf(ctx, player),
       };
       yield* applyPriorityAction(ctx, player, payload, outcome);
       passesInARow = 0;

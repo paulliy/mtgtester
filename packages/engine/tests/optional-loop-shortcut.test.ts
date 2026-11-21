@@ -35,6 +35,16 @@ const cantrip = () =>
     oracleText: '{0}: You gain 1 life. Activate only as a sorcery.',
   });
 
+const lifePump = () =>
+  oracle({
+    name: 'Test Life Pump',
+    typeLine: 'Creature — Horror',
+    manaCost: '{B}',
+    power: '1',
+    toughness: '1',
+    oracleText: 'Pay 1 life: This creature gets +1/+1 until end of turn.',
+  });
+
 function pod(): GameContext {
   const ctx = createGame(
     gameConfig(
@@ -148,5 +158,29 @@ describe('optional loop backstop (CR 732.4)', () => {
     // 3 breaks x 5 activations, then a final streak that is capped at the limit.
     expect(breaks).toBe(3);
     expect(activations).toBe(15 + OPTIONAL_LOOP_ITERATIONS);
+  });
+
+  it('does not cap a repeated action that spends a finite resource (life)', () => {
+    const ctx = pod();
+    spawn(ctx, 'P1', lifePump());
+    const startLife = ctx.state.players[0]!.life;
+    const wanted = OPTIONAL_LOOP_ITERATIONS + 5;
+    let activations = 0;
+    pump(
+      runPrioritySequence(ctx),
+      (d) => {
+        if (d.player !== 'P1') return { index: 0, targets: new Map() };
+        const i = d.options.findIndex((o) => o.description.includes('Pay 1 life'));
+        if (activations < wanted) {
+          expect(i).toBeGreaterThanOrEqual(0);
+          activations += 1;
+          return { index: i, targets: new Map() };
+        }
+        return { index: d.options.findIndex((o) => o.type === 'pass'), targets: new Map() };
+      },
+      { strict: true },
+    );
+    expect(activations).toBe(wanted);
+    expect(ctx.state.players[0]!.life).toBe(startLife - wanted);
   });
 });
