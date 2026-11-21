@@ -48,7 +48,14 @@ import type { ManaUnit } from '../mana/cost';
 import { manaValueOf, parseManaCost, type ParsedManaCost } from '../mana/cost';
 import type { EnginePermanent, GameContext } from '../state/types';
 import { cardZoneCandidate } from '../state/queries';
-import { getCached, sampleCacheHit, scopedDigestOf, setCached } from './layer-cache';
+import {
+  battlefieldHasCard,
+  getCached,
+  sampleCacheHit,
+  scopedDigestOf,
+  setCached,
+  tappedDigestForChecks,
+} from './layer-cache';
 import { countWork } from '../work-counters';
 import { readsOf, writesOf } from './layer-dependency';
 
@@ -629,18 +636,32 @@ export function matchesSelector(
   );
 }
 
-function affects(ctx: GameContext, effect: LayerEffect, entry: Working): boolean {
+/**
+ * Selector candidates by card id for one unchanging working set, so the many effects a
+ * dependency probe matches against that set build each permanent's candidate once
+ * (`dependencyProbe`). A candidate is a pure function of the entry's characteristics and state
+ * no layer pass changes, so a cached one is exactly what `candidateOf` would build again.
+ */
+type CandidateCache = Map<string, SelectorCandidate>;
+
+function affects(
+  ctx: GameContext,
+  effect: LayerEffect,
+  entry: Working,
+  candidates?: CandidateCache,
+): boolean {
   if (effect.applies.kind === 'fixed') {
     return (
       effect.applies.cardIds.includes(entry.perm.cardId) &&
       (effect.applies.objectIds === undefined || effect.applies.objectIds.includes(entry.perm.id))
     );
   }
-  return selectMatches(
-    candidateOf(ctx, entry.perm, entry.chars),
-    effect.applies.selector,
-    effect.applies.source,
-  );
+  let candidate = candidates?.get(entry.perm.cardId);
+  if (candidate === undefined) {
+    candidate = candidateOf(ctx, entry.perm, entry.chars);
+    candidates?.set(entry.perm.cardId, candidate);
+  }
+  return selectMatches(candidate, effect.applies.selector, effect.applies.source);
 }
 
 /** The static effect source's controller — the only scope the layer engine can offer a `Value`. */
@@ -802,7 +823,18 @@ function applyOpTo(
   }
 }
 
-function applyOne(ctx: GameContext, work: WorkMap, effect: LayerEffect): void {
+/**
+ * Apply `effect` to every entry of `work` it affects. `candidates`, when given, must describe
+ * `work` as it is on entry: each entry is matched before the op changes it, and the op changes
+ * only that entry, so the cache stays exact for every match this call makes (and, by the same
+ * argument, for a fresh clone of that `work`). The caller discards it afterwards.
+ */
+function applyOne(
+  ctx: GameContext,
+  work: WorkMap,
+  effect: LayerEffect,
+  candidates?: CandidateCache,
+): void {
   if (!effectExists(ctx, work, effect)) return;
   const scope = scopeOf(ctx, work, effect);
   // "For each time it has attacked this turn" reads the affected object, not the source.
@@ -813,7 +845,7 @@ function applyOne(ctx: GameContext, work: WorkMap, effect: LayerEffect): void {
     ((typeof op.power !== 'number' && op.power.kind === 'timesAttackedThisTurn') ||
       (typeof op.toughness !== 'number' && op.toughness.kind === 'timesAttackedThisTurn'));
   for (const entry of work.values()) {
-    if (!affects(ctx, effect, entry)) continue;
+    if (!affects(ctx, effect, entry, candidates)) continue;
     applyOpTo(
       ctx,
       entry.chars,
@@ -830,11 +862,16 @@ function applyOne(ctx: GameContext, work: WorkMap, effect: LayerEffect): void {
  * objects it applies to, and what it would do to them. Two fingerprints differing means the
  * effect's behavior changed.
  */
-function fingerprint(ctx: GameContext, work: WorkMap, effect: LayerEffect): string {
+function fingerprint(
+  ctx: GameContext,
+  work: WorkMap,
+  effect: LayerEffect,
+  candidates: CandidateCache,
+): string {
   if (!effectExists(ctx, work, effect)) return '<nonexistent>';
   const targets: string[] = [];
   for (const entry of work.values()) {
-    if (affects(ctx, effect, entry)) targets.push(entry.perm.cardId);
+    if (affects(ctx, effect, entry, candidates)) targets.push(entry.perm.cardId);
   }
   const op = effect.op;
   // Resolve any `Value`s, so an effect whose *magnitude* changes counts as changed too.
@@ -897,24 +934,39 @@ function dependencyProbe(
   ctx: GameContext,
   work: WorkMap,
   counted = true,
-): (effect: LayerEffect, other: LayerEffect) => boolean {
+): {
+  dependsOn: (effect: LayerEffect, other: LayerEffect) => boolean;
+  /** Candidates of `work` as it is now; valid until `work` next changes. */
+  candidates: CandidateCache;
+} {
   const before = new Map<LayerEffect, string>();
-  const trials = new Map<LayerEffect, WorkMap>();
-  return (effect, other) => {
+  const trials = new Map<LayerEffect, { work: WorkMap; candidates: CandidateCache }>();
+  // `work` and each trial stay unchanged while the probe reads them, so each keeps one cache.
+  const candidates: CandidateCache = new Map();
+  const dependsOn = (effect: LayerEffect, other: LayerEffect): boolean => {
     let fingerprintBefore = before.get(effect);
     if (fingerprintBefore === undefined) {
-      fingerprintBefore = fingerprint(ctx, work, effect);
+      fingerprintBefore = fingerprint(ctx, work, effect, candidates);
       before.set(effect, fingerprintBefore);
     }
     let trial = trials.get(other);
     if (trial === undefined) {
       if (counted) countWork('layerDependencyProbes');
-      trial = cloneWork(work);
-      applyOne(ctx, trial, other);
+      // The clone matches `work` until `other` changes it, entry by entry after its match, so
+      // its matches can read `work`'s candidates. Every one is built from `work` first: a
+      // candidate shares its entry's arrays, which the op changes in place, so one built from
+      // the clone must never enter this cache.
+      for (const entry of work.values())
+        if (!candidates.has(entry.perm.cardId))
+          candidates.set(entry.perm.cardId, candidateOf(ctx, entry.perm, entry.chars));
+      const trialWork = cloneWork(work);
+      applyOne(ctx, trialWork, other, candidates);
+      trial = { work: trialWork, candidates: new Map() };
       trials.set(other, trial);
     }
-    return fingerprint(ctx, trial, effect) !== fingerprintBefore;
+    return fingerprint(ctx, trial.work, effect, trial.candidates) !== fingerprintBefore;
   };
+  return { dependsOn, candidates };
 }
 
 /**
@@ -967,14 +1019,15 @@ function applyGroup(
     // 613.8b: the earliest-timestamped effect that depends on nothing still unapplied.
     const probe = dependencyProbe(ctx, work);
     const check = verify ? dependencyProbe(ctx, work, false) : probe;
+    const { candidates } = probe;
     const dependsOn = (effect: LayerEffect, other: LayerEffect): boolean => {
       const may = mayDepend(effect, other);
-      if (verify && !may && check(effect, other)) {
+      if (verify && !may && check.dependsOn(effect, other)) {
         throw new Error(
           `engine bug: layer dependency prefilter said independent, probe says dependent.\neffect: ${JSON.stringify(effect.op)}\nother:  ${JSON.stringify(other.op)}`,
         );
       }
-      return may && probe(effect, other);
+      return may && probe.dependsOn(effect, other);
     };
     const next = remaining.findIndex((effect, i) =>
       remaining.every((other, j) => j === i || !dependsOn(effect, other)),
@@ -984,7 +1037,8 @@ function applyGroup(
       for (const effect of remaining) applyOne(ctx, work, effect);
       return;
     }
-    applyOne(ctx, work, remaining.splice(next, 1)[0] as LayerEffect);
+    // The probe's candidates still describe `work`, which nothing has changed since.
+    applyOne(ctx, work, remaining.splice(next, 1)[0] as LayerEffect, candidates);
   }
 }
 
@@ -1252,7 +1306,16 @@ export function computeAllCharacteristics(
 
   if (cached !== undefined && cached.digest === digest && cached.extraCardId === extraCardId) {
     countWork('layerCacheHits');
-    if (!VERIFY_CACHE && !sampleCacheHit(ctx)) return cached.map;
+    // A verified pass that read no tapped status is verified again once the board's tapped
+    // status changes (`sampleCacheHit`). Strict games only: production never samples.
+    if (
+      cached.verified === true &&
+      !cached.usedTapped &&
+      ctx.strictInvariants === true &&
+      tappedDigestForChecks(ctx, extra, includeGraveyards) !== cached.verifiedTappedDigest
+    )
+      delete cached.verified;
+    if (!VERIFY_CACHE && !sampleCacheHit(ctx, cached)) return cached.map;
     const fresh = runLayers(ctx, permsFor(ctx, extra));
     const a = canonicalJson(cached.map);
     const b = canonicalJson(fresh.map);
@@ -1261,6 +1324,9 @@ export function computeAllCharacteristics(
         `engine bug: stale layer cache — digest collided or an input is missing from it.\ncached: ${a}\nfresh:  ${b}`,
       );
     }
+    cached.verified = true;
+    if (!cached.usedTapped)
+      cached.verifiedTappedDigest = tappedDigestForChecks(ctx, extra, includeGraveyards);
     return cached.map;
   }
 
@@ -1333,7 +1399,7 @@ export function battlefieldCharacteristics(
 export function computeCharacteristics(ctx: GameContext, perm: EnginePermanent): Characteristics {
   // Only pass `extra` when the permanent is genuinely off the battlefield — otherwise every
   // query for a different permanent would be a distinct cache key and never hit.
-  const onBattlefield = ctx.state.battlefield.some((p) => p.cardId === perm.cardId);
+  const onBattlefield = battlefieldHasCard(ctx, perm.cardId);
   const all = computeAllCharacteristics(ctx, onBattlefield ? undefined : perm);
   const chars = all.get(perm.cardId);
   if (chars === undefined) throw new Error(`engine bug: no characteristics for ${perm.name}`);

@@ -37,11 +37,20 @@ const STABLE_SELECTOR_KINDS: ReadonlySet<Selector['kind']> = new Set<Selector['k
   'isMonocolored',
 ]);
 
-function stableSelector(selector: Selector): boolean {
+export function stableSelector(selector: Selector): boolean {
   if (selector.kind === 'allOf' || selector.kind === 'anyOf')
     return selector.of.every(stableSelector);
   if (selector.kind === 'not') return stableSelector(selector.of);
   return STABLE_SELECTOR_KINDS.has(selector.kind);
+}
+
+/**
+ * True when a board count stays what it is now through a payment in which no permanent leaves:
+ * a count of permanents over a stable selector, which a tap, a mana payment or a life rider cannot
+ * change. The caller must know that nothing in the payment sacrifices.
+ */
+export function countFixedWhileNothingLeaves(condition: Condition): boolean {
+  return condition.kind === 'countPermanents' && stableSelector(condition.selector);
 }
 
 /**
@@ -83,6 +92,35 @@ const PAYMENT_STATE_KINDS: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * Condition kinds a payment cannot change: a board count (its selector is checked on its own), the
+ * turn and step, a permanent's own entry, cast and kicker history, a choice already made, the
+ * monarch, the number of opponents. "Has hexproof as long as it entered this turn" (Zurgo and
+ * Ojutai) broke the premise for every payment at the table and halted fuzz-26 and fuzz-169.
+ * Combinators pass through, and each child is checked. Counts of what happened this turn are not
+ * here: the payment belongs to a cast that may itself be counted.
+ */
+const PAYMENT_FIXED_CONDITION_KINDS: ReadonlySet<string> = new Set([
+  'countPermanents',
+  'allOf',
+  'anyOf',
+  'not',
+  'enteredThisTurn',
+  'yourTurn',
+  'notYourTurn',
+  'duringStep',
+  'duringYourMainPhase',
+  'beforeAttackersDeclared',
+  'castDuringYourMainPhase',
+  'wasKicked',
+  'sourceWasCast',
+  'escaped',
+  'giftPromised',
+  'chosenOptionIs',
+  'opponentIsMonarch',
+  'opponentCount',
+]);
+
+/**
  * Whether anything in `value` could read state that a fixed-capacity payment changes: a kind in
  * `PAYMENT_STATE_KINDS`, or any condition other than a board count (a life total, a turn fact, a
  * source's own status).
@@ -92,7 +130,11 @@ function readsPaymentState(value: unknown, underCondition = false): boolean {
   if (value === null || typeof value !== 'object') return false;
   const record = value as Record<string, unknown>;
   if (typeof record['kind'] === 'string' && PAYMENT_STATE_KINDS.has(record['kind'])) return true;
-  if (underCondition && record['kind'] !== undefined && record['kind'] !== 'countPermanents')
+  if (
+    underCondition &&
+    record['kind'] !== undefined &&
+    !PAYMENT_FIXED_CONDITION_KINDS.has(String(record['kind']))
+  )
     return true;
   return Object.entries(record).some(([key, child]) =>
     readsPaymentState(child, key === 'condition' ? true : underCondition && key !== 'selector'),
@@ -242,6 +284,28 @@ const RULES_IRRELEVANT_TO_PRODUCTION: ReadonlySet<string> = new Set([
   'additionalLandDrops',
   'artifactTokenCreatesThopter',
   'counterPlacementReplacement',
+  // Damage modifiers change only how much damage is dealt. No source's production reads damage,
+  // and ending one never raises a life total, so the life checks keep their premise too (Neriv,
+  // Heart of the Storm on a Treasure board dropped the bound and halted fuzz-26).
+  'damageDoubled',
+  'damageDoubledToOpponents',
+  'damageHalvedToYou',
+  'preventCombatDamageToSelf',
+  // Neither changes a source's production when it ends: a cost the opponents pay to target
+  // (Terror of the Peaks, fuzz-26), rules for cards off the battlefield or not yet drawn, how a
+  // token's or another permanent's entry is replaced (no fixed-capacity activation makes one), or
+  // an untap step.
+  'targetLifeTax',
+  'alsoTypesOffBattlefield',
+  'beginOnBattlefieldFromOpeningHand',
+  'createClueFoodAndTreasure',
+  'effectDiscardMayGoToLibraryTop',
+  'graveyardToExile',
+  'lookTopLibrary',
+  'revealTopLibrary',
+  'otherPermanentsEnterTapped',
+  'tokenCountMultiplier',
+  'untapDuringOthersUntapSteps',
   'spellCastLimit',
   'spellCostIncrease',
   // A trigger waits for the stack, so doubling, adding to or suppressing one changes nothing a
@@ -326,5 +390,79 @@ export function leavingPermanentsKeepProduction(
       leavingByDefinition.set(definition, answer);
     }
     return answer.general && (!powerGated || answer.power);
+  });
+}
+
+/**
+ * A self-sacrificing source (a Treasure: "{T}, Sacrifice this artifact: Add one mana of any
+ * color") changes the board by more than a tap: it leaves the battlefield, and a card goes to its
+ * owner's graveyard. Under `characteristicsFixedDuringPayment` no static reads tapped status,
+ * life or any condition but a board count, so a departure can add capacity only through a static
+ * that reads a count, a zone or a graveyard ("as long as you control no artifacts, lands lose all
+ * abilities", "for each artifact", threshold); a gate that counts up ("activate only if you control
+ * three or more artifacts", `gateCannotOpenDuringPayment`) can only close. So the capacity bound
+ * may count such a source when no static in play reads any of these. Conservative: one that does
+ * keeps the copying search, whichever way it would move.
+ */
+function readsBoardMembership(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(readsBoardMembership);
+  if (value === null || typeof value !== 'object') return false;
+  const record = value as Record<string, unknown>;
+  const kind = record['kind'];
+  if (typeof kind === 'string' && /count|zone|graveyard/i.test(kind)) return true;
+  return Object.values(record).some(readsBoardMembership);
+}
+
+/** Layer-7 keys: a static that only changes power and toughness. */
+const PT_ONLY_KEYS: ReadonlySet<string> = new Set(['layer', 'sublayer', 'power', 'toughness']);
+
+function membershipStatics(
+  staticEffects: readonly unknown[],
+  ruleStatics: readonly unknown[],
+  gated: boolean,
+) {
+  const matters = staticEffects.filter((effect) => {
+    const op = (effect as { op?: Record<string, unknown> }).op ?? {};
+    if (OPS_OUTSIDE_PAYMENT.some((key) => key in op)) return false;
+    // Power and toughness reach a payment only through a gate's selector ("activate only if you
+    // control a creature with power 4 or greater"); with no gate, a P/T static cannot add capacity.
+    return gated || !Object.keys(op).every((key) => PT_ONLY_KEYS.has(key));
+  });
+  // A rule no source's production reads (an attack tax, a cost increase) cannot add capacity
+  // whatever it counts: Nils, Discipline Enforcer's tax counts counters, and kept every Treasure
+  // board at the table off the bound (fuzz-131).
+  const rules = ruleStatics.filter(
+    (rule) => !RULES_IRRELEVANT_TO_PRODUCTION.has(String((rule as { kind?: unknown }).kind)),
+  );
+  return !readsBoardMembership(matters) && !readsBoardMembership(rules);
+}
+
+const departureSafeByDefinition = new WeakMap<object, boolean>();
+
+const departureSafeGated = new WeakMap<object, boolean>();
+
+/**
+ * `gated`: some mana ability of the payer has an activation condition, so statics that only
+ * change power and toughness count too.
+ */
+export function departuresCannotAddCapacity(
+  definitions: readonly StaticHolder[],
+  gated: boolean,
+): boolean {
+  const cache = gated ? departureSafeGated : departureSafeByDefinition;
+  return definitions.every((definition) => {
+    let answer = cache.get(definition);
+    if (answer === undefined) {
+      answer =
+        membershipStatics(definition.staticEffects, definition.ruleStatics, gated) &&
+        (definition.backFace === undefined ||
+          membershipStatics(
+            definition.backFace.staticEffects,
+            definition.backFace.ruleStatics,
+            gated,
+          ));
+      cache.set(definition, answer);
+    }
+    return answer;
   });
 }

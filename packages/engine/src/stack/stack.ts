@@ -12,11 +12,13 @@ import { TREASURE } from '../cards/tokens';
 import { captureResolutionTargets } from '../targets/resolution';
 import { emit, debug } from '../log/log';
 import {
+  atResolutionDepth,
   createTokens,
   makePermanent,
   moveObject,
   paysEntersUnlessDiscard,
   queueTriggersForObject,
+  stackObjectDepth,
 } from '../state/objects';
 import { roomDoorOf } from '../cards/spell-faces';
 import { spellDefinitionOf, stackSourceTraits } from '../state/queries';
@@ -29,6 +31,14 @@ import type {
 
 /** Resolve the top object of the stack. Caller guarantees the stack is nonempty. */
 export function* resolveTopOfStack(ctx: GameContext): GameGen<void> {
+  const top = ctx.state.stack.at(-1);
+  if (top === undefined) throw new Error('engine bug: resolveTopOfStack on empty stack');
+  // A token loop's budget (`resolutionDepth`): how deep this object sits in the turn's chain.
+  const depth = stackObjectDepth(ctx, top);
+  yield* atResolutionDepth(ctx, depth, () => resolveTop(ctx));
+}
+
+function* resolveTop(ctx: GameContext): GameGen<void> {
   const s = ctx.state;
   const top = s.stack.pop();
   if (top === undefined) throw new Error('engine bug: resolveTopOfStack on empty stack');

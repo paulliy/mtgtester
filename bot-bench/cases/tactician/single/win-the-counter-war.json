@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "id": "win-the-counter-war",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Discipline: the last counterspell protects our Wrath from a Negate",
+  "skills": ["interaction-discipline", "threat-assessment", "stack-interaction"],
+  "briefing": "On P1's turn, P1 casts Wrath of God into two opposing boards of big creatures. P2 answers with Negate targeting the Wrath. P1 holds Counterspell, its last counterspell, with two Islands untapped. Negate itself is a cheap spell, but what it counters is P1's sweeper.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Wrath of God", "Counterspell", "Divination"],
+        "battlefield": ["Plains", "Plains", "Plains", "Plains", "Island", "Island"]
+      },
+      "P2": {
+        "life": 30,
+        "hand": ["Negate", "Island"],
+        "battlefield": [
+          "Island",
+          "Island",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Kalonian Tusker",
+          "Leatherback Baloth",
+          "Craterhoof Behemoth"
+        ]
+      },
+      "P3": {
+        "life": 28,
+        "hand": ["Mountain"],
+        "battlefield": ["Mountain", "Mountain", "Mountain", "Serra Angel", "Shivan Dragon"]
+      },
+      "P4": {
+        "life": 31,
+        "hand": ["Divination"],
+        "battlefield": ["Plains", "Plains", "Island", "Island"]
+      }
+    }
+  },
+  "setup": [
+    {
+      "player": "P1",
+      "choose": "Cast Wrath of God"
+    },
+    {
+      "player": "P2",
+      "choose": "Cast Negate",
+      "targets": ["Wrath of God"]
+    }
+  ],
+  "reference": {
+    "analysis": "P1, at 30 life with no creatures, faces Craterhoof Behemoth, Leatherback Baloth and Kalonian Tusker from P2 and Serra Angel and Shivan Dragon from P3. Wrath of God resolving clears all five. Negate would counter it. Counterspell is P1's last counterspell, but the spell it protects is the most valuable card on the stack: spending it on the Negate is the reason to hold it. Neither board is lethal yet (21 power against 30 life), so the hold is a real choice.",
+    "options": [
+      {
+        "label": "Counter the Negate",
+        "when": {
+          "choose": "Cast Counterspell",
+          "targets": ["Negate"]
+        },
+        "grade": "best",
+        "why": "Keeps Wrath of God, which answers five creatures."
+      },
+      {
+        "label": "Counter our own Wrath",
+        "when": {
+          "choose": "Cast Counterspell",
+          "targets": ["Wrath of God"]
+        },
+        "grade": "blunder",
+        "why": "Counters P1's own sweeper and spends the last counterspell doing it."
+      },
+      {
+        "label": "Pass and let the Wrath be countered",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "blunder",
+        "why": "Loses the sweeper to a two-mana spell while two strong boards stay."
+      },
+      {
+        "label": "Yield until end of turn",
+        "when": {
+          "choose": "Pass and yield"
+        },
+        "grade": "blunder",
+        "why": "Same as passing."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Not a reviewed answer."
+    }
+  },
+  "table": {
+    "policy": "passive"
+  }
+}

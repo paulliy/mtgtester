@@ -15,6 +15,7 @@ import type {
   PermanentView,
   PlayerId,
   PlayerView,
+  StackObjectView,
   TargetChoice,
 } from '@mtg/shared';
 import { NO_ATTACK_TARGET } from '@mtg/shared';
@@ -41,6 +42,8 @@ import {
   type CastCandidate,
   type CombatBody,
 } from './tactics';
+import { lastAnswerKinds, publicLethal, type AnswerKind } from './answers';
+import { roleScale, styleProfile } from './styles';
 import { WEIGHTS } from './weights';
 
 const P = WEIGHTS.policy;
@@ -138,6 +141,32 @@ export function traitsFor(ctx: PolicyContext, name: string | undefined): CardTra
 
 /** A permanent's worth in LEP to whoever controls it. */
 export function permanentValue(p: PermanentView, ctx: PolicyContext): number {
+  return (
+    permanentBaseValue(p, ctx) + (isCommanderName(p.name, ctx) ? P.commanderPermanentBonus : 0)
+  );
+}
+
+/**
+ * `commanderValue`: whether `name` is a commander at this table, ours or an opponent's, so worth
+ * more than its body: it comes back taxed, and it is what the deck is built around.
+ */
+function isCommanderName(name: string, ctx: PolicyContext): boolean {
+  return fixOn(ctx, 'commanderValue') && commanderNamed(name, ctx);
+}
+
+/** Whether `name` is a commander at this table, whatever the fixes. */
+function commanderNamed(name: string, ctx: PolicyContext): boolean {
+  const names = once(ctx, 'commanderNames', () => {
+    const { view } = ctx;
+    return new Set([
+      ...(view.commanders ?? []).map((c) => c.name),
+      ...view.opponents.flatMap((o) => (o.commanders ?? []).map((c) => c.name)),
+    ]);
+  });
+  return names.has(name);
+}
+
+function permanentBaseValue(p: PermanentView, ctx: PolicyContext): number {
   if (isCreaturePermanent(p)) {
     const w = WEIGHTS.combat;
     return (
@@ -322,6 +351,20 @@ function optionScore(
     const pending = fixOn(ctx, 'ownStack') ? (pendingDamage(ctx).get(option) ?? 0) : 0;
     const player = ctx.view.opponents.find((o) => o.seat === option);
     if (player !== undefined && pending > 0 && player.life - pending <= 0) return -1;
+    // Damage that leaves the player alive is worth the damage, not a whole player: two points at
+    // someone on 30 life must not outrank killing a creature. Aggression and the style scale it
+    // for racing. Damage that kills the player is worth the player on top of that damage, so no
+    // scale ever ranks five points at a healthy player above finishing one in reach.
+    if (player !== undefined && damage !== null && fixOn(ctx, 'faceDamage')) {
+      const aggression = clamp01(ctx.steering?.aggression ?? P.defaultAggression);
+      const racing =
+        damage *
+        P.faceDamagePerLife *
+        styleProfile(ctx.steering?.style).faceDamage *
+        (0.5 + aggression);
+      const kill = damage + pending >= player.life ? c.value : 0;
+      return racing + kill + (pressure.get(c.owner) ?? 0) * P.targetPressureWeight;
+    }
     // Damage that leaves a creature alive takes only a sliver of its worth (Bolt on a 10/10).
     const creature = ctx.view.battlefield.find((p) => p.id === option);
     let share = 1;
@@ -608,6 +651,22 @@ function attackIsSafe(
   });
 }
 
+/**
+ * An unsafe attack (only made at high aggression) must be worth losing the creature. One with an attack
+ * trigger is; a lone attacker, the commander, or a 1-power body with nothing on attack is not.
+ */
+function weakRiskyAttacker(
+  attacker: PermanentView | undefined,
+  subject: AttackSubject,
+  ownCreatures: number,
+  ctx: PolicyContext,
+): boolean {
+  if (subject.hasTriggers) return false;
+  if (ownCreatures <= 1) return true;
+  if (attacker !== undefined && commanderNamed(attacker.name, ctx)) return true;
+  return subject.power <= P.riskyAttackMinPower;
+}
+
 /** Per-slot attack choices, shaped by aggression and target order. */
 export function chooseAttacks(action: LegalAction, ctx: PolicyContext): TargetChoice[] {
   const { view, steering } = ctx;
@@ -661,6 +720,7 @@ export function chooseAttacks(action: LegalAction, ctx: PolicyContext): TargetCh
     const worth = subject.power > 0 || subject.hasTriggers;
     const attack =
       worth &&
+      (safe || !weakRiskyAttacker(attacker, subject, ownCreatures.length, ctx)) &&
       subject.subjectId !== reserve &&
       (safe ? aggression >= P.safeAttackAggression : aggression >= P.riskyAttackAggression);
     return { slot: slot.slot, choice: attack ? best : NO_ATTACK_TARGET };
@@ -996,7 +1056,9 @@ function roleValue(roles: readonly CardRole[], action: LegalAction, ctx: PolicyC
         break;
       case 'removal': {
         const best = bestHostileTargetValue(action, ctx);
-        value += best === null ? P.roles.removal : Math.min(best, 30) * P.removalTargetShare;
+        const scale = roleScale(ctx.steering?.style, 'removal');
+        value +=
+          (best === null ? P.roles.removal : Math.min(best, 30) * P.removalTargetShare) * scale;
         break;
       }
       case 'wipe': {
@@ -1016,7 +1078,7 @@ function roleValue(roles: readonly CardRole[], action: LegalAction, ctx: PolicyC
         break;
       }
       default:
-        value += P.roles[role];
+        value += P.roles[role] * roleScale(ctx.steering?.style, role);
     }
   }
   return value;
@@ -1042,10 +1104,74 @@ function idleReactivePenalty(
   return 0;
 }
 
-/** Does casting this at sorcery speed break the strategist's hold-up-mana knob? */
+/** Roles worth keeping mana open for through the opponents' turns. */
+const INTERACTION: ReadonlySet<CardRole> = new Set([
+  'counter',
+  'removal',
+  'wipe',
+  'burn',
+  'protection',
+]);
+
+/**
+ * The mana the seat's held instant-speed interaction needs, or 0 when it holds none: the dearest
+ * play costing at most `holdUpMaxInteractionCost` among instants with an interaction role and
+ * flash cards in hand, and instant-speed interaction abilities on the menu.
+ */
+function heldInteractionCost(ctx: PolicyContext): number {
+  const { view, request } = ctx;
+  let cost = 0;
+  const consider = (mv: number): void => {
+    if (mv > 0 && mv <= P.holdUpMaxInteractionCost) cost = Math.max(cost, mv);
+  };
+  for (const card of view.hand) {
+    const traits = traitsFor(ctx, card.name);
+    if (traits === undefined) continue;
+    const interacts = traits.roles.some((r) => INTERACTION.has(r));
+    const flashCreature = traits.flash === true && traits.types.includes('Creature');
+    const instantSpeed = traits.types.includes('Instant') || traits.flash === true;
+    if ((instantSpeed && interacts) || flashCreature) consider(traits.manaValue);
+  }
+  for (const action of request.legalActions) {
+    if (action.type !== 'activateAbility' || action.data?.['producesMana'] === true) continue;
+    const index = abilityIndexOf(action);
+    const traits = traitsFor(ctx, sourceNameOf(action, view));
+    if (index === undefined || traits === undefined || traits.abilitySorcery?.[index] === true)
+      continue;
+    if (!(traits.abilityRoles?.[index] ?? []).some((r) => INTERACTION.has(r))) continue;
+    const shown = action.data?.['manaCost'];
+    if (typeof shown === 'string') consider(manaValueOfCost(shown));
+  }
+  return cost;
+}
+
+/** Lands and other mana-producing permanents the seat controls, tapped or not. */
+function manaBase(ctx: PolicyContext): number {
+  const { view } = ctx;
+  return view.battlefield.filter(
+    (p) =>
+      p.controller === view.seat &&
+      (isLandType(p.typeLine) || (traitsFor(ctx, p.name)?.manaUnits?.length ?? 0) > 0),
+  ).length;
+}
+
+/**
+ * Does casting this at sorcery speed break the strategist's hold-up-mana knob? Only when the seat
+ * holds cheap instant-speed interaction to use that mana on, and only once its mana base can keep
+ * the reserve and still cast a three-drop, so early development is never held back.
+ */
 function holdUpPenalty(mv: number, action: LegalAction, ctx: PolicyContext): number {
-  const want = ctx.steering?.holdUpMana ?? 0;
-  if (want <= 0 || action.data?.['instantSpeed'] === true) return 0;
+  const knob = ctx.steering?.holdUpMana ?? 0;
+  if (knob <= 0 || action.data?.['instantSpeed'] === true) return 0;
+  // The commander is the deck's plan, and a full hand discards what it does not cast.
+  if (action.data?.['sourceZone'] === 'command') return 0;
+  if (ctx.view.hand.length >= P.holdUpFullHand) return 0;
+  const want = Math.min(
+    knob,
+    once(ctx, 'heldInteraction', () => heldInteractionCost(ctx)),
+  );
+  if (want <= 0) return 0;
+  if (once(ctx, 'manaBase', () => manaBase(ctx)) - want < P.holdUpDevelopMana) return 0;
   // Each source row is one permanent. Its `count` sums every alternative mana ability, so a
   // row that makes several kinds of mana (Aether Hub, Command Tower) usually yields one per
   // tap; only a single-symbol row (Forest, Sol Ring) is taken at its count. That undercounts a
@@ -1127,9 +1253,122 @@ export function actionValue(action: LegalAction, ctx: PolicyContext): number | n
   // checks each slot alone, but no choice is legal, so never pick it.
   if (needsDistinctTargets(action) && !distinctAssignmentExists(action)) return P.impossibleTargets;
 
+  // The last answer of its kind is kept for a real threat. Applied before the strategist's knobs,
+  // so a `prioritize` on the card can still spend it.
+  if (
+    action.type === 'castSpell' &&
+    fixOn(ctx, 'scarceAnswer') &&
+    wastesLastAnswer(action, name, ctx)
+  )
+    value = Math.min(value, WEIGHTS.passBaseline - P.scarceAnswer.holdMargin);
+
   if (namedIn(steering?.prioritize, name)) value += P.prioritizeBonus;
   if (namedIn(steering?.hold, name)) value -= P.holdPenalty;
   return value;
+}
+
+// --- Answer discipline (`scarceAnswer`, ADR 0044's `scarce-answer` positions) ------------------
+
+/**
+ * Whether casting `action` spends the last counterspell or hard removal of its kind in hand on
+ * something below its threshold, with no lethal on the public board. Every last-of-its-kind answer
+ * the card would spend must be wasted for it to be held; a target the bot cannot value (an
+ * ability on the stack, an unknown card, a spell with no target) is never held.
+ */
+function wastesLastAnswer(
+  action: LegalAction,
+  name: string | undefined,
+  ctx: PolicyContext,
+): boolean {
+  const { view, request, knowledge } = ctx;
+  if (knowledge === undefined) return false;
+  const castId = action.interaction?.kind === 'source' ? action.interaction.sourceId : undefined;
+  const last = lastAnswerKinds(name, castId, view, knowledge);
+  if (last.length === 0) return false;
+  if (once(ctx, 'publicLethal', () => publicLethal(view, request, knowledge))) return false;
+  return last.every((kind) => {
+    const threat = answerThreat(kind, action, ctx);
+    const style = styleProfile(ctx.steering?.style);
+    const floor =
+      kind === 'counter'
+        ? P.scarceAnswer.minCounterThreat * style.counterThreshold
+        : P.scarceAnswer.minRemovalThreat * style.removalThreshold;
+    return threat !== null && threat < floor;
+  });
+}
+
+/**
+ * What countering an opposing spell protects: when it targets the seat's own spells on the stack
+ * (a Negate aimed at our Wrath), the threat of the best of them. A counter war is fought over the
+ * spell being countered, not over the counterspell's own size.
+ */
+function protectedThreat(item: StackObjectView, ctx: PolicyContext): number {
+  const { view } = ctx;
+  let best = -Infinity;
+  for (const id of item.targets) {
+    const ours = view.stack.find((entry) => entry.id === id && entry.controller === view.seat);
+    if (ours === undefined) continue;
+    const traits = traitsFor(ctx, ours.description);
+    if (traits === undefined) continue;
+    const commander = isCommanderName(ours.description, ctx) ? P.commanderPermanentBonus : 0;
+    best = Math.max(best, spellThreat(traits) + commander);
+  }
+  return best;
+}
+
+/** What an answer of `kind` would hit, on its own scale; null when the bot cannot tell. */
+function answerThreat(kind: AnswerKind, action: LegalAction, ctx: PolicyContext): number | null {
+  const { view } = ctx;
+  if (kind === 'counter') {
+    // A mode that counters nothing (Izzet Charm's damage) is not spending the counter.
+    if (action.data?.['modeLabel'] !== undefined && !targetsStack(view, action)) return null;
+    const theirs = view.stack.filter((item) => item.controller !== view.seat);
+    const options = new Set((action.targets ?? []).flatMap((t) => t.options));
+    const top = view.stack.at(-1);
+    const hits =
+      options.size > 0
+        ? theirs.filter((item) => options.has(item.id))
+        : top !== undefined && top.controller !== view.seat
+          ? [top]
+          : [];
+    if (hits.length === 0) return null;
+    let best = -Infinity;
+    for (const item of hits) {
+      // A spell is shown by its card name; an ability's description is not one.
+      const traits = traitsFor(ctx, item.description);
+      if (traits === undefined) return null;
+      const commander = isCommanderName(item.description, ctx) ? P.commanderPermanentBonus : 0;
+      best = Math.max(best, spellThreat(traits) + commander, protectedThreat(item, ctx));
+    }
+    return best;
+  }
+  if (kind === 'hardRemoval') {
+    let best: number | null = null;
+    for (const slot of action.targets ?? []) {
+      for (const option of slot.options) {
+        const p = view.battlefield.find((x) => x.id === option);
+        if (p === undefined || p.controller === view.seat) continue;
+        const bonus =
+          isCreaturePermanent(p) && fixOn(ctx, 'lethalTargets')
+            ? lethalRemovalBonus(p, ctx, action)
+            : 0;
+        const value = permanentValue(p, ctx) + bonus;
+        best = best === null ? value : Math.max(best, value);
+      }
+    }
+    return best;
+  }
+  // A wipe is already valued by what it removes on each side.
+  return null;
+}
+
+/** A spell's threat: its mana value, plus a bonus for an effect that swings a game at any cost. */
+function spellThreat(traits: CardTraits): number {
+  const big =
+    traits.roles.includes('wipe') ||
+    traits.roles.includes('extraTurn') ||
+    traits.massPump !== undefined;
+  return traits.manaValue + (big ? P.scarceAnswer.bigEffectBonus : 0);
 }
 
 // --- ADR 0043: yielding, lethal spells, casting order, land colours ---------------------------
@@ -1347,6 +1586,14 @@ const GAIN_CHOICES: ReadonlySet<string> = new Set([
   'returnToHand',
   'castFree',
 ]);
+/**
+ * `costChoices`: a permanent sacrificed to pay an activation cost (Ashnod's Altar's victim) is a
+ * loss like any other sacrifice. Without it the bot has no opinion and its seeded tie-break picks.
+ */
+function isLossChoice(type: string, ctx: PolicyContext): boolean {
+  return LOSS_CHOICES.has(type) || (type === 'sacrificeCost' && fixOn(ctx, 'costChoices'));
+}
+
 /** Opt-out choices that score below opting in. */
 const DECLINES: ReadonlySet<string> = new Set([
   'findNothing',
@@ -1407,7 +1654,7 @@ export function choiceValue(action: LegalAction, ctx: PolicyContext): number | n
   const id = subjectOf(action, ctx);
   if (id !== undefined) {
     const value = subjectValue(id, action, ctx);
-    if (value !== null && LOSS_CHOICES.has(action.type)) return P.choiceBase - value;
+    if (value !== null && isLossChoice(action.type, ctx)) return P.choiceBase - value;
     if (value !== null && GAIN_CHOICES.has(action.type)) return P.choiceBase + value;
   }
   if (GAIN_CHOICES.has(action.type)) return P.choiceBase;

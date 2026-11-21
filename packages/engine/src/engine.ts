@@ -133,6 +133,14 @@ export interface EngineOptions {
    * table game gets it with no new stored limit; unlimited when both are absent.
    */
   maxTurnObjects?: number;
+  /**
+   * How deep one turn's token chain may run before the game halts: a token whose event triggers
+   * an ability that creates a token, whose event triggers another, and so on. A loop that grows
+   * the board adds one step per round and halts within about a hundred rounds; a large legal turn
+   * stays a step or two deep, however many objects it makes. Defaults to
+   * `DEFAULT_MAX_TOKEN_CHAIN_DEPTH` whenever `maxObjects` is set; unlimited when both are absent.
+   */
+  maxTokenChainDepth?: number;
 }
 
 /**
@@ -142,8 +150,20 @@ export interface EngineOptions {
  * 173 and one game 544. Without strict invariants (as tables run) a board-growing loop reached
  * 1,000 objects in about a second, 2,000 in 6 s, 4,000 in 37 s and 8,000 in 5 min, so a table's
  * 20,000 per game would take hours (each iteration costs more as the board grows).
+ *
+ * 2026-11-20 (#46): legal turns pass 1,000. Rabble Rousing with Champion of Lambholt created
+ * 2,272 objects in one turn of fuzz-203 and Old Gnawbone 1,536 in fuzz-212, and both games went
+ * on to finish. A token loop now halts on `DEFAULT_MAX_TOKEN_CHAIN_DEPTH` long before this, so the
+ * object limit is only the backstop for a loop no token chain carries (about a minute at 5,000).
  */
-export const DEFAULT_MAX_TURN_OBJECTS = 1_000;
+export const DEFAULT_MAX_TURN_OBJECTS = 5_000;
+
+/**
+ * The token chain depth a game with `maxObjects` gets by default (`EngineOptions.maxTokenChainDepth`).
+ * The deepest chain in 26 seeded four-player fuzz games was a step or two; a hundred rounds of the
+ * Mechan Assembler loop make about 300 objects.
+ */
+export const DEFAULT_MAX_TOKEN_CHAIN_DEPTH = 100;
 
 export class Engine implements EngineDriver {
   private readonly ctx: GameContext;
@@ -160,15 +180,20 @@ export class Engine implements EngineDriver {
     const maxTurnObjects =
       options.maxTurnObjects ??
       (options.maxObjects !== undefined ? DEFAULT_MAX_TURN_OBJECTS : undefined);
+    const maxTokenChainDepth =
+      options.maxTokenChainDepth ??
+      (options.maxObjects !== undefined ? DEFAULT_MAX_TOKEN_CHAIN_DEPTH : undefined);
     if (
       options.maxStepWork !== undefined ||
       options.maxObjects !== undefined ||
-      maxTurnObjects !== undefined
+      maxTurnObjects !== undefined ||
+      maxTokenChainDepth !== undefined
     ) {
       this.ctx.budget = {
         ...(options.maxStepWork !== undefined && { maxStepWork: options.maxStepWork }),
         ...(options.maxObjects !== undefined && { maxObjects: options.maxObjects }),
         ...(maxTurnObjects !== undefined && { maxTurnObjects }),
+        ...(maxTokenChainDepth !== undefined && { maxTokenChainDepth }),
         stepWork: { count: 0 },
         objectsAtStart: this.ctx.state.nextObjectNum,
       };
