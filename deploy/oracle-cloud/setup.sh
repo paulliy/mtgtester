@@ -28,17 +28,20 @@ if [ "${MEM_KB}" -lt 3000000 ]; then
   SMALL_VM=1
   if ! swapon --show | grep -q .; then
     echo "==> Small VM (${MEM_KB} kB): adding a 4 GB swap file"
+    sudo install -m 600 /dev/null /swapfile
     sudo fallocate -l 4G /swapfile
-    sudo chmod 600 /swapfile
     sudo mkswap /swapfile
     sudo swapon /swapfile
     grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
   fi
+  # Use swap only under real pressure, so a live game stays in memory.
+  echo 'vm.swappiness=10' | sudo tee /etc/sysctl.d/90-mtg-swappiness.conf >/dev/null
+  sudo sysctl -q -p /etc/sysctl.d/90-mtg-swappiness.conf
 fi
 
 echo "==> Creating the mtg user"
 if ! id mtg >/dev/null 2>&1; then
-  sudo useradd --system --create-home --shell /bin/bash mtg
+  sudo useradd --system --create-home --shell /usr/sbin/nologin mtg
 fi
 
 echo "==> Installing Bun ${BUN_VERSION} for mtg"
@@ -74,7 +77,8 @@ run "mkdir -p data/tables"
 
 echo "==> Installing the settings file and the service"
 if [ ! -f /etc/mtg-table.env ]; then
-  sudo install -m 640 -o root -g mtg "${APP_DIR}/deploy/oracle-cloud/mtg-table.env.example" /etc/mtg-table.env
+  # systemd reads it as root, so the service account never needs to read the secret file.
+  sudo install -m 600 -o root -g root "${APP_DIR}/deploy/oracle-cloud/mtg-table.env.example" /etc/mtg-table.env
   if [ "${SMALL_VM}" = 1 ]; then
     # Each game runs in its own worker, so keep the number of games small on a 1 GB VM.
     sudo sed -i 's/^# TABLE_MAX_TABLES=8$/TABLE_MAX_TABLES=2/' /etc/mtg-table.env
@@ -90,6 +94,6 @@ cat <<'DONE'
 Setup finished. Next:
   1. sudo nano /etc/mtg-table.env          # replace tables.example.com with your subdomain
   2. sudo systemctl start mtg-table
-  3. sudo journalctl -u mtg-table -n 40    # the host secret is printed here
+  3. sudo journalctl -u mtg-table -n 40    # the host secret is printed here unless you set TABLE_HOST_SECRET
   4. Install the Cloudflare Tunnel connector (guide, step 5).
 DONE

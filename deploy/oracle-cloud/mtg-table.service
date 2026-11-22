@@ -35,6 +35,21 @@ ProtectKernelModules=true
 ProtectControlGroups=true
 RestrictSUIDSGID=true
 LockPersonality=true
+PrivateDevices=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictRealtime=true
+# AF_NETLINK lets the server list network interfaces for its start banner.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+CapabilityBoundingSet=
+UMask=0077
+# Not MemoryDenyWriteExecute: Bun's JIT needs writable code pages.
+
+# On a 1 GB VM, if memory runs out the kernel kills this service before sshd or cloudflared,
+# and systemd restarts it. A hard MemoryMax would kill it while swap could still carry it.
+OOMScoreAdjust=500
 
 [Install]
 WantedBy=multi-user.target
