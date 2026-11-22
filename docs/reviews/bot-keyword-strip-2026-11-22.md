@@ -76,7 +76,24 @@ points overall, no position lower on any seed.
 
 **Gauntlet** (`bot-gauntlet --pods 80 --seed field --new fixed,fixed-0052 --jobs 4`):
 
-Pending: the run was in progress when this was committed.
+720 games: 80 baseline pods with the old bot (`fixed-0043`) in every seat, then each seat switched
+to each arm. 648 ended in a win, 67 halted on the known payment-search budget (see the
+[commander value review](bot-commander-value-2026-11-20.md)) and 5 timed out, the same for both
+arms.
+
+| Arm against `fixed-0043`      | Pairs | +   | −   | z     |
+| ----------------------------- | ----- | --- | --- | ----- |
+| `fixed` (with `keywordStrip`) | 287   | 15  | 19  | −0.69 |
+| `fixed-0052` (without)        | 287   | 15  | 19  | −0.69 |
+| with against without, paired  | 320   | 0   | 0   | 0.00  |
+
+The two arms played identically in 318 of 320 seat games. Both that differed are the Silverquill
+Influence seat, the only gauntlet deck with a keyword stripper (Arcane Lighthouse), and in neither
+did that seat's result change: in pod 19 the same seat won on the same turn with different life
+totals; in pod 42 the seat lost either way (another seat won on turn 32 with the fix, turn 49
+without). No regression, and no measurable effect in the field: no gauntlet deck plays Shadowspear
+or Bonds of Mortality. The `fixed` arm's −0.69 against the old bot is the existing production
+bot's, unchanged by this fix.
 
 ## Not reproduced
 
