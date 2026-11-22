@@ -197,6 +197,29 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
   }
 
   /**
+   * A click while composing, on `clickedId` with `focused` selected: assign `focused` to it when it
+   * is a legal target. A clicked permanent that is not itself a legal target falls back to its
+   * controller's seat (`ownerSeat`), so clicking any of an opponent's permanents attacks that
+   * opponent. Returns whether an assignment was made.
+   */
+  function assignFromBoardClick(
+    focused: ObjectId | null,
+    clickedId: string,
+    ownerSeat?: string,
+  ): boolean {
+    if (mode.value !== 'composing' || focused === null) return false;
+    if (isLegalTarget(focused, clickedId)) {
+      assign(focused, clickedId);
+      return true;
+    }
+    if (ownerSeat !== undefined && isLegalTarget(focused, ownerSeat)) {
+      assign(focused, ownerSeat);
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * The one entry point PlayerGameView calls to submit a composed plan, for either kind. `null`
    * unless a confirmed (`mode === 'replaying'`) plan matches the request currently pending, so a
    * caller that invokes this before `confirm()`, or for a stale/mismatched request, gets nothing
@@ -269,6 +292,7 @@ export const useCombatPlanStore = defineStore('combatPlan', () => {
     assign,
     clear,
     isLegalTarget,
+    assignFromBoardClick,
     pendingSubmission,
     confirm,
     cancel,

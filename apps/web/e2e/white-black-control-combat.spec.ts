@@ -123,3 +123,29 @@ test("Duelist's Heritage: one optional double-strike target", async ({ page }) =
   await passUntil(page, p2Life.filter({ hasText: '39' }));
   await expect(p2Life).toHaveText('39');
 });
+
+test("a board click on an opponent's permanent attacks that opponent", async ({ page }) => {
+  const title = 'Breena: aggregate attacks and compare defending-opponent life';
+  await runScenario(page, title);
+  await passUntil(page, page.getByRole('button', { name: /Declare attackers/ }));
+  await page.getByRole('button', { name: /Declare attackers/ }).click({ timeout: 20_000 });
+
+  // Select the attacker on the board, then click P2's creature. It is not an attack target
+  // itself, so the click has to attack the seat that controls it.
+  await page
+    .locator('.object')
+    .filter({ has: page.getByRole('img', { name: 'Lab Attack Witness Alpha', exact: true }) })
+    .first()
+    .click();
+  await page
+    .locator('[data-seat="P2"] .object')
+    .filter({ has: page.getByRole('img', { name: 'Lab P2 Defender', exact: true }) })
+    .first()
+    .click();
+
+  const row = page
+    .locator('.combat-assignment-row')
+    .filter({ hasText: 'Lab Attack Witness Alpha' });
+  await expect(row.getByRole('button', { name: 'P2' })).toHaveClass(/primary/);
+  await expect(row.getByRole('button', { name: 'Stay home' })).not.toHaveClass(/primary/);
+});
