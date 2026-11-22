@@ -1,6 +1,6 @@
-# MTG Tester
+# Decktank
 
-MTG Tester is a local, rules-driven **Magic: The Gathering Commander** simulator. It runs seeded four-player games through a deterministic TypeScript engine, as a spectator experience or with one human player against automated opponents.
+Decktank (this repository, `mtgtester`) is a local, rules-driven **Magic: The Gathering Commander** simulator. It runs seeded four-player games through a deterministic TypeScript engine, as a spectator experience or with one human player against automated opponents.
 
 The engine is authoritative: it produces legal actions. Humans, the heuristic bot, and OpenAI-compatible providers only choose from those actions; they do not adjudicate Magic rules.
 

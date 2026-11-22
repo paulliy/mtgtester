@@ -2,6 +2,10 @@ import { createApp, type Component } from 'vue';
 import { createPinia } from 'pinia';
 import type { Router } from 'vue-router';
 import './styles.css';
+import { applyStoredTheme } from './stores/theme';
+
+// Before anything mounts, so a stored Day or Night choice is on the page at first paint.
+applyStoredTheme();
 
 /**
  * Two apps from one source tree (ADR 0031, plan M6 task 1). The tester (the default) is the

@@ -2575,28 +2575,31 @@ button.selected,
   align-items: center;
   justify-content: center;
   font-size: 0.5rem;
-  font-weight: 800;
-  color: #1c1917;
-  background: #d6d3d1;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35);
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--mana-letter);
+  background: var(--mana-c);
+  box-shadow: inset 0 0 0 1px var(--ink);
 }
 .mana-dot:first-of-type {
   margin-left: 0.15rem;
 }
 .mana-W {
-  background: #f8f4d8;
+  background: var(--mana-w);
 }
 .mana-U {
-  background: #a9cdf0;
+  background: var(--mana-u);
 }
 .mana-B {
-  background: #b5aaa6;
+  background: var(--mana-b);
+  color: var(--mana-b-letter);
 }
 .mana-R {
-  background: #f0a184;
+  background: var(--mana-r);
 }
 .mana-G {
-  background: #9bcb98;
+  background: var(--mana-g);
 }
 .battle-row {
   flex: 1;
@@ -2856,7 +2859,7 @@ button.selected,
 }
 .assignment-options button.primary {
   background: var(--accent);
-  color: #08111f;
+  color: var(--paper);
   font-weight: 700;
   border-color: var(--accent);
 }
@@ -2913,7 +2916,7 @@ button.selected,
   padding: 0.05rem 0.4rem;
   border-radius: 999px;
   background: var(--accent);
-  color: #fff;
+  color: var(--paper);
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -2939,7 +2942,7 @@ button.selected,
 }
 .playable-list button.focused {
   background: var(--accent);
-  color: #fff;
+  color: var(--paper);
 }
 .playable-list .verb {
   font-weight: 700;
@@ -2984,7 +2987,7 @@ button.selected,
 }
 button.primary {
   background: var(--accent);
-  color: #08111f;
+  color: var(--paper);
   font-weight: 700;
 }
 .decision :deep(.decision-panel) {

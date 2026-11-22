@@ -180,7 +180,7 @@ function hidePreview(): void {
 }
 button.primary {
   background: var(--accent);
-  color: #08111f;
+  color: var(--paper);
   font-weight: 700;
 }
 button.muted {

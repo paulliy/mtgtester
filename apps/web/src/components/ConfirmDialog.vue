@@ -100,7 +100,7 @@ onMounted(() => cancelButton.value?.focus());
 .confirm-btn {
   background: var(--accent);
   border: 1px solid var(--accent);
-  color: #fff;
+  color: var(--paper);
   font-weight: 700;
 }
 .danger .confirm-btn {

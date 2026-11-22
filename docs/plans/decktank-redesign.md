@@ -53,7 +53,7 @@ Write ADR 0052 "Decktank visual identity", amending the brief §2 styling row an
    | `--ink-soft` (hover)   | `#413e3d`             | `#cfcabe`          | primary-button hover                                                 |
    | `--muted` (small text) | `#66625f`             | `#a29d95`          | at least 4.5:1 on paper and on paper-2 in both themes                |
    | `--rule` (soft lines)  | `#bdbbb6`             | `#4a4643`          |                                                                      |
-   | `--accent` (warm)      | `#a77e5f`             | `#c49a77`          | tick, needle, planet; decoration only, never text                    |
+   | `--warm`               | `#a77e5f`             | `#c49a77`          | tick, needle, planet; decoration only, never text                    |
    | `--mana-w`             | `#ddd2b0`             | `#c9bd96`          | dark letter                                                          |
    | `--mana-u`             | `#9fb1c1`             | `#7f95a8`          | dark letter                                                          |
    | `--mana-b`             | `#5e5753`             | `#3f3936`          | light letter; the pip's 1px ring (`--ink`) keeps it visible at night |
@@ -74,7 +74,7 @@ Write ADR 0052 "Decktank visual identity", amending the brief §2 styling row an
 
 **Files:** `apps/web/src/styles.css` (split into `styles/tokens.css`, `styles/base.css`, `styles/motion.css`); `apps/web/index.html`; `apps/web/public/fonts/*`; `App.vue` (brand only); `components/ManaPips.vue`; `components/DeckColors.vue`.
 
-1. Add the tokens: `--paper --paper-2 (#eeeadf) --ink --ink-soft (#413e3d) --muted --rule --accent`, the mana colours `--mana-w/u/b/r/g/c` plus light tints for unselected filters, the three font families, the house easing `--ease: cubic-bezier(0.165, 0.84, 0.44, 1)`, and spacing.
+1. Add the tokens: `--paper --paper-2 (#eeeadf) --ink --ink-soft (#413e3d) --muted --rule --warm`, the mana colours `--mana-w/u/b/r/g/c` plus light tints for unselected filters, the three font families, the house easing `--ease: cubic-bezier(0.165, 0.84, 0.44, 1)`, and spacing.
    Define each token twice: day values on `:root`, night values under `:root[data-theme="night"]` and under `@media (prefers-color-scheme: dark) { :root:not([data-theme="day"]) { … } }`. A small `stores/theme.ts` (or composable) reads `localStorage['decktank.theme']` (`day | night | system`, wrapped in try/catch), sets `data-theme` on `<html>` before first paint (an inline script in `index.html` avoids a flash), and exposes the control for phase 2's nav.
 2. Add a compatibility layer: map the old variables onto the new tokens (`--bg → --paper`, `--surface → --paper`, `--surface-2 → --paper-2`, `--line → --ink`, `--text → --ink`, `--muted → --muted`, `--accent → --ink`, plus the muted status colours). Every existing component then switches theme with no edits, and later phases restyle them one at a time.
 3. Base styles from the mockups:

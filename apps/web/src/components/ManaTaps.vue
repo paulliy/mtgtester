@@ -69,9 +69,9 @@ function title(action: LegalAction): string {
   cursor: pointer;
 }
 .mana-tap:hover {
-  background: var(--accent);
+  background: var(--paper-2);
 }
-/* Mana-symbol circles in the printed symbols' colors, as in the top bar. */
+/* Colour identity in the muted Decktank colours, as in the top bar (ADR 0052). */
 .mana-dot {
   width: 16px;
   height: 16px;
@@ -80,24 +80,27 @@ function title(action: LegalAction): string {
   align-items: center;
   justify-content: center;
   font-size: 0.6rem;
-  font-weight: 800;
-  color: #1c1917;
-  background: #d6d3d1;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35);
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--mana-letter);
+  background: var(--mana-c);
+  box-shadow: inset 0 0 0 1px var(--ink);
 }
 .mana-W {
-  background: #f8f4d8;
+  background: var(--mana-w);
 }
 .mana-U {
-  background: #a9cdf0;
+  background: var(--mana-u);
 }
 .mana-B {
-  background: #b5aaa6;
+  background: var(--mana-b);
+  color: var(--mana-b-letter);
 }
 .mana-R {
-  background: #f0a184;
+  background: var(--mana-r);
 }
 .mana-G {
-  background: #9bcb98;
+  background: var(--mana-g);
 }
 </style>
