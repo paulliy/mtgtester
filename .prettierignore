@@ -58,3 +58,6 @@ docs/reviews/card-compiler-trial-chunk-*/patches
 
 # The hill-climb baseline, written by `bun run hill-climb --write-baseline`
 packages/server/fixtures/hill-climb-baseline.json
+
+# Decktank mockup screens, kept verbatim as design reference (docs/plans/decktank-redesign.md)
+docs/design/

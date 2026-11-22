@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Deals preview</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&amp;family=Bodoni+Moda:opsz,wght@6..96,400&amp;family=Cutive+Mono&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f5f3ec}
+a{color:#2d2a2a}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+button:disabled{opacity:.35;cursor:default}
+button:focus-visible,a:focus-visible{outline:2px solid #2d2a2a;outline-offset:3px}
+@keyframes orrRiseA{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes orrRiseB{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes orrRule{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes orrFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes orrSlideL{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+@keyframes orrType{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes orrTrack{from{letter-spacing:0.04em;opacity:0}to{letter-spacing:-0.03em;opacity:1}}
+@keyframes orrTick{from{transform:scale(0.4);opacity:0}to{transform:none;opacity:1}}
+@keyframes orrStamp{0%{transform:scale(1.35) rotate(-8deg);opacity:0}60%{opacity:1}100%{transform:scale(1) rotate(-4deg);opacity:1}}
+@keyframes orrFlip{from{transform:perspective(900px) rotateY(-28deg) translateX(-10px);opacity:0}to{transform:none;opacity:1}}
+.grow{transition:width 1s cubic-bezier(0.165, 0.84, 0.44, 1),flex-grow 1s cubic-bezier(0.165, 0.84, 0.44, 1),left 1s cubic-bezier(0.165, 0.84, 0.44, 1),stroke-dasharray 1.2s cubic-bezier(0.165, 0.84, 0.44, 1)}
+@media (max-width: 760px){ .pad{padding-left:1rem !important;padding-right:1rem !important} }
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #f5f3ec; color: #2d2a2a; font-family: 'Cutive Mono', 'Courier New', ui-monospace, monospace; display: flex; flex-direction: column">
+  <dc-import name="TopBar" current="{{four}}" hint-size="100%,68px"></dc-import>
+
+  <main class="pad" style="flex: 1; padding: 2rem 3rem 3rem; display: flex; flex-direction: column; gap: 1.75rem">
+    <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem">
+      <div style="display: flex; flex-direction: column; gap: 0.5rem">
+        <div style="display: flex; flex-direction: column; gap: 0.6rem; width: fit-content; max-width: 100%">
+          <h1 style="animation: orrTrack 1s cubic-bezier(0.165, 0.84, 0.44, 1) both; margin: 0; font-family: 'Bodoni Moda', Didot, serif; font-weight: 400; font-size: clamp(2.4rem, 4vw, 3.6rem); line-height: 0.95; letter-spacing: -0.03em; text-transform: uppercase">Deals preview</h1>
+          <span aria-hidden="true" style="display: flex; align-items: center; gap: 0.5rem; width: 100%"><span style="flex: 1; height: 1px; background: #2d2a2a; transform-origin: right center; animation: orrRule 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.25s both"></span><span style="display: inline-flex; animation: orrTick 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) 0.55s both"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" fill="#2d2a2a"></path></svg></span><span style="flex: 1; height: 1px; background: #2d2a2a; transform-origin: left center; animation: orrRule 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.40s both"></span></span>
+        </div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; font-size: 0.8rem">
+        <button type="button" onClick="{{reset}}" style="min-height: 40px">[ Reset sample ]</button>
+        <button type="button" onClick="{{toggleWarn}}" aria-pressed="{{warn}}" style="min-height: 40px; text-decoration: {{warnDeco}}; text-underline-offset: 0.35em">[ Show the deal warning ]</button>
+        <button type="button" onClick="{{switchSlot}}" style="min-height: 40px">[ Switch negotiation slot ]</button>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start">
+      <!-- the offer on the table -->
+      <section aria-labelledby="offer-title" style="flex: 1 1 26rem; min-width: 0; border: 1px solid #2d2a2a; display: flex; flex-direction: column; animation: {{rise}} 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) both">
+        <div style="padding: 1rem 1.25rem; background: #eeeadf; border-bottom: 1px solid #2d2a2a; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem">
+          <h2 id="offer-title" style="margin: 0; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase">{{slot.title}}</h2>
+          <span style="display: inline-flex; align-items: center; gap: 0.75rem; font-size: 0.725rem; color: #66625f"><span title="Seat B broke 2 of its last 3 deals" aria-hidden="{{warnHidden}}" style="display: inline-flex; gap: 3px; visibility: {{warnVis}}"><sc-for list="{{warnMarks}}" as="wm" hint-placeholder-count="3"><span style="width: 1.1rem; height: 0.55rem; background: {{wm.bg}}; border: 1px solid {{wm.bd}}"></span></sc-for></span>{{slot.when}}</span>
+        </div>
+        <div style="position: relative; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem">
+          <div style="position: relative">
+            <p style="margin: 0; font-family: 'Bodoni Moda', Didot, serif; font-size: 1.6rem; line-height: 1.2; animation: orrType 1.4s steps(36, end) 0.3s both">{{slot.words}}</p>
+            <sc-if value="{{stamp}}" hint-placeholder-val="{{ false }}">
+              <span aria-live="polite" style="position: absolute; right: 0; bottom: -1.45rem; z-index: 1; background: #f5f3ec; padding: 0.4rem 0.9rem; border: 3px double {{stampInk}}; color: {{stampInk}}; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.9rem; letter-spacing: 0.12em; text-transform: uppercase; background: #f5f3ec; animation: orrStamp 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) both">{{stamp}}</span>
+            </sc-if>
+          </div>
+          <dl style="margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.45rem 1.25rem; font-size: 0.8rem; border-top: 1px solid #2d2a2a; padding-top: 0.9rem">
+            <sc-for list="{{slot.terms}}" as="tm" hint-placeholder-count="3">
+              <dt style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">{{tm.k}}</dt>
+              <dd style="margin: 0">{{tm.v}}</dd>
+            </sc-for>
+          </dl>
+          <div style="display: flex; flex-wrap: nowrap; gap: 0.75rem 1rem; align-items: center; height: 44px">
+            <button type="button" onClick="{{accept}}" disabled="{{decided}}" style="min-height: 44px; padding: 0 1.25rem; background: #2d2a2a; color: #f5f3ec; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase">Accept</button>
+            <button type="button" onClick="{{counter}}" disabled="{{decided}}" style="min-height: 44px; padding: 0 1rem; border: 1px solid #2d2a2a; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase">Counter</button>
+            <button type="button" onClick="{{decline}}" disabled="{{decided}}" style="min-height: 44px; font-size: 0.8rem; white-space: nowrap">[ Decline ]</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- in force + records -->
+      <div style="flex: 1 1 24rem; min-width: 0; display: flex; flex-direction: column; gap: 1.5rem">
+        <section aria-labelledby="force-title" style="display: flex; flex-direction: column; gap: 0.5rem">
+          <h2 id="force-title" style="margin: 0; font-size: 1.05rem; font-weight: 400; letter-spacing: 0.09em; text-transform: uppercase; border-bottom: 1px solid #2d2a2a; padding-bottom: 0.4rem">In force</h2>
+          <sc-for list="{{inForce}}" as="d" hint-placeholder-count="2">
+            <div style="animation: orrSlideL 0.55s cubic-bezier(0.165, 0.84, 0.44, 1) {{d.delay}} both; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.25rem 1rem; align-content: center; padding: 0 0; box-sizing: border-box; height: 4.25rem; overflow: hidden; border-bottom: 1px {{d.line}} {{d.lineInk}}">
+              <span style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{d.words}}</span>
+              <span style="display: flex; gap: 3px; align-items: center" aria-label="{{d.left}}">
+                <sc-for list="{{d.rounds}}" as="rd" hint-placeholder-count="3">
+                  <span style="width: 0.9rem; height: 0.9rem; border: 1px solid #2d2a2a; background: {{rd.bg}}; transition: background-color 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) 0.6s"></span>
+                </sc-for>
+              </span>
+              <span style="font-size: 0.7rem; color: #66625f; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{d.meta}}</span>
+            </div>
+          </sc-for>
+        </section>
+
+        <section aria-labelledby="records-title" style="display: flex; flex-direction: column; gap: 0.5rem">
+          <h2 id="records-title" style="margin: 0; font-size: 1.05rem; font-weight: 400; letter-spacing: 0.09em; text-transform: uppercase; border-bottom: 1px solid #2d2a2a; padding-bottom: 0.4rem">Records</h2>
+          <sc-for list="{{records}}" as="rc" hint-placeholder-count="4">
+            <div title="{{rc.tip}}" style="display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; gap: 0.75rem; align-items: center">
+              <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 1.4rem">{{rc.seat}}</span>
+              <span style="display: flex; gap: 3px">
+                <sc-for list="{{rc.marks}}" as="mk" hint-placeholder-count="4">
+                  <span style="width: 1.1rem; height: 0.55rem; background: {{mk.bg}}; border: 1px solid {{mk.bd}}; animation: orrTick 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) {{mk.delay}} both"></span>
+                </sc-for>
+              </span>
+              <span style="font-size: 0.75rem; color: #66625f">{{rc.text}}</span>
+            </div>
+          </sc-for>
+          <span style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.7rem; letter-spacing: 0.09em; color: #66625f" aria-hidden="true"><span style="width: 1.1rem; height: 0.55rem; background: #2d2a2a; border: 1px solid #2d2a2a"></span>KEPT<span style="width: 1.1rem; height: 0.55rem; margin-left: 0.6rem; background: repeating-linear-gradient(45deg,#a77e5f 0 1px,transparent 1px 3px); border: 1px solid #a77e5f"></span>BROKEN</span>
+        </section>
+      </div>
+
+      <!-- table talk -->
+      <section aria-labelledby="talk-title" style="flex: 1 1 22rem; min-width: 0; display: flex; flex-direction: column; gap: 0.5rem">
+        <h2 id="talk-title" style="margin: 0; font-size: 1.05rem; font-weight: 400; letter-spacing: 0.09em; text-transform: uppercase; border-bottom: 1px solid #2d2a2a; padding-bottom: 0.4rem">Table talk</h2>
+        <sc-for list="{{talk}}" as="tk" hint-placeholder-count="5">
+          <div style="animation: orrSlideL 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) {{tk.delay}} both; display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: 0.75rem; padding: 0.45rem 0; border-bottom: 1px solid #2d2a2a; font-size: 0.8rem; line-height: 1.6">
+            <span style="color: #66625f">{{tk.turn}}</span>
+            <span><span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">{{tk.who}}</span> {{tk.text}}</span>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+  </main>
+  <footer class="pad" style="padding: 0 3rem 1.5rem"><div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 2rem; border-top: 1px solid #2d2a2a; padding-top: 0.6rem; font-size: 0.7rem; letter-spacing: 0.09em; color: #66625f; transform-origin: left center; animation: orrFadeIn 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.9s both"><span>DECKTANK · III. WORKSHOP · b. DEALS PREVIEW</span><span style="display: inline-flex; align-items: center; gap: 0.5rem"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" fill="#2d2a2a"></path></svg> SHEET 005 OF 006 · SAMPLE FIGURES</span></div></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { grown: false, warn: false, slot: 0, flip: 0, outcome: null };
+  }
+  componentDidMount() {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { this.setState({ grown: true }); return; }
+    this._g = setTimeout(() => this.setState({ grown: true }), 90);
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this._g);
+  }
+
+  renderVals() {
+    const ink = '#2d2a2a';
+    const s = this.state;
+    const set = (p) => this.setState(p);
+    const slots = [
+      { title: 'Offer from seat B · Queen Marchesa', when: 'Round 6, your main phase', words: '"You leave me alone, I leave you alone. Two rounds."',
+        terms: [{ k: 'Promise', v: 'B won\'t attack you · You won\'t attack B' }, { k: 'Rounds', v: '2' }, { k: 'Owed by', v: 'Both of you' }] },
+      { title: 'Your counter to seat B · Queen Marchesa', when: 'Round 6, your main phase', words: '"Hit D with me this turn, and I won\'t counter your spells."',
+        terms: [{ k: 'Promise', v: 'B will attack D · You won\'t counter B' }, { k: 'Rounds', v: '1' }, { k: 'Owed by', v: 'Both of you' }] },
+    ];
+    const box = (n, used) => Array.from({ length: n }, (_, i) => ({ bg: s.grown && i < used ? ink : 'transparent' }));
+    let mi = 0;
+    const peru = '#a77e5f';
+    const hatch = 'repeating-linear-gradient(45deg,#a77e5f 0 1px,transparent 1px 3px)';
+    const rec = (k, b) => Array.from({ length: k + b }, (_, i) => ({ bg: i < k ? ink : hatch, bd: i < k ? ink : peru, delay: (0.6 + 0.06 * mi++).toFixed(2) + 's' }));
+    const accepted = s.outcome === 'accepted';
+    const row = (d) => Object.assign({ line: 'solid', lineInk: ink }, d, { meta: d.parties + ' · ' + d.left });
+    return {
+      four: 4,
+      rise: s.flip % 2 ? 'orrRiseB' : 'orrRiseA',
+      warn: s.warn,
+      warnHidden: !s.warn,
+      warnVis: s.warn ? 'visible' : 'hidden',
+      warnMarks: [{ bg: ink, bd: ink }, { bg: hatch, bd: peru }, { bg: hatch, bd: peru }],
+      warnDeco: s.warn ? 'underline' : 'none',
+      toggleWarn: () => set({ warn: !s.warn }),
+      counter: () => set({ slot: 1, flip: s.flip + 1, outcome: null }),
+      stampInk: accepted ? peru : ink,
+      switchSlot: () => set({ slot: (s.slot + 1) % 2, flip: s.flip + 1, outcome: null }),
+      reset: () => set({ warn: false, slot: 0, flip: s.flip + 1, outcome: null }),
+      accept: () => set({ outcome: 'accepted' }),
+      decline: () => set({ outcome: 'declined' }),
+      decided: !!s.outcome,
+      stamp: s.outcome === 'accepted' ? 'Deal struck' : s.outcome === 'declined' ? 'Declined' : '',
+      slot: slots[s.slot],
+      inForce: [accepted
+        ? { words: s.slot === 0 ? 'B won\'t attack you · you won\'t attack B' : 'B will attack D · you won\'t counter B', parties: 'You & B · new', rounds: box(s.slot === 0 ? 2 : 1, 0), left: s.slot === 0 ? '2 rounds left' : 'this round' }
+        : { words: '', parties: '', left: '', rounds: [], line: 'dashed', lineInk: '#bdbbb6', meta: '' },
+        { words: 'C won\'t target you · you won\'t target C', parties: 'You & C', rounds: box(3, 1), left: '2 of 3 rounds left' },
+        { words: 'D will attack B', parties: 'D, owed to you', rounds: box(1, 0), left: 'this round' },
+      ].map((d, i) => Object.assign({ delay: (0.3 + i * 0.1).toFixed(2) + 's' }, row(d))),
+      records: [
+        { seat: 'A', marks: rec(3, 0), text: '3 kept', tip: 'You kept all 3 deals' },
+        { seat: 'B', marks: rec(1, 2), text: '1 kept · 2 broken', tip: 'Seat B broke 2 of 3' },
+        { seat: 'C', marks: rec(2, 0), text: '2 kept', tip: 'Seat C kept both deals' },
+        { seat: 'D', marks: rec(2, 1), text: '2 kept · 1 broken', tip: 'Seat D broke 1 of 3' },
+      ],
+      talk: ([
+        { turn: 'R5', who: 'C', text: 'The Ur-Dragon is at 10 power. Someone deal with it.' },
+        { turn: 'R5', who: 'B', text: 'Offered D a two-round truce. D declined.' },
+        { turn: 'R6', who: 'D', text: 'Broke the truce with B: attacked for 4.' },
+        { turn: 'R6', who: 'B', text: 'Offered you a two-round truce.' },
+        { turn: 'R6', who: 'C', text: 'B has the most cards in hand. Watch it.' },
+      ]).map((x, i) => Object.assign({ delay: (0.7 + i * 0.14).toFixed(2) + 's' }, x)),
+    };
+  }
+}
+</script>
+</body>
+</html>

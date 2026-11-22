@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Batch runs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&amp;family=Bodoni+Moda:opsz,wght@6..96,400&amp;family=Cutive+Mono&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f5f3ec}
+a{color:#2d2a2a}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+button:focus-visible,a:focus-visible{outline:2px solid #2d2a2a;outline-offset:3px}
+.row{transition:background-color 0.3s cubic-bezier(0.165,0.84,0.44,1)}
+.row:hover{background:#eeeadf}
+.bar{transition:width 0.7s cubic-bezier(0.165,0.84,0.44,1)}
+@keyframes orrRiseA{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes orrRiseB{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes orrRule{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes orrFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes orrSlideL{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+@keyframes orrType{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes orrTrack{from{letter-spacing:0.04em;opacity:0}to{letter-spacing:-0.03em;opacity:1}}
+@keyframes orrTick{from{transform:scale(0.4);opacity:0}to{transform:none;opacity:1}}
+@keyframes orrStamp{0%{transform:scale(1.35) rotate(-8deg);opacity:0}60%{opacity:1}100%{transform:scale(1) rotate(-4deg);opacity:1}}
+@keyframes orrFlip{from{transform:perspective(900px) rotateY(-28deg) translateX(-10px);opacity:0}to{transform:none;opacity:1}}
+.grow{transition:width 1s cubic-bezier(0.165, 0.84, 0.44, 1),flex-grow 1s cubic-bezier(0.165, 0.84, 0.44, 1),left 1s cubic-bezier(0.165, 0.84, 0.44, 1),stroke-dasharray 1.2s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn{display:inline-flex;align-items:center;gap:0.7rem;min-height:42px;padding:0 1.05rem 0 1.15rem;border:1px solid #2d2a2a;background:transparent;color:#2d2a2a;text-decoration:none;font-family:Archivo,'Helvetica Neue',Arial,sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap;transition:background-color 0.35s cubic-bezier(0.165, 0.84, 0.44, 1),color 0.35s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn:hover{background:#2d2a2a;color:#f5f3ec !important}
+.btn .arr{display:inline-flex;transition:transform 0.35s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn:hover .arr{transform:translateX(3px)}
+.btn .arr path{stroke:currentColor}
+.gt{display:grid;grid-template-columns:3rem minmax(0,1fr) 7rem 4rem 4rem minmax(0,1.3fr) 4.5rem;gap:0.75rem}
+@media (max-width: 760px){ .pad{padding-left:1rem !important;padding-right:1rem !important} .hide-sm{display:none !important} .gt{grid-template-columns:2.4rem minmax(0,1fr) 3.2rem 2.8rem auto;gap:0.4rem} .fd{flex-direction:column !important;align-items:flex-start !important;height:4.2rem !important;gap:0.3rem !important} .gt a{white-space:nowrap} }
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #f5f3ec; color: #2d2a2a; font-family: 'Cutive Mono', 'Courier New', ui-monospace, monospace; display: flex; flex-direction: column">
+  <dc-import name="TopBar" current="{{two}}" hint-size="100%,68px"></dc-import>
+
+  <main class="pad" style="flex: 1; padding: 2.25rem 3rem 3rem; display: flex; flex-wrap: wrap; gap: 2.5rem; align-items: flex-start">
+
+    <!-- Runs -->
+    <section aria-labelledby="runs-title" style="flex: 0 1 22rem; min-width: 0; display: flex; flex-direction: column; gap: 1rem">
+      <div style="display: flex; flex-direction: column; gap: 0.5rem">
+        <div style="display: flex; flex-direction: column; gap: 0.6rem; width: fit-content; max-width: 100%">
+          <h1 id="runs-title" style="animation: orrTrack 1s cubic-bezier(0.165, 0.84, 0.44, 1) both; margin: 0; font-family: 'Bodoni Moda', Didot, serif; font-weight: 400; font-size: clamp(2.6rem, 4vw, 3.6rem); line-height: 0.95; letter-spacing: -0.03em; text-transform: uppercase">Batch runs</h1>
+          <span aria-hidden="true" style="display: flex; align-items: center; gap: 0.5rem; width: 100%"><span style="flex: 1; height: 1px; background: #2d2a2a; transform-origin: right center; animation: orrRule 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.25s both"></span><span style="display: inline-flex; animation: orrTick 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) 0.55s both"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" fill="#2d2a2a"></path></svg></span><span style="flex: 1; height: 1px; background: #2d2a2a; transform-origin: left center; animation: orrRule 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.40s both"></span></span>
+        </div>
+      </div>
+      <a href="Main.dc.html" class="btn" style="align-self: flex-start">New batch<span class="arr" aria-hidden="true"><svg width="14" height="8" viewBox="0 0 14 8"><path d="M0 4 H12 M9 1 L12 4 L9 7" fill="none" stroke-width="1"></path></svg></span></a>
+      <ol style="margin: 0; padding: 0; list-style: none; border-top: 1px solid #2d2a2a">
+        <sc-for list="{{runs}}" as="r" hint-placeholder-count="4">
+          <li style="border-bottom: 1px solid #2d2a2a; animation: orrSlideL 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) {{r.delay}} both">
+            <button type="button" class="row" onClick="{{r.pick}}" aria-pressed="{{r.on}}" style="width: 100%; display: flex; flex-direction: column; gap: 0.4rem; padding: 0.8rem 0.6rem; background: {{r.bg}}">
+              <span style="display: flex; justify-content: space-between; gap: 1rem; align-items: baseline">
+                <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: {{r.deco}}; text-underline-offset: 0.3em">{{r.name}}</span>
+                <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.15rem 0.4rem; border: 1px solid {{r.tagBd}}; background: {{r.tagBg}}; color: {{r.tagFg}}">{{r.status}}</span>
+              </span>
+              <span style="font-size: 0.725rem; color: #66625f">{{r.when}} · {{r.scen}}</span>
+              <span style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.725rem">
+                <span style="position: relative; flex: 1; height: 6px; background: #e8e6df"><span class="grow" style="position: absolute; left: 0; top: 0; bottom: 0; width: {{r.doneW}}; background: #2d2a2a; transition-delay: {{r.delay}}"></span></span>
+                <span>{{r.done}}</span>
+              </span>
+            </button>
+          </li>
+        </sc-for>
+      </ol>
+    </section>
+
+    <!-- The chosen run -->
+    <section aria-labelledby="run-title" style="flex: 1 1 46rem; min-width: 0; display: flex; flex-direction: column; gap: 1.75rem; animation: {{rise}} 0.55s cubic-bezier(0.165, 0.84, 0.44, 1) both">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem; padding-top: 1.6rem">
+        <div style="display: flex; flex-direction: column; gap: 0.35rem">
+          <h2 id="run-title" style="margin: 0; font-family: 'Bodoni Moda', Didot, serif; font-weight: 400; font-size: 2.65rem; line-height: 1; letter-spacing: -0.03em; text-transform: uppercase">{{run.name}}</h2>
+          <span style="font-size: 0.725rem; color: #66625f">{{run.when}} · batch seed {{run.seed}}</span>
+        </div>
+        <a href="Stats.dc.html" class="btn">Deck stats for this run<span class="arr" aria-hidden="true"><svg width="14" height="8" viewBox="0 0 14 8"><path d="M0 4 H12 M9 1 L12 4 L9 7" fill="none" stroke-width="1"></path></svg></span></a>
+      </div>
+
+      <dl style="margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); border-top: 1px solid #2d2a2a; border-left: 1px solid #2d2a2a">
+        <sc-for list="{{run.facts}}" as="f" hint-placeholder-count="4">
+          <div style="border-right: 1px solid #2d2a2a; border-bottom: 1px solid #2d2a2a; padding: 0.9rem 1.1rem; display: flex; flex-direction: column; gap: 0.3rem">
+            <dt style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">{{f.k}}</dt>
+            <dd class="fd" style="margin: 0; height: 3rem; display: flex; align-items: baseline; gap: 0.45rem"><span style="white-space: nowrap; font-family: 'Bodoni Moda', Didot, serif; font-size: 2.1rem; line-height: 1">{{f.v}}</span><span style="font-size: 0.725rem; color: #66625f">{{f.unit}}</span></dd>
+          </div>
+        </sc-for>
+      </dl>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 2rem">
+        <!-- By seat -->
+        <section aria-labelledby="seat-title" style="flex: 1 1 20rem; min-width: 0; display: flex; flex-direction: column; gap: 0.75rem">
+          <h3 id="seat-title" style="margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; font-size: 1.05rem; font-weight: 400; letter-spacing: 0.09em; text-transform: uppercase; border-bottom: 1px solid #2d2a2a; padding-bottom: 0.4rem">By seat<span aria-hidden="true" style="font-size: 0.6rem; letter-spacing: 0.09em; color: #66625f">FIG. 001</span></h3>
+          <sc-for list="{{run.seats}}" as="st" hint-placeholder-count="4">
+            <div title="{{st.tip}}" style="display: grid; grid-template-columns: 2rem minmax(0, 1fr) 4.5rem 4.5rem; gap: 0.75rem; align-items: center">
+              <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 1.6rem; line-height: 1">{{st.seat}}</span>
+              <span style="position: relative; height: 10px; background: #e8e6df">
+                <span class="grow" style="position: absolute; left: 0; top: 0; bottom: 0; width: {{st.w}}; background: #2d2a2a; transition-delay: {{st.delay}}"></span>
+                <span aria-hidden="true" style="position: absolute; left: {{st.fair}}; top: -4px; bottom: -4px; border-left: 1px dashed #2d2a2a"></span>
+              </span>
+              <span style="font-size: 0.8rem; text-align: right">{{st.wins}}</span>
+              <span style="font-size: 0.8rem; text-align: right; color: #66625f">avg {{st.pos}}</span>
+            </div>
+          </sc-for>
+          <span style="font-size: 0.6rem; letter-spacing: 0.09em; color: #66625f">¦ FAIR SHARE, 1 IN 4 · SEAT A MOVES FIRST</span>
+        </section>
+
+        <!-- Scenarios side by side -->
+        <section aria-labelledby="scen-title" style="flex: 1 1 22rem; min-width: 0; display: flex; flex-direction: column; gap: 0.75rem">
+          <h3 id="scen-title" style="margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; font-size: 1.05rem; font-weight: 400; letter-spacing: 0.09em; text-transform: uppercase; border-bottom: 1px solid #2d2a2a; padding-bottom: 0.4rem">Scenarios<span aria-hidden="true" style="font-size: 0.6rem; letter-spacing: 0.09em; color: #66625f">FIG. 002</span></h3>
+          <sc-for list="{{run.scenarios}}" as="sc" hint-placeholder-count="2">
+            <div style="visibility: {{sc.vis}}; display: flex; flex-direction: column; gap: 0.45rem; padding-bottom: 0.75rem; border-bottom: 1px solid #2d2a2a">
+              <span style="display: flex; justify-content: space-between; gap: 1rem; align-items: baseline">
+                <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase">{{sc.name}}</span>
+                <span style="font-size: 0.725rem; color: #66625f">{{sc.bots}}</span>
+              </span>
+              <span style="display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; font-size: 0.8rem"><span>{{sc.games}}</span><span>{{sc.turns}}</span><span style="color: #66625f">{{sc.ai}}</span></span>
+              <span aria-label="{{sc.seatLabel}}" style="box-sizing: border-box; display: flex; gap: 2px; height: 1.6rem; border: {{sc.barBd}}">
+                <sc-for list="{{sc.split}}" as="sp" hint-placeholder-count="4">
+                  <span class="grow" title="{{sp.tip}}" style="flex: {{sp.flex}} 1 0; min-width: 1.4rem; overflow: hidden; white-space: nowrap; transition-delay: {{sp.delay}}; display: flex; align-items: center; justify-content: center; background: {{sp.bg}}; color: {{sp.fg}}; font-size: 0.7rem">{{sp.seat}} {{sp.n}}</span>
+                </sc-for>
+              </span>
+            </div>
+          </sc-for>
+        </section>
+      </div>
+
+      <!-- Games -->
+      <section aria-labelledby="games-title" style="display: flex; flex-direction: column; gap: 0.6rem">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.5rem 1rem; border-bottom: 1px solid #2d2a2a; padding-bottom: 0.4rem">
+          <h3 id="games-title" style="margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; font-size: 1.05rem; font-weight: 400; letter-spacing: 0.09em; text-transform: uppercase">Games<span aria-hidden="true" style="font-size: 0.6rem; letter-spacing: 0.09em; color: #66625f">FIG. 003</span></h3>
+          <span style="display: flex; gap: 1rem; font-size: 0.8rem">
+            <sc-for list="{{gameFilters}}" as="gf" hint-placeholder-count="2">
+              <button type="button" onClick="{{gf.pick}}" aria-pressed="{{gf.on}}" style="min-height: 32px; color: {{gf.fg}}; text-decoration: {{gf.deco}}; text-underline-offset: 0.35em">[ {{gf.label}} ]</button>
+            </sc-for>
+          </span>
+        </div>
+        <div aria-hidden="true" class="gt" style="padding: 0 0.6rem; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">
+          <span>Game</span><span>Scenario</span><span class="hide-sm">Seed</span><span>Winner</span><span>Turns</span><span class="hide-sm">Finish order</span><span></span>
+        </div>
+        <ol style="margin: 0; padding: 0; list-style: none; border-top: 1px solid #2d2a2a">
+          <sc-for list="{{games}}" as="g" hint-placeholder-count="8">
+            <li class="row gt" style="animation: orrSlideL 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) {{g.delay}} both; align-items: center; padding: 0.5rem 0.6rem calc(0.5rem) calc(0.6rem - 2px); border-left: 2px solid {{g.rule}}; border-bottom: 1px solid #2d2a2a; font-size: 0.8rem">
+              <span>{{g.idx}}</span>
+              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{g.scen}}</span>
+              <span class="hide-sm" style="color: #66625f">{{g.seed}}</span>
+              <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 1.15rem">{{g.winner}}</span>
+              <span>{{g.turns}}</span>
+              <span class="hide-sm" style="justify-self: start; max-width: 100%; color: {{g.orderColor}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{g.order}}</span>
+              <a href="Debug.dc.html" style="text-decoration: none; justify-self: end; white-space: nowrap">[ Debug ]</a>
+            </li>
+          </sc-for>
+        </ol>
+        <span style="font-size: 0.725rem; color: #66625f">{{gamesNote}}</span>
+      </section>
+    </section>
+  </main>
+  <footer class="pad" style="padding: 0 3rem 1.5rem"><div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 2rem; border-top: 1px solid #2d2a2a; padding-top: 0.6rem; font-size: 0.6rem; letter-spacing: 0.09em; color: #66625f; transform-origin: left center; animation: orrFadeIn 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.9s both"><span>DECKTANK · II. RECORDS · b. BATCH RUNS</span><span style="display: inline-flex; align-items: center; gap: 0.5rem"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" fill="#2d2a2a"></path></svg> SHEET 003 OF 006 · SAMPLE FIGURES</span></div></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { grown: false, p: 0, sel: 0, filter: 'all', flip: 0 };
+  }
+
+  componentDidMount() {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { this.setState({ grown: true, p: 1 }); return; }
+    this._g = setTimeout(() => this.setState({ grown: true }), 90);
+    const t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / 1100);
+      this.setState({ p: 1 - Math.pow(1 - k, 3) });
+      if (k < 1) this._raf = requestAnimationFrame(step);
+    };
+    this._raf = requestAnimationFrame(step);
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this._g);
+    cancelAnimationFrame(this._raf);
+    clearInterval(this._run);
+  }
+
+  renderVals() {
+    const ink = '#2d2a2a';
+    const paper = '#f5f3ec';
+    const muted = '#66625f';
+    const s = this.state;
+    const set = (p) => this.setState(p);
+    // Sample runs. In the app these come from BatchResults (progress, aggregate, scenarioAggregates, games).
+    const runs = [
+      { name: 'Built-in vs AI', when: '21 Nov, 21:40', seed: '7Q2F-11', status: 'Finished', done: 35, total: 35, failed: 1, failAt: 27, turns: 11.8,
+        ai: '420 calls · 1.9M tokens · $1.84',
+        seats: [['A', 11, 2.2], ['B', 9, 2.4], ['C', 7, 2.6], ['D', 7, 2.7]],
+        scenarios: [
+          { name: 'Built-in baseline', bots: 'Built-in bots', games: 25, turns: 11.6, ai: 'no AI calls', split: [['A', 8], ['B', 7], ['C', 4], ['D', 6]] },
+          { name: 'AI comparison', bots: 'AI bots', games: 10, turns: 12.4, ai: '420 calls · $1.84', split: [['A', 3], ['B', 2], ['C', 3], ['D', 1]] },
+        ] },
+      { name: 'Ur-Dragon seat test', when: '20 Nov, 18:05', seed: 'B4K0-02', status: 'Finished', done: 50, total: 50, failed: 0, turns: 11.2,
+        ai: 'no AI calls', seats: [['A', 19, 1.9], ['B', 12, 2.5], ['C', 11, 2.6], ['D', 8, 2.9]],
+        scenarios: [{ name: 'Ur-Dragon in seat A', bots: 'Built-in bots', games: 50, turns: 11.2, ai: 'no AI calls', split: [['A', 19], ['B', 12], ['C', 11], ['D', 8]] }] },
+      { name: 'Deals on and off', when: '19 Nov, 22:31', seed: 'M9X3-40', status: 'Running', done: 37, total: 100, failed: 0, turns: 12.9,
+        ai: 'no AI calls', seats: [['A', 10, 2.4], ['B', 9, 2.5], ['C', 10, 2.5], ['D', 8, 2.6]],
+        scenarios: [
+          { name: 'Table talk off', bots: 'Built-in bots', games: 37, turns: 12.9, ai: '37 of 50 done', split: [['A', 10], ['B', 9], ['C', 10], ['D', 8]] },
+          { name: 'Table talk on', bots: 'Built-in bots', games: 0, turns: 0, ai: 'waiting', split: [] },
+        ] },
+      { name: 'Smoke test', when: '18 Nov, 09:12', seed: '0000-01', status: 'Failed', done: 3, total: 10, failed: 1, failAt: 3, turns: 9.7,
+        ai: 'no AI calls', seats: [['A', 1, 2.3], ['B', 1, 2.3], ['C', 0, 3.0], ['D', 0, 2.7]],
+        scenarios: [{ name: 'Quick check', bots: 'Built-in bots', games: 3, turns: 9.7, ai: 'stopped at game 3', split: [['A', 1], ['B', 1]] }] },
+    ];
+    const r = runs[s.sel];
+    const finished = r.done - r.failed;
+    const fairPct = 25;
+    const peru = '#a77e5f';
+    const tags = { Finished: ['transparent', ink, ink], Running: ['transparent', peru, peru], Failed: [ink, paper, ink] };
+    const tone = { A: ['#413e3d', paper], B: ['#8f8c88', paper], C: ['#bdbbb6', ink], D: ['#e8e6df', ink] };
+
+    const order = (n) => { let x = (n * 2654435761 + 12345) >>> 0; const a = ['A', 'B', 'C', 'D']; for (let i = 3; i > 0; i--) { x = (x * 1664525 + 1013904223) >>> 0; const j = x % (i + 1); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+    const scenOf = (n) => { let acc = 0; for (const sc of r.scenarios) { acc += sc.games; if (n <= acc) return sc; } return r.scenarios[r.scenarios.length - 1]; };
+    const idxs = [1, 2, 3, 4, r.done - 2, r.done - 1, r.done, r.failAt || 0].filter((n, i, a) => n >= 1 && n <= r.done && a.indexOf(n) === i).sort((x, y) => x - y);
+    const games = idxs.map((n, i) => {
+      const sc = scenOf(n);
+      const failed = !!r.failed && n === r.failAt;
+      const o = order(n);
+      return {
+        idx: String(n).padStart(3, '0'), scen: sc.name, seed: r.seed + '\u00b7' + String(n).padStart(2, '0'),
+        winner: failed ? '\u00d7' : o[0], turns: String(Math.max(5, Math.round(r.turns) + ((n * 7) % 5) - 2)),
+        order: failed ? (sc.ai.indexOf('calls') >= 0 ? 'Stopped: AI budget ran out' : 'Stopped: game did not finish') : o.join(' \u00b7 '),
+        failed, orderColor: failed ? ink : muted, rule: failed ? ink : 'transparent', delay: (0.6 + i * 0.06).toFixed(2) + 's',
+      };
+    });
+    const shown = s.filter === 'failed' ? games.filter((g) => g.failed) : games;
+
+    return {
+      two: 2,
+      rise: s.flip % 2 ? 'orrRiseB' : 'orrRiseA',
+      runs: runs.map((x, i) => ({
+        name: x.name, when: x.when, status: x.status,
+        scen: x.scenarios.length + (x.scenarios.length === 1 ? ' scenario' : ' scenarios'),
+        done: Math.round(x.done * (s.p ?? 1)) + ' / ' + x.total, doneW: s.grown ? ((x.done / x.total) * 100).toFixed(1) + '%' : '0%', delay: (0.2 + i * 0.1).toFixed(2) + 's',
+        on: s.sel === i, bg: s.sel === i ? '#eeeadf' : 'transparent', deco: s.sel === i ? 'underline' : 'none',
+        tagBg: tags[x.status][0], tagFg: tags[x.status][1], tagBd: tags[x.status][2],
+        pick: () => set({ sel: i, flip: s.flip + 1 }),
+      })),
+      run: {
+        name: r.name, when: r.when, seed: r.seed,
+        facts: [
+          { k: 'Games', v: Math.round(finished * (s.p ?? 1)) + '', unit: 'of ' + r.total + ' finished' },
+          { k: 'Failed', v: r.failed + '', unit: r.failed ? 'see the list' : 'none' },
+          { k: 'Average game', v: (r.turns * (s.p ?? 1)).toFixed(1), unit: 'turns' },
+          { k: 'AI', v: r.ai.indexOf('$') >= 0 ? r.ai.slice(r.ai.indexOf('$')) : '—', unit: r.ai.indexOf('$') >= 0 ? r.ai.slice(0, r.ai.indexOf(' · $')) : r.ai },
+        ],
+        seats: r.seats.map(([seat, wins, pos], i) => ({
+          seat, wins: wins + (wins === 1 ? ' win' : ' wins'), pos: pos.toFixed(1), delay: (0.35 + i * 0.09).toFixed(2) + 's',
+          w: s.grown && finished ? ((wins / finished) * 100).toFixed(1) + '%' : '0%',
+          fair: fairPct + '%',
+          tip: 'Seat ' + seat + ': ' + wins + (wins === 1 ? ' win' : ' wins') + ' of ' + finished + ', average finish ' + pos.toFixed(1),
+        })),
+        scenarios: r.scenarios.concat(r.scenarios.length < 2 ? [{ name: '\u00a0', bots: '\u00a0', games: 0, turns: 0, ai: '\u00a0', split: [], ph: true }] : []).map((sc) => ({
+          vis: sc.ph ? 'hidden' : 'visible', barBd: sc.split.length ? '0' : '1px solid #d6d4ce',
+          name: sc.name, bots: sc.bots,
+          games: sc.ph ? '\u00a0' : sc.games + (sc.games === 1 ? ' game' : ' games'), turns: sc.games ? sc.turns.toFixed(1) + ' turns avg' : '',
+          ai: sc.ai,
+          seatLabel: 'Wins by seat: ' + sc.split.map(([a, n]) => a + ' ' + n).join(', '),
+          split: sc.split.map(([seat, n], i) => ({ seat, n, flex: s.grown ? n : 0.001, delay: (0.5 + i * 0.08).toFixed(2) + 's', bg: tone[seat][0], fg: tone[seat][1], tip: 'Seat ' + seat + ' won ' + n })),
+        })),
+      },
+      gameFilters: [['all', 'All'], ['failed', 'Failed only']].map(([k, label]) => ({ label, on: s.filter === k, fg: s.filter === k ? ink : muted, deco: s.filter === k ? 'underline' : 'none', pick: () => set({ filter: k }) })),
+      games: shown,
+      gamesNote: 'Showing ' + shown.length + ' of ' + (s.filter === 'failed' ? r.failed : r.done),
+    };
+  }
+}
+</script>
+</body>
+</html>

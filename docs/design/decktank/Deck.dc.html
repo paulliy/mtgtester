@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Choose a deck</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&amp;family=Bodoni+Moda:opsz,wght@6..96,400&amp;family=Cutive+Mono&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f5f3ec}
+a{color:#2d2a2a}a:hover{color:#20201f;opacity:0.95}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #2d2a2a;outline-offset:3px}
+input::placeholder,textarea::placeholder{color:rgba(45,42,42,0.4)}
+@media (max-width: 760px){
+  .pad{padding-left:1rem !important;padding-right:1rem !important}
+  .seatrail{border-right:0 !important;border-bottom:1px solid #2d2a2a;flex:1 1 100% !important;width:100% !important}
+  .tag{min-width:0 !important}
+  .rowbtn{gap:0.5rem !important;grid-template-columns:1rem minmax(0,1fr) auto !important;padding:0.75rem 0.5rem !important}
+  .hdr{grid-template-columns:minmax(0,1fr) !important}
+  .crumb,.hdr-end{display:none !important}
+  .commit{margin:0 -1rem -3rem !important;padding:0.5rem 1rem !important;gap:0.25rem 1rem !important}
+  .commit p{flex:1 1 100%;font-size:0.8rem !important;line-height:1.4 !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .commit-btns{width:100%;justify-content:space-between}
+}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #f5f3ec; color: #2d2a2a; font-family: 'Cutive Mono', 'Courier New', ui-monospace, monospace; display: flex; flex-direction: column">
+
+  <header class="pad hdr" style="display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 1rem; min-height: 3.5rem; padding: 0 2rem; border-bottom: 1px solid #2d2a2a; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.08em">
+    <a href="Main.dc.html" style="justify-self: start; font-size: 0.7rem; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; white-space: nowrap">← Back to the table</a>
+    <span class="crumb" style="font-size: 0.8rem; text-align: center">New game <span style="color: #66625f">/</span> Deck for seat {{seat}}</span>
+    <span class="hdr-end"></span>
+  </header>
+
+  <div style="display: flex; flex-wrap: wrap; flex: 1 1 auto">
+
+    <!-- Which seat: switch seats without going back -->
+    <nav class="seatrail" aria-label="Seats" style="flex: 0 0 15rem; width: 15rem; background: #eeeadf; border-right: 1px solid #2d2a2a; padding: 2rem; box-sizing: border-box; display: flex; flex-direction: column; gap: 1rem">
+      <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Choosing for</span>
+      <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; border-top: 1px solid #2d2a2a">
+        <sc-for list="{{seats}}" as="s" hint-placeholder-count="4">
+          <li style="border-bottom: 1px solid #2d2a2a">
+            <button type="button" onClick="{{s.pick}}" aria-current="{{s.current}}" style="width: 100%; display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; text-align: left; color: {{s.color}}">
+              <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 2.1rem; line-height: 1; width: 2rem; flex: none">{{s.id}}</span>
+              <span style="display: flex; flex-direction: column; gap: 0.125rem; min-width: 0; flex: 1 1 auto">
+                <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">{{s.who}}</span>
+                <span style="font-size: 0.9rem; line-height: 1.4; display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">{{s.deck}}</span>
+              </span>
+              <span aria-hidden="true" style="flex: none; font-size: 0.9rem">{{s.mark}}</span>
+            </button>
+          </li>
+        </sc-for>
+      </ul>
+    </nav>
+
+    <main class="pad" style="flex: 999 1 560px; min-width: 0; padding: 3rem 4rem; display: flex; flex-direction: column; gap: 2.5rem">
+      <div style="display: flex; flex-direction: column; gap: 1rem">
+        <h1 style="margin: 0; font-family: 'Bodoni Moda', Didot, 'Times New Roman', serif; font-weight: 400; font-size: clamp(2.65rem, 5vw, 4.4rem); line-height: 1; letter-spacing: -0.03em; text-transform: uppercase">Choose a deck</h1>
+        <p style="margin: 0; max-width: 34rem; font-size: 1rem; line-height: 1.5">Every deck listed here plays without stalling. Pick one for seat {{seat}}, or paste your own list at the end.</p>
+      </div>
+
+      <!-- Find -->
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1.5rem 3rem">
+        <label style="flex: 1 1 18rem; display: flex; flex-direction: column; gap: 0.5rem">
+          <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Find a commander</span>
+          <input type="text" value="{{query}}" onInput="{{setQuery}}" placeholder="Type a name" style="font-family: 'Cutive Mono', monospace; font-size: 1rem; background: transparent; border: 0; border-bottom: 1px solid #2d2a2a; border-radius: 0; padding: 0.5rem 0; min-height: 44px; box-sizing: border-box; color: #2d2a2a">
+        </label>
+        <div role="group" aria-label="Colour identity" style="display: flex; flex-direction: column; gap: 0.5rem">
+          <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Colours</span>
+          <div style="display: flex; gap: 0.5rem; font-size: 0.9rem">
+            <sc-for list="{{colors}}" as="c" hint-placeholder-count="5">
+              <button type="button" onClick="{{c.toggle}}" aria-pressed="{{c.on}}" aria-label="{{c.name}}" style="min-width: 44px; min-height: 44px; box-sizing: border-box; border: {{c.bd}}; background: {{c.bg}}; color: {{c.color}}; font-family: 'Bodoni Moda', Didot, serif; font-size: 1.05rem; transition: background-color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1)">{{c.k}}</button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <!-- The index: three groups, typed like an atlas -->
+      <div style="display: flex; flex-direction: column; gap: 2.5rem">
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+          <section style="display: flex; flex-direction: column; gap: 0.75rem">
+            <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 2rem; border-bottom: 1px solid #2d2a2a; padding-bottom: 0.5rem">
+              <h2 style="margin: 0; font-size: 1.05rem; font-weight: 400; line-height: 1.2; letter-spacing: 0.09em; text-transform: uppercase">{{g.title}}</h2>
+              <span style="font-size: 0.725rem; line-height: 1.85; color: #66625f">{{g.note}}</span>
+            </div>
+            <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+              <sc-for list="{{g.rows}}" as="d" hint-placeholder-count="3">
+                <li style="border-bottom: 1px solid #2d2a2a">
+                  <button class="rowbtn" type="button" onClick="{{d.pick}}" aria-pressed="{{d.on}}" disabled="{{d.locked}}" style="width: 100%; box-sizing: border-box; display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; align-items: center; gap: 1rem; padding: 0.75rem; text-align: left; cursor: {{d.cursor}}; color: {{d.color}}; background: {{d.bg}}; transition: background-color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1)">
+                    <span style="font-size: 0.725rem; letter-spacing: 0.09em; color: #66625f">{{d.letter}}.</span>
+                    <span style="display: flex; flex-direction: column; gap: 0.125rem; min-width: 0">
+                      <span style="font-size: 0.9rem; line-height: 1.5; ">{{d.name}}</span>
+                      <span style="font-size: 0.725rem; line-height: 1.6; color: #66625f">{{d.sub}}</span>
+                    </span>
+                    <span style="display: flex; align-items: center; gap: 1rem">
+                      <span role="img" aria-label="{{d.pipLabel}}" style="display: inline-flex; gap: 2px"><sc-for list="{{d.pips}}" as="pp" hint-placeholder-count="2"><span title="{{pp.name}}" style="width: 16px; height: 16px; box-sizing: border-box; border-radius: 50%; border: 1px solid #2d2a2a; background: {{pp.bg}}; color: {{pp.fg}}; display: inline-flex; align-items: center; justify-content: center; font-family: 'Bodoni Moda', Didot, serif; font-size: 10px; line-height: 1; letter-spacing: 0">{{pp.k}}</span></sc-for></span>
+                      <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; min-width: 6rem; text-align: right" class="tag">{{d.tag}}</span>
+                      <span aria-hidden="true" style="width: 1rem; text-align: center; font-size: 0.9rem; line-height: 1">{{d.mark}}</span>
+                    </span>
+                  </button>
+                </li>
+              </sc-for>
+            </ul>
+            <sc-for list="{{g.hints}}" as="h" hint-placeholder-count="0">
+              <p style="margin: 0; font-size: 0.725rem; line-height: 1.6; color: #66625f">{{h}}</p>
+            </sc-for>
+          </section>
+        </sc-for>
+
+        <!-- Import -->
+        <section style="display: flex; flex-direction: column; gap: 1rem">
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 2rem; border-bottom: 1px solid #2d2a2a; padding-bottom: 0.5rem">
+            <h2 style="margin: 0; font-size: 1.05rem; font-weight: 400; line-height: 1.2; letter-spacing: 0.09em; text-transform: uppercase">IV. Bring your own</h2>
+            <span style="font-size: 0.725rem; line-height: 1.85; color: #66625f">Moxfield, Archidekt, or a pasted list.</span>
+          </div>
+          <label style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 40rem">
+            <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Deck link or decklist</span>
+            <textarea rows="4" placeholder="https://moxfield.com/decks/… or one card per line" style="font-family: 'Cutive Mono', monospace; font-size: 0.9rem; line-height: 1.6; background: #eeeadf; border: 1px solid #2d2a2a; border-radius: 0; padding: 0.75rem; color: #2d2a2a; resize: vertical"></textarea>
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 20rem">
+            <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Archetype (optional)</span>
+            <input type="text" placeholder="Worked out for you if blank" style="font-family: 'Cutive Mono', monospace; font-size: 0.9rem; background: transparent; border: 0; border-bottom: 1px solid #2d2a2a; border-radius: 0; padding: 0.5rem 0; color: #2d2a2a">
+          </label>
+          <button type="button" style="align-self: flex-start; min-height: 44px; padding: 0 1.5rem; border: 1px solid #2d2a2a; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase">Check and import</button>
+        </section>
+      </div>
+
+      <!-- Commit -->
+      <div class="commit" style="position: sticky; bottom: 0; margin: 0 -4rem -3rem; padding: 0.75rem 4rem; background: #eeeadf; border-top: 1px solid #2d2a2a; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 2rem">
+        <p style="margin: 0; font-size: 0.9rem; line-height: 1.6">Seat {{seat}}: <span style="text-transform: uppercase; letter-spacing: 0.09em">{{chosenName}}</span></p>
+        <div class="commit-btns" style="display: flex; align-items: center; gap: 1.5rem">
+          <a href="Main.dc.html" style="font-size: 0.9rem; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center">[ Cancel ]</a>
+          <a href="Main.dc.html" style="display: inline-flex; align-items: center; justify-content: center; height: 44px; box-sizing: border-box; background: #2d2a2a; color: #f5f3ec; text-decoration: none; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.75rem; line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 1.5rem">Use this deck</a>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"databaseOn":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":1240}}'>
+// The five colours, muted to sit on paper: name, pip fill, letter colour, light tint.
+const MANA = { W: ['White', '#ddd2b0', '#2d2a2a', '#efe9d8'], U: ['Blue', '#9fb1c1', '#2d2a2a', '#d9e0e6'], B: ['Black', '#5e5753', '#f5f3ec', '#cfcac6'], R: ['Red', '#c99580', '#2d2a2a', '#ecd7cd'], G: ['Green', '#9cae94', '#2d2a2a', '#d8dfd3'], C: ['Colourless', '#d6d4ce', '#2d2a2a', '#e8e6df'] };
+function pips(str) {
+  const ks = !str ? [] : /colou?rless/i.test(str) ? ['C'] : String(str).split(/\s+/).filter((k) => MANA[k]);
+  return ks.map((k) => ({ k, name: MANA[k][0], bg: MANA[k][1], fg: MANA[k][2] }));
+}
+function pipLabel(str) { return pips(str).map((p) => p.name).join(', ') || 'No colours'; }
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { seat: 'B', chosen: 'gen', query: '', colors: [] };
+  }
+
+  renderVals() {
+    const ink = '#2d2a2a';
+    const muted = '#66625f';
+    const s = this.state;
+    const db = this.props.databaseOn !== false;
+    const set = (p) => this.setState(p);
+
+    // Sample entries: in the app these come from the modeled-deck list and the saved decks.
+    const modeled = [
+      { id: 'm1', name: 'Ghalta and Mavren', colors: 'G W', tag: 'Stompy' },
+      { id: 'm2', name: 'Iron Lad, Young Avenger', colors: 'U R', tag: 'Artifacts' },
+      { id: 'm3', name: '[Commander name]', colors: 'W U B', tag: 'Control' },
+      { id: 'm4', name: '[Commander name]', colors: 'B R', tag: 'Aristocrats' },
+    ];
+    const saved = [
+      { id: 's1', name: '[Saved deck commander]', colors: 'U B', tag: 'Combo', sub: 'Imported from Moxfield. Used in your last game.' },
+    ];
+    const q = s.query.trim().toLowerCase();
+    const want = s.colors;
+    const keep = (d) => (!q || d.name.toLowerCase().includes(q)) && want.every((c) => d.colors.split(' ').includes(c));
+    const letters = 'abcdefghij';
+    const names = { gen: 'Generated deck' };
+    modeled.concat(saved).forEach((d) => { names[d.id] = d.name; });
+
+    let n = 0;
+    const row = (d, locked) => ({
+      letter: letters[n++],
+      name: d.name,
+      sub: d.sub ?? (d.id === 'gen' ? 'Built fresh from fully supported cards. Reroll it from the table.' : 'Modeled deck. Every card supported.'),
+      colors: d.colors ?? '',
+      pips: pips(d.colors), pipLabel: pipLabel(d.colors),
+      tag: d.tag ?? '',
+      mark: s.chosen === d.id ? '\u2605' : '',
+      bg: s.chosen === d.id ? '#eeeadf' : 'transparent',
+      on: s.chosen === d.id,
+      color: locked ? muted : ink,
+      cursor: locked ? 'not-allowed' : 'pointer',
+      locked,
+      pick: () => set({ chosen: d.id }),
+    });
+
+    const groups = [
+      { title: 'I. Generated', note: 'Different every time.', rows: [row({ id: 'gen', name: 'Generated deck', colors: '', tag: '' }, false)] },
+      { title: 'II. Modeled decks', note: db ? modeled.filter(keep).length + ' of ' + modeled.length + ' shown.' : 'Needs a database. Generated decks still work.', rows: modeled.filter(keep).map((d) => row(d, !db)) },
+      { title: 'III. Your saved decks', note: db ? 'Decks you imported before.' : 'Needs a database.', rows: db ? saved.filter(keep).map((d) => row(d, false)) : [] },
+    ];
+
+    const hide = (list) => {
+      const out = list.filter((d) => !keep(d));
+      return out.length && out.some((d) => d.id === s.chosen) ? [out.length + ' hidden by filter, including your choice'] : [];
+    };
+    groups[0].hints = [];
+    groups[1].hints = hide(modeled);
+    groups[2].hints = db ? hide(saved) : [];
+
+    const seatDecks = { A: 'Generated deck', B: names[s.chosen], C: 'Generated deck', D: 'Generated deck' };
+    const seats = ['A', 'B', 'C', 'D'].map((id) => ({
+      id,
+      who: id === 'A' ? 'You' : 'Built-in bot',
+      deck: id === s.seat ? names[s.chosen] : seatDecks[id],
+      current: id === s.seat ? 'true' : 'false',
+      color: id === s.seat ? ink : muted,
+      mark: id === s.seat ? '←' : '',
+      pick: () => set({ seat: id }),
+    }));
+
+    const colorNames = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' };
+    const colors = ['W', 'U', 'B', 'R', 'G'].map((k) => {
+      const on = want.includes(k);
+      return {
+        k, on, name: colorNames[k],
+        color: on ? MANA[k][2] : ink,
+        bg: on ? MANA[k][1] : MANA[k][3],
+        bd: on ? '3px solid ' + ink : '1px solid ' + ink,
+        toggle: () => set({ colors: on ? want.filter((x) => x !== k) : want.concat(k) }),
+      };
+    });
+
+    return {
+      seat: s.seat,
+      seats,
+      query: s.query,
+      setQuery: (e) => set({ query: e.target.value }),
+      colors,
+      groups,
+      chosenName: names[s.chosen],
+    };
+  }
+}
+</script>
+</body>
+</html>

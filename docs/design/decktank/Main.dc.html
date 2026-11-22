@@ -1,0 +1,1225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New game</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&amp;family=Bodoni+Moda:opsz,wght@6..96,400&amp;family=Cutive+Mono&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f5f3ec}
+a{color:#2d2a2a}a:hover{color:#20201f;opacity:0.95}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:disabled{cursor:default}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #2d2a2a;outline-offset:3px}
+input[type=checkbox]{accent-color:#2d2a2a;width:1.1rem;height:1.1rem;margin:0;flex:0 0 auto}
+input::placeholder{color:rgba(45,42,42,0.4)}
+.btn{display:inline-flex;align-items:center;gap:0.7rem;min-height:42px;padding:0 1.05rem 0 1.15rem;border:1px solid #2d2a2a;background:transparent;color:#2d2a2a;text-decoration:none;cursor:pointer;font-family:Archivo,'Helvetica Neue',Arial,sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap;transition:background-color 0.35s cubic-bezier(0.165, 0.84, 0.44, 1),color 0.35s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn:hover{background:#2d2a2a;color:#f5f3ec !important}
+.btn .arr{display:inline-flex;transition:transform 0.35s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn:hover .arr,.btn-primary:hover .arr{transform:translateX(3px)}
+.btn .arr path,.btn-primary .arr path{stroke:currentColor}
+.btn-primary{transition:background-color 0.35s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn-primary .arr{display:inline-flex;transition:transform 0.35s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn-primary:hover{background:#413e3d !important}
+@media (max-width: 900px){
+  .setup[aria-hidden="true"]{display:none !important}
+  .shell{height:auto !important;min-height:100vh}
+  .setup{flex:1 1 100% !important;max-width:none !important;min-width:0 !important;border-left:0 !important;border-top:1px solid #2d2a2a;max-height:none !important}
+  .setup-scroll{overflow:auto !important;flex:0 0 auto !important;height:31rem}
+}
+@media (max-width: 760px){
+  .setup{min-width:0 !important}
+  .pad{padding-left:1rem !important;padding-right:1rem !important}
+  .ruler{display:none !important}
+  .brand-btn{display:inline-flex !important}
+  .brand-name{display:none !important}
+}
+.ruler,.brand-btn svg{transition:opacity 0.8s cubic-bezier(0.165,0.84,0.44,1) 0.35s,visibility 0s linear 0s}
+header[data-opening="true"] .ruler,header[data-opening="true"] .brand-btn svg{opacity:0;visibility:hidden;transition:none}
+header[data-opening="true"] .brand-btn{pointer-events:none}
+header.pad{transition:transform 0.9s cubic-bezier(0.165,0.84,0.44,1),opacity 0.6s cubic-bezier(0.165,0.84,0.44,1) 0.2s}
+header.pad[data-opening="true"]{opacity:0;visibility:hidden;transform:translate3d(0,-100%,0);animation:none !important;transition:none}
+.setup[aria-hidden="true"]{pointer-events:none}
+.compass-g,.title-g,main.pad{will-change:transform}
+@media (max-width: 900px){
+  main.pad,.compass-g,.title-g{transform:none !important}
+  .compass-g{width:min(100%, 52vh, 480px) !important}
+  main.pad[data-opening="true"]{justify-content:center !important}
+}
+.ruler-tick-bg{background-image:repeating-linear-gradient(to right,#2d2a2a 0 1px,transparent 1px 0.6rem);background-size:100% 6px;background-repeat:no-repeat;background-position:left bottom}
+.ruler a:hover,.ruler a:focus-visible{opacity:1}
+@keyframes orrDrop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes orrDraw{from{stroke-dashoffset:1232}to{stroke-dashoffset:0}}
+@keyframes orrDrift{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes orrDriftBack{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
+@media (prefers-reduced-motion: reduce){.garn-spin,[style*="orrDrift"]{animation:none !important}}
+@keyframes orrFade{from{opacity:0}to{opacity:1}}
+@keyframes orrRose{from{opacity:0;transform:scale(0.55) rotate(-22deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+@keyframes orrPop{from{opacity:0;transform:translate(-50%,-50%) scale(0.85)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes orrPopIn{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:none}}
+@keyframes orrRule{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes orrTick{from{transform:scale(0.4);opacity:0}to{transform:none;opacity:1}}
+.drow{transition:background-color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.drow:hover{background:#eeeadf}
+@media (max-width: 760px){ .drow{grid-template-columns:1rem minmax(0,1fr) auto !important;gap:0.5rem !important;padding:0.7rem 0.4rem !important} .dtag{min-width:0 !important} }
+@keyframes orrFromLeft{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+@keyframes orrFromRight{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes orrRiseA{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes orrRiseB{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes orrSwayA{0%{transform:rotate(0deg)}38%{transform:rotate(var(--sway))}100%{transform:rotate(0deg)}}
+@keyframes orrSwayB{0%{transform:rotate(0deg)}38%{transform:rotate(var(--sway))}100%{transform:rotate(0deg)}}
+@keyframes orrSoftA{from{opacity:0}to{opacity:1}}
+@keyframes orrSoftB{from{opacity:0}to{opacity:1}}
+.orr-stop{transition:background-color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),border-color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.orr-stop:not(:disabled):hover{border-width:2px}
+.orr-stop[aria-pressed="true"]:hover{border-width:1px !important;background:#4f4b49 !important;outline:1px solid #f5f3ec;outline-offset:-4px}
+.orr-seg{transition:background-color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1)}
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+</helmet>
+<div class="shell" style="height: 100vh; min-height: 600px; background: #f5f3ec; color: #2d2a2a; font-family: 'Cutive Mono', 'Courier New', ui-monospace, monospace; display: flex; flex-direction: column; overflow: hidden">
+
+  <!-- Top bar -->
+  <header class="pad" data-opening="{{asideHidden}}" style="position: relative; z-index: 20; flex: 0 0 auto; display: flex; align-items: stretch; gap: 2rem; min-height: 4.25rem; padding: 0 2rem; border-bottom: 1px solid #2d2a2a; animation: orrFade 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) both">
+    <a href="#" class="brand-name" style="align-self: center; flex: 0 0 auto; text-decoration: none; font-family: 'Bodoni Moda', Didot, 'Times New Roman', serif; font-size: 1.35rem; line-height: 1; letter-spacing: -0.03em; text-transform: uppercase">Decktank</a>
+
+    <!-- The ruler: every place on a big tick; the warm tick is where you are, and slides to where you point -->
+    <nav class="ruler" aria-label="Places" onMouseLeave="{{navRest}}" style="flex: 1 1 auto; min-width: 0; display: flex; justify-content: flex-end; align-self: stretch">
+      <div class="ruler-tick-bg" style="position: relative; display: flex; align-items: stretch; padding: 0 0.6rem">
+        <sc-for list="{{nav}}" as="n" hint-placeholder-count="6">
+          <a href="{{n.href}}" onClick="{{n.go}}" onMouseEnter="{{n.hover}}" onFocus="{{n.hover}}" onBlur="{{navRest}}" aria-current="{{n.current}}" style="position: relative; width: 7.2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem; padding-bottom: 1rem; text-decoration: none; text-align: center">
+            <span style="min-height: 0.9rem; font-size: 0.6rem; letter-spacing: 0.09em; color: #66625f">{{n.group}}</span>
+            <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; color: {{n.color}}; transition: color 0.3s cubic-bezier(0.165, 0.84, 0.44, 1)">{{n.label}}</span>
+            <span aria-hidden="true" style="position: absolute; left: 50%; bottom: 0; width: 1px; height: {{n.tick}}; background: #2d2a2a"></span>
+          </a>
+        </sc-for>
+        <span aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: #2d2a2a"></span>
+        <span aria-hidden="true" style="position: absolute; bottom: 0; left: 0.6rem; width: 3px; height: 1.35rem; margin-left: -1.5px; background: #a77e5f; transform: translateX(calc({{navAt}} * 7.2rem + 3.6rem)); transition: transform 0.55s cubic-bezier(0.165, 0.84, 0.44, 1)"></span>
+      </div>
+    </nav>
+
+    <!-- Phones: the name is the menu -->
+    <button type="button" class="brand-btn" onClick="{{toggleNav}}" aria-expanded="{{navOpen}}" style="display: none; align-self: center; align-items: center; gap: 0.6rem; min-height: 44px; font-family: 'Bodoni Moda', Didot, serif; font-size: 1.15rem; letter-spacing: -0.03em; text-transform: uppercase">
+      Decktank
+      <svg width="12" height="8" viewBox="0 0 12 8" aria-hidden="true" style="transform: rotate({{caret}}deg); transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1)"><path d="M1 1 L6 6 L11 1" fill="none" stroke="#2d2a2a" stroke-width="1.2"></path></svg>
+    </button>
+    <sc-if value="{{navOpen}}" hint-placeholder-val="{{ false }}">
+      <!-- Phones: the name opens a full sheet of places, grouped as on the ruler -->
+      <nav aria-label="Places" style="position: absolute; left: 0; right: 0; top: 100%; height: calc(100vh - 4.25rem); overflow: auto; display: flex; flex-direction: column; padding: 0.5rem 1rem 1.25rem; background: #eeeadf; border-bottom: 1px solid #2d2a2a; animation: orrDrop 0.35s cubic-bezier(0.165, 0.84, 0.44, 1) both">
+        <sc-for list="{{sheet}}" as="r" hint-placeholder-count="9">
+          <sc-if value="{{r.head}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: baseline; gap: 0.75rem; padding: 1.4rem 0 0.5rem; border-bottom: 1px solid #2d2a2a; animation: orrDrop 0.45s cubic-bezier(0.165, 0.84, 0.44, 1) {{r.delay}} both">
+              <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 1.5rem; line-height: 1; min-width: 2.2rem">{{r.num}}</span>
+              <span style="font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: #66625f">{{r.name}}</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{r.item}}" hint-placeholder-val="{{ true }}">
+            <a href="{{r.href}}" onClick="{{r.go}}" aria-current="{{r.current}}" style="position: relative; display: flex; align-items: center; gap: 0.75rem; min-height: 3.9rem; padding: 0.55rem 0 0.55rem 2.95rem; border-bottom: 1px solid #bdbbb6; text-decoration: none; animation: orrDrop 0.45s cubic-bezier(0.165, 0.84, 0.44, 1) {{r.delay}} both">
+              <span aria-hidden="true" style="position: absolute; left: 0; top: 0.9rem; bottom: 0.9rem; width: 3px; background: {{r.markBg}}"></span>
+              <span style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.3rem">
+                <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase">{{r.label}}</span>
+                <span style="font-size: 0.72rem; line-height: 1.35; color: #66625f">{{r.desc}}</span>
+              </span>
+              <span aria-hidden="true" style="flex: 0 0 auto; font-family: Archivo, sans-serif; font-size: 1rem; color: {{r.arrow}}">&#8594;</span>
+            </a>
+          </sc-if>
+        </sc-for>
+        <div aria-hidden="true" style="margin-top: auto; padding-top: 2rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: #8f8c88; animation: orrFade 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) 0.4s both">
+          <svg width="22" height="22" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="#8f8c88" stroke-width="1"></circle><path d="M20 4 L23 20 L20 36 L17 20 Z M4 20 L20 17 L36 20 L20 23 Z" fill="none" stroke="#8f8c88" stroke-width="1"></path><path d="M20 4 L23 20 L17 20 Z" fill="#a77e5f"></path></svg>
+          <span>Decktank &#183; Commander table</span>
+          <span style="flex: 1 1 auto; height: 1px; background: #bdbbb6"></span>
+        </div>
+      </nav>
+    </sc-if>
+  </header>
+
+  <div style="flex: 1 1 auto; min-height: 0; display: flex; flex-wrap: wrap; align-items: stretch">
+  <sc-if value="{{onNewGame}}" hint-placeholder-val="{{ true }}">
+
+    <!-- Centre: the compass chooses the mode; the headline says what it means -->
+    <main class="pad" data-opening="{{asideHidden}}" aria-labelledby="mode-title" style="flex: 1 1 420px; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 1.25rem; padding: 1.5rem 2.5rem; position: relative; transform: translate3d({{mainShift}}, 0, 0); transition: transform 1s cubic-bezier(0.165, 0.84, 0.44, 1)">
+
+      <sc-if value="{{notPicking}}" hint-placeholder-val="{{ true }}">
+      <div role="group" aria-label="Mode" class="compass-g" style="position: relative; width: min(100%, 64vh, 680px); min-width: 280px; aspect-ratio: 1 / 1; transform-origin: 50% 0; transform: scale({{compassScale}}); transition: transform 1s cubic-bezier(0.165, 0.84, 0.44, 1)">
+        <!-- Opening garnish: the plate around the instrument. Only on the opening screen; it fades as the menu opens -->
+        <div aria-hidden="true" style="position: absolute; inset: -46%; pointer-events: none; opacity: {{garnishOp}}; transition: opacity 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)">
+          <div style="position: absolute; inset: 0; animation: orrFade 1.4s cubic-bezier(0.165, 0.84, 0.44, 1) 0.9s both">
+          <svg viewBox="-380 -380 760 760" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible">
+            <path d="M-380 0L-250 0M250 0L380 0M0 -380L0 -250M0 250L0 380" stroke="#8f8c88" stroke-width="0.6"></path>
+            <path d="M-250 -6L-250 6M-6 -250L6 -250M-258 -3L-258 3M-3 -258L3 -258M-266 -3L-266 3M-3 -266L3 -266M-274 -3L-274 3M-3 -274L3 -274M-282 -3L-282 3M-3 -282L3 -282M-290 -6L-290 6M-6 -290L6 -290M-298 -3L-298 3M-3 -298L3 -298M-306 -3L-306 3M-3 -306L3 -306M-314 -3L-314 3M-3 -314L3 -314M-322 -3L-322 3M-3 -322L3 -322M-330 -6L-330 6M-6 -330L6 -330M-338 -3L-338 3M-3 -338L3 -338M-346 -3L-346 3M-3 -346L3 -346M-354 -3L-354 3M-3 -354L3 -354M-362 -3L-362 3M-3 -362L3 -362M-370 -6L-370 6M-6 -370L6 -370M250 -6L250 6M-6 250L6 250M258 -3L258 3M-3 258L3 258M266 -3L266 3M-3 266L3 266M274 -3L274 3M-3 274L3 274M282 -3L282 3M-3 282L3 282M290 -6L290 6M-6 290L6 290M298 -3L298 3M-3 298L3 298M306 -3L306 3M-3 306L3 306M314 -3L314 3M-3 314L3 314M322 -3L322 3M-3 322L3 322M330 -6L330 6M-6 330L6 330M338 -3L338 3M-3 338L3 338M346 -3L346 3M-3 346L3 346M354 -3L354 3M-3 354L3 354M362 -3L362 3M-3 362L3 362M370 -6L370 6M-6 370L6 370" stroke="#8f8c88" stroke-width="0.6"></path>
+                                    <circle r="318" fill="none" stroke="#bdbbb6" stroke-width="0.6" stroke-dasharray="6 6"></circle>
+          </svg>
+          <!-- the sky: constellations and loose stars turning slowly round the middle -->
+          <svg viewBox="-380 -380 760 760" class="garn-spin" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; will-change: transform; animation: orrDrift 420s linear infinite">
+            <path d="M-330 -250L-300 -205L-262 -238L-228 -292 M318 -262L282 -300L250 -250 M-320 250L-276 300L-240 262 M330 240L296 300L262 268 M50 -328L65 -339L84 -334L112 -318L131 -324 M252 -174L280 -156L297 -134L323 -143L323 -164L326 -184 M361 112L349 97L339 78L310 79L282 76 M201 322L188 303L167 297L158 281L135 269 M-130 317L-104 332L-81 321 M-282 131L-286 157L-302 167L-298 189L-306 207 M-346 -98L-343 -69L-318 -66L-304 -80L-318 -107L-340 -109 M-189 -302L-173 -287L-149 -293 M57 433L38 430L25 399L27 369L24 337 M-358 15L-373 36L-381 55L-405 52L-421 74L-409 98 M-60 -387L-38 -396L-5 -396" fill="none" stroke="#bdbbb6" stroke-width="0.6"></path>
+            <g fill="#2d2a2a"><circle cx="-330" cy="-250" r="1.7"></circle><circle cx="-300" cy="-205" r="0.9"></circle><circle cx="-262" cy="-238" r="1.3"></circle><circle cx="-228" cy="-292" r="1.3"></circle><circle cx="318" cy="-262" r="1.7"></circle><circle cx="282" cy="-300" r="1.3"></circle><circle cx="250" cy="-250" r="1.3"></circle><circle cx="-320" cy="250" r="1.7"></circle><circle cx="-276" cy="300" r="1.2"></circle><circle cx="-240" cy="262" r="0.9"></circle><circle cx="330" cy="240" r="1.7"></circle><circle cx="296" cy="300" r="1"></circle><circle cx="262" cy="268" r="0.9"></circle><circle cx="50" cy="-328" r="1.7"></circle><circle cx="65" cy="-339" r="1.2"></circle><circle cx="84" cy="-334" r="1.2"></circle><circle cx="112" cy="-318" r="1.3"></circle><circle cx="131" cy="-324" r="1"></circle><circle cx="252" cy="-174" r="1.7"></circle><circle cx="280" cy="-156" r="1.6"></circle><circle cx="297" cy="-134" r="0.9"></circle><circle cx="323" cy="-143" r="1"></circle><circle cx="323" cy="-164" r="1.6"></circle><circle cx="326" cy="-184" r="1.2"></circle><circle cx="361" cy="112" r="1.7"></circle><circle cx="349" cy="97" r="1"></circle><circle cx="339" cy="78" r="1.6"></circle><circle cx="310" cy="79" r="0.9"></circle><circle cx="282" cy="76" r="1.6"></circle><circle cx="201" cy="322" r="1.7"></circle><circle cx="188" cy="303" r="1.2"></circle><circle cx="167" cy="297" r="0.9"></circle><circle cx="158" cy="281" r="1.2"></circle><circle cx="135" cy="269" r="1.6"></circle><circle cx="-130" cy="317" r="1.7"></circle><circle cx="-104" cy="332" r="1.2"></circle><circle cx="-81" cy="321" r="1"></circle><circle cx="-282" cy="131" r="1.7"></circle><circle cx="-286" cy="157" r="1.2"></circle><circle cx="-302" cy="167" r="1"></circle><circle cx="-298" cy="189" r="1.6"></circle><circle cx="-306" cy="207" r="1.6"></circle><circle cx="-346" cy="-98" r="1.7"></circle><circle cx="-343" cy="-69" r="1.6"></circle><circle cx="-318" cy="-66" r="1.2"></circle><circle cx="-304" cy="-80" r="1"></circle><circle cx="-318" cy="-107" r="1.6"></circle><circle cx="-340" cy="-109" r="1"></circle><circle cx="-189" cy="-302" r="1.7"></circle><circle cx="-173" cy="-287" r="1"></circle><circle cx="-149" cy="-293" r="1.3"></circle><circle cx="57" cy="433" r="1.7"></circle><circle cx="38" cy="430" r="1.2"></circle><circle cx="25" cy="399" r="0.9"></circle><circle cx="27" cy="369" r="0.9"></circle><circle cx="24" cy="337" r="1.2"></circle><circle cx="-358" cy="15" r="1.7"></circle><circle cx="-373" cy="36" r="1.3"></circle><circle cx="-381" cy="55" r="1.2"></circle><circle cx="-405" cy="52" r="1"></circle><circle cx="-421" cy="74" r="1.6"></circle><circle cx="-409" cy="98" r="1.2"></circle><circle cx="-60" cy="-387" r="1.7"></circle><circle cx="-38" cy="-396" r="1.3"></circle><circle cx="-5" cy="-396" r="1.2"></circle></g>
+            <g fill="#5f5c59"><circle cx="-93" cy="-321" r="0.6"></circle><circle cx="207" cy="-277" r="0.8"></circle><circle cx="350" cy="-103" r="0.9"></circle><circle cx="-293" cy="-187" r="0.9"></circle><circle cx="305" cy="204" r="0.9"></circle><circle cx="230" cy="-246" r="0.9"></circle><circle cx="-347" cy="0" r="0.6"></circle><circle cx="148" cy="335" r="0.6"></circle><circle cx="-386" cy="-128" r="0.8"></circle><circle cx="87" cy="369" r="0.6"></circle><circle cx="-307" cy="49" r="0.6"></circle><circle cx="62" cy="-356" r="0.8"></circle><circle cx="-288" cy="-107" r="0.9"></circle><circle cx="-46" cy="-366" r="0.8"></circle><circle cx="295" cy="-198" r="0.6"></circle><circle cx="36" cy="-405" r="0.9"></circle><circle cx="229" cy="-303" r="0.6"></circle><circle cx="159" cy="361" r="0.6"></circle><circle cx="55" cy="-311" r="0.9"></circle><circle cx="360" cy="-21" r="0.8"></circle><circle cx="-107" cy="375" r="0.6"></circle><circle cx="-178" cy="-281" r="0.8"></circle><circle cx="-331" cy="203" r="0.9"></circle><circle cx="191" cy="351" r="0.9"></circle><circle cx="226" cy="-210" r="0.9"></circle><circle cx="40" cy="-340" r="0.6"></circle><circle cx="-345" cy="-140" r="0.9"></circle><circle cx="340" cy="-188" r="0.9"></circle><circle cx="355" cy="330" r="0.9"></circle><circle cx="-180" cy="-340" r="0.9"></circle><circle cx="170" cy="345" r="0.9"></circle></g>
+          </svg>
+          <svg viewBox="-380 -380 760 760" class="garn-spin" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; will-change: transform; animation: orrDrift 240s linear infinite">
+              <circle r="214" fill="none" stroke="#5f5c59" stroke-width="0.6"></circle>
+              <circle r="246" fill="none" stroke="#5f5c59" stroke-width="0.6"></circle>
+              <path d="M0.0 -214.0L0.0 -226.0M7.5 -213.9L7.6 -217.9M14.9 -213.5L15.2 -217.5M22.4 -212.8L22.8 -216.8M29.8 -211.9L30.3 -215.9M37.2 -210.7L38.5 -218.6M44.5 -209.3L45.3 -213.2M51.8 -207.6L52.7 -211.5M59.0 -205.7L60.1 -209.6M66.1 -203.5L67.4 -207.3M73.2 -201.1L75.9 -208.6M80.2 -198.4L81.7 -202.1M87.0 -195.5L88.7 -199.2M93.8 -192.3L95.6 -195.9M100.5 -189.0L102.3 -192.5M107.0 -185.3L113.0 -195.7M113.4 -181.5L115.5 -184.9M119.7 -177.4L121.9 -180.7M125.8 -173.1L128.1 -176.4M131.8 -168.6L134.2 -171.8M137.6 -163.9L142.7 -170.1M143.2 -159.0L145.9 -162.0M148.7 -153.9L151.4 -156.8M153.9 -148.7L156.8 -151.4M159.0 -143.2L162.0 -145.9M163.9 -137.6L170.1 -142.7M168.6 -131.8L171.8 -134.2M173.1 -125.8L176.4 -128.1M177.4 -119.7L180.7 -121.9M181.5 -113.4L184.9 -115.5M185.3 -107.0L195.7 -113.0M189.0 -100.5L192.5 -102.3M192.3 -93.8L195.9 -95.6M195.5 -87.0L199.2 -88.7M198.4 -80.2L202.1 -81.7M201.1 -73.2L208.6 -75.9M203.5 -66.1L207.3 -67.4M205.7 -59.0L209.6 -60.1M207.6 -51.8L211.5 -52.7M209.3 -44.5L213.2 -45.3M210.7 -37.2L218.6 -38.5M211.9 -29.8L215.9 -30.3M212.8 -22.4L216.8 -22.8M213.5 -14.9L217.5 -15.2M213.9 -7.5L217.9 -7.6M214.0 0.0L226.0 0.0M213.9 7.5L217.9 7.6M213.5 14.9L217.5 15.2M212.8 22.4L216.8 22.8M211.9 29.8L215.9 30.3M210.7 37.2L218.6 38.5M209.3 44.5L213.2 45.3M207.6 51.8L211.5 52.7M205.7 59.0L209.6 60.1M203.5 66.1L207.3 67.4M201.1 73.2L208.6 75.9M198.4 80.2L202.1 81.7M195.5 87.0L199.2 88.7M192.3 93.8L195.9 95.6M189.0 100.5L192.5 102.3M185.3 107.0L195.7 113.0M181.5 113.4L184.9 115.5M177.4 119.7L180.7 121.9M173.1 125.8L176.4 128.1M168.6 131.8L171.8 134.2M163.9 137.6L170.1 142.7M159.0 143.2L162.0 145.9M153.9 148.7L156.8 151.4M148.7 153.9L151.4 156.8M143.2 159.0L145.9 162.0M137.6 163.9L142.7 170.1M131.8 168.6L134.2 171.8M125.8 173.1L128.1 176.4M119.7 177.4L121.9 180.7M113.4 181.5L115.5 184.9M107.0 185.3L113.0 195.7M100.5 189.0L102.3 192.5M93.8 192.3L95.6 195.9M87.0 195.5L88.7 199.2M80.2 198.4L81.7 202.1M73.2 201.1L75.9 208.6M66.1 203.5L67.4 207.3M59.0 205.7L60.1 209.6M51.8 207.6L52.7 211.5M44.5 209.3L45.3 213.2M37.2 210.7L38.5 218.6M29.8 211.9L30.3 215.9M22.4 212.8L22.8 216.8M14.9 213.5L15.2 217.5M7.5 213.9L7.6 217.9M0.0 214.0L0.0 226.0M-7.5 213.9L-7.6 217.9M-14.9 213.5L-15.2 217.5M-22.4 212.8L-22.8 216.8M-29.8 211.9L-30.3 215.9M-37.2 210.7L-38.5 218.6M-44.5 209.3L-45.3 213.2M-51.8 207.6L-52.7 211.5M-59.0 205.7L-60.1 209.6M-66.1 203.5L-67.4 207.3M-73.2 201.1L-75.9 208.6M-80.2 198.4L-81.7 202.1M-87.0 195.5L-88.7 199.2M-93.8 192.3L-95.6 195.9M-100.5 189.0L-102.3 192.5M-107.0 185.3L-113.0 195.7M-113.4 181.5L-115.5 184.9M-119.7 177.4L-121.9 180.7M-125.8 173.1L-128.1 176.4M-131.8 168.6L-134.2 171.8M-137.6 163.9L-142.7 170.1M-143.2 159.0L-145.9 162.0M-148.7 153.9L-151.4 156.8M-153.9 148.7L-156.8 151.4M-159.0 143.2L-162.0 145.9M-163.9 137.6L-170.1 142.7M-168.6 131.8L-171.8 134.2M-173.1 125.8L-176.4 128.1M-177.4 119.7L-180.7 121.9M-181.5 113.4L-184.9 115.5M-185.3 107.0L-195.7 113.0M-189.0 100.5L-192.5 102.3M-192.3 93.8L-195.9 95.6M-195.5 87.0L-199.2 88.7M-198.4 80.2L-202.1 81.7M-201.1 73.2L-208.6 75.9M-203.5 66.1L-207.3 67.4M-205.7 59.0L-209.6 60.1M-207.6 51.8L-211.5 52.7M-209.3 44.5L-213.2 45.3M-210.7 37.2L-218.6 38.5M-211.9 29.8L-215.9 30.3M-212.8 22.4L-216.8 22.8M-213.5 14.9L-217.5 15.2M-213.9 7.5L-217.9 7.6M-214.0 0.0L-226.0 0.0M-213.9 -7.5L-217.9 -7.6M-213.5 -14.9L-217.5 -15.2M-212.8 -22.4L-216.8 -22.8M-211.9 -29.8L-215.9 -30.3M-210.7 -37.2L-218.6 -38.5M-209.3 -44.5L-213.2 -45.3M-207.6 -51.8L-211.5 -52.7M-205.7 -59.0L-209.6 -60.1M-203.5 -66.1L-207.3 -67.4M-201.1 -73.2L-208.6 -75.9M-198.4 -80.2L-202.1 -81.7M-195.5 -87.0L-199.2 -88.7M-192.3 -93.8L-195.9 -95.6M-189.0 -100.5L-192.5 -102.3M-185.3 -107.0L-195.7 -113.0M-181.5 -113.4L-184.9 -115.5M-177.4 -119.7L-180.7 -121.9M-173.1 -125.8L-176.4 -128.1M-168.6 -131.8L-171.8 -134.2M-163.9 -137.6L-170.1 -142.7M-159.0 -143.2L-162.0 -145.9M-153.9 -148.7L-156.8 -151.4M-148.7 -153.9L-151.4 -156.8M-143.2 -159.0L-145.9 -162.0M-137.6 -163.9L-142.7 -170.1M-131.8 -168.6L-134.2 -171.8M-125.8 -173.1L-128.1 -176.4M-119.7 -177.4L-121.9 -180.7M-113.4 -181.5L-115.5 -184.9M-107.0 -185.3L-113.0 -195.7M-100.5 -189.0L-102.3 -192.5M-93.8 -192.3L-95.6 -195.9M-87.0 -195.5L-88.7 -199.2M-80.2 -198.4L-81.7 -202.1M-73.2 -201.1L-75.9 -208.6M-66.1 -203.5L-67.4 -207.3M-59.0 -205.7L-60.1 -209.6M-51.8 -207.6L-52.7 -211.5M-44.5 -209.3L-45.3 -213.2M-37.2 -210.7L-38.5 -218.6M-29.8 -211.9L-30.3 -215.9M-22.4 -212.8L-22.8 -216.8M-14.9 -213.5L-15.2 -217.5M-7.5 -213.9L-7.6 -217.9" stroke="#5f5c59" stroke-width="0.6"></path>
+              <g fill="#66625f" style="font-family: 'Cutive Mono', 'Courier New', monospace; font-size: 7px; letter-spacing: 0.08em"><text x="0" y="-238" transform="rotate(0)" text-anchor="middle">000</text><text x="0" y="-238" transform="rotate(30)" text-anchor="middle">030</text><text x="0" y="-238" transform="rotate(60)" text-anchor="middle">060</text><text x="0" y="-238" transform="rotate(90)" text-anchor="middle">090</text><text x="0" y="-238" transform="rotate(120)" text-anchor="middle">120</text><text x="0" y="-238" transform="rotate(150)" text-anchor="middle">150</text><text x="0" y="-238" transform="rotate(180)" text-anchor="middle">180</text><text x="0" y="-238" transform="rotate(210)" text-anchor="middle">210</text><text x="0" y="-238" transform="rotate(240)" text-anchor="middle">240</text><text x="0" y="-238" transform="rotate(270)" text-anchor="middle">270</text><text x="0" y="-238" transform="rotate(300)" text-anchor="middle">300</text><text x="0" y="-238" transform="rotate(330)" text-anchor="middle">330</text></g></svg>
+          <svg viewBox="-380 -380 760 760" class="garn-spin" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; will-change: transform; animation: orrDriftBack 360s linear infinite">
+              <circle r="272" fill="none" stroke="#8f8c88" stroke-width="0.6" stroke-dasharray="1 5"></circle>
+              <path d="M159.9 -220.1L0.0 272.0L-159.9 -220.1L258.7 84.1L-258.7 84.1L159.9 -220.1" fill="none" stroke="#bdbbb6" stroke-width="0.6"></path>
+              <circle cx="159.9" cy="-220.1" r="9" fill="#ddd2b0" stroke="#2d2a2a" stroke-width="0.8"></circle><text x="159.9" y="-216.5" text-anchor="middle" transform="rotate(-36 159.9 -220.1)" style="font-family: 'Bodoni Moda', Didot, serif; font-size: 10px">W</text><circle cx="258.7" cy="84.1" r="9" fill="#9fb1c1" stroke="#2d2a2a" stroke-width="0.8"></circle><text x="258.7" y="87.69999999999999" text-anchor="middle" transform="rotate(-108 258.7 84.1)" style="font-family: 'Bodoni Moda', Didot, serif; font-size: 10px">U</text><circle cx="0.0" cy="272.0" r="9" fill="#5e5753" stroke="#2d2a2a" stroke-width="0.8"></circle><text fill="#f5f3ec" x="0.0" y="275.6" text-anchor="middle" transform="rotate(-180 0.0 272.0)" style="font-family: 'Bodoni Moda', Didot, serif; font-size: 10px">B</text><circle cx="-258.7" cy="84.1" r="9" fill="#c99580" stroke="#2d2a2a" stroke-width="0.8"></circle><text x="-258.7" y="87.69999999999999" text-anchor="middle" transform="rotate(-252 -258.7 84.1)" style="font-family: 'Bodoni Moda', Didot, serif; font-size: 10px">R</text><circle cx="-159.9" cy="-220.1" r="9" fill="#9cae94" stroke="#2d2a2a" stroke-width="0.8"></circle><text x="-159.9" y="-216.5" text-anchor="middle" transform="rotate(-324 -159.9 -220.1)" style="font-family: 'Bodoni Moda', Didot, serif; font-size: 10px">G</text></svg>
+          <svg viewBox="-380 -380 760 760" class="garn-spin" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; will-change: transform; animation: orrDrift 70s linear infinite"><circle cx="0" cy="-318" r="4" fill="#a77e5f"></circle><circle cx="0" cy="-318" r="8" fill="none" stroke="#a77e5f" stroke-width="0.6"></circle></svg>
+          </div>
+        </div>
+        <!-- the instrument: bezel, ticks, bearings, rose. Drawn, not read: the stops below carry the meaning -->
+        <svg viewBox="0 0 400 400" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%">
+          <circle cx="200" cy="200" r="196" fill="#f5f3ec" stroke="#2d2a2a" stroke-width="3" stroke-dasharray="1232" style="animation: orrDraw 1s cubic-bezier(0.165, 0.84, 0.44, 1) both; transform: rotate(-90deg); transform-origin: 200px 200px"></circle>
+          </svg><svg viewBox="0 0 400 400" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; will-change: transform; transform: rotate({{rings.ticks}}deg); transition: transform {{rings.ticksT}}"><g>
+            <circle cx="200" cy="200" r="190" fill="none" stroke="#2d2a2a" stroke-width="1" style="animation: orrFade 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) 0.35s both"></circle>
+            <path d="{{ticks}}" stroke="#2d2a2a" stroke-width="1" fill="none" style="animation: orrFade 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) 0.15s both"></path>
+            <path d="M200 10 L200 34 M390 200 L366 200 M200 390 L200 366 M10 200 L34 200" stroke="#a77e5f" stroke-width="3.5" stroke-linecap="butt" style="animation: orrFade 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) 0.8s both"></path>
+          </g>
+          </svg><svg viewBox="0 0 400 400" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; will-change: transform; transform: rotate({{rings.mid}}deg); transition: transform {{rings.midT}}"><g>
+            <circle cx="200" cy="200" r="150" fill="none" stroke="#2d2a2a" stroke-width="1" stroke-dasharray="{{midDash}}" style="animation: orrFade 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) 0.55s both"></circle>
+            <path d="{{midTicks}}" stroke="#2d2a2a" stroke-width="1" fill="none" style="animation: orrFade 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) 0.55s both"></path>
+            <path d="M200 50 L200 70 M350 200 L330 200 M200 350 L200 330 M50 200 L70 200" stroke="#a77e5f" stroke-width="3.5" stroke-linecap="butt" style="animation: orrFade 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) 0.8s both"></path>
+          </g>
+          </svg><svg viewBox="0 0 400 400" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; will-change: transform; transform: rotate({{rings.inner}}deg); transition: transform {{rings.innerT}}"><g>
+            <circle cx="200" cy="200" r="104" fill="none" stroke="#2d2a2a" stroke-width="1" stroke-dasharray="1 4" style="animation: orrFade 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) 0.65s both"></circle>
+            <path d="{{innerTicks}}" stroke="#2d2a2a" stroke-width="1" fill="none" style="animation: orrFade 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) 0.65s both"></path>
+            <path d="M200 96 L200 80 M304 200 L320 200 M200 304 L200 320 M96 200 L80 200" stroke="#a77e5f" stroke-width="3.5" stroke-linecap="butt" style="animation: orrFade 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) 0.8s both"></path>
+          </g>
+          </svg><svg viewBox="0 0 400 400" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; will-change: transform; transform: rotate({{rings.rose}}deg); transition: transform {{rings.roseT}}"><g>
+          <g style="transform-origin: 200px 200px; animation: orrRose 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.2s both">
+            <path d="{{roseLight}}" fill="#e8e6df" stroke="#2d2a2a" stroke-width="0.75" stroke-linejoin="round"></path>
+            <path d="{{roseDark}}" fill="#bdbbb6" stroke="#2d2a2a" stroke-width="0.75" stroke-linejoin="round"></path>
+            <path d="M200 94 L213 189 L200 200 L187 189 Z" fill="#a77e5f" stroke="#2d2a2a" stroke-width="0.75" stroke-linejoin="round" style="opacity: {{chosenOp}}; transition: opacity 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) 0.3s"></path>
+            <circle cx="200" cy="200" r="22" fill="#f5f3ec" stroke="#2d2a2a" stroke-width="1"></circle>
+          </g>
+          </g>
+          </svg><svg viewBox="0 0 400 400" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible">
+          <path d="M200 14 L205 4 L195 4 Z" fill="#2d2a2a" style="opacity: {{chosenOp}}; transform-origin: 200px 200px; transform: rotate({{lubberAngle}}deg); transition: transform 0.7s cubic-bezier(0.165, 0.84, 0.44, 1); animation: orrFade 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) 1s both"></path>
+        </svg>
+
+
+        <!-- the needle: turns to the chosen stop; drag the face to turn it yourself -->
+        <div onPointerDown="{{dialDown}}" onPointerMove="{{dialMove}}" onPointerUp="{{dialUp}}" onPointerCancel="{{dialUp}}" onPointerLeave="{{softLeave}}" aria-hidden="true" style="position: absolute; inset: 0; border-radius: 50%; touch-action: none; cursor: {{grabCursor}}">
+          <svg viewBox="0 0 400 400" style="position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate({{needleAngle}}deg); transition: {{needleTransition}}">
+            <path d="M200 112 L206.5 200 L200 209 L193.5 200 Z" fill="#2d2a2a" stroke="#2d2a2a" stroke-width="1" stroke-linejoin="round"></path>
+            <path d="M200 284 L205.5 200 L200 191 L194.5 200 Z" fill="#f5f3ec" stroke="#2d2a2a" stroke-width="1" stroke-linejoin="round"></path>
+            <circle cx="200" cy="200" r="7" fill="#2d2a2a"></circle>
+            <circle cx="200" cy="200" r="2.5" fill="#f5f3ec"></circle>
+          </svg>
+        </div>
+
+        <!-- the four stops ride a plate that turns: the chosen one comes round to north. Labels stay upright -->
+        <div style="position: absolute; inset: 0; z-index: 2; pointer-events: none; will-change: transform; transform: rotate({{dialRot}}deg); transition: {{dialT}}">
+          <sc-for list="{{stops}}" as="st" hint-placeholder-count="4">
+            <span style="position: absolute; left: {{st.x}}; top: {{st.y}}; pointer-events: auto; transform: translate(-50%, -50%) rotate({{st.rot}}deg); transition: {{st.rotT}}">
+              <button type="button" class="orr-stop" onClick="{{st.pick}}" onMouseEnter="{{st.hover}}" onMouseLeave="{{softLeave}}" onFocus="{{st.hover}}" onBlur="{{softLeave}}" aria-pressed="{{st.pressed}}" disabled="{{st.disabled}}" title="{{st.title}}" style="animation: orrPopIn 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) {{st.delay}} both; display: flex; flex-direction: column; align-items: center; gap: 0.1rem; min-width: 64px; min-height: 44px; padding: 0.3rem 0.6rem; border: {{st.bw}} solid {{st.border}}; outline: {{st.outline}}; outline-offset: -4px; background: {{st.bg}}; color: {{st.fg}}">
+                <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 1.15rem; line-height: 1">{{st.point}}</span>
+                <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">{{st.label}}</span>
+                <span style="font-size: 0.6rem; letter-spacing: 0.06em; opacity: 0.85; white-space: nowrap">{{st.sub}}</span>
+              </button>
+            </span>
+          </sc-for>
+        </div>
+      </div>
+
+      <div class="title-g" style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-align: center; max-width: 40rem; transform: translate3d(0, {{titleShift}}, 0); transition: transform 1s cubic-bezier(0.165, 0.84, 0.44, 1)">
+        <h1 id="mode-title" style="position: relative; z-index: 1; text-shadow: {{titleGlow}}; animation: {{modeRise}} 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) {{headDelay}} both; margin: 0; min-height: 1.9em; display: flex; align-items: flex-start; justify-content: center; font-family: 'Bodoni Moda', Didot, 'Times New Roman', serif; font-weight: 400; font-size: clamp(2.4rem, 4.2vw, 4.4rem); line-height: 0.95; letter-spacing: -0.03em; text-transform: uppercase">{{headTitle}}</h1>
+        <sc-if value="{{showReplay}}" hint-placeholder-val="{{ false }}">
+          <button type="button" onClick="{{replayOpening}}" style="min-height: 44px; padding: 0 0.5rem; font-size: 0.75rem; letter-spacing: 0.06em; color: #66625f; animation: orrFade 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) 0.6s both">[ Replay opening ]</button>
+        </sc-if>
+      </div>
+      </sc-if>
+
+      <!-- Choosing a deck takes the compass's place until you cancel or use the deck -->
+      <sc-if value="{{picking}}" hint-placeholder-val="{{ false }}">
+        <section aria-labelledby="deck-title" style="align-self: stretch; flex: 1 1 auto; min-height: 0; width: 100%; max-width: 54rem; margin: 0 auto; display: flex; flex-direction: column; animation: orrRiseA 0.55s cubic-bezier(0.165, 0.84, 0.44, 1) both">
+          <div style="flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 2rem; padding: 0.75rem 0.25rem 2rem">
+
+            <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem">
+              <div style="display: flex; flex-direction: column; gap: 0.6rem; width: fit-content; max-width: 100%">
+                <h1 id="deck-title" style="margin: 0; font-family: 'Bodoni Moda', Didot, 'Times New Roman', serif; font-weight: 400; font-size: clamp(2.4rem, 4vw, 3.6rem); line-height: 0.95; letter-spacing: -0.03em; text-transform: uppercase">Choose a deck</h1>
+                <span aria-hidden="true" style="display: flex; align-items: center; gap: 0.5rem; width: 100%"><span style="flex: 1; height: 1px; background: #2d2a2a; transform-origin: right center; animation: orrRule 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.2s both"></span><span style="display: inline-flex; animation: orrTick 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) 0.5s both"><svg width="12" height="12" viewBox="0 0 14 14"><path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" fill="#2d2a2a"></path></svg></span><span style="flex: 1; height: 1px; background: #2d2a2a; transform-origin: left center; animation: orrRule 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.35s both"></span></span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.4rem">
+                <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">For seat</span>
+                <div role="group" aria-label="Seat" style="display: flex; padding-left: 1px">
+                  <sc-for list="{{pickSeats}}" as="ps" hint-placeholder-count="4">
+                    <button type="button" class="orr-seg" onClick="{{ps.pick}}" aria-pressed="{{ps.on}}" aria-label="{{ps.label}}" style="min-width: 44px; min-height: 44px; margin-left: -1px; border: 1px solid #2d2a2a; background: {{ps.bg}}; color: {{ps.fg}}; font-family: 'Bodoni Moda', Didot, serif; font-size: 1.2rem; line-height: 1">{{ps.id}}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1.25rem 3rem">
+              <label style="flex: 1 1 16rem; display: flex; flex-direction: column; gap: 0.5rem">
+                <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Find a commander</span>
+                <input type="text" value="{{deckQuery}}" onInput="{{setDeckQuery}}" placeholder="Type a name" style="font-family: 'Cutive Mono', monospace; font-size: 1rem; background: transparent; border: 0; border-bottom: 1px solid #2d2a2a; border-radius: 0; padding: 0.5rem 0; min-height: 44px; box-sizing: border-box; color: #2d2a2a">
+              </label>
+              <div role="group" aria-label="Colour identity" style="display: flex; flex-direction: column; gap: 0.5rem">
+                <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Colours</span>
+                <div style="display: flex; gap: 0.5rem; font-size: 0.9rem">
+                  <sc-for list="{{deckColors}}" as="dc" hint-placeholder-count="5">
+                    <button type="button" class="orr-seg" onClick="{{dc.toggle}}" aria-pressed="{{dc.on}}" aria-label="{{dc.name}}" style="min-width: 44px; min-height: 44px; box-sizing: border-box; border: {{dc.bd}}; background: {{dc.bg}}; color: {{dc.fg}}; font-family: 'Bodoni Moda', Didot, serif; font-size: 1.05rem">{{dc.k}}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <sc-for list="{{deckGroups}}" as="dg" hint-placeholder-count="3">
+              <section style="display: flex; flex-direction: column; gap: 0.6rem">
+                <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 2rem; border-bottom: 1px solid #2d2a2a; padding-bottom: 0.5rem">
+                  <h2 style="margin: 0; font-size: 1.05rem; font-weight: 400; line-height: 1.2; letter-spacing: 0.09em; text-transform: uppercase">{{dg.title}}</h2>
+                  <span style="font-size: 0.725rem; line-height: 1.85; color: #66625f">{{dg.note}}</span>
+                </div>
+                <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+                  <sc-for list="{{dg.rows}}" as="d" hint-placeholder-count="3">
+                    <li style="border-bottom: 1px solid #2d2a2a">
+                      <button type="button" class="drow" onClick="{{d.pick}}" aria-pressed="{{d.on}}" style="width: 100%; box-sizing: border-box; display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; align-items: center; gap: 1rem; padding: 0.75rem; text-align: left; background: {{d.bg}}">
+                        <span style="font-size: 0.725rem; letter-spacing: 0.09em; color: #66625f">{{d.letter}}.</span>
+                        <span style="display: flex; flex-direction: column; gap: 0.125rem; min-width: 0">
+                          <span style="font-size: 0.9rem; line-height: 1.5">{{d.name}}</span>
+                          <span style="font-size: 0.725rem; line-height: 1.6; color: #66625f">{{d.sub}}</span>
+                        </span>
+                        <span style="display: flex; align-items: center; gap: 1rem">
+                          <span role="img" aria-label="{{d.pipLabel}}" style="display: inline-flex; gap: 2px"><sc-for list="{{d.pips}}" as="pp" hint-placeholder-count="2"><span title="{{pp.name}}" style="width: 16px; height: 16px; box-sizing: border-box; border-radius: 50%; border: 1px solid #2d2a2a; background: {{pp.bg}}; color: {{pp.fg}}; display: inline-flex; align-items: center; justify-content: center; font-family: 'Bodoni Moda', Didot, serif; font-size: 10px; line-height: 1; letter-spacing: 0">{{pp.k}}</span></sc-for></span>
+                          <span class="dtag" style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; min-width: 6rem; text-align: right">{{d.tag}}</span>
+                          <span aria-hidden="true" style="width: 1rem; text-align: center; font-size: 0.9rem; line-height: 1">{{d.mark}}</span>
+                        </span>
+                      </button>
+                    </li>
+                  </sc-for>
+                </ul>
+                <sc-for list="{{dg.hints}}" as="h" hint-placeholder-count="0">
+                  <p style="margin: 0; font-size: 0.725rem; line-height: 1.6; color: #66625f">{{h}}</p>
+                </sc-for>
+              </section>
+            </sc-for>
+
+            <section style="display: flex; flex-direction: column; gap: 1rem">
+              <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 2rem; border-bottom: 1px solid #2d2a2a; padding-bottom: 0.5rem">
+                <h2 style="margin: 0; font-size: 1.05rem; font-weight: 400; line-height: 1.2; letter-spacing: 0.09em; text-transform: uppercase">IV. Bring your own</h2>
+                <span style="font-size: 0.725rem; line-height: 1.85; color: #66625f">Moxfield, Archidekt, or a pasted list.</span>
+              </div>
+              <label style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 40rem">
+                <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Deck link or decklist</span>
+                <textarea rows="4" value="{{deckList}}" onInput="{{setDeckList}}" placeholder="https://moxfield.com/decks/… or one card per line" style="font-family: 'Cutive Mono', monospace; font-size: 0.9rem; line-height: 1.6; background: #eeeadf; border: 1px solid #2d2a2a; border-radius: 0; padding: 0.75rem; color: #2d2a2a; resize: vertical"></textarea>
+              </label>
+              <button type="button" class="btn" onClick="{{checkImport}}" style="align-self: flex-start">Check and import</button>
+              <sc-if value="{{importEmpty}}" hint-placeholder-val="{{ false }}">
+                <p role="status" style="margin: 0; font-size: 0.8rem; color: #66625f">Paste a deck link or a list first.</p>
+              </sc-if>
+              <sc-if value="{{importFailed}}" hint-placeholder-val="{{ false }}">
+                <div role="status" style="max-width: 40rem; border: 1px solid #2d2a2a; display: flex; flex-direction: column; animation: orrRiseA 0.45s cubic-bezier(0.165, 0.84, 0.44, 1) both">
+                  <div style="padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.35rem">
+                    <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Import stopped</span>
+                    <span style="font-size: 0.9rem; line-height: 1.5">95 of 100 cards are supported. These 5 still need work in the rules engine, so the deck can't be used yet:</span>
+                  </div>
+                  <ul style="margin: 0; padding: 0 1rem; list-style: none; border-top: 1px solid #2d2a2a">
+                    <sc-for list="{{importMissing}}" as="im" hint-placeholder-count="5">
+                      <li style="display: flex; justify-content: space-between; gap: 1rem; padding: 0.45rem 0; border-bottom: 1px solid #bdbbb6; font-size: 0.8rem">
+                        <span>{{im.name}}</span>
+                        <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.1rem 0.35rem; border: {{im.bd}}; color: {{im.fg}}; text-decoration: {{im.deco}}; white-space: nowrap">{{im.status}}</span>
+                      </li>
+                    </sc-for>
+                  </ul>
+                  <div style="padding: 0.9rem 1rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; background: #eeeadf">
+                    <span style="font-size: 0.75rem; line-height: 1.5; color: #66625f">The Card lab has the full list and a work order you can hand to an LLM.</span>
+                    <a href="CardLab.dc.html" class="btn">Open in Card lab<span class="arr" aria-hidden="true"><svg width="14" height="8" viewBox="0 0 14 8"><path d="M0 4 H12 M9 1 L12 4 L9 7" fill="none" stroke-width="1"></path></svg></span></a>
+                  </div>
+                </div>
+              </sc-if>
+            </section>
+          </div>
+
+          <div style="flex: 0 0 auto; border: 1px solid #2d2a2a; background: #eeeadf; padding: 0.75rem 1.25rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 2rem">
+            <p style="margin: 0; font-size: 0.9rem; line-height: 1.6; min-width: 0">Seat {{pickSeat}}: <span style="text-transform: uppercase; letter-spacing: 0.09em">{{pickName}}</span></p>
+            <div style="display: flex; align-items: center; gap: 1.25rem">
+              <button type="button" onClick="{{cancelPick}}" style="min-height: 44px; font-size: 0.9rem">[ Cancel ]</button>
+              <button type="button" class="btn-primary" onClick="{{useDeck}}" style="display: inline-flex; align-items: center; gap: 0.8rem; min-height: 44px; padding: 0 1.4rem; background: #2d2a2a; color: #f5f3ec; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase">Use this deck<span class="arr" aria-hidden="true"><svg width="14" height="8" viewBox="0 0 14 8"><path d="M0 4 H12 M9 1 L12 4 L9 7" fill="none" stroke-width="1"></path></svg></span></button>
+            </div>
+          </div>
+        </section>
+      </sc-if>
+    </main>
+
+    <!-- Right: set it up, then start. Tabs keep everything on one screen -->
+    <aside class="setup" aria-label="Set up" aria-hidden="{{asideHidden}}" style="flex: 0 1 30rem; min-width: 20rem; max-width: 30rem; opacity: {{asideOp}}; transform: translate3d({{asideX}}, 0, 0); will-change: transform; overflow: hidden; transition: opacity 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) 0.35s, transform 1s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.6s linear 0.3s; min-height: 0; max-height: 100%; border-left: 1px solid {{asideBorder}}; display: flex; flex-direction: column">
+
+      <div class="pad" style="flex: 0 0 auto; padding: 1.25rem 1.75rem 1rem; border-bottom: 1px solid #2d2a2a; display: flex; flex-direction: column; gap: 0.6rem">
+        <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">{{mode.plateLabel}}</span>
+        <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; height: 9.4rem">
+          <sc-for list="{{plate}}" as="row" hint-placeholder-count="4">
+            <li style="animation: {{modeRise}} 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) {{row.delay}} both; display: flex; gap: 1rem; align-items: baseline; border-bottom: 1px solid #2d2a2a; padding: 0.3rem 0">
+              <span style="flex: 0 0 6.5rem; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">{{row.k}}</span>
+              <span style="flex: 1; min-width: 0; font-size: 0.8rem; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{row.v}}</span>
+            </li>
+          </sc-for>
+        </ul>
+      </div>
+
+      <sc-if value="{{showSetup}}" hint-placeholder-val="{{ true }}">
+        <div role="group" aria-label="Setup sections" style="flex: 0 0 auto; display: flex; border-bottom: 1px solid #2d2a2a">
+          <sc-for list="{{tabs}}" as="tb" hint-placeholder-count="4">
+            <button type="button" class="orr-seg" onClick="{{tb.pick}}" aria-pressed="{{tb.on}}" style="flex: 1; min-height: 44px; border-right: 1px solid #2d2a2a; background: {{tb.bg}}; color: {{tb.fg}}; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">{{tb.label}}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <div class="setup-scroll pad" style="animation: {{panelSoft}} 0.45s cubic-bezier(0.165, 0.84, 0.44, 1) both; flex: 1 1 auto; min-height: 0; overflow: auto; padding: 1rem 1.75rem">
+
+        <!-- Seats: two by two -->
+        <sc-if value="{{tabSeats}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 0.75rem">
+            <ul style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); border-top: 1px solid #2d2a2a; border-left: 1px solid #2d2a2a">
+              <sc-for list="{{seats}}" as="s" hint-placeholder-count="4">
+                <li style="border-right: 1px solid #2d2a2a; border-bottom: 1px solid #2d2a2a; display: flex; flex-direction: column">
+                  <span style="padding: 0.25rem 0.9rem; min-height: 0.9rem; background: {{s.bandBg}}; color: #f5f3ec; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase">{{s.band}}</span>
+                  <div style="padding: 0.5rem 0.9rem 0.6rem; display: flex; flex-direction: column; gap: 0.55rem; flex: 1">
+                    <div style="display: flex; align-items: baseline; gap: 0.75rem">
+                      <span style="flex: 0 0 1.9rem; font-family: 'Bodoni Moda', Didot, serif; font-size: 2.1rem; line-height: 1">{{s.id}}</span>
+                      <span style="display: flex; flex-direction: column; min-width: 0">
+                        <span style="font-size: 0.8rem; letter-spacing: 0.09em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.deck}}</span>
+                        <span style="font-size: 0.6rem; line-height: 1.8; letter-spacing: 0.09em; color: #66625f">{{s.meta}}</span>
+                      </span>
+                    </div>
+                    <span style="font-size: 0.725rem; line-height: 1.6; color: #66625f">{{s.deckNote}}</span>
+                    <div style="margin-top: auto; display: flex; flex-direction: column; align-items: stretch; gap: 0.4rem; --x: 0.4rem 0.9rem; font-size: 0.75rem">
+                      <button type="button" class="btn" onClick="{{s.change}}" aria-label="{{s.changeLabel}}" style="min-height: 38px; width: 100%; box-sizing: border-box; justify-content: space-between">Change deck<span class="arr" aria-hidden="true"><svg width="14" height="8" viewBox="0 0 14 8"><path d="M0 4 H12 M9 1 L12 4 L9 7" fill="none" stroke-width="1"></path></svg></span></button>
+                      <button type="button" class="btn" onClick="{{s.reroll}}" aria-label="{{s.rerollLabel}}" title="Build a new generated deck for this seat" style="min-height: 38px; width: 100%; box-sizing: border-box">Reroll</button>
+                    </div>
+                  </div>
+                </li>
+              </sc-for>
+            </ul>
+          </div>
+        </sc-if>
+
+        <!-- Option groups: one per tab -->
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="0">
+          <div role="group" aria-label="{{g.title}}" style="display: flex; flex-direction: column">
+            <sc-for list="{{g.rows}}" as="o" hint-placeholder-count="2">
+              <div style="display: flex; flex-direction: column; gap: 0.6rem; padding: 1.1rem 0; border-bottom: 1px solid #2d2a2a">
+                <div style="display: flex; flex-direction: column; gap: 0.2rem">
+                  <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: {{o.labelColor}}">{{o.label}}</span>
+                </div>
+
+                <sc-if value="{{o.isSeatCtrl}}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-direction: column; gap: 0.4rem">
+                    <sc-for list="{{seatCtrls}}" as="sq" hint-placeholder-count="4">
+                      <div style="display: grid; grid-template-columns: 1.8rem minmax(0, 1fr); gap: 0.75rem; align-items: center">
+                        <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 1.6rem; line-height: 1">{{sq.id}}</span>
+                        <div role="group" aria-label="{{sq.label}}" style="display: flex; padding-left: 1px">
+                          <sc-for list="{{sq.ctrls}}" as="k" hint-placeholder-count="3">
+                            <button type="button" class="orr-seg" onClick="{{k.pick}}" aria-pressed="{{k.on}}" title="{{k.title}}" style="flex: 1 1 0; white-space: nowrap; min-height: 36px; margin-left: -1px; padding: 0 0.5rem; text-align: center; border: 1px solid #2d2a2a; background: {{k.bg}}; color: {{k.fg}}; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase">{{k.label}}</button>
+                          </sc-for>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{o.isChoice}}" hint-placeholder-val="{{ true }}">
+                  <div role="group" aria-label="{{o.label}}" style="display: flex; flex-wrap: wrap; padding-left: 1px">
+                    <sc-for list="{{o.choices}}" as="c" hint-placeholder-count="2">
+                      <button type="button" class="orr-seg" onClick="{{c.pick}}" aria-pressed="{{c.on}}" disabled="{{c.disabled}}" style="min-height: 38px; margin-left: -1px; padding: 0 0.9rem; border: 1px solid #2d2a2a; background: {{c.bg}}; color: {{c.fg}}; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">{{c.label}}</button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{o.isToggle}}" hint-placeholder-val="{{ false }}">
+                  <label style="display: flex; align-items: center; gap: 0.75rem; min-height: 36px; cursor: pointer; font-size: 0.9rem; color: {{o.labelColor}}">
+                    <input type="checkbox" checked="{{o.checked}}" disabled="{{o.disabled}}" onChange="{{o.flip}}">
+                    {{o.toggleText}}
+                    <span style="margin-left: auto; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: #66625f; white-space: nowrap">{{o.offNote}}</span>
+                  </label>
+                </sc-if>
+
+                <sc-if value="{{o.isRange}}" hint-placeholder-val="{{ false }}">
+                  <label style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; font-size: 0.8rem">
+                    <input type="range" min="250" max="3000" step="250" value="{{o.value}}" disabled="{{o.disabled}}" onInput="{{o.set}}" aria-label="{{o.label}}" style="flex: 1 1 10rem; accent-color: #2d2a2a">
+                    <span>{{o.valueText}}</span>
+                  </label>
+                </sc-if>
+
+                <sc-if value="{{o.isText}}" hint-placeholder-val="{{ false }}">
+                  <input type="text" value="{{o.value}}" onChange="{{o.set}}" placeholder="Blank for a new shuffle" aria-label="{{o.label}}" style="max-width: 18rem; font-family: 'Cutive Mono', monospace; font-size: 0.9rem; background: transparent; border: 0; border-bottom: 1px solid #2d2a2a; border-radius: 0; padding: 0.4rem 0; color: #2d2a2a">
+                </sc-if>
+
+                <sc-if value="{{o.isScenarios}}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-direction: column">
+                    <sc-for list="{{scenarios}}" as="sc" hint-placeholder-count="2">
+                      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.8rem; padding: 0.5rem 0; border-top: 1px solid #2d2a2a">
+                        <label style="flex: 1 1 100%; display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.8rem">{{sc.num}}.<input type="text" value="{{sc.name}}" onChange="{{sc.rename}}" aria-label="{{sc.nameLabel}}" style="flex: 1; min-width: 0; font-family: 'Cutive Mono', monospace; font-size: 0.8rem; background: transparent; border: 0; border-bottom: 1px solid #2d2a2a; border-radius: 0; padding: 0.2rem 0; color: #2d2a2a"></label>
+                        <span role="group" aria-label="{{sc.gamesLabel}}" style="display: flex; padding-left: 1px">
+                          <sc-for list="{{sc.games}}" as="n" hint-placeholder-count="4">
+                            <button type="button" onClick="{{n.pick}}" aria-pressed="{{n.on}}" style="min-width: 38px; min-height: 34px; margin-left: -1px; border: 1px solid #2d2a2a; background: {{n.bg}}; color: {{n.fg}}; font-size: 0.75rem">{{n.n}}</button>
+                          </sc-for>
+                        </span>
+                        <span role="group" aria-label="{{sc.botsLabel}}" style="display: flex; padding-left: 1px">
+                          <sc-for list="{{sc.bots}}" as="b" hint-placeholder-count="2">
+                            <button type="button" onClick="{{b.pick}}" aria-pressed="{{b.on}}" style="min-height: 34px; margin-left: -1px; padding: 0 0.6rem; border: 1px solid #2d2a2a; background: {{b.bg}}; color: {{b.fg}}; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase">{{b.label}}</button>
+                          </sc-for>
+                        </span>
+                        <sc-if value="{{sc.removable}}" hint-placeholder-val="{{ false }}">
+                          <button type="button" onClick="{{sc.remove}}" style="min-height: 34px; font-size: 0.75rem">[ Remove ]</button>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                    <span style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; padding-top: 0.4rem; border-top: 1px solid #2d2a2a">
+                      <button type="button" class="btn" onClick="{{addScenario}}">Add a scenario</button>
+                      <span style="font-size: 0.8rem">{{batchTotalText}}</span>
+                    </span>
+                  </div>
+                </sc-if>
+
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+
+      </div>
+
+      <!-- Start: the one primary action, always in view -->
+      <div class="pad" style="flex: 0 0 auto; border-top: 1px solid #2d2a2a; background: #eeeadf; padding: 1rem 1.75rem; display: flex; flex-direction: column; gap: 0.6rem">
+        <button type="button" class="btn-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; min-height: 52px; background: #2d2a2a; color: #f5f3ec; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.95rem; line-height: 1; letter-spacing: 0.08em; text-transform: uppercase"><span style="animation: {{modeSoft}} 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) both">{{mode.verb}}</span><span class="arr" aria-hidden="true"><svg width="14" height="8" viewBox="0 0 14 8"><path d="M0 4 H12 M9 1 L12 4 L9 7" fill="none" stroke-width="1"></path></svg></span></button>
+      </div>
+    </aside>
+  </sc-if>
+  <sc-if value="{{offNewGame}}" hint-placeholder-val="{{ false }}">
+    <section class="pad" aria-labelledby="place-title" style="flex: 1 1 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 3rem 2rem; text-align: center; animation: orrRiseA 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) both">
+      <span style="font-size: 0.725rem; letter-spacing: 0.09em; color: #66625f">{{place.group}}</span>
+      <h1 id="place-title" style="margin: 0; font-family: 'Bodoni Moda', Didot, serif; font-weight: 400; font-size: clamp(2.6rem, 5vw, 4.4rem); line-height: 1; letter-spacing: -0.03em; text-transform: uppercase">{{place.label}}</h1>
+      <span style="display: flex; align-items: center; gap: 0.5rem; width: 6rem"><span style="flex: 1; height: 1px; background: #2d2a2a"></span><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" fill="#2d2a2a"></path></svg><span style="flex: 1; height: 1px; background: #2d2a2a"></span></span>
+      <p style="margin: 0; font-size: 0.9rem; line-height: 1.7; color: #66625f">Not designed yet.</p>
+      <button type="button" onClick="{{goHome}}" style="min-height: 44px; font-size: 0.9rem">[ Back to New game ]</button>
+    </section>
+  </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"startMode":{"editor":"enum","options":["play","watch","batch"],"default":"play"},"gameInProgress":{"editor":"boolean","default":false},"opening":{"editor":"boolean","default":true},"openingKey":{"editor":"text","default":"desktop"},"$preview":{"width":1440,"height":900}}'>
+const SHEET = [
+  ['I', 'New game', [['New game', 'Main.dc.html', 'Play, watch or batch a four-seat table']]],
+  ['II', 'Records', [['Stats', 'Stats.dc.html', 'Standings, matchups and how each deck fares'], ['Batch runs', 'Batches.dc.html', 'Queued, running and finished batches']]],
+  ['III', 'Workshop', [['Card lab', 'CardLab.dc.html', 'Put single cards through the rules engine'], ['Deals', 'Deals.dc.html', 'Preview opening hands before a game'], ['Debug', 'Debug.dc.html', 'Engine log, game state and seeds']]],
+];
+// Sample entries: in the app these come from the modeled-deck list and the saved decks.
+const MODELED = [
+  { id: 'm1', name: 'Ghalta and Mavren', colors: 'G W', tag: 'Stompy' },
+  { id: 'm2', name: 'Iron Lad, Young Avenger', colors: 'U R', tag: 'Artifacts' },
+  { id: 'm3', name: '[Commander name]', colors: 'W U B', tag: 'Control' },
+  { id: 'm4', name: '[Commander name] ', colors: 'B R', tag: 'Aristocrats' },
+];
+const SAVED = [
+  { id: 's1', name: '[Saved deck commander]', colors: 'U B', tag: 'Combo', sub: 'Imported from Moxfield. Used in your last game.' },
+];
+// Sample result of a failed import: the cards the rules engine can't play yet.
+const IMPORT_MISSING = [
+  ['Cyclonic Rift', 'Unsupported'], ['Scion of the Ur-Dragon', 'Unsupported'], ['Crux of Fate', 'Unsupported'], ['Dragon Tempest', 'Unsupported'], ['Smothering Tithe', 'In progress'],
+];
+// The five colours, muted to sit on paper: name, pip fill, letter colour, light tint.
+const MANA = { W: ['White', '#ddd2b0', '#2d2a2a', '#efe9d8'], U: ['Blue', '#9fb1c1', '#2d2a2a', '#d9e0e6'], B: ['Black', '#5e5753', '#f5f3ec', '#cfcac6'], R: ['Red', '#c99580', '#2d2a2a', '#ecd7cd'], G: ['Green', '#9cae94', '#2d2a2a', '#d8dfd3'], C: ['Colourless', '#d6d4ce', '#2d2a2a', '#e8e6df'] };
+function pips(str) {
+  const ks = !str ? [] : /colou?rless/i.test(str) ? ['C'] : String(str).split(/\s+/).filter((k) => MANA[k]);
+  return ks.map((k) => ({ k, name: MANA[k][0], bg: MANA[k][1], fg: MANA[k][2] }));
+}
+function pipLabel(str) { return pips(str).map((p) => p.name).join(', ') || 'No colours'; }
+function sheetRows(cur, go) {
+  const rows = []; let i = 0, n = 0;
+  for (const [num, name, items] of SHEET) {
+    rows.push({ head: true, item: false, num, name, delay: (n++ * 0.04) + 's' });
+    for (const [label, href, desc] of items) {
+      const k = i++;
+      rows.push({ head: false, item: true, label, href, desc, delay: (n++ * 0.04) + 's', current: k === cur ? 'page' : 'false', markBg: k === cur ? '#a77e5f' : 'transparent', arrow: k === cur ? '#a77e5f' : '#2d2a2a', go: go ? (e) => go(k, e) : undefined });
+    }
+  }
+  return rows;
+}
+class Component extends DCLogic {
+  // The opening screen shows once per visit: after the first choice, reloads go straight to the menu.
+  static seenOpening(k) { try { return sessionStorage.getItem('decktank.opened.' + (k || 'desktop')) === '1'; } catch (e) { return false; } }
+  static markOpened(k) { try { sessionStorage.setItem('decktank.opened.' + (k || 'desktop'), '1'); } catch (e) {} }
+  static clearOpened(k) { try { sessionStorage.removeItem('decktank.opened.' + (k || 'desktop')); } catch (e) {} }
+
+  constructor(props) {
+    super(props);
+    const start = { play: 0, watch: 270, batch: 90 }[props && props.startMode] || 0;
+    this.state = {
+      mode: null,
+      drag: null,
+      needle: null,
+      tab: 'seats',
+      entered: !!(props && props.opening === false) || Component.seenOpening(props && props.openingKey),
+      booted: false,
+      settling: false,
+      hoverStop: null,
+      lean: 0,
+      flip: 0,
+      turn: 0,
+      navHover: null,
+      navCurrent: 0,
+      navOpen: false,
+      stuck: null,
+      motion: 'free',
+      kick: false,
+      ringTicks: start,
+      ringMid: start + 90,
+      ringInner: start - 90,
+      ringRose: null,
+      tabFlip: 0,
+      you: 'A',
+      ctrl: { A: 'builtin', B: 'builtin', C: 'builtin', D: 'builtin' },
+      talk: true,
+      commentary: false,
+      playback: 'live',
+      pace: 1000,
+      seed: '',
+      rolls: { A: 1, B: 1, C: 1, D: 1 },
+      decks: { A: 'gen', B: 'gen', C: 'gen', D: 'gen' },
+      picking: null,
+      pickChoice: 'gen',
+      deckQuery: '',
+      deckColorsOn: [],
+      deckList: '',
+      importState: null,
+      seatsOpen: false,
+      more: {},
+      scenarios: [
+        { name: 'Built-in baseline', games: 25, bots: 'builtin' },
+      ],
+    };
+  }
+
+  angleFrom(e) {
+    const r = e.currentTarget.getBoundingClientRect();
+    const a = Math.atan2(e.clientX - (r.left + r.width / 2), (r.top + r.height / 2) - e.clientY) * 180 / Math.PI;
+    return (a + 360) % 360;
+  }
+
+  componentDidMount() {
+    // First paint holds the needle off its bearing; the next frame lets it swing home.
+    this._boot = setTimeout(() => {
+      this.setState({ booted: true, settling: true });
+      this._settle = setTimeout(() => this.setState({ settling: false }), 1150);
+    }, 150);
+  }
+
+  // Each change spins every under-layer one full turn in the direction of travel, then lands.
+  // Angles are cumulative, so quick clicks add turns instead of restarting anything.
+  // Each ring travels about its usual distance in its own direction, then stops where its marker
+  // sits on a quarter: the outer marker on the chosen option, the middle a quarter clockwise of it,
+  // the inner a quarter anticlockwise.
+  kickRings(turn) {
+    const dir = turn < 0 ? -1 : 1;
+    const land = (cur, travel, want) => {
+      let k = Math.round((cur + travel - want) / 360);
+      let end = want + 360 * k;
+      const sign = travel < 0 ? -1 : 1;
+      while ((end - cur) * sign < Math.abs(travel) * 0.6) { k += sign; end = want + 360 * k; }
+      return end;
+    };
+    this.setState((s) => {
+      // The chosen option now always sits at north, so the markers land on the quarters around it.
+      const sel = 0;
+      return {
+        ringTicks: land(s.ringTicks, -dir * 405, sel),
+        ringMid: land(s.ringMid, dir * 360, sel + 90),
+        ringInner: land(s.ringInner || 0, -dir * 180, sel - 90),
+      };
+    });
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this._hov);
+    clearTimeout(this._rel);
+    clearTimeout(this._boot);
+    clearTimeout(this._settle);
+  }
+
+  compass() {
+    if (this._compass) return this._compass;
+    const c = 200;
+    const pt = (deg, rad) => {
+      const t = (deg * Math.PI) / 180;
+      return [+(c + rad * Math.sin(t)).toFixed(1), +(c - rad * Math.cos(t)).toFixed(1)];
+    };
+    let ticks = '';
+    for (let d = 0; d < 360; d += 5) {
+      const inner = d % 90 === 0 ? 162 : d % 30 === 0 ? 172 : d % 15 === 0 ? 177 : 183;
+      const [x1, y1] = pt(d, 190);
+      const [x2, y2] = pt(d, inner);
+      ticks += 'M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2 + ' ';
+    }
+    let light = '';
+    let dark = '';
+    for (let d = 0; d < 360; d += 45) {
+      const len = d % 90 === 0 ? 100 : 64;
+      const [tx, ty] = pt(d, len);
+      const [ax, ay] = pt(d - 45, 15);
+      const [bx, by] = pt(d + 45, 15);
+      light += 'M' + c + ' ' + c + ' L' + tx + ' ' + ty + ' L' + ax + ' ' + ay + ' Z ';
+      dark += 'M' + c + ' ' + c + ' L' + tx + ' ' + ty + ' L' + bx + ' ' + by + ' Z ';
+    }
+    const degrees = [30, 60, 120, 150, 210, 240, 300, 330].map((d) => {
+      const t = (d * Math.PI) / 180;
+      return {
+        t: String(d).padStart(3, '0'),
+        x: (50 + 40 * Math.sin(t)).toFixed(2) + '%',
+        y: (50 - 40 * Math.cos(t)).toFixed(2) + '%',
+        rot: d > 90 && d < 270 ? d - 180 : d,
+        delay: (0.4 + (d / 360) * 0.3).toFixed(2) + 's',
+      };
+    });
+    let midTicks = '';
+    for (let d = 0; d < 360; d += 15) {
+      const [x1, y1] = pt(d, 150);
+      const [x2, y2] = pt(d, d % 90 === 0 ? 136 : d % 45 === 0 ? 141 : 145);
+      midTicks += 'M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2 + ' ';
+    }
+    let innerTicks = '';
+    for (let d = 0; d < 360; d += 30) {
+      const [x1, y1] = pt(d, 104);
+      const [x2, y2] = pt(d, d % 90 === 0 ? 114 : 109);
+      innerTicks += 'M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2 + ' ';
+    }
+    this._compass = { ticks, roseLight: light, roseDark: dark, degrees, midTicks, innerTicks };
+    return this._compass;
+  }
+
+  renderVals() {
+    const ink = '#2d2a2a';
+    const paper = '#f5f3ec';
+    const muted = '#66625f';
+    const s = this.state;
+    const hasGame = !!this.props.gameInProgress;
+    let mode = s.mode ?? this.props.startMode ?? 'play';
+    if (!['play', 'watch', 'batch'].includes(mode)) mode = 'play';
+    const set = (patch) => this.setState(patch);
+    const pick = (on) => ({ bg: on ? ink : 'transparent', fg: on ? paper : ink });
+    const ids = ['A', 'B', 'C', 'D'];
+    const kindName = { builtin: 'Built-in', ai: 'AI' };
+
+    // Who plays each seat: in Play one seat is yours; every other seat keeps its own bot type.
+    const youSeat = s.you;
+    const kindOf = (id) => (mode === 'play' && id === youSeat ? 'you' : s.ctrl[id]);
+    const botKinds = ids.filter((id) => kindOf(id) !== 'you').map((id) => s.ctrl[id]);
+    const nAi = botKinds.filter((k) => k === 'ai').length;
+    const nBuiltin = botKinds.length - nAi;
+    const everyBot = nAi === 0 ? 'builtin' : nBuiltin === 0 ? 'ai' : 'mixed';
+    const words = ['no', 'one', 'two', 'three', 'four'];
+    const botsText = everyBot === 'mixed'
+      ? words[botKinds.length] + ' bots (' + nBuiltin + ' built-in, ' + nAi + ' AI)'
+      : words[botKinds.length] + (everyBot === 'ai' ? ' AI bots' : ' built-in bots');
+    const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+    const setCtrl = (id, kind) => {
+      if (kind === 'you') { set({ you: id }); return; }
+      const patch = { ctrl: Object.assign({}, s.ctrl, { [id]: kind }) };
+      if (mode === 'play' && id === youSeat) patch.you = ids.find((x) => x !== id);
+      set(patch);
+    };
+    const setEveryBot = (kind) => {
+      const next = {};
+      ids.forEach((x) => { next[x] = kind; });
+      set({ ctrl: next, commentary: kind === 'builtin' ? false : s.commentary });
+    };
+
+    const totalGames = s.scenarios.reduce((a, sc) => a + sc.games, 0);
+    const gamesText = totalGames + (totalGames === 1 ? ' game' : ' games');
+    const batchAi = s.scenarios.some((sc) => sc.bots === 'ai');
+    const anyAi = mode === 'batch' ? batchAi : nAi > 0;
+
+    const modes = {
+      play: {
+        name: 'Play', angle: 0, point: 'N',
+        fact: 'One seat is yours',
+        title: 'Play against bots',
+        lead: 'You play one seat and bots play the others. Every deck here uses only cards the simulator fully supports, so the game never stalls on a card.',
+        plateLabel: 'This game:',
+        verb: 'Start game',
+      },
+      watch: {
+        name: 'Watch', angle: 270, point: 'W',
+        fact: 'All four seats are bots',
+        title: 'Watch four bots',
+        lead: 'You take no seat. Four bots play it out while you scrub back to any turn and see every hand.',
+        plateLabel: 'This game:',
+        verb: 'Start watching',
+      },
+      batch: {
+        name: 'Batch', angle: 90, point: 'E',
+        fact: gamesText + ', no board',
+        title: 'Run a batch',
+        lead: 'Bots play many games in a row with no board to watch. Each scenario is a set of games under one setting. Results are saved under Records.',
+        plateLabel: 'This batch:',
+        verb: 'Run ' + gamesText,
+      },
+      multi: {
+        name: 'Multiplayer', angle: 180, point: 'S',
+        fact: '', title: '', lead: '', plateLabel: '', verb: '',
+      },
+    };
+    const m = modes[mode];
+    const pos = { play: ['50%', '15.5%'], batch: ['84.5%', '50%'], multi: ['50%', '84.5%'], watch: ['15.5%', '50%'] };
+    const order = ['play', 'batch', 'multi', 'watch'];
+    const turnTo = (key) => {
+      const cur = s.needle ?? m.angle;
+      const target = modes[key].angle;
+      let delta = ((target - (((cur % 360) + 360) % 360)) + 540) % 360 - 180;
+      // A half-turn could go either way: go back the way the last turn came.
+      if (Math.abs(delta) === 180) delta = (s.turn || 0) < 0 ? 180 : -180;
+      if (key === mode && s.entered) return;
+      if (!s.entered) Component.markOpened(this.props.openingKey);
+      set({ mode: key, entered: true, drag: null, needle: cur + delta, lean: 0, stuck: key, motion: 'free', flip: s.flip + 1, turn: delta });
+      this.kickRings(delta || 1);
+    };
+    const dialAt = s.drag ?? s.needle ?? m.angle;
+    const dialT = s.drag != null ? 'none' : 'transform 1.25s cubic-bezier(0.165, 0.84, 0.44, 1)';
+    const stops = order.map((key) => {
+      const on = mode === key && s.entered;
+      const off = key === 'multi';
+      return {
+        rot: dialAt,
+        rotT: dialT,
+        point: modes[key].point,
+        sub: { play: '1 v 3', watch: '4 bots', batch: gamesText, multi: 'soon' }[key],
+        label: modes[key].name,
+        x: pos[key][0], y: pos[key][1],
+        pressed: on,
+        disabled: off,
+        title: off ? 'Tables for several people are coming' : '',
+        bg: on ? (s.stuck === key ? '#4f4b49' : ink) : paper,
+        fg: on ? paper : off ? muted : ink,
+        border: off ? 'rgba(45, 42, 42, 0.4)' : ink,
+        bw: s.stuck === key && !on ? '2px' : '1px',
+        outline: s.stuck === key && on ? '1px solid #f5f3ec' : 'none',
+        pick: () => turnTo(key),
+        hover: () => {
+          if (off) return;
+          clearTimeout(this._hov);
+          const st = this.state;
+          if (st.stuck === key) return;
+          const base = st.needle ?? m.angle;
+          set({ stuck: key, motion: 'snap', lean: Math.round(((((modes[key].angle - base) % 360) + 540) % 360) - 180) });
+        },
+        delay: (0.2 + order.indexOf(key) * 0.06).toFixed(2) + 's',
+      };
+    });
+    const snap = (a) => {
+      const choices = order.filter((k) => k !== 'multi');
+      let best = choices[0];
+      let bestD = 999;
+      choices.forEach((k) => {
+        const d = Math.abs((((a - modes[k].angle) % 360) + 540) % 360 - 180);
+        if (d < bestD) { bestD = d; best = k; }
+      });
+      return best;
+    };
+    const bearing = Math.round(((((s.drag ?? s.needle ?? m.angle) % 360) + 360) % 360));
+    const bearingText = String(bearing).padStart(3, '0') + '° ' + m.point;
+
+    const shuffle = s.seed ? 'Seed ' + s.seed : 'New random shuffle';
+    const paceText = String(s.pace / 1000) + ' s between bot actions';
+    const playbackText = s.playback === 'live' ? 'Live, ' + paceText.replace(' between bot actions', ' per action') : 'Step by hand';
+    const plates = {
+      play: [
+        { k: 'You', v: 'Seat ' + youSeat + ', ' + (s.decks[youSeat] === 'gen' ? 'generated deck' : deckNames[s.decks[youSeat]]) },
+        { k: 'Opponents', v: cap(botsText) },
+        { k: 'Playback', v: playbackText },
+        { k: 'Shuffle', v: shuffle },
+        { k: 'Table talk', v: s.talk ? 'On, bots can offer you deals' : 'Off' },
+      ],
+      watch: [
+        { k: 'Players', v: cap(botsText) },
+        { k: 'You see', v: 'Every hand, every turn' },
+        { k: 'Playback', v: playbackText },
+        { k: 'Shuffle', v: shuffle },
+        { k: 'Table talk', v: s.talk ? 'On' : 'Off' },
+      ],
+      batch: [
+        { k: 'Scenarios', v: s.scenarios.map((sc) => sc.name + ' (' + sc.games + ')').join(', ') },
+        { k: 'Games', v: totalGames + ', one after another' },
+        { k: 'Shuffle', v: s.seed ? 'Batch seed ' + s.seed : 'New random batch seed' },
+        { k: 'Bots', v: 'Set by each scenario' },
+        { k: 'Results', v: 'Saved under Records' },
+      ].slice(0, batchAi ? 4 : 5).concat(batchAi ? [{ k: 'Cost', v: 'Spends API budget' }] : []),
+    };
+
+    // Choosing a deck: the panel that stands in for the compass.
+    const deckNames = { gen: 'Generated deck' };
+    MODELED.concat(SAVED).forEach((d) => { deckNames[d.id] = d.name.trim(); });
+    const deckOf = (id) => (s.decks && s.decks[id]) || 'gen';
+    const pickSeat = s.picking;
+    const dq = (s.deckQuery || '').trim().toLowerCase();
+    const want = s.deckColorsOn || [];
+    const keepDeck = (d) => (!dq || d.name.toLowerCase().includes(dq)) && want.every((c) => d.colors.split(' ').includes(c));
+    let letterN = 0;
+    const drow = (d) => {
+      const on = s.pickChoice === d.id;
+      return {
+        letter: 'abcdefghij'[letterN++],
+        name: d.name.trim(),
+        sub: d.sub ?? (d.id === 'gen' ? 'Built fresh from fully supported cards. Reroll it from the seat.' : 'Modeled deck. Every card supported.'),
+        colors: d.colors || '',
+        pips: pips(d.colors), pipLabel: pipLabel(d.colors),
+        tag: d.tag || '',
+        mark: on ? '★' : '',
+        bg: on ? '#eeeadf' : 'transparent',
+        on,
+        pick: () => set({ pickChoice: d.id }),
+      };
+    };
+    const hiddenHint = (list) => {
+      const out = list.filter((d) => !keepDeck(d));
+      return out.length && out.some((d) => d.id === s.pickChoice) ? [out.length + ' hidden by filter, including your choice'] : [];
+    };
+    const deckGroups = [
+      { title: 'I. Generated', note: 'Different every time.', rows: [drow({ id: 'gen', name: 'Generated deck', colors: '', tag: '' })], hints: [] },
+      { title: 'II. Modeled decks', note: MODELED.filter(keepDeck).length + ' of ' + MODELED.length + ' shown.', rows: MODELED.filter(keepDeck).map(drow), hints: hiddenHint(MODELED) },
+      { title: 'III. Your saved decks', note: 'Decks you imported before.', rows: SAVED.filter(keepDeck).map(drow), hints: hiddenHint(SAVED) },
+    ];
+    const colorNames = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' };
+    const deckColors = ['W', 'U', 'B', 'R', 'G'].map((k) => {
+      const on = want.includes(k);
+      return { k, on, name: colorNames[k], bg: on ? MANA[k][1] : MANA[k][3], fg: on ? MANA[k][2] : ink, bd: on ? '3px solid ' + ink : '1px solid ' + ink, toggle: () => set({ deckColorsOn: on ? want.filter((x) => x !== k) : want.concat(k) }) };
+    });
+    const startPick = (id) => set({ picking: id, pickChoice: deckOf(id), importState: null, navOpen: false });
+    const pickSeats = ids.map((id) => ({ id, on: id === pickSeat, label: 'Seat ' + id, bg: id === pickSeat ? ink : 'transparent', fg: id === pickSeat ? paper : ink, pick: () => startPick(id) }));
+    const statusLook = { Unsupported: ['1px solid #bdbbb6', muted, 'line-through'], 'In progress': ['1px dashed ' + ink, ink, 'none'] };
+    const importMissing = IMPORT_MISSING.map(([name, status]) => ({ name, status, bd: statusLook[status][0], fg: statusLook[status][1], deco: statusLook[status][2] }));
+
+    const seats = ids.map((id) => {
+      const kind = kindOf(id);
+      const roll = s.rolls[id];
+      const open = !!s.seatsOpen;
+      const dk = deckOf(id);
+      const options = mode === 'play' ? ['you', 'builtin', 'ai'] : ['builtin', 'ai'];
+      return {
+        id,
+        controller: mode === 'batch' ? 'Bot' : kind === 'you' ? 'You' : kindName[kind] + ' bot',
+        ctrlColor: kind === 'you' ? ink : muted,
+        ctrlGroupLabel: 'Who plays seat ' + id,
+        band: pickSeat === id ? 'Choosing a deck' : kind === 'you' ? 'Your seat' : '',
+        bandBg: pickSeat === id || kind === 'you' ? ink : 'transparent',
+        change: () => startPick(id),
+        changeLabel: 'Change the deck for seat ' + id,
+        byScenario: mode === 'batch',
+        ctrls: mode === 'batch' ? [] : options.map((k) => Object.assign({ title: { you: 'You play this seat', builtin: 'Rule-based bot: fast, free, seeded', ai: 'Language-model bot: slower, spends API budget' }[k], label: k === 'you' ? 'You' : kindName[k], on: kind === k, pick: () => setCtrl(id, k) }, pick(kind === k))),
+        deck: deckNames[dk],
+        deckNote: dk !== 'gen' ? (dk.charAt(0) === 's' ? 'Your saved deck.' : 'Modeled deck. Every card supported.') : kind === 'you' ? 'Your deck. Built when the game starts.' : 'Built when the game starts.',
+        meta: dk === 'gen' && roll > 1 ? 'Rerolled ×' + (roll - 1) : '',
+        open,
+        toggle: () => set({ seatsOpen: !open }),
+        toggleLabel: open ? '[ Hide seat details ]' : '[ Seat details ]',
+        details: [
+          { k: 'Deck', v: 'Built from the supported card pool when the game starts.' },
+          { k: 'Deck seed', v: roll > 1 ? 'Reroll ' + (roll - 1) + ' of the game seed' : 'Follows the game seed' },
+          { k: 'Commander', v: 'Shown once the deck is built' },
+          { k: 'Reroll', v: 'Builds a new deck for this seat only. The shuffle stays the same.' },
+          { k: 'Decisions', v: mode === 'batch' ? 'Set by each scenario.' : kind === 'you' ? 'Yours. The game waits for you.' : kind === 'ai' ? 'A language model. May spend API budget.' : 'Rule-based. Same seed, same choices.' },
+        ],
+        reroll: () => set({ rolls: Object.assign({}, s.rolls, { [id]: roll + 1 }), decks: Object.assign({}, s.decks, { [id]: 'gen' }) }),
+        rerollLabel: 'Reroll the generated deck for seat ' + id,
+      };
+    });
+
+    const more = s.more;
+    const row = (key, o) => Object.assign({
+      offNote: '', isChoice: false, isSeatCtrl: false, isToggle: false, isRange: false, isText: false, isScenarios: false,
+      labelColor: ink, disabled: false,
+      open: !!more[key],
+      moreLabel: more[key] ? '[ Less ]' : '[ What this changes ]',
+      toggle: () => set({ more: Object.assign({}, more, { [key]: !more[key] }) }),
+    }, o);
+
+    const botsGroup = {
+      title: 'The bots',
+      rows: [
+        mode === 'batch' ? null : row('who', {
+          label: 'Who plays each seat',
+          isSeatCtrl: true,
+        }),
+        row('commentary', {
+          label: 'Post-game commentary',
+          hint: anyAi ? 'Each AI seat looks back at its own play.' : 'Available when at least one seat is an AI bot.',
+          isToggle: true,
+          checked: anyAi && s.commentary,
+          disabled: !anyAi,
+          offNote: anyAi ? '' : 'Needs an AI seat',
+          labelColor: anyAi ? ink : muted,
+          toggleText: 'Write a review after the game',
+          flip: () => set({ commentary: !s.commentary }),
+          detail: 'Runs once, after the game is over, so it never slows play. One extra model call per AI seat. The reviews appear on the game-over panel and in Records.',
+        }),
+      ].filter(Boolean),
+    };
+
+    const pacingGroup = {
+      title: 'Pacing',
+      rows: [
+        row('playback', {
+          label: 'Playback',
+          hint: s.playback === 'live' ? 'Bots move on their own; you can pause and scrub at any time.' : 'Nothing moves until you step forward.',
+          isChoice: true,
+          choices: [['live', 'Live'], ['manual', 'Step by hand']].map(([k, label]) => Object.assign({ label, on: s.playback === k, disabled: false, pick: () => set({ playback: k }) }, pick(s.playback === k))),
+          detail: 'In live playback the engine works up to 5 turns ahead of what you are looking at, then waits for you to catch up. Scrubbing back to an earlier turn only changes what you see, never the game. Step by hand computes the next action only when you ask for it.',
+        }),
+        row('pace', {
+          label: 'Pace',
+          hint: s.playback === 'live' ? 'How long each bot action stays on screen.' : 'Not used while you step by hand.',
+          isRange: true,
+          value: s.pace,
+          valueText: s.playback === 'live' ? paceText : 'Off while stepping by hand',
+          disabled: s.playback !== 'live',
+          labelColor: s.playback === 'live' ? ink : muted,
+          set: (e) => set({ pace: Number(e.target.value) }),
+          detail: 'Only changes how quickly the board moves. The game itself is the same at any pace, and in Play mode the game always waits for your decisions.',
+        }),
+      ],
+    };
+
+    const scenarioGroup = {
+      title: 'Scenarios',
+      rows: [
+        row('scenarios', {
+          label: 'Scenarios',
+          hint: 'Each scenario sets how many games and which bots. The decks on the seats above are shared by every scenario.',
+          isScenarios: true,
+          detail: 'Scenarios run one after another, each up to 100 games. Comparing a built-in scenario with an AI one on the same seed shows how much the AI changes results. Each finished scenario is saved under Records as soon as it ends.',
+        }),
+      ],
+    };
+
+    const extrasGroup = {
+      title: 'Table talk and shuffle',
+      rows: [
+        row('talk', {
+          label: 'Table talk and deals',
+          hint: mode === 'play' ? 'Bots point out threats and can offer you short deals.' : 'Bots point out threats and make short deals with each other.',
+          isToggle: true,
+          checked: s.talk,
+          toggleText: s.talk ? 'On' : 'Off',
+          flip: () => set({ talk: !s.talk }),
+          detail: 'A deal is a short promise between two seats, such as not attacking each other next turn. Bots weigh deals and can break them, and the log marks every breach. In Play mode deals are offered to you too, and you answer from the board. With table talk off, the game plays exactly as it would without the feature.',
+        }),
+        row('seed', {
+          label: mode === 'batch' ? 'Batch seed' : 'Replay seed',
+          hint: 'Type a seed from an earlier game to deal the same shuffle again. Every finished game shows its seed on the game-over panel and in Records.',
+          isText: true,
+          value: s.seed,
+          set: (e) => set({ seed: e.target.value }),
+          detail: 'The seed fixes every shuffle and every built-in bot choice, so the same seed with built-in bots replays the same game. AI bot decisions can still differ. Each finished game shows its seed on the game-over panel and in Records.',
+        }),
+      ],
+    };
+
+    const tab = s.tab || 'seats';
+    const tabDefs = [['seats', 'Seats'], ['bots', 'Bots'], ['pace', mode === 'batch' ? 'Scenarios' : 'Pacing'], ['extras', 'Extras']];
+    const groupFor = { bots: botsGroup, pace: mode === 'batch' ? scenarioGroup : pacingGroup, extras: extrasGroup };
+    const seatCtrls = seats.map((st) => ({ id: st.id, label: st.ctrlGroupLabel, ctrls: st.ctrls }));
+    const groups = tab === 'seats' ? [] : [groupFor[tab]];
+
+    const scenarios = s.scenarios.map((sc, i) => {
+      const upd = (patch) => set({ scenarios: s.scenarios.map((x, j) => (j === i ? Object.assign({}, x, patch) : x)) });
+      return {
+        num: i + 1,
+        name: sc.name,
+        gamesLabel: 'Games in scenario ' + (i + 1),
+        botsLabel: 'Bots in scenario ' + (i + 1),
+        games: [10, 25, 50, 100].map((n) => Object.assign({ n, on: sc.games === n, pick: () => upd({ games: n }) }, pick(sc.games === n))),
+        bots: [['builtin', 'Built-in'], ['ai', 'AI']].map(([k, label]) => Object.assign({ label, on: sc.bots === k, pick: () => upd({ bots: k, name: sc.name.startsWith('Built-in') || sc.name.startsWith('AI') ? (k === 'ai' ? 'AI comparison' : 'Built-in baseline') : sc.name }) }, pick(sc.bots === k))),
+        nameLabel: 'Name of scenario ' + (i + 1),
+        rename: (e) => upd({ name: e.target.value }),
+        removable: s.scenarios.length > 1,
+        remove: () => set({ scenarios: s.scenarios.filter((x, j) => j !== i) }),
+      };
+    });
+
+    const summaries = {
+      play: 'You sit at seat ' + youSeat + ' against ' + botsText + '. ' + (s.playback === 'live' ? 'Live playback.' : 'You step through it.') + ' ' + (s.seed ? 'Seed ' + s.seed + '.' : 'A new random shuffle.'),
+      watch: cap(botsText) + ' play while you watch every hand. ' + (s.seed ? 'Seed ' + s.seed + '.' : 'A new random shuffle.'),
+      batch: gamesText + ' across ' + s.scenarios.length + (s.scenarios.length === 1 ? ' scenario' : ' scenarios') + ', saved under Records.',
+    };
+
+    return {
+      mode: m,
+      gameInProgress: hasGame,
+      isBatch: mode === 'batch',
+      showSetup: true,
+      stops,
+      ticks: this.compass().ticks,
+      roseLight: this.compass().roseLight,
+      roseDark: this.compass().roseDark,
+      midTicks: this.compass().midTicks,
+      innerTicks: this.compass().innerTicks,
+      degrees: this.compass().degrees,
+      bearingText,
+      // The needle and rose hold north; only the first paint swings the needle home.
+      needleAngle: !s.booted ? -120 : s.drag != null ? 0 : s.lean,
+      needleTransition: !s.booted ? 'none' : s.drag != null ? 'transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1)' : s.settling ? 'transform 1.1s cubic-bezier(0.165, 0.84, 0.44, 1)' : s.motion === 'snap' ? 'transform 0.17s cubic-bezier(0.6, 0, 0.45, 1)' : s.motion === 'release' ? 'transform 0.4s cubic-bezier(0.3, 1.4, 0.6, 1)' : s.lean ? 'transform 0.4s cubic-bezier(0.25, 0.8, 0.35, 1)' : 'transform 1.25s cubic-bezier(0.165, 0.84, 0.44, 1)',
+      lubberAngle: 0,
+      tipAngle: 0,
+      dialRot: -dialAt,
+      dialT,
+      rings: {
+        rose: '0',
+        roseT: '0.5s cubic-bezier(0.3, 0.55, 0.25, 1)',
+        inner: (s.ringInner || 0).toFixed(1),
+        innerT: '1.1s cubic-bezier(0.3, 0.55, 0.25, 1)',
+        mid: s.ringMid.toFixed(1),
+        midT: '1.5s cubic-bezier(0.3, 0.55, 0.25, 1)',
+        ticks: s.ringTicks.toFixed(1),
+        ticksT: '1.7s cubic-bezier(0.3, 0.55, 0.25, 1)',
+      },
+      midDash: '6 5',
+      // Leaving the face or a label waits a beat: crossing from one to the other is not leaving.
+      softLeave: () => {
+        clearTimeout(this._hov);
+        this._hov = setTimeout(() => {
+          const st = this.state;
+          if (st.lean || st.stuck) this.setState({ lean: 0, stuck: null, motion: 'release' });
+        }, 40);
+      },
+      modeRise: s.flip % 2 ? 'orrRiseB' : 'orrRiseA',
+      modeSoft: s.flip % 2 ? 'orrSoftB' : 'orrSoftA',
+      panelSoft: (s.flip + s.tabFlip) % 2 ? 'orrSoftB' : 'orrSoftA',
+      headDelay: s.flip ? '0s' : '0.3s',
+      grabCursor: s.drag == null ? 'grab' : 'grabbing',
+      // Dragging the face turns the plate of options with your hand; letting go brings the nearest one to north.
+      // `drag` keeps the bearing that sits at north, so turning the plate clockwise lowers it.
+      dialDown: (e) => {
+        if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId);
+        this._dragA = this.angleFrom(e);
+        set({ drag: s.needle ?? m.angle });
+      },
+      dialMove: (e) => {
+        if (this.state.drag == null) {
+          // Hovering the face: the needle follows the pointer, snaps onto an option it nears,
+          // holds until pulled well clear, then springs loose. Options sit at (bearing - north bearing).
+          clearTimeout(this._hov);
+          const st = this.state;
+          if (!st.booted || st.settling) return;
+          const base = st.needle ?? m.angle;
+          const wrap = (x) => ((((x % 360) + 540) % 360) - 180);
+          const p = wrap(this.angleFrom(e));
+          const gap = (k) => wrap(p - (modes[k].angle - base));
+          const toward = (k) => Math.round(wrap(modes[k].angle - base));
+          if (st.stuck) {
+            if (Math.abs(gap(st.stuck)) <= 17) return;
+            set({ stuck: null, motion: 'release', lean: Math.round(p) });
+            return;
+          }
+          const near = order.filter((k) => k !== 'multi').find((k) => Math.abs(gap(k)) < 12);
+          if (near) { set({ stuck: near, motion: 'snap', lean: toward(near) }); return; }
+          const lean = Math.round(p);
+          if (lean !== st.lean || st.motion !== 'free') set({ lean, motion: 'free' });
+          return;
+        }
+        const a = this.angleFrom(e);
+        const da = ((((a - this._dragA) % 360) + 540) % 360) - 180;
+        this._dragA = a;
+        set({ drag: this.state.drag - da });
+      },
+      dialUp: () => {
+        const a = this.state.drag;
+        if (a == null) return;
+        const near = snap(a);
+        const off = Math.abs((((modes[near].angle - a) % 360) + 540) % 360 - 180);
+        const key = off <= 32 ? near : mode;
+        const entering = !s.entered && off <= 32;
+        if (!s.entered && !entering) { set({ drag: null, lean: 0, releasing: true }); clearTimeout(this._rel); this._rel = setTimeout(() => this.setState({ releasing: false }), 1300); return; }
+        const delta = (((modes[key].angle - a) % 360) + 540) % 360 - 180;
+        const prev = s.needle ?? m.angle;
+        const turned = (((modes[key].angle - prev) % 360) + 540) % 360 - 180;
+        if (entering) Component.markOpened(this.props.openingKey);
+        set({ drag: null, mode: key, entered: true, needle: a + delta, lean: 0, stuck: null, releasing: true, flip: key === mode && !entering ? s.flip : s.flip + 1, turn: key === mode && !entering ? s.turn : turned });
+        if (key !== mode || entering) this.kickRings(turned || 1);
+        clearTimeout(this._rel);
+        this._rel = setTimeout(() => this.setState({ releasing: false }), 1300);
+      },
+      headTitle: s.entered ? m.title : 'Where to?',
+      showReplay: !!s.entered && !s.picking,
+      // Back to the opening plate: forget it was seen, return the options to their start and swing the needle in again.
+      replayOpening: () => {
+        Component.clearOpened(this.props.openingKey);
+        clearTimeout(this._boot);
+        clearTimeout(this._settle);
+        clearTimeout(this._hov);
+        set({ entered: false, mode: null, needle: null, drag: null, lean: 0, stuck: null, motion: 'free', navOpen: false, booted: false, settling: false, flip: s.flip + 1, turn: 0 });
+        this.kickRings(1);
+        this._boot = setTimeout(() => {
+          this.setState({ booted: true, settling: true });
+          this._settle = setTimeout(() => this.setState({ settling: false }), 1150);
+        }, 150);
+      },
+      chosenOp: s.entered ? 1 : 0,
+      garnishOp: s.entered ? 0 : 1,
+      titleGlow: s.entered ? 'none' : '0 0 6px #f5f3ec, 0 0 12px #f5f3ec, 0 0 18px #f5f3ec, 0 0 24px #f5f3ec',
+      mainShift: s.entered ? '0px' : '15rem',
+      compassScale: s.entered ? 1 : 1.16,
+      titleShift: s.entered ? '0px' : 'calc(min(64vh, 680px) * 0.16)',
+      asideHidden: s.entered ? 'false' : 'true',
+      asideOp: s.entered ? 1 : 0,
+      asideBorder: s.entered ? '#2d2a2a' : 'transparent',
+      asideX: s.entered ? '0' : '100%',
+      nav: (() => {
+        const items = [['I', 'New game', '#'], ['II', 'Stats', 'Stats.dc.html'], ['', 'Batch runs', 'Batches.dc.html'], ['III', 'Card lab', 'CardLab.dc.html'], ['', 'Deals', 'Deals.dc.html'], ['', 'Debug', 'Debug.dc.html']];
+        const cur = s.navCurrent || 0;
+        const at = s.navHover ?? cur;
+        return items.map(([group, label, href], i) => ({
+          group, label, href,
+          current: i === cur ? 'page' : 'false',
+          color: i === at ? ink : muted,
+          tick: group ? '0.9rem' : '0.55rem',
+          markBg: i === cur ? '#a77e5f' : 'transparent',
+          go: (e) => { if (i === 0 && e && e.preventDefault) e.preventDefault(); set({ navHover: null, navOpen: false }); },
+          hover: () => { if (this.state.navHover !== i) set({ navHover: i }); },
+        }));
+      })(),
+      navAt: s.navHover ?? (s.navCurrent || 0),
+      onNewGame: !s.navCurrent,
+      offNewGame: !!s.navCurrent,
+      place: [['I', 'New game'], ['II', 'Stats'], ['II', 'Batch runs'], ['III', 'Card test lab'], ['III', 'Deals preview'], ['III', 'Debug']].map(([g, l]) => ({ group: g === 'I' ? 'I. New game' : g === 'II' ? 'II. Records' : 'III. Workshop', label: l }))[s.navCurrent || 0],
+      goHome: () => set({ navCurrent: 0 }),
+      navRest: () => { if (this.state.navHover != null) set({ navHover: null }); },
+      navOpen: !!s.navOpen,
+      sheet: sheetRows(s.navCurrent || 0, (k, e) => { if (k === 0 && e && e.preventDefault) e.preventDefault(); set({ navHover: null, navOpen: false }); }),
+      toggleNav: () => set({ navOpen: !s.navOpen }),
+      caret: s.navOpen ? 180 : 0,
+      tabs: tabDefs.map(([k, label]) => ({ label, on: tab === k, bg: tab === k ? ink : 'transparent', fg: tab === k ? paper : ink, pick: () => set({ tab: k, tabFlip: s.tabFlip + 1 }) })),
+      tabSeats: tab === 'seats',
+      plate: plates[mode].map((row, i) => Object.assign({}, row, { delay: (s.flip ? 0.05 * i : 0.15 + 0.04 * i).toFixed(2) + 's' })),
+      seats,
+      tableHint: mode === 'play' ? 'Choose who plays each seat. Pick You on any seat to sit there.' : 'Every seat is a bot. Choose built-in or AI for each.',
+      groups,
+      seatCtrls,
+      scenarios,
+      addScenario: () => set({ scenarios: s.scenarios.concat([{ name: 'Scenario ' + (s.scenarios.length + 1), games: 25, bots: everyBot === 'ai' ? 'ai' : 'builtin' }]) }),
+      batchTotalText: 'Total: ' + gamesText,
+      summary: summaries[mode],
+      picking: !!pickSeat,
+      notPicking: !pickSeat,
+      pickSeat: pickSeat || '',
+      pickSeats,
+      pickName: deckNames[s.pickChoice] || 'Generated deck',
+      deckQuery: s.deckQuery,
+      setDeckQuery: (e) => set({ deckQuery: e.target.value }),
+      deckColors,
+      deckGroups,
+      deckList: s.deckList,
+      setDeckList: (e) => set({ deckList: e.target.value, importState: null }),
+      checkImport: () => set({ importState: (this.state.deckList || '').trim() ? 'failed' : 'empty' }),
+      importFailed: s.importState === 'failed',
+      importEmpty: s.importState === 'empty',
+      importMissing,
+      cancelPick: () => set({ picking: null, importState: null }),
+      useDeck: () => set({ decks: Object.assign({}, s.decks, { [pickSeat]: s.pickChoice }), picking: null, importState: null }),
+    };
+  }
+}
+</script>
+</body>
+</html>

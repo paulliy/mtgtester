@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The board</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&amp;family=Bodoni+Moda:opsz,wght@6..96,400&amp;family=Cutive+Mono&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f5f3ec}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid #2d2a2a;outline-offset:3px}
+@container (max-width: 90px){ .ctype{display:none !important} }
+@container (max-width: 70px){ .tsup{display:none !important} }
+@container (max-width: 60px){ .cart{margin-bottom:0 !important} .tapword{display:none !important} }
+@container (max-width: 112px){ .tapword{display:none !important} }
+@media (max-width: 720px){
+  .b-steps li{flex:0 0 auto !important;padding:0 0.6rem 0.7rem !important}
+  .b-steps li[data-on="false"] .b-steplbl{display:none}
+  .b-steps li[data-on="false"]{padding:0 0.35rem 0.7rem !important}
+  .b-stepdot,.b-stepfill{display:none}
+  .b-turn{flex-wrap:wrap;row-gap:0.4rem}
+  .b-arrows{display:none !important}
+  .b-root{height:auto !important;min-height:0 !important;display:block !important;overflow:visible !important}
+  .b-head{grid-template-columns:minmax(0,1fr) auto !important;padding:0.5rem 1rem !important;gap:0.5rem 1rem !important}
+  .b-title{display:none !important}
+  .b-opps{grid-template-columns:minmax(0,1fr) !important}
+  .b-opp{border-right:0 !important;border-bottom:1px solid #2d2a2a}
+  .b-chip{white-space:normal !important;max-width:6.5rem;line-height:1.25;font-size:0.6rem !important}
+  .b-ozone{flex:none !important;height:7rem !important;flex-wrap:nowrap !important;justify-content:flex-start !important;overflow-x:auto !important;overflow-y:hidden !important;--cw:62px !important}
+  .b-ozone>button,.b-mezone>div>button,.b-lands>div>button,.b-hand>button{flex-shrink:0}
+  .b-me{grid-template-columns:minmax(0,1fr) !important;border-bottom:1px solid #2d2a2a}
+  .b-meinner{display:flex !important;flex-direction:column;padding:0.6rem 1rem 0.5rem !important}
+  .b-mecols{grid-template-columns:minmax(0,1fr) !important;gap:0.5rem !important}
+  .b-mezone{height:9rem}
+  .b-mezone>div:last-child,.b-lands>div:last-child,.b-hand{flex-wrap:nowrap !important;justify-content:flex-start !important;overflow-x:auto !important;overflow-y:hidden !important;--cw:70px !important}
+  .b-lands{height:7rem}
+  .b-lands>div:last-child{--cw:54px !important}
+  .b-rail{border-left:0 !important;border-top:1px solid #2d2a2a}
+  .b-handsec{grid-template-columns:minmax(0,1fr) !important;border-bottom:0}
+  .b-handwrap{padding:0.5rem 1rem !important;height:var(--hh);border-bottom:1px solid #2d2a2a}
+  .b-head>span:first-child{line-height:1.8}
+  .b-decide{border-left:0 !important;padding:0.75rem 1rem !important}
+  .b-combat{padding:0.55rem 1rem !important}
+  .b-legend{margin-left:0 !important}
+}
+</style>
+</helmet>
+<div class="b-root" data-board-root="" style="position: relative; height: 100vh; min-height: 760px; box-sizing: border-box; display: grid; grid-template-rows: auto minmax(0, 33fr) auto minmax(0, 41fr) {{handRow}}; background: #f5f3ec; color: #2d2a2a; font-family: 'Cutive Mono', 'Courier New', ui-monospace, monospace; overflow: hidden">
+
+  <!-- Top bar: round and step, centred page name, way out -->
+  <header class="b-head" style="display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1.5rem; min-height: 3.6rem; padding: 0 1.25rem; border-bottom: 1px solid #2d2a2a; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">
+    <!-- Whose turn and where in it: the round, a solid turn tag, and a step ruler with a warm dot on the current step -->
+    <span class="b-turn" style="display: flex; align-items: center; gap: 1rem; min-width: 0; align-self: stretch">
+      <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 1.6rem; line-height: 1; letter-spacing: -0.02em; text-transform: none; white-space: nowrap">Round {{round}}</span>
+      <span style="background: #2d2a2a; color: #f5f3ec; padding: 0.35rem 0.6rem; font-size: 0.65rem; letter-spacing: 0.1em; white-space: nowrap">Your turn</span>
+      <ol class="b-steps" aria-label="Step" style="list-style: none; margin: 0 0 0 0.5rem; padding: 0; position: relative; display: flex; align-self: stretch; align-items: flex-end">
+        <span aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: #bdbbb6"></span>
+        <span class="b-stepfill" aria-hidden="true" style="position: absolute; left: 0; bottom: 0; height: 2px; width: {{stepFill}}; background: #2d2a2a; transition: width 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)"></span>
+        <sc-for list="{{steps}}" as="st" hint-placeholder-count="5">
+          <li data-on="{{st.on}}" aria-current="{{st.current}}" style="position: relative; flex: 0 0 5.8rem; padding: 0 0 0.7rem; text-align: center; white-space: nowrap; font-size: 0.62rem; letter-spacing: 0.07em; color: {{st.color}}; font-weight: {{st.weight}}">
+            <span class="b-steplbl">{{st.label}}</span>
+            <span aria-hidden="true" style="position: absolute; left: 50%; bottom: 0; width: 1px; height: {{st.tick}}; background: {{st.tickBg}}"></span>
+          </li>
+        </sc-for>
+        <span class="b-stepdot" aria-hidden="true" style="position: absolute; left: 0; width: 9px; height: 9px; margin-left: -6.5px; border-radius: 50%; background: #a77e5f; border: 2px solid #f5f3ec; bottom: -6px; transform: translateX(calc(({{stepAt}} + 0.5) * 5.8rem)); transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)"></span>
+      </ol>
+    </span>
+    <span aria-hidden="true"></span>
+    <span style="justify-self: end; display: flex; gap: 1.25rem; font-family: 'Cutive Mono', monospace; text-transform: none; letter-spacing: 0; font-size: 0.8rem">
+      <sc-if value="{{combatClosed}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{openCombat}}" style="min-height: 36px">[ Combat ]</button></sc-if>
+      <button type="button" style="min-height: 36px">[ Game log ]</button>
+      <a href="Main.dc.html" style="color: #2d2a2a; text-decoration: none; min-height: 32px; display: inline-flex; align-items: center; padding: 0 0.75rem; border: 1px solid #2d2a2a; font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Leave game</a>
+    </span>
+  </header>
+
+  <!-- Opponents: one panel each, widths follow how much they have in play -->
+  <section class="b-opps" aria-label="Opponents" style="display: grid; grid-template-columns: {{oppCols}}; min-height: 0; border-bottom: 1px solid #2d2a2a">
+    <sc-for list="{{opps}}" as="o" hint-placeholder-count="3">
+      <article class="b-opp" data-key="{{o.key}}" aria-label="{{o.aria}}" style="min-width: 0; min-height: 0; display: flex; flex-direction: column; border-right: 1px solid #2d2a2a; padding: 0.6rem 0.9rem 0.5rem; gap: 0.4rem; background: {{o.bg}}">
+        <div style="display: flex; align-items: center; gap: 0.6rem; min-width: 0">
+          <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: {{o.seatSize}}; line-height: 1; color: {{o.fg}}">{{o.seat}}</span>
+          <span style="display: flex; flex-direction: column; min-width: 0; flex: 1">
+            <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: {{o.fg}}; white-space: {{o.nameWrap}}; overflow: hidden; text-overflow: ellipsis; cursor: help; text-decoration: underline dotted #8f8c88; text-underline-offset: 0.3em" tabindex="0" onMouseEnter="{{o.cmdHover}}" onFocus="{{o.cmdHover}}" onMouseLeave="{{unhover}}" onBlur="{{unhover}}">{{o.name}}</span>
+            <span style="font-size: 0.6rem; line-height: 1.8; letter-spacing: 0.09em; color: #66625f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"><sc-if value="{{o.cmdState}}" hint-placeholder-val="{{ true }}"><span style="color: #2d2a2a">{{o.cmdState}}</span> · </sc-if><span role="img" aria-label="{{o.pipLabel}}" style="display: inline-flex; gap: 2px; vertical-align: -3px"><sc-for list="{{o.pips}}" as="pp" hint-placeholder-count="3"><span title="{{pp.name}}" style="width: 13px; height: 13px; box-sizing: border-box; border-radius: 50%; border: 1px solid #2d2a2a; background: {{pp.bg}}; color: {{pp.fg}}; display: inline-flex; align-items: center; justify-content: center; font-family: 'Bodoni Moda', Didot, serif; font-size: 8px; line-height: 1; letter-spacing: 0">{{pp.k}}</span></sc-for></span> · {{o.counts}}</span>
+          </span>
+          <sc-if value="{{o.attacked}}" hint-placeholder-val="{{ false }}">
+            <span class="b-chip" style="flex-shrink: 0; font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; background: #2d2a2a; color: #f5f3ec; padding: 0.3rem 0.5rem; white-space: nowrap">{{o.attacked}}</span>
+          </sc-if>
+          <sc-if value="{{o.monarch}}" hint-placeholder-val="{{ false }}">
+            <span style="font-family: Archivo, sans-serif; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid #2d2a2a; padding: 0.2rem 0.4rem">Monarch</span>
+          </sc-if>
+          <span data-life="{{o.key}}" style="flex-shrink: 0; font-family: 'Bodoni Moda', Didot, serif; font-size: {{o.lifeSize}}; line-height: 1; letter-spacing: -0.03em; color: {{o.fg}}" aria-label="{{o.lifeLabel}}">{{o.life}}</span>
+        </div>
+
+
+        <sc-if value="{{o.out}}" hint-placeholder-val="{{ false }}">
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem; border-top: 1px solid #2d2a2a; text-align: center">
+            <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f; font-family: Archivo, sans-serif">Out</span>
+            <span style="font-size: 0.725rem; line-height: 1.6; color: #66625f">{{o.outNote}}</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{o.alive}}" hint-placeholder-val="{{ true }}">
+          <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; border-top: 1px solid #2d2a2a">
+            <div class="b-ozone" style="flex: 1; min-height: 0; container-type: size; display: flex; flex-wrap: wrap; gap: 6px; align-content: safe center; justify-content: center; overflow: auto; padding: 0.5rem 0; --cw: {{o.cw}}">
+              <sc-for list="{{o.cards}}" as="c" hint-placeholder-count="4">
+                <button type="button" data-key="{{c.key}}" onMouseEnter="{{c.hover}}" onMouseLeave="{{unhover}}" onFocus="{{c.hover}}" onBlur="{{unhover}}" aria-label="{{c.aria}}" style="text-align: left; cursor: pointer; position: relative; width: var(--cw); aspect-ratio: 5 / 7; box-sizing: border-box; border: {{c.border}}; background: #f5f3ec; display: flex; flex-direction: column; container-type: inline-size; overflow: hidden">
+                  <sc-if value="{{c.tag}}" hint-placeholder-val="{{ false }}">
+                    <span style="font-family: Archivo, sans-serif; font-size: max(9px, 8cqw); letter-spacing: 0.04em; text-transform: uppercase; background: {{c.tagBg}}; color: {{c.tagFg}}; border-bottom: 1px solid #2d2a2a; padding: 2% 5%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.tag}}</span>
+                  </sc-if>
+                  <span style="font-family: Archivo, sans-serif; font-size: max(10px, 9.5cqw); line-height: 1.12; letter-spacing: 0.02em; text-transform: uppercase; margin: 5% 6% 3%; flex-shrink: 0; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+                  <span class="cart" style="display: flex; align-items: flex-end; flex: 1; min-height: 0; margin: 0 6% 4%; background: {{c.art}}"><sc-if value="{{c.typeSuper}}" hint-placeholder-val="{{ false }}"><span class="tsup" style="display: inline-block; margin: 5%; padding: 1px 4px; background: #f5f3ec; border: 1px solid #2d2a2a; font-family: Archivo, sans-serif; font-size: max(7px, 6.2cqw); line-height: 1.3; letter-spacing: 0.08em; text-transform: uppercase; color: #2d2a2a">{{c.typeSuper}}</span></sc-if></span>
+                  <span class="ctype" style="font-size: 7.5cqw; line-height: 1.3; color: #66625f; padding: 0 {{c.typePad}} 6% 6%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"><span style="display: block; overflow: hidden; text-overflow: ellipsis">{{c.typeMain}}</span><sc-if value="{{c.typeSub}}" hint-placeholder-val="{{ false }}"><span style="display: block; overflow: hidden; text-overflow: ellipsis; font-family: 'Bodoni Moda', Didot, serif; font-size: 1.3em; line-height: 1.15; color: #2d2a2a">{{c.typeSub}}</span></sc-if></span>
+                  <sc-if value="{{c.pt}}" hint-placeholder-val="{{ false }}">
+                    <span style="position: absolute; right: 4%; bottom: 3%; font-family: Archivo, sans-serif; font-size: max(11px, 12cqw); letter-spacing: 0.02em; line-height: 1; background: #f5f3ec; border: 1px solid #2d2a2a; padding: 3% 5%">{{c.pt}}</span>
+                  </sc-if>
+                  <sc-if value="{{c.count}}" hint-placeholder-val="{{ false }}">
+                    <span style="position: absolute; right: 4%; top: 30%; font-family: Archivo, sans-serif; font-size: max(9px, 11cqw); background: #2d2a2a; color: #f5f3ec; padding: 2% 6%">×{{c.count}}</span>
+                  </sc-if>
+                  <sc-if value="{{c.tapped}}" hint-placeholder-val="{{ false }}">
+                    <span style="position: absolute; left: 4%; top: 30%; font-family: Archivo, sans-serif; font-size: max(8px, 8cqw); letter-spacing: 0.06em; text-transform: uppercase; background: #f5f3ec; border: 1px solid #2d2a2a; padding: 2% 5%" class="tapword">Tapped</span>
+                  </sc-if>
+                </button>
+              </sc-for>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 0.8rem; border-top: 1px solid #2d2a2a; padding-top: 0.35rem; font-size: 0.725rem; line-height: 1.6; min-width: 0">
+              <span style="position: relative; z-index: 6; background: {{o.bg}}; flex-shrink: 0; font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">{{o.landsLabel}}</span>
+              <span title="{{o.landsText}}" style="position: relative; z-index: 6; background: {{o.bg}}; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #66625f">{{o.landsText}}</span>
+              <button type="button" style="position: relative; z-index: 6; background: {{o.bg}}; flex-shrink: 0; min-height: 28px">[ Graveyard {{o.gy}} ]</button>
+              <button type="button" style="position: relative; z-index: 6; background: {{o.bg}}; flex-shrink: 0; min-height: 28px">[ Exile {{o.ex}} ]</button>
+            </div>
+          </div>
+        </sc-if>
+      </article>
+    </sc-for>
+  </section>
+
+  <!-- Combat: who is attacking whom, in words -->
+  <div class="b-combatwrap" style="min-width: 0">
+  <sc-if value="{{combatOpen}}" hint-placeholder-val="{{ true }}">
+  <section class="b-combat" aria-label="Combat" style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 2rem; padding: 0.55rem 1.25rem; border-bottom: 1px solid #2d2a2a; background: #eeeadf">
+    <span style="position: relative; z-index: 6; background: #eeeadf; font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">{{combatLabel}}</span>
+    <sc-for list="{{pairs}}" as="p" hint-placeholder-count="2">
+      <span style="position: relative; z-index: 6; background: #eeeadf; font-size: 0.9rem; line-height: 1.5; padding: 0 0.25rem">{{p.text}}</span>
+    </sc-for>
+    <span class="b-legend" aria-hidden="true" style="position: relative; z-index: 6; background: #eeeadf; padding: 0.15rem 0.4rem; margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 1rem; font-size: 0.6rem; line-height: 1.8; letter-spacing: 0.09em; text-transform: uppercase; color: #66625f">
+      <span style="display: flex; align-items: center; gap: 0.4rem"><svg width="30" height="8"><line x1="1" y1="4" x2="29" y2="4" stroke="#2d2a2a" stroke-width="2"></line></svg>Attacking</span>
+      <span style="display: flex; align-items: center; gap: 0.4rem"><svg width="30" height="8"><line x1="1" y1="4" x2="29" y2="4" stroke="#2d2a2a" stroke-width="2" stroke-dasharray="10 6" stroke-linecap="round"></line></svg>Chosen, not confirmed</span>
+      <span style="display: flex; align-items: center; gap: 0.4rem"><svg width="30" height="12"><line x1="2" y1="6" x2="24" y2="6" stroke="#2d2a2a" stroke-width="3" stroke-dasharray="0.1 6" stroke-linecap="round"></line><rect x="26" y="1" width="3" height="10" fill="#2d2a2a"></rect></svg>Blocking</span>
+    </span>
+      <button type="button" onClick="{{closeCombat}}" aria-label="Hide the combat summary" title="Hide" style="position: relative; z-index: 6; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; margin-right: -0.5rem; background: #eeeadf"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1 L11 11 M11 1 L1 11" stroke="#2d2a2a" stroke-width="1.3"></path></svg></button>
+  </section>
+  </sc-if>
+  </div>
+
+  <!-- Your side: big, not everything -->
+  <section class="b-me" aria-label="Your side" style="min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) clamp(8.5rem, 11vw, 11rem); border-bottom: 1px solid #2d2a2a">
+    <div class="b-meinner" style="min-width: 0; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 66fr) minmax(5.5rem, 34fr); padding: 0.6rem 1.25rem 0.5rem; gap: 0.4rem">
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap">
+        <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 2.1rem; line-height: 1">A</span>
+        <span style="position: relative; z-index: 6; background: #f5f3ec; font-family: Archivo, sans-serif; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase">You · <span tabindex="0" onMouseEnter="{{me.cmdHover}}" onFocus="{{me.cmdHover}}" onMouseLeave="{{unhover}}" onBlur="{{unhover}}" style="cursor: help; text-decoration: underline dotted #8f8c88; text-underline-offset: 0.3em">{{me.name}}</span></span>
+        <span style="position: relative; z-index: 6; background: #f5f3ec; font-size: 0.6rem; line-height: 1.8; letter-spacing: 0.09em; color: #66625f"><span style="color: #2d2a2a">{{me.cmdState}}</span> · <span role="img" aria-label="{{me.pipLabel}}" style="display: inline-flex; gap: 2px; vertical-align: -3px"><sc-for list="{{me.pips}}" as="pp" hint-placeholder-count="5"><span title="{{pp.name}}" style="width: 13px; height: 13px; box-sizing: border-box; border-radius: 50%; border: 1px solid #2d2a2a; background: {{pp.bg}}; color: {{pp.fg}}; display: inline-flex; align-items: center; justify-content: center; font-family: 'Bodoni Moda', Didot, serif; font-size: 8px; line-height: 1; letter-spacing: 0">{{pp.k}}</span></sc-for></span> · {{me.counts}}</span>
+      </div>
+      <div class="b-mecols" style="min-height: 0; display: grid; grid-template-columns: {{meCols}}; gap: 1rem">
+        <sc-for list="{{meZones}}" as="z" hint-placeholder-count="2">
+          <div class="b-mezone" style="min-width: 0; min-height: 0; display: flex; flex-direction: column; border-top: 1px solid #2d2a2a">
+            <span style="position: relative; z-index: 6; align-self: flex-start; background: #f5f3ec; font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.3rem 0.25rem 0 0">{{z.label}}</span>
+            <div style="flex: 1; min-height: 0; container-type: size; display: flex; flex-wrap: wrap; gap: 8px; align-content: safe center; justify-content: center; overflow: auto; --cw: {{z.cw}}">
+              <sc-for list="{{z.cards}}" as="c" hint-placeholder-count="3">
+                <button type="button" data-key="{{c.key}}" onMouseEnter="{{c.hover}}" onMouseLeave="{{unhover}}" onFocus="{{c.hover}}" onBlur="{{unhover}}" aria-label="{{c.aria}}" style="text-align: left; cursor: pointer; position: relative; width: var(--cw); aspect-ratio: 5 / 7; box-sizing: border-box; border: {{c.border}}; background: #f5f3ec; display: flex; flex-direction: column; container-type: inline-size; overflow: hidden">
+                  <sc-if value="{{c.tag}}" hint-placeholder-val="{{ false }}">
+                    <span style="font-family: Archivo, sans-serif; font-size: max(9px, 8cqw); letter-spacing: 0.04em; text-transform: uppercase; background: {{c.tagBg}}; color: {{c.tagFg}}; border-bottom: 1px solid #2d2a2a; padding: 2% 5%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.tag}}</span>
+                  </sc-if>
+                  <span style="font-family: Archivo, sans-serif; font-size: max(10px, 9.5cqw); line-height: 1.12; letter-spacing: 0.02em; text-transform: uppercase; margin: 5% 6% 3%; flex-shrink: 0; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+                  <span class="cart" style="display: flex; align-items: flex-end; flex: 1; min-height: 0; margin: 0 6% 4%; background: {{c.art}}"><sc-if value="{{c.typeSuper}}" hint-placeholder-val="{{ false }}"><span class="tsup" style="display: inline-block; margin: 5%; padding: 1px 4px; background: #f5f3ec; border: 1px solid #2d2a2a; font-family: Archivo, sans-serif; font-size: max(7px, 6.2cqw); line-height: 1.3; letter-spacing: 0.08em; text-transform: uppercase; color: #2d2a2a">{{c.typeSuper}}</span></sc-if></span>
+                  <span class="ctype" style="font-size: 7.5cqw; line-height: 1.3; color: #66625f; padding: 0 {{c.typePad}} 6% 6%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"><span style="display: block; overflow: hidden; text-overflow: ellipsis">{{c.typeMain}}</span><sc-if value="{{c.typeSub}}" hint-placeholder-val="{{ false }}"><span style="display: block; overflow: hidden; text-overflow: ellipsis; font-family: 'Bodoni Moda', Didot, serif; font-size: 1.3em; line-height: 1.15; color: #2d2a2a">{{c.typeSub}}</span></sc-if></span>
+                  <sc-if value="{{c.pt}}" hint-placeholder-val="{{ false }}">
+                    <span style="position: absolute; right: 4%; bottom: 3%; font-family: Archivo, sans-serif; font-size: max(11px, 12cqw); letter-spacing: 0.02em; line-height: 1; background: #f5f3ec; border: 1px solid #2d2a2a; padding: 3% 5%">{{c.pt}}</span>
+                  </sc-if>
+                  <sc-if value="{{c.count}}" hint-placeholder-val="{{ false }}">
+                    <span style="position: absolute; right: 4%; top: 30%; font-family: Archivo, sans-serif; font-size: max(9px, 11cqw); background: #2d2a2a; color: #f5f3ec; padding: 2% 6%">×{{c.count}}</span>
+                  </sc-if>
+                  <sc-if value="{{c.tapped}}" hint-placeholder-val="{{ false }}">
+                    <span style="position: absolute; left: 4%; top: 30%; font-family: Archivo, sans-serif; font-size: max(8px, 8cqw); letter-spacing: 0.06em; text-transform: uppercase; background: #f5f3ec; border: 1px solid #2d2a2a; padding: 2% 5%" class="tapword">Tapped</span>
+                  </sc-if>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <!-- Lands: same cards, a smaller ceiling, stacked by name -->
+      <div class="b-lands" style="min-height: 0; display: flex; flex-direction: column; border-top: 1px solid #2d2a2a">
+        <span style="font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.3rem 0 0">{{me.landsLabel}}</span>
+        <div style="flex: 1; min-height: 0; container-type: size; display: flex; flex-wrap: wrap; gap: 6px; align-content: safe center; justify-content: flex-start; overflow: auto; --cw: {{me.landCw}}">
+          <sc-for list="{{me.lands}}" as="c" hint-placeholder-count="6">
+            <button type="button" data-key="{{c.key}}" onMouseEnter="{{c.hover}}" onMouseLeave="{{unhover}}" onFocus="{{c.hover}}" onBlur="{{unhover}}" aria-label="{{c.aria}}" style="text-align: left; cursor: pointer; position: relative; width: var(--cw); aspect-ratio: 5 / 7; box-sizing: border-box; border: 1px solid #2d2a2a; background: #f5f3ec; display: flex; flex-direction: column; container-type: inline-size; overflow: hidden">
+              <span style="font-family: Archivo, sans-serif; font-size: max(10px, 9.5cqw); line-height: 1.12; letter-spacing: 0.02em; text-transform: uppercase; margin: 5% 6% 3%; flex-shrink: 0; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+              <span class="cart" style="display: flex; align-items: flex-end; flex: 1; min-height: 0; margin: 0 6% 6%; background: {{c.art}}"><sc-if value="{{c.typeSuper}}" hint-placeholder-val="{{ false }}"><span class="tsup" style="display: inline-block; margin: 5%; padding: 1px 4px; background: #f5f3ec; border: 1px solid #2d2a2a; font-family: Archivo, sans-serif; font-size: max(7px, 6.2cqw); line-height: 1.3; letter-spacing: 0.08em; text-transform: uppercase; color: #2d2a2a">{{c.typeSuper}}</span></sc-if></span>
+              <sc-if value="{{c.count}}" hint-placeholder-val="{{ false }}">
+                <span style="position: absolute; right: 4%; top: 30%; font-family: Archivo, sans-serif; font-size: max(9px, 11cqw); background: #2d2a2a; color: #f5f3ec; padding: 2% 6%">×{{c.count}}</span>
+              </sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rail: life first, then the zones that are only counts -->
+    <aside class="b-rail" aria-label="Your zones" style="min-height: 0; border-left: 1px solid #2d2a2a; background: #eeeadf; padding: 0.75rem 1rem; display: flex; flex-direction: column; gap: 0.75rem">
+      <div style="display: flex; flex-direction: column; gap: 0.1rem">
+        <span style="font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Life</span>
+        <span style="display: flex; align-items: baseline; gap: 0.5rem">
+          <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 2.65rem; line-height: 1; letter-spacing: -0.03em">{{me.life}}</span>
+          <span style="font-size: 0.725rem">{{me.lifeDelta}}</span>
+        </span>
+      </div>
+      <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; border-top: 1px solid #2d2a2a; font-size: 0.9rem">
+        <sc-for list="{{me.piles}}" as="p" hint-placeholder-count="4">
+          <li style="border-bottom: 1px solid #2d2a2a">
+            <button type="button" style="width: 100%; min-height: 40px; display: flex; justify-content: space-between; align-items: center; text-align: left">
+              <span>{{p.label}}</span><span>{{p.n}}</span>
+            </button>
+          </li>
+        </sc-for>
+      </ul>
+    </aside>
+  </section>
+
+  <!-- Hand and the one decision you owe -->
+  <section class="b-handsec" aria-label="Hand and decision" style="min-height: 0; display: grid; grid-template-columns: {{handCols}}">
+    <div class="b-handwrap" style="--hh: {{handH}}; min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 0.5rem 1.25rem">
+      <span style="font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">{{handLabel}}</span>
+      <div class="b-hand" style="flex: 1; min-height: 0; container-type: size; display: flex; flex-wrap: wrap; gap: 8px; align-content: safe center; justify-content: flex-start; overflow: auto; --cw: {{handCw}}">
+        <!-- Your commander, when you can cast it: beside the hand, set apart -->
+        <sc-for list="{{cmdList}}" as="c" hint-placeholder-count="0">
+          <button type="button" data-key="{{c.key}}" onMouseEnter="{{c.hover}}" onMouseLeave="{{unhover}}" onFocus="{{c.hover}}" onBlur="{{unhover}}" aria-label="{{c.aria}}" style="position: relative; width: var(--cw); aspect-ratio: 5 / 7; box-sizing: border-box; border: 3px double #2d2a2a; background: #f5f3ec; display: flex; flex-direction: column; container-type: inline-size; overflow: hidden; text-align: left">
+            <span style="font-family: Archivo, sans-serif; font-size: max(8px, 7.5cqw); letter-spacing: 0.06em; text-transform: uppercase; background: #2d2a2a; color: #f5f3ec; padding: 2% 5%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.tag}}</span>
+            <span style="font-family: Archivo, sans-serif; font-size: max(10px, 9.5cqw); line-height: 1.12; letter-spacing: 0.02em; text-transform: uppercase; margin: 5% 6% 3%; flex-shrink: 0; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+            <span class="cart" style="display: flex; align-items: flex-end; flex: 1; align-self: stretch; margin: 0 6% 4%; background: {{c.art}}"><sc-if value="{{c.typeSuper}}" hint-placeholder-val="{{ false }}"><span class="tsup" style="display: inline-block; margin: 5%; padding: 1px 4px; background: #f5f3ec; border: 1px solid #2d2a2a; font-family: Archivo, sans-serif; font-size: max(7px, 6.2cqw); line-height: 1.3; letter-spacing: 0.08em; text-transform: uppercase; color: #2d2a2a">{{c.typeSuper}}</span></sc-if></span>
+            <span class="ctype" style="font-size: 7.5cqw; line-height: 1.3; color: #66625f; padding: 0 {{c.typePad}} 6% 6%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"><span style="display: block; overflow: hidden; text-overflow: ellipsis">{{c.typeMain}}</span><sc-if value="{{c.typeSub}}" hint-placeholder-val="{{ false }}"><span style="display: block; overflow: hidden; text-overflow: ellipsis; font-family: 'Bodoni Moda', Didot, serif; font-size: 1.3em; line-height: 1.15; color: #2d2a2a">{{c.typeSub}}</span></sc-if></span>
+          </button>
+        </sc-for>
+        <sc-if value="{{cmdShow}}" hint-placeholder-val="{{ false }}">
+          <span aria-hidden="true" style="align-self: stretch; width: 1px; margin: 0 6px; background: #2d2a2a"></span>
+        </sc-if>
+        <sc-for list="{{hand}}" as="c" hint-placeholder-count="5">
+          <button type="button" data-key="{{c.key}}" onMouseEnter="{{c.hover}}" onMouseLeave="{{unhover}}" onFocus="{{c.hover}}" onBlur="{{unhover}}" aria-label="{{c.aria}}" style="position: relative; width: var(--cw); aspect-ratio: 5 / 7; box-sizing: border-box; border: 1px solid #2d2a2a; background: #f5f3ec; display: flex; flex-direction: column; container-type: inline-size; overflow: hidden; text-align: left">
+            <span style="font-family: Archivo, sans-serif; font-size: max(10px, 9.5cqw); line-height: 1.12; letter-spacing: 0.02em; text-transform: uppercase; margin: 5% 6% 3%; flex-shrink: 0; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+            <span class="cart" style="display: flex; align-items: flex-end; flex: 1; align-self: stretch; margin: 0 6% 4%; background: {{c.art}}"><sc-if value="{{c.typeSuper}}" hint-placeholder-val="{{ false }}"><span class="tsup" style="display: inline-block; margin: 5%; padding: 1px 4px; background: #f5f3ec; border: 1px solid #2d2a2a; font-family: Archivo, sans-serif; font-size: max(7px, 6.2cqw); line-height: 1.3; letter-spacing: 0.08em; text-transform: uppercase; color: #2d2a2a">{{c.typeSuper}}</span></sc-if></span>
+            <span class="ctype" style="font-size: 7.5cqw; line-height: 1.3; color: #66625f; padding: 0 {{c.typePad}} 6% 6%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"><span style="display: block; overflow: hidden; text-overflow: ellipsis">{{c.typeMain}}</span><sc-if value="{{c.typeSub}}" hint-placeholder-val="{{ false }}"><span style="display: block; overflow: hidden; text-overflow: ellipsis; font-family: 'Bodoni Moda', Didot, serif; font-size: 1.3em; line-height: 1.15; color: #2d2a2a">{{c.typeSub}}</span></sc-if></span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+    <div class="b-decide" aria-live="polite" style="min-width: 0; border-left: 1px solid #2d2a2a; padding: 0.5rem 1.25rem; overflow: auto; display: flex; flex-direction: row; flex-wrap: wrap; gap: 0.4rem 1.5rem; justify-content: flex-start; align-items: center; align-content: center">
+      <span style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem">
+        <span style="display: flex; align-items: center; gap: 0.5rem; font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">
+          <svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" fill="#a77e5f"></path></svg>
+          {{decision.kicker}}
+        </span>
+        <span style="font-size: 1.05rem; line-height: 1.2; letter-spacing: 0.09em; text-transform: uppercase">{{decision.title}}</span>
+      </span>
+      <sc-if value="{{decision.targets}}" hint-placeholder-val="{{ false }}">
+        <span role="group" aria-label="Send selected attackers at" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem">
+          <span style="font-family: Archivo, sans-serif; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase">Send at</span>
+          <sc-for list="{{decision.targetList}}" as="tg" hint-placeholder-count="3">
+            <button type="button" aria-pressed="{{tg.on}}" style="min-width: 40px; min-height: 36px; border: 1px solid #2d2a2a; background: {{tg.bg}}; color: {{tg.fg}}">{{tg.k}}</button>
+          </sc-for>
+        </span>
+      </sc-if>
+      <sc-if value="{{decision.verb}}" hint-placeholder-val="{{ true }}">
+        <span style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.25rem">
+          <button type="button" style="min-height: 44px; padding: 0 1.5rem; background: #2d2a2a; color: #f5f3ec; font-family: Archivo, sans-serif; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase">{{decision.verb}}</button>
+          <button type="button" style="min-height: 44px; font-size: 0.8rem">{{decision.alt}}</button>
+        </span>
+      </sc-if>
+          <span style="flex: 1 1 {{bodyBasis}}; max-width: 62ch; font-size: 0.9rem; line-height: 1.5">{{decision.body}}</span>
+</div>
+  </section>
+  <!-- Arrows: drawn from where the cards really are; the strip above says the same in words -->
+  <div class="b-arrows" aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; z-index: 5">
+    <sc-for list="{{arrows}}" as="a" hint-placeholder-count="0">
+      <svg width="100%" height="100%" style="position: absolute; inset: 0; overflow: visible">
+        <path d="{{a.d}}" fill="none" stroke="#f5f3ec" stroke-width="6" stroke-linecap="round"></path>
+        <path d="{{a.d}}" fill="none" stroke="#2d2a2a" stroke-width="{{a.width}}" stroke-dasharray="{{a.dash}}" stroke-linecap="round"></path>
+        <path d="{{a.head}}" fill="#2d2a2a" stroke="#f5f3ec" stroke-width="1.5"></path>
+        <circle cx="{{a.x0}}" cy="{{a.y0}}" r="3.5" fill="#2d2a2a" stroke="#f5f3ec" stroke-width="1.5"></circle>
+      </svg>
+    </sc-for>
+  </div>
+
+  <!-- Card preview: opens beside whatever card is hovered or focused -->
+  <sc-if value="{{pv.show}}" hint-placeholder-val="{{ false }}">
+    <div role="tooltip" style="position: absolute; left: {{pv.x}}px; top: {{pv.y}}px; width: 288px; z-index: 10; box-sizing: border-box; background: #f5f3ec; border: 1px solid #2d2a2a; display: flex; flex-direction: column; pointer-events: none">
+      <sc-if value="{{pv.tag}}" hint-placeholder-val="{{ false }}">
+        <span style="font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; background: #2d2a2a; color: #f5f3ec; padding: 0.4rem 0.9rem">{{pv.tag}}</span>
+      </sc-if>
+      <div style="padding: 0.9rem; display: flex; flex-direction: column; gap: 0.6rem">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem">
+          <span style="font-family: Archivo, sans-serif; font-size: 1.05rem; line-height: 1.2; letter-spacing: 0.06em; text-transform: uppercase">{{pv.name}}</span>
+          <sc-if value="{{pv.pt}}" hint-placeholder-val="{{ false }}">
+            <span style="flex-shrink: 0; font-family: Archivo, sans-serif; font-size: 1.05rem; border: 1px solid #2d2a2a; padding: 0.2rem 0.45rem">{{pv.pt}}</span>
+          </sc-if>
+        </div>
+        <span style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.15rem 0.45rem; padding-bottom: 0.35rem; border-bottom: 1px solid #d6d4ce; font-size: 0.75rem; line-height: 1.5; color: #66625f">
+          <span style="font-family: Archivo, sans-serif; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: #2d2a2a">{{pv.typeSuper}}</span>
+          <span>{{pv.typeMain}}</span>
+          <span style="color: #8f8c88">{{pv.typeDash}}</span>
+          <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 0.95rem; color: #2d2a2a">{{pv.typeSub}}</span>
+        </span>
+        <span style="height: 96px; background: {{pv.art}}"></span>
+        <p style="margin: 0; border-top: 1px solid #2d2a2a; border-bottom: 1px solid #2d2a2a; padding: 0.4rem 0; font-size: 0.725rem; line-height: 1.7; color: #66625f">Rules text from the card database.</p>
+        <dl style="margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.3rem 1rem; font-size: 0.725rem; line-height: 1.6">
+          <sc-for list="{{pv.facts}}" as="f" hint-placeholder-count="3">
+            <dt style="font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">{{f.k}}</dt>
+            <dd style="margin: 0">{{f.v}}</dd>
+          </sc-for>
+        </dl>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"density":{"editor":"enum","options":["few","medium","many"],"default":"few"},"$preview":{"width":1600,"height":1000}}'>
+// The five colours, muted to sit on paper: name, pip fill, letter colour, light tint.
+const MANA = { W: ['White', '#ddd2b0', '#2d2a2a', '#efe9d8'], U: ['Blue', '#9fb1c1', '#2d2a2a', '#d9e0e6'], B: ['Black', '#5e5753', '#f5f3ec', '#cfcac6'], R: ['Red', '#c99580', '#2d2a2a', '#ecd7cd'], G: ['Green', '#9cae94', '#2d2a2a', '#d8dfd3'], C: ['Colourless', '#d6d4ce', '#2d2a2a', '#e8e6df'] };
+function pips(str) {
+  const ks = !str ? [] : /colou?rless/i.test(str) ? ['C'] : String(str).split(/\s+/).filter((k) => MANA[k]);
+  return ks.map((k) => ({ k, name: MANA[k][0], bg: MANA[k][1], fg: MANA[k][2] }));
+}
+function pipLabel(str) { return pips(str).map((p) => p.name).join(', ') || 'No colours'; }
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { arrows: [], preview: null, combatHidden: false };
+  }
+
+  // Largest card width w that fits n cards (5:7) in the zone, tried over 1..4 rows.
+  // Pure CSS: cqw/cqh are the zone's own size, so it refits on any resize.
+  fit(n, gap, minW, maxW) {
+    if (!n) return minW + 'px';
+    const terms = [];
+    for (let r = 1; r <= Math.min(4, n); r++) {
+      const c = Math.ceil(n / r);
+      terms.push('min(calc((100cqw - ' + ((c - 1) * gap + 2) + 'px) / ' + c + '), calc((100cqh - ' + ((r - 1) * gap + 2) + 'px) / ' + r + ' / 1.4))');
+    }
+    return 'clamp(' + minW + 'px, max(' + terms.join(', ') + '), ' + maxW + 'px)';
+  }
+
+  componentDidMount() {
+    this._measure = () => this.measureArrows();
+    window.addEventListener('resize', this._measure);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(this._measure);
+    setTimeout(this._measure, 350);
+    this.measureArrows();
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._measure);
+  }
+
+  componentDidUpdate() {
+    this.measureArrows();
+  }
+
+  rootEl() {
+    return document.querySelector('[data-board-root]');
+  }
+
+  // Arrows are drawn from the cards' real boxes, so they follow any layout and any density.
+  measureArrows() {
+    const root = this.rootEl();
+    if (!root) return;
+    const R = root.getBoundingClientRect();
+    const byKey = {};
+    root.querySelectorAll('[data-key]').forEach((el) => { byKey[el.getAttribute('data-key')] = el.getBoundingClientRect(); });
+    const lifeByKey = {};
+    root.querySelectorAll('[data-life]').forEach((el) => { lifeByKey[el.getAttribute('data-life')] = el.getBoundingClientRect(); });
+    const specs = this._arrowSpecs || [];
+    const perTarget = {};
+    specs.forEach((sp) => { if (sp.kind !== 'block') perTarget[sp.to] = (perTarget[sp.to] || 0) + 1; });
+    const seen = {};
+    const out = [];
+    specs.forEach((sp) => {
+      const a = byKey[sp.from];
+      const b = byKey[sp.to];
+      if (!a || !b) return;
+      const rx = (v) => Math.round(v - R.left);
+      const ry = (v) => Math.round(v - R.top);
+      let x0, y0, x1, y1, d, head;
+      if (sp.kind === 'block') {
+        x0 = rx(a.left + a.width / 2); y0 = ry(a.bottom);
+        x1 = rx(b.left + b.width * 0.72); y1 = ry(b.top) - 2;
+        const k = Math.max(30, (y1 - y0) * 0.45);
+        d = 'M' + x0 + ' ' + y0 + ' C' + x0 + ' ' + (y0 + k) + ' ' + x1 + ' ' + (y1 - k) + ' ' + x1 + ' ' + y1;
+        head = 'M' + (x1 - 9) + ' ' + (y1 - 1.5) + ' L' + (x1 + 9) + ' ' + (y1 - 1.5) + ' L' + (x1 + 9) + ' ' + (y1 + 1.5) + ' L' + (x1 - 9) + ' ' + (y1 + 1.5) + ' Z';
+      } else {
+        const n = perTarget[sp.to];
+        const i = seen[sp.to] = (seen[sp.to] || 0) + 1;
+        const life = lifeByKey[sp.to] || b;
+        x0 = rx(a.left + a.width * 0.32); y0 = ry(a.top) - 2;
+        x1 = rx(life.left + life.width / 2 + (i - 1 - (n - 1) / 2) * 16); y1 = ry(life.bottom) + 4;
+        const k = Math.max(30, (y0 - y1) * 0.45);
+        d = 'M' + x0 + ' ' + y0 + ' C' + x0 + ' ' + (y0 - k) + ' ' + x1 + ' ' + (y1 + k) + ' ' + x1 + ' ' + y1;
+        head = 'M' + x1 + ' ' + y1 + ' L' + (x1 - 6) + ' ' + (y1 + 11) + ' L' + (x1 + 6) + ' ' + (y1 + 11) + ' Z';
+      }
+      out.push({ d, head, x0, y0, dash: sp.kind === 'block' ? '0.1 6' : sp.kind === 'pending' ? '10 6' : 'none', width: sp.kind === 'block' ? 3 : 2 });
+    });
+    const sig = JSON.stringify(out);
+    if (sig !== this._arrowSig) { this._arrowSig = sig; this.setState({ arrows: out }); }
+  }
+
+  showPreview(card, e) {
+    const root = this.rootEl();
+    if (!root || !e || !e.currentTarget) return;
+    const R = root.getBoundingClientRect();
+    const r = e.currentTarget.getBoundingClientRect();
+    const W = 288, H = 400;
+    // Dock to the side of the board away from the card, so its neighbours stay visible.
+    const cardMid = (r.left + r.right) / 2 - R.left;
+    const x = cardMid > R.width / 2 ? 16 : R.width - W - 16;
+    const y = Math.max(52, Math.min((r.top + r.bottom) / 2 - R.top - H / 2, R.height - H - 8));
+    const cur = this.state.preview;
+    if (cur && cur.key === card.key && cur.x === Math.round(x) && cur.y === Math.round(y)) return;
+    this.setState({ preview: Object.assign({}, card, { x: Math.round(x), y: Math.round(y) }) });
+  }
+
+  renderVals() {
+    const d = this.props.density ?? 'few';
+    const ink = '#2d2a2a';
+    const tones = ['#d6d4ce', '#bdbbb6', '#e8e6df'];
+    // Printed type lines: supertypes · card types — subtypes, as on the card.
+    const TYPE_LINES = {
+      'Assassin token': 'Token Creature — Assassin', 'Broodcaller Scourge': 'Creature — Dragon', 'Dragon token': 'Token Creature — Dragon',
+      'Dragonlord Atarka': 'Legendary Creature — Elder Dragon', 'Dragonspeaker Shaman': 'Creature — Human Barbarian Shaman', 'Goldspan Dragon': 'Creature — Dragon',
+      'Klauth, Unrivaled Ancient': 'Legendary Creature — Dragon', 'Lathliss, Dragon Queen': 'Legendary Creature — Dragon', 'Marchesa, the Black Rose': 'Legendary Creature — Human Wizard',
+      'Mentor of the Meek': 'Creature — Human Soldier', 'Michiko Konda, Truth Seeker': 'Legendary Creature — Human Advisor', 'Midnight Reaper': 'Creature — Zombie Knight',
+      'Myr Battlesphere': 'Artifact Creature — Myr Construct', 'Myr token': 'Token Artifact Creature — Myr', 'Old Gnawbone': 'Legendary Creature — Dragon',
+      'Pitiless Plunderer': 'Creature — Human Pirate', 'Queen Marchesa': 'Legendary Creature — Human Assassin', 'Scion of the Ur-Dragon': 'Legendary Creature — Dragon Avatar',
+      'Skullclamp': 'Artifact — Equipment', 'The Ur-Dragon': 'Legendary Creature — Dragon Avatar', 'Treasure token': 'Token Artifact — Treasure', 'Utvara Hellkite': 'Creature — Dragon',
+      'Walking Ballista': 'Artifact Creature — Construct', 'Wurmcoil Engine': 'Artifact Creature — Phyrexian Wurm', 'Zombie token': 'Token Creature — Zombie',
+      'Watery Grave': 'Land — Island Swamp', 'Ophiolite Wall': 'Creature — Wall',
+    };
+    const BASICS = { Plains: 1, Island: 1, Swamp: 1, Mountain: 1, Forest: 1, Wastes: 1 };
+    const SUPERS = ['Legendary', 'Basic', 'Snow', 'World', 'Token'];
+    const typeLine = (name, given) => {
+      let line = TYPE_LINES[name] || (BASICS[name] ? 'Basic Land' + (name === 'Wastes' ? '' : ' — ' + name) : (given || '').replace(/\bcreature\b/g, 'Creature').replace(/\btoken\b/g, '').replace(/ · /g, ' — ').trim());
+      const [front, sub] = line.split(' — ');
+      const words = front.split(/\s+/).filter(Boolean);
+      const sup = words.filter((w) => SUPERS.includes(w));
+      const main = words.filter((w) => !SUPERS.includes(w));
+      return { type: line, typeSuper: sup.join(' '), typeMain: main.join(' '), typeSub: sub || '', typeDash: sub ? '—' : '' };
+    };
+    const C = (name, type, pt, x) => Object.assign({ name, pt: pt || '' }, typeLine(name, type), x || {});
+    const L = (name, count, tapped) => ({ name, count: count || 0, tapped: !!tapped });
+
+    this._arrowSpecs = null;
+    const data = {
+      few: {
+        round: 3, step: 2, combatLabel: 'Combat · blockers',
+        pairs: ['Broodcaller Scourge 5/7 → B Queen Marchesa · waiting for blocks'],
+        opps: [
+          { seat: 'B', name: 'Queen Marchesa', colors: 'W B R', life: 34, hand: 6, lib: 88, gy: 1, ex: 0,
+            cards: [C('Queen Marchesa', 'Legendary creature', '3/3'), C('Talisman of Hierarchy', 'Artifact')],
+            lands: [L('Sulfurous Springs'), L('Command Tower', 0, true), L('Mountain')] },
+          { seat: 'C', name: 'Invisible Woman', colors: 'Colorless', life: 40, hand: 7, lib: 90, gy: 0, ex: 0,
+            cards: [C('Sol Ring', 'Artifact')], lands: [L('Wastes', 2)] },
+          { seat: 'D', name: 'Marchesa, the Black Rose', colors: 'U B R', life: 40, hand: 6, lib: 89, gy: 0, ex: 0,
+            cards: [C('Marchesa, the Black Rose', 'Legendary creature', '3/3')], lands: [L('Watery Grave'), L('Swamp', 2)] },
+        ],
+        me: { life: 38, delta: '−2', hand: 5, lib: 87, gy: 0, ex: 0,
+          creatures: [C('Broodcaller Scourge', 'Creature · Dragon', '5/7', { tag: 'Attacking B', tapped: true })],
+          other: [C('Arcane Signet', 'Artifact'), C('Fellwar Stone', 'Artifact')],
+          lands: [L('Command Tower', 0, true), L('Forest', 0, true), L('Island', 0, true), L('Temple Garden', 0, true)],
+          command: 'The Ur-Dragon is in the command zone.' },
+        hand: [C('Klauth, Unrivaled Ancient', 'Creature · Dragon'), C("Dragon's Hoard", 'Artifact'), C('Swamp', 'Land'), C('Woodland Cemetery', 'Land'), C('Kindred Discovery', 'Enchantment')],
+        attacked: { B: 'Under attack · 5 incoming' },
+        arrows: [{ from: 'A:Broodcaller Scourge', to: 'seat:B', kind: 'attack' }],
+        decision: { kicker: 'Waiting on B', title: 'Queen Marchesa is blocking', body: 'Nothing to do yet. You will choose damage order if she blocks with more than one creature.', verb: '', alt: '' },
+      },
+      medium: {
+        round: 6, step: 2, combatLabel: 'Combat · blocks declared',
+        pairs: ['Klauth, Unrivaled Ancient 4/4 → D Marchesa · blocked by Midnight Reaper 4/3', 'The Ur-Dragon 10/10 → B Queen Marchesa · unblocked, 10 damage'],
+        opps: [
+          { seat: 'B', name: 'Queen Marchesa', colors: 'W B R', life: 26, hand: 7, lib: 72, gy: 12, ex: 0, monarch: true,
+            cards: [C('Queen Marchesa', 'Legendary creature', '3/3'), C('Assassin token', 'Creature token', '1/1'), C('Smothering Tithe', 'Enchantment'), C('Michiko Konda, Truth Seeker', 'Legendary creature', '2/2'), C('Talisman of Hierarchy', 'Artifact')],
+            lands: [L('Sulfurous Springs'), L('Mountain'), L('Command Tower'), L('Path of Ancestry'), L('Exotic Orchard')] },
+          { seat: 'C', name: 'Invisible Woman', colors: 'Colorless', life: -8, out: 'Lost on round 5 at −8 life.' },
+          { seat: 'D', name: 'Marchesa, the Black Rose', colors: 'U B R', life: 20, hand: 4, lib: 85, gy: 2, ex: 0,
+            cards: [C('Talisman of Indulgence', 'Artifact'), C('Midnight Reaper', 'Creature · Zombie', '4/3', { tag: 'Blocking Klauth', counter: '+1' }), C('Marchesa, the Black Rose', 'Legendary creature', '3/3')],
+            lands: [L('Watery Grave'), L('Swamp', 4), L('Mountain')] },
+        ],
+        me: { life: 28, delta: '+2', hand: 0, lib: 81, gy: 4, ex: 1,
+          creatures: [C('The Ur-Dragon', 'Legendary creature · Dragon', '10/10', { tag: 'Attacking B', tapped: true }), C('Broodcaller Scourge', 'Creature · Dragon', '5/7'), C('Klauth, Unrivaled Ancient', 'Legendary creature · Dragon', '4/4', { tag: 'Attacking D · blocked', tagLong: 'Attacking D, blocked by Midnight Reaper', tapped: true })],
+          other: [C('Fellwar Stone', 'Artifact'), C('Arcane Signet', 'Artifact'), C("Dragon's Hoard", 'Artifact')],
+          lands: [L('Woodland Cemetery', 0, true), L('Command Tower', 0, true), L('Island', 0, true), L('Turbulent Springs', 0, true), L('Forest', 0, true), L('Swamp', 0, true), L('Dreamroot Cascade', 0, true), L('Temple Garden', 0, true)],
+          command: 'The Ur-Dragon is on the battlefield. Cast once.' },
+        hand: [],
+        attacked: { B: 'Under attack · 10 incoming', D: 'Under attack · blocked' },
+        arrows: [
+          { from: 'A:The Ur-Dragon', to: 'seat:B', kind: 'attack' },
+          { from: 'A:Klauth, Unrivaled Ancient', to: 'seat:D', kind: 'attack' },
+          { from: 'D:Midnight Reaper', to: 'A:Klauth, Unrivaled Ancient', kind: 'block' },
+        ],
+        decision: { kicker: 'Your move', title: 'Blocks are in', body: 'Klauth is blocked by Midnight Reaper. The Ur-Dragon is unblocked and deals 10 to Queen Marchesa.', verb: 'Go to damage', alt: '[ Review blocks ]' },
+      },
+      many: {
+        round: 11, step: 2, combatLabel: 'Combat · choose attackers',
+        pairs: ['4 selected: The Ur-Dragon, Old Gnawbone, Dragon token ×2. Click a creature to add or remove it.'],
+        opps: [
+          { seat: 'B', name: 'Queen Marchesa', colors: 'W B R', life: 19, hand: 3, lib: 58, gy: 24, ex: 3, monarch: true,
+            cards: [C('Queen Marchesa', 'Legendary creature', '3/3'), C('Assassin token', 'Creature token', '1/1', { count: 5 }), C('Treasure token', 'Artifact token', '', { count: 7 }), C('Smothering Tithe', 'Enchantment'), C('Michiko Konda, Truth Seeker', 'Legendary creature', '2/2'), C('Talisman of Hierarchy', 'Artifact'), C('Pitiless Plunderer', 'Creature · Pirate', '1/4'), C('Mentor of the Meek', 'Creature', '2/2'), C('Black Market Connections', 'Enchantment'), C('Ophiolite Wall', 'Creature · Wall', '0/6'), C('Sol Ring', 'Artifact'), C('Swords to Plowshares', 'Instant')],
+            lands: [L('Sulfurous Springs'), L('Mountain', 2), L('Plains', 2), L('Command Tower'), L('Path of Ancestry'), L('Exotic Orchard'), L('Scoured Barrens')] },
+          { seat: 'C', name: 'Invisible Woman', colors: 'Colorless', life: 31, hand: 5, lib: 70, gy: 9, ex: 0,
+            cards: [C('Sol Ring', 'Artifact'), C('Thought Vessel', 'Artifact'), C('Myr Battlesphere', 'Artifact creature', '4/7'), C('Myr token', 'Artifact creature token', '1/1', { count: 4 }), C('Wurmcoil Engine', 'Artifact creature', '6/6'), C('Walking Ballista', 'Artifact creature', '3/3'), C('Mind Stone', 'Artifact'), C('Skullclamp', 'Artifact')],
+            lands: [L('Wastes', 6), L('Reliquary Tower'), L('Mishra’s Factory')] },
+          { seat: 'D', name: 'Marchesa, the Black Rose', colors: 'U B R', life: 14, hand: 2, lib: 66, gy: 17, ex: 1,
+            cards: [C('Talisman of Indulgence', 'Artifact'), C('Midnight Reaper', 'Creature · Zombie', '4/3'), C('Marchesa, the Black Rose', 'Legendary creature', '3/3'), C('Rhystic Study', 'Enchantment'), C('Zombie token', 'Creature token', '2/2', { count: 3 }), C('Phyrexian Arena', 'Enchantment'), C('Fact or Fiction', 'Instant')],
+            lands: [L('Watery Grave'), L('Swamp', 5), L('Mountain', 2), L('Island', 2)] },
+        ],
+        me: { life: 22, delta: '−6', hand: 9, lib: 64, gy: 18, ex: 2,
+          creatures: [C('The Ur-Dragon', 'Legendary creature · Dragon', '10/10', { tag: '→ D', tagLong: 'Chosen to attack D, not confirmed yet' }), C('Broodcaller Scourge', 'Creature · Dragon', '5/7'), C('Klauth, Unrivaled Ancient', 'Legendary creature · Dragon', '4/4'), C('Old Gnawbone', 'Legendary creature · Dragon', '7/7', { tag: '→ D', tagLong: 'Chosen to attack D, not confirmed yet' }), C('Lathliss, Dragon Queen', 'Legendary creature · Dragon', '6/6'), C('Dragon token', 'Creature token · Dragon', '5/5', { count: 4, tag: '2 → D', tagLong: '2 of 4 chosen to attack D, not confirmed yet' }), C('Scion of the Ur-Dragon', 'Legendary creature · Dragon', '4/4'), C('Goldspan Dragon', 'Creature · Dragon', '4/4'), C('Utvara Hellkite', 'Creature · Dragon', '6/6'), C('Dragonspeaker Shaman', 'Creature · Human', '2/2', { tapped: true })],
+          other: [C('Fellwar Stone', 'Artifact'), C('Arcane Signet', 'Artifact'), C("Dragon's Hoard", 'Artifact'), C('Sol Ring', 'Artifact'), C("Herald's Horn", 'Artifact'), C("Urza's Incubator", 'Artifact'), C('Kindred Discovery', 'Enchantment'), C('Treasure token', 'Artifact token', '', { count: 3 })],
+          lands: [L('Woodland Cemetery'), L('Command Tower'), L('Island', 2), L('Turbulent Springs'), L('Forest', 3), L('Swamp', 2), L('Dreamroot Cascade'), L('Temple Garden'), L('Mountain', 2), L('Plains')],
+          command: 'The Ur-Dragon is on the battlefield. Cast twice.' },
+        hand: [C('Dragonlord Atarka', 'Creature · Dragon'), C('Crux of Fate', 'Sorcery'), C('Cyclonic Rift', 'Instant'), C('Teferi’s Protection', 'Instant'), C('Swamp', 'Land'), C('Farseek', 'Sorcery'), C('Dragon Tempest', 'Enchantment'), C('Heroic Intervention', 'Instant'), C('Chaos Warp', 'Instant')],
+        attacked: {},
+        arrows: [
+          { from: 'A:The Ur-Dragon', to: 'seat:D', kind: 'pending' },
+          { from: 'A:Old Gnawbone', to: 'seat:D', kind: 'pending' },
+          { from: 'A:Dragon token', to: 'seat:D', kind: 'pending' },
+        ],
+        decision: { kicker: 'Your move', title: 'Choose attackers', body: 'Click creatures to select them, then pick who they attack.', verb: 'Confirm attacks', alt: '[ Attack with all ]', targets: true, target: 'D' },
+      },
+    }[d];
+    this._arrowSpecs = data.arrows || [];
+
+    const facts = (c, owner) => [
+      { k: 'Controller', v: owner },
+      c.tapped ? { k: 'Status', v: 'Tapped' } : { k: 'Status', v: 'Untapped' },
+      c.tag ? { k: 'Combat', v: c.tagLong || c.tag } : null,
+      c.count ? { k: 'Copies', v: String(c.count) } : null,
+      c.counter ? { k: 'Counters', v: 'One +1/+1 counter' } : null,
+    ].filter(Boolean);
+    const hoverable = (card) => Object.assign(card, { hover: (e) => this.showPreview(card, e) });
+    const CMDR = Object.assign({ A: 'The Ur-Dragon' }, ...data.opps.map((o) => ({ [o.seat]: o.name })));
+    const CMD_PT = { 'The Ur-Dragon': '10/10', 'Queen Marchesa': '3/3', 'Marchesa, the Black Rose': '3/3' };
+    const cmdPreview = (seat, onField, owner, extra) => onField || hoverable(Object.assign(C(CMDR[seat], 'Legendary creature', CMD_PT[CMDR[seat]] || ''), { typeSuper: 'Commander', key: 'cmdname:' + seat, art: tones[1], tag: '', facts: [{ k: 'Owner', v: owner }, { k: 'Zone', v: 'Command zone' }].concat(extra || []) }));
+    const dress = (c, i, seat, owner) => {
+      const attacking = c.tag && /^(Attack|→|\d+ →)/.test(c.tag);
+      return hoverable(Object.assign({}, c, {
+        key: seat + ':' + c.name,
+        typeSuper: CMDR[seat] === c.name ? 'Commander' : c.typeSuper,
+        facts: facts(c, owner),
+        aria: c.name + (c.pt ? ', ' + c.pt : '') + (c.count ? ', ' + c.count + ' copies' : '') + (c.tag ? ', ' + c.tag : '') + (c.tapped ? ', tapped' : ''),
+        tag: c.tag || '',
+        tagBg: attacking ? ink : '#f5f3ec',
+        tagFg: attacking ? '#f5f3ec' : ink,
+        border: '1px solid ' + ink,
+        tapped: !!c.tapped,
+        count: c.count || 0,
+        typePad: c.pt ? '42%' : '6%',
+        art: c.tapped ? 'repeating-linear-gradient(135deg, rgba(45,42,42,0.55) 0 1px, transparent 1px 7px), ' + tones[i % 3] : tones[i % 3],
+      }));
+    };
+
+    const opps = data.opps.map((o) => {
+      const out = !!o.out;
+      const n = out ? 0 : o.cards.length;
+      const untapped = out ? 0 : o.lands.reduce((a, l) => a + (l.tapped ? 0 : (l.count || 1)), 0);
+      const total = out ? 0 : o.lands.reduce((a, l) => a + (l.count || 1), 0);
+      const cards = out ? [] : o.cards.map((c, i) => dress(c, i, o.seat, 'Seat ' + o.seat + ', ' + o.name));
+      const onField = cards.find((c) => c.name === o.name);
+      return {
+        seat: o.seat, name: o.name, colors: o.colors, pips: pips(o.colors), pipLabel: pipLabel(o.colors),
+        cmdState: out ? '' : onField ? 'Cmdr in play' : 'Cmdr in zone',
+        cmdHover: (e) => this.showPreview(cmdPreview(o.seat, onField, 'Seat ' + o.seat), e),
+        aria: 'Seat ' + o.seat + ', ' + o.name,
+        life: o.life, lifeLabel: o.life + ' life',
+        counts: out ? 'out' : 'hand ' + o.hand + ' · library ' + o.lib,
+        monarch: !!o.monarch,
+        out, alive: !out, outNote: o.out || '',
+        bg: out ? '#eeeadf' : '#f5f3ec',
+        fg: out ? '#66625f' : '#2d2a2a',
+        seatSize: out ? '1.3rem' : '2.1rem',
+        lifeSize: out ? '1.1rem' : '2.1rem',
+        nameWrap: out ? 'normal' : 'nowrap',
+        gy: o.gy, ex: o.ex,
+        cw: this.fit(n, 6, 40, 140),
+        key: 'seat:' + o.seat,
+        cards,
+        landsLabel: 'Lands ' + total + ' · ' + untapped + ' open',
+        landsText: out ? '' : o.lands.map((l) => l.name + (l.count ? ' ×' + l.count : '')).join(' · '),
+        weight: out ? 0.42 : 1 + n / 10,
+        attacked: (data.attacked || {})[o.seat] || '',
+      };
+    });
+
+    const me = data.me;
+    const cr = me.creatures.map((c, i) => dress(c, i, 'A', 'You'));
+    const ot = me.other.map((c, i) => dress(c, i + 1, 'A', 'You'));
+    const landTotal = me.lands.reduce((a, l) => a + (l.count || 1), 0);
+    const landUntapped = me.lands.reduce((a, l) => a + (l.tapped ? 0 : (l.count || 1)), 0);
+    const crW = Math.max(1, cr.length) + 1;
+    const otW = Math.max(1, ot.length) * 0.75 + 1;
+    const hand = data.hand.map((c, i) => hoverable(Object.assign({}, c, { key: 'hand:' + c.name, art: tones[i % 3], aria: c.name + ', in hand', pt: '', tag: '', facts: [{ k: 'Zone', v: 'Your hand' }] })));
+    const cmdIn = /command zone/.test(me.command || '');
+    const cmdCasts = /twice/.test(me.command || '') ? 2 : /once/.test(me.command || '') ? 1 : 0;
+    const cmdList = cmdIn ? [hoverable(Object.assign(C('The Ur-Dragon', 'Legendary creature · Dragon', '10/10'), { key: 'cmd:The Ur-Dragon', art: tones[0], aria: 'The Ur-Dragon' + ', your commander, in the command zone', pt: '10/10', typePad: '42%', tag: 'Commander', facts: [{ k: 'Zone', v: 'Command zone' }, { k: 'Commander tax', v: String(2 * cmdCasts) }] }))] : [];
+    const stepNames = ['Beginning', 'Main', 'Combat', 'Second main', 'End'];
+
+    return {
+      round: data.round,
+      steps: stepNames.map((label, i) => ({ label, on: i === data.step ? 'true' : 'false', current: i === data.step ? 'step' : 'false', color: i === data.step ? ink : i < data.step ? '#66625f' : '#8f8c88', weight: i === data.step ? 500 : 400, tick: i === data.step ? '0.6rem' : '0.35rem', tickBg: i <= data.step ? ink : '#bdbbb6' })),
+      stepAt: data.step,
+      stepFill: 'calc(' + (data.step + 0.5) + ' * 5.8rem)',
+      oppCols: opps.map((o) => 'minmax(0, ' + o.weight + 'fr)').join(' '),
+      opps,
+      combatLabel: data.combatLabel,
+      pairs: data.pairs.map((text) => ({ text })),
+      meCols: 'minmax(0, ' + crW + 'fr) minmax(0, ' + otW + 'fr)',
+      meZones: [
+        { label: 'Creatures ' + cr.length, cards: cr, cw: this.fit(cr.length, 8, 50, 168) },
+        { label: 'Artifacts and enchantments ' + ot.length, cards: ot, cw: this.fit(ot.length, 8, 46, 140) },
+      ],
+      me: {
+        name: 'The Ur-Dragon', colors: 'W U B R G', pips: pips('W U B R G'), pipLabel: pipLabel('W U B R G'),
+        cmdState: cmdIn ? 'Cmdr in zone' : 'Cmdr in play',
+        cmdHover: (e) => this.showPreview(cmdIn ? cmdList[0] : (cr.find((c) => c.name === 'The Ur-Dragon') || cmdPreview('A', null, 'You')), e),
+        counts: 'hand ' + me.hand + ' · library ' + me.lib,
+        life: me.life, lifeDelta: me.delta + ' this turn',
+        landsLabel: 'Lands ' + landTotal + ' · ' + landUntapped + ' untapped',
+        landCw: this.fit(me.lands.length, 6, 34, 96),
+        lands: me.lands.map((l, i) => hoverable(Object.assign({}, typeLine(l.name, 'Land'), { key: 'A:land:' + l.name, pt: '', tag: '', facts: facts(l, 'You'), name: l.name, count: l.count, tapped: l.tapped, art: l.tapped ? 'repeating-linear-gradient(135deg, rgba(45,42,42,0.55) 0 1px, transparent 1px 7px), ' + tones[(i + 2) % 3] : tones[(i + 2) % 3], aria: l.name + (l.count ? ' ×' + l.count : '') + (l.tapped ? ', tapped' : '') }))),
+        piles: [
+          { label: 'Graveyard', n: me.gy },
+          { label: 'Exile', n: me.ex },
+          { label: 'Library', n: me.lib },
+          { label: 'Cmdr tax', n: '+' + 2 * cmdCasts },
+        ],
+      },
+      handRow: hand.length ? 'minmax(10rem, 13fr)' : 'auto',
+      combatOpen: !this.state.combatHidden,
+      combatClosed: !!this.state.combatHidden,
+      closeCombat: () => this.setState({ combatHidden: true }),
+      openCombat: () => this.setState({ combatHidden: false }),
+      handLabel: hand.length ? 'Your hand ' + hand.length : 'Your hand is empty',
+      hand,
+      cmdList,
+      cmdShow: cmdList.length > 0,
+      handCw: this.fit(hand.length + cmdList.length, 8, 46, 100),
+      arrows: this.state.arrows || [],
+      unhover: () => { if (this.state.preview) this.setState({ preview: null }); },
+      pv: this.state.preview ? Object.assign({ show: true, tag: '', pt: '', type: '', typeSuper: '', typeMain: '', typeSub: '', typeDash: '' }, this.state.preview) : { show: false, x: 0, y: 0, facts: [] },
+      decision: Object.assign({ targets: false, targetList: [] }, data.decision, { targetList: ['B', 'C', 'D'].map((k) => ({ k, on: data.decision.target === k, bg: data.decision.target === k ? ink : 'transparent', fg: data.decision.target === k ? '#f5f3ec' : ink })) }),
+      handCols: hand.length ? 'minmax(0, 1fr) minmax(24rem, 48%)' : 'minmax(0, 10rem) minmax(0, 1fr)',
+      handH: hand.length ? '10rem' : 'auto',
+      bodyBasis: hand.length ? '100%' : '16rem',
+    };
+  }
+}
+</script>
+</body>
+</html>
