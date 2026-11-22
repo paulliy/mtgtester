@@ -9,8 +9,9 @@ given, every position, every model's answers side by side, and the scorecard to 
 It benchmarks the **tactician**, alone or behind a **strategist**: any strategist model can be put
 in front of any tactician (the bot, a chat model, a decision model) and every pair is scored on the
 same positions ([Strategists](#strategists-every-strategist-in-front-of-every-tactician)).
-Strategist-specific positions are still to be written
-([cases/strategist/README.md](cases/strategist/README.md)).
+Six strategist positions over two and three turns are in
+[cases/strategist/](cases/strategist/README.md) (`--role strategist`), and `duel` plays whole
+games between any of these entries ([Games](#games-duel-whole-games-between-pairs)).
 
 ## Quick start
 
@@ -211,7 +212,7 @@ entry in a plain `models` list can carry its own `strategist` too. Three kinds:
 | `kind` | What the tactician gets                                                                                                                                                    |
 | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `none` | No strategy, even when the case has a hand-written one. The case's deals stay: they are table facts.                                                                       |
-| `case` | The case's own `context` (below). The same as an entry with no strategist. No committed case has a context yet, so for now this row plays as `none`.                       |
+| `case` | The case's own `context` (below). The same as an entry with no strategist. The strategist cases carry one; the tactician cases do not, so there this row plays as `none`.  |
 | `llm`  | A live strategist model, through the production `StrategyCoordinator`: its primer, prompt and parser. Fields as for a chat model, plus `replan` (`everyTurn`, `onChange`). |
 
 ```json

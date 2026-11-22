@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "id": "keep-the-deal",
+  "role": "strategist",
+  "scope": "turn",
+  "title": "A promise not to attack P3, and P3 at 6: finish P2 instead",
+  "skills": ["diplomacy", "deal-keeping", "target-choice", "multi-turn"],
+  "briefing": "P1 and P3 have a two-round deal: neither attacks the other. P3 is at 6, exactly what P1's two flyers (Serra Angel and Vampire Nighthawk) deal in one attack, so the deal is the only thing keeping P3 alive. P2 is at 12, which the same two flyers eliminate over P1's two turns. Keeping the promise and eliminating P2 is the right round; breaking it to kill P3 at once leaves P2 alive and makes P1 a player whose word means nothing. Bots at this table keep their deals (ADR 0035), and P1's should too.",
+  "actor": "P1",
+  "turns": 2,
+  "maxActorDecisions": 80,
+  "position": {
+    "turn": { "player": "P1", "phase": "precombatMain", "step": null, "number": 13 },
+    "seats": {
+      "P1": {
+        "life": 18,
+        "battlefield": ["Plains", "Plains", "Swamp", "Swamp", "Serra Angel", "Vampire Nighthawk"]
+      },
+      "P2": {
+        "life": 12,
+        "battlefield": ["Mountain", "Mountain", "Mountain"]
+      },
+      "P3": {
+        "life": 6,
+        "battlefield": ["Island", "Island", "Island", "Island"]
+      },
+      "P4": {
+        "life": 22,
+        "battlefield": ["Forest", "Forest", "Forest", "Forest"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true,
+      "throughTurns": 4
+    }
+  },
+  "table": { "policy": "passive" },
+  "context": {
+    "strategy": {
+      "intent": "We promised P3 not to attack it for two rounds. Keep the deal and use both flyers to eliminate P2 over this turn and the next.",
+      "threatOrder": ["P2", "P4", "P3"],
+      "steering": { "aggression": 1, "targetOrder": ["P2", "P4", "P3"] }
+    },
+    "deals": [
+      {
+        "parties": ["P1", "P3"],
+        "rounds": 2,
+        "obligations": [
+          { "kind": "noAttack", "by": "P1", "against": "P3" },
+          { "kind": "noAttack", "by": "P3", "against": "P1" }
+        ]
+      }
+    ]
+  },
+  "reference": {
+    "analysis": "Serra Angel and Vampire Nighthawk deal six in the air each turn and nobody can block them. P3 at 6 would die to one attack, but P1 has promised not to attack P3 for two rounds. P2 at 12 dies to both flyers on both of P1's turns. Keeping the deal and focusing P2 eliminates an opponent within the promise; attacking P3 breaks it, and splitting between P2 and P4 eliminates nobody.",
+    "lines": [
+      {
+        "id": "keep-deal-kill-p2",
+        "label": "Both flyers at P2 on both turns",
+        "grade": "best",
+        "why": "Eliminates P2 without breaking the promise to P3.",
+        "steps": [
+          {
+            "choose": "Declare attackers",
+            "assign": { "Serra Angel": "P2", "Vampire Nighthawk": "P2" }
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": { "Serra Angel": "P2", "Vampire Nighthawk": "P2" }
+          }
+        ]
+      },
+      {
+        "id": "keep-deal-no-kill",
+        "label": "Keep the deal but split between P2 and P4",
+        "grade": "good",
+        "why": "The promise holds, but nobody is eliminated.",
+        "steps": [
+          {
+            "choose": "Declare attackers",
+            "assign": { "Serra Angel": "P2", "Vampire Nighthawk": "P4" }
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": { "Serra Angel": "P2", "Vampire Nighthawk": "P4" }
+          }
+        ]
+      },
+      {
+        "id": "break-deal",
+        "label": "Both flyers at P3 now, then at P2",
+        "grade": "blunder",
+        "why": "Breaks the deal on the first attack to eliminate P3; P2 survives the second attack at 6.",
+        "steps": [
+          {
+            "choose": "Declare attackers",
+            "assign": { "Serra Angel": "P3", "Vampire Nighthawk": "P3" }
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": { "Serra Angel": "P2", "Vampire Nighthawk": "P2" }
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "deal-kept",
+        "label": "P1 never attacks P3",
+        "points": 5,
+        "check": { "action": { "neverTook": "→ P3" } }
+      },
+      {
+        "id": "p2-eliminated",
+        "label": "P2 is eliminated",
+        "points": 3,
+        "check": { "eliminated": "P2" }
+      }
+    ]
+  }
+}

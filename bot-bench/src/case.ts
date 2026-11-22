@@ -131,10 +131,19 @@ export interface BenchContext {
 /** How every seat the benchmark is not testing plays: the heuristic bot, or holding still. */
 export type TablePolicy = 'heuristic' | 'passive';
 
+/**
+ * Whose skill a case is built to measure. A `tactician` case is any one-decision or one-turn
+ * position. A `strategist` case is a turn case over two or more of the seat's own turns, whose
+ * objectives only a good plan meets; every entry plays it, and a strategist grid reads what the
+ * plan added (`cases/strategist/README.md`).
+ */
+export type CaseRole = 'tactician' | 'strategist';
+export const CASE_ROLES: readonly CaseRole[] = ['tactician', 'strategist'];
+
 export interface BenchCase {
   schemaVersion: 1;
   id: string;
-  role: 'tactician';
+  role: CaseRole;
   scope: 'single' | 'turn';
   title: string;
   /** Short tags: `lethal`, `blocking`, `removal-targeting`, `sequencing`, ... */
@@ -179,8 +188,10 @@ export interface BenchCase {
   maxActorDecisions?: number;
   /**
    * Turn cases only: how many of the seat's own turns the case spans (ADR 0045 decision 6). Above
-   * 1, `position.continue` must reach past the first turn (`throughNextTurn` or a count), and the
-   * seat answers every decision of those turns under `maxActorDecisions`.
+   * 1, `position.continue` must reach past the first turn, and the seat answers every decision of
+   * those turns under `maxActorDecisions`. With `continue.throughTurns`, which plays every turn in
+   * between whole, it must equal the seat's own turns that window reaches at a four-seat table:
+   * `1 + floor(throughTurns / 4)`. Strategist cases use `throughTurns`.
    */
   turns?: number;
   /**
@@ -431,7 +442,7 @@ export function parseBenchCase(json: unknown, path = 'case'): BenchCase {
         if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value as string))
           fail(at, 'must be lowercase words joined by hyphens');
       },
-      role: oneOf('tactician'),
+      role: oneOf(...CASE_ROLES),
       scope: oneOf('single', 'turn'),
       title: str,
       skills: list(str, 1),
@@ -491,17 +502,36 @@ export function parseBenchCase(json: unknown, path = 'case'): BenchCase {
   } else if (!(benchCase.reference as SingleReference).options.some((o) => o.grade === 'best')) {
     fail(`${path}.reference.options`, 'needs an option graded best');
   }
+  const reach = benchCase.position.continue;
   if (benchCase.turns !== undefined) {
     if (benchCase.scope !== 'turn') fail(`${path}.turns`, 'is for turn cases');
     if (benchCase.turns < 1) fail(`${path}.turns`, 'must be at least 1');
-    const reach = benchCase.position.continue;
     if (
       benchCase.turns > 1 &&
       reach?.throughNextTurn !== true &&
+      reach?.throughTurns === undefined &&
       (reach?.throughPrecombatMains ?? 0) < 2 &&
       (reach?.throughUpkeeps ?? 0) < 2
     )
       fail(`${path}.position.continue`, 'must reach past the first turn of a multi-turn case');
+  }
+  if (reach?.throughTurns !== undefined) {
+    const own = 1 + Math.floor(reach.throughTurns / CARD_SCENARIO_SEATS.length);
+    if ((benchCase.turns ?? 1) !== own)
+      fail(
+        `${path}.turns`,
+        `must be ${own}: continue.throughTurns ${reach.throughTurns} reaches ${own} of the seat's own turns`,
+      );
+  }
+  if (benchCase.role === 'strategist') {
+    if (benchCase.scope !== 'turn') fail(`${path}.scope`, 'a strategist case is a turn case');
+    if ((benchCase.turns ?? 1) < 2)
+      fail(`${path}.turns`, "a strategist case spans at least two of the seat's own turns");
+    if (reach?.throughTurns === undefined)
+      fail(
+        `${path}.position.continue`,
+        'a strategist case plays the turns in between whole: use throughTurns',
+      );
   }
   for (const [index, deal] of (benchCase.context?.deals ?? []).entries()) {
     if (deal.parties.length !== 2 || deal.parties[0] === deal.parties[1])
@@ -535,8 +565,21 @@ export function parseBenchCase(json: unknown, path = 'case'): BenchCase {
 
 export const CASES_DIRECTORY = fileURLToPath(new URL('../cases/', import.meta.url));
 
-/** Every committed case of a role, one-decision cases first, each group in file-name order. */
-export function loadCases(role: 'tactician' = 'tactician', root = CASES_DIRECTORY): BenchCase[] {
+/**
+ * Every committed case of a role (`all`: tactician cases, then strategist cases), one-decision
+ * cases first, each group in file-name order.
+ */
+export function loadCases(
+  role: CaseRole | 'all' = 'tactician',
+  root = CASES_DIRECTORY,
+): BenchCase[] {
+  if (role === 'all') {
+    const cases = CASE_ROLES.flatMap((each) => loadCases(each, root));
+    const ids = cases.map((benchCase) => benchCase.id);
+    const clash = ids.find((id, i) => ids.indexOf(id) !== i);
+    if (clash !== undefined) throw new Error(`case id ${clash} is used by two roles`);
+    return cases;
+  }
   const cases: BenchCase[] = [];
   for (const scope of ['single', 'turn'] as const) {
     const directory = join(root, role, scope);
@@ -552,6 +595,7 @@ export function loadCases(role: 'tactician' = 'tactician', root = CASES_DIRECTOR
       const path = join(directory, name);
       const parsed = parseBenchCase(JSON.parse(readFileSync(path, 'utf8')), path);
       if (parsed.scope !== scope) fail(path, `is a ${parsed.scope} case in the ${scope} folder`);
+      if (parsed.role !== role) fail(path, `is a ${parsed.role} case in the ${role} folder`);
       if (`${parsed.id}.json` !== name) fail(path, `must be named ${parsed.id}.json`);
       if (cases.some((existing) => existing.id === parsed.id)) fail(path, 'repeats a case id');
       cases.push(parsed);

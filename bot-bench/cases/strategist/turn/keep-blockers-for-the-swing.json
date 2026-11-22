@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "id": "keep-blockers-for-the-swing",
+  "role": "strategist",
+  "scope": "turn",
+  "title": "At 2 life, keep the Baloth home: the swing needs two blockers",
+  "skills": ["defense", "race-or-defend", "attack-restraint", "multi-turn"],
+  "briefing": "P1 is at 2 life with Leatherback Baloth, Kalonian Tusker and Serra Angel. P3 has Colossal Dreadmaw and Grizzly Bears and will attack P1 on its turn, so P1 needs two untapped blockers then, one of them able to hold the 6/6 trampler to at most one point. Serra Angel has vigilance and stays untapped when it attacks, so it can attack P2 on both turns and still block the Bears; the Baloth must stay home for the Dreadmaw. All-in on P2 (at 20) taps the Baloth and the Tusker: the Angel then blocks one attacker and the other is lethal.",
+  "actor": "P1",
+  "turns": 2,
+  "maxActorDecisions": 80,
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 12
+    },
+    "seats": {
+      "P1": {
+        "life": 2,
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Plains",
+          "Plains",
+          "Leatherback Baloth",
+          "Kalonian Tusker",
+          "Serra Angel"
+        ]
+      },
+      "P2": {
+        "life": 20,
+        "battlefield": ["Island", "Island", "Island"]
+      },
+      "P3": {
+        "life": 24,
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Colossal Dreadmaw",
+          "Grizzly Bears"
+        ]
+      },
+      "P4": {
+        "life": 24,
+        "battlefield": ["Swamp", "Swamp", "Swamp"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true,
+      "throughTurns": 4
+    }
+  },
+  "table": {
+    "policy": "passive",
+    "script": [
+      {
+        "player": "P3",
+        "choose": "Declare attackers",
+        "assign": {
+          "Colossal Dreadmaw": "P1",
+          "Grizzly Bears": "P1"
+        }
+      }
+    ]
+  },
+  "context": {
+    "strategy": {
+      "intent": "We are at 2 and P3's Dreadmaw and Bears will swing at us. Keep Leatherback Baloth home for the Dreadmaw; the vigilant Angel can attack and still block the Bears.",
+      "threatOrder": ["P3", "P2", "P4"],
+      "steering": {
+        "aggression": 0.2,
+        "targetOrder": ["P2", "P4", "P3"]
+      }
+    }
+  },
+  "reference": {
+    "analysis": "P3's Colossal Dreadmaw (6/6 trample) and Grizzly Bears (2/2) attack P1 on P3's turn. At 2 life P1 must block both: Leatherback Baloth (4/5) on the Dreadmaw lets at most one point trample over, and the Bears need any other untapped blocker, the Tusker or the vigilant Angel. Serra Angel can therefore attack P2 on both of P1's turns at no cost; the Tusker may attack too. Attacking with the Baloth leaves no blocker that survives the Dreadmaw with P1 alive, and attacking with Baloth and Tusker together leaves one blocker for two attackers.",
+    "lines": [
+      {
+        "id": "angel-only-block-both",
+        "label": "Angel attacks P2 each turn; Baloth blocks the Dreadmaw, Tusker the Bears",
+        "grade": "best",
+        "why": "P1 survives P3's attack and the Angel deals eight to P2 over the two turns.",
+        "steps": [
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Serra Angel": "P2"
+            }
+          },
+          {
+            "choose": "Declare blockers",
+            "assign": {
+              "Leatherback Baloth": "Colossal Dreadmaw",
+              "Kalonian Tusker": "Grizzly Bears"
+            }
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Serra Angel": "P2"
+            }
+          }
+        ]
+      },
+      {
+        "id": "hold-everything",
+        "label": "No attacks at all; Baloth and Tusker block",
+        "grade": "good",
+        "why": "Survives, but gives up eight free damage from the vigilant Angel.",
+        "steps": [
+          {
+            "choose": "Declare blockers",
+            "assign": {
+              "Leatherback Baloth": "Colossal Dreadmaw",
+              "Kalonian Tusker": "Grizzly Bears"
+            }
+          }
+        ]
+      },
+      {
+        "id": "all-in",
+        "label": "Everything at P2; the Angel blocks the Dreadmaw",
+        "grade": "blunder",
+        "why": "Baloth and Tusker are tapped when P3 attacks; the unblocked Bears deal the last two points.",
+        "steps": [
+          {
+            "choose": "Declare attackers",
+            "assign": {
+              "Serra Angel": "P2",
+              "Leatherback Baloth": "P2",
+              "Kalonian Tusker": "P2"
+            }
+          },
+          {
+            "choose": "Declare blockers",
+            "assign": {
+              "Serra Angel": "Colossal Dreadmaw"
+            }
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "survive",
+        "label": "P1 is still alive at the end",
+        "points": 6,
+        "check": {
+          "life": {
+            "player": "P1",
+            "atLeast": 1
+          }
+        }
+      },
+      {
+        "id": "angel-pressure",
+        "label": "P2 is at 12 or less (the Angel attacked on both turns)",
+        "points": 2,
+        "check": {
+          "life": {
+            "player": "P2",
+            "atMost": 12
+          }
+        }
+      }
+    ]
+  }
+}

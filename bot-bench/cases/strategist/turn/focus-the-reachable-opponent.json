@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "id": "focus-the-reachable-opponent",
+  "role": "strategist",
+  "scope": "turn",
+  "title": "Two attacks, one kill: aim both at the only opponent they can finish",
+  "skills": ["threat-assessment", "target-choice", "multi-turn"],
+  "briefing": "P1 has two evasive attackers, Serra Angel and Vampire Nighthawk, six power in the air each turn and nobody at the table able to block a flyer. P2 is at 11 with a Shivan Dragon that threatens P1, who is at 12. P3 (16) and P4 (20, with a 10/10 on the board) are out of reach for two attacks. Both attacks into P2 eliminate P2 and its Dragon at the end of P1's second turn; any split, or pressure on the table leader, eliminates nobody. Nighthawk's lifelink is worth having on both turns.",
+  "actor": "P1",
+  "turns": 2,
+  "maxActorDecisions": 80,
+  "position": {
+    "turn": { "player": "P1", "phase": "precombatMain", "step": null, "number": 11 },
+    "seats": {
+      "P1": {
+        "life": 12,
+        "battlefield": ["Plains", "Plains", "Swamp", "Swamp", "Serra Angel", "Vampire Nighthawk"]
+      },
+      "P2": {
+        "life": 11,
+        "battlefield": ["Mountain", "Mountain", "Mountain", "Mountain", "Shivan Dragon"]
+      },
+      "P3": {
+        "life": 16,
+        "battlefield": ["Island", "Island", "Island"]
+      },
+      "P4": {
+        "life": 20,
+        "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest", "Gigantosaurus"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true,
+      "throughTurns": 4
+    }
+  },
+  "table": { "policy": "passive" },
+  "context": {
+    "strategy": {
+      "intent": "P2 is the only opponent two attacks can eliminate, and its Shivan Dragon is the threat to us. Send both flyers at P2 this turn and next.",
+      "threatOrder": ["P2", "P4", "P3"],
+      "steering": { "aggression": 1, "targetOrder": ["P2", "P4", "P3"] }
+    }
+  },
+  "reference": {
+    "analysis": "Serra Angel (4, flying, vigilance) and Vampire Nighthawk (2, flying, deathtouch, lifelink) deal six a turn, and no opponent has a flyer or reach that can block them. Over P1's two turns that is twelve damage. P2 at 11 is the only opponent twelve damage eliminates, and eliminating P2 also removes the Shivan Dragon that could attack P1 (at 12). Splitting the attackers, or hitting P4 because it has the biggest creature, leaves every opponent alive. Each Nighthawk hit gains two life.",
+    "lines": [
+      {
+        "id": "both-at-p2-twice",
+        "label": "Both flyers at P2 on both turns",
+        "grade": "best",
+        "why": "Twelve damage into P2 at 11 eliminates P2 and its Dragon, and Nighthawk gains four life.",
+        "steps": [
+          {
+            "choose": "Declare attackers",
+            "assign": { "Serra Angel": "P2", "Vampire Nighthawk": "P2" }
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": { "Serra Angel": "P2", "Vampire Nighthawk": "P2" }
+          }
+        ]
+      },
+      {
+        "id": "split",
+        "label": "Angel at P2, Nighthawk at P4, both turns",
+        "grade": "weak",
+        "why": "Eight damage into P2 leaves it at 3 with its Dragon; the Nighthawk's damage to P4 changes nothing.",
+        "steps": [
+          {
+            "choose": "Declare attackers",
+            "assign": { "Serra Angel": "P2", "Vampire Nighthawk": "P4" }
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": { "Serra Angel": "P2", "Vampire Nighthawk": "P4" }
+          }
+        ]
+      },
+      {
+        "id": "pressure-the-leader",
+        "label": "Both flyers at P4 on both turns",
+        "grade": "weak",
+        "why": "Twelve damage into P4 at 20 eliminates nobody and leaves the Dragon pointed at P1.",
+        "steps": [
+          {
+            "choose": "Declare attackers",
+            "assign": { "Serra Angel": "P4", "Vampire Nighthawk": "P4" }
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": { "Serra Angel": "P4", "Vampire Nighthawk": "P4" }
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "p2-eliminated",
+        "label": "P2 is eliminated",
+        "points": 6,
+        "check": { "eliminated": "P2" }
+      },
+      {
+        "id": "lifelink-twice",
+        "label": "P1 ends at 16 life or more (Nighthawk connected on both turns)",
+        "points": 2,
+        "check": { "life": { "player": "P1", "atLeast": 16 } }
+      }
+    ]
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "id": "save-swords-for-the-threat",
+  "role": "strategist",
+  "scope": "turn",
+  "title": "The only Swords: not on a mana elf now, on the 10/10 that is coming",
+  "skills": ["hold-answer", "scarce-removal", "threat-assessment", "multi-turn"],
+  "briefing": "P1 holds its only removal, Swords to Plowshares, and Serra Angel, on six Plains: exactly enough to cast both this turn. The only target now is P2's Llanowar Elves. P4 has five Forests open and a card in hand, and casts Gigantosaurus on its turn. The plan: cast the Angel, keep one Plains and the Swords for whatever P4 brings, and exile the Gigantosaurus. Spending the Swords on the elf because the mana is there leaves P1 with no answer to a 10/10.",
+  "actor": "P1",
+  "turns": 2,
+  "maxActorDecisions": 80,
+  "position": {
+    "turn": { "player": "P1", "phase": "precombatMain", "step": null, "number": 8 },
+    "seats": {
+      "P1": {
+        "life": 28,
+        "hand": ["Swords to Plowshares", "Serra Angel"],
+        "battlefield": ["Plains", "Plains", "Plains", "Plains", "Plains", "Plains"]
+      },
+      "P2": {
+        "life": 30,
+        "battlefield": ["Forest", "Forest", "Llanowar Elves"]
+      },
+      "P3": {
+        "life": 30,
+        "battlefield": ["Island", "Island", "Island"]
+      },
+      "P4": {
+        "life": 30,
+        "hand": ["Gigantosaurus"],
+        "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true,
+      "throughTurns": 4
+    }
+  },
+  "table": {
+    "policy": "passive",
+    "script": [{ "player": "P4", "choose": "Cast Gigantosaurus" }]
+  },
+  "context": {
+    "strategy": {
+      "intent": "Develop with Serra Angel and keep Swords to Plowshares, our only removal, for a real threat; P4 has five Forests open and a big hand.",
+      "threatOrder": ["P4", "P2", "P3"],
+      "steering": {
+        "hold": ["Swords to Plowshares"],
+        "prioritize": ["Serra Angel"],
+        "holdUpMana": 1
+      }
+    }
+  },
+  "reference": {
+    "analysis": "Six Plains pay for Serra Angel (five) and Swords to Plowshares (one) together, and the only creature to exile this turn is a Llanowar Elves. P4 casts Gigantosaurus (10/10) on its turn; it has summoning sickness, so P1 can exile it at instant speed on P4's turn or on its own next turn, if the Swords are still in hand. The Angel this turn plus the Swords on the Gigantosaurus is the round; the Swords on the elf leaves the 10/10 unanswered.",
+    "lines": [
+      {
+        "id": "angel-then-swords-the-giant",
+        "label": "Serra Angel now; Swords on the Gigantosaurus",
+        "grade": "best",
+        "why": "Develops and keeps the only answer for the only threat.",
+        "steps": [
+          { "choose": "Cast Serra Angel" },
+          { "choose": "Cast Swords to Plowshares", "targets": ["Gigantosaurus"] }
+        ]
+      },
+      {
+        "id": "swords-the-elf",
+        "label": "Serra Angel and Swords on Llanowar Elves now",
+        "grade": "weak",
+        "why": "Uses all six mana, and the only removal on a mana elf; the Gigantosaurus stays.",
+        "steps": [
+          { "choose": "Cast Serra Angel" },
+          { "choose": "Cast Swords to Plowshares", "targets": ["Llanowar Elves"] }
+        ]
+      },
+      {
+        "id": "hold-everything",
+        "label": "Hold both; Swords on the Gigantosaurus, no Angel",
+        "grade": "good",
+        "why": "Answers the threat, but wastes a turn of development with the Angel in hand.",
+        "steps": [{ "choose": "Cast Swords to Plowshares", "targets": ["Gigantosaurus"] }]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "giant-exiled",
+        "label": "Gigantosaurus is exiled",
+        "points": 5,
+        "check": { "zone": { "player": "P4", "zone": "exile", "has": ["Gigantosaurus"] } }
+      },
+      {
+        "id": "angel-in-play",
+        "label": "Serra Angel is on the battlefield",
+        "points": 3,
+        "check": { "zone": { "player": "P1", "zone": "battlefield", "has": ["Serra Angel"] } }
+      }
+    ]
+  }
+}

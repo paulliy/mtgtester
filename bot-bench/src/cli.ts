@@ -75,7 +75,10 @@ function positive(flags: Flags, key: string, fallback: number): number {
 }
 
 function selectCases(flags: Flags): BenchCase[] {
-  let cases = loadCases();
+  const role = text(flags, 'role') ?? 'tactician';
+  if (role !== 'tactician' && role !== 'strategist' && role !== 'all')
+    throw new Error('--role must be tactician, strategist or all');
+  let cases = loadCases(role);
   const scope = text(flags, 'scope');
   if (scope !== undefined) {
     if (scope !== 'single' && scope !== 'turn') throw new Error('--scope must be single or turn');
@@ -101,9 +104,9 @@ function gitCommit(): string | null {
 }
 
 function listCases(): void {
-  for (const benchCase of loadCases())
+  for (const benchCase of loadCases('all'))
     console.log(
-      `${benchCase.scope.padEnd(6)} ${benchCase.id.padEnd(34)} ${benchCase.title}  [${benchCase.skills.join(', ')}]`,
+      `${(benchCase.role === 'strategist' ? `strategist ${benchCase.turns ?? 1}t` : benchCase.scope).padEnd(13)} ${benchCase.id.padEnd(34)} ${benchCase.title}  [${benchCase.skills.join(', ')}]`,
     );
 }
 
@@ -112,7 +115,7 @@ async function inspect(id: string | undefined, flags: Flags): Promise<void> {
   const file = text(flags, 'file');
   const benchCase =
     file === undefined
-      ? loadCases().find((candidate) => candidate.id === id)
+      ? loadCases('all').find((candidate) => candidate.id === id)
       : parseBenchCase(JSON.parse(readFileSync(file, 'utf8')), file);
   if (benchCase === undefined)
     throw new Error(`inspect needs a case id (see "bot-bench list") or --file <case.json>`);
@@ -348,7 +351,7 @@ async function duel(flags: Flags): Promise<void> {
 async function bundle(flags: Flags): Promise<void> {
   const runDirectory = text(flags, 'run');
   if (runDirectory === undefined) throw new Error('bundle needs --run <run directory>');
-  const built = await writeBundle(resolve(runDirectory), loadCases(), {
+  const built = await writeBundle(resolve(runDirectory), loadCases('all'), {
     blind: flags['reveal-models'] !== true,
   });
   console.log(`\njudge bundle: ${built.files} files, ${Math.round(built.bytes / 1024)} KB`);
@@ -376,7 +379,7 @@ async function rescore(flags: Flags): Promise<void> {
   if (runDirectory === undefined) throw new Error('rescore needs --run <run directory>');
   const directory = resolve(runDirectory);
   const { manifest, models } = readRun(directory);
-  const cases = loadCases();
+  const cases = loadCases('all');
   // The decision under test is the same for every model, so a saved run does not repeat it.
   const focuses = new Map<string, CaseRun['focus']>();
   const focusOf = (benchCase: BenchCase): CaseRun['focus'] => {

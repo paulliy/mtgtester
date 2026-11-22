@@ -104,6 +104,8 @@ export interface ScenarioContinue {
   toPostcombatMain?: true;
   toEndStep?: true;
   throughNextTurn?: true;
+  /** This turn, then this many further full turns (1 to 12); 4 reaches your next turn at a four-seat table. */
+  throughTurns?: number;
   throughUpkeeps?: number;
   throughPrecombatMains?: number;
 }
@@ -295,6 +297,7 @@ const scenarioShape = shaped(
       toPostcombatMain: yes,
       toEndStep: yes,
       throughNextTurn: yes,
+      throughTurns: int,
       throughUpkeeps: int,
       throughPrecombatMains: int,
     }),
@@ -442,6 +445,7 @@ function continuation(spec: ScenarioContinue | undefined): Partial<PreparedScena
     ...(spec.toPostcombatMain === true && { continueToPostcombatMain: true }),
     ...(spec.toEndStep === true && { continueToEndStep: true }),
     ...(spec.throughNextTurn === true && { continueThroughNextTurn: true }),
+    ...(spec.throughTurns !== undefined && { continueThroughTurns: spec.throughTurns }),
     ...(spec.throughUpkeeps !== undefined && { continueThroughUpkeeps: spec.throughUpkeeps }),
     ...(spec.throughPrecombatMains !== undefined && {
       continueThroughPrecombatMains: spec.throughPrecombatMains,

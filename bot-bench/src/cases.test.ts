@@ -5,7 +5,7 @@ import { openCase, playCase, scriptedActor } from './play';
 import { scoreRun } from './score';
 import { verifyCase } from './verify';
 
-const cases = loadCases();
+const cases = loadCases('all');
 
 describe('committed benchmark cases', () => {
   it('cover one-decision and whole-turn tactician play', () => {

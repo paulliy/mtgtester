@@ -175,6 +175,28 @@ export function* playPreparedScenario(
     throw new Error(
       'continueThroughNextTurn requires combat, postcombat main, and end-step continuations',
     );
+  const turnCount = spec.continueThroughTurns;
+  if (turnCount !== undefined) {
+    if (!Number.isSafeInteger(turnCount) || turnCount < 1 || turnCount > 12)
+      throw new Error('continueThroughTurns requires one to twelve further turns');
+    if (
+      spec.continueThroughCombat !== true ||
+      spec.continueToPostcombatMain !== true ||
+      spec.continueToEndStep !== true
+    )
+      throw new Error(
+        'continueThroughTurns requires combat, postcombat main, and end-step continuations',
+      );
+    if (
+      spec.continueThroughNextTurn === true ||
+      spec.continueToNextUpkeep === true ||
+      (spec.continueThroughUpkeeps ?? 0) > 0 ||
+      (spec.continueThroughPrecombatMains ?? 0) > 0 ||
+      spec.continueThroughNextPrecombatMain === true ||
+      spec.continueThroughNextCombat === true
+    )
+      throw new Error('prepared scenario must choose one next-turn continuation');
+  }
   emit(ctx, 'gameStart', { seed: state.seed, players: state.seating });
   emit(ctx, 'startingPlayer', { player: state.currentTurnPlayer });
   if (
@@ -262,6 +284,29 @@ export function* playPreparedScenario(
     advanceToNextTurnPlayer(ctx);
     state.turnNumber += 1;
     yield* runTurn(ctx);
+  }
+  if (turnCount !== undefined) {
+    // Complete the arranged turn as `continueThroughNextTurn` does, then take further turns the
+    // way `playGame` takes every turn, a departed active player's turn ending early included.
+    emptyManaPools(ctx);
+    yield* cleanupStep(ctx);
+    emit(
+      ctx,
+      'turnEnd',
+      { turn: state.turnNumber, player: state.currentTurnPlayer },
+      state.currentTurnPlayer,
+    );
+    for (let index = 0; index < turnCount; index++) {
+      if (state.players.filter((player) => !player.hasLost).length <= 1) break;
+      advanceToNextTurnPlayer(ctx);
+      state.turnNumber += 1;
+      try {
+        yield* runTurn(ctx);
+      } catch (err) {
+        if (!(err instanceof TurnAbortedSignal)) throw err;
+        expireDepartedPlayerEffects(ctx);
+      }
+    }
   }
   const result: GameResult = {
     gameId: state.gameId,

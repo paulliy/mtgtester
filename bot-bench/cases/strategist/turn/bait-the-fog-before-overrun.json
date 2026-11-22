@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "id": "bait-the-fog-before-overrun",
+  "role": "strategist",
+  "scope": "turn",
+  "title": "Three turns to kill P2: draw out the Fog with a plain attack, then Overrun",
+  "skills": ["sequencing", "play-around", "lethal-planning", "multi-turn"],
+  "briefing": "P2 is at 27 with no creatures, one Forest open on every turn and Fog in hand; a Fog already sits in P2's graveyard. P1 has Grizzly Bears, Kalonian Tusker and Leatherback Baloth (nine power) and Overrun (+3/+3 and trample, nine more) on five Forests. Over three of P1's turns P2 dies only if the attack P2 Fogs is a plain one: attack without Overrun first, let the Fog go, then Overrun on a later attack (18) and attack once more (9): 27. Overrun into the open Fog wastes it: two plain attacks deal 18 and P2 survives. Holding back on the first turn wastes an attack and lets the Fog wait for the Overrun.",
+  "actor": "P1",
+  "turns": 3,
+  "maxActorDecisions": 120,
+  "position": {
+    "turn": { "player": "P1", "phase": "precombatMain", "step": null, "number": 10 },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Overrun"],
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Grizzly Bears",
+          "Kalonian Tusker",
+          "Leatherback Baloth"
+        ]
+      },
+      "P2": {
+        "life": 27,
+        "hand": ["Fog"],
+        "graveyard": ["Fog"],
+        "battlefield": ["Forest", "Island", "Island"]
+      },
+      "P3": {
+        "life": 30,
+        "battlefield": ["Mountain", "Mountain", "Mountain"]
+      },
+      "P4": {
+        "life": 30,
+        "battlefield": ["Swamp", "Swamp", "Swamp"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true,
+      "throughTurns": 8
+    }
+  },
+  "table": {
+    "policy": "passive",
+    "script": [{ "player": "P2", "choose": "Cast Fog", "prompt": "declareBlockers" }]
+  },
+  "context": {
+    "strategy": {
+      "intent": "P2 has shown Fog and keeps a Forest open. Attack without Overrun until the Fog is spent, then Overrun for the big hit; three attacks kill P2.",
+      "threatOrder": ["P2", "P3", "P4"],
+      "steering": { "aggression": 1, "targetOrder": ["P2", "P3", "P4"], "hold": ["Overrun"] }
+    }
+  },
+  "reference": {
+    "analysis": "P2 casts Fog during the first attack P1 makes at it, whatever that attack is. Nine power attacks each turn; Overrun adds +3/+3 to each of the three creatures for that turn, nine more. Three attacks are available. The kill needs the Fogged attack to be a plain one and the Overrun on a later one: 0 + 18 + 9 = 27, P2's life exactly. Overrun on the first attack: 0 + 9 + 9 = 18. Skipping the first attack: the Fog waits for the second, and only 18 or 9 more can follow.",
+    "lines": [
+      {
+        "id": "probe-then-overrun",
+        "label": "Plain attack first, Overrun on the second, plain attack on the third",
+        "grade": "best",
+        "why": "The Fog spends itself on nine damage; 18 and 9 follow for exactly 27.",
+        "steps": [
+          {
+            "choose": "Declare attackers",
+            "assign": { "Grizzly Bears": "P2", "Kalonian Tusker": "P2", "Leatherback Baloth": "P2" }
+          },
+          { "choose": "Cast Overrun", "prompt": "precombatMain" },
+          {
+            "choose": "Declare attackers",
+            "assign": { "Grizzly Bears": "P2", "Kalonian Tusker": "P2", "Leatherback Baloth": "P2" }
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": { "Grizzly Bears": "P2", "Kalonian Tusker": "P2", "Leatherback Baloth": "P2" }
+          }
+        ]
+      },
+      {
+        "id": "overrun-into-fog",
+        "label": "Overrun on the first attack, plain attacks after",
+        "grade": "blunder",
+        "why": "The Fog prevents the Overrun turn; two plain attacks leave P2 at 9.",
+        "steps": [
+          { "choose": "Cast Overrun", "prompt": "precombatMain" },
+          {
+            "choose": "Declare attackers",
+            "assign": { "Grizzly Bears": "P2", "Kalonian Tusker": "P2", "Leatherback Baloth": "P2" }
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": { "Grizzly Bears": "P2", "Kalonian Tusker": "P2", "Leatherback Baloth": "P2" }
+          },
+          {
+            "choose": "Declare attackers",
+            "assign": { "Grizzly Bears": "P2", "Kalonian Tusker": "P2", "Leatherback Baloth": "P2" }
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "p2-eliminated",
+        "label": "P2 is eliminated",
+        "points": 8,
+        "check": { "eliminated": "P2" }
+      }
+    ]
+  }
+}

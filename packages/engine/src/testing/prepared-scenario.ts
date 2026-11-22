@@ -55,6 +55,13 @@ export interface PreparedScenarioSpec {
   continueToNextUpkeep?: boolean;
   /** Finish the arranged active turn, then run exactly the next surviving player's full turn. */
   continueThroughNextTurn?: boolean;
+  /**
+   * Finish the arranged active turn, then run this many further full turns (1 to 12) through the
+   * production turn routine, as `playGame` runs them: every surviving player's untap through
+   * cleanup, combat included. Reaches a seat's later turns at a four-player table (4 is the
+   * arranged player's next turn). Stops early once one player or none remains.
+   */
+  continueThroughTurns?: number;
   /** Card Lab continuation: visit successive upkeeps, including a full rotation to your own. */
   continueThroughUpkeeps?: number;
   /** One subsequent turn's production untap, upkeep, draw and precombat main window. */

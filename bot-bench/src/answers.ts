@@ -187,6 +187,12 @@ export function buildAnswer(
   state: GameState,
   /** A table reply written before the tested seat moved: what no longer applies is held back. */
   lenient = false,
+  /**
+   * A reviewed line's step that names a spell or permanent not yet there (a Counterspell for a
+   * Wrath that has not been cast) is not this decision's: null, so the line passes and waits.
+   * A step that never finds its target is reported as never reached, as before.
+   */
+  waitForTargets = false,
 ): DecisionResponse | null {
   if (spec.split !== undefined) {
     const offered = request.combatDamageSplit;
@@ -243,7 +249,13 @@ export function buildAnswer(
     return response;
   }
 
-  const targets = scenarioTargets(state, request, action, step);
+  let targets: ReturnType<typeof scenarioTargets>;
+  try {
+    targets = scenarioTargets(state, request, action, step);
+  } catch (cause) {
+    if (lenient || waitForTargets) return null;
+    throw cause;
+  }
   if (targets !== undefined) response.targets = targets;
   return response;
 }

@@ -575,7 +575,7 @@ export function scriptedActor(steps: readonly AnswerSpec[]): {
     localActor('script', (request) => {
       const step = steps[next];
       if (step !== undefined) {
-        const response = buildAnswer(step, request, engine.getState());
+        const response = buildAnswer(step, request, engine.getState(), false, true);
         if (response !== null) {
           next += 1;
           return response;

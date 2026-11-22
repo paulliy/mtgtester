@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "id": "counter-the-wrath-not-the-bait",
+  "role": "strategist",
+  "scope": "turn",
+  "title": "Hold Counterspell through the bait for the Wrath, and the Angel until after it",
+  "skills": ["hold-answer", "overextension", "threat-assessment", "multi-turn"],
+  "briefing": "P1 leads on board with three creatures and holds Counterspell and Serra Angel on six lands. P3 already cast one Wrath of God (it is in P3's graveyard), has four Plains untapped and a full hand. Over the next round P2 casts Colossal Dreadmaw and then P3 casts a second Wrath of God. The plan that wins the round: do not tap below UU on P1's turn (so no Angel yet), let the Dreadmaw resolve (the Wrath P1 is about to stop would have killed it, and it threatens nobody this round), counter the Wrath, then cast the Angel on P1's next turn. Casting the Angel now leaves one mana and loses the Angel and the whole board to the Wrath; countering the Dreadmaw spends the only answer on the bait.",
+  "actor": "P1",
+  "turns": 2,
+  "maxActorDecisions": 80,
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 9
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Counterspell", "Serra Angel"],
+        "battlefield": [
+          "Island",
+          "Island",
+          "Plains",
+          "Plains",
+          "Plains",
+          "Plains",
+          "Savannah Lions",
+          "Grizzly Bears",
+          "Kalonian Tusker"
+        ]
+      },
+      "P2": {
+        "life": 30,
+        "hand": ["Colossal Dreadmaw"],
+        "battlefield": ["Forest", "Forest", "Forest", "Forest", "Forest", "Forest"]
+      },
+      "P3": {
+        "life": 30,
+        "hand": ["Wrath of God"],
+        "graveyard": ["Wrath of God"],
+        "battlefield": ["Plains", "Plains", "Plains", "Plains"]
+      },
+      "P4": {
+        "life": 30,
+        "battlefield": ["Swamp", "Swamp", "Swamp"]
+      }
+    },
+    "continue": {
+      "throughCombat": true,
+      "toPostcombatMain": true,
+      "toEndStep": true,
+      "throughTurns": 4
+    }
+  },
+  "table": {
+    "policy": "passive",
+    "script": [
+      {
+        "player": "P2",
+        "choose": "Cast Colossal Dreadmaw"
+      },
+      {
+        "player": "P3",
+        "choose": "Cast Wrath of God"
+      }
+    ]
+  },
+  "context": {
+    "strategy": {
+      "intent": "We lead on board and P3 has shown Wrath of God with four Plains open. Keep Counterspell mana up for P3's sweeper, ignore smaller threats this round, and add Serra Angel only after the Wrath is answered.",
+      "threatOrder": ["P3", "P2", "P4"],
+      "steering": {
+        "hold": ["Serra Angel"],
+        "holdUpMana": 2,
+        "avoidOverextending": true,
+        "targetOrder": ["P3", "P2", "P4"]
+      }
+    }
+  },
+  "reference": {
+    "analysis": "Six lands, two of them Islands. Serra Angel costs five, so casting it on this turn leaves one land and no Counterspell for the round. P2 casts Colossal Dreadmaw on its turn: a 6/6 that cannot attack until P2's next turn, after this window, and that P3's Wrath would destroy anyway. P3 then casts Wrath of God, which would destroy P1's three creatures. The round is won by holding UU through P1's turn and through the Dreadmaw, countering the Wrath, and casting the Angel on P1's next turn: P1 ends with four creatures. Countering the Dreadmaw instead leaves the Wrath to resolve; P1 still casts the Angel afterwards. Casting the Angel now loses everything.",
+    "lines": [
+      {
+        "id": "hold-counter-wrath-angel-next",
+        "label": "Hold Counterspell, counter the Wrath, Serra Angel on the next turn",
+        "grade": "best",
+        "why": "Keeps the three creatures through the round and adds the Angel after the danger has passed.",
+        "steps": [
+          {
+            "choose": "Cast Counterspell",
+            "targets": ["Wrath of God"]
+          },
+          {
+            "choose": "Cast Serra Angel"
+          }
+        ]
+      },
+      {
+        "id": "counter-the-dreadmaw",
+        "label": "Counter the Dreadmaw, Wrath resolves, Angel on the next turn",
+        "grade": "weak",
+        "why": "Spends the only answer on the bait. The Wrath clears P1's board; only the Angel cast afterwards survives.",
+        "steps": [
+          {
+            "choose": "Cast Counterspell",
+            "targets": ["Colossal Dreadmaw"]
+          },
+          {
+            "choose": "Cast Serra Angel"
+          }
+        ]
+      },
+      {
+        "id": "angel-now",
+        "label": "Serra Angel now, no Counterspell mana for the round",
+        "grade": "blunder",
+        "why": "Overextends into a sweeper P3 has already shown: the Wrath takes the Angel and all three creatures.",
+        "steps": [
+          {
+            "choose": "Cast Serra Angel"
+          }
+        ]
+      }
+    ],
+    "objectives": [
+      {
+        "id": "board-survives",
+        "label": "Savannah Lions, Grizzly Bears and Kalonian Tusker survive the round",
+        "points": 5,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Savannah Lions", "Grizzly Bears", "Kalonian Tusker"]
+          }
+        }
+      },
+      {
+        "id": "angel-in-play",
+        "label": "Serra Angel is on the battlefield at the end",
+        "points": 3,
+        "check": {
+          "zone": {
+            "player": "P1",
+            "zone": "battlefield",
+            "has": ["Serra Angel"]
+          }
+        }
+      }
+    ]
+  }
+}
