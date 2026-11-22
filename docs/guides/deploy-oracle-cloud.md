@@ -102,7 +102,8 @@ restart. Keep it private.
 In the Cloudflare dashboard: Zero Trust, Networks, Tunnels, Create a tunnel.
 
 1. Type **Cloudflared**, name it (for example `mtg-tables`).
-2. Environment **Debian**, architecture **arm64**. The dashboard shows install commands with a
+2. Environment **Debian**, architecture **arm64** on the Ampere A1, or **64-bit** (amd64) on the
+   AMD micro (`uname -m` prints `aarch64` or `x86_64`). The dashboard shows install commands with a
    token. Run them on the VM. They install `cloudflared` as a system service that starts at boot.
 3. **Public hostname:** subdomain `tables`, domain your site, path empty.
    **Service:** type `HTTP`, URL `127.0.0.1:3002`. Use `127.0.0.1`, not `localhost`: the server
