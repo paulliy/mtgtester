@@ -348,6 +348,53 @@ describe('Ureni, the Song Unending — damage divided among a variable-count gro
     expect(untouched.damageMarked).toBe(0);
   });
 
+  it('warns on a damage-reflecting target the chooser could not survive, and only then', () => {
+    const taunter = oracle({
+      oracleId: '3e41648f-c5a9-4b26-b97e-8176fe5e9c85',
+      name: 'Brash Taunter',
+      typeLine: 'Creature — Goblin',
+      manaCost: '{4}{R}',
+      power: '1',
+      toughness: '1',
+      oracleText:
+        'Indestructible\nWhenever this creature is dealt damage, it deals that much damage to target opponent.\n{2}{R}, {T}: Brash Taunter fights another target creature.',
+    });
+    const targetPrompts = (lives: number): string[] => {
+      const ctx = pod();
+      for (let i = 0; i < 4; i++) spawn(ctx, 'P1', forest());
+      const source = spawn(ctx, 'P1', ureni());
+      spawn(ctx, 'P2', taunter);
+      spawn(ctx, 'P2', bear('2', 'Plain Bear'));
+      (ctx.state.players.find((p) => p.id === 'P1') as EnginePlayerState).life = lives;
+      const trigger = interpretCard(ureni()).triggers.find(
+        (t) => t.trigger?.when === 'enters',
+      ) as Ability;
+      ctx.state.pendingTriggers.push({
+        controllerId: 'P1',
+        sourceCardId: source.cardId,
+        sourceOracleId: source.oracleId,
+        sourceName: source.name,
+        ability: trigger,
+      });
+      const seen: string[] = [];
+      pump(runPrioritySequence(ctx), (d) => {
+        if (d.decisionType === 'general' && /choose (a|another) target/.test(d.prompt)) {
+          if (seen.length === 0) seen.push(...d.options.map((o) => o.description));
+          return { index: d.options.findIndex((o) => o.type === 'decline'), targets: new Map() };
+        }
+        return { index: 0, targets: new Map() };
+      });
+      return seen;
+    };
+
+    // At 1 life, with more damage on offer than that, Brash Taunter is flagged; the bear is not.
+    const low = targetPrompts(1);
+    expect(low.find((d) => d.includes('Brash Taunter'))).toContain('sends the damage back to you');
+    expect(low.find((d) => d.includes('Plain Bear'))).toBe('Target Plain Bear');
+    // At 40 life the damage on offer cannot kill the chooser, so nothing is flagged.
+    expect(targetPrompts(40).find((d) => d.includes('Brash Taunter'))).toBe('Target Brash Taunter');
+  });
+
   it('choosing zero targets resolves as a no-op, not a fizzle', () => {
     const ctx = pod();
     const source = spawn(ctx, 'P1', ureni());

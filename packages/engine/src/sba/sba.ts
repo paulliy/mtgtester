@@ -605,6 +605,36 @@ function describeTargetForLog(ctx: GameContext, id: ObjectId): string {
   return ctx.state.players.find((p) => p.id === id)?.id ?? id;
 }
 
+function playerLife(ctx: GameContext, playerId: PlayerId): number | undefined {
+  return ctx.state.players.find((p) => p.id === playerId)?.life;
+}
+
+/**
+ * Whether choosing `id` as a damage target could kill the chooser: it is another player's
+ * permanent with a "whenever this is dealt damage, it deals that much damage to …" trigger
+ * (Brash Taunter), and the damage on offer (`total`) is at least the chooser's life. A hint only —
+ * the amount that reaches it is still the chooser's to divide, and the reflection might target
+ * someone else — so it errs towards telling the player.
+ */
+function reflectsDamageAtLethal(
+  ctx: GameContext,
+  id: ObjectId,
+  chooser: PlayerId,
+  total: number,
+): boolean {
+  const perm = ctx.state.battlefield.find((p) => p.id === id);
+  if (perm === undefined || perm.controllerId === chooser) return false;
+  const life = playerLife(ctx, chooser);
+  if (life === undefined || total < life) return false;
+  const triggers = ctx.defs.get(perm.oracleId)?.triggers ?? [];
+  return triggers.some(
+    (t) =>
+      t.trigger?.when === 'dealtDamage' &&
+      t.trigger.subject?.kind === 'self' &&
+      t.effects.some((e) => e.op === 'dealDamage' && e.amount.kind === 'damageDealt'),
+  );
+}
+
 function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen<void> {
   const s = ctx.state;
   // A modal trigger's controller chooses the mode as the ability is put on the stack, BEFORE
@@ -897,7 +927,11 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
         options: [
           ...candidates.map((id) => ({
             type: 'pickTarget',
-            description: `Target ${describeTargetForLog(ctx, id)}`,
+            description:
+              `Target ${describeTargetForLog(ctx, id)}` +
+              (total !== undefined && reflectsDamageAtLethal(ctx, id, trigger.controllerId, total)
+                ? ` ⚠ sends the damage back to you (you are at ${playerLife(ctx, trigger.controllerId)})`
+                : ''),
           })),
           ...(canStop ? [{ type: 'decline', description: 'Choose no more targets' }] : []),
         ],
