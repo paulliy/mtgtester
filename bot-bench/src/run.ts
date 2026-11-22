@@ -54,7 +54,7 @@ export interface ModelResult {
     caseId: string;
     trial: number;
     decisions: CaseRun['decisions'];
-    strategistTail?: StrategistCall;
+    strategistTail?: StrategistCall[];
   }>;
   startedAt: string;
   endedAt: string;
@@ -105,6 +105,9 @@ export async function runLineup(
     // Charges the provider reported during the current decision; a model's decisions run one at
     // a time, so this is never shared between two of them.
     let reportedThisDecision = 0;
+    // Charges strategist attempts reported since the last strategist call was settled; a call's
+    // estimate is netted against them, as a decision's is against `reportedThisDecision`.
+    let reportedStrategist = 0;
     const runtime: LlmRuntime = {
       env: options.env,
       mode: options.mode,
@@ -118,6 +121,7 @@ export async function runLineup(
           knownSpend += attempt.usage.costUsd;
           // Netted against the tactician's own estimate only; a strategist call is settled apart.
           if (context.role === 'tactician') reportedThisDecision += attempt.usage.costUsd;
+          else reportedStrategist += attempt.usage.costUsd;
         }
         options.onTranscript?.({
           modelId: entry.id,
@@ -164,10 +168,13 @@ export async function runLineup(
         providerFailures >= PROVIDER_FAILURE_LIMIT || strategistFailures >= PROVIDER_FAILURE_LIMIT;
       const countStrategist = (call: StrategistCall | undefined): void => {
         if (call === undefined) return;
-        // A strategist call priced from the price list counts against the cap; reported charges
-        // already did, attempt by attempt.
+        // A strategist call priced from the price list counts against the cap, less whatever its
+        // attempts already reported, so nothing is counted twice.
         if (call.costSource === 'estimated' && call.costUsd !== undefined)
-          knownSpend += call.costUsd;
+          knownSpend += Math.max(0, call.costUsd - reportedStrategist);
+        reportedStrategist = 0;
+        // A call cancelled at the end of a case says nothing about the provider either way.
+        if (call.failure?.startsWith('cancelled') === true) return;
         if (call.failure?.startsWith('provider error') === true) {
           strategistFailures += 1;
           lastStrategistFailure = call.failure;
@@ -182,7 +189,7 @@ export async function runLineup(
           ...(actor.close !== undefined && {
             close: async () => {
               const tail = await actor.close!();
-              countStrategist(tail);
+              for (const call of tail) countStrategist(call);
               return tail;
             },
           }),

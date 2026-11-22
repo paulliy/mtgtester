@@ -149,6 +149,19 @@ export function readRun(runDirectory: string): {
 export interface JudgeKey {
   runId: string;
   aliases: Array<{ alias: string; aliasId: string; model: ModelResult['model'] }>;
+  /**
+   * Strategists and remote tacticians in a grid, each under one alias of its own ("Strategist A"),
+   * kept across rebuilds like the model aliases so a judge's free text keeps pointing at the same
+   * model.
+   */
+  roles?: RoleAlias[];
+}
+
+export interface RoleAlias {
+  role: 'Strategist' | 'Tactician';
+  /** The strategist's or tactician's id in the lineup. */
+  id: string;
+  alias: string;
 }
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -239,7 +252,14 @@ export function anonymise(
    * to the same models after `run --out` adds more (`collate` reads the latest key).
    */
   previous: JudgeKey['aliases'] = [],
-): { models: ModelResult[]; transcripts: TranscriptEntry[]; key: JudgeKey['aliases'] } {
+  /** The run's earlier role aliases; each keeps its letter, and its letter is never reused. */
+  previousRoles: readonly RoleAlias[] = [],
+): {
+  models: ModelResult[];
+  transcripts: TranscriptEntry[];
+  key: JudgeKey['aliases'];
+  roles: RoleAlias[];
+} {
   const key: JudgeKey['aliases'] = [];
   const kept = new Map(previous.map((entry) => [entry.model.id, entry]));
   const taken = new Set(previous.map((entry) => entry.aliasId));
@@ -260,25 +280,50 @@ export function anonymise(
   const nameAs = (name: unknown, alias: string, minimum = 3): void => {
     if (typeof name === 'string' && name.length >= minimum) names.push([name, alias]);
   };
-  const llm = models.filter((result) => isCandidate(result.model));
   const rank = (id: string): string => createHash('sha256').update(`${seed}:${id}`).digest('hex');
+  const llm = models.filter((result) => isCandidate(result.model));
   const turn =
     seed === undefined
       ? llm
       : [...llm].sort((left, right) => (rank(left.model.id) < rank(right.model.id) ? -1 : 1));
   // A strategist or a remote tactician that sits in several cells of a grid gets one alias of its
   // own, so a judge can still read the grid ("Tactician B behind Strategist A") without names.
-  const roleAliases = new Map<string, string>();
-  const roleAlias = (role: 'Strategist' | 'Tactician', id: string): string => {
-    const key = `${role}:${id}`;
-    let alias = roleAliases.get(key);
-    if (alias === undefined) {
-      const used = [...roleAliases.keys()].filter((k) => k.startsWith(`${role}:`)).length;
-      alias = `${role} ${LETTERS[used] ?? `N${used + 1}`}`;
-      roleAliases.set(key, alias);
+  // Letters for new ones go in a seeded order of their ids, never to a letter the earlier key used.
+  const roleAliases = new Map<string, string>(
+    previousRoles.map((entry) => [`${entry.role}:${entry.id}`, entry.alias]),
+  );
+  const wanted = new Map<string, { role: 'Strategist' | 'Tactician'; id: string }>();
+  for (const result of llm) {
+    const strategist = result.model['strategist'] as { kind?: string; id?: string } | undefined;
+    if (strategist?.kind === 'llm')
+      wanted.set(`Strategist:${String(strategist.id)}`, {
+        role: 'Strategist',
+        id: String(strategist.id),
+      });
+    const tactician = result.model['tactician'] as { id?: string } | undefined;
+    if (tactician !== undefined && isRemoteKind(result.model.kind))
+      wanted.set(`Tactician:${String(tactician.id)}`, {
+        role: 'Tactician',
+        id: String(tactician.id),
+      });
+  }
+  for (const [key, { role }] of [...wanted].sort(([a], [b]) =>
+    rank(a) < rank(b) ? -1 : rank(a) > rank(b) ? 1 : 0,
+  )) {
+    if (roleAliases.has(key)) continue;
+    const taken = new Set(
+      [...roleAliases].filter(([k]) => k.startsWith(`${role}:`)).map(([, alias]) => alias),
+    );
+    for (let index = 0; ; index++) {
+      const alias = `${role} ${LETTERS[index] ?? `N${index + 1}`}`;
+      if (!taken.has(alias)) {
+        roleAliases.set(key, alias);
+        break;
+      }
     }
-    return alias;
-  };
+  }
+  const roleAlias = (role: 'Strategist' | 'Tactician', id: string): string =>
+    roleAliases.get(`${role}:${id}`) ?? `${role} ?`;
   const nameModel = (fields: Record<string, unknown>, alias: string): void => {
     const modelName = fields['model'];
     nameAs(modelName, alias);
@@ -383,6 +428,15 @@ export function anonymise(
   // resolves for scorecards already returned and its letter is never handed to another model.
   const present = new Set(llm.map((result) => result.model.id));
   for (const entry of previous) if (!present.has(entry.model.id)) key.push(entry);
+  // A name two aliases claim (a vendor both a strategist and a tactician come from) is replaced
+  // with a neutral word: either alias would mislabel the other's text.
+  const claimed = new Map<string, Set<string>>();
+  for (const [name, alias] of names) {
+    const key = name.toLowerCase();
+    claimed.set(key, (claimed.get(key) ?? new Set()).add(alias));
+  }
+  for (const entry of names)
+    if ((claimed.get(entry[0].toLowerCase())?.size ?? 0) > 1) entry[1] = 'a model';
   // Longest first, so a name that contains another is replaced whole.
   names.sort((a, b) => b[0].length - a[0].length);
   const patterns = names.map(([name, alias]) => [nameRegex(name), alias] as const);
@@ -403,6 +457,10 @@ export function anonymise(
       redact({ ...entry, modelId: ids.get(entry.modelId) ?? entry.modelId }, patterns),
     ),
     key,
+    roles: [...roleAliases].map(([key, alias]) => {
+      const [role, ...rest] = key.split(':');
+      return { role: role as RoleAlias['role'], id: rest.join(':'), alias };
+    }),
   };
 }
 
@@ -410,6 +468,15 @@ export function anonymise(
  * The aliases a run's earlier key assigned, with any model that has since left the run kept too,
  * so its letter is never reused. A key from another run (a copied directory) is ignored.
  */
+function previousRoles(keyPath: string, run: ReturnType<typeof readRun>): RoleAlias[] {
+  try {
+    const key = JSON.parse(readFileSync(keyPath, 'utf8')) as JudgeKey;
+    return key.runId === run.manifest.runId && Array.isArray(key.roles) ? key.roles : [];
+  } catch {
+    return [];
+  }
+}
+
 function previousAliases(keyPath: string, run: ReturnType<typeof readRun>): JudgeKey['aliases'] {
   let key: JudgeKey;
   try {
@@ -458,8 +525,14 @@ export async function writeBundle(
   });
   const keyPath = join(runDirectory, 'judge-key.json');
   const shown = options.blind
-    ? anonymise(run.models, run.transcripts, run.manifest.runId, previousAliases(keyPath, run))
-    : { models: run.models, transcripts: run.transcripts, key: [] };
+    ? anonymise(
+        run.models,
+        run.transcripts,
+        run.manifest.runId,
+        previousAliases(keyPath, run),
+        previousRoles(keyPath, run),
+      )
+    : { models: run.models, transcripts: run.transcripts, key: [], roles: [] };
 
   const analyses = new Map<string, CaseAnalysis>();
   for (const benchCase of selected) analyses.set(benchCase.id, await analyzeCase(benchCase));
@@ -538,7 +611,11 @@ export async function writeBundle(
   // A bundle with real names needs no key, but an existing one is kept: it maps the aliases in
   // bundles already sent to judges, and a later blind rebuild must reuse them.
   if (options.blind && shown.key.length > 0) {
-    const key: JudgeKey = { runId: run.manifest.runId, aliases: shown.key };
+    const key: JudgeKey = {
+      runId: run.manifest.runId,
+      aliases: shown.key,
+      ...(shown.roles.length > 0 && { roles: shown.roles }),
+    };
     writeFileSync(keyPath, json(key));
   }
   return {

@@ -976,9 +976,7 @@ function strategistLines(result: CaseResult): string[] {
         ? []
         : [{ at: `before decision ${decision.index + 1}`, call: decision.strategist }],
     ),
-    ...(result.run.strategistTail === undefined
-      ? []
-      : [{ at: 'after the last decision', call: result.run.strategistTail }]),
+    ...(result.run.strategistTail ?? []).map((call) => ({ at: 'not before any decision', call })),
   ];
   if (calls.length === 0) return [];
   const out = ['Strategist:', ''];

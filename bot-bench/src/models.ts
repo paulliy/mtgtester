@@ -800,6 +800,24 @@ function laneHooks(lane: StrategistLane | undefined): Pick<Actor, 'observe' | 'c
   };
 }
 
+/** Waits for the strategist, then asks the tactician; a call is never lost if the tactician throws. */
+async function withStrategist(
+  lane: StrategistLane | undefined,
+  request: DecisionRequest,
+  decide: () => Promise<ActorAnswer>,
+): Promise<ActorAnswer> {
+  // The strategist first, timed apart: the decision's own figures stay the tactician's.
+  const strategist = await lane?.before(request);
+  let answer: ActorAnswer;
+  try {
+    answer = await decide();
+  } catch (cause) {
+    lane?.giveBack(strategist);
+    throw cause;
+  }
+  return strategist === undefined ? answer : { ...answer, strategist };
+}
+
 function pipelineActorFactory(
   entry: LlmEntry | BotLedEntry,
   config: AiConfig,
@@ -857,50 +875,48 @@ function pipelineActorFactory(
         },
       },
     );
+    const decideOne = async (request: DecisionRequest): Promise<ActorAnswer> => {
+      attempts = [];
+      takeOutcome();
+      const started = performance.now();
+      const response = await provider.decide(request);
+      const outcome = takeOutcome();
+      const latencyMs = round(performance.now() - started, 1);
+      const logged = logger.take(request.requestId);
+      const source = (logged && SOURCE[logged.source]) ?? 'model';
+
+      const { promptTokens, responseTokens, costUsd, costSource } = settleAttempts(
+        attempts,
+        entry.pricing,
+      );
+
+      const last = attempts.at(-1);
+      const answered = attempts.some((attempt) => attempt.status === 'accepted');
+      const failure =
+        source === 'fallback'
+          ? attempts.length > 0 && !answered && attempts.every((a) => a.status !== 'rejected')
+            ? `provider error: ${last?.error ?? 'no response'}`
+            : `no legal answer: ${last?.error ?? logged?.meta.rawResponse.slice(0, 200) ?? 'model failed'}`
+          : undefined;
+      return {
+        response,
+        source,
+        latencyMs,
+        requests: attempts.length,
+        costSource,
+        ...(attempts.length > 0 && { promptTokens, responseTokens }),
+        ...(costUsd !== undefined && { costUsd: round(costUsd, 8) }),
+        ...(last?.rawResponse !== undefined && { raw: last.rawResponse }),
+        ...(failure !== undefined && { failure }),
+        ...(outcome !== undefined && {
+          escalated: outcome.escalated,
+          ...(outcome.reasons.length > 0 && { reasons: [...outcome.reasons] }),
+        }),
+      };
+    };
     return {
       ...laneHooks(lane),
-      async decide(request): Promise<ActorAnswer> {
-        // The strategist first, timed apart: the decision's own figures stay the tactician's.
-        const strategist = await lane?.before(request);
-        attempts = [];
-        takeOutcome();
-        const started = performance.now();
-        const response = await provider.decide(request);
-        const outcome = takeOutcome();
-        const latencyMs = round(performance.now() - started, 1);
-        const logged = logger.take(request.requestId);
-        const source = (logged && SOURCE[logged.source]) ?? 'model';
-
-        const { promptTokens, responseTokens, costUsd, costSource } = settleAttempts(
-          attempts,
-          entry.pricing,
-        );
-
-        const last = attempts.at(-1);
-        const answered = attempts.some((attempt) => attempt.status === 'accepted');
-        const failure =
-          source === 'fallback'
-            ? attempts.length > 0 && !answered && attempts.every((a) => a.status !== 'rejected')
-              ? `provider error: ${last?.error ?? 'no response'}`
-              : `no legal answer: ${last?.error ?? logged?.meta.rawResponse.slice(0, 200) ?? 'model failed'}`
-            : undefined;
-        return {
-          response,
-          source,
-          latencyMs,
-          requests: attempts.length,
-          costSource,
-          ...(attempts.length > 0 && { promptTokens, responseTokens }),
-          ...(costUsd !== undefined && { costUsd: round(costUsd, 8) }),
-          ...(last?.rawResponse !== undefined && { raw: last.rawResponse }),
-          ...(failure !== undefined && { failure }),
-          ...(outcome !== undefined && {
-            escalated: outcome.escalated,
-            ...(outcome.reasons.length > 0 && { reasons: [...outcome.reasons] }),
-          }),
-          ...(strategist !== undefined && { strategist }),
-        };
-      },
+      decide: (request) => withStrategist(lane, request, () => decideOne(request)),
     };
   };
 }
@@ -943,16 +959,13 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
   const base = loadAiConfig(runtime.env);
   // The tactician's settings with no strategist: what the chat lane's coordinator is built from.
   // Model mode, so a live strategist returns a plan (intent, threat order, steps), not bot knobs.
-  const config: AiConfig = {
-    ...configForRole(base, 'tactician'),
-    strategistEnabled: false,
-    tacticalMode: 'model',
-  };
+  const config: AiConfig = { ...configForRole(base, 'tactician'), strategistEnabled: false };
   const unsupported = entry.unsupported ?? 'bot';
   const requestTimeoutMs = entry.requestTimeoutMs ?? DEFAULT_DECISION_TIMEOUT_MS;
   // One queue per model, shared by its cases: the client-side rate limit is per model.
   const queue = new RequestQueue({ rpmLimit: base.rpmLimit, concurrency: 1 });
-  const lanes = strategistLanes(entry, config, runtime);
+  // Model mode for its strategist, so it returns a plan (intent, threat order, steps), not knobs.
+  const lanes = strategistLanes(entry, { ...config, tacticalMode: 'model' }, runtime);
   return (engine: Engine, benchCase: BenchCase): Actor => {
     const lane = lanes?.(engine, benchCase);
     let attempts: AiNetworkAttempt[] = [];
@@ -1099,12 +1112,7 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
     };
     return {
       ...laneHooks(lane),
-      async decide(request, view): Promise<ActorAnswer> {
-        // The strategist first, timed apart: the decision's own figures stay the tactician's.
-        const strategist = await lane?.before(request);
-        const answer = await decideOwn(request, view);
-        return strategist === undefined ? answer : { ...answer, strategist };
-      },
+      decide: (request, view) => withStrategist(lane, request, () => decideOwn(request, view)),
     };
   };
 }

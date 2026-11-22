@@ -124,7 +124,7 @@ export interface Actor {
    * The case is over: stop any strategist call still running and report it, since a re-plan
    * started by the table's last action may have been billed with no decision left to wait for it.
    */
-  close?(): Promise<StrategistCall | undefined>;
+  close?(): Promise<StrategistCall[]>;
 }
 export type ActorFactory = (engine: Engine, benchCase: BenchCase) => Actor;
 
@@ -200,8 +200,11 @@ export interface CaseRun {
   error?: string;
   /** Bot-led entries only. */
   escalations?: EscalationSummary;
-  /** A strategist call no decision waited for (a re-plan the case ended before), still billed. */
-  strategistTail?: StrategistCall;
+  /**
+   * Strategist calls no decision recorded (a re-plan the case ended before, or a call whose
+   * decision then failed), still billed.
+   */
+  strategistTail?: StrategistCall[];
 }
 
 const HARD_DECISION_LIMIT = 600;
@@ -485,9 +488,10 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
     error = cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause);
   }
 
-  let strategistTail: StrategistCall | undefined;
+  let strategistTail: StrategistCall[] | undefined;
   try {
-    strategistTail = await actor.close?.();
+    const tail = await actor.close?.();
+    if (tail !== undefined && tail.length > 0) strategistTail = tail;
   } catch (cause) {
     if (error === undefined) {
       termination = 'error';

@@ -6,7 +6,16 @@ import { fakeProvider, pick, type FakeTurn } from './fake-provider';
 import { modelMetrics } from './metrics';
 import { crossLineup, parseLineup, parseModelList, publicEntry } from './models';
 import { runLineup, type RunOptions, type TranscriptEntry } from './run';
-import { parseStrategistList } from './strategist';
+import { openCase } from './play';
+import {
+  StrategistLane,
+  parseStrategist,
+  parseStrategistList,
+  resolveStrategistClientConfig,
+  type LlmStrategist,
+} from './strategist';
+import { loadAiConfig, configForRole } from '../../packages/server/src/ai/config';
+import { RequestQueue } from '../../packages/server/src/ai/queue';
 
 const cases = loadCases();
 const only = (...ids: string[]) => cases.filter((benchCase) => ids.includes(benchCase.id));
@@ -414,5 +423,74 @@ describe('a blind bundle of strategist pairs', () => {
     expect(renamed.model['strategist']).toMatchObject({ kind: 'llm', label: 'Strategist A' });
     expect(renamed.model['tactician']).toMatchObject({ label: 'Tactician A' });
     expect(text).toContain('I am Strategist A and I plan to wipe.');
+  });
+});
+
+describe('the end of a case', () => {
+  it('reports a strategist call still in flight as cancelled, never as a provider failure', async () => {
+    const benchCase = only('wrath-then-rebuild')[0]!;
+    const { engine, request } = openCase(benchCase);
+    // A provider that never answers: the request hangs until it is aborted.
+    let sent!: () => void;
+    const inFlight = new Promise<void>((resolve) => (sent = resolve));
+    // The client's model-endpoints lookup is answered; only the strategist call itself hangs.
+    const hanging = ((url: unknown, init?: { signal?: AbortSignal }) =>
+      String(url).includes('/endpoints')
+        ? Promise.resolve(new Response('not found', { status: 404 }))
+        : new Promise<Response>((_resolve, reject) => {
+            sent();
+            init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+          })) as unknown as typeof fetch;
+    const spec = parseStrategist(strategist, 'test') as LlmStrategist;
+    const runtime = { env: {}, fetchImpl: hanging, sleepImpl: () => Promise.resolve() };
+    const config = {
+      ...configForRole(loadAiConfig({}), 'tactician'),
+      tacticalMode: 'model' as const,
+    };
+    const lane = new StrategistLane(
+      engine,
+      benchCase,
+      spec,
+      { ...config, strategistEnabled: true },
+      resolveStrategistClientConfig(spec, runtime),
+      new RequestQueue({ rpmLimit: 1000, concurrency: 1 }),
+      runtime,
+    );
+    lane.coordinator.prepare(request);
+    await inFlight;
+    const tail = await lane.close();
+    expect(tail).toHaveLength(1);
+    for (const call of tail) {
+      expect(call.failure).toMatch(/^cancelled/);
+      expect(call.waitMs).toBe(0);
+    }
+  });
+});
+
+describe('role aliases across rebuilds', () => {
+  it("keeps a strategist's alias when a later run adds another strategist", async () => {
+    const tactician = rebuildTactician([]);
+    const run = async (specs: unknown[]) =>
+      runLineup(
+        only('develop-the-board'),
+        parseLineup({
+          strategists: specs,
+          tacticians: [{ id: 'chat', kind: 'llm', provider: 'openrouter', model: 'fake/chat' }],
+        }),
+        options(routed(() => ({}), tactician)),
+      );
+    const first = await run([strategist]);
+    const before = anonymise(first, [], 'run-2');
+    const second = await run([
+      strategist,
+      { ...strategist, id: 'aaa-other', model: 'other/planner' },
+      { ...strategist, id: 'zzz-other', model: 'third/planner' },
+    ]);
+    const after = anonymise(second, [], 'run-2', before.key, before.roles);
+    const aliasOf = (roles: typeof before.roles, id: string) =>
+      roles.find((role) => role.role === 'Strategist' && role.id === id)?.alias;
+    expect(aliasOf(after.roles, 'planner')).toBe(aliasOf(before.roles, 'planner'));
+    const letters = after.roles.filter((role) => role.role === 'Strategist').map((r) => r.alias);
+    expect(new Set(letters).size).toBe(3);
   });
 });

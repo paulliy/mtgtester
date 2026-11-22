@@ -202,12 +202,8 @@ export function modelMetrics(
 
   const strategistCalls: StrategistCall[] = [
     ...paid.flatMap((decision) => (decision.strategist === undefined ? [] : [decision.strategist])),
-    ...played.flatMap((entry) =>
-      entry.run.strategistTail === undefined ? [] : [entry.run.strategistTail],
-    ),
-    ...(result.unscored ?? []).flatMap((entry) =>
-      entry.strategistTail === undefined ? [] : [entry.strategistTail],
-    ),
+    ...played.flatMap((entry) => entry.run.strategistTail ?? []),
+    ...(result.unscored ?? []).flatMap((entry) => entry.strategistTail ?? []),
   ];
   const strategist = isCandidateWithStrategist(result)
     ? strategistMetrics(strategistCalls, decisions, totalUsd)

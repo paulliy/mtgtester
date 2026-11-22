@@ -345,6 +345,8 @@ export class StrategistLane {
   /** Set when a call installs a plan or changes the knobs, cleared by `take`. */
   private installed = false;
   private lastSteeringKey = 'null';
+  /** A call `before` reported for a decision that then threw, so it was never recorded. */
+  private returned: StrategistCall[] = [];
 
   constructor(
     engine: Engine,
@@ -399,14 +401,26 @@ export class StrategistLane {
       this.coordinator.recordDecision(request, response, 'bot');
   }
 
-  async close(): Promise<StrategistCall | undefined> {
+  /** A decision threw after `before` reported its call; `close` reports it instead. */
+  giveBack(call: StrategistCall | undefined): void {
+    if (call !== undefined) this.returned.push(call);
+  }
+
+  /**
+   * Every call no decision recorded: one given back, and one still in flight when the case ended,
+   * which is cancelled. A cancelled call is ours, not the provider's failure.
+   */
+  async close(): Promise<StrategistCall[]> {
     this.coordinator.cancel();
     await this.coordinator.drained();
-    return this.take(0);
+    const tail = this.take(0, true);
+    const calls = [...this.returned, ...(tail === undefined ? [] : [tail])];
+    this.returned = [];
+    return calls;
   }
 
   /** The strategist requests made since the last call to `take`, settled into one record. */
-  private take(waitMs: number): StrategistCall | undefined {
+  private take(waitMs: number, cancelled = false): StrategistCall | undefined {
     const attempts = this.attempts;
     if (attempts.length === 0) return undefined;
     this.attempts = [];
@@ -427,9 +441,11 @@ export class StrategistLane {
     const answered = attempts.some((attempt) => attempt.status === 'accepted');
     const last = attempts.at(-1);
     const failure = !answered
-      ? attempts.some((attempt) => attempt.status === 'rejected')
-        ? `no usable plan: ${last?.error ?? 'rejected'}`
-        : `provider error: ${last?.error ?? 'no response'}`
+      ? cancelled
+        ? 'cancelled: the case ended before the strategist answered'
+        : attempts.some((attempt) => attempt.status === 'rejected')
+          ? `no usable plan: ${last?.error ?? 'rejected'}`
+          : `provider error: ${last?.error ?? 'no response'}`
       : !fresh
         ? 'no usable plan: answered, but the coordinator installed nothing (unparseable, or dropped as stale)'
         : undefined;
