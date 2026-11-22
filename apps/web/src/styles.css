@@ -135,7 +135,9 @@ button {
     color 0.3s var(--ease);
 }
 
-button:hover:not(:disabled) {
+/* Zero specificity, so any component's own button style (an ink-filled primary, a selected
+   state) keeps its background on hover instead of turning pale under pale text. */
+:where(button:hover:not(:disabled)) {
   background: var(--paper-2);
 }
 
