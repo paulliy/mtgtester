@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Declare attackers and blockers</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&amp;family=Bodoni+Moda:opsz,wght@6..96,400&amp;family=Cutive+Mono&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f5f3ec}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:disabled{cursor:default}
+button:focus-visible{outline:2px solid #2d2a2a;outline-offset:3px}
+@keyframes cdBob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+@keyframes cdFade{from{opacity:0}to{opacity:1}}
+@keyframes cdChip{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.cd-seg{transition:background-color 0.3s cubic-bezier(0.165,0.84,0.44,1),color 0.3s cubic-bezier(0.165,0.84,0.44,1)}
+.cd-opp{transition:background-color 0.3s cubic-bezier(0.165,0.84,0.44,1)}
+.cd-btn{display:inline-flex;align-items:center;gap:0.7rem;min-height:42px;padding:0 1.1rem;border:1px solid #2d2a2a;font-family:Archivo,'Helvetica Neue',Arial,sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap;transition:background-color 0.35s cubic-bezier(0.165,0.84,0.44,1),color 0.35s cubic-bezier(0.165,0.84,0.44,1)}
+.cd-btn:not(:disabled):hover{background:#2d2a2a;color:#f5f3ec}
+.cd-btn:disabled{opacity:0.45}
+.cd-go{background:#2d2a2a;color:#f5f3ec}
+.cd-go:not(:disabled):hover{background:#413e3d}
+@media (max-width: 900px){ .cd-opps{grid-template-columns:minmax(0,1fr) !important} .cd-hint{display:none !important} }
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</helmet>
+<div data-cd-root onPointerMove="{{move}}" onPointerLeave="{{leaveRoot}}" onClick="{{cancel}}" style="position: relative; min-height: 100vh; background: #f5f3ec; color: #2d2a2a; font-family: 'Cutive Mono', 'Courier New', ui-monospace, monospace; display: flex; flex-direction: column; cursor: {{rootCursor}}; user-select: none">
+
+  <!-- Top bar: whose turn and which step -->
+  <header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 2rem; min-height: 4rem; padding: 0.5rem 1.75rem; border-bottom: 1px solid #2d2a2a">
+    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap">
+      <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 1.6rem; line-height: 1; letter-spacing: -0.02em">Round 4</span>
+      <span style="font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; background: #2d2a2a; color: #f5f3ec; padding: 0.3rem 0.55rem">{{turnTag}}</span>
+      <span style="font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Combat <span style="color: #66625f">·</span> {{stepLabel}}</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem">
+      <div role="group" aria-label="Mockup step" style="display: flex; padding-left: 1px">
+        <sc-for list="{{phases}}" as="ph" hint-placeholder-count="2">
+          <button type="button" class="cd-seg" onClick="{{ph.pick}}" aria-pressed="{{ph.on}}" style="min-height: 36px; margin-left: -1px; padding: 0 0.9rem; border: 1px solid #2d2a2a; background: {{ph.bg}}; color: {{ph.fg}}; font-family: Archivo, sans-serif; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase">{{ph.label}}</button>
+        </sc-for>
+      </div>
+      <button type="button" onClick="{{reset}}" style="min-height: 36px; padding: 0 0.4rem; font-size: 0.8rem">[ Reset ]</button>
+    </div>
+  </header>
+
+  <!-- Opponents: name, life (where attack lines land), creatures -->
+  <section class="cd-opps" aria-label="Opponents" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid #2d2a2a">
+    <sc-for list="{{opps}}" as="o" hint-placeholder-count="3">
+      <article class="cd-opp" style="min-width: 0; border-right: 1px solid #2d2a2a; padding: 0.6rem 1rem 1rem; display: flex; flex-direction: column; gap: 0.6rem; background: {{o.bg}}">
+        <button type="button" onClick="{{o.target}}" onMouseEnter="{{o.enter}}" onMouseLeave="{{unhover}}" onFocus="{{o.enter}}" onBlur="{{unhover}}" disabled="{{o.noTarget}}" aria-label="{{o.aria}}" style="display: flex; align-items: center; gap: 0.7rem; min-height: 48px; text-align: left; cursor: {{o.cursor}}">
+          <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 2rem; line-height: 1">{{o.seat}}</span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+            <span style="font-family: Archivo, sans-serif; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{o.name}}</span>
+            <span style="font-size: 0.6rem; line-height: 1.8; letter-spacing: 0.09em; color: #66625f">{{o.sub}}</span>
+          </span>
+          <sc-if value="{{o.chip}}" hint-placeholder-val="{{ false }}">
+            <span style="flex-shrink: 0; font-family: Archivo, sans-serif; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; background: {{o.chipBg}}; color: {{o.chipFg}}; border: 1px solid #2d2a2a; padding: 0.25rem 0.45rem; white-space: nowrap; animation: cdChip 0.35s cubic-bezier(0.165, 0.84, 0.44, 1) both">{{o.chip}}</span>
+          </sc-if>
+          <span data-life="{{o.key}}" style="flex-shrink: 0; font-family: 'Bodoni Moda', Didot, serif; font-size: 2.4rem; line-height: 1; letter-spacing: -0.03em; padding: 0 0.15rem; border-bottom: {{o.lifeLine}}; transition: border-color 0.3s">{{o.life}}</span>
+        </button>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; border-top: 1px solid #2d2a2a; padding-top: 0.9rem; min-height: 8.5rem">
+          <sc-for list="{{o.cards}}" as="c" hint-placeholder-count="3">
+            <span style="display: inline-block; position: relative">
+              <button type="button" data-k="{{c.key}}" onClick="{{c.click}}" onMouseEnter="{{c.enter}}" onMouseLeave="{{unhover}}" onFocus="{{c.enter}}" onBlur="{{unhover}}" disabled="{{c.disabled}}" aria-label="{{c.aria}}" style="position: relative; width: 84px; aspect-ratio: 5 / 7; box-sizing: border-box; border: {{c.border}}; background: #f5f3ec; display: flex; flex-direction: column; container-type: inline-size; overflow: hidden; text-align: left; cursor: {{c.cursor}}; opacity: {{c.op}}; transition: opacity 0.3s, border-color 0.3s">
+                <sc-if value="{{c.tag}}" hint-placeholder-val="{{ false }}">
+                  <span style="font-family: Archivo, sans-serif; font-size: max(8px, 8cqw); letter-spacing: 0.04em; text-transform: uppercase; background: {{c.tagBg}}; color: {{c.tagFg}}; border-bottom: 1px solid #2d2a2a; padding: 2% 5%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.tag}}</span>
+                </sc-if>
+                <span style="font-family: Archivo, sans-serif; font-size: max(9px, 10cqw); line-height: 1.12; text-transform: uppercase; margin: 6% 6% 3%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+                <span style="flex: 1; min-height: 0; margin: 0 6% 4%; background: #dcdad3"></span>
+                <span style="font-size: max(7px, 8cqw); line-height: 1.3; color: #66625f; padding: 0 40% 6% 6%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.type}}</span>
+                <span data-pt="{{c.key}}" style="position: absolute; right: 4%; bottom: 3%; font-family: Archivo, sans-serif; font-size: max(10px, 12cqw); line-height: 1; background: #f5f3ec; border: 1px solid #2d2a2a; padding: 3% 5%">{{c.pt}}</span>
+                <sc-if value="{{c.tapped}}" hint-placeholder-val="{{ false }}">
+                  <span style="position: absolute; left: 4%; top: 34%; font-family: Archivo, sans-serif; font-size: max(7px, 8cqw); letter-spacing: 0.06em; text-transform: uppercase; background: #f5f3ec; border: 1px solid #2d2a2a; padding: 2% 5%">Tapped</span>
+                </sc-if>
+              </button>
+            </span>
+          </sc-for>
+        </div>
+      </article>
+    </sc-for>
+  </section>
+
+  <!-- The open table the lines travel across -->
+  <div style="flex: 1 1 auto; min-height: 7rem; display: flex; align-items: center; justify-content: center; padding: 1rem">
+    <p class="cd-hint" aria-live="polite" style="margin: 0; max-width: 46ch; text-align: center; font-size: 0.8rem; line-height: 1.6; color: #66625f; animation: cdFade 0.4s both">{{hint}}</p>
+  </div>
+
+  <!-- You: life on the left (where blocked attacks land), creatures to the right -->
+  <section aria-label="Your battlefield" style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1.5rem 2.5rem; padding: 1.5rem 1.75rem 1.25rem; border-top: 1px solid #2d2a2a">
+    <div style="flex: 0 0 auto; display: flex; flex-direction: column; gap: 0.35rem; min-width: 11rem">
+      <span style="display: flex; align-items: baseline; gap: 0.6rem"><span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 2rem; line-height: 1">A</span><span style="font-family: Archivo, sans-serif; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase">You · The Ur-Dragon</span></span>
+      <span style="font-family: Archivo, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">Life</span>
+      <span data-life="A" style="align-self: flex-start; font-family: 'Bodoni Moda', Didot, serif; font-size: 3rem; line-height: 1; letter-spacing: -0.03em">31</span>
+    </div>
+    <div style="flex: 1 1 32rem; min-width: 0; display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; padding-top: 1.75rem">
+      <sc-for list="{{mine}}" as="c" hint-placeholder-count="5">
+        <span style="display: inline-block; position: relative; z-index: {{c.z}}; transform: {{c.lift}}; transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.25)">
+          <button type="button" data-k="{{c.key}}" onClick="{{c.click}}" disabled="{{c.disabled}}" aria-pressed="{{c.pressed}}" aria-label="{{c.aria}}" title="{{c.title}}" style="position: relative; width: 116px; aspect-ratio: 5 / 7; box-sizing: border-box; border: {{c.border}}; background: #f5f3ec; display: flex; flex-direction: column; container-type: inline-size; overflow: hidden; text-align: left; cursor: {{c.cursor}}; opacity: {{c.op}}; box-shadow: {{c.shadow}}; animation: {{c.bob}}; transition: box-shadow 0.45s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.3s">
+            <sc-if value="{{c.tag}}" hint-placeholder-val="{{ false }}">
+              <span style="font-family: Archivo, sans-serif; font-size: max(8px, 8cqw); letter-spacing: 0.04em; text-transform: uppercase; background: {{c.tagBg}}; color: {{c.tagFg}}; border-bottom: 1px solid #2d2a2a; padding: 2% 5%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.tag}}</span>
+            </sc-if>
+            <span style="font-family: Archivo, sans-serif; font-size: max(10px, 9.5cqw); line-height: 1.12; text-transform: uppercase; margin: 6% 6% 3%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+            <span style="flex: 1; min-height: 0; margin: 0 6% 4%; background: #dcdad3"></span>
+            <span style="font-size: max(7px, 7.5cqw); line-height: 1.3; color: #66625f; padding: 0 34% 6% 6%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.type}}</span>
+            <span style="position: absolute; right: 4%; bottom: 3%; font-family: Archivo, sans-serif; font-size: max(11px, 12cqw); line-height: 1; background: #f5f3ec; border: 1px solid #2d2a2a; padding: 3% 5%">{{c.pt}}</span>
+            <sc-if value="{{c.note}}" hint-placeholder-val="{{ false }}">
+              <span style="position: absolute; left: 4%; top: 34%; font-family: Archivo, sans-serif; font-size: max(7px, 7.5cqw); letter-spacing: 0.06em; text-transform: uppercase; background: #f5f3ec; border: 1px solid #2d2a2a; padding: 2% 5%">{{c.note}}</span>
+            </sc-if>
+          </button>
+        </span>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- Decision bar: what to do now, and the one confirm -->
+  <footer style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 2rem; padding: 0.9rem 1.75rem; border-top: 1px solid #2d2a2a; background: #eeeadf">
+    <span style="display: flex; align-items: center; gap: 0.6rem">
+      <svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" fill="#a77e5f"></path></svg>
+      <span style="font-size: 1.05rem; letter-spacing: 0.09em; text-transform: uppercase">{{decisionTitle}}</span>
+    </span>
+    <span style="flex: 1 1 22rem; font-size: 0.9rem; line-height: 1.5">{{decisionBody}}</span>
+    <span style="display: flex; gap: 0.6rem">
+      <button type="button" class="cd-btn" onClick="{{clear}}" disabled="{{clearOff}}">Clear</button>
+      <button type="button" class="cd-btn cd-go" onClick="{{confirm}}" disabled="{{confirmOff}}">{{confirmLabel}}<svg width="14" height="8" viewBox="0 0 14 8" aria-hidden="true"><path d="M0 4 H12 M9 1 L12 4 L9 7" fill="none" stroke="currentColor" stroke-width="1"></path></svg></button>
+    </span>
+  </footer>
+
+  <!-- Lines: measured from the real cards every frame, so they follow lifts, the cursor and any layout -->
+  <div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; z-index: 30">
+    <sc-for list="{{lines}}" as="l" hint-placeholder-count="0">
+      <svg width="100%" height="100%" style="position: absolute; inset: 0; overflow: visible">
+        <path d="{{l.d}}" fill="none" stroke="#f5f3ec" stroke-width="{{l.halo}}" stroke-linecap="round"></path>
+        <path d="{{l.d}}" fill="none" stroke="#2d2a2a" stroke-width="{{l.w}}" stroke-dasharray="{{l.dash}}" stroke-dashoffset="{{l.off}}" stroke-linecap="round"></path>
+        <path d="{{l.head}}" fill="#2d2a2a" stroke="#f5f3ec" stroke-width="1.5" stroke-linejoin="round"></path>
+      </svg>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"phase":{"editor":"enum","options":["attack","block"],"default":"attack"},"wobble":{"editor":"range","min":0,"max":2,"step":0.1,"default":1},"$preview":{"width":1440,"height":900}}'>
+const OPPS = [
+  { key: 'B', seat: 'B', name: 'Ghalta and Mavren', life: 34, cards: [
+    { key: 'ghalta', name: 'Ghalta, Primal Hunger', type: 'Creature — Elder Dinosaur', pt: '12/12' },
+    { key: 'elf1', name: 'Elf Warrior', type: 'Token Creature — Elf Warrior', pt: '1/1' },
+    { key: 'elf2', name: 'Elf Warrior', type: 'Token Creature — Elf Warrior', pt: '1/1' },
+    { key: 'llanowar', name: 'Llanowar Elves', type: 'Creature — Elf Druid', pt: '1/1' },
+  ] },
+  { key: 'C', seat: 'C', name: 'Iron Lad, Young Avenger', life: 27, cards: [
+    { key: 'thopter', name: 'Ornithopter', type: 'Artifact Creature — Thopter', pt: '0/2' },
+    { key: 'overseer', name: 'Steel Overseer', type: 'Artifact Creature — Construct', pt: '1/1' },
+  ] },
+  { key: 'D', seat: 'D', name: 'Invisible Woman', life: 18, cards: [
+    { key: 'strix', name: 'Baleful Strix', type: 'Artifact Creature — Bird', pt: '1/1' },
+    { key: 'wall', name: 'Wall of Omens', type: 'Creature — Wall', pt: '0/4' },
+  ] },
+];
+const MINE = [
+  { key: 'urd', name: 'The Ur-Dragon', type: 'Legendary Creature — Dragon Avatar', pt: '10/10', cmdr: true },
+  { key: 'thund', name: 'Thundermaw Hellkite', type: 'Creature — Dragon', pt: '5/5' },
+  { key: 'utv', name: 'Utvara Hellkite', type: 'Creature — Dragon', pt: '6/6' },
+  { key: 'whelp', name: 'Sarkhan’s Whelp', type: 'Creature — Dragon', pt: '2/2' },
+  { key: 'serv', name: 'Dragonlord’s Servant', type: 'Creature — Goblin Shaman', pt: '1/3', sick: true },
+];
+// In the blockers mockup it is B's turn: B attacks you with two creatures and C with one.
+const B_ATTACKS = { ghalta: 'A', elf1: 'A', elf2: 'C' };
+const NAMES = {};
+OPPS.forEach((o) => o.cards.forEach((c) => { NAMES[c.key] = c.name; }));
+MINE.forEach((c) => { NAMES[c.key] = c.name; });
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { phase: (props && props.phase) || 'attack', lifted: null, hover: null, attacks: {}, blocks: {}, doneA: false, doneB: false, lines: [] };
+    this._cursor = null;
+    this._tw = {};
+    this._seed = {};
+  }
+
+  componentDidMount() {
+    this._reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const tick = (now) => { this._raf = requestAnimationFrame(tick); this.frame(now); };
+    this._raf = requestAnimationFrame(tick);
+  }
+
+  componentWillUnmount() { cancelAnimationFrame(this._raf); }
+
+  componentDidUpdate(prev) {
+    if (prev.phase !== this.props.phase && this.props.phase) this.switchPhase(this.props.phase);
+  }
+
+  switchPhase(p) {
+    this._tw = {}; this._cursor = null;
+    this.setState({ phase: p, lifted: null, hover: null });
+  }
+
+  seed(k) {
+    if (!this._seed[k]) this._seed[k] = { a: Math.random() * 6.28, b: Math.random() * 6.28, f: 0.8 + Math.random() * 0.9, g: 1.9 + Math.random() * 1.4 };
+    return this._seed[k];
+  }
+
+  // One frame: measure the cards, life totals and P/T boxes, then draw every line from them.
+  frame(now) {
+    const root = document.querySelector('[data-cd-root]');
+    if (!root) return;
+    const R = root.getBoundingClientRect();
+    const grab = (attr) => {
+      const m = {};
+      root.querySelectorAll('[' + attr + ']').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        m[el.getAttribute(attr)] = { l: r.left - R.left, t: r.top - R.top, w: r.width, h: r.height };
+      });
+      return m;
+    };
+    const K = grab('data-k'), L = grab('data-life'), P = grab('data-pt');
+    const s = this.state;
+    const t = now / 1000;
+    const amp0 = this.props.wobble ?? 1;
+    const ease = (x) => { const c = 1.4; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+    let busy = false;
+    const out = [];
+
+    const draw = (key, sx, sy, tx, ty, style, wob) => {
+      // A line that was just placed flies from where the cursor let go to its target.
+      let ex = tx, ey = ty;
+      const tw = this._tw[key];
+      if (tw) {
+        const p = this._reduce ? 1 : Math.min(1, (now - tw.t0) / 460);
+        const k = ease(p);
+        ex = tw.x + (tx - tw.x) * k; ey = tw.y + (ty - tw.y) * k;
+        if (p >= 1) delete this._tw[key]; else busy = true;
+      }
+      const sg = ey < sy ? -1 : 1;
+      const kk = Math.max(40, Math.abs(sy - ey) * 0.45);
+      let c1x = sx, c1y = sy + sg * kk, c2x = ex, c2y = ey - sg * kk;
+      if (wob && !this._reduce && amp0 > 0) {
+        const sd = this.seed(key);
+        const a = wob * amp0;
+        const n = (f, ph) => Math.sin(t * f + ph) * 0.65 + Math.sin(t * f * 2.3 + ph * 1.7) * 0.35;
+        c1x += a * n(sd.f, sd.a); c1y += a * 0.6 * n(sd.g, sd.b);
+        c2x += a * n(sd.g, sd.b + 1.3); c2y += a * 0.6 * n(sd.f, sd.a + 2.1);
+        busy = true;
+      }
+      let dx = ex - c2x, dy = ey - c2y;
+      const len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
+      const px = -dy, py = dx;
+      const f1 = (v) => v.toFixed(1);
+      let head;
+      if (style.block) {
+        head = 'M' + f1(ex + px * 9 - dx * 1.5) + ' ' + f1(ey + py * 9 - dy * 1.5) + ' L' + f1(ex - px * 9 - dx * 1.5) + ' ' + f1(ey - py * 9 - dy * 1.5) + ' L' + f1(ex - px * 9 + dx * 1.5) + ' ' + f1(ey - py * 9 + dy * 1.5) + ' L' + f1(ex + px * 9 + dx * 1.5) + ' ' + f1(ey + py * 9 + dy * 1.5) + ' Z';
+      } else {
+        const bx = ex - dx * 11, by = ey - dy * 11;
+        head = 'M' + f1(ex) + ' ' + f1(ey) + ' L' + f1(bx + px * 6) + ' ' + f1(by + py * 6) + ' L' + f1(bx - px * 6) + ' ' + f1(by - py * 6) + ' Z';
+      }
+      const d = 'M' + f1(sx) + ' ' + f1(sy) + ' C' + f1(c1x) + ' ' + f1(c1y) + ' ' + f1(c2x) + ' ' + f1(c2y) + ' ' + f1(ex) + ' ' + f1(ey);
+      if (style.march) busy = true;
+      out.push({ d, head, w: style.w, halo: style.w + 4, dash: style.dash, off: style.march && !this._reduce ? f1(-(t * 28) % 32) : '0' });
+    };
+
+    const cursorEnd = (sx, sy) => this._cursor ? [this._cursor.x, this._cursor.y] : [sx, sy - 140];
+    const pending = { w: 2, dash: '10 6' };
+    const solid = { w: 2, dash: 'none' };
+    const blockS = { w: 3, dash: '0.1 6', block: true };
+
+    if (s.phase === 'attack') {
+      const per = {}; const seen = {};
+      Object.values(s.attacks).forEach((o) => { per[o] = (per[o] || 0) + 1; });
+      Object.keys(s.attacks).forEach((mk) => {
+        const a = K[mk]; const o = s.attacks[mk]; const life = L[o];
+        if (!a || !life) return;
+        const i = seen[o] = (seen[o] || 0) + 1;
+        const tx = life.l + life.w / 2 + (i - 1 - (per[o] - 1) / 2) * 14;
+        draw(mk, a.l + a.w * 0.5, a.t - 2, tx, life.t + life.h + 4, s.doneA ? solid : pending, s.doneA ? 0 : 4);
+      });
+      if (s.lifted && K[s.lifted]) {
+        const a = K[s.lifted]; const sx = a.l + a.w * 0.5, sy = a.t - 2;
+        const [ex, ey] = cursorEnd(sx, sy);
+        draw('follow', sx, sy, ex, ey, { w: 2, dash: '10 6', march: true }, 9);
+      }
+    } else {
+      // B's attacks, already declared: from each attacker down to the player it attacks.
+      const per = {}; const seen = {};
+      Object.values(B_ATTACKS).forEach((o) => { per[o] = (per[o] || 0) + 1; });
+      Object.keys(B_ATTACKS).forEach((ak) => {
+        const a = K[ak]; const o = B_ATTACKS[ak]; const life = L[o];
+        if (!a || !life) return;
+        const i = seen[o] = (seen[o] || 0) + 1;
+        const tx = life.l + life.w / 2 + (i - 1 - (per[o] - 1) / 2) * 14;
+        const ty = o === 'A' ? life.t - 6 : life.t + life.h + 4;
+        draw('atk-' + ak, a.l + a.w * 0.5, o === 'A' ? a.t + a.h + 2 : a.t - 2, tx, ty, solid, 0);
+      });
+      Object.keys(s.blocks).forEach((mk) => {
+        const a = K[mk]; const pt = P[s.blocks[mk]];
+        if (!a || !pt) return;
+        draw(mk, a.l + a.w * 0.5, a.t - 2, pt.l + pt.w / 2, pt.t + pt.h + 4, blockS, 0);
+      });
+      if (s.lifted && K[s.lifted]) {
+        const a = K[s.lifted]; const sx = a.l + a.w * 0.5, sy = a.t - 2;
+        const [ex, ey] = cursorEnd(sx, sy);
+        draw('follow', sx, sy, ex, ey, { w: 3, dash: '0.1 6', block: true, march: true }, 0);
+      }
+    }
+
+    const sig = out.map((x) => x.d + x.off).join('|');
+    if (busy || sig !== this._sig) { this._sig = sig; this.setState({ lines: out }); }
+  }
+
+  renderVals() {
+    const ink = '#2d2a2a', paper = '#f5f3ec', muted = '#66625f';
+    const s = this.state;
+    const set = (p) => this.setState(p);
+    const atk = s.phase === 'attack';
+    const done = atk ? s.doneA : s.doneB;
+    const assign = atk ? s.attacks : s.blocks;
+    const lifted = s.lifted;
+    const stop = (e) => { if (e && e.stopPropagation) e.stopPropagation(); };
+    const from = () => {
+      if (this._cursor) return { x: this._cursor.x, y: this._cursor.y };
+      return null;
+    };
+    const place = (mk, target) => {
+      const f = from();
+      if (f) this._tw[mk] = { x: f.x, y: f.y, t0: performance.now() };
+      const next = Object.assign({}, assign, { [mk]: target });
+      set(atk ? { attacks: next, lifted: null, hover: null } : { blocks: next, lifted: null, hover: null });
+    };
+    const oppNameOf = { A: 'you', B: 'Ghalta and Mavren', C: 'Iron Lad', D: 'Invisible Woman' };
+
+    const mine = MINE.map((c, i) => {
+      const following = lifted === c.key;
+      const placed = !!assign[c.key];
+      const waiting = placed && !done;
+      const can = !done && !(atk && c.sick);
+      const up = following || waiting;
+      const declared = placed && done;
+      let tag = c.cmdr ? 'Commander' : '';
+      let tagBg = c.cmdr ? paper : ink, tagFg = c.cmdr ? ink : paper;
+      if (placed) {
+        const tgt = assign[c.key];
+        tag = atk ? (declared ? 'Attacking ' + tgt : '→ ' + tgt) : (declared ? 'Blocking' : 'Blocks ' + NAMES[tgt]);
+        tagBg = declared ? ink : paper; tagFg = declared ? paper : ink;
+      } else if (following) {
+        tag = atk ? 'Choose a player' : 'Choose an attacker';
+        tagBg = paper; tagFg = ink;
+      }
+      return {
+        key: c.key, name: c.name, type: c.type, pt: c.pt, tag, tagBg, tagFg,
+        note: atk && c.sick ? 'Summoning sick' : atk && declared ? 'Tapped' : '',
+        disabled: !can,
+        pressed: following ? 'true' : 'false',
+        op: atk && c.sick ? 0.55 : 1,
+        cursor: can ? 'pointer' : 'default',
+        border: following ? '2px solid ' + ink : waiting ? '1px dashed ' + ink : c.cmdr ? '3px double ' + ink : '1px solid ' + ink,
+        lift: following ? 'translateY(-24px) scale(1.05)' : waiting ? 'translateY(-12px) scale(1.02)' : 'none',
+        shadow: following ? '0 28px 26px -16px rgba(45, 42, 42, 0.5)' : waiting ? '0 16px 18px -12px rgba(45, 42, 42, 0.35)' : '0 0 0 0 rgba(45, 42, 42, 0)',
+        bob: up ? 'cdBob ' + (following ? '1.3s' : '2.1s') + ' ease-in-out ' + (-i * 0.37).toFixed(2) + 's infinite alternate' : 'none',
+        z: following ? 40 : up ? 20 : 1,
+        title: atk && c.sick ? 'Came in this turn, so it cannot attack' : '',
+        aria: c.name + ', ' + c.pt + (placed ? (atk ? ', attacking ' + assign[c.key] : ', blocking ' + NAMES[assign[c.key]]) : ''),
+        click: (e) => {
+          stop(e);
+          if (!can) return;
+          if (following) { set({ lifted: null }); return; }
+          // Picking up a creature that already has a line takes the line back into your hand.
+          if (placed) {
+            const next = Object.assign({}, assign); delete next[c.key];
+            set(atk ? { attacks: next, lifted: c.key } : { blocks: next, lifted: c.key });
+            return;
+          }
+          set({ lifted: c.key });
+        },
+      };
+    });
+
+    const per = {};
+    if (atk) Object.values(s.attacks).forEach((o) => { per[o] = (per[o] || 0) + 1; });
+    const blockedBy = {};
+    if (!atk) Object.keys(s.blocks).forEach((mk) => { const a = s.blocks[mk]; (blockedBy[a] = blockedBy[a] || []).push(mk); });
+
+    const opps = OPPS.map((o) => {
+      const tgtOk = atk && !!lifted;
+      const hot = tgtOk && (s.hover === o.key || o.cards.some((c) => c.key === s.hover));
+      const n = per[o.key] || 0;
+      const attackedByB = !atk ? Object.keys(B_ATTACKS).filter((k) => B_ATTACKS[k] === o.key).length : 0;
+      return {
+        key: o.key, seat: o.seat, name: o.name, life: o.life,
+        sub: !atk && o.key === 'B' ? 'Attacking' : o.cards.length + ' creatures',
+        bg: hot ? '#eeeadf' : 'transparent',
+        lifeLine: hot ? '2px solid ' + ink : '2px solid transparent',
+        chip: atk ? (n ? (s.doneA ? 'Attacked by ' + n : n + ' coming') : '') : (attackedByB ? 'Attacked by ' + attackedByB : ''),
+        chipBg: atk && !s.doneA ? paper : ink, chipFg: atk && !s.doneA ? ink : paper,
+        noTarget: !atk || done,
+        cursor: tgtOk ? 'pointer' : 'default',
+        aria: atk ? 'Attack ' + o.name + ', ' + o.life + ' life' : o.name + ', ' + o.life + ' life',
+        enter: () => { if (tgtOk && s.hover !== o.key) set({ hover: o.key }); },
+        target: (e) => { stop(e); if (tgtOk) place(lifted, o.key); },
+        cards: o.cards.map((c) => {
+          const attacking = !atk && !!B_ATTACKS[c.key];
+          const atMe = attacking && B_ATTACKS[c.key] === 'A';
+          const blockable = !atk && atMe && !!lifted;
+          const hotCard = blockable && s.hover === c.key;
+          const blockers = blockedBy[c.key] || [];
+          return {
+            key: c.key, name: c.name, type: c.type, pt: c.pt,
+            tag: attacking ? (blockers.length ? 'Blocked' : 'Attacking ' + B_ATTACKS[c.key]) : '',
+            tagBg: ink, tagFg: paper,
+            tapped: attacking,
+            border: hotCard ? '2px solid ' + ink : '1px solid ' + ink,
+            op: !atk && lifted && !atMe ? 0.45 : 1,
+            cursor: (atk && lifted) || blockable ? 'pointer' : 'default',
+            disabled: done,
+            aria: c.name + ', ' + c.pt + (attacking ? ', attacking ' + (B_ATTACKS[c.key] === 'A' ? 'you' : oppNameOf[B_ATTACKS[c.key]]) : ''),
+            enter: () => { const h = atk ? (lifted ? o.key : null) : (blockable ? c.key : null); if (h !== s.hover) set({ hover: h }); },
+            click: (e) => {
+              stop(e);
+              if (atk && lifted) { place(lifted, o.key); return; }
+              if (blockable) place(lifted, c.key);
+            },
+          };
+        }),
+      };
+    });
+
+    const count = Object.keys(assign).length;
+    const listA = Object.keys(s.attacks).map((k) => NAMES[k] + ' → ' + s.attacks[k]).join(', ');
+    const listB = Object.keys(s.blocks).map((k) => NAMES[k] + ' blocks ' + NAMES[s.blocks[k]]).join(', ');
+    let hint, title, body;
+    if (atk) {
+      title = s.doneA ? 'Attackers declared' : 'Declare attackers';
+      if (s.doneA) { hint = 'Attacks are locked in. Each defending player now chooses blocks.'; body = listA + '.'; }
+      else if (lifted) { hint = 'The line follows your cursor. Click a player’s name, life or creatures to attack them.'; body = 'Choose who ' + NAMES[lifted] + ' attacks. Click it again, or the table, to put it back.'; }
+      else if (count) { hint = 'Pick up another creature, or confirm.'; body = count + ' attacking: ' + listA + '. Click one to change its target.'; }
+      else { hint = 'Pick up a creature to attack with.'; body = 'Click a creature. It lifts, and a line follows your cursor until you choose a player.'; }
+    } else {
+      title = s.doneB ? 'Blockers declared' : 'Declare blockers';
+      if (s.doneB) { hint = 'Blocks are locked in. Damage is next.'; body = listB ? listB + '.' : 'No blocks. You take the full attack.'; }
+      else if (lifted) { hint = 'Click a creature attacking you. The line lands on its power and toughness.'; body = 'Choose what ' + NAMES[lifted] + ' blocks. Click it again, or the table, to put it back.'; }
+      else if (count) { hint = 'Pick up another creature, or confirm.'; body = count + ' blocking: ' + listB + '.'; }
+      else { hint = 'Ghalta, Primal Hunger and an Elf Warrior are attacking you.'; body = 'Click one of your creatures, then the attacker it should block. Confirm with no blocks to take the damage.'; }
+    }
+
+    return {
+      phases: [['attack', 'Attackers'], ['block', 'Blockers']].map(([k, label]) => ({ label, on: s.phase === k, bg: s.phase === k ? ink : 'transparent', fg: s.phase === k ? paper : ink, pick: (e) => { stop(e); if (s.phase !== k) this.switchPhase(k); } })),
+      reset: (e) => { stop(e); this._tw = {}; set({ lifted: null, hover: null, attacks: {}, blocks: {}, doneA: false, doneB: false }); },
+      turnTag: atk ? 'Your turn' : 'B’s turn',
+      stepLabel: atk ? 'Declare attackers' : 'Declare blockers',
+      opps, mine, hint,
+      decisionTitle: title, decisionBody: body,
+      lines: s.lines,
+      rootCursor: lifted ? 'crosshair' : 'default',
+      move: (e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        this._cursor = { x: e.clientX - r.left, y: e.clientY - r.top };
+      },
+      leaveRoot: () => { this._cursor = null; },
+      cancel: () => { if (this.state.lifted) set({ lifted: null, hover: null }); },
+      unhover: () => { if (this.state.hover) set({ hover: null }); },
+      clear: (e) => { stop(e); this._tw = {}; set(atk ? { attacks: {}, lifted: null } : { blocks: {}, lifted: null }); },
+      clearOff: done || !count,
+      confirm: (e) => { stop(e); set(atk ? { doneA: true, lifted: null } : { doneB: true, lifted: null }); },
+      confirmOff: done || (atk && !count),
+      confirmLabel: atk ? 'Confirm attackers' : count ? 'Confirm blockers' : 'No blocks',
+    };
+  }
+}
+</script>
+</body>
+</html>

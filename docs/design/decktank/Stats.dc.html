@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Deck statistics</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&amp;family=Bodoni+Moda:opsz,wght@6..96,400&amp;family=Cutive+Mono&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f5f3ec}
+a{color:#2d2a2a}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+button:focus-visible,a:focus-visible{outline:2px solid #2d2a2a;outline-offset:3px}
+.row{transition:background-color 0.3s cubic-bezier(0.165,0.84,0.44,1)}
+.row:hover{background:#eeeadf}
+.seg{transition:background-color 0.3s cubic-bezier(0.165,0.84,0.44,1),color 0.3s cubic-bezier(0.165,0.84,0.44,1)}
+.bar{transition:width 0.7s cubic-bezier(0.165,0.84,0.44,1)}
+@keyframes orrRiseA{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes orrRiseB{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes orrRule{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes orrFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes orrSlideL{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+@keyframes orrType{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes orrTrack{from{letter-spacing:0.04em;opacity:0}to{letter-spacing:-0.03em;opacity:1}}
+@keyframes orrTick{from{transform:scale(0.4);opacity:0}to{transform:none;opacity:1}}
+@keyframes orrStamp{0%{transform:scale(1.35) rotate(-8deg);opacity:0}60%{opacity:1}100%{transform:scale(1) rotate(-4deg);opacity:1}}
+@keyframes orrFlip{from{transform:perspective(900px) rotateY(-28deg) translateX(-10px);opacity:0}to{transform:none;opacity:1}}
+.grow{transition:width 1s cubic-bezier(0.165, 0.84, 0.44, 1),flex-grow 1s cubic-bezier(0.165, 0.84, 0.44, 1),left 1s cubic-bezier(0.165, 0.84, 0.44, 1),stroke-dasharray 1.2s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn{display:inline-flex;align-items:center;gap:0.7rem;min-height:42px;padding:0 1.05rem 0 1.15rem;border:1px solid #2d2a2a;background:transparent;color:#2d2a2a;text-decoration:none;font-family:Archivo,'Helvetica Neue',Arial,sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap;transition:background-color 0.35s cubic-bezier(0.165, 0.84, 0.44, 1),color 0.35s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn:hover{background:#2d2a2a;color:#f5f3ec !important}
+.btn .arr{display:inline-flex;transition:transform 0.35s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn:hover .arr{transform:translateX(3px)}
+.btn .arr path{stroke:currentColor}
+.st-grid{grid-template-columns:2rem minmax(0,1fr) 4rem minmax(9rem,13rem) 7rem 4.5rem}
+@media (max-width: 760px){ .st-grid{grid-template-columns:1.75rem minmax(0,1fr) 2.5rem 7.5rem;gap:0.75rem !important} .pad{padding-left:1rem !important;padding-right:1rem !important} .hide-sm{display:none !important} }
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #f5f3ec; color: #2d2a2a; font-family: 'Cutive Mono', 'Courier New', ui-monospace, monospace; display: flex; flex-direction: column">
+  <dc-import name="TopBar" current="{{one}}" hint-size="100%,68px"></dc-import>
+
+  <main class="pad" style="flex: 1; padding: 2.25rem 3rem 3rem; display: flex; flex-direction: column; gap: 2rem">
+
+    <!-- Title and scope -->
+    <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.25rem 2rem">
+      <div style="display: flex; flex-direction: column; gap: 0.5rem">
+        <div style="display: flex; flex-direction: column; gap: 0.6rem; width: fit-content; max-width: 100%">
+          <h1 style="animation: orrTrack 1s cubic-bezier(0.165, 0.84, 0.44, 1) both; margin: 0; font-family: 'Bodoni Moda', Didot, 'Times New Roman', serif; font-weight: 400; font-size: clamp(2.6rem, 4.6vw, 4.4rem); line-height: 0.95; letter-spacing: -0.03em; text-transform: uppercase">Deck statistics</h1>
+          <span aria-hidden="true" style="display: flex; align-items: center; gap: 0.5rem; width: 100%"><span style="flex: 1; height: 1px; background: #2d2a2a; transform-origin: right center; animation: orrRule 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.25s both"></span><span style="display: inline-flex; animation: orrTick 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) 0.55s both"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" fill="#2d2a2a"></path></svg></span><span style="flex: 1; height: 1px; background: #2d2a2a; transform-origin: left center; animation: orrRule 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.40s both"></span></span>
+        </div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.5rem">
+        <div role="group" aria-label="Which games" style="display: flex; padding-left: 1px">
+          <sc-for list="{{scopes}}" as="sc" hint-placeholder-count="3">
+            <button type="button" class="seg" onClick="{{sc.pick}}" aria-pressed="{{sc.on}}" style="min-height: 40px; margin-left: -1px; padding: 0 1rem; border: 1px solid #2d2a2a; background: {{sc.bg}}; color: {{sc.fg}}; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap">{{sc.label}}</button>
+          </sc-for>
+        </div>
+        <button type="button" class="btn">Refresh</button>
+      </div>
+    </div>
+
+    <!-- Facts: four plates, edge to edge -->
+    <dl style="margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); border-top: 1px solid #2d2a2a; border-left: 1px solid #2d2a2a">
+      <sc-for list="{{facts}}" as="f" hint-placeholder-count="4">
+        <div style="border-right: 1px solid #2d2a2a; border-bottom: 1px solid #2d2a2a; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.35rem; animation: {{rise}} 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) both">
+          <dt style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">{{f.k}}</dt>
+          <dd style="margin: 0; display: flex; align-items: baseline; gap: 0.5rem">
+            <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 2.1rem; line-height: 1; letter-spacing: -0.02em">{{f.v}}</span>
+            <span style="font-size: 0.725rem; color: #66625f">{{f.unit}}</span>
+          </dd>
+        </div>
+      </sc-for>
+    </dl>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 2.5rem; align-items: flex-start">
+
+      <!-- Standings -->
+      <section aria-labelledby="standings-title" style="flex: 1 1 44rem; min-width: 0; display: flex; flex-direction: column; gap: 0.9rem">
+        <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.5rem">
+          <span style="display: flex; align-items: baseline; gap: 0.75rem"><span aria-hidden="true" style="font-size: 0.6rem; letter-spacing: 0.09em; color: #66625f">FIG. 001</span><h2 id="standings-title" style="margin: 0; font-family: 'Bodoni Moda', Didot, serif; font-weight: 400; font-size: 2.1rem; line-height: 1; letter-spacing: -0.03em; text-transform: uppercase">Standings</h2></span>
+          <div role="group" aria-label="Sort by" style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.8rem">
+            <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">Sort</span>
+            <sc-for list="{{sorts}}" as="so" hint-placeholder-count="3">
+              <button type="button" onClick="{{so.pick}}" aria-pressed="{{so.on}}" style="min-height: 36px; color: {{so.fg}}; text-decoration: {{so.deco}}; text-underline-offset: 0.35em">[ {{so.label}} ]</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- header row -->
+        <div aria-hidden="true" class="st-grid" style="display: grid; gap: 1rem; align-items: end; padding: 0 0.75rem 0.4rem; border-bottom: 1px solid #2d2a2a; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">
+          <span></span><span>Deck</span><span style="text-align: right">Games</span>
+          <span style="display: flex; justify-content: space-between"><span>Win rate</span><span style="font-family: 'Cutive Mono', monospace; letter-spacing: 0.04em">¦ 25% = fair share</span></span>
+          <span class="hide-sm">Avg finish</span><span class="hide-sm" style="text-align: right">Turns</span>
+        </div>
+
+        <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+          <sc-for list="{{rows}}" as="d" hint-placeholder-count="4">
+            <li style="border-bottom: 1px solid #2d2a2a; animation: {{rise}} 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) {{d.delay}} both">
+              <button type="button" class="row st-grid" onClick="{{d.pick}}" aria-pressed="{{d.on}}" title="{{d.tip}}" style="width: 100%; display: grid; gap: 1rem; align-items: center; padding: 0.85rem 0.75rem; background: {{d.bg}}">
+                <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 1.6rem; line-height: 1">{{d.rank}}</span>
+                <span style="display: flex; flex-direction: column; gap: 0.2rem; min-width: 0">
+                  <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: {{d.deco}}; text-underline-offset: 0.3em">{{d.name}}</span>
+                  <span style="font-size: 0.725rem; color: #66625f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"><span role="img" aria-label="{{d.pipLabel}}" style="display: inline-flex; gap: 2px; vertical-align: -4px"><sc-for list="{{d.pips}}" as="pp" hint-placeholder-count="3"><span title="{{pp.name}}" style="width: 16px; height: 16px; box-sizing: border-box; border-radius: 50%; border: 1px solid #2d2a2a; background: {{pp.bg}}; color: {{pp.fg}}; display: inline-flex; align-items: center; justify-content: center; font-family: 'Bodoni Moda', Didot, serif; font-size: 10px; line-height: 1; letter-spacing: 0">{{pp.k}}</span></sc-for></span> · {{d.archetype}}</span>
+                </span>
+                <span style="text-align: right; font-size: 0.9rem">{{d.games}}</span>
+                <span style="display: flex; align-items: center; gap: 0.6rem">
+                  <span style="position: relative; flex: 1; height: 10px; background: #e8e6df">
+                    <span class="grow" style="position: absolute; left: 0; top: 0; bottom: 0; width: {{d.winW}}; background: #2d2a2a; transition-delay: {{d.delay}}"></span>
+                    <span aria-hidden="true" style="position: absolute; left: 25%; top: -4px; bottom: -4px; width: 0; border-left: 1px dashed #2d2a2a"></span>
+                  </span>
+                  <span style="min-width: 2.6rem; text-align: right; font-size: 0.9rem">{{d.winText}}</span>
+                </span>
+                <span class="hide-sm" aria-label="{{d.finishLabel}}" style="position: relative; height: 18px">
+                  <span style="position: absolute; left: 0; right: 0; top: 8px; height: 1px; background: #2d2a2a"></span>
+                  <span style="position: absolute; left: 0; top: 4px; width: 1px; height: 9px; background: #2d2a2a"></span>
+                  <span style="position: absolute; left: 33.33%; top: 5px; width: 1px; height: 7px; background: #2d2a2a"></span>
+                  <span style="position: absolute; left: 66.66%; top: 5px; width: 1px; height: 7px; background: #2d2a2a"></span>
+                  <span style="position: absolute; right: 0; top: 4px; width: 1px; height: 9px; background: #2d2a2a"></span>
+                  <span class="grow" style="transition-delay: {{d.delay}}; position: absolute; left: {{d.finishX}}; top: 3px; width: 11px; height: 11px; margin-left: -5.5px; border-radius: 50%; background: #2d2a2a; border: 2px solid #f5f3ec; box-sizing: border-box"></span>
+                  <span style="position: absolute; left: 0; top: 14px; font-size: 0.55rem; color: #66625f">1st</span>
+                  <span style="position: absolute; right: 0; top: 14px; font-size: 0.55rem; color: #66625f">4th</span>
+                </span>
+                <span class="hide-sm" style="text-align: right; font-size: 0.9rem">{{d.turns}}</span>
+              </button>
+            </li>
+          </sc-for>
+        </ol>
+
+        <button type="button" onClick="{{toggleGen}}" aria-expanded="{{genOpen}}" style="align-self: flex-start; min-height: 40px; font-size: 0.8rem">{{genLabel}}</button>
+        <sc-if value="{{genOpen}}" hint-placeholder-val="{{ false }}">
+          <ul style="margin: 0; padding: 0; list-style: none; border-top: 1px solid #2d2a2a">
+            <sc-for list="{{generated}}" as="g" hint-placeholder-count="3">
+              <li style="display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 1rem; align-items: baseline; padding: 0.55rem 0.75rem; border-bottom: 1px solid #2d2a2a; font-size: 0.8rem">
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{g.name}} <span style="color: #66625f">·</span> <span role="img" aria-label="{{g.pipLabel}}" style="display: inline-flex; gap: 2px; vertical-align: -4px"><sc-for list="{{g.pips}}" as="pp" hint-placeholder-count="2"><span title="{{pp.name}}" style="width: 16px; height: 16px; box-sizing: border-box; border-radius: 50%; border: 1px solid #2d2a2a; background: {{pp.bg}}; color: {{pp.fg}}; display: inline-flex; align-items: center; justify-content: center; font-family: 'Bodoni Moda', Didot, serif; font-size: 10px; line-height: 1; letter-spacing: 0">{{pp.k}}</span></sc-for></span></span>
+                <span style="color: #66625f">{{g.games}}</span>
+                <span>{{g.result}}</span>
+              </li>
+            </sc-for>
+            <li style="padding: 0.55rem 0.75rem; font-size: 0.725rem; color: #66625f">Each generated deck has its own random list, so most play one game.</li>
+          </ul>
+        </sc-if>
+
+        <!-- Head to head: wins each deck took from each opponent -->
+        <section aria-labelledby="h2h-title" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.9rem">
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.5rem">
+            <span style="display: flex; align-items: baseline; gap: 0.75rem"><span aria-hidden="true" style="font-size: 0.6rem; letter-spacing: 0.09em; color: #66625f">FIG. 002</span><h2 id="h2h-title" style="margin: 0; font-family: 'Bodoni Moda', Didot, serif; font-weight: 400; font-size: 2.1rem; line-height: 1; letter-spacing: -0.03em; text-transform: uppercase">Matchups</h2></span>
+          </div>
+          <div role="table" aria-label="Matchup wins" style="display: flex; flex-direction: column; font-size: 0.8rem">
+            <div role="row" style="display: grid; grid-template-columns: minmax(0, 30fr) repeat(4, minmax(0, 14.5fr)) minmax(0, 12fr); gap: 0 6px; align-items: center; padding-bottom: 0.5rem">
+              <span role="columnheader" style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">Winner ↓ · beaten →</span>
+              <sc-for list="{{h2hCols}}" as="hc" hint-placeholder-count="4">
+                <span role="columnheader" title="{{hc.full}}" style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{hc.short}}</span>
+              </sc-for>
+              <span role="columnheader" style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; text-align: right; color: #66625f">Total</span>
+            </div>
+            <sc-for list="{{h2h}}" as="hr" hint-placeholder-count="4">
+              <div role="row" style="display: grid; grid-template-columns: minmax(0, 30fr) repeat(4, minmax(0, 14.5fr)) minmax(0, 12fr); gap: 0 6px; align-items: center; border-top: 1px solid #2d2a2a; padding: 4px 0">
+                <span role="rowheader" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{hr.name}}</span>
+                <sc-for list="{{hr.cells}}" as="c" hint-placeholder-count="4">
+                  <span role="cell" title="{{c.tip}}" style="animation: {{c.anim}}; display: flex; align-items: center; justify-content: center; height: 2.4rem; background: {{c.bg}}; color: {{c.fg}}; font-size: 0.9rem; transition: background-color 0.4s">{{c.v}}</span>
+                </sc-for>
+                <span role="cell" style="text-align: right">{{hr.total}}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div aria-hidden="true" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.6rem; letter-spacing: 0.09em; color: #66625f">
+            <span>{{h2hMin}}</span>
+            <span style="display: flex"><span style="width: 1.6rem; height: 0.6rem; background: #e8e6df"></span><span style="width: 1.6rem; height: 0.6rem; background: #d6d4ce"></span><span style="width: 1.6rem; height: 0.6rem; background: #bdbbb6"></span><span style="width: 1.6rem; height: 0.6rem; background: #8f8c88"></span><span style="width: 1.6rem; height: 0.6rem; background: #5f5c59"></span><span style="width: 1.6rem; height: 0.6rem; background: #413e3d"></span></span>
+            <span>{{h2hMax}}</span>
+          </div>
+        </section>
+      </section>
+
+      <!-- Detail for the chosen deck -->
+      <aside aria-labelledby="detail-title" style="flex: 1 1 24rem; max-width: 34rem; min-width: 0; border: 1px solid #2d2a2a; display: flex; flex-direction: column; animation: {{detailRise}} 0.55s cubic-bezier(0.165, 0.84, 0.44, 1) both">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #2d2a2a; display: flex; flex-direction: column; gap: 0.3rem; background: #eeeadf">
+          <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">Selected deck</span>
+          <h2 id="detail-title" style="margin: 0; font-family: 'Bodoni Moda', Didot, serif; font-weight: 400; font-size: 2.1rem; line-height: 1; letter-spacing: -0.03em; text-transform: uppercase">{{sel.name}}</h2>
+          <span style="font-size: 0.725rem; color: #66625f"><span role="img" aria-label="{{sel.pipLabel}}" style="display: inline-flex; gap: 2px; vertical-align: -4px"><sc-for list="{{sel.pips}}" as="pp" hint-placeholder-count="3"><span title="{{pp.name}}" style="width: 16px; height: 16px; box-sizing: border-box; border-radius: 50%; border: 1px solid #2d2a2a; background: {{pp.bg}}; color: {{pp.fg}}; display: inline-flex; align-items: center; justify-content: center; font-family: 'Bodoni Moda', Didot, serif; font-size: 10px; line-height: 1; letter-spacing: 0">{{pp.k}}</span></sc-for></span> · {{sel.archetype}} · {{sel.games}} games</span>
+        </div>
+
+        <!-- win rate as an instrument: ring = share of games won; the warm tick is a fair share (25%) -->
+        <div style="padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1.5rem; border-bottom: 1px solid #2d2a2a">
+          <div style="position: relative; width: 9.5rem; height: 9.5rem; flex: 0 0 auto">
+            <svg viewBox="0 0 120 120" role="img" aria-label="{{sel.ringLabel}}" style="position: absolute; inset: 0; width: 100%; height: 100%">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="#e8e6df" stroke-width="10"></circle>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="#2d2a2a" stroke-width="10" stroke-dasharray="{{sel.arc}}" transform="rotate(-90 60 60)" style="transition: stroke-dasharray 1.3s cubic-bezier(0.165, 0.84, 0.44, 1) 0.2s"></circle>
+              <line x1="110" y1="60" x2="117" y2="60" stroke="#a77e5f" stroke-width="3"></line>
+              <circle cx="60" cy="60" r="38" fill="none" stroke="#2d2a2a" stroke-width="1"></circle>
+            </svg>
+            <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center">
+              <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 2.1rem; line-height: 1">{{sel.winText}}</span>
+              <span style="font-size: 0.6rem; letter-spacing: 0.09em; color: #66625f">{{sel.wins}} OF {{sel.games}}</span>
+            </div>
+          </div>
+          <dl style="margin: 0; flex: 1; display: grid; grid-template-columns: auto auto; gap: 0.45rem 1rem; align-items: baseline">
+            <dt style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">Avg finish</dt><dd style="margin: 0; font-size: 0.9rem">{{sel.finish}}</dd>
+            <dt style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">Game length</dt><dd style="margin: 0; font-size: 0.9rem">{{sel.turns}} turns</dd>
+            <dt style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">Mulligans</dt><dd style="margin: 0; font-size: 0.9rem">{{sel.mull}} per game</dd>
+            <dt style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">Vs fair share</dt><dd style="margin: 0; font-size: 0.9rem">{{sel.vsFair}}</dd>
+          </dl>
+        </div>
+
+        <sc-for list="{{sel.blocks}}" as="bl" hint-placeholder-count="3">
+          <section style="padding: 1rem 1.5rem; border-bottom: 1px solid #2d2a2a; display: flex; flex-direction: column; gap: 0.55rem">
+            <h3 style="margin: 0; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">{{bl.title}}</h3>
+            <sc-for list="{{bl.items}}" as="it" hint-placeholder-count="3">
+              <div title="{{it.tip}}" style="display: grid; grid-template-columns: minmax(0, 12.5rem) minmax(0, 1fr) 2.6rem; gap: 0.75rem; align-items: center; font-size: 0.8rem">
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{it.label}}</span>
+                <span style="position: relative; height: 8px; background: #e8e6df"><span class="grow" style="position: absolute; left: 0; top: 0; bottom: 0; width: {{it.w}}; background: #2d2a2a; transition-delay: 0.3s"></span></span>
+                <span style="text-align: right; color: #66625f">{{it.v}}</span>
+              </div>
+            </sc-for>
+          </section>
+        </sc-for>
+
+        <div style="padding: 1rem 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; font-size: 0.8rem">
+          <a href="Batches.dc.html" class="btn">Games in batch runs<span class="arr" aria-hidden="true"><svg width="14" height="8" viewBox="0 0 14 8"><path d="M0 4 H12 M9 1 L12 4 L9 7" fill="none" stroke-width="1"></path></svg></span></a>
+          <a href="Debug.dc.html" class="btn">Open last game in Debug<span class="arr" aria-hidden="true"><svg width="14" height="8" viewBox="0 0 14 8"><path d="M0 4 H12 M9 1 L12 4 L9 7" fill="none" stroke-width="1"></path></svg></span></a>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <footer class="pad" style="padding: 0 3rem 1.5rem"><div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 2rem; border-top: 1px solid #2d2a2a; padding-top: 0.6rem; font-size: 0.6rem; letter-spacing: 0.09em; color: #66625f; transform-origin: left center; animation: orrFadeIn 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.9s both"><span>DECKTANK · II. RECORDS · a. STATS</span><span style="display: inline-flex; align-items: center; gap: 0.5rem"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" fill="#2d2a2a"></path></svg> SHEET 002 OF 006 · SAMPLE FIGURES</span></div></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+// The five colours, muted to sit on paper: name, pip fill, letter colour, light tint.
+const MANA = { W: ['White', '#ddd2b0', '#2d2a2a', '#efe9d8'], U: ['Blue', '#9fb1c1', '#2d2a2a', '#d9e0e6'], B: ['Black', '#5e5753', '#f5f3ec', '#cfcac6'], R: ['Red', '#c99580', '#2d2a2a', '#ecd7cd'], G: ['Green', '#9cae94', '#2d2a2a', '#d8dfd3'], C: ['Colourless', '#d6d4ce', '#2d2a2a', '#e8e6df'] };
+function pips(str) {
+  const ks = !str ? [] : /colou?rless/i.test(str) ? ['C'] : String(str).split(/\s+/).filter((k) => MANA[k]);
+  return ks.map((k) => ({ k, name: MANA[k][0], bg: MANA[k][1], fg: MANA[k][2] }));
+}
+function pipLabel(str) { return pips(str).map((p) => p.name).join(', ') || 'No colours'; }
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { grown: false, p: 0, sel: 'ur', sort: 'win', scope: 'all', genOpen: false, flip: 0, intro: true };
+  }
+
+  componentDidMount() {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { this.setState({ grown: true, p: 1, intro: false }); return; }
+    this._intro = setTimeout(() => this.setState({ intro: false }), 2400);
+    this._g = setTimeout(() => this.setState({ grown: true }), 90);
+    const t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / 1100);
+      this.setState({ p: 1 - Math.pow(1 - k, 3) });
+      if (k < 1) this._raf = requestAnimationFrame(step);
+    };
+    this._raf = requestAnimationFrame(step);
+  }
+
+  componentWillUnmount() {
+    cancelAnimationFrame(this._tw);
+    clearTimeout(this._g);
+    clearTimeout(this._intro);
+    cancelAnimationFrame(this._raf);
+    clearInterval(this._run);
+  }
+
+  // Changing deck keeps every box in place: numbers tween from the old deck to the new one.
+  selectDeck(id) {
+    if (id === this.state.sel) return;
+    cancelAnimationFrame(this._tw);
+    this.setState({ prevSel: this.state.sel, sel: id, tw: 0 });
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { this.setState({ tw: 1 }); return; }
+    const t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / 800);
+      this.setState({ tw: 1 - Math.pow(1 - k, 3) });
+      if (k < 1) this._tw = requestAnimationFrame(step);
+    };
+    this._tw = requestAnimationFrame(step);
+  }
+
+  renderVals() {
+    const ink = '#2d2a2a';
+    const paper = '#f5f3ec';
+    const muted = '#66625f';
+    const s = this.state;
+    const set = (p) => this.setState(p);
+    // Sample figures. In the app these come from /api/stats (DeckStatistic).
+    const decks = [
+      { id: 'ur', name: 'The Ur-Dragon', colors: 'W U B R G', archetype: 'Dragons', games: 42, wins: 17, finish: 1.9, turns: 11.6, mull: 0.4,
+        mullDist: [28, 11, 3, 0], causes: [['Life total reached 0', 18], ['21 commander damage', 5], ['Drew from an empty library', 2]],
+        lossesTo: [['Queen Marchesa', 9], ['Marchesa, the Black Rose', 7], ['Generated decks', 6], ['Invisible Woman', 3]], flood: 0.18, drought: 0.09 },
+      { id: 'qm', name: 'Queen Marchesa', colors: 'W B R', archetype: 'Politics', games: 42, wins: 12, finish: 2.3, turns: 12.1, mull: 0.5,
+        mullDist: [25, 13, 3, 1], causes: [['Life total reached 0', 24], ['21 commander damage', 6]],
+        lossesTo: [['The Ur-Dragon', 12], ['Marchesa, the Black Rose', 8], ['Generated decks', 8], ['Invisible Woman', 2]], flood: 0.12, drought: 0.14 },
+      { id: 'mb', name: 'Marchesa, the Black Rose', colors: 'U B R', archetype: 'Aristocrats', games: 42, wins: 9, finish: 2.6, turns: 11.9, mull: 0.6,
+        mullDist: [22, 15, 4, 1], causes: [['Life total reached 0', 26], ['21 commander damage', 4], ['10+ poison counters', 3]],
+        lossesTo: [['The Ur-Dragon', 13], ['Queen Marchesa', 9], ['Generated decks', 8], ['Invisible Woman', 3]], flood: 0.1, drought: 0.2 },
+      { id: 'iw', name: 'Invisible Woman', colors: 'Colourless', archetype: 'Artifacts', games: 42, wins: 4, finish: 3.2, turns: 11.4, mull: 0.9,
+        mullDist: [17, 16, 7, 2], causes: [['Life total reached 0', 31], ['21 commander damage', 7]],
+        lossesTo: [['The Ur-Dragon', 14], ['Queen Marchesa', 10], ['Marchesa, the Black Rose', 8], ['Generated decks', 6]], flood: 0.22, drought: 0.31 },
+    ];
+    const pct = (v) => Math.round(v * 100) + '%';
+    const sorted = decks.slice().sort((a, b) => s.sort === 'games' ? b.games - a.games : s.sort === 'finish' ? a.finish - b.finish : b.wins / b.games - a.wins / a.games);
+    const roman = ['I', 'II', 'III', 'IV', 'V'];
+    const rows = sorted.map((d, i) => {
+      const wr = d.wins / d.games;
+      const on = s.sel === d.id;
+      return {
+        rank: roman[i], name: d.name, colors: d.colors, pips: pips(d.colors), pipLabel: pipLabel(d.colors), archetype: d.archetype, games: d.games,
+        winW: s.grown ? (wr * 100).toFixed(1) + '%' : '0%', winText: pct(wr), turns: d.turns.toFixed(1),
+        finishX: s.grown ? (((d.finish - 1) / 3) * 100).toFixed(1) + '%' : '0%',
+        finishLabel: 'Average finish ' + d.finish.toFixed(1) + ' of 4',
+        tip: d.name + ': ' + d.wins + ' wins in ' + d.games + ' games (' + pct(wr) + '), average finish ' + d.finish.toFixed(1),
+        on, bg: on ? '#eeeadf' : 'transparent', deco: on ? 'underline' : 'none',
+        delay: (0.15 + 0.08 * i).toFixed(2) + 's',
+        pick: () => this.selectDeck(d.id),
+      };
+    });
+
+    const d = decks.find((x) => x.id === s.sel) || decks[0];
+    const from = decks.find((x) => x.id === s.prevSel) || d;
+    const k = s.tw ?? 1;
+    const mix = (a, b) => a + (b - a) * k;
+    const wrNow = mix(from.wins / from.games, d.wins / d.games);
+    const wr = d.wins / d.games;
+    const circ = 2 * Math.PI * 50;
+    const losses = d.games - d.wins;
+    const bar = (label, n, total, v, tip) => ({ label, w: s.grown ? ((n / total) * 100).toFixed(1) + '%' : '0%', v, tip });
+    const tweenN = (list, i, n) => String(Math.round(mix(list && list[i] != null ? list[i] : n, n)));
+    const mullTotal = d.mullDist.reduce((a, b) => a + b, 0);
+    const lossTotal = d.causes.reduce((a, c) => a + c[1], 0);
+    const diff = Math.round((wrNow - 0.25) * 100);
+    const sel = {
+      name: d.name, colors: d.colors, pips: pips(d.colors), pipLabel: pipLabel(d.colors), archetype: d.archetype, games: d.games, wins: Math.round(mix(from.wins, d.wins)),
+      winText: pct(wrNow),
+      arc: (s.grown ? circ * wr : 0).toFixed(1) + ' ' + circ.toFixed(1),
+      ringLabel: 'Won ' + d.wins + ' of ' + d.games + ' games, ' + pct(wr) + '. A fair share at a four-player table is 25%.',
+      finish: mix(from.finish, d.finish).toFixed(1) + ' of 4',
+      turns: mix(from.turns, d.turns).toFixed(1),
+      mull: mix(from.mull, d.mull).toFixed(1),
+      vsFair: (diff >= 0 ? '+' : '−') + Math.abs(diff) + ' points',
+      blocks: [
+        { title: 'Mulligans', items: d.mullDist.map((n, i) => bar(i === 3 ? '3 or more' : i === 0 ? 'Kept seven' : i + (i === 1 ? ' mulligan' : ' mulligans'), n, mullTotal, tweenN(from.mullDist, i, n), n + ' of ' + mullTotal + ' games')) },
+        { title: 'How it lost', items: d.causes.concat(Array(Math.max(0, 3 - d.causes.length)).fill(['—', 0])).map(([label, n]) => bar(label, n, lossTotal, String(n), n + ' of ' + losses + ' losses')) },
+        { title: 'Who beats it', items: d.lossesTo.map(([label, n]) => bar(label, n, losses, String(n), label + ' won ' + n + ' of the games this deck lost')) },
+        { title: 'Mana', items: [bar('Flooded', d.flood, 1, pct(mix(from.flood, d.flood)), 'Games with too much mana and nothing to cast'), bar('Short of mana', d.drought, 1, pct(mix(from.drought, d.drought)), 'Games stuck on too few lands')] },
+      ],
+    };
+
+    const totalGames = 42;
+    const short = { ur: 'Ur-Dragon', qm: 'Q. Marchesa', mb: 'Black Rose', iw: 'Inv. Woman' };
+    const beat = (winner, loser) => { const l = loser.lossesTo.find((x) => x[0] === winner.name); return l ? l[1] : 0; };
+    const ramp = [['#e8e6df', ink], ['#d6d4ce', ink], ['#bdbbb6', ink], ['#8f8c88', paper], ['#5f5c59', paper], ['#413e3d', paper]];
+    const allN = [];
+    decks.forEach((w) => decks.forEach((l) => { if (w.id !== l.id) allN.push(beat(w, l)); }));
+    const nMin = Math.min(...allN), nMax = Math.max(...allN);
+    const h2h = decks.map((w, wi) => {
+      const cells = decks.map((l, li) => {
+        const delay = (0.5 + (wi + li) * 0.07).toFixed(2) + 's';
+        const anim = s.intro ? 'orrTick 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) ' + delay + ' both' : 'none';
+        if (w.id === l.id) return { v: '—', bg: 'transparent', fg: muted, tip: '', anim };
+        const n = beat(w, l);
+        const [bg, fg] = ramp[Math.round(((n - nMin) / (nMax - nMin)) * 5)];
+        return { v: String(n), bg, fg, tip: w.name + ' beat ' + l.name + ' in ' + n + ' games', anim };
+      });
+      return { name: w.name, cells, total: decks.reduce((a, l) => a + (l.id === w.id ? 0 : beat(w, l)), 0) };
+    });
+    return {
+      one: 1,
+      rise: s.intro ? 'orrRiseA' : 'none',
+      detailRise: s.intro ? 'orrRiseA' : 'none',
+      scopes: [['all', 'All games'], ['last', 'Last batch'], ['play', 'Games I played']].map(([k, label]) => ({ label, on: s.scope === k, bg: s.scope === k ? ink : 'transparent', fg: s.scope === k ? paper : ink, pick: () => set({ scope: k }) })),
+      facts: [
+        { k: 'Finished games', v: (totalGames * (s.p ?? 1)).toFixed(0), unit: '+ 31 generated' },
+        { k: 'Decks tracked', v: (4 * (s.p ?? 1)).toFixed(0), unit: 'saved & imported' },
+        { k: 'Average game', v: (11.8 * (s.p ?? 1)).toFixed(1), unit: 'turns' },
+        { k: 'Most common end', v: (71 * (s.p ?? 1)).toFixed(0) + '%', unit: 'life reached 0' },
+      ],
+      sorts: [['win', 'Win rate'], ['finish', 'Avg finish'], ['games', 'Games']].map(([k, label]) => ({ label, on: s.sort === k, fg: s.sort === k ? ink : muted, deco: s.sort === k ? 'underline' : 'none', pick: () => set({ sort: k }) })),
+      rows,
+      sel,
+      h2h, h2hMin: String(nMin), h2hMax: String(nMax),
+      h2hCols: decks.map((x) => ({ short: short[x.id], full: x.name })),
+      genOpen: !!s.genOpen,
+      toggleGen: () => set({ genOpen: !s.genOpen }),
+      genLabel: s.genOpen ? '[ Hide generated decks ]' : '[ Show 31 generated decks ]',
+      generated: [
+        { name: 'Ghalta and Mavren', colors: 'G W', games: '1 game', result: 'Won' },
+        { name: 'Iron Lad, Young Avenger', colors: 'U R', games: '1 game', result: '3rd' },
+        { name: 'Kenrith, the Returned King', colors: 'W U B R G', games: '2 games', result: '1 win' },
+      ].map((g) => Object.assign({}, g, { pips: pips(g.colors), pipLabel: pipLabel(g.colors) })),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Debug</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&amp;family=Bodoni+Moda:opsz,wght@6..96,400&amp;family=Cutive+Mono&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f5f3ec}
+a{color:#2d2a2a}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+button:focus-visible,a:focus-visible{outline:2px solid #2d2a2a;outline-offset:3px}
+.row{transition:background-color 0.3s cubic-bezier(0.165,0.84,0.44,1)}
+.row:hover{background:#eeeadf}
+button:disabled{cursor:default}
+.crow{width:100%;box-sizing:border-box;min-height:37px;display:grid;grid-template-columns:3rem 1.6rem minmax(0,1fr) 8rem 4rem;gap:0.6rem;align-items:center;padding:0.35rem 0.5rem;font-size:0.78rem}
+.c-what{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-underline-offset:0.3em}
+.c-tok{display:flex;align-items:center;justify-content:flex-end;gap:0.4rem}
+.c-ms{text-align:right}
+.hbtns{display:flex;gap:0.5rem 1.25rem;flex-wrap:nowrap}
+@media (max-width: 760px){ .crow{grid-template-columns:3rem 1.6rem minmax(0,1fr) auto;row-gap:0.1rem} .c-what{grid-column:3 / -1;white-space:normal;overflow:visible} .c-tok{grid-column:3;justify-content:flex-start} .c-ms{grid-column:4} }
+@keyframes orrRiseA{from{opacity:0}to{opacity:1}}
+@keyframes orrRiseB{from{opacity:0}to{opacity:1}}
+@keyframes orrRule{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes orrFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes orrSlideL{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+@keyframes orrType{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes orrTypeB{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes orrTrack{from{letter-spacing:0.04em;opacity:0}to{letter-spacing:-0.03em;opacity:1}}
+@keyframes orrTick{from{transform:scale(0.4);opacity:0}to{transform:none;opacity:1}}
+@keyframes orrStamp{0%{transform:scale(1.35) rotate(-8deg);opacity:0}60%{opacity:1}100%{transform:scale(1) rotate(-4deg);opacity:1}}
+@keyframes orrFlip{from{transform:perspective(900px) rotateY(-28deg) translateX(-10px);opacity:0}to{transform:none;opacity:1}}
+.grow{transition:width 1s cubic-bezier(0.165, 0.84, 0.44, 1),flex-grow 1s cubic-bezier(0.165, 0.84, 0.44, 1),left 1s cubic-bezier(0.165, 0.84, 0.44, 1),stroke-dasharray 1.2s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn{display:inline-flex;align-items:center;gap:0.7rem;min-height:42px;padding:0 1.05rem 0 1.15rem;border:1px solid #2d2a2a;background:transparent;color:#2d2a2a;text-decoration:none;font-family:Archivo,'Helvetica Neue',Arial,sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap;transition:background-color 0.35s cubic-bezier(0.165, 0.84, 0.44, 1),color 0.35s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn:hover{background:#2d2a2a;color:#f5f3ec !important}
+.btn .arr{display:inline-flex;transition:transform 0.35s cubic-bezier(0.165, 0.84, 0.44, 1)}
+.btn:hover .arr{transform:translateX(3px)}
+.btn .arr path{stroke:currentColor}
+@media (max-width: 760px){ .pad{padding-left:1rem !important;padding-right:1rem !important} }
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #f5f3ec; color: #2d2a2a; font-family: 'Cutive Mono', 'Courier New', ui-monospace, monospace; display: flex; flex-direction: column">
+  <dc-import name="TopBar" current="{{five}}" hint-size="100%,68px"></dc-import>
+
+  <main class="pad" style="flex: 1; padding: 2rem 3rem 3rem; display: flex; flex-direction: column; gap: 1.5rem">
+    <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem">
+      <div style="display: flex; flex-direction: column; gap: 0.5rem">
+        <div style="display: flex; flex-direction: column; gap: 0.6rem; width: fit-content; max-width: 100%">
+          <h1 style="animation: orrTrack 1s cubic-bezier(0.165, 0.84, 0.44, 1) both; margin: 0; font-family: 'Bodoni Moda', Didot, serif; font-weight: 400; font-size: clamp(2.4rem, 4vw, 3.6rem); line-height: 0.95; letter-spacing: -0.03em; text-transform: uppercase">Debug</h1>
+          <span aria-hidden="true" style="display: flex; align-items: center; gap: 0.5rem; width: 100%"><span style="flex: 1; height: 1px; background: #2d2a2a; transform-origin: right center; animation: orrRule 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.25s both"></span><span style="display: inline-flex; animation: orrTick 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) 0.55s both"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" fill="#2d2a2a"></path></svg></span><span style="flex: 1; height: 1px; background: #2d2a2a; transform-origin: left center; animation: orrRule 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.40s both"></span></span>
+        </div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.25rem; font-size: 0.8rem">
+        <div role="group" aria-label="Turn" style="display: flex; align-items: center; gap: 0.6rem">
+          <span style="font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #66625f">Turn</span>
+          <span style="display: flex; padding-left: 1px">
+            <sc-for list="{{turns}}" as="t" hint-placeholder-count="5">
+              <button type="button" onClick="{{t.pick}}" aria-pressed="{{t.on}}" disabled="{{t.dis}}" style="min-width: 38px; min-height: 42px; margin-left: -1px; text-align: center; border: 1px solid {{t.bd}}; background: {{t.bg}}; color: {{t.fg}}; font-size: 0.75rem">{{t.label}}</button>
+            </sc-for>
+          </span>
+        </div>
+        <div class="hbtns">
+          <button type="button" class="btn">Refresh</button>
+          <button type="button" class="btn">Export JSON</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start">
+      <!-- engine log -->
+      <section aria-labelledby="log-title" style="flex: 1 1 24rem; min-width: 0; display: flex; flex-direction: column; gap: 0.5rem">
+        <h2 id="log-title" style="margin: 0; font-size: 1.05rem; font-weight: 400; letter-spacing: 0.09em; text-transform: uppercase; border-bottom: 1px solid #2d2a2a; padding-bottom: 0.4rem">Engine log</h2>
+        <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+          <sc-for list="{{log}}" as="l" hint-placeholder-count="10">
+            <li style="display: grid; grid-template-columns: 3rem 1.6rem minmax(0, 1fr); gap: 0.6rem; box-sizing: border-box; min-height: 38px; align-items: center; padding: 0.35rem 0.5rem; border-bottom: 1px solid #2d2a2a; font-size: 0.78rem; line-height: 1.55; color: #2d2a2a; box-shadow: {{l.rule}}; animation: {{l.anim}}">
+              <span style="color: #66625f">{{l.at}}</span>
+              <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 1rem">{{l.seat}}</span>
+              <span>{{l.text}}</span>
+            </li>
+          </sc-for>
+        </ol>
+      </section>
+
+      <!-- AI calls -->
+      <section aria-labelledby="ai-title" style="flex: 1.3 1 30rem; min-width: 0; display: flex; flex-direction: column; gap: 0.5rem">
+        <h2 id="ai-title" style="margin: 0; font-size: 1.05rem; font-weight: 400; letter-spacing: 0.09em; text-transform: uppercase; border-bottom: 1px solid #2d2a2a; padding-bottom: 0.4rem">AI calls</h2>
+        <ol style="margin: 0; padding: 0; list-style: none">
+          <sc-for list="{{calls}}" as="c" hint-placeholder-count="4">
+            <li style="border-bottom: 1px solid #2d2a2a">
+              <button type="button" class="row crow" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="box-shadow: {{c.rule}}; background: {{c.bg}}">
+                <span style="color: {{c.seqFg}}">#{{c.seq}}</span>
+                <span style="font-family: 'Bodoni Moda', Didot, serif; font-size: 1rem">{{c.seat}}</span>
+                <span class="c-what" style="text-decoration: {{c.deco}}">{{c.what}}</span>
+                <span class="c-tok" style="color: #66625f"><span aria-hidden="true" style="display: {{c.trackDisp}}; width: 2.4rem; height: 4px; background: #e8e6df; position: relative"><span class="grow" style="position: absolute; left: 0; top: 0; bottom: 0; width: {{c.tokW}}; background: #2d2a2a"></span></span>{{c.tokens}}</span>
+                <span class="c-ms" style="color: #66625f">{{c.ms}}</span>
+              </button>
+            </li>
+          </sc-for>
+        </ol>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin-top: 0.75rem; animation: {{rise}} 0.2s cubic-bezier(0.165, 0.84, 0.44, 1) both">
+          <div style="display: flex; flex-direction: column; gap: 0.4rem">
+            <h3 style="margin: 0; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Request · call #{{sel.seq}}</h3>
+            <pre style="margin: 0; padding: 0.8rem; background: #eeeadf; border: 1px solid #2d2a2a; font-family: 'Cutive Mono', monospace; font-size: 0.72rem; line-height: 1.55; white-space: pre-wrap; max-height: 16rem; overflow: auto; animation: {{typeA}}">{{sel.req}}</pre>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.4rem">
+            <h3 style="margin: 0; font-family: Archivo, 'Helvetica Neue', Arial, sans-serif; font-weight: 400; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase">Response</h3>
+            <pre style="margin: 0; padding: 0.8rem; background: #eeeadf; border: 1px solid #2d2a2a; font-family: 'Cutive Mono', monospace; font-size: 0.72rem; line-height: 1.55; white-space: pre-wrap; max-height: 16rem; overflow: auto; animation: {{typeB}}">{{sel.res}}</pre>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="pad" style="padding: 0 3rem 1.5rem"><div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 2rem; border-top: 1px solid #2d2a2a; padding-top: 0.6rem; font-size: 0.6rem; letter-spacing: 0.09em; color: #66625f; transform-origin: left center; animation: orrFadeIn 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) 0.9s both"><span>DECKTANK · III. WORKSHOP · c. DEBUG</span><span style="display: inline-flex; align-items: center; gap: 0.5rem"><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" fill="#2d2a2a"></path></svg> SHEET 006 OF 006 · SAMPLE FIGURES</span></div></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { grown: false, p: 0, turn: 'all', sel: 1, flip: 0, intro: true };
+  }
+  componentDidMount() {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { this.setState({ grown: true, p: 1, intro: false }); return; }
+    this._i = setTimeout(() => this.setState({ intro: false }), 2000);
+    this._g = setTimeout(() => this.setState({ grown: true }), 90);
+    const t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / 1100);
+      this.setState({ p: 1 - Math.pow(1 - k, 3) });
+      if (k < 1) this._raf = requestAnimationFrame(step);
+    };
+    this._raf = requestAnimationFrame(step);
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this._g);
+    clearTimeout(this._i);
+    cancelAnimationFrame(this._raf);
+    clearInterval(this._run);
+  }
+
+  renderVals() {
+    const ink = '#2d2a2a';
+    const paper = '#f5f3ec';
+    const muted = '#66625f';
+    const s = this.state;
+    const set = (p) => this.setState(p);
+    const all = [
+      ['R8', 'A', 'Casts Klauth, Unrivaled Ancient.'], ['R8', 'B', 'Attacks A with Assassin token ×3.'], ['R8', 'A', 'Blocks with Broodcaller Scourge.'],
+      ['R9', 'C', 'Activates Sol Ring: adds {C}{C}.'], ['R9', 'C', 'AI call #41 requested: choose a spell.'], ['R9', 'D', 'Casts Midnight Reaper.'],
+      ['R9', 'A', 'AI call #42 requested: declare attackers.'], ['R9', '—', 'Halt: AI budget ran out. Game stopped.', true],
+    ];
+    const shown = s.turn === 'all' ? all : all.filter((x) => x[0] === s.turn);
+    const calls = [
+      { seq: 40, turn: 'R8', w: '67%', seat: 'B', what: 'Choose blockers', tokens: '3.1k tok', ms: '1.8 s', req: '{\n  "seat": "B",\n  "decision": "declareBlockers",\n  "attackers": ["[card id]", "…"],\n  "legalActions": 4\n}', res: '{\n  "actionId": 2,\n  "note": "Chump the 10/10; keep Marchesa."\n}' },
+      { seq: 41, turn: 'R9', w: '100%', seat: 'C', what: 'Choose a spell to cast', tokens: '4.6k tok', ms: '2.4 s', req: '{\n  "seat": "C",\n  "decision": "castSpell",\n  "hand": ["[card]", "[card]", "…"],\n  "manaAvailable": "{C}{C}{C}",\n  "legalActions": 6\n}', res: '{\n  "actionId": 4,\n  "turnStrategy": { "intent": "Build artifacts; stay quiet." },\n  "note": "Thought Vessel before the big drop."\n}' },
+      { seq: 42, turn: 'R9', w: '0%', seat: 'A', what: 'Declare attackers', tokens: '—', ms: '—', req: '{\n  "seat": "A",\n  "decision": "declareAttackers",\n  "legalActions": 9\n}', res: '[No response: budget exhausted before the call]' },
+    ];
+    const hasData = (k) => all.some((x) => x[0] === k) || calls.some((x) => x.turn === k);
+    const vis = calls.filter((x) => s.turn === 'all' || x.turn === s.turn);
+    const c = vis.includes(calls[s.sel]) ? calls[s.sel] : vis[0];
+    const peru = '#a77e5f';
+    return {
+      five: 5,
+      typeA: s.intro ? 'orrType 0.9s steps(30, end) 0.1s both' : (s.flip % 2 ? 'orrRiseB' : 'orrRiseA') + ' 0.2s cubic-bezier(0.165, 0.84, 0.44, 1) both',
+      typeB: s.intro ? 'orrType 0.9s steps(30, end) 0.5s both' : (s.flip % 2 ? 'orrRiseB' : 'orrRiseA') + ' 0.2s cubic-bezier(0.165, 0.84, 0.44, 1) both',
+      rise: s.flip % 2 ? 'orrRiseB' : 'orrRiseA',
+      turns: ['all', 'R7', 'R8', 'R9'].map((k) => { const dis = k !== 'all' && !hasData(k); return { label: k === 'all' ? 'All' : k, on: s.turn === k, dis, bd: dis ? '#d6d4ce' : ink, bg: s.turn === k ? ink : 'transparent', fg: dis ? '#bdbbb6' : s.turn === k ? paper : ink, pick: () => set({ turn: k }) }; }),
+      log: shown.map(([at, seat, text, halt], i) => ({ at, seat, text, rule: halt ? 'inset 2px 0 0 ' + peru : 'none', anim: s.intro ? 'orrType 0.7s steps(28, end) ' + (0.25 + i * 0.09).toFixed(2) + 's both' : 'none' })),
+      calls: vis.map((x) => { const i = calls.indexOf(x); const on = x === c; return { tokW: s.grown ? x.w : '0%', seq: x.seq, seat: x.seat, what: x.what, tokens: x.tokens === '—' ? 'no response' : x.tokens, trackDisp: x.tokens === '—' ? 'none' : 'block', seqFg: x.seq === 42 ? peru : muted, ms: x.ms, on, bg: on ? '#eeeadf' : 'transparent', rule: on ? 'inset 2px 0 0 ' + ink : 'none', deco: on ? 'underline' : 'none', pick: () => set({ sel: i, flip: s.flip + 1 }) }; }),
+      sel: c,
+    };
+  }
+}
+</script>
+</body>
+</html>
