@@ -24,12 +24,23 @@ function measure(id: string): void {
   if (el === undefined || root === null) return;
   const elRect = el.getBoundingClientRect();
   const rootRect = root.getBoundingClientRect();
-  anchors.set(id, {
+  const next = {
     x: elRect.left - rootRect.left,
     y: elRect.top - rootRect.top,
     width: elRect.width,
     height: elRect.height,
-  });
+  };
+  // Unchanged rects are not written back, so measuring every frame doesn't re-render readers.
+  const prev = anchors.get(id);
+  if (
+    prev !== undefined &&
+    prev.x === next.x &&
+    prev.y === next.y &&
+    prev.width === next.width &&
+    prev.height === next.height
+  )
+    return;
+  anchors.set(id, next);
 }
 
 function measureAll(): void {

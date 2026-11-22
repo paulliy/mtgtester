@@ -974,7 +974,10 @@ describe('MatchSession — a prepared scenario flushes its own outcome before th
     expect(secondIndex).toBeGreaterThan(-1);
 
     const delivered = linesBefore(secondIndex);
-    expect(delivered.filter((line) => line.text === 'draws Three Color Commander')).toHaveLength(1);
+    // The draw may also name its cause: "draws X (Source)".
+    expect(
+      delivered.filter((line) => /^draws Three Color Commander( \(.*\))?$/.test(line.text)),
+    ).toHaveLength(1);
     expect(
       delivered.filter((line) => /Pay life.*resolves/.test(line.text)).map((line) => line.text),
     ).toEqual([

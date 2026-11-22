@@ -7,7 +7,7 @@
 import type { GameGen } from '../decisions';
 import { evaluateCondition } from '../cards/condition';
 import { isPermanentCard } from '../cards/definition';
-import { executeAbility, drawCards } from '../effects/resolve';
+import { executeAbility, drawCards, optionalAbilityHasNothingToDo } from '../effects/resolve';
 import { TREASURE } from '../cards/tokens';
 import { captureResolutionTargets } from '../targets/resolution';
 import { emit, debug } from '../log/log';
@@ -123,6 +123,19 @@ function* resolveTop(ctx: GameContext): GameGen<void> {
   // fizzle check — an ability whose targets are all illegal is removed without anyone choosing
   // anything (CR 608.2b).
   if (top.kind === 'triggeredAbility' && top.ability?.optional === true) {
+    // Nothing to choose from (Broodcaller Scourge with no card in hand at or under the damage):
+    // don't ask a question whose every answer does nothing.
+    if (
+      optionalAbilityHasNothingToDo(
+        ctx,
+        { cardId: top.sourceCardId, controllerId: top.controllerId },
+        top.ability,
+        { ...top.triggerScope },
+      )
+    ) {
+      emit(ctx, 'triggerSkippedNoChoice', { description: top.description }, top.controllerId);
+      return;
+    }
     const outcome = yield {
       decisionType: 'optionalTrigger',
       player: top.controllerId,
@@ -152,37 +165,49 @@ function* resolveTop(ctx: GameContext): GameGen<void> {
     }
   }
   if (top.ability !== null) {
-    yield* executeAbility(
-      ctx,
-      {
-        id: top.sourceId,
-        cardId: top.sourceCardId,
-        name: top.card?.name ?? top.description,
-        oracleId: top.sourceOracleId,
-        controllerId: top.controllerId,
-        resolutionTargets,
-        ...(top.sourceFacts === undefined ? {} : { lastKnownFacts: top.sourceFacts }),
-        ...(top.sourceTransformations === undefined
-          ? {}
-          : { transformationsAtStack: top.sourceTransformations }),
-        ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
-        ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
-        ...(top.kind === 'spell' ? { lastKnownTypes: stackSourceTraits(ctx, top).types } : {}),
-        ...(top.sourceDamageKeywords !== undefined
-          ? { lastKnownDamageKeywords: top.sourceDamageKeywords }
-          : {}),
-      },
-      top.ability,
-      top.targets,
-      top.triggerObjectCardId,
-      {
-        ...top.triggerScope,
-        giftPromised: top.giftRecipientId !== undefined,
-        ...(top.announcedX === undefined ? {} : { x: top.announcedX }),
-      },
-      top.countTargets,
-      top.divisionAmounts,
-    );
+    // So a draw (or anything else logged) during this resolution can name what caused it.
+    ctx.resolvingSource =
+      top.card?.name ??
+      s.battlefield.find((p) => p.id === top.sourceId || p.cardId === top.sourceCardId)?.name ??
+      top.sourceFacts?.name ??
+      // "Name — rules text": keep the name, not the whole ability.
+      top.description.split(' — ')[0] ??
+      top.description;
+    try {
+      yield* executeAbility(
+        ctx,
+        {
+          id: top.sourceId,
+          cardId: top.sourceCardId,
+          name: top.card?.name ?? top.description,
+          oracleId: top.sourceOracleId,
+          controllerId: top.controllerId,
+          resolutionTargets,
+          ...(top.sourceFacts === undefined ? {} : { lastKnownFacts: top.sourceFacts }),
+          ...(top.sourceTransformations === undefined
+            ? {}
+            : { transformationsAtStack: top.sourceTransformations }),
+          ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
+          ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
+          ...(top.kind === 'spell' ? { lastKnownTypes: stackSourceTraits(ctx, top).types } : {}),
+          ...(top.sourceDamageKeywords !== undefined
+            ? { lastKnownDamageKeywords: top.sourceDamageKeywords }
+            : {}),
+        },
+        top.ability,
+        top.targets,
+        top.triggerObjectCardId,
+        {
+          ...top.triggerScope,
+          giftPromised: top.giftRecipientId !== undefined,
+          ...(top.announcedX === undefined ? {} : { x: top.announcedX }),
+        },
+        top.countTargets,
+        top.divisionAmounts,
+      );
+    } finally {
+      delete ctx.resolvingSource;
+    }
   }
 
   if (top.kind === 'spell') {

@@ -24,7 +24,7 @@ import { describe, expect, it } from 'vitest';
 import type { Ability } from '../src/cards/ability';
 import { interpretCard } from '../src/cards/interpret';
 import { computeTargetOptions } from '../src/actions/legal';
-import { executeAbility } from '../src/effects/resolve';
+import { executeAbility, optionalAbilityHasNothingToDo } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import { createToken, moveObject } from '../src/state/objects';
 import type { GameContext } from '../src/state/types';
@@ -295,6 +295,27 @@ describe('Broodcaller Scourge — bounded hand-to-battlefield', () => {
       'Put none of them',
     ]);
     expect(ctx.state.battlefield.some((p) => p.cardId === cheap.cardId)).toBe(true);
+  });
+
+  it('skips the "use this ability?" question when nothing in hand is affordable', () => {
+    const ctx = pod();
+    const def = interpretCard(broodcaller());
+    const trigger = def.triggers[0] as Ability;
+    const source = { cardId: 'c-brood', controllerId: 'P1' as const };
+
+    // Empty hand: every answer would do nothing.
+    expect(optionalAbilityHasNothingToDo(ctx, source, trigger, { damageDealt: 4 })).toBe(true);
+
+    conjure(
+      ctx,
+      'P1',
+      oracle({ name: 'Test Pricey Rock', typeLine: 'Artifact', manaCost: '{6}' }),
+      'hand',
+    );
+    // Only a card above the damage: still nothing to put.
+    expect(optionalAbilityHasNothingToDo(ctx, source, trigger, { damageDealt: 4 })).toBe(true);
+    // The same hand with more damage dealt does have a legal pick, so the question stays.
+    expect(optionalAbilityHasNothingToDo(ctx, source, trigger, { damageDealt: 6 })).toBe(false);
   });
 
   it('declining leaves the card in hand', () => {

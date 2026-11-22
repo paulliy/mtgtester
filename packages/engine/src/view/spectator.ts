@@ -682,7 +682,10 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
       };
 
     case 'draw':
-      return { ...base, text: `draws ${str(p, 'name') ?? 'a card'}` };
+      return {
+        ...base,
+        text: `draws ${str(p, 'name') ?? 'a card'}${str(p, 'source') == null ? '' : ` (${str(p, 'source')})`}`,
+      };
 
     case 'discard':
       return { ...base, text: `discards ${str(p, 'name') ?? 'a card'}` };

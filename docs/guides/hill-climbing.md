@@ -4,6 +4,9 @@
 below, compares them with a baseline, and exits 1 when anything regressed or a benchmark game
 played differently. It uses no network and no paid model.
 
+For model spend, aim at the tactician first: in a real game (2026-11-21, $0.103) it was 72.5% of the
+bill, the strategist 27.5%. See [ADR 0039](../decisions/0039-bot-led-tactics.md).
+
 ## What it measures
 
 | Metric                                                   | What it is                                                                                                                                                                                                                                                                                  | Kind  |

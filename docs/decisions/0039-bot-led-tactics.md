@@ -150,6 +150,24 @@ each; the win-rate result is a miss, not a measured gap in play strength.
 
 Total spend for the five finished games was $0.51.
 
+### Live table game, 2026-11-21 (where the money goes)
+
+One real four-seat game (seed `2d59b89f`, you as P1 against three AI seats, ended on turn 33) was
+billed $0.103 for the day, read off the provider's cost breakdown:
+
+| Model                    | Role       | Cost    | Share |
+| ------------------------ | ---------- | ------- | ----- |
+| `particle-ai/particle-1` | tactician  | $0.0747 | 72.5% |
+| `z-ai/glm-5.3-flash`     | strategist | $0.0283 | 27.5% |
+| Total                    |            | $0.1030 | 100%  |
+
+The tactician is nearly three quarters of the bill, so it is where cost work pays most. **Direction:
+spend most cost-reduction effort on tactician calls** — fewer escalations to the model (ADR 0044's
+triggers), smaller prompts per call, and answering more decisions from the bot — and treat strategist
+savings as secondary. A tactician change is judged the usual way: `bun run hill-climb` model calls
+and tokens per turn, with the benchmark fingerprints unchanged unless the play is meant to change.
+One game is one sample; the split should be re-read from the next few games before it is relied on.
+
 ## Consequences
 
 - The fallback bot on a model failure, the table server's bots and the sweeps all play the new

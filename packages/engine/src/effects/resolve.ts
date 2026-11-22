@@ -924,6 +924,12 @@ export function payLife(ctx: GameContext, player: EnginePlayerState, amount: num
  * draw, so callers such as "draw for each opponent who drew a card this way" must not
  * count it (CR 608.2h reads what actually happened).
  */
+function drawSourceLabel(ctx: GameContext): { source?: string } {
+  if (ctx.resolvingSource !== undefined) return { source: ctx.resolvingSource };
+  if (ctx.state.step === 'draw') return { source: 'draw step' };
+  return {};
+}
+
 export function* drawCards(
   ctx: GameContext,
   player: EnginePlayerState,
@@ -975,6 +981,9 @@ export function* drawCards(
         cardId: top.cardId,
         name: top.name,
         isLand: getDefByOracleId(ctx, top.oracleId, top.name).types.includes('Land'),
+        // Where the draw came from, for the log: what is resolving, else the draw step itself.
+        // Nothing rules-relevant reads it.
+        ...drawSourceLabel(ctx),
       },
       player.id,
     );
@@ -10000,6 +10009,57 @@ function* addManaFromAbility(
   });
 }
 
+/** The cards in `player`'s hand `handToBattlefield` would offer right now. */
+function handToBattlefieldCandidates(
+  ctx: GameContext,
+  source: Pick<EffectSource, 'cardId'>,
+  player: EnginePlayerState,
+  filter: Selector,
+  maxManaValue: number | undefined,
+): EngineCardObject[] {
+  const selectorSource = { cardId: source.cardId, controllerId: player.id };
+  return player.hand.filter((card) => {
+    if (!selectMatches(cardZoneCandidate(ctx, card, player.id), filter, selectorSource)) {
+      return false;
+    }
+    if (maxManaValue === undefined) return true;
+    const def = getDefByOracleId(ctx, card.oracleId, card.name);
+    // Off the stack, X counts as 0 (CR 202.3b) — exactly what `spellManaValue(def, undefined)`
+    // answers.
+    return spellManaValue(def, undefined) <= maxManaValue;
+  });
+}
+
+/**
+ * Whether an optional ability's whole effect list has nothing to choose from, so the "use this
+ * ability?" question would be asking about a certain no-op. Deliberately narrow: only effects whose
+ * options are fully enumerable up front count (today, `handToBattlefield` with an empty candidate
+ * list); any other op is assumed able to act. The trigger still goes on the stack and resolves
+ * (CR 603.3, 608.2) — only the player's yes/no is skipped.
+ */
+export function optionalAbilityHasNothingToDo(
+  ctx: GameContext,
+  source: Pick<EffectSource, 'cardId' | 'controllerId'>,
+  ability: Ability,
+  extraScope?: Omit<ValueScope, 'controllerId' | 'sourceCardId'>,
+): boolean {
+  if (ability.effects.length === 0) return false;
+  const scope: ValueScope = {
+    controllerId: source.controllerId,
+    sourceCardId: source.cardId,
+    ...(extraScope ?? {}),
+  };
+  const player = playerById(ctx, source.controllerId);
+  return ability.effects.every((effect) => {
+    if (effect.op !== 'handToBattlefield') return false;
+    const maxMv =
+      effect.maxManaValue === undefined
+        ? undefined
+        : evaluateValueIn(ctx, effect.maxManaValue, scope);
+    return handToBattlefieldCandidates(ctx, source, player, effect.filter, maxMv).length === 0;
+  });
+}
+
 /**
  * "Put a/any number of `<filter>` cards from your hand onto the battlefield" — Broodcaller
  * Scourge's single mana-value-bounded pick and Last March of the Ents' unbounded "any number"
@@ -10017,18 +10077,8 @@ function* handToBattlefield(
   maxManaValue: number | undefined,
   count: 'one' | 'any',
 ): GameGen<void> {
-  const selectorSource = { cardId: source.cardId, controllerId: player.id };
   for (;;) {
-    const eligible = player.hand.filter((card) => {
-      if (!selectMatches(cardZoneCandidate(ctx, card, player.id), filter, selectorSource)) {
-        return false;
-      }
-      if (maxManaValue === undefined) return true;
-      const def = getDefByOracleId(ctx, card.oracleId, card.name);
-      // Off the stack, X counts as 0 (CR 202.3b) — exactly what `spellManaValue(def, undefined)`
-      // answers.
-      return spellManaValue(def, undefined) <= maxManaValue;
-    });
+    const eligible = handToBattlefieldCandidates(ctx, source, player, filter, maxManaValue);
     if (eligible.length === 0) break;
 
     const outcome = yield {
