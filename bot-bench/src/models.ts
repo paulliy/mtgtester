@@ -19,7 +19,6 @@ import {
 } from '../../packages/server/src/ai/client';
 import {
   LIVE_ESCALATION_TRIGGERS,
-  PROVIDERS,
   configForRole,
   loadAiConfig,
   type AiConfig,
@@ -35,16 +34,30 @@ import { JevClient, type JevDecisionsTransport } from '../../packages/server/src
 import { JevActionPolicy } from '../../packages/server/src/ai/jev-policy';
 import { OPENROUTER_BASE_URL } from '../../packages/server/src/ai/jev-runtime';
 import { OpenAiDecisionProvider } from '../../packages/server/src/ai/provider';
-import {
-  seatDiplomacyContext,
-  type DiplomacySource,
-} from '../../packages/server/src/ai/diplomacy-context';
 import { StrategyCoordinator } from '../../packages/server/src/ai/strategy-coordinator';
 import { FixedGuidance } from '../../packages/server/src/benchmark/turn-arms';
 import { RequestQueue } from '../../packages/server/src/ai/queue';
 import { JEV_MAX_CHOICE_OPTIONS } from '../../packages/server/src/ai/tactical-decision-shape';
-import type { DecisionRequest } from '../../packages/shared/src';
+import type { DecisionRequest, PlayerView } from '../../packages/shared/src';
 import type { BenchCase } from './case';
+import { round, settleAttempts } from './billing';
+import {
+  StrategistLane,
+  caseDealsContext,
+  checkEndpointFields,
+  coordinatorConfig,
+  parseStrategist,
+  publicStrategist,
+  resolveEndpoint,
+  resolveStrategistClientConfig,
+  slug,
+  strategistLabel,
+  type LlmStrategist,
+  type StrategistSpec,
+} from './strategist';
+
+export { settleAttempts } from './billing';
+export type { StrategistSpec } from './strategist';
 import {
   localActor,
   type Actor,
@@ -77,6 +90,8 @@ export interface LocalEntry {
   id: string;
   label?: string;
   kind: 'local';
+  /** Grid cells: the tactician this entry was crossed from (`<tactician>.st-<strategist>`). */
+  tacticianOf?: string;
   policy: LocalPolicy;
   /** Tie-break seed label for the bot (ADR 0043); omitted keeps `bot-bench-actor:<case>`. */
   seed?: string;
@@ -87,6 +102,8 @@ export interface LocalEntry {
    * `[]` is the card-aware bot before them. `heuristic-plain` always plays with none.
    */
   fixes?: string[];
+  /** `none` or `case` only: a local bot reads no strategy, so a live strategist is refused. */
+  strategist?: StrategistSpec;
 }
 
 /** Fields that name a model and how to reach it, shared by `llm` and `bot-led` entries. */
@@ -114,6 +131,8 @@ export interface BotLedEntry extends ModelFields {
   id: string;
   label?: string;
   kind: 'bot-led';
+  /** Grid cells: the tactician this entry was crossed from (`<tactician>.st-<strategist>`). */
+  tacticianOf?: string;
   /** Trigger names; empty is `never`. */
   escalation: string[];
   /** LEP margin for `uncertain`; defaults to the production margin. */
@@ -122,12 +141,16 @@ export interface BotLedEntry extends ModelFields {
   model?: string;
   seed?: string;
   seedOf?: string;
+  /** Who sets the bot's knobs; omitted is the case's own context, as before strategists. */
+  strategist?: StrategistSpec;
 }
 
 export interface LlmEntry {
   id: string;
   label?: string;
   kind: 'llm';
+  /** Grid cells: the tactician this entry was crossed from (`<tactician>.st-<strategist>`). */
+  tacticianOf?: string;
   /** A provider preset from `ai/config.ts` (openrouter, groq, gemini, deepseek, openai). */
   provider?: string;
   /** Any OpenAI-compatible endpoint; overrides the preset's. */
@@ -141,6 +164,8 @@ export interface LlmEntry {
   requestTimeoutMs?: number;
   /** USD per million tokens, used only when the provider does not report a cost. */
   pricing?: { inputPerMTok: number; outputPerMTok: number };
+  /** Who plans the seat's turn; omitted is the case's own context, as before strategists. */
+  strategist?: StrategistSpec;
 }
 
 /**
@@ -156,6 +181,8 @@ export interface DecisionEntry {
   id: string;
   label?: string;
   kind: 'decision';
+  /** Grid cells: the tactician this entry was crossed from (`<tactician>.st-<strategist>`). */
+  tacticianOf?: string;
   /** A Decisions API model, e.g. `typesafe/jev-1.14` or `google/gemini-decision-1`. */
   model: string;
   /** A Decisions API server; defaults to OpenRouter. */
@@ -169,6 +196,8 @@ export interface DecisionEntry {
   expandTargets?: boolean;
   /** Default: `bot`. */
   unsupported?: UnsupportedPolicy;
+  /** Who plans the seat's turn; omitted is the case's own context, as before strategists. */
+  strategist?: StrategistSpec;
 }
 
 export type LineupEntry = LocalEntry | LlmEntry | BotLedEntry | DecisionEntry;
@@ -181,6 +210,21 @@ export function isRemoteKind(kind: string): boolean {
   return kind === 'llm' || kind === 'decision';
 }
 
+/** The live strategist an entry carries, if any. */
+export function liveStrategist(entry: { strategist?: unknown }): LlmStrategist | undefined {
+  const spec = entry.strategist as StrategistSpec | undefined;
+  return spec?.kind === 'llm' ? spec : undefined;
+}
+
+/**
+ * A scored candidate rather than a baseline: a remote tactician, or any tactician behind a live
+ * strategist model (a bot-led seat steered by a model is that model's result). Candidates are
+ * anonymised in a judge bundle.
+ */
+export function isCandidate(model: { kind: string; strategist?: unknown }): boolean {
+  return isRemoteKind(model.kind) || liveStrategist(model) !== undefined;
+}
+
 /**
  * A decision model's request timeout when the lineup does not set one. The production Jev lane
  * uses 2 s (`jevRequestTimeoutMs`); a benchmark run from a laptop allows for a slow first call.
@@ -191,13 +235,6 @@ export const DEFAULT_DECISION_TIMEOUT_MS = 10_000;
 export type RunMode = 'raw' | 'production';
 
 const ID_PATTERN = /^[a-z0-9]+(?:[-.][a-z0-9]+)*$/;
-
-function slug(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9.]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
 
 function entryError(index: number, message: string): never {
   throw new Error(`lineup entry ${index + 1}: ${message}`);
@@ -215,32 +252,7 @@ const MODEL_FIELDS = [
 ];
 
 function checkModelFields(entry: Record<string, unknown>, index: number): void {
-  if (entry['provider'] !== undefined && PROVIDERS[entry['provider'] as string] === undefined)
-    entryError(index, `provider must be one of ${Object.keys(PROVIDERS).join(', ')}`);
-  if (
-    entry['reasoning'] !== undefined &&
-    !['none', 'low', 'medium', 'high'].includes(entry['reasoning'] as string)
-  )
-    entryError(index, 'reasoning must be none, low, medium or high');
-  for (const key of ['maxOutputTokens', 'requestTimeoutMs'])
-    if (
-      entry[key] !== undefined &&
-      !(Number.isSafeInteger(entry[key]) && (entry[key] as number) > 0)
-    )
-      entryError(index, `${key} must be a positive whole number`);
-  const pricing = entry['pricing'] as Record<string, unknown> | undefined;
-  if (
-    pricing !== undefined &&
-    !(
-      typeof pricing === 'object' &&
-      pricing !== null &&
-      typeof pricing['inputPerMTok'] === 'number' &&
-      typeof pricing['outputPerMTok'] === 'number' &&
-      pricing['inputPerMTok'] >= 0 &&
-      pricing['outputPerMTok'] >= 0
-    )
-  )
-    entryError(index, 'pricing needs inputPerMTok and outputPerMTok in USD');
+  checkEndpointFields(entry, (message) => entryError(index, message));
 }
 
 function checkSeed(value: unknown, where: string): void {
@@ -268,12 +280,37 @@ export function parseLineup(json: unknown): LineupEntry[] {
   const file = typeof json === 'object' && json !== null && !Array.isArray(json) ? json : null;
   if (file !== null)
     for (const key of Object.keys(file))
-      if (!['models', 'seeds', 'description'].includes(key))
+      if (!['models', 'seeds', 'description', 'strategists', 'tacticians'].includes(key))
         throw new Error(`lineup: unknown top-level field "${key}"`);
-  const list = file !== null ? (file as { models?: unknown }).models : json;
-  const seedsRaw = file !== null ? (file as { seeds?: unknown }).seeds : undefined;
-  if (!Array.isArray(list) || list.length === 0)
-    throw new Error('a lineup is a non-empty list of models');
+  const fields = (file ?? {}) as {
+    models?: unknown;
+    seeds?: unknown;
+    strategists?: unknown;
+    tacticians?: unknown;
+  };
+  const grid = fields.strategists !== undefined || fields.tacticians !== undefined;
+  const seedsRaw = fields.seeds;
+  let entries: LineupEntry[];
+  if (grid) {
+    if (fields.models !== undefined)
+      throw new Error('lineup: use either models, or strategists with tacticians, not both');
+    if (!Array.isArray(fields.tacticians) || fields.tacticians.length === 0)
+      throw new Error('lineup: tacticians is a non-empty list of models');
+    if (!Array.isArray(fields.strategists) || fields.strategists.length === 0)
+      throw new Error('lineup: strategists is a non-empty list');
+    const strategists = fields.strategists.map((raw: unknown, i) =>
+      parseStrategist(raw, `lineup strategist ${i + 1}`),
+    );
+    const sids = strategists.map((spec) => spec.id);
+    const sclash = sids.find((id, i) => sids.indexOf(id) !== i);
+    if (sclash !== undefined) throw new Error(`lineup: strategist id ${sclash} repeats`);
+    entries = crossLineup(parseEntries(fields.tacticians), strategists);
+  } else {
+    const list = file !== null ? fields.models : json;
+    if (!Array.isArray(list) || list.length === 0)
+      throw new Error('a lineup is a non-empty list of models');
+    entries = parseEntries(list);
+  }
   let seeds: string[] = [];
   if (seedsRaw !== undefined) {
     if (!Array.isArray(seedsRaw) || seedsRaw.length === 0 || seedsRaw.length > 32)
@@ -282,15 +319,69 @@ export function parseLineup(json: unknown): LineupEntry[] {
     seeds = seedsRaw as string[];
     if (new Set(seeds).size !== seeds.length) throw new Error('lineup: seeds repeat');
   }
+  if (seeds.length === 0) return entries;
+  const expanded = entries.flatMap((entry): LineupEntry[] =>
+    seeded(entry) && entry.seed === undefined
+      ? seeds.map((seed, i) => ({
+          ...entry,
+          id: `${entry.id}.s${i + 1}`,
+          ...(entry.label !== undefined && { label: `${entry.label} (seed ${i + 1})` }),
+          seed,
+          seedOf: entry.id,
+        }))
+      : [entry],
+  );
+  const ids = expanded.map((entry) => entry.id);
+  const clash = ids.find((id, i) => ids.indexOf(id) !== i);
+  if (clash !== undefined) throw new Error(`lineup: seed expansion repeats id ${clash}`);
+  return expanded;
+}
+
+/**
+ * Every tactician behind every strategist, as `<tactician>.st-<strategist>`. A local bot reads no
+ * strategy, so it is paired with the `none` and `case` rows only. A tactician listed here names
+ * no strategist of its own.
+ */
+export function crossLineup(
+  tacticians: readonly LineupEntry[],
+  strategists: readonly StrategistSpec[],
+): LineupEntry[] {
+  const entries: LineupEntry[] = [];
+  for (const tactician of tacticians) {
+    if (tactician.strategist !== undefined)
+      throw new Error(
+        `${tactician.id}: a tactician in a grid names no strategist; list it under strategists`,
+      );
+    for (const strategist of strategists) {
+      if (tactician.kind === 'local' && strategist.kind === 'llm') continue;
+      entries.push({
+        ...tactician,
+        id: `${tactician.id}.st-${strategist.id}`,
+        tacticianOf: tactician.id,
+        ...(tactician.label !== undefined && {
+          label: `${tactician.label} + ${strategistLabel(strategist)}`,
+        }),
+        strategist,
+      });
+    }
+  }
+  const ids = entries.map((entry) => entry.id);
+  const clash = ids.find((id, i) => ids.indexOf(id) !== i);
+  if (clash !== undefined) throw new Error(`lineup: the grid repeats id ${clash}`);
+  return entries;
+}
+
+/** Validate a list of entries. Unknown fields are refused so a typo cannot change a run. */
+function parseEntries(list: readonly unknown[]): LineupEntry[] {
   const entries: LineupEntry[] = [];
   list.forEach((raw: unknown, index) => {
     if (typeof raw !== 'object' || raw === null) entryError(index, 'must be an object');
     const entry = raw as Record<string, unknown>;
     const allowed =
       entry['kind'] === 'local'
-        ? ['id', 'label', 'kind', 'policy', 'seed', 'fixes']
+        ? ['id', 'label', 'kind', 'policy', 'seed', 'fixes', 'strategist']
         : entry['kind'] === 'bot-led'
-          ? ['id', 'label', 'kind', 'escalation', 'margin', 'seed', ...MODEL_FIELDS]
+          ? ['id', 'label', 'kind', 'escalation', 'margin', 'seed', 'strategist', ...MODEL_FIELDS]
           : entry['kind'] === 'decision'
             ? [
                 'id',
@@ -303,8 +394,9 @@ export function parseLineup(json: unknown): LineupEntry[] {
                 'pricing',
                 'expandTargets',
                 'unsupported',
+                'strategist',
               ]
-            : ['id', 'label', 'kind', ...MODEL_FIELDS];
+            : ['id', 'label', 'kind', 'strategist', ...MODEL_FIELDS];
     for (const key of Object.keys(entry))
       if (!allowed.includes(key)) entryError(index, `unknown field "${key}"`);
     if (typeof entry['id'] !== 'string' || !ID_PATTERN.test(entry['id']))
@@ -373,24 +465,22 @@ export function parseLineup(json: unknown): LineupEntry[] {
     } else {
       entryError(index, 'kind must be local, llm, bot-led or decision');
     }
+    if (entry['strategist'] !== undefined) {
+      const strategist = parseStrategist(
+        entry['strategist'],
+        `lineup entry ${index + 1} strategist`,
+      );
+      if (entry['kind'] === 'local' && strategist.kind === 'llm')
+        entryError(
+          index,
+          'a local bot reads no strategy; put a live strategist behind a bot-led entry instead',
+        );
+      entries.push({ ...entry, strategist } as unknown as LineupEntry);
+      return;
+    }
     entries.push(entry as unknown as LineupEntry);
   });
-  if (seeds.length === 0) return entries;
-  const expanded = entries.flatMap((entry): LineupEntry[] =>
-    seeded(entry) && entry.seed === undefined
-      ? seeds.map((seed, i) => ({
-          ...entry,
-          id: `${entry.id}.s${i + 1}`,
-          ...(entry.label !== undefined && { label: `${entry.label} (seed ${i + 1})` }),
-          seed,
-          seedOf: entry.id,
-        }))
-      : [entry],
-  );
-  const ids = expanded.map((entry) => entry.id);
-  const clash = ids.find((id, i) => ids.indexOf(id) !== i);
-  if (clash !== undefined) throw new Error(`lineup: seed expansion repeats id ${clash}`);
-  return expanded;
+  return entries;
 }
 
 export function loadLineupFile(path: string): LineupEntry[] {
@@ -455,6 +545,13 @@ export function parseModelList(text: string): LineupEntry[] {
 
 export function entryLabel(entry: LineupEntry): string {
   if (entry.label !== undefined) return entry.label;
+  const tactician = tacticianLabel(entry);
+  return entry.strategist === undefined
+    ? tactician
+    : `${tactician} + ${strategistLabel(entry.strategist)}`;
+}
+
+function tacticianLabel(entry: LineupEntry): string {
   if (entry.kind === 'decision')
     return entry.unsupported === 'hold'
       ? `${entry.model} (decision model, holds on combat)`
@@ -470,8 +567,20 @@ export function entryLabel(entry: LineupEntry): string {
     : entry.model;
 }
 
-/** What is safe to print about an entry: everything but where its key comes from. */
+/** What is safe to print about an entry: everything but where its keys come from. */
 export function publicEntry(entry: LineupEntry): Record<string, unknown> {
+  const { tacticianOf: _tacticianOf, ...shown } = publicTactician(entry);
+  return entry.strategist === undefined
+    ? shown
+    : {
+        ...shown,
+        strategist: publicStrategist(entry.strategist),
+        // Which tactician sits behind the strategist, so cells of a grid can be lined up.
+        tactician: { id: entry.tacticianOf ?? entry.id, label: tacticianLabel(entry) },
+      };
+}
+
+function publicTactician(entry: LineupEntry): Record<string, unknown> {
   if (entry.kind === 'local') return { ...entry, label: entryLabel(entry) };
   if (entry.kind === 'decision') {
     const { apiKeyEnv: _apiKeyEnv, ...rest } = entry;
@@ -534,7 +643,10 @@ export interface LlmRuntime {
   /** Test seam: how the client waits between retries. */
   sleepImpl?: (ms: number) => Promise<void>;
   /** Called for every physical provider request, for the transcript. */
-  onAttempt?: (attempt: AiNetworkAttempt, context: { caseId: string }) => void;
+  onAttempt?: (
+    attempt: AiNetworkAttempt,
+    context: { caseId: string; role: 'tactician' | 'strategist' },
+  ) => void;
   /** Test seam: every Decisions API request goes through this instead of the network. */
   decisionTransport?: JevDecisionsTransport;
 }
@@ -571,15 +683,7 @@ export function resolveBotLedConfig(entry: BotLedEntry, runtime: LlmRuntime): Ai
 function modelConfig(entry: LlmEntry | BotLedEntry, model: string, runtime: LlmRuntime): AiConfig {
   const base = loadAiConfig(runtime.env);
   const role = configForRole(base, 'tactician');
-  const preset = entry.provider === undefined ? undefined : PROVIDERS[entry.provider];
-  const keyEnv = entry.apiKeyEnv ?? preset?.keyEnv;
-  const apiKey = keyEnv === undefined ? base.apiKey : (runtime.env[keyEnv] ?? '');
-  const baseUrl = entry.baseUrl ?? preset?.baseUrl ?? base.baseUrl;
-  const local = /\/\/(localhost|127\.0\.0\.1|\[::1\])[:/]/.test(baseUrl);
-  if (apiKey === '' && !local && runtime.fetchImpl === undefined)
-    throw new Error(
-      `${entry.id}: no API key (set ${keyEnv ?? 'a provider key such as OPENROUTER_API_KEY'} in the environment or .env)`,
-    );
+  const { baseUrl, apiKey } = resolveEndpoint(entry.id, entry, base, runtime);
   const reasoning = entry.reasoning ?? (role.reasoningEnabled ? role.reasoningEffort : 'none');
   return {
     ...role,
@@ -613,36 +717,22 @@ function modelConfig(entry: LlmEntry | BotLedEntry, model: string, runtime: LlmR
  * A case's `context` block (ADR 0045 decision 6) as the tactician's guidance: the strategist's
  * view as a knobs-only strategy, and its deals through the same summary a live table gives.
  * Undefined without a context, so the provider builds its usual coordinator.
+ *
+ * The entry's strategist decides which half is used: `none` keeps the deals and drops the
+ * hand-written strategy; `case`, or no strategist, keeps both. A live strategist does not come
+ * here: its lane builds its own coordinator.
  */
 export function caseGuidance(
   engine: Engine,
   config: AiConfig,
   benchCase: BenchCase,
+  strategist?: StrategistSpec,
 ): StrategyCoordinator | undefined {
   const context = benchCase.context;
   if (context === undefined) return undefined;
-  const strategy = context.strategy;
-  const deals = context.deals ?? [];
-  const summary =
-    deals.length === 0
-      ? null
-      : seatDiplomacyContext(
-          benchCase.actor,
-          {
-            deals: deals.map((deal, i) => ({
-              id: `case-deal-${i + 1}`,
-              parties: [...deal.parties],
-              obligations: deal.obligations.map((o) => ({ ...o })),
-              rounds: deal.rounds,
-              status: 'active',
-            })) as unknown as DiplomacySource['deals'],
-            records: [],
-            canPropose: false,
-            maxRounds: 2,
-            maxObligationsPerSide: 2,
-          },
-          'tactician',
-        );
+  const strategy = strategist?.kind === 'none' ? undefined : context.strategy;
+  const summary = caseDealsContext(benchCase, 'tactician');
+  if (strategy === undefined && summary === null) return undefined;
   return new FixedGuidance(
     engine,
     config,
@@ -659,67 +749,6 @@ export function caseGuidance(
   );
 }
 
-function round(value: number, digits: number): number {
-  const scale = 10 ** digits;
-  return Math.round(value * scale) / scale;
-}
-
-/**
- * What a decision's provider requests cost. An attempt may have been billed once a generation
- * started: it was answered, or it got a generation id or token counts before failing (a timeout
- * or a broken stream, which the client records for later settlement). Only when every such
- * attempt reports its charge is the decision's cost known; otherwise it stays unknown rather
- * than looking cheaper. Reported charges are always kept. Only attempts with no reported charge
- * are estimated from the lineup's price list; without one, the decision's cost stays unknown.
- */
-export function settleAttempts(
-  attempts: readonly AiNetworkAttempt[],
-  pricing: { inputPerMTok: number; outputPerMTok: number } | undefined,
-): {
-  promptTokens: number;
-  responseTokens: number;
-  costUsd: number | undefined;
-  costSource: ActorAnswer['costSource'];
-} {
-  const promptTokens = attempts.reduce((sum, a) => sum + (a.usage.promptTokens ?? 0), 0);
-  const responseTokens = attempts.reduce((sum, a) => sum + (a.usage.responseTokens ?? 0), 0);
-  const billed = attempts.filter(
-    (attempt) =>
-      attempt.usage.costUsd !== undefined ||
-      attempt.status === 'accepted' ||
-      attempt.status === 'rejected' ||
-      attempt.providerRequestId !== undefined ||
-      attempt.usage.promptTokens !== undefined ||
-      attempt.usage.responseTokens !== undefined,
-  );
-  const reported = billed.filter((attempt) => attempt.usage.costUsd !== undefined);
-  const reportedUsd = reported.reduce((sum, a) => sum + (a.usage.costUsd ?? 0), 0);
-  const unpriced = billed.filter((attempt) => attempt.usage.costUsd === undefined);
-  let costUsd: number | undefined;
-  let costSource: ActorAnswer['costSource'] = 'unknown';
-  if (billed.length === 0) {
-    // No request, or every attempt failed before any generation started: unbilled.
-    costUsd = 0;
-    costSource = 'not_applicable';
-  } else if (unpriced.length === 0) {
-    costUsd = reportedUsd;
-    costSource = 'reported';
-  } else if (pricing !== undefined) {
-    costUsd =
-      reportedUsd +
-      unpriced.reduce(
-        (sum, a) =>
-          sum +
-          ((a.usage.promptTokens ?? 0) * pricing.inputPerMTok +
-            (a.usage.responseTokens ?? 0) * pricing.outputPerMTok) /
-            1_000_000,
-        0,
-      );
-    costSource = 'estimated';
-  }
-  return { promptTokens, responseTokens, costUsd, costSource };
-}
-
 /** A model in the tested seat, played through the production provider. */
 export function llmActorFactory(entry: LlmEntry, runtime: LlmRuntime): ActorFactory {
   return pipelineActorFactory(entry, resolveLlmConfig(entry, runtime), runtime);
@@ -734,6 +763,43 @@ export function botLedActorFactory(entry: BotLedEntry, runtime: LlmRuntime): Act
   return pipelineActorFactory(entry, resolveBotLedConfig(entry, runtime), runtime);
 }
 
+/**
+ * The live strategist behind an entry, built per case; undefined for `none`, `case` or no
+ * strategist. The key is resolved once, when the entry starts, so a missing key fails early.
+ */
+function strategistLanes(
+  entry: LineupEntry,
+  tactician: AiConfig,
+  runtime: LlmRuntime,
+): ((engine: Engine, benchCase: BenchCase) => StrategistLane) | undefined {
+  const spec = liveStrategist(entry);
+  if (spec === undefined) return undefined;
+  const clientConfig = resolveStrategistClientConfig(spec, runtime);
+  const config = coordinatorConfig(tactician, spec);
+  // Its own queue lane, as in a live game: a strategist call never waits behind a tactical one.
+  const queue = new RequestQueue({
+    rpmLimit: clientConfig.rpmLimit,
+    concurrency: clientConfig.strategistConcurrency,
+  });
+  return (engine, benchCase) =>
+    new StrategistLane(engine, benchCase, spec, config, clientConfig, queue, {
+      env: runtime.env,
+      ...(runtime.fetchImpl !== undefined && { fetchImpl: runtime.fetchImpl }),
+      ...(runtime.sleepImpl !== undefined && { sleepImpl: runtime.sleepImpl }),
+      onAttempt: (attempt) =>
+        runtime.onAttempt?.(attempt, { caseId: benchCase.id, role: 'strategist' }),
+    });
+}
+
+/** The `observe` and `close` hooks an actor passes to its strategist lane. */
+function laneHooks(lane: StrategistLane | undefined): Pick<Actor, 'observe' | 'close'> {
+  if (lane === undefined) return {};
+  return {
+    observe: (request, response, by) => lane.observe(request, response, by),
+    close: () => lane.close(),
+  };
+}
+
 function pipelineActorFactory(
   entry: LlmEntry | BotLedEntry,
   config: AiConfig,
@@ -742,7 +808,9 @@ function pipelineActorFactory(
   const neverEscalates = entry.kind === 'bot-led' && entry.model === undefined;
   // One queue per model, shared by its cases: the client-side rate limit is per model.
   const queue = new RequestQueue({ rpmLimit: config.rpmLimit, concurrency: 1 });
+  const lanes = strategistLanes(entry, config, runtime);
   return (engine: Engine, benchCase: BenchCase): Actor => {
+    const lane = lanes?.(engine, benchCase);
     let attempts: AiNetworkAttempt[] = [];
     // Set by the provider's hook during `decide`; a holder, since TypeScript cannot see the write.
     const bot: { outcome?: { escalated: boolean; reasons: readonly string[] } } = {};
@@ -760,7 +828,7 @@ function pipelineActorFactory(
       : runtime.fetchImpl;
     const client = new OpenAiCompatibleClient(config, fetchImpl, runtime.sleepImpl, (attempt) => {
       attempts.push(attempt);
-      runtime.onAttempt?.(attempt, { caseId: benchCase.id });
+      runtime.onAttempt?.(attempt, { caseId: benchCase.id, role: 'tactician' });
     });
     const logger = new CapturingLogger(`bot-bench-${benchCase.id}`);
     // The same tie-break seed as `local:heuristic` on the same `seed`, so `bot-led:never` and the
@@ -778,7 +846,7 @@ function pipelineActorFactory(
       config,
       logger,
       undefined,
-      caseGuidance(engine, config, benchCase),
+      lane?.coordinator ?? caseGuidance(engine, config, benchCase, entry.strategist),
       undefined,
       undefined,
       undefined,
@@ -790,7 +858,10 @@ function pipelineActorFactory(
       },
     );
     return {
+      ...laneHooks(lane),
       async decide(request): Promise<ActorAnswer> {
+        // The strategist first, timed apart: the decision's own figures stay the tactician's.
+        const strategist = await lane?.before(request);
         attempts = [];
         takeOutcome();
         const started = performance.now();
@@ -827,6 +898,7 @@ function pipelineActorFactory(
             escalated: outcome.escalated,
             ...(outcome.reasons.length > 0 && { reasons: [...outcome.reasons] }),
           }),
+          ...(strategist !== undefined && { strategist }),
         };
       },
     };
@@ -870,19 +942,26 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
   const apiKey = resolveDecisionKey(entry, runtime);
   const base = loadAiConfig(runtime.env);
   // The tactician's settings with no strategist: what the chat lane's coordinator is built from.
-  const config: AiConfig = { ...configForRole(base, 'tactician'), strategistEnabled: false };
+  // Model mode, so a live strategist returns a plan (intent, threat order, steps), not bot knobs.
+  const config: AiConfig = {
+    ...configForRole(base, 'tactician'),
+    strategistEnabled: false,
+    tacticalMode: 'model',
+  };
   const unsupported = entry.unsupported ?? 'bot';
   const requestTimeoutMs = entry.requestTimeoutMs ?? DEFAULT_DECISION_TIMEOUT_MS;
   // One queue per model, shared by its cases: the client-side rate limit is per model.
   const queue = new RequestQueue({ rpmLimit: base.rpmLimit, concurrency: 1 });
+  const lanes = strategistLanes(entry, config, runtime);
   return (engine: Engine, benchCase: BenchCase): Actor => {
+    const lane = lanes?.(engine, benchCase);
     let attempts: AiNetworkAttempt[] = [];
     const client = new JevClient(
       { apiKey, baseUrl: entry.baseUrl ?? OPENROUTER_BASE_URL, requestTimeoutMs },
       runtime.decisionTransport,
       (attempt) => {
         attempts.push(attempt);
-        runtime.onAttempt?.(attempt, { caseId: benchCase.id });
+        runtime.onAttempt?.(attempt, { caseId: benchCase.id, role: 'tactician' });
       },
     );
     const policy = new JevActionPolicy(client, queue, {
@@ -904,7 +983,8 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
     // has one, else the default coordinator's (recent decisions, public memory, features). The
     // production Jev lane passes the same `guidanceFor` result to the policy.
     const coordinator =
-      caseGuidance(engine, config, benchCase) ??
+      lane?.coordinator ??
+      caseGuidance(engine, config, benchCase, entry.strategist) ??
       new StrategyCoordinator(null, queue, engine, config);
     // The production fallback bot: card-aware, with its default fixes (ADR 0043).
     const bot = new HeuristicDecisionProvider(
@@ -912,94 +992,118 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
       () => engine.view(benchCase.actor),
       { knowledge: knowledgeFor(engine) },
     );
-    return {
-      async decide(request, view): Promise<ActorAnswer> {
-        attempts = [];
-        const started = performance.now();
-        const elapsed = (): number => round(performance.now() - started, 1);
-        // Every answer the harness plays goes into the seat's history, as the chat provider records
-        // it, so later requests in a whole turn carry the seat's recent decisions.
-        const played = (answer: ActorAnswer, as: DecisionSource): ActorAnswer => {
-          coordinator.recordDecision(request, answer.response, as);
-          return answer;
-        };
-        if (runtime.mode === 'production') {
-          // As in a live seat, a decision with one sensible answer is settled before any call.
-          const local = tryHeuristic(request, view);
-          if (local !== null)
-            return played(
-              {
-                response: local,
-                source: 'heuristic',
-                latencyMs: elapsed(),
-                requests: 0,
-                costSource: 'not_applicable',
-                costUsd: 0,
-              },
-              'heuristic',
-            );
-        }
-        const outcome = await policy.decide(
-          request,
-          view,
-          coordinator.guidanceFor(request.decidingPlayer, request, view),
-        );
-        const latencyMs = elapsed();
-        const { promptTokens, responseTokens, costUsd, costSource } = settleAttempts(
-          attempts,
-          entry.pricing,
-        );
-        const last = attempts.at(-1);
-        const paid = {
-          latencyMs,
-          requests: attempts.length,
-          costSource,
-          ...(attempts.length > 0 && { promptTokens, responseTokens }),
-          ...(costUsd !== undefined && { costUsd: round(costUsd, 8) }),
-          ...(last?.rawResponse !== undefined && { raw: last.rawResponse }),
-        };
-        if (outcome.kind === 'answered')
+    const decideOwn = async (request: DecisionRequest, view: PlayerView): Promise<ActorAnswer> => {
+      attempts = [];
+      const started = performance.now();
+      const elapsed = (): number => round(performance.now() - started, 1);
+      // Every answer the harness plays goes into the seat's history, as the chat provider records
+      // it, so later requests in a whole turn carry the seat's recent decisions.
+      const played = (answer: ActorAnswer, as: DecisionSource): ActorAnswer => {
+        coordinator.recordDecision(request, answer.response, as);
+        return answer;
+      };
+      if (lane !== undefined) {
+        // As in a live decision-model seat (the provider's local answers come before Jev), a
+        // strategist step that matches the menu exactly is played without asking the model.
+        const planned = coordinator.tryExecutePlan(request);
+        if (planned !== null)
           return played(
             {
-              ...paid,
-              response: {
-                ...outcome.response,
-                note: decisionNote(outcome.confidence, outcome.topTwoMargin),
-              },
-              source: 'model',
+              response: planned,
+              source: 'plan',
+              latencyMs: elapsed(),
+              requests: 0,
+              costSource: 'not_applicable',
+              costUsd: 0,
             },
-            'jev',
+            'plan',
           );
-
-        const botAnswer = await bot.decide(request);
-        if (outcome.reason === 'unsupported_shape') {
-          // Nothing was sent: the shape is one no Choice can express.
-          const why = `a decision model cannot express this (${outcome.detail})`;
-          return unsupported === 'bot'
-            ? played(
-                {
-                  ...paid,
-                  response: { ...botAnswer, note: `bot: ${why}` },
-                  source: 'bot-handoff',
-                },
-                'bot',
-              )
-            : { ...paid, response: botAnswer, source: 'fallback', failure: `unsupported: ${why}` };
-        }
-        // The provider answered but the answer was unusable (a refusal, an unknown option, a
-        // malformed distribution), or the provider never answered. Only the second counts
-        // towards stopping a model whose provider keeps failing.
-        const rejected = attempts.some((attempt) => attempt.status === 'rejected');
-        const refused = attempts.some((attempt) =>
-          /"type":"refusal"/.test(attempt.rawResponse ?? ''),
+      }
+      if (runtime.mode === 'production') {
+        // As in a live seat, a decision with one sensible answer is settled before any call.
+        const local = tryHeuristic(request, view);
+        if (local !== null)
+          return played(
+            {
+              response: local,
+              source: 'heuristic',
+              latencyMs: elapsed(),
+              requests: 0,
+              costSource: 'not_applicable',
+              costUsd: 0,
+            },
+            'heuristic',
+          );
+      }
+      const outcome = await policy.decide(
+        request,
+        view,
+        coordinator.guidanceFor(request.decidingPlayer, request, view),
+      );
+      const latencyMs = elapsed();
+      const { promptTokens, responseTokens, costUsd, costSource } = settleAttempts(
+        attempts,
+        entry.pricing,
+      );
+      const last = attempts.at(-1);
+      const paid = {
+        latencyMs,
+        requests: attempts.length,
+        costSource,
+        ...(attempts.length > 0 && { promptTokens, responseTokens }),
+        ...(costUsd !== undefined && { costUsd: round(costUsd, 8) }),
+        ...(last?.rawResponse !== undefined && { raw: last.rawResponse }),
+      };
+      if (outcome.kind === 'answered')
+        return played(
+          {
+            ...paid,
+            response: {
+              ...outcome.response,
+              note: decisionNote(outcome.confidence, outcome.topTwoMargin),
+            },
+            source: 'model',
+          },
+          'jev',
         );
-        const failure =
-          outcome.reason === 'invalid_response' || rejected
-            ? `no legal answer: ${refused ? 'the model refused to answer; ' : ''}${outcome.detail}`
-            : `provider error: ${last?.error ?? outcome.detail}`;
-        // A fallback is not recorded: the harness discards it and holds the seat still, so the
-        // bot's proposal never happened and must not appear in the seat's recent decisions.
-        return { ...paid, response: botAnswer, source: 'fallback', failure };
+
+      const botAnswer = await bot.decide(request);
+      if (outcome.reason === 'unsupported_shape') {
+        // Nothing was sent: the shape is one no Choice can express.
+        const why = `a decision model cannot express this (${outcome.detail})`;
+        return unsupported === 'bot'
+          ? played(
+              {
+                ...paid,
+                response: { ...botAnswer, note: `bot: ${why}` },
+                source: 'bot-handoff',
+              },
+              'bot',
+            )
+          : { ...paid, response: botAnswer, source: 'fallback', failure: `unsupported: ${why}` };
+      }
+      // The provider answered but the answer was unusable (a refusal, an unknown option, a
+      // malformed distribution), or the provider never answered. Only the second counts
+      // towards stopping a model whose provider keeps failing.
+      const rejected = attempts.some((attempt) => attempt.status === 'rejected');
+      const refused = attempts.some((attempt) =>
+        /"type":"refusal"/.test(attempt.rawResponse ?? ''),
+      );
+      const failure =
+        outcome.reason === 'invalid_response' || rejected
+          ? `no legal answer: ${refused ? 'the model refused to answer; ' : ''}${outcome.detail}`
+          : `provider error: ${last?.error ?? outcome.detail}`;
+      // A fallback is not recorded: the harness discards it and holds the seat still, so the
+      // bot's proposal never happened and must not appear in the seat's recent decisions.
+      return { ...paid, response: botAnswer, source: 'fallback', failure };
+    };
+    return {
+      ...laneHooks(lane),
+      async decide(request, view): Promise<ActorAnswer> {
+        // The strategist first, timed apart: the decision's own figures stay the tactician's.
+        const strategist = await lane?.before(request);
+        const answer = await decideOwn(request, view);
+        return strategist === undefined ? answer : { ...answer, strategist };
       },
     };
   };

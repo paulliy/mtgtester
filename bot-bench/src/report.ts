@@ -17,7 +17,7 @@ import { describeChanges } from './analysis';
 import { GRADE_POINTS, type BenchCase, type SingleReference, type TurnReference } from './case';
 import { cell, foldRepeats, meaningfulActions, renderPosition } from './describe';
 import { DECISIONS_PER_GAME, type CostMetrics, type ModelMetrics } from './metrics';
-import { isRemoteKind } from './models';
+import { isCandidate as isCandidateModel } from './models';
 import type { CaseResult, ModelResult } from './run';
 
 /** How a case's scope reads to judges: one decision, a whole turn, or N turns (ADR 0045). */
@@ -95,7 +95,7 @@ export function caseFileName(benchCase: BenchCase, index: number): string {
 
 /** Candidates are the models being chosen between; local policies are calibration only. */
 export function isCandidate(model: ModelResult['model'], models: readonly ModelResult[]): boolean {
-  return isRemoteKind(model.kind) || models.every((other) => !isRemoteKind(other.model.kind));
+  return isCandidateModel(model) || models.every((other) => !isCandidateModel(other.model));
 }
 
 function firstTrial(model: ModelResult, caseId: string): CaseResult | undefined {
@@ -216,7 +216,7 @@ export function renderBrief(input: ReportInput): string {
             .join(
               ', ',
             )}. The heuristic baseline is the non-model bot the product falls back to when a model fails; a candidate that does not play better than it adds nothing.`,
-    BLIND_NOTE: !input.models.some((model) => isRemoteKind(model.model.kind))
+    BLIND_NOTE: !input.models.some((model) => isCandidateModel(model.model))
       ? 'This run holds only local policies, which are not language models; they are named as they are.'
       : input.blind
         ? 'The candidates are anonymised. An alias such as "Model A" is all you should know about a model.'
@@ -355,6 +355,101 @@ function metricTables(input: ReportInput): string[] {
       ]),
     ),
     '',
+    ...strategistTable(input),
+  ];
+}
+
+function strategistTable(input: ReportInput): string[] {
+  const rows = input.metrics.filter((m) => m.strategist !== undefined);
+  if (rows.length === 0) return [];
+  return [
+    '## Strategist',
+    '',
+    "Entries with a live strategist model. It plans the tested seat's own turns only, so one-decision cases on an opponent's turn never call it. Its time and cost are kept out of the speed and cost tables above, which stay the tactician's. *Wait* is how long the seat sat waiting for the plan before its tactician was asked; *plan steps* are decisions played straight from the strategist's planned steps (chat and decision-model tacticians only: a bot-led tactician gets knobs, not steps). *Pair total* is tactician plus strategist.",
+    '',
+    table(
+      [
+        'Model',
+        'Calls',
+        'Installed nothing',
+        'Plan steps played',
+        'Mean wait',
+        '90th percentile wait',
+        'Strategist total',
+        'Per call',
+        'Pair total',
+      ],
+      rows.map((m) => {
+        const st = m.strategist!;
+        return [
+          `${m.label}${m.status === 'aborted' ? ' (stopped early)' : ''}`,
+          String(st.calls),
+          `${st.failures}${st.providerErrors > 0 ? ` (${st.providerErrors} provider errors)` : ''}`,
+          String(st.planSteps),
+          milliseconds(st.meanWaitMs),
+          milliseconds(st.p90WaitMs),
+          st.source === 'partial' ? `at least ${dollars(st.totalUsd)}` : dollars(st.totalUsd),
+          dollars(st.perCallUsd),
+          dollars(st.combinedUsd),
+        ];
+      }),
+    ),
+    '',
+  ];
+}
+
+interface GridCell {
+  scores: number[];
+  turnScores: number[];
+}
+
+/**
+ * The strategist × tactician grid: one row per strategist, one column per tactician, each cell the
+ * mean whole-turn score (the cases a strategist can affect) and, after it, the overall score.
+ * Seeded copies of a cell are averaged. Shown only when entries name strategists.
+ */
+function strategistGrid(input: ReportInput): string[] {
+  const paired = input.models.filter((model) => model.model['strategist'] !== undefined);
+  if (paired.length === 0) return [];
+  const scope = new Map(input.cases.map((benchCase) => [benchCase.id, benchCase.scope]));
+  const strategists = new Map<string, string>();
+  const tacticians = new Map<string, string>();
+  const cells = new Map<string, GridCell>();
+  for (const model of paired) {
+    const strategist = model.model['strategist'] as { id: string; label?: string };
+    const tactician = (model.model['tactician'] as { id: string; label?: string } | undefined) ?? {
+      id: model.model.id,
+      label: model.model.label,
+    };
+    strategists.set(strategist.id, strategist.label ?? strategist.id);
+    tacticians.set(tactician.id, tactician.label ?? tactician.id);
+    const key = `${strategist.id}|${tactician.id}`;
+    const cell = cells.get(key) ?? { scores: [], turnScores: [] };
+    for (const result of model.cases) {
+      cell.scores.push(result.score.score);
+      if (scope.get(result.caseId) === 'turn') cell.turnScores.push(result.score.score);
+    }
+    cells.set(key, cell);
+  }
+  const meanOf = (values: readonly number[]): number | null =>
+    values.length === 0 ? null : values.reduce((sum, value) => sum + value, 0) / values.length;
+  return [
+    '## Strategist × tactician grid',
+    '',
+    'Each cell is one strategist (row) in front of one tactician (column): whole-turn score, then overall score in brackets. Compare a cell with the *no strategist* row in its column to see what the strategist added. A blank cell is a pair the lineup did not run (a local bot reads no strategy, so it sits behind `none` and `case` only).',
+    '',
+    table(
+      ['Strategist \\ tactician', ...tacticians.values()],
+      [...strategists].map(([sid, slabel]) => [
+        slabel,
+        ...[...tacticians.keys()].map((tid) => {
+          const cell = cells.get(`${sid}|${tid}`);
+          if (cell === undefined) return '';
+          return `${percent(meanOf(cell.turnScores))} (${percent(meanOf(cell.scores))})`;
+        }),
+      ]),
+    ),
+    '',
   ];
 }
 
@@ -401,6 +496,7 @@ export function renderSummary(input: ReportInput): string {
         `> **${model.model.label} stopped early:** ${model.abortReason ?? 'unknown reason'}. Its numbers cover only the cases it played.`,
         '',
       );
+  out.push(...strategistGrid(input));
   out.push(...metricTables(input));
 
   out.push(
@@ -807,6 +903,11 @@ export function renderModel(input: ReportInput, model: ModelResult): string {
       `- Reliability: ${metrics.reliability.firstTryLegal} of ${metrics.reliability.decisions} decisions legal on the first try, ${metrics.reliability.correctiveRetries} corrective retries, ${metrics.reliability.fallbacks} fallbacks.`,
       `- Speed: median ${milliseconds(metrics.speed.p50Ms)}, 90th percentile ${milliseconds(metrics.speed.p90Ms)}, slowest ${milliseconds(metrics.speed.maxMs)}.`,
       `- Cost: ${totalCost(metrics.cost)} total (${costSourceText(metrics.cost)}), ${dollars(metrics.cost.perDecisionUsd)} per decision, ${dollars(metrics.cost.perGameUsd)} per ${DECISIONS_PER_GAME} decisions.`,
+      ...(metrics.strategist === undefined
+        ? []
+        : [
+            `- Strategist: ${metrics.strategist.calls} calls, ${metrics.strategist.failures} installed nothing, ${metrics.strategist.planSteps} plan steps played, mean wait ${milliseconds(metrics.strategist.meanWaitMs)}, ${dollars(metrics.strategist.totalUsd)} (pair total ${dollars(metrics.strategist.combinedUsd)}).`,
+          ]),
       '',
     );
   out.push('## Every decision', '');
@@ -846,6 +947,7 @@ export function renderModel(input: ReportInput, model: ModelResult): string {
           result.score.flags.length > 0 ? ` Flags: ${result.score.flags.join('; ')}.` : ''
         }`,
         '',
+        ...strategistLines(result),
       );
       const raws = result.run.decisions.filter((decision) => decision.raw !== undefined);
       if (raws.length > 0)
@@ -864,6 +966,45 @@ export function renderModel(input: ReportInput, model: ModelResult): string {
     }
   });
   return out.join('\n');
+}
+
+/** What the strategist told the tactician before each decision it planned for, in order. */
+function strategistLines(result: CaseResult): string[] {
+  const calls = [
+    ...result.run.decisions.flatMap((decision) =>
+      decision.strategist === undefined
+        ? []
+        : [{ at: `before decision ${decision.index + 1}`, call: decision.strategist }],
+    ),
+    ...(result.run.strategistTail === undefined
+      ? []
+      : [{ at: 'after the last decision', call: result.run.strategistTail }]),
+  ];
+  if (calls.length === 0) return [];
+  const out = ['Strategist:', ''];
+  for (const { at, call } of calls) {
+    const cost = call.requests === 0 ? '$0' : dollars(call.costUsd ?? null);
+    const head = `- ${at} (waited ${milliseconds(call.waitMs)}, ${call.requests} request${call.requests === 1 ? '' : 's'}, ${cost})`;
+    if (call.strategy === undefined) {
+      out.push(`${head}: ${call.failure ?? 'installed nothing'}`);
+      continue;
+    }
+    const parts = [
+      call.strategy.intent === '' ? undefined : `intent "${call.strategy.intent}"`,
+      call.strategy.threatOrder === undefined
+        ? undefined
+        : `threat order ${call.strategy.threatOrder.join(', ')}`,
+      call.strategy.steering === undefined
+        ? undefined
+        : `knobs ${JSON.stringify(call.strategy.steering)}`,
+      call.strategy.plannedActions === undefined
+        ? undefined
+        : `planned: ${call.strategy.plannedActions.join('; ')}`,
+    ].filter((part): part is string => part !== undefined);
+    out.push(`${head}: ${parts.join('; ')}`);
+  }
+  out.push('');
+  return out;
 }
 
 // ── README.md, scorecard ───────────────────────────────────────────────────────────────────────

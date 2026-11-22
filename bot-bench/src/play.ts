@@ -19,7 +19,9 @@ import {
   type DecisionRequest,
   type DecisionResponse,
   type GameId,
+  type BotSteering,
   type GameState,
+  type PlayerId,
   type PlayerView,
 } from '../../packages/shared/src';
 import { buildAnswer, describeAnswer, namesOf } from './answers';
@@ -55,6 +57,38 @@ export type AnswerSource =
 
 export type CostSource = 'reported' | 'estimated' | 'unknown' | 'not_applicable';
 
+/** What a live strategist returned, as the tested seat's tactician received it. */
+export interface RecordedStrategy {
+  intent: string;
+  threatOrder?: PlayerId[];
+  /** Bot-led tacticians: the knobs in force after the call. */
+  steering?: BotSteering;
+  /** Model and decision-model tacticians: the planned steps, in words. */
+  plannedActions?: string[];
+}
+
+/**
+ * One strategist call the seat waited for before a decision (at most one per turn, plus a re-plan
+ * after an opponent's intervention). Kept apart from the decision's own figures, which stay the
+ * tactician's: a decision's latency, tokens and cost never include the strategist's.
+ */
+export interface StrategistCall {
+  /** Provider requests the strategist made, retries included. */
+  requests: number;
+  promptTokens?: number;
+  responseTokens?: number;
+  costUsd?: number;
+  costSource: CostSource;
+  /** How long the seat waited for the strategist before its tactician was asked. */
+  waitMs: number;
+  /** Why no strategy was installed, when none was: `provider error: ...` or `no usable plan: ...`. */
+  failure?: string;
+  /** What was installed, when something was. */
+  strategy?: RecordedStrategy;
+  /** The strategist's raw text, when there was one. */
+  raw?: string;
+}
+
 export interface ActorAnswer {
   response: DecisionResponse;
   source: AnswerSource;
@@ -74,11 +108,23 @@ export interface ActorAnswer {
   escalated?: boolean;
   /** Bot-led entries only: the escalation triggers that fired, live or not. */
   reasons?: string[];
+  /** Entries with a live strategist: the call the seat waited for before this decision. */
+  strategist?: StrategistCall;
 }
 
 /** One seat's player for one game. */
 export interface Actor {
   decide(request: DecisionRequest, view: PlayerView): Promise<ActorAnswer> | ActorAnswer;
+  /**
+   * Every decision the engine accepted after the focus, the table's and the seat's own, as a live
+   * table's shared coordinator sees them: an opponent's action can invalidate the seat's plan.
+   */
+  observe?(request: DecisionRequest, response: DecisionResponse, by: 'actor' | 'table'): void;
+  /**
+   * The case is over: stop any strategist call still running and report it, since a re-plan
+   * started by the table's last action may have been billed with no decision left to wait for it.
+   */
+  close?(): Promise<StrategistCall | undefined>;
 }
 export type ActorFactory = (engine: Engine, benchCase: BenchCase) => Actor;
 
@@ -110,6 +156,7 @@ export interface DecisionRecord {
   failure?: string;
   escalated?: boolean;
   reasons?: string[];
+  strategist?: StrategistCall;
 }
 
 /** How often a bot-led entry handed the case's decisions to the model, and why (ADR 0043). */
@@ -153,6 +200,8 @@ export interface CaseRun {
   error?: string;
   /** Bot-led entries only. */
   escalations?: EscalationSummary;
+  /** A strategist call no decision waited for (a re-plan the case ended before), still billed. */
+  strategistTail?: StrategistCall;
 }
 
 const HARD_DECISION_LIMIT = 600;
@@ -346,6 +395,7 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
         (benchCase.table?.actorAfterFocus ?? 'still') === 'still');
     const response = table.answer(request, still);
     engine.submit(response);
+    actor.observe?.(request, response, 'table');
     return response;
   };
 
@@ -377,6 +427,7 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
           if (invalid === undefined) {
             try {
               engine.submit(answer.response);
+              actor.observe?.(request, answer.response, 'actor');
             } catch (cause) {
               invalid = cause instanceof Error ? cause.message : String(cause);
             }
@@ -410,6 +461,7 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
           ...(answer.failure !== undefined && { failure: answer.failure }),
           ...(answer.escalated !== undefined && { escalated: answer.escalated }),
           ...(answer.reasons !== undefined && { reasons: answer.reasons }),
+          ...(answer.strategist !== undefined && { strategist: answer.strategist }),
         };
         decisions.push(record);
       }
@@ -433,6 +485,16 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
     error = cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause);
   }
 
+  let strategistTail: StrategistCall | undefined;
+  try {
+    strategistTail = await actor.close?.();
+  } catch (cause) {
+    if (error === undefined) {
+      termination = 'error';
+      error = cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause);
+    }
+  }
+
   const state = engine.getState();
   const escalations = summarizeEscalations(decisions);
   return {
@@ -449,6 +511,7 @@ export async function playCase(benchCase: BenchCase, makeActor: ActorFactory): P
     termination,
     ...(error !== undefined && { error }),
     ...(escalations !== undefined && { escalations }),
+    ...(strategistTail !== undefined && { strategistTail }),
   };
 }
 

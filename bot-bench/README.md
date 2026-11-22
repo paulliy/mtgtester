@@ -6,7 +6,10 @@ engine, and writes one ZIP you can hand to judge models. The ZIP holds the judgi
 the rubric (accuracy, speed and cost scored separately, plus a blurb), the primer the models were
 given, every position, every model's answers side by side, and the scorecard to send back.
 
-It benchmarks the **tactician** only. Strategist cases are reserved
+It benchmarks the **tactician**, alone or behind a **strategist**: any strategist model can be put
+in front of any tactician (the bot, a chat model, a decision model) and every pair is scored on the
+same positions ([Strategists](#strategists-every-strategist-in-front-of-every-tactician)).
+Strategist-specific positions are still to be written
 ([cases/strategist/README.md](cases/strategist/README.md)).
 
 ## Quick start
@@ -182,6 +185,74 @@ own cost, so the price list is a fallback. A model that rejects the request shap
 limit than Jev's 255, a vendor-specific state format) fails as a provider error and is stopped.
 Check the live list with `GET https://openrouter.ai/api/v1/models?output_modalities=decisions`
 before a sweep and add new models the same way.
+
+## Strategists: every strategist in front of every tactician
+
+In a live game a strategist plans each seat's turn once, at its first decision after the beginning
+phase, and the tactician plays the turn with that plan (ADR 0016). With a bot-led tactician the
+strategist sets knobs instead (ADR 0039). An entry's `strategist` puts one in front of the tested
+seat, and a lineup can cross a list of strategists with a list of tacticians:
+
+```powershell
+# Free: the grid machinery with no live strategist.
+bun run bot-bench run --models local:heuristic,bot-led:never --strategists none,case
+
+# Paid: two strategists in front of the bot, a chat tactician and a decision model.
+bun run bot-bench run --models bot-led:never,openrouter:qwen/qwen3.7-flash,decision:typesafe/jev-1.14 --strategists none,openrouter:z-ai/glm-5.3-flash@low --scope turn --spend-cap 1
+
+# The full grid: 4 strategists x 6 tacticians (22 cells, local bots sit out the model rows).
+bun run bot-bench run --lineup bot-bench/lineups/strategist-grid.json --scope turn --trials 3 --spend-cap 5
+```
+
+A lineup file lists `strategists` and `tacticians` instead of `models`; each pair runs as
+`<tactician>.st-<strategist>` ([lineups/strategist-grid.json](lineups/strategist-grid.json)). An
+entry in a plain `models` list can carry its own `strategist` too. Three kinds:
+
+| `kind` | What the tactician gets                                                                                                                                                    |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `none` | No strategy, even when the case has a hand-written one. The case's deals stay: they are table facts.                                                                       |
+| `case` | The case's own `context` (below). The same as an entry with no strategist. No committed case has a context yet, so for now this row plays as `none`.                       |
+| `llm`  | A live strategist model, through the production `StrategyCoordinator`: its primer, prompt and parser. Fields as for a chat model, plus `replan` (`everyTurn`, `onChange`). |
+
+```json
+{
+  "id": "glm-low",
+  "kind": "llm",
+  "provider": "openrouter",
+  "model": "z-ai/glm-5.3-flash",
+  "reasoning": "low"
+}
+```
+
+What a live strategist does in a case:
+
+- **It plans the tested seat's own turns only.** One-decision cases on an opponent's turn (blocks,
+  counters, Fog) never call it, so its effect shows on whole-turn cases and on single decisions in
+  the seat's own turn. Use `--scope turn` to spend only where it can matter.
+- **The seat waits for it.** In a live game the strategist call races the tactician; here the
+  seat's first decision of the turn waits for the plan, so the tactician always plays with it. That
+  wait is recorded as the strategist's, never as the decision's latency.
+- **What it returns depends on the tactician behind it, as in production.** A bot-led tactician gets
+  the bot primer and knobs only. A chat or decision-model tactician gets an intent, a threat order
+  and planned steps, and a step that matches the menu exactly is played without asking the
+  tactician (`plan` in the "answered by" column, counted as _plan steps_). So one strategist row is
+  not one identical prompt across the columns, and the report says so.
+- **Opponents' actions reach it.** The table's decisions are fed to the coordinator as a live
+  table's would be, so a non-pass action invalidates the plan and may start the turn's one re-plan.
+  A re-plan whose answer the coordinator drops as stale (an opponent acting again while it was in
+  flight) is still billed, and is counted as a call that installed nothing.
+- **Local bots read no strategy**, so in a grid `local:*` sits behind `none` and `case` only, and an
+  entry naming a live strategist in front of a local bot is refused. Use `bot-led:never` for the bot.
+- **A dead strategist stops the entry**, like a dead tactician: three strategist calls in a row that
+  fail at the provider stop it, so a cell is never quietly scored as its `none` row.
+
+The report adds a **strategist × tactician grid** (whole-turn score, overall in brackets) to
+`SUMMARY.md`, and a **Strategist** table: calls, calls that installed nothing, plan steps played,
+time waited, and the strategist's cost with the pair's total. The speed and cost tables stay the
+tactician's alone. Each model page lists what the strategist returned before each decision. In a
+blind bundle a strategist gets its own alias (`Strategist A`) and a remote tactician that appears
+in several cells gets one too (`Tactician B`), so a judge can read the grid without names; every
+strategist model name is redacted and searched for like a tactician's.
 
 ## What is measured
 

@@ -19,6 +19,8 @@ import { loadCases, parseBenchCase, type BenchCase } from './case';
 import { collate, parseScorecard } from './collate';
 import { modelMetrics } from './metrics';
 import {
+  crossLineup,
+  liveStrategist,
   loadLineupFile,
   parseModelList,
   resolveDecisionKey,
@@ -28,6 +30,7 @@ import {
   type RunMode,
 } from './models';
 import { openCase, type CaseRun } from './play';
+import { parseStrategistList, resolveStrategistClientConfig } from './strategist';
 import { dollars, milliseconds, percent } from './report';
 import { runLineup, type TranscriptEntry } from './run';
 import { scoreRun } from './score';
@@ -158,13 +161,11 @@ async function verify(flags: Flags): Promise<void> {
 function printLeaderboard(runDirectory: string, cases: readonly BenchCase[]): void {
   const run = readRun(runDirectory);
   const selected = cases.filter((benchCase) => run.manifest.caseIds.includes(benchCase.id));
-  console.log(
-    '\nmodel                                    accuracy  median     p90        cost/decision',
-  );
+  console.log(`\n${'model'.padEnd(60)} accuracy  median     p90        cost/decision`);
   for (const model of run.models) {
     const metrics = modelMetrics(model, selected, run.manifest.trials);
     console.log(
-      `${model.model.label.slice(0, 40).padEnd(40)} ${percent(metrics.accuracy.overall).padEnd(9)} ${milliseconds(metrics.speed.p50Ms).padEnd(10)} ${milliseconds(metrics.speed.p90Ms).padEnd(10)} ${dollars(metrics.cost.perDecisionUsd)} (${metrics.cost.source})${model.status === 'aborted' ? `  STOPPED: ${model.abortReason ?? ''}` : ''}`,
+      `${model.model.label.slice(0, 60).padEnd(60)} ${percent(metrics.accuracy.overall).padEnd(9)} ${milliseconds(metrics.speed.p50Ms).padEnd(10)} ${milliseconds(metrics.speed.p90Ms).padEnd(10)} ${dollars(metrics.cost.perDecisionUsd)} (${metrics.cost.source})${model.status === 'aborted' ? `  STOPPED: ${model.abortReason ?? ''}` : ''}`,
     );
   }
 }
@@ -172,9 +173,17 @@ function printLeaderboard(runDirectory: string, cases: readonly BenchCase[]): vo
 async function run(flags: Flags): Promise<void> {
   const lineupPath = text(flags, 'lineup');
   const modelList = text(flags, 'models');
+  const strategistList = text(flags, 'strategists');
+  if (strategistList !== undefined && modelList === undefined)
+    throw new Error(
+      '--strategists crosses with --models; a lineup file lists its own strategists and tacticians',
+    );
+  const listed = modelList === undefined ? [] : parseModelList(modelList);
   const lineup: LineupEntry[] = [
     ...(lineupPath === undefined ? [] : loadLineupFile(lineupPath)),
-    ...(modelList === undefined ? [] : parseModelList(modelList)),
+    ...(strategistList === undefined
+      ? listed
+      : crossLineup(listed, parseStrategistList(strategistList))),
   ];
   if (lineup.length === 0)
     throw new Error(
@@ -196,6 +205,8 @@ async function run(flags: Flags): Promise<void> {
     if (entry.kind === 'llm') resolveLlmConfig(entry, { env: process.env, mode });
     else if (entry.kind === 'decision') resolveDecisionKey(entry, { env: process.env, mode });
     else if (entry.kind === 'bot-led') resolveBotLedConfig(entry, { env: process.env, mode });
+    const strategist = liveStrategist(entry);
+    if (strategist !== undefined) resolveStrategistClientConfig(strategist, { env: process.env });
   }
 
   const stamp = new Date()
@@ -409,7 +420,8 @@ const USAGE = `bot-bench: tactician benchmark with a judge bundle
   bun run bot-bench verify [--scope single|turn]     check every reference against the engine
   bun run bot-bench run --models <list> | --lineup <file.json>
         [--cases id,id] [--scope single|turn] [--trials N] [--mode raw|production]
-        [--out <run directory>] [--concurrency N] [--spend-cap <USD>] [--reveal-models]
+        [--strategists <list>] [--out <run directory>] [--concurrency N] [--spend-cap <USD>]
+        [--reveal-models]
   bun run bot-bench bundle --run <run directory> [--reveal-models]
   bun run bot-bench rescore --run <run directory>    grade saved play again against the current references
   bun run bot-bench collate --run <run directory> <scorecard.json> [...]
@@ -423,8 +435,12 @@ const USAGE = `bot-bench: tactician benchmark with a judge bundle
              add @low, @medium or @high to turn reasoning on;
              decision:<vendor/model> for a Decisions API model (decision:typesafe/jev-1.14),
              add @hold to hold still on attacks and blocks instead of letting the bot play them
+  --strategists  comma separated, crossed with every --models entry: none (no strategy), case (the
+             case's own context), or a strategist model such as openrouter:z-ai/glm-5.3-flash@low;
+             local bots pair with none and case only
   --lineup   a JSON file; a top-level "seeds" list plays every heuristic and bot-led entry once
-             per seed (see bot-bench/lineups/bot-gate.json)
+             per seed (see bot-bench/lineups/bot-gate.json); "strategists" and "tacticians"
+             lists instead of "models" run every pair (see bot-bench/lineups/strategist-grid.json)
   --out      an existing run directory adds models to that run and rebuilds its bundle
 `;
 

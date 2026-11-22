@@ -15,7 +15,7 @@ import { AI_VERSIONS } from '../../packages/server/src/ai/versions';
 import { analyzeCase, type CaseAnalysis } from './analysis';
 import type { BenchCase } from './case';
 import { modelMetrics } from './metrics';
-import { isRemoteKind } from './models';
+import { isCandidate, isRemoteKind } from './models';
 import {
   caseFileName,
   renderBrief,
@@ -160,7 +160,19 @@ const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
  * identifiers such as a case id or an action key are left alone, so a model id that happens to
  * appear in one (`turn` in `land-for-the-turn`) cannot corrupt it.
  */
-const FREE_TEXT = new Set(['error', 'failure', 'raw', 'rawResponse', 'note', 'abortReason']);
+const FREE_TEXT = new Set([
+  'error',
+  'failure',
+  'raw',
+  'rawResponse',
+  'note',
+  'abortReason',
+  // A strategist's own words: its intent and planned steps.
+  'intent',
+  'plannedActions',
+  // A transcript's prompt text, which carries the strategist's words into the tactician's prompt.
+  'content',
+]);
 
 /** Regex special characters, escaped so a model name can be matched literally. */
 const escapeRegex = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -184,7 +196,11 @@ function redact<T>(value: T, names: ReadonlyArray<readonly [RegExp, string]>): T
       return Object.fromEntries(
         Object.entries(item).map(([key, field]) => [
           key,
-          FREE_TEXT.has(key) && typeof field === 'string' ? scrub(field) : walk(field),
+          FREE_TEXT.has(key) && typeof field === 'string'
+            ? scrub(field)
+            : FREE_TEXT.has(key) && Array.isArray(field)
+              ? field.map((part: unknown) => (typeof part === 'string' ? scrub(part) : walk(part)))
+              : walk(field),
         ]),
       );
     return item;
@@ -244,12 +260,38 @@ export function anonymise(
   const nameAs = (name: unknown, alias: string, minimum = 3): void => {
     if (typeof name === 'string' && name.length >= minimum) names.push([name, alias]);
   };
-  const llm = models.filter((result) => isRemoteKind(result.model.kind));
+  const llm = models.filter((result) => isCandidate(result.model));
   const rank = (id: string): string => createHash('sha256').update(`${seed}:${id}`).digest('hex');
   const turn =
     seed === undefined
       ? llm
       : [...llm].sort((left, right) => (rank(left.model.id) < rank(right.model.id) ? -1 : 1));
+  // A strategist or a remote tactician that sits in several cells of a grid gets one alias of its
+  // own, so a judge can still read the grid ("Tactician B behind Strategist A") without names.
+  const roleAliases = new Map<string, string>();
+  const roleAlias = (role: 'Strategist' | 'Tactician', id: string): string => {
+    const key = `${role}:${id}`;
+    let alias = roleAliases.get(key);
+    if (alias === undefined) {
+      const used = [...roleAliases.keys()].filter((k) => k.startsWith(`${role}:`)).length;
+      alias = `${role} ${LETTERS[used] ?? `N${used + 1}`}`;
+      roleAliases.set(key, alias);
+    }
+    return alias;
+  };
+  const nameModel = (fields: Record<string, unknown>, alias: string): void => {
+    const modelName = fields['model'];
+    nameAs(modelName, alias);
+    if (typeof modelName === 'string' && modelName.includes('/')) {
+      const [vendor = '', ...rest] = modelName.split('/');
+      nameAs(vendor, alias, 4);
+      nameAs(rest.join('/'), alias, 4);
+    }
+    nameAs(fields['label'], alias);
+    nameAs(fields['provider'], 'the provider', 4);
+    for (const host of hostNames(fields['baseUrl'] ?? providerUrl(fields['provider'])))
+      nameAs(host, 'the provider', 4);
+  };
   const renamedBy = new Map<string, ModelResult>();
   for (const result of turn) {
     const earlier = kept.get(result.model.id);
@@ -270,9 +312,30 @@ export function anonymise(
     nameAs(result.model['provider'], 'the provider', 4);
     for (const host of hostNames(result.model['baseUrl'] ?? providerUrl(result.model['provider'])))
       nameAs(host, 'the provider', 4);
+    const strategist = result.model['strategist'] as Record<string, unknown> | undefined;
+    const strategistAlias =
+      strategist?.['kind'] === 'llm'
+        ? roleAlias('Strategist', String(strategist['id']))
+        : undefined;
+    if (strategist !== undefined && strategistAlias !== undefined) {
+      nameModel(strategist, strategistAlias);
+      nameAs(strategist['id'], strategistAlias);
+    }
+    const tactician = result.model['tactician'] as { id?: string; label?: string } | undefined;
+    const tacticianAlias =
+      tactician !== undefined && isRemoteKind(result.model.kind)
+        ? roleAlias('Tactician', String(tactician.id))
+        : undefined;
+    if (tacticianAlias !== undefined && tactician !== undefined) {
+      nameAs(tactician.label, tacticianAlias);
+      nameAs(tactician.id, tacticianAlias);
+    }
     for (const entry of transcripts)
       if (entry.modelId === result.model.id) {
-        nameAs(entry.responseModel, alias);
+        nameAs(
+          entry.responseModel,
+          entry.role === 'strategist' ? (strategistAlias ?? alias) : alias,
+        );
         nameAs(entry.backend, 'the provider');
       }
     renamedBy.set(result.model.id, {
@@ -293,6 +356,26 @@ export function anonymise(
         ...(result.model['maxOutputTokens'] !== undefined && {
           maxOutputTokens: result.model['maxOutputTokens'],
         }),
+        // The pair's shape survives: which strategist kind, under which alias, at which effort.
+        ...(strategist !== undefined && {
+          strategist:
+            strategistAlias === undefined
+              ? { id: strategist['id'], kind: strategist['kind'], label: strategist['label'] }
+              : {
+                  id: strategistAlias.toLowerCase().replace(' ', '-'),
+                  kind: 'llm',
+                  label: strategistAlias,
+                  ...(strategist['reasoning'] !== undefined && {
+                    reasoning: strategist['reasoning'],
+                  }),
+                },
+        }),
+        ...(tactician !== undefined && {
+          tactician:
+            tacticianAlias === undefined
+              ? tactician
+              : { id: tacticianAlias.toLowerCase().replace(' ', '-'), label: tacticianAlias },
+        }),
       },
     });
   }
@@ -309,9 +392,9 @@ export function anonymise(
     seed === undefined
       ? renamed
       : [
-          ...renamed.filter((result) => !isRemoteKind(result.model.kind)),
+          ...renamed.filter((result) => !isCandidate(result.model)),
           ...renamed
-            .filter((result) => isRemoteKind(result.model.kind))
+            .filter((result) => isCandidate(result.model))
             .sort((left, right) => (left.model.id < right.model.id ? -1 : 1)),
         ];
   return {
@@ -349,11 +432,16 @@ export interface BundleResult {
 
 /** Names that identify a model: its model string, each half of it, and its provider's host. */
 export function identifyingNames(model: ModelResult['model']): string[] {
-  const modelName = model['model'];
-  const parts = typeof modelName === 'string' ? [modelName, ...modelName.split('/')] : [];
-  const provider = typeof model['provider'] === 'string' ? [model['provider']] : [];
-  const hosts = hostNames(model['baseUrl'] ?? providerUrl(model['provider']));
-  return [...new Set([...parts, ...hosts, ...provider])].filter((name) => name.length >= 4);
+  const own = (fields: Record<string, unknown>): string[] => {
+    const modelName = fields['model'];
+    const parts = typeof modelName === 'string' ? [modelName, ...modelName.split('/')] : [];
+    const provider = typeof fields['provider'] === 'string' ? [fields['provider']] : [];
+    const hosts = hostNames(fields['baseUrl'] ?? providerUrl(fields['provider']));
+    return [...parts, ...hosts, ...provider];
+  };
+  const strategist = model['strategist'] as Record<string, unknown> | undefined;
+  const theirs = strategist?.['kind'] === 'llm' ? own(strategist) : [];
+  return [...new Set([...own(model), ...theirs])].filter((name) => name.length >= 4);
 }
 
 /** Build the judge bundle for everything a run directory holds. */

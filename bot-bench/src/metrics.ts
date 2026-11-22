@@ -4,6 +4,7 @@
  * decision is billed). Nothing here blends them into one figure; that weighting is the judge's.
  */
 import type { BenchCase } from './case';
+import type { DecisionRecord, StrategistCall } from './play';
 import type { ModelResult } from './run';
 
 /**
@@ -84,6 +85,34 @@ export interface CostMetrics {
   providerRequests: number;
 }
 
+/**
+ * A live strategist's share, kept out of the other groups: speed and cost there stay the
+ * tactician's, so a cell can be compared with its tactician's `none` row on the same terms.
+ */
+export interface StrategistMetrics {
+  /** Strategist calls the seat waited for, re-plans and calls a case ended before included. */
+  calls: number;
+  /** Calls that installed no strategy: the provider failed or the answer was unusable. */
+  failures: number;
+  providerErrors: number;
+  /** The seat's decisions played straight from the strategist's planned steps. */
+  planSteps: number;
+  meanWaitMs: number | null;
+  p90WaitMs: number | null;
+  /** Null when no call has a price; with `source: 'partial'`, the priced calls only. */
+  totalUsd: number | null;
+  source: CostMetrics['source'];
+  perCallUsd: number | null;
+  promptTokens: number;
+  responseTokens: number;
+  providerRequests: number;
+  /**
+   * The tactician's and the strategist's spending together: what the pair costs. Null when either
+   * half is unknown.
+   */
+  combinedUsd: number | null;
+}
+
 export interface ModelMetrics {
   modelId: string;
   label: string;
@@ -94,6 +123,8 @@ export interface ModelMetrics {
   reliability: ReliabilityMetrics;
   speed: SpeedMetrics;
   cost: CostMetrics;
+  /** Entries with a live strategist only. */
+  strategist?: StrategistMetrics;
 }
 
 function mean(values: readonly number[]): number | null {
@@ -169,6 +200,19 @@ export function modelMetrics(
   const perDecisionUsd =
     totalUsd === null ? null : billable.length === 0 ? 0 : totalUsd / known.length;
 
+  const strategistCalls: StrategistCall[] = [
+    ...paid.flatMap((decision) => (decision.strategist === undefined ? [] : [decision.strategist])),
+    ...played.flatMap((entry) =>
+      entry.run.strategistTail === undefined ? [] : [entry.run.strategistTail],
+    ),
+    ...(result.unscored ?? []).flatMap((entry) =>
+      entry.strategistTail === undefined ? [] : [entry.strategistTail],
+    ),
+  ];
+  const strategist = isCandidateWithStrategist(result)
+    ? strategistMetrics(strategistCalls, decisions, totalUsd)
+    : undefined;
+
   return {
     modelId: result.model.id,
     label: result.model.label,
@@ -238,5 +282,55 @@ export function modelMetrics(
       responseTokensPerDecision: billable.length === 0 ? null : responseTokens / billable.length,
       providerRequests: paid.reduce((sum, decision) => sum + decision.requests, 0),
     },
+    ...(strategist !== undefined && { strategist }),
+  };
+}
+
+function isCandidateWithStrategist(result: ModelResult): boolean {
+  const spec = result.model['strategist'] as { kind?: string } | undefined;
+  return spec?.kind === 'llm';
+}
+
+function strategistMetrics(
+  calls: readonly StrategistCall[],
+  decisions: readonly DecisionRecord[],
+  tacticianUsd: number | null,
+): StrategistMetrics {
+  const billable = calls.filter((call) => call.requests > 0);
+  const known = billable.filter((call) => call.costUsd !== undefined);
+  const totalUsd =
+    billable.length === 0
+      ? 0
+      : known.length === 0
+        ? null
+        : known.reduce((sum, call) => sum + (call.costUsd ?? 0), 0);
+  const sources = new Set(known.map((call) => call.costSource));
+  const source: CostMetrics['source'] =
+    billable.length === 0
+      ? 'free'
+      : known.length === 0
+        ? 'unknown'
+        : known.length < billable.length
+          ? 'partial'
+          : sources.size === 1
+            ? (sources.values().next().value as 'reported' | 'estimated')
+            : 'mixed';
+  // Waits are what the seat sat through before a decision; a call no decision waited for has none.
+  const waits = calls.filter((call) => call.waitMs > 0).map((call) => call.waitMs);
+  return {
+    calls: calls.length,
+    failures: calls.filter((call) => call.failure !== undefined).length,
+    providerErrors: calls.filter((call) => call.failure?.startsWith('provider error') === true)
+      .length,
+    planSteps: decisions.filter((decision) => decision.source === 'plan').length,
+    meanWaitMs: mean(waits),
+    p90WaitMs: percentile(waits, 0.9),
+    totalUsd,
+    source,
+    perCallUsd: totalUsd === null || known.length === 0 ? null : totalUsd / known.length,
+    promptTokens: calls.reduce((sum, call) => sum + (call.promptTokens ?? 0), 0),
+    responseTokens: calls.reduce((sum, call) => sum + (call.responseTokens ?? 0), 0),
+    providerRequests: calls.reduce((sum, call) => sum + call.requests, 0),
+    combinedUsd: totalUsd === null || tacticianUsd === null ? null : totalUsd + tacticianUsd,
   };
 }

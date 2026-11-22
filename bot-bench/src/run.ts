@@ -12,7 +12,7 @@ import {
   type LlmRuntime,
   type RunMode,
 } from './models';
-import { playCase, type ActorFactory, type CaseRun } from './play';
+import { playCase, type ActorFactory, type CaseRun, type StrategistCall } from './play';
 import { scoreRun, type CaseScore } from './score';
 
 /** One model's attempt at one case. The focus prompt is the same for every model, so it is not repeated here. */
@@ -28,6 +28,8 @@ export interface TranscriptEntry {
   caseId: string;
   trial: number;
   requestId: string;
+  /** Who made the request; omitted for the tactician, as before strategists. */
+  role?: 'strategist';
   attemptIndex: number;
   status: AiNetworkAttempt['status'];
   durationMs: number;
@@ -48,7 +50,12 @@ export interface ModelResult {
    * Decisions from a case cut off by the spend cap or by a provider that kept failing. They were
    * paid for, so they count towards cost, but the case is not scored.
    */
-  unscored?: Array<{ caseId: string; trial: number; decisions: CaseRun['decisions'] }>;
+  unscored?: Array<{
+    caseId: string;
+    trial: number;
+    decisions: CaseRun['decisions'];
+    strategistTail?: StrategistCall;
+  }>;
   startedAt: string;
   endedAt: string;
   wallClockMs: number;
@@ -109,13 +116,15 @@ export async function runLineup(
       onAttempt: (attempt, context) => {
         if (attempt.usage.costUsd !== undefined) {
           knownSpend += attempt.usage.costUsd;
-          reportedThisDecision += attempt.usage.costUsd;
+          // Netted against the tactician's own estimate only; a strategist call is settled apart.
+          if (context.role === 'tactician') reportedThisDecision += attempt.usage.costUsd;
         }
         options.onTranscript?.({
           modelId: entry.id,
           caseId: context.caseId,
           trial,
           requestId: attempt.logicalRequestId,
+          ...(context.role === 'strategist' && { role: 'strategist' as const }),
           attemptIndex: attempt.attemptIndex,
           status: attempt.status,
           durationMs: attempt.durationMs,
@@ -143,23 +152,52 @@ export async function runLineup(
       // decision per running model.
       let providerFailures = 0;
       let lastFailure = 'provider error';
+      // A strategist that never answers would quietly turn the cell into its `none` row.
+      let strategistFailures = 0;
+      let lastStrategistFailure = 'provider error';
       let stopReason: string | undefined;
       const providerStop = (): string =>
-        `${PROVIDER_FAILURE_LIMIT} decisions in a row failed at the provider (${lastFailure})`;
+        strategistFailures >= PROVIDER_FAILURE_LIMIT
+          ? `${PROVIDER_FAILURE_LIMIT} strategist calls in a row failed at the provider (${lastStrategistFailure})`
+          : `${PROVIDER_FAILURE_LIMIT} decisions in a row failed at the provider (${lastFailure})`;
+      const stopped = (): boolean =>
+        providerFailures >= PROVIDER_FAILURE_LIMIT || strategistFailures >= PROVIDER_FAILURE_LIMIT;
+      const countStrategist = (call: StrategistCall | undefined): void => {
+        if (call === undefined) return;
+        // A strategist call priced from the price list counts against the cap; reported charges
+        // already did, attempt by attempt.
+        if (call.costSource === 'estimated' && call.costUsd !== undefined)
+          knownSpend += call.costUsd;
+        if (call.failure?.startsWith('provider error') === true) {
+          strategistFailures += 1;
+          lastStrategistFailure = call.failure;
+        } else strategistFailures = 0;
+      };
       const makeActor: ActorFactory = (engine, benchCase) => {
         const actor = baseFactory(engine, benchCase);
         return {
+          ...(actor.observe !== undefined && {
+            observe: actor.observe.bind(actor),
+          }),
+          ...(actor.close !== undefined && {
+            close: async () => {
+              const tail = await actor.close!();
+              countStrategist(tail);
+              return tail;
+            },
+          }),
           async decide(request, view) {
             if (overBudget()) {
               stopReason = `${new SpendCapReached(options.spendCapUsd ?? 0).message} during ${benchCase.id}`;
               throw new SpendCapReached(options.spendCapUsd ?? 0);
             }
-            if (providerFailures >= PROVIDER_FAILURE_LIMIT) {
+            if (stopped()) {
               stopReason = providerStop();
               throw new Error(stopReason);
             }
             reportedThisDecision = 0;
             const answer = await actor.decide(request, view);
+            countStrategist(answer.strategist);
             // A decision priced from the lineup's price list counts against the cap too, less
             // whatever its attempts already reported, so nothing is counted twice.
             if (answer.costSource === 'estimated' && answer.costUsd !== undefined)
@@ -183,12 +221,18 @@ export async function runLineup(
           }
           stopReason = undefined;
           const played = await playCase(benchCase, makeActor);
-          if (stopReason === undefined && providerFailures >= PROVIDER_FAILURE_LIMIT)
-            stopReason = providerStop();
+          if (stopReason === undefined && stopped()) stopReason = providerStop();
           if (stopReason !== undefined) {
             // A case stopped by the cap or by a dead provider is not scored: the rest of it was
             // never asked, or was played by the fallback. What it already spent still counts.
-            unscored.push({ caseId: benchCase.id, trial, decisions: played.decisions });
+            unscored.push({
+              caseId: benchCase.id,
+              trial,
+              decisions: played.decisions,
+              ...(played.strategistTail !== undefined && {
+                strategistTail: played.strategistTail,
+              }),
+            });
             abortReason = stopReason;
             break outer;
           }

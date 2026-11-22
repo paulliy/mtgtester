@@ -1,0 +1,35 @@
+{
+  "description": "Every strategist in front of every tactician. Rows: no strategist, the case's own hand-written context, and the two production strategist models. Columns: the bot, the bot escalating close calls to the production tactician, the production chat tactician, and two decision models. Local bots sit behind none and case only.",
+  "strategists": [
+    { "id": "none", "kind": "none" },
+    { "id": "case", "kind": "case" },
+    {
+      "id": "glm-low",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "z-ai/glm-5.3-flash",
+      "reasoning": "low"
+    },
+    {
+      "id": "dsv4-low",
+      "kind": "llm",
+      "provider": "openrouter",
+      "model": "deepseek/deepseek-v4-flash",
+      "reasoning": "low"
+    }
+  ],
+  "tacticians": [
+    { "id": "heuristic", "kind": "local", "policy": "heuristic" },
+    { "id": "bot", "kind": "bot-led", "escalation": [] },
+    {
+      "id": "bot-uncertain-qwen",
+      "kind": "bot-led",
+      "escalation": ["uncertain"],
+      "provider": "openrouter",
+      "model": "qwen/qwen3.7-flash"
+    },
+    { "id": "qwen", "kind": "llm", "provider": "openrouter", "model": "qwen/qwen3.7-flash" },
+    { "id": "jev-1.14", "kind": "decision", "model": "typesafe/jev-1.14" },
+    { "id": "gemini-decision-1", "kind": "decision", "model": "google/gemini-decision-1" }
+  ]
+}
