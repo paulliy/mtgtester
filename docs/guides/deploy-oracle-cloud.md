@@ -29,10 +29,12 @@ The files are in [`deploy/oracle-cloud/`](../../deploy/oracle-cloud/).
 Compute, Instances, Create instance:
 
 - **Image:** Canonical Ubuntu 24.04 (or 22.04).
-- **Shape:** Ampere, `VM.Standard.A1.Flex`, **2 OCPU and 12 GB** memory. That is half the Always
-  Free allowance (4 OCPU, 24 GB) and leaves room for a second VM. The server needs about 400 MB
-  before any game starts, and each game runs in its own worker on top of that, so 12 GB leaves
-  wide headroom for the default 8 tables.
+- **Shape:** Ampere, `VM.Standard.A1.Flex`, **2 OCPU and 12 GB** memory. That is the whole
+  Always Free Ampere allowance as Oracle documents it in 2026 (2 OCPU and 12 GB in total, split
+  across up to two instances); the older 4 OCPU and 24 GB allowance no longer applies. Check the
+  current figures on Oracle's Always Free page before creating the VM. The server needs about
+  400 MB before any game starts, and each game runs in its own worker on top of that, so 1 OCPU and 6 GB
+  should also be enough for the default 8 tables.
 - **Networking:** a new VCN with a public subnet and a public IPv4 address, so you can SSH in.
   Leave the security list with SSH (22) only. Do not open 3002, 80 or 443: the tunnel needs no
   inbound port.
