@@ -34,6 +34,8 @@ import {
   type Budget,
   type Tally,
 } from './ai-mode-duel';
+import { DecisionTraceWriter, decisionTraceLine } from './decision-trace';
+import type { AsyncDecisionProvider } from '@mtg/engine';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
 const SEATS: PlayerId[] = ['P1', 'P2', 'P3', 'P4'];
@@ -50,6 +52,8 @@ async function main(): Promise<void> {
   const seed = arg(argv, '--seed') ?? 'four-way-1';
   const turnCap = Number(arg(argv, '--turn-cap') ?? 60);
   const json = arg(argv, '--json');
+  const tracePath = arg(argv, '--trace');
+  const trace = tracePath === undefined ? undefined : new DecisionTraceWriter(tracePath);
   const budget: Budget = {
     maxUsd: Number(arg(argv, '--max-usd') ?? 2),
     maxCalls: 1500,
@@ -140,7 +144,15 @@ async function main(): Promise<void> {
       .getState()
       .players.filter((p) => p.hasLost === true)
       .map((p) => p.id);
-  const providers = new Map<PlayerId, OpenAiDecisionProvider>();
+  const providers = new Map<PlayerId, AsyncDecisionProvider>();
+  const botOutcomes = new Map<
+    string,
+    { escalated: boolean; reasons: readonly string[]; escalatedBy?: string }
+  >();
+  const lifeNow = (): Record<string, number> =>
+    Object.fromEntries(
+      engine.getState().players.map((p) => [p.id, p.hasLost === true ? 0 : p.life]),
+    );
   const started = performance.now();
   const result = await runToCompletionAsync(
     engine,
@@ -148,7 +160,7 @@ async function main(): Promise<void> {
       let provider = providers.get(seat);
       if (provider === undefined) {
         const mode = modeOf(seat);
-        provider = new OpenAiDecisionProvider(
+        const live = new OpenAiDecisionProvider(
           mode === 'model-none' ? tacticianNone : tacticianLow,
           queue,
           engine,
@@ -156,7 +168,42 @@ async function main(): Promise<void> {
           logger,
           undefined,
           coordinators[mode],
+          undefined,
+          undefined,
+          undefined,
+          {
+            onBotDecision(request, outcome) {
+              botOutcomes.set(request.requestId, outcome);
+            },
+          },
         );
+        const coordinator = coordinators[mode];
+        provider =
+          trace === undefined
+            ? live
+            : {
+                async decide(request) {
+                  const view = engine.view(request.decidingPlayer);
+                  const life = lifeNow();
+                  const response = await live.decide(request);
+                  const bot = botOutcomes.get(request.requestId);
+                  botOutcomes.delete(request.requestId);
+                  const steering = coordinator.steeringFor(request.decidingPlayer);
+                  trace.write(
+                    decisionTraceLine({
+                      request,
+                      response,
+                      view,
+                      mode,
+                      source: logger.sourceFor(request.requestId) ?? 'unknown',
+                      ...(bot !== undefined && { bot }),
+                      ...(steering !== undefined && { steering }),
+                      life,
+                    }),
+                  );
+                  return response;
+                },
+              };
         providers.set(seat, provider);
       }
       return provider;
@@ -178,6 +225,13 @@ async function main(): Promise<void> {
 
   const turns = result.turnCount;
   tracker.finish(turns, lostSeats());
+  trace?.write({
+    kind: 'end',
+    turns,
+    winner: result.winnerSeat,
+    finishingOrder: result.finishingOrder,
+    life: lifeNow(),
+  });
   const life: Record<string, number> = {};
   for (const p of engine.getState().players) life[p.id] = p.hasLost === true ? 0 : p.life;
   const report = {
