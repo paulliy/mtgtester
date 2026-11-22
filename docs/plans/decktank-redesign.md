@@ -1,19 +1,19 @@
 # Decktank redesign: implementation plan
 
-Status: proposed, 2026-11-22. Planned on Claude Opus; the board and combat phases are high-effort and should be re-planned task by task before implementation, per [AGENTS.md](../../AGENTS.md).
+Status: proposed, 2026-11-22. Phase 0 decisions 3, 7 and 8 were settled by the owner the same day (night theme, external multiplayer link, import report deferred). Planned on Claude Opus; the board and combat phases are high-effort and should be re-planned task by task before implementation, per [AGENTS.md](../../AGENTS.md).
 
 This plan brings the "Decktank" redesign into `apps/web`. The design was mocked up as interactive canvas screens; their source is copied into [docs/design/decktank/](../design/decktank/) as reference. Each `.dc.html` file is one self-contained screen: the markup is the layout and styling, and the `class Component` script at the bottom is the behaviour (state, handlers, animation maths). The scripts use sample data throughout; nothing in them is a source of truth for game data.
 
-| Mockup file                                   | Becomes                                                                       |
-| --------------------------------------------- | ----------------------------------------------------------------------------- |
-| `Main.dc.html`, `MainPhone.dc.html`           | `SetupView.vue` (New game: compass, setup panel, inline deck picker)          |
-| `TopBar.dc.html`                              | `App.vue` navigation (ruler nav, phone menu)                                  |
-| `Deck.dc.html`                                | Superseded by the inline deck picker in `Main.dc.html`; reference only        |
-| `Board.dc.html` (+ `BoardMedium`, `BoardMany`) | `PlayerGameView.vue`, `GameView.vue`, `SeatPanel.vue`, `PermanentChip.vue`     |
-| `CombatDeclare.dc.html`, `CombatBlock.dc.html` | `CombatOverlay.vue`, `combatPlan` store, `PermanentChip.vue`                   |
-| `Stats.dc.html`, `Batches.dc.html`            | `StatsView.vue`, `BatchResultsView.vue`, `BatchSetupView.vue`                 |
-| `CardLab.dc.html`                             | `CardTestLabView.vue` plus a new import report (phase 4)                      |
-| `Deals.dc.html`, `Debug.dc.html`              | `DealsPreviewView.vue`, `DebugView.vue`                                       |
+| Mockup file                                    | Becomes                                                                    |
+| ---------------------------------------------- | -------------------------------------------------------------------------- |
+| `Main.dc.html`, `MainPhone.dc.html`            | `SetupView.vue` (New game: compass, setup panel, inline deck picker)       |
+| `TopBar.dc.html`                               | `App.vue` navigation (ruler nav, phone menu)                               |
+| `Deck.dc.html`                                 | Superseded by the inline deck picker in `Main.dc.html`; reference only     |
+| `Board.dc.html` (+ `BoardMedium`, `BoardMany`) | `PlayerGameView.vue`, `GameView.vue`, `SeatPanel.vue`, `PermanentChip.vue` |
+| `CombatDeclare.dc.html`, `CombatBlock.dc.html` | `CombatOverlay.vue`, `combatPlan` store, `PermanentChip.vue`               |
+| `Stats.dc.html`, `Batches.dc.html`             | `StatsView.vue`, `BatchResultsView.vue`, `BatchSetupView.vue`              |
+| `CardLab.dc.html`                              | `CardTestLabView.vue` restyle; the import report is deferred (phase 4)     |
+| `Deals.dc.html`, `Debug.dc.html`               | `DealsPreviewView.vue`, `DebugView.vue`                                    |
 
 ## What exists today, and what that means for the plan
 
@@ -25,13 +25,15 @@ This plan brings the "Decktank" redesign into `apps/web`. The design was mocked 
   - **Reduced motion:** honoured through `game.reducedMotion` and the `.reduced-motion` CSS override.
 
   The combat work is therefore an extension of this code, not a rewrite.
+
 - Setup already does what the mockup's setup panel does:
   - **Seat choices:** game mode, who controls each seat (`random` is the built-in bot, `ai` the language-model bot), rerolls and the seed.
   - **Preview:** a live matchup preview (`POST /api/setup-preview`).
   - **Decks:** known and saved deck galleries, plus URL and plaintext import.
 
   Batch setup is a separate route (`BatchSetupView.vue`).
-- A failed import only reports `"<seat>: Deck is not fully modeled."` in `SetupPreview.blockers`. The names of the unmodeled cards are computed for saved decks (`packages/server/src/match/preview.ts`) but never sent. The README lists "failed-import draft preservation" as open product work. Phase 4 closes both gaps.
+
+- A failed import only reports `"<seat>: Deck is not fully modeled."` in `SetupPreview.blockers`. The names of the unmodeled cards are computed for saved decks (`packages/server/src/match/preview.ts`) but never sent. The README lists "failed-import draft preservation" as open product work. Phase 4 closes both gaps, but it is deferred.
 - The Card Test Lab (`/card-test-lab`) is a dev-only list of engine scenarios (`CardTestScenarioMetadata`: title, instructions, `oracleSha256`, `clauseIds`). Per-card evidence of the kind the mockup shows lives in `docs/plans/card-catalog-audit.json` (`implementationStatus`, `engineEvidence`, `viewerEvidence`, `gameplayAiEvidence`) and in the completion rule of [card modeling and testing](../guides/card-modeling-and-testing.md). No endpoint serves it yet.
 - The Playwright suites find elements by role and accessible name: the heading "New game", the buttons "Start game" and `Keep N`, deck buttons named by commander, and many board controls in the `white-black-control-*` and `*-card-test-lab` specs. Every phase keeps those names, or updates the specs in the same pull request.
 
@@ -41,18 +43,39 @@ Write ADR 0052 "Decktank visual identity", amending the brief §2 styling row an
 
 1. **Name.** The product is "Decktank". This plan changes only the user-facing brand: the nav brand, `index.html` title and README heading. Package names (`@mtg/*`) and the repository name stay.
 2. **Theme.** Paper `#f5f3ec`, ink `#2d2a2a`, muted text `#66625f`, rules `#bdbbb6`, warm accent `#a77e5f`, and the muted Magic colours W `#ddd2b0`, U `#9fb1c1`, B `#5e5753` (light letter), R `#c99580`, G `#9cae94`, colourless `#d6d4ce`. Status colours (ok, warn, danger) get muted equivalents chosen for 4.5:1 contrast on paper.
-3. **Dark mode.** Decide: drop it, or keep a night variant of the same tokens. The recommendation is to ship light first and keep every colour in tokens, so a night theme is a later token swap.
+3. **Night theme (decided).** Ship a day theme and a night theme from the same tokens. Night follows `prefers-color-scheme: dark` by default, and a Day / Night / Match system control (stored in `localStorage` under `decktank.theme`) overrides it. Night is warm charcoal, not blue-black, so it reads as the same paper-and-ink design with the lights down:
+
+   | Token                  | Day                   | Night              | Note                                                                 |
+   | ---------------------- | --------------------- | ------------------ | -------------------------------------------------------------------- |
+   | `--paper` (page)       | `#f5f3ec`             | `#1b1a19`          |                                                                      |
+   | `--paper-2` (raised)   | `#eeeadf`             | `#24221f`          | panels, decision bar, selected rows                                  |
+   | `--ink` (text, rules)  | `#2d2a2a`             | `#e9e5da`          | 12.8:1 day, 13.8:1 night                                             |
+   | `--ink-soft` (hover)   | `#413e3d`             | `#cfcabe`          | primary-button hover                                                 |
+   | `--muted` (small text) | `#66625f`             | `#a29d95`          | at least 4.5:1 on paper and on paper-2 in both themes                |
+   | `--rule` (soft lines)  | `#bdbbb6`             | `#4a4643`          |                                                                      |
+   | `--accent` (warm)      | `#a77e5f`             | `#c49a77`          | tick, needle, planet; decoration only, never text                    |
+   | `--mana-w`             | `#ddd2b0`             | `#c9bd96`          | dark letter                                                          |
+   | `--mana-u`             | `#9fb1c1`             | `#7f95a8`          | dark letter                                                          |
+   | `--mana-b`             | `#5e5753`             | `#3f3936`          | light letter; the pip's 1px ring (`--ink`) keeps it visible at night |
+   | `--mana-r`             | `#c99580`             | `#b07f6b`          | dark letter                                                          |
+   | `--mana-g`             | `#9cae94`             | `#82967b`          | dark letter                                                          |
+   | `--mana-c`             | `#d6d4ce`             | `#8c8984`          | dark letter                                                          |
+   | `--lift-shadow`        | `rgb(45 42 42 / 0.5)` | `rgb(0 0 0 / 0.6)` | lifted combat creatures                                              |
+
+   A pip's dark letter is `#2d2a2a` in day and `#1b1a19` in night; every letter clears 4.5:1 on its fill. "Selected" stays an inversion in both themes (`--ink` fill, `--paper` text), so no component needs a night-specific rule. The phase 1 pull request includes a contrast unit test over this table.
+
 4. **Fonts.** Bodoni Moda (display), Archivo (labels and buttons), Cutive Mono (body). All three are OFL. Self-host them under `apps/web/public/fonts/` rather than loading Google Fonts, because the app runs locally and offline. Add them to `THIRD_PARTY_NOTICES.md`.
 5. **Motion.** Motion is allowed as CSS transitions and `requestAnimationFrame` loops, with no library. Every animation is off under reduced motion, and an animation never delays a state change: the state lands at once and the motion is decoration on top.
 6. **Batch mode.** Fold batch setup into the New game screen as the compass's East option (the mockup's design), with `/batch` kept as a redirect. Or keep `/batch` as its own restyled page. The recommendation is to fold it in.
-7. **The fourth compass option.** The mockup shows "Multiplayer · soon". The table server (ADR 0031) already exists, so either link it to the table app or leave it disabled.
-8. **Import report in production.** The Card Test Lab is dev-only. Phase 4's failed-import report must work in production, so it is a separate, always-available route; the scenario runner stays dev-only.
+7. **The fourth compass option (decided).** For now, Multiplayer (South) is a plain link to `https://decktester.poilygon.dev/`, opened in a new tab (`target="_blank" rel="noopener"`), with an external-link mark and "Opens the hosted tables" as its sub-label. It does not start or proxy anything on the local server; `serve` must never be exposed ([table hosting](../guides/table-hosting.md)). Keep the URL in one constant (`lib/links.ts`) so it can move to configuration later.
+8. **Import report (decided: later).** The failed-import report and the LLM work order (phase 4) are deferred. Until then, a blocked import keeps today's behaviour: the preview's blocker message under the deck picker's "Bring your own" field.
 
 ## Phase 1: foundation (1 pull request)
 
 **Files:** `apps/web/src/styles.css` (split into `styles/tokens.css`, `styles/base.css`, `styles/motion.css`); `apps/web/index.html`; `apps/web/public/fonts/*`; `App.vue` (brand only); `components/ManaPips.vue`; `components/DeckColors.vue`.
 
 1. Add the tokens: `--paper --paper-2 (#eeeadf) --ink --ink-soft (#413e3d) --muted --rule --accent`, the mana colours `--mana-w/u/b/r/g/c` plus light tints for unselected filters, the three font families, the house easing `--ease: cubic-bezier(0.165, 0.84, 0.44, 1)`, and spacing.
+   Define each token twice: day values on `:root`, night values under `:root[data-theme="night"]` and under `@media (prefers-color-scheme: dark) { :root:not([data-theme="day"]) { … } }`. A small `stores/theme.ts` (or composable) reads `localStorage['decktank.theme']` (`day | night | system`, wrapped in try/catch), sets `data-theme` on `<html>` before first paint (an inline script in `index.html` avoids a flash), and exposes the control for phase 2's nav.
 2. Add a compatibility layer: map the old variables onto the new tokens (`--bg → --paper`, `--surface → --paper`, `--surface-2 → --paper-2`, `--line → --ink`, `--text → --ink`, `--muted → --muted`, `--accent → --ink`, plus the muted status colours). Every existing component then switches theme with no edits, and later phases restyle them one at a time.
 3. Base styles from the mockups:
    - **Outlined button:** the 1px ink border with uppercase Archivo 0.7rem/0.08em fills ink on hover, with an arrow that nudges 3px.
@@ -74,6 +97,7 @@ Write ADR 0052 "Decktank visual identity", amending the brief §2 styling row an
 3. Keep `#top-bar-status`: the board teleports round and phase into it.
 4. Below 760px the brand becomes a button that opens a full-height sheet of places with descriptions (`MainPhone.dc.html`).
 5. The New game opening screen hides the bar (phase 3 sets a flag the shell reads).
+6. Put the Day / Night / Match system control at the right end of the bar, and in the phone sheet's footer.
 
 **Checks:** nav e2e locators. The current links are named Setup, Board, Stats, Debug, Batch, Card Test Lab and Deals. Grep `e2e/` for any spec that clicks them, and update it.
 
@@ -81,17 +105,18 @@ Write ADR 0052 "Decktank visual identity", amending the brief §2 styling row an
 
 `SetupView.vue` is 1,242 lines. Split it while restyling, so the result is a thin view over components:
 
-| New file                               | Holds                                                                                               |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `components/setup/ModeCompass.vue`     | The instrument: bezel, rings, rose, needle, four options, opening artwork, "Where to?"              |
-| `components/setup/SetupPanel.vue`      | The right-hand panel: summary plate, tabs (Seats, Bots, Pacing or Scenarios, Extras), Start button  |
-| `components/setup/DeckPicker.vue`      | The inline deck chooser that takes the compass's place                                              |
-| `lib/compass.ts` (+ `compass.test.ts`) | Pure angle maths: wrap, shortest turn, cumulative needle, ring landing, magnet snap and release      |
-| `stores/setup.ts` (optional)           | Setup state now spread through the view, if splitting needs a shared store                          |
+| New file                               | Holds                                                                                              |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `components/setup/ModeCompass.vue`     | The instrument: bezel, rings, rose, needle, four options, opening artwork, "Where to?"             |
+| `components/setup/SetupPanel.vue`      | The right-hand panel: summary plate, tabs (Seats, Bots, Pacing or Scenarios, Extras), Start button |
+| `components/setup/DeckPicker.vue`      | The inline deck chooser that takes the compass's place                                             |
+| `lib/compass.ts` (+ `compass.test.ts`) | Pure angle maths: wrap, shortest turn, cumulative needle, ring landing, magnet snap and release    |
+| `stores/setup.ts` (optional)           | Setup state now spread through the view, if splitting needs a shared store                         |
 
 **3a. Compass** (reference: `Main.dc.html`, `renderVals`, `kickRings`, `dialMove`, `dialUp`, `replayOpening`):
 
-- **Options:** four buttons on a plate that rotates so the chosen one comes to north (rotation `-angle`, with each label counter-rotated `+angle`). Angles are cumulative, so repeated clicks add turns instead of jumping. The needle and rose hold north.
+- **Multiplayer (South):** not a mode. It is an `<a>` to the hosted tables URL (phase 0, decision 7), styled like the other options, that opens a new tab and never turns the compass.
+- **Options:** the other three are buttons on a plate that rotates so the chosen one comes to north (rotation `-angle`, with each label counter-rotated `+angle`). Angles are cumulative, so repeated clicks add turns instead of jumping. The needle and rose hold north.
 - **Hover:** the needle leans toward a hovered option or follows the pointer over the face. It snaps on within 12° and releases past 17°, with a 0.4s spring back. Leaving an option button waits 40ms before the needle returns.
 - **Drag:** dragging the face turns the plate with the pointer. On release, the nearest option within 32° comes to north.
 - **Rings:** three rings each spin about a turn in alternating directions per change and land on quarters (`kickRings`).
@@ -101,15 +126,15 @@ Write ADR 0052 "Decktank visual identity", amending the brief §2 styling row an
 
 **3b. Setup panel** (reference: the `<aside class="setup">` in `Main.dc.html`). Wire it to the existing state; don't invent new state:
 
-| Mockup                                  | Today                                                                                     |
-| --------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Play / Watch                            | `StartGameMode` (player vs spectator)                                                     |
-| You / Built-in / AI per seat            | `SeatControllerKind` (`human`, `random`, `ai`); labels from `lib/providerLabels.ts`        |
-| Seats tab: deck, Change deck, Reroll    | Current seat summary, pool reroll, gallery selection                                      |
-| Pacing: Live or Step by hand, Pace      | Current playback and pace settings                                                        |
-| Extras: Table talk, Replay seed         | Current table-talk (ADR 0035) and seed fields                                             |
-| Batch: Scenarios                        | `BatchSetupView.vue` form (if phase 0 folds it in)                                        |
-| Summary plate                           | Derived from the same state and the preview response                                      |
+| Mockup                               | Today                                                                               |
+| ------------------------------------ | ----------------------------------------------------------------------------------- |
+| Play / Watch                         | `StartGameMode` (player vs spectator)                                               |
+| You / Built-in / AI per seat         | `SeatControllerKind` (`human`, `random`, `ai`); labels from `lib/providerLabels.ts` |
+| Seats tab: deck, Change deck, Reroll | Current seat summary, pool reroll, gallery selection                                |
+| Pacing: Live or Step by hand, Pace   | Current playback and pace settings                                                  |
+| Extras: Table talk, Replay seed      | Current table-talk (ADR 0035) and seed fields                                       |
+| Batch: Scenarios                     | `BatchSetupView.vue` form (if phase 0 folds it in)                                  |
+| Summary plate                        | Derived from the same state and the preview response                                |
 
 Keep the live preview on every change, the client-fixed seed, `useConfirmedStart`, the start errors and `recentSetup`. Keep an `<h1>` named "New game" (visually hidden if the display title is "Play against bots") so `player-setup.spec.ts` keeps working. Below 900px the panel stacks under the compass at full width, as in the fixed mockup.
 
@@ -122,7 +147,9 @@ Keep the live preview on every change, the client-fixed seed, `useConfirmedStart
 
 **Checks:** `compass.test.ts`, all existing setup unit tests, `test:e2e:setup`, plus one new e2e that changes a seat's deck through the picker and starts.
 
-## Phase 4: failed import goes to the Card lab, with an LLM work order (3 pull requests)
+## Phase 4: failed import goes to the Card lab, with an LLM work order (deferred)
+
+Deferred by the owner on 2026-11-22. The design below is kept so it can be picked up later; nothing in phases 5 to 8 depends on it. Only 4d (the Card Test Lab restyle) goes ahead now, as part of phase 7.
 
 **4a. Server and protocol.** In `packages/shared/src/protocol.ts`, extend `SetupPreviewSeat` with `unmodeledCards?: { name: string; oracleSha256?: string; status: 'unsupported' | 'implemented-unreviewed' | 'provisional' }[]`. Fill it in `packages/server/src/match/preview.ts` for URL, plaintext and saved seats. The saved-deck path already computes the names; the status comes from `interpretCard`, the provisional tier (ADR 0050) and the catalog audit. The protocol comment says "No card list or private card data crosses this boundary". Amend it in the ADR, because every previewed deck was supplied by the user at setup, and these are only its unmodeled names. Add preview tests for an import with unsupported cards.
 
@@ -158,6 +185,7 @@ Offer "Save work order" (Blob download, file `decktank-work-order-<deck>.md`), "
    - **Commander:** a double border.
 
    Type-line data comes from the server presentation (ADR 0032). If the parts aren't split there, split them server-side, not in the view.
+
 2. **Seat panels** (`SeatPanel.vue`, `ZonePile.vue`, `ZoneStrip.vue`, `CommanderDamageGrid.vue`): a large Bodoni life total, the commander name hoverable for its card, "Cmdr in play" or "Cmdr in zone", the colour pips, and the side rail (Life, Graveyard, Exile, Library, Cmdr tax).
 3. **Top bar and turn** (`#top-bar-status` content): "Round N" in Bodoni, a solid "Your turn" tag, and a step ruler (Beginning, Main, Combat, Second main, End) with filled finished steps and a sliding warm dot. On phones only the current step keeps its label.
 4. **Commander in hand:** while castable from the command zone, the commander sits at the start of the hand behind a rule, with its tax on hover.
@@ -195,6 +223,7 @@ Reference: `CombatDeclare.dc.html` and `CombatBlock.dc.html` (`frame()`, `draw()
   - **Buttons:** outlined.
 - **`BatchResultsView.vue`, `BatchSetupView.vue`:** restyle, or redirect if batch setup moved into New game.
 - **`DebugView.vue`, `DealsPreviewView.vue`:** restyle only.
+- **`CardTestLabView.vue`:** the restyle from phase 4d, without the import report.
 - **All pages:** the star-and-rule ornament spans each page title, and the footer line reads "Decktank · II. Records · a. Stats".
 
 ## Phase 8: multiplayer tables (1 pull request)
@@ -203,17 +232,17 @@ Reference: `CombatDeclare.dc.html` and `CombatBlock.dc.html` (`frame()`, `draw()
 
 ## Order and size
 
-| Phase | Pull requests | Depends on | Risk                                                   |
-| ----- | ------------- | ---------- | ------------------------------------------------------ |
-| 0     | 1 (ADR)       | none       | Low; decisions only                                    |
-| 1     | 1             | 0          | Low; compatibility layer keeps every view working      |
-| 2     | 1             | 1          | Low; nav locators                                      |
-| 3     | 3             | 1, 2       | Medium; largest view, setup e2e                        |
-| 4     | 3 (+1 lab)    | 3c         | Medium; protocol and server change                     |
-| 5     | 4 or more     | 1          | High; board e2e coverage                               |
-| 6     | 2             | 5.1        | High; combat correctness and engine retry paths        |
-| 7     | 2 or 3        | 1          | Low                                                    |
-| 8     | 1             | 1          | Low                                                    |
+| Phase | Pull requests | Depends on | Risk                                              |
+| ----- | ------------- | ---------- | ------------------------------------------------- |
+| 0     | 1 (ADR)       | none       | Low; decisions only                               |
+| 1     | 1             | 0          | Low; compatibility layer keeps every view working |
+| 2     | 1             | 1          | Low; nav locators                                 |
+| 3     | 3             | 1, 2       | Medium; largest view, setup e2e                   |
+| 4     | Deferred      | 3c         | Medium; protocol and server change (4d runs in 7) |
+| 5     | 4 or more     | 1          | High; board e2e coverage                          |
+| 6     | 2             | 5.1        | High; combat correctness and engine retry paths   |
+| 7     | 2 or 3        | 1          | Low                                               |
+| 8     | 1             | 1          | Low                                               |
 
 Phases 5 and 7 can run in parallel with 3 and 4 once phase 1 lands, as long as they touch disjoint files.
 
@@ -221,7 +250,7 @@ Phases 5 and 7 can run in parallel with 3 and 4 once phase 1 lands, as long as t
 
 - Keep every accessible name a Playwright spec uses, or update that spec in the same pull request.
 - Run what CI runs for viewer changes: `typecheck`, `typecheck:tests`, `lint`, `format:check`, the web build, `test:e2e` and `test:e2e:setup` ([testing discipline](../guides/testing-discipline.md)).
-- Text contrast stays at least 4.5:1 on paper, including small grey labels. Touch targets are at least 44px. Icon-only buttons get an `aria-label`.
+- Text contrast stays at least 4.5:1 on paper in both themes, including small grey labels. Check every restyled screen in day and in night. Touch targets are at least 44px. Icon-only buttons get an `aria-label`.
 - Every animation honours `game.reducedMotion` and `prefers-reduced-motion`.
 - Mockup sample data (deck names, figures, the sample failed import) never ships. Every value on screen comes from the server or the store.
 - Attach before and after screenshots in `docs/reviews/` for any screen the pull request restyles.
