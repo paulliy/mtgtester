@@ -145,7 +145,12 @@ function main(): void {
   console.log(`  Max tables:     ${config.maxTables}`);
   console.log(`  Oracle index:   ${index.size.toLocaleString()} cards`);
   console.log(`  Supported pool: ${pool.cards.length.toLocaleString()} cards`);
-  console.log(`\n  Host secret (creates tables; keep it private):\n    ${registry.hostSecret}`);
+  if (config.hostSecret !== null) {
+    // The operator chose it and it outlives this run, so it stays out of the log.
+    console.log('\n  Host secret:    fixed by TABLE_HOST_SECRET (not printed)');
+  } else {
+    console.log(`\n  Host secret (creates tables; keep it private):\n    ${registry.hostSecret}`);
+  }
   console.log(
     `\n  Create a table:\n    curl -s -X POST -H "Authorization: Bearer <secret>" ${origin}/tables\n`,
   );

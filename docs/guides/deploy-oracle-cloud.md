@@ -93,8 +93,9 @@ sudo journalctl -u mtg-table -n 40 --no-pager
 ```
 
 The log should say `production, behind a TLS proxy` and print the **host secret**, which creates
-tables. A new secret is printed at every start; read it from the log again after a restart. Keep it
-private.
+tables. A new secret is printed at every start; read it from the log again after a restart. To keep one
+fixed secret instead, set `TABLE_HOST_SECRET` in `/etc/mtg-table.env` (see the comment there) and
+restart. Keep it private.
 
 ## 5. Create the Cloudflare Tunnel (you)
 
