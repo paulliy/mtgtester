@@ -1,4 +1,4 @@
-import { withReadScope } from '../effects/layer-cache';
+import { readScopeToken, withReadScope } from '../effects/layer-cache';
 import { playerLifeLocked } from './phasing';
 import { offBattlefieldTypes } from './off-battlefield-types';
 import { counterCount } from './counters';
@@ -1443,6 +1443,42 @@ export interface RuleStaticEntry {
  * double-counts a permanent that is also on the battlefield.
  */
 export function gatherRuleStatics(ctx: GameContext): RuleStaticEntry[] {
+  // Inside a read scope the battlefield cannot change, so one gathering serves every query in
+  // it: a priority menu asks once per card considered and once per mana source listing. The
+  // command zones are not a digest input, so the memo also checks they are the same arrays at
+  // the same lengths. Callers only read the result.
+  const scope = readScopeToken(ctx);
+  if (scope !== undefined) {
+    const memo = RULE_STATICS.get(scope);
+    if (memo !== undefined && memo.defs === ctx.defs && sameCommandZones(ctx, memo.zones))
+      return memo.out;
+    const out = gatherRuleStaticsNow(ctx);
+    RULE_STATICS.set(scope, {
+      defs: ctx.defs,
+      zones: ctx.state.players.map((player) => [player.commandZone, player.commandZone.length]),
+      out,
+    });
+    return out;
+  }
+  return gatherRuleStaticsNow(ctx);
+}
+
+const RULE_STATICS = new WeakMap<
+  object,
+  { defs: object; zones: [readonly unknown[], number][]; out: RuleStaticEntry[] }
+>();
+
+function sameCommandZones(ctx: GameContext, zones: [readonly unknown[], number][]): boolean {
+  const players = ctx.state.players;
+  if (players.length !== zones.length) return false;
+  for (let i = 0; i < players.length; i++) {
+    const zone = players[i]!.commandZone;
+    if (zone !== zones[i]![0] || zone.length !== zones[i]![1]) return false;
+  }
+  return true;
+}
+
+function gatherRuleStaticsNow(ctx: GameContext): RuleStaticEntry[] {
   const out: RuleStaticEntry[] = [];
   let all: Map<string, Characteristics> | undefined;
   for (const perm of ctx.state.battlefield) {

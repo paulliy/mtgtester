@@ -45,9 +45,21 @@ export function castingCheckpoint(ctx: GameContext): () => void {
     });
     for (let i = 0; i < values.length; i++) capture(values[i]);
   }
+  // The event log and the debug log are append-only: a logged entry is never edited (see
+  // `emit` and the mana planner's `clone`), so rolling one back is truncating it. Walking every
+  // entry, as the generic capture does, made each cast cost time in proportion to the length of
+  // the game so far: in a bot game nothing drains either log.
+  const appendOnly = (log: unknown[]): void => {
+    seen.add(log);
+    const length = log.length;
+    restore.push(() => {
+      log.length = length;
+    });
+  };
+  appendOnly(ctx.state.eventLog);
+  appendOnly(ctx.debugLog);
   capture(ctx.state);
   capture(ctx.rng);
-  capture(ctx.debugLog);
   capture(ctx.defs);
   capture(ctx.resolutionObjectMoves);
   capture(ctx.resolutionObjectFacts);

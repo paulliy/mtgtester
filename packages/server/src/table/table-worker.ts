@@ -12,7 +12,7 @@
  */
 
 import { buildOracleIndexFromCards } from '../cards/oracle-index';
-import { buildSupportedPool } from '../cards/pool';
+import type { SupportedPool } from '../cards/pool';
 import { GameStore } from '../db';
 import { bannedListFromNames } from '../decks/banned';
 import { InProcessSessionPort } from './in-process-port';
@@ -31,8 +31,17 @@ function boot(input: TableWorkerBoot): void {
   if (port !== null) return;
   const { config, cards } = input;
   store = new GameStore(config.dbPath, { busyTimeoutMs: input.busyTimeoutMs });
-  const index = buildOracleIndexFromCards([...cards.poolCards, ...cards.deckCards]);
-  const pool = buildSupportedPool(cards.poolCards);
+  const index = buildOracleIndexFromCards([
+    ...cards.pool.map((entry) => entry.card),
+    ...cards.deckCards,
+  ]);
+  // The main thread's pool, as `buildSupportedPool` would rebuild it here without interpreting
+  // every card again: the worker has no provisional catalog, so provisional entries drop out, and
+  // every entry is commander-legal, so each counts as considered.
+  const pool: SupportedPool = {
+    cards: cards.pool.filter((entry) => entry.provisional !== true),
+    considered: cards.pool.length,
+  };
   const session = new InProcessSessionPort({
     generation: input.generation,
     deps: {

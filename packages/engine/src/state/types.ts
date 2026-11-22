@@ -1085,6 +1085,8 @@ export interface GameContext {
   costLifePaid?: { amount: number };
   /** Copied from `GameConfig.strictInvariants`: rethrow invariant failures instead of halting. */
   strictInvariants?: boolean;
+  /** Set by `EngineOptions.spectatorSnapshots: false`: `emit` records no per-line boards. */
+  skipSpectatorSnapshots?: true;
   /** The test-only diagnostics sink (ADR 0034 decision 4); absent in production. */
   diagnostics?: import('../testing/diagnostics').DiagnosticsSink;
   /**

@@ -69,7 +69,7 @@ function makePort(generation = 3) {
   const port = new WorkerSessionPort({
     generation,
     spawn: () => worker,
-    cardsFor: () => ({ poolCards: [], deckCards: [], bannedNames: [] }),
+    cardsFor: () => ({ pool: [], deckCards: [], bannedNames: [] }),
     replay: { cardDataSha256: null, build: { commit: null, branch: null, dirty: null } },
     stopGraceMs: 20,
   });
