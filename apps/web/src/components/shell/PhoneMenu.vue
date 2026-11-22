@@ -2,8 +2,8 @@
 /**
  * Phones: the name is the menu (redesign plan, phase 2; `MainPhone.dc.html`). Tapping "Decktank"
  * drops a full-height sheet of the same places as the ruler, grouped, each with one line about
- * it, and the theme control at the foot. Choosing a place, Escape, or tapping the name again
- * closes it.
+ * it, and the theme control at the foot. Choosing a place (the current one too, which changes no
+ * route), Escape, or tapping the name again closes it.
  */
 import { ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
@@ -53,6 +53,7 @@ watch(
           class="row"
           :class="{ here: i === current }"
           :aria-current="i === current ? 'page' : undefined"
+          @click="open = false"
         >
           <span class="mark" aria-hidden="true" />
           <span class="text">
