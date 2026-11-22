@@ -1061,6 +1061,12 @@ export interface GameContext {
    * A hidden-zone destination ends tracking, represented by null.
    */
   resolutionObjectMoves?: Map<ObjectId, ObjectId | null>;
+  /**
+   * Name of the spell, ability or permanent being resolved right now, so an event it causes (a
+   * draw) can say where it came from. Set by `resolveTop` for the length of one resolution; a
+   * log aid only, never read for rules.
+   */
+  resolvingSource?: string;
   /** CR 608.2h departure information for objects moved by the resolving effect. */
   resolutionObjectFacts?: Map<ObjectId, ObjectFacts>;
   /**

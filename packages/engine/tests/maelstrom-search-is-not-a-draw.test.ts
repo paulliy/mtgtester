@@ -10,7 +10,8 @@ import { interpretCard } from '../src/cards/interpret';
 import { executeAbility } from '../src/effects/resolve';
 import { createGame } from '../src/state/game';
 import type { GameContext } from '../src/state/types';
-import { conjure, copies, forest, gameConfig, oracle, pick, pump } from './fixtures';
+import { runPrioritySequence } from '../src/turn/priority';
+import { conjure, copies, forest, gameConfig, oracle, pick, pump, spawn } from './fixtures';
 
 function pod(): GameContext {
   const ctx = createGame(
@@ -84,5 +85,36 @@ describe('Maelstrom of the Spirit Dragon — search', () => {
     const p1 = ctx.state.players.find((p) => p.id === 'P1');
     expect(p1?.hand.some((c) => c.cardId === dragon.cardId)).toBe(true);
     expect(ctx.state.eventLog.filter((e) => e.type === 'draw')).toEqual([]);
+  });
+});
+
+describe('the draw log names its cause', () => {
+  it('stamps a triggered ability’s draw with the permanent that caused it', () => {
+    const ctx = pod();
+    const card = oracle({
+      name: 'Test Curious Owl',
+      typeLine: 'Creature — Bird',
+      manaCost: '{2}',
+      oracleText: 'When this creature enters, draw a card.',
+    });
+    const source = spawn(ctx, 'P1', card);
+    const trigger = interpretCard(card).triggers.find(
+      (t) => t.trigger?.when === 'enters',
+    ) as Ability;
+    ctx.state.pendingTriggers.push({
+      controllerId: 'P1',
+      sourceCardId: source.cardId,
+      sourceOracleId: source.oracleId,
+      sourceName: source.name,
+      ability: trigger,
+    });
+
+    pump(runPrioritySequence(ctx));
+
+    const draws = ctx.state.eventLog.filter((e) => e.type === 'draw');
+    expect(draws).toHaveLength(1);
+    expect(draws[0]?.payload['source']).toBe('Test Curious Owl');
+    // The marker is cleared once the resolution ends, so a later draw is not mislabeled.
+    expect(ctx.resolvingSource).toBeUndefined();
   });
 });

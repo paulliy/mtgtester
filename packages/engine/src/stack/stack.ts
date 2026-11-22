@@ -165,37 +165,49 @@ function* resolveTop(ctx: GameContext): GameGen<void> {
     }
   }
   if (top.ability !== null) {
-    yield* executeAbility(
-      ctx,
-      {
-        id: top.sourceId,
-        cardId: top.sourceCardId,
-        name: top.card?.name ?? top.description,
-        oracleId: top.sourceOracleId,
-        controllerId: top.controllerId,
-        resolutionTargets,
-        ...(top.sourceFacts === undefined ? {} : { lastKnownFacts: top.sourceFacts }),
-        ...(top.sourceTransformations === undefined
-          ? {}
-          : { transformationsAtStack: top.sourceTransformations }),
-        ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
-        ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
-        ...(top.kind === 'spell' ? { lastKnownTypes: stackSourceTraits(ctx, top).types } : {}),
-        ...(top.sourceDamageKeywords !== undefined
-          ? { lastKnownDamageKeywords: top.sourceDamageKeywords }
-          : {}),
-      },
-      top.ability,
-      top.targets,
-      top.triggerObjectCardId,
-      {
-        ...top.triggerScope,
-        giftPromised: top.giftRecipientId !== undefined,
-        ...(top.announcedX === undefined ? {} : { x: top.announcedX }),
-      },
-      top.countTargets,
-      top.divisionAmounts,
-    );
+    // So a draw (or anything else logged) during this resolution can name what caused it.
+    ctx.resolvingSource =
+      top.card?.name ??
+      s.battlefield.find((p) => p.id === top.sourceId || p.cardId === top.sourceCardId)?.name ??
+      top.sourceFacts?.name ??
+      // "Name — rules text": keep the name, not the whole ability.
+      top.description.split(' — ')[0] ??
+      top.description;
+    try {
+      yield* executeAbility(
+        ctx,
+        {
+          id: top.sourceId,
+          cardId: top.sourceCardId,
+          name: top.card?.name ?? top.description,
+          oracleId: top.sourceOracleId,
+          controllerId: top.controllerId,
+          resolutionTargets,
+          ...(top.sourceFacts === undefined ? {} : { lastKnownFacts: top.sourceFacts }),
+          ...(top.sourceTransformations === undefined
+            ? {}
+            : { transformationsAtStack: top.sourceTransformations }),
+          ...(top.kind === 'spell' ? { resolvingStackObject: top } : {}),
+          ...(top.sourceColors !== undefined ? { lastKnownColors: top.sourceColors } : {}),
+          ...(top.kind === 'spell' ? { lastKnownTypes: stackSourceTraits(ctx, top).types } : {}),
+          ...(top.sourceDamageKeywords !== undefined
+            ? { lastKnownDamageKeywords: top.sourceDamageKeywords }
+            : {}),
+        },
+        top.ability,
+        top.targets,
+        top.triggerObjectCardId,
+        {
+          ...top.triggerScope,
+          giftPromised: top.giftRecipientId !== undefined,
+          ...(top.announcedX === undefined ? {} : { x: top.announcedX }),
+        },
+        top.countTargets,
+        top.divisionAmounts,
+      );
+    } finally {
+      delete ctx.resolvingSource;
+    }
   }
 
   if (top.kind === 'spell') {

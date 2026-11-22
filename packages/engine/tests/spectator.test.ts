@@ -224,6 +224,12 @@ describe('formatSpectatorLine', () => {
     expect(formatSpectatorLine(event({ type: 'draw', payload: { name: 'Opt' } }))?.text).toBe(
       'draws Opt',
     );
+    // A draw names what caused it when the engine knows, so an odd draw can be traced.
+    expect(
+      formatSpectatorLine(
+        event({ type: 'draw', payload: { name: 'Opt', source: "Dragon's Hoard" } }),
+      )?.text,
+    ).toBe("draws Opt (Dragon's Hoard)");
     expect(formatSpectatorLine(event({ type: 'discard', payload: { name: 'Island' } }))?.text).toBe(
       'discards Island',
     );

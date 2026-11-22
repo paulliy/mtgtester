@@ -924,6 +924,12 @@ export function payLife(ctx: GameContext, player: EnginePlayerState, amount: num
  * draw, so callers such as "draw for each opponent who drew a card this way" must not
  * count it (CR 608.2h reads what actually happened).
  */
+function drawSourceLabel(ctx: GameContext): { source?: string } {
+  if (ctx.resolvingSource !== undefined) return { source: ctx.resolvingSource };
+  if (ctx.state.step === 'draw') return { source: 'draw step' };
+  return {};
+}
+
 export function* drawCards(
   ctx: GameContext,
   player: EnginePlayerState,
@@ -975,6 +981,9 @@ export function* drawCards(
         cardId: top.cardId,
         name: top.name,
         isLand: getDefByOracleId(ctx, top.oracleId, top.name).types.includes('Land'),
+        // Where the draw came from, for the log: what is resolving, else the draw step itself.
+        // Nothing rules-relevant reads it.
+        ...drawSourceLabel(ctx),
       },
       player.id,
     );
@@ -10044,7 +10053,9 @@ export function optionalAbilityHasNothingToDo(
   return ability.effects.every((effect) => {
     if (effect.op !== 'handToBattlefield') return false;
     const maxMv =
-      effect.maxManaValue === undefined ? undefined : evaluateValueIn(ctx, effect.maxManaValue, scope);
+      effect.maxManaValue === undefined
+        ? undefined
+        : evaluateValueIn(ctx, effect.maxManaValue, scope);
     return handToBattlefieldCandidates(ctx, source, player, effect.filter, maxMv).length === 0;
   });
 }
