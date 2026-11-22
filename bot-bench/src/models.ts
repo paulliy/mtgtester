@@ -30,7 +30,7 @@ import {
   type CallResult,
   type DecisionSource,
 } from '../../packages/server/src/ai/logger';
-import { tryHeuristic } from '../../packages/server/src/ai/heuristics';
+import { abilityFactsFrom, tryHeuristic } from '../../packages/server/src/ai/heuristics';
 import { JevClient, type JevDecisionsTransport } from '../../packages/server/src/ai/jev-client';
 import { JevActionPolicy } from '../../packages/server/src/ai/jev-policy';
 import { OPENROUTER_BASE_URL } from '../../packages/server/src/ai/jev-runtime';
@@ -925,7 +925,7 @@ export function decisionActorFactory(entry: DecisionEntry, runtime: LlmRuntime):
         };
         if (runtime.mode === 'production') {
           // As in a live seat, a decision with one sensible answer is settled before any call.
-          const local = tryHeuristic(request, view);
+          const local = tryHeuristic(request, view, abilityFactsFrom(knowledgeFor(engine)));
           if (local !== null)
             return played(
               {

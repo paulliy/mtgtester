@@ -20,6 +20,7 @@
 
 import type { DecisionRequest, DecisionResponse, LegalAction, PlayerView, Step } from '@mtg/shared';
 import { NO_ATTACK_TARGET } from '@mtg/shared';
+import type { CardKnowledge } from '@mtg/bot';
 
 /**
  * Combat steps where holding an instant is still obviously safe. The steps left out —
@@ -200,14 +201,119 @@ function tryDeclineZeroPowerAttack(
   };
 }
 
+/** What the card-traits table knows about one activated ability on the menu. */
+export interface AbilityFacts {
+  /** The ability's roles (`CardRole` names); empty when it has none the table recognizes. */
+  roles: readonly string[];
+  /** The polarity of each of its target slots. */
+  targets: readonly string[];
+}
+
+/** Looks up an `activateAbility` action's facts; undefined when the card or ability is unknown. */
+export type AbilityFactsLookup = (
+  action: LegalAction,
+  view: PlayerView,
+) => AbilityFacts | undefined;
+
+/** Roles that act on opponents, where timing against their main phase can matter. */
+const HOSTILE_ROLES: ReadonlySet<string> = new Set([
+  'removal',
+  'wipe',
+  'counter',
+  'burn',
+  'discard',
+  'extraTurn',
+]);
+
+const EARLY_STEPS: ReadonlySet<Step> = new Set<Step>(['upkeep', 'draw']);
+
+/**
+ * Rule D's lookup over the card-traits table: the ability's source by name, then its roles and
+ * target polarities by ability index. Undefined whenever any of those is missing.
+ */
+export function abilityFactsFrom(knowledge: CardKnowledge): AbilityFactsLookup {
+  return (action, view) => {
+    if (action.interaction?.kind !== 'source') return undefined;
+    const { sourceId, abilityIndex } = action.interaction;
+    if (abilityIndex === undefined) return undefined;
+    const named = action.data?.['sourceName'];
+    const name =
+      typeof named === 'string'
+        ? named
+        : (view.battlefield.find((p) => p.id === sourceId)?.name ??
+          view.hand.find((c) => c.id === sourceId)?.name);
+    if (name === undefined) return undefined;
+    const traits = knowledge(name);
+    const roles = traits?.abilityRoles?.[abilityIndex];
+    const targets = traits?.abilityTargets?.[abilityIndex];
+    if (roles === undefined || targets === undefined) return undefined;
+    return { roles, targets };
+  };
+}
+
+/**
+ * Rule D — defer a non-hostile activated ability through an opponent's upkeep and draw step.
+ *
+ * An activated ability that can be used at any time (Zopandrel's indestructible counter) keeps a
+ * priority window non-dominated for the whole game, so Rule A never fires and every step of every
+ * opponent's turn becomes a paid call that comes back "pass": 58 of one seat's 86 calls in a
+ * 2026-11-22 four-seat game. In an opponent's upkeep and draw step that opponent has not had a
+ * main phase yet. Whatever they do before this seat next gets priority goes on the stack (a land
+ * drop aside), and a non-empty stack is always a real decision for the model. So waiting loses no
+ * line for an ability that does not act on opponents: the model still sees the main phase, every
+ * combat step, the end step and every response.
+ *
+ * Guards: opponent's turn only (an own-upkeep activation can matter before the draw); empty stack;
+ * every non-pass option is an instant (Rule A's reasoning) or a non-mana activated ability whose
+ * traits are known, with no hostile target slot and no hostile role. A plain `pass` is chosen, not
+ * a yield, so the later windows still reach the model.
+ */
+function tryDeferQuietAbility(
+  request: DecisionRequest,
+  view: PlayerView,
+  abilityFacts: AbilityFactsLookup | undefined,
+): DecisionResponse | null {
+  if (abilityFacts === undefined || request.decisionType !== 'priority') return null;
+  if (request.decidingPlayer === request.activePlayer) return null;
+  if (request.phase !== 'beginning' || request.step === null || !EARLY_STEPS.has(request.step))
+    return null;
+  if (view.stack.length > 0) return null;
+
+  const pass = request.legalActions.find((a) => a.type === 'pass');
+  if (pass === undefined) return null;
+  const nonPass = request.legalActions.filter((a) => !isPassAction(a));
+  if (!nonPass.some((a) => a.type === 'activateAbility')) return null;
+
+  for (const action of nonPass) {
+    if (action.type === 'castSpell' && action.data?.['instantSpeed'] === true) continue;
+    if (action.type !== 'activateAbility' || action.data?.['producesMana'] === true) return null;
+    const facts = abilityFacts(action, view);
+    if (facts === undefined) return null;
+    if (facts.targets.includes('hostile')) return null;
+    if (facts.roles.some((role) => HOSTILE_ROLES.has(role))) return null;
+  }
+
+  return {
+    requestId: request.requestId,
+    actionId: pass.id,
+    note: "Heuristic: no reason to use a non-hostile ability before the opponent's main phase",
+  };
+}
+
 /**
  * The safe local answer for a decision the AI could not meaningfully improve on, or `null`
- * when the decision is a real one and must go to the model.
+ * when the decision is a real one and must go to the model. Rule D runs only when the caller can
+ * describe the menu's activated abilities.
  */
-export function tryHeuristic(request: DecisionRequest, view: PlayerView): DecisionResponse | null {
+export function tryHeuristic(
+  request: DecisionRequest,
+  view: PlayerView,
+  abilityFacts?: AbilityFactsLookup,
+): DecisionResponse | null {
   return (
     tryDeferInstant(request, view) ??
     tryObviousLandDrop(request) ??
-    tryDeclineZeroPowerAttack(request, view)
+    tryDeclineZeroPowerAttack(request, view) ??
+    tryDeferQuietAbility(request, view, abilityFacts)
   );
 }

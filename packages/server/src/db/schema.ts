@@ -29,6 +29,8 @@ export const MIGRATIONS_SQL: readonly string[] = [
   `ALTER TABLE games ADD COLUMN config_json TEXT`,
   `ALTER TABLE games ADD COLUMN build_commit TEXT`,
   `ALTER TABLE games ADD COLUMN build_dirty INTEGER`,
+  // The bot's choice beside the model's on a model-answered decision (`BotComparison`).
+  `ALTER TABLE ai_calls ADD COLUMN bot_json TEXT`,
 ];
 
 export const SCHEMA_SQL = `
@@ -177,6 +179,9 @@ CREATE TABLE IF NOT EXISTS ai_calls (
   -- before the column existed, and for any that never reached a submitted decision.
   anchor_sequence INTEGER,
   turn            INTEGER,
+  -- The bot's ranking beside the model's answer (BotComparison in ai/logger.ts): escalated
+  -- bot-led decisions and model-mode shadow. Null for local answers and older rows.
+  bot_json        TEXT,
   PRIMARY KEY (game_id, sequence)
 );
 

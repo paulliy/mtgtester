@@ -71,6 +71,8 @@ export interface BotAnswer {
   topActionIds?: number[];
   /** The bot's score for its best option, in LEP: how much the decision is worth. */
   topScore?: number;
+  /** The bot's ranking, best first (kept for `BotComparison`). */
+  ranked: readonly ScoredAction[];
 }
 
 export class BotTactician {
@@ -108,7 +110,16 @@ export class BotTactician {
       uncertain: reasons.includes('uncertain'),
       topActionIds: scored.ranked.slice(0, 2).map((entry) => entry.action.id),
       ...(scored.ranked[0] === undefined ? {} : { topScore: scored.ranked[0].score }),
+      ranked: scored.ranked,
     };
+  }
+
+  /**
+   * The bot's ranking for a decision someone else answers, from its pure scoring path: no
+   * tie-break draw, nothing recorded, so reading it never changes the game.
+   */
+  shadowRank(request: DecisionRequest): ScoredAction[] {
+    return this.bot.rank(request);
   }
 
   record(request: DecisionRequest, response: DecisionResponse): void {

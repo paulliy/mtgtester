@@ -67,7 +67,7 @@ import type { AiAttemptObserver, AiClient, CostSettlement } from '../ai/client';
 import type { AiPrompt } from '../ai/context';
 import type { AsyncDecisionProvider } from '@mtg/engine';
 import { knowledgeFor } from '../ai/bot-tactician';
-import { localCallMeta } from '../ai/logger';
+import { localCallMeta, type BotComparison } from '../ai/logger';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
 const SEATS: PlayerId[] = ['P1', 'P2', 'P3', 'P4'];
@@ -510,6 +510,7 @@ async function main(): Promise<void> {
       engine.getState().players.map((p) => [p.id, p.hasLost === true ? 0 : p.life]),
     );
   // What the bot-led tactician reported for each decision it was consulted on.
+  const comparisons = new Map<string, BotComparison>();
   const botOutcomes = new Map<
     string,
     { escalated: boolean; reasons: readonly string[]; escalatedBy?: string }
@@ -540,6 +541,9 @@ async function main(): Promise<void> {
           undefined,
           undefined,
           {
+            onBotComparison(comparison) {
+              if (trace !== undefined) comparisons.set(comparison.requestId, comparison);
+            },
             onBotDecision(request, outcome) {
               if (trace !== undefined) botOutcomes.set(request.requestId, outcome);
             },
@@ -557,6 +561,8 @@ async function main(): Promise<void> {
                   const response = await live.decide(request);
                   const bot = botOutcomes.get(request.requestId);
                   botOutcomes.delete(request.requestId);
+                  const comparison = comparisons.get(request.requestId);
+                  comparisons.delete(request.requestId);
                   const steering = coordinator.steeringFor(request.decidingPlayer);
                   trace.write(
                     decisionTraceLine({
@@ -567,6 +573,7 @@ async function main(): Promise<void> {
                       source: logger.sourceFor(request.requestId) ?? 'unknown',
                       ...(bot !== undefined && { bot }),
                       ...(steering !== undefined && { steering }),
+                      ...(comparison !== undefined && { comparison }),
                       life,
                     }),
                   );

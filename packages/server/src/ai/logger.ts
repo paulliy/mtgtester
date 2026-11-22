@@ -13,6 +13,37 @@ import type {
   JevTraceObserver,
 } from './jev-policy';
 
+/**
+ * The bot's view of a decision the model answered, for teaching the bot from the model (the
+ * learning loop: record, judge, fix, escalate less). `escalated`: a bot-led seat asked the model,
+ * so the bot's own answer is known in full. `shadow`: a model-mode seat, where the bot's side-effect
+ * free ranking is read and nothing it computes reaches the game.
+ */
+export interface BotComparison {
+  schemaVersion: 1;
+  requestId: string;
+  seat: string;
+  turn: number;
+  decisionType: string;
+  kind: 'escalated' | 'shadow';
+  /** Escalated only: the live trigger that asked the model, and every trigger that fired. */
+  escalatedBy?: string;
+  reasons?: readonly string[];
+  /** Who answered the played decision (`primary`, `retry`, `jev`). */
+  playedBy: DecisionSource;
+  playedActionId: number;
+  /** The bot's pick, or null when it ranked nothing. */
+  botActionId: number | null;
+  /** The bot's best options, best first, with scores in LEP. */
+  botTop: Array<{ actionId: number; score: number; description: string }>;
+  /** The bot's score for the action the model played, when the bot ranked it. */
+  playedBotScore?: number;
+  /** Same action as the model's, any targets. */
+  sameAction: boolean;
+  /** Escalated only: same action and same targets. */
+  agreed?: boolean;
+}
+
 export interface CallResult {
   response: DecisionResponse;
   meta: CallMeta;
@@ -99,6 +130,7 @@ export class AiCallLogger {
   private attemptKnownCostUsd = 0;
   private readonly jevDecisionTraces: JevDecisionTrace[] = [];
   private readonly jevComparisons: JevComparison[] = [];
+  private readonly botComparisons: BotComparison[] = [];
 
   constructor(
     private readonly db: SqliteDb | null,
@@ -251,6 +283,28 @@ export class AiCallLogger {
   /** Jev's answers beside the answers actually played (shadow and fallthrough), this process. */
   capturedJevComparisons(): readonly JevComparison[] {
     return this.jevComparisons;
+  }
+
+  /**
+   * The bot's choice beside the model's for one model-answered decision: kept in memory for the
+   * CLIs and stored on that decision's `ai_calls` row when there is a database.
+   */
+  recordBotComparison(comparison: BotComparison): void {
+    this.botComparisons.push(comparison);
+    const row = this.rowByRequestId.get(comparison.requestId);
+    if (row === undefined || this.db === null) return;
+    try {
+      this.db
+        .query(`UPDATE ai_calls SET bot_json = ? WHERE game_id = ? AND sequence = ?`)
+        .run(JSON.stringify(comparison), this.gameId, row);
+    } catch {
+      // Best-effort diagnostics.
+    }
+  }
+
+  /** Every bot comparison recorded by this logger, in order. */
+  capturedBotComparisons(): readonly BotComparison[] {
+    return this.botComparisons;
   }
 
   /** Resolution source for a surfaced decision, if it was recorded by this logger. */

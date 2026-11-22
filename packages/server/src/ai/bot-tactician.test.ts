@@ -5,7 +5,7 @@ import type { Engine } from '@mtg/engine';
 import { OpenAiDecisionProvider } from './provider';
 import type { AiClient } from './client';
 import { DEFAULT_AI_CONFIG, type AiConfig } from './config';
-import { localCallMeta } from './logger';
+import { AiCallLogger, localCallMeta } from './logger';
 import { isUncertain } from './bot-tactician';
 import { buildSupportedPool } from '../cards/pool';
 import { censusGame, MODES } from '../cli/ai-call-census';
@@ -177,4 +177,100 @@ describe('ADR 0044 shadow triggers', () => {
     expect(logs).toHaveLength(2);
     expect(logs[1]).toBe(logs[0]);
   }, 120_000);
+});
+
+describe('bot comparisons (the bot beside the model)', () => {
+  it('records the bot answer beside an escalated close call', async () => {
+    const logger = new AiCallLogger(null, 'g');
+    const seen: unknown[] = [];
+    const provider = new OpenAiDecisionProvider(
+      client(),
+      queue,
+      engine,
+      bot({ botEscalation: ['uncertain'] }),
+      logger,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { onBotComparison: (c) => seen.push(c) },
+    );
+    const res = await provider.decide(closeCall);
+    const [comparison] = logger.capturedBotComparisons();
+    expect(res.actionId).toBe(2);
+    expect(comparison).toMatchObject({
+      kind: 'escalated',
+      escalatedBy: 'uncertain',
+      playedBy: 'primary',
+      playedActionId: 2,
+      decisionType: 'priority',
+    });
+    expect(comparison!.botTop).toHaveLength(3);
+    expect([1, 2]).toContain(comparison!.botActionId);
+    expect(comparison!.sameAction).toBe(comparison!.botActionId === 2);
+    expect(comparison!.agreed).toBe(comparison!.sameAction);
+    expect(comparison!.playedBotScore).toBeTypeOf('number');
+    expect(seen).toEqual([comparison]);
+  });
+
+  it('records nothing when the bot answers on its own', async () => {
+    const logger = new AiCallLogger(null, 'g');
+    const provider = new OpenAiDecisionProvider(
+      client(),
+      queue,
+      engine,
+      bot({ botEscalation: [] }),
+      logger,
+    );
+    await provider.decide(closeCall);
+    expect(logger.capturedBotComparisons()).toEqual([]);
+  });
+
+  it('records nothing when the model failed and the fallback bot played', async () => {
+    const logger = new AiCallLogger(null, 'g');
+    const failing: AiClient = {
+      activeModel: 'm',
+      requestDecision: vi.fn().mockRejectedValue(new Error('down')),
+    };
+    const provider = new OpenAiDecisionProvider(
+      failing,
+      queue,
+      engine,
+      bot({ botEscalation: ['uncertain'], maxRetries: 0 }),
+      logger,
+    );
+    await provider.decide(closeCall);
+    expect(logger.capturedBotComparisons()).toEqual([]);
+  });
+
+  it('records nothing with AI_BOT_COMPARISON off', async () => {
+    const logger = new AiCallLogger(null, 'g');
+    const provider = new OpenAiDecisionProvider(
+      client(),
+      queue,
+      engine,
+      bot({ botEscalation: ['uncertain'], botComparisonEnabled: false }),
+      logger,
+    );
+    await provider.decide(closeCall);
+    expect(logger.capturedBotComparisons()).toEqual([]);
+  });
+
+  it('shadows a model-mode answer with the bot ranking, without changing the answer', async () => {
+    const logger = new AiCallLogger(null, 'g');
+    const provider = new OpenAiDecisionProvider(
+      client(),
+      queue,
+      engine,
+      { ...DEFAULT_AI_CONFIG, strategistEnabled: false, tacticalMode: 'model' },
+      logger,
+    );
+    const res = await provider.decide(closeCall);
+    const [comparison] = logger.capturedBotComparisons();
+    expect(res.actionId).toBe(2);
+    expect(comparison).toMatchObject({ kind: 'shadow', playedBy: 'primary', playedActionId: 2 });
+    expect(comparison!.agreed).toBeUndefined();
+    expect(comparison!.botActionId).toBe(comparison!.botTop[0]!.actionId);
+  });
 });

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { DecisionRequest, LegalAction, PlayerView } from '@mtg/shared';
-import { tryHeuristic } from './heuristics';
+import type { DecisionRequest, LegalAction, PermanentView, PlayerView } from '@mtg/shared';
+import {
+  abilityFactsFrom,
+  tryHeuristic,
+  type AbilityFacts,
+  type AbilityFactsLookup,
+} from './heuristics';
 
 function makeView(overrides: Partial<PlayerView> = {}): PlayerView {
   return {
@@ -274,5 +279,119 @@ describe('tryHeuristic — declining a powerless attack (ADR 0023 items 13/14 ba
     });
 
     expect(tryHeuristic(req, makeView())).toBeNull();
+  });
+});
+
+describe('tryHeuristic — Rule D, deferring quiet abilities before the opponent acts', () => {
+  const ABILITY: LegalAction = {
+    id: 2,
+    type: 'activateAbility',
+    description:
+      'Zopandrel, Hunger Dominus: Put an indestructible counter on Zopandrel, Hunger Dominus.',
+    interaction: { kind: 'source', sourceId: 'z1', abilityIndex: 0 },
+    data: { sourceName: 'Zopandrel, Hunger Dominus' },
+  };
+  const YIELD: LegalAction = { id: 9, type: 'passAndYieldTurn', description: 'Pass and yield' };
+  const facts =
+    (value: AbilityFacts | undefined): AbilityFactsLookup =>
+    () =>
+      value;
+  const quiet = facts({ roles: [], targets: [] });
+  const req = (overrides: Partial<DecisionRequest> = {}): DecisionRequest =>
+    makeRequest({ legalActions: [PASS, ABILITY, YIELD], ...overrides });
+
+  it.each(['upkeep', 'draw'] as const)(
+    "passes (without yielding) in an opponent's %s with an empty stack",
+    (step) => {
+      const res = tryHeuristic(req({ step }), makeView(), quiet);
+      expect(res?.actionId).toBe(0);
+      expect(res?.note).toContain('Heuristic');
+    },
+  );
+
+  it('also covers a menu mixing the ability with instants', () => {
+    const res = tryHeuristic(req({ legalActions: [PASS, ABILITY, INSTANT] }), makeView(), quiet);
+    expect(res?.actionId).toBe(0);
+  });
+
+  it('accepts friendly and non-hostile roles', () => {
+    const lookup = facts({ roles: ['draw', 'protection'], targets: ['friendly'] });
+    expect(tryHeuristic(req(), makeView(), lookup)?.actionId).toBe(0);
+  });
+
+  it('does nothing without a facts lookup, so callers that cannot describe abilities are unchanged', () => {
+    expect(tryHeuristic(req(), makeView())).toBeNull();
+  });
+
+  it('asks the model when the ability is unknown to the card-traits table', () => {
+    expect(tryHeuristic(req(), makeView(), facts(undefined))).toBeNull();
+  });
+
+  it.each([
+    ['a hostile target slot', { roles: [], targets: ['hostile'] }],
+    ['a removal role', { roles: ['removal'], targets: [] }],
+    ['a burn role', { roles: ['burn'], targets: [] }],
+    ['a counter role', { roles: ['counter'], targets: [] }],
+  ] as const)('asks the model for an ability with %s', (_label, value) => {
+    expect(tryHeuristic(req(), makeView(), facts(value))).toBeNull();
+  });
+
+  it('asks the model on its own turn', () => {
+    expect(tryHeuristic(req({ activePlayer: 'P1' }), makeView(), quiet)).toBeNull();
+  });
+
+  it.each([
+    ['precombatMain', null],
+    ['combat', 'beginCombat'],
+    ['ending', 'end'],
+  ] as const)('asks the model in %s / %s', (phase, step) => {
+    expect(tryHeuristic(req({ phase, step }), makeView(), quiet)).toBeNull();
+  });
+
+  it('asks the model when something is on the stack', () => {
+    const view = makeView({
+      stack: [{ id: 'o1', controller: 'P2', description: 'Wrath of God', targets: [] }],
+    });
+    expect(tryHeuristic(req(), view, quiet)).toBeNull();
+  });
+
+  it('asks the model when a sorcery-speed or other non-instant option is on the menu', () => {
+    const land: LegalAction = { id: 3, type: 'playLand', description: 'Play Forest' };
+    expect(
+      tryHeuristic(req({ legalActions: [PASS, ABILITY, land] }), makeView(), quiet),
+    ).toBeNull();
+  });
+
+  it('leaves mana abilities alone', () => {
+    const mana: LegalAction = { ...ABILITY, data: { ...ABILITY.data, producesMana: true } };
+    expect(tryHeuristic(req({ legalActions: [PASS, mana] }), makeView(), quiet)).toBeNull();
+  });
+});
+
+describe('abilityFactsFrom', () => {
+  const action: LegalAction = {
+    id: 2,
+    type: 'activateAbility',
+    description: 'x',
+    interaction: { kind: 'source', sourceId: 'p1', abilityIndex: 1 },
+  };
+  const view = makeView({
+    battlefield: [{ id: 'p1', name: 'Shadowspear', controller: 'P1' } as PermanentView],
+  });
+
+  it('reads the roles and targets of the ability by index, naming the source from the view', () => {
+    const lookup = abilityFactsFrom((name) =>
+      name === 'Shadowspear'
+        ? ({ abilityRoles: [[], ['pump']], abilityTargets: [[], ['friendly']] } as never)
+        : undefined,
+    );
+    expect(lookup(action, view)).toEqual({ roles: ['pump'], targets: ['friendly'] });
+  });
+
+  it('is undefined for an unknown card or ability index', () => {
+    expect(abilityFactsFrom(() => undefined)(action, view)).toBeUndefined();
+    expect(
+      abilityFactsFrom(() => ({ abilityRoles: [[]], abilityTargets: [[]] }) as never)(action, view),
+    ).toBeUndefined();
   });
 });

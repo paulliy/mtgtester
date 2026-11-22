@@ -13,14 +13,24 @@
 
 import type { AsyncDecisionProvider, Engine } from '@mtg/engine';
 import type { DecisionRequest, DecisionResponse, PlayerId, PlayerView } from '@mtg/shared';
-import { decide as heuristicDecide, Rng as HeuristicRng, type DiplomacyPlay } from '@mtg/bot';
+import {
+  decide as heuristicDecide,
+  Rng as HeuristicRng,
+  type DiplomacyPlay,
+  type ScoredAction,
+} from '@mtg/bot';
 import type { AiConfig } from './config';
 import type { AiClient, CallMeta } from './client';
 import { assemblePrompt, type AiPrompt, type OpenAiMessage } from './context';
 import { DecisionCache } from './decision-cache';
 import { AiResponseValidationError } from './errors';
-import { tryHeuristic } from './heuristics';
-import { localCallMeta, type AiCallLogger, type DecisionSource } from './logger';
+import { abilityFactsFrom, tryHeuristic } from './heuristics';
+import {
+  localCallMeta,
+  type AiCallLogger,
+  type BotComparison,
+  type DecisionSource,
+} from './logger';
 import { validateResponse } from './validate';
 import { StrategyCoordinator } from './strategy-coordinator';
 import { preparePromptForCaching } from './prompt-cache';
@@ -87,6 +97,8 @@ export interface BotLedHooks {
     request: DecisionRequest,
     outcome: { escalated: boolean; reasons: readonly string[]; escalatedBy?: string },
   ) => void;
+  /** Called with each `BotComparison`, after the logger has it (for decision traces). */
+  onBotComparison?: (comparison: BotComparison) => void;
 }
 
 /**
@@ -220,10 +232,77 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
       this.escalationReason = { requestId: request.requestId, reason: escalatedBy };
       const response = await this.decideViaModelOrFallback(request, view, answer, escalatedBy);
       bot.record(request, response);
+      this.compareBot(request, response, answer.ranked, {
+        kind: 'escalated',
+        botResponse: answer.response,
+        escalatedBy,
+        reasons: answer.reasons,
+      });
       return response;
     }
 
-    return await this.decideViaModelOrFallback(request, view);
+    const response = await this.decideViaModelOrFallback(request, view);
+    if (this.config.botComparisonEnabled && this.logger !== undefined) {
+      try {
+        this.compareBot(request, response, this.botFor(request).shadowRank(request), {
+          kind: 'shadow',
+        });
+      } catch {
+        // Evidence collection must never stop a game.
+      }
+    }
+    return response;
+  }
+
+  /**
+   * Record the bot's choice beside a model-answered decision (`BotComparison`). Only answers the
+   * model (or Jev) played count: a fallback is the bot itself, and a local answer asked nobody.
+   */
+  private compareBot(
+    request: DecisionRequest,
+    played: DecisionResponse,
+    ranked: readonly ScoredAction[],
+    detail:
+      | {
+          kind: 'escalated';
+          botResponse: DecisionResponse;
+          escalatedBy: string;
+          reasons: readonly string[];
+        }
+      | { kind: 'shadow' },
+  ): void {
+    if (!this.config.botComparisonEnabled) return;
+    const playedBy = this.logger?.sourceFor(request.requestId);
+    if (playedBy !== 'primary' && playedBy !== 'retry' && playedBy !== 'jev') return;
+    const botActionId =
+      detail.kind === 'escalated' ? detail.botResponse.actionId : (ranked[0]?.action.id ?? null);
+    const playedScore = ranked.find((entry) => entry.action.id === played.actionId)?.score;
+    const comparison: BotComparison = {
+      schemaVersion: 1,
+      requestId: request.requestId,
+      seat: request.decidingPlayer,
+      turn: request.turn,
+      decisionType: request.decisionType,
+      kind: detail.kind,
+      ...(detail.kind === 'escalated'
+        ? { escalatedBy: detail.escalatedBy, reasons: [...detail.reasons] }
+        : {}),
+      playedBy,
+      playedActionId: played.actionId,
+      botActionId,
+      botTop: ranked.slice(0, 3).map((entry) => ({
+        actionId: entry.action.id,
+        score: Math.round(entry.score * 100) / 100,
+        description: entry.action.description,
+      })),
+      ...(playedScore === undefined ? {} : { playedBotScore: Math.round(playedScore * 100) / 100 }),
+      sameAction: botActionId === played.actionId,
+      ...(detail.kind === 'escalated'
+        ? { agreed: sameResponse(detail.botResponse, played, request) }
+        : {}),
+    };
+    this.logger?.recordBotComparison(comparison);
+    this.botHooks.onBotComparison?.(comparison);
   }
 
   /** Live and shadow triggers this seat evaluates; empty means the trigger code never runs. */
@@ -705,7 +784,14 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
     }
 
     if (this.config.heuristicsEnabled) {
-      const heuristic = tryHeuristic(request, view);
+      // Rule D only saves model calls; in bot-led mode the bot answers those windows for free.
+      const heuristic = tryHeuristic(
+        request,
+        view,
+        this.config.tacticalMode === 'model'
+          ? abilityFactsFrom(knowledgeFor(this.engine))
+          : undefined,
+      );
       if (heuristic !== null) {
         this.lastLocalSource = 'heuristic';
         this.engine.addDebug?.(

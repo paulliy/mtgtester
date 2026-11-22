@@ -78,6 +78,13 @@ export interface AiConfig {
    */
   decisionCacheEnabled: boolean;
   /**
+   * Record the bot's choice beside the model's on every model-answered decision (`BotComparison`
+   * in `logger.ts`): the full bot answer on a bot-led escalation, the bot's side-effect-free
+   * ranking in model mode. Local and free; it never changes what is played. Env:
+   * `AI_BOT_COMPARISON`. Default: true.
+   */
+  botComparisonEnabled: boolean;
+  /**
    * Stream OpenRouter responses (ADR 0040). An aborted stream stops generation and billing at
    * supported providers; an aborted plain request is billed in full. Default: true.
    */
@@ -352,6 +359,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   strategistConcurrency: 1,
   heuristicsEnabled: true,
   decisionCacheEnabled: true,
+  botComparisonEnabled: true,
   tacticalMode: 'model',
   botEscalation: [],
   botEscalationShadow: [],
@@ -798,6 +806,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     decisionCacheEnabled: parseBoolean(
       env['AI_DECISION_CACHE_ENABLED'],
       DEFAULT_AI_CONFIG.decisionCacheEnabled,
+    ),
+    botComparisonEnabled: parseBoolean(
+      env['AI_BOT_COMPARISON'],
+      DEFAULT_AI_CONFIG.botComparisonEnabled,
     ),
     tacticalMode: parseChoice(
       env['AI_TACTICAL_MODE'],

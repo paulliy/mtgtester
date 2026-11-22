@@ -18,6 +18,7 @@ import type {
   PlayerId,
   PlayerView,
 } from '@mtg/shared';
+import type { BotComparison } from '../ai/logger';
 
 export interface DecisionTraceInput {
   request: DecisionRequest;
@@ -30,6 +31,8 @@ export interface DecisionTraceInput {
   /** Bot-led seats: whether the bot escalated to the model, and every trigger that fired. */
   bot?: { escalated: boolean; reasons: readonly string[]; escalatedBy?: string };
   steering?: BotSteering;
+  /** The bot's choice beside a model-answered decision, when one was recorded. */
+  comparison?: BotComparison;
   /** Life of every seat when the decision was made. */
   life: Record<string, number>;
 }
@@ -51,6 +54,16 @@ export interface DecisionTraceLine {
   reasons?: readonly string[];
   escalatedBy?: string;
   steering?: BotSteering;
+  /** What the bot would have played on a model-answered decision. */
+  botPick?: {
+    kind: BotComparison['kind'];
+    actionId: number | null;
+    description?: string;
+    sameAction: boolean;
+    agreed?: boolean;
+    top: BotComparison['botTop'];
+    playedBotScore?: number;
+  };
   life: Record<string, number>;
 }
 
@@ -93,7 +106,24 @@ export function decisionTraceLine(input: DecisionTraceInput): DecisionTraceLine 
       ...(input.bot.escalatedBy !== undefined && { escalatedBy: input.bot.escalatedBy }),
     }),
     ...(input.steering !== undefined && { steering: input.steering }),
+    ...(input.comparison !== undefined && { botPick: botPickOf(input.comparison, request) }),
     life: input.life,
+  };
+}
+
+function botPickOf(
+  c: BotComparison,
+  request: DecisionRequest,
+): NonNullable<DecisionTraceLine['botPick']> {
+  const description = request.legalActions.find((a) => a.id === c.botActionId)?.description;
+  return {
+    kind: c.kind,
+    actionId: c.botActionId,
+    ...(description !== undefined && { description }),
+    sameAction: c.sameAction,
+    ...(c.agreed !== undefined && { agreed: c.agreed }),
+    top: c.botTop,
+    ...(c.playedBotScore !== undefined && { playedBotScore: c.playedBotScore }),
   };
 }
 

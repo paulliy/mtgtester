@@ -35,6 +35,7 @@ import {
   type Tally,
 } from './ai-mode-duel';
 import { DecisionTraceWriter, decisionTraceLine } from './decision-trace';
+import type { BotComparison } from '../ai/logger';
 import type { AsyncDecisionProvider } from '@mtg/engine';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
@@ -45,6 +46,38 @@ const MODES: Mode[] = ['model-low', 'model-none', 'bot', 'bot-esc'];
 function arg(argv: string[], name: string): string | undefined {
   const i = argv.indexOf(name);
   return i >= 0 ? argv[i + 1] : undefined;
+}
+
+function botAgreement(
+  comparisons: readonly BotComparison[],
+  modeOf: (seat: PlayerId) => Mode,
+): Record<string, { decisions: number; sameAction: number; byType: Record<string, string> }> {
+  const out: Record<
+    string,
+    { decisions: number; sameAction: number; types: Record<string, [number, number]> }
+  > = {};
+  for (const c of comparisons) {
+    const entry = (out[modeOf(c.seat as PlayerId)] ??= { decisions: 0, sameAction: 0, types: {} });
+    entry.decisions++;
+    const type = (entry.types[c.decisionType] ??= [0, 0]);
+    type[1]++;
+    if (c.sameAction) {
+      entry.sameAction++;
+      type[0]++;
+    }
+  }
+  return Object.fromEntries(
+    Object.entries(out).map(([mode, e]) => [
+      mode,
+      {
+        decisions: e.decisions,
+        sameAction: e.sameAction,
+        byType: Object.fromEntries(
+          Object.entries(e.types).map(([t, [same, all]]) => [t, `${same}/${all}`]),
+        ),
+      },
+    ]),
+  );
 }
 
 async function main(): Promise<void> {
@@ -145,6 +178,7 @@ async function main(): Promise<void> {
       .players.filter((p) => p.hasLost === true)
       .map((p) => p.id);
   const providers = new Map<PlayerId, AsyncDecisionProvider>();
+  const comparisons = new Map<string, BotComparison>();
   const botOutcomes = new Map<
     string,
     { escalated: boolean; reasons: readonly string[]; escalatedBy?: string }
@@ -172,8 +206,11 @@ async function main(): Promise<void> {
           undefined,
           undefined,
           {
+            onBotComparison(comparison) {
+              if (trace !== undefined) comparisons.set(comparison.requestId, comparison);
+            },
             onBotDecision(request, outcome) {
-              botOutcomes.set(request.requestId, outcome);
+              if (trace !== undefined) botOutcomes.set(request.requestId, outcome);
             },
           },
         );
@@ -188,6 +225,8 @@ async function main(): Promise<void> {
                   const response = await live.decide(request);
                   const bot = botOutcomes.get(request.requestId);
                   botOutcomes.delete(request.requestId);
+                  const comparison = comparisons.get(request.requestId);
+                  comparisons.delete(request.requestId);
                   const steering = coordinator.steeringFor(request.decidingPlayer);
                   trace.write(
                     decisionTraceLine({
@@ -198,6 +237,7 @@ async function main(): Promise<void> {
                       source: logger.sourceFor(request.requestId) ?? 'unknown',
                       ...(bot !== undefined && { bot }),
                       ...(steering !== undefined && { steering }),
+                      ...(comparison !== undefined && { comparison }),
                       life,
                     }),
                   );
@@ -256,6 +296,11 @@ async function main(): Promise<void> {
         },
       ]),
     ),
+    /**
+     * The bot's pick beside each model-answered decision, per seat mode: how often it chose the
+     * same action, by decision type (escalated decisions on bot-led seats, shadow on model seats).
+     */
+    botAgreement: botAgreement(logger.capturedBotComparisons(), modeOf),
     perMode: Object.fromEntries(
       MODES.map((m) => {
         const t = tallies[m];
