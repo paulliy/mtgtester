@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "id": "shadowspear-before-murder",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Strip the Tyrant's hexproof before removal",
+  "skills": ["removal", "activated-abilities"],
+  "briefing": "Positive control for `shadowspear-idle-in-upkeep`: the fix must not stop Shadowspear where it matters. P1 is in its main phase with Shadowspear, three Swamps and a Plains, and Murder in hand. P2 controls Carnage Tyrant, a 7/6 trampler with hexproof, the only creature on the table, so Murder has no legal target until Shadowspear strips the hexproof.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "precombatMain",
+      "step": null,
+      "number": 7
+    },
+    "seats": {
+      "P1": {
+        "life": 30,
+        "hand": ["Murder"],
+        "battlefield": ["Shadowspear", "Swamp", "Swamp", "Swamp", "Plains"]
+      },
+      "P2": {
+        "life": 38,
+        "hand": ["Island", "Island", "Island", "Island"],
+        "battlefield": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Carnage Tyrant"
+        ]
+      },
+      "P3": {
+        "life": 37,
+        "hand": ["Island", "Island", "Island", "Island"],
+        "battlefield": ["Plains", "Plains", "Plains"]
+      },
+      "P4": {
+        "life": 40,
+        "hand": ["Island", "Island", "Island", "Island"],
+        "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp"]
+      }
+    }
+  },
+  "reference": {
+    "analysis": "Carnage Tyrant has hexproof, so Murder cannot target it. Shadowspear's {1} removes the hexproof until end of turn, and the three Swamps left pay for Murder.",
+    "options": [
+      {
+        "label": "Activate Shadowspear",
+        "when": {
+          "choose": "Shadowspear: {1}"
+        },
+        "grade": "best",
+        "why": "Opens the Tyrant to Murder this turn with mana to spare."
+      },
+      {
+        "label": "Pass",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "weak",
+        "why": "Leaves a 7/6 trampler unanswered."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Another line that leaves the Tyrant unanswerable."
+    }
+  }
+}

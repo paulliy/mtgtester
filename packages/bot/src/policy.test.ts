@@ -10,6 +10,7 @@ import type {
 import { NO_ATTACK_TARGET } from '@mtg/shared';
 import type { CardKnowledge, CardTraits } from './card-knowledge';
 import { decide, decideScored, evaluate } from './evaluate';
+import type { PolicyFix } from './fixes';
 import { manaValueOfCost } from './policy';
 import { Rng } from './rng';
 
@@ -1057,6 +1058,138 @@ describe('activations with no effect role', () => {
     expect(go(vehicle, { phase: 'postcombatMain' })).toBe(0);
     // Crewing in response to an opponent's attack lets the Vehicle block.
     expect(go(vehicle, { activePlayer: 'P2', phase: 'combat', step: 'declareAttackers' })).toBe(1);
+  });
+});
+
+describe('keywordStrip: an ability that only takes keywords away', () => {
+  // Shadowspear as the server's classifier describes it: no role, ability 0 strips hexproof and
+  // indestructible from opponents' permanents.
+  const k = knowledge({
+    Shadowspear: {
+      manaValue: 1,
+      types: ['Artifact'],
+      abilityRoles: [[], []],
+      abilityTargets: [[], ['friendly']],
+      abilitySorcery: [false, true],
+      abilityKeywordStrip: [
+        {
+          selector: { kind: 'controller', who: 'opponents' },
+          keywords: ['hexproof', 'indestructible'],
+        },
+        null,
+      ],
+    },
+  });
+  const spear: LegalAction = {
+    id: 1,
+    type: 'activateAbility',
+    description:
+      'Shadowspear: {1}: Permanents your opponents control lose hexproof and indestructible until end of turn.',
+    data: {
+      sourceName: 'Shadowspear',
+      abilityDescription:
+        '{1}: Permanents your opponents control lose hexproof and indestructible until end of turn.',
+      manaCost: '{1}',
+    },
+    interaction: { kind: 'source', sourceId: 'spear', sourceCardId: 'c-sp', abilityIndex: 0 },
+  };
+  const upkeep = { phase: 'beginning', step: 'upkeep' } as const;
+  const pick = (
+    battlefield: PermanentView[],
+    opts: { repeats?: number; stack?: PlayerView['stack']; fixes?: PolicyFix[] } = {},
+  ): number =>
+    decide(
+      request([PASS, spear], upkeep),
+      view({ battlefield, stack: opts.stack ?? [] }),
+      new Rng('a'),
+      {
+        knowledge: k,
+        repeatCount: (a) => (a.id === spear.id ? (opts.repeats ?? 0) : 0),
+        ...(opts.fixes === undefined ? {} : { fixes: opts.fixes }),
+      },
+    ).actionId;
+
+  it('passes when no opposing permanent has hexproof or indestructible', () => {
+    const board = [
+      creature('bear', 'P2', 2, 2),
+      creature('mine', 'P1', 3, 3, { keywords: ['hexproof'] }),
+    ];
+    expect(pick(board)).toBe(0);
+  });
+
+  it('activated three times per window without the fix: the bug this fix closes', () => {
+    const board = [creature('bear', 'P2', 2, 2)];
+    expect([0, 1, 2, 3].map((repeats) => pick(board, { repeats, fixes: [] }))).toEqual([
+      1, 1, 1, 0,
+    ]);
+  });
+
+  it('activates when an opposing permanent has hexproof, hexproof from a quality, or indestructible', () => {
+    for (const keyword of ['hexproof', 'hexproof from black', 'indestructible'])
+      expect({ keyword, pick: pick([creature('t', 'P2', 7, 6, { keywords: [keyword] })]) }).toEqual(
+        {
+          keyword,
+          pick: 1,
+        },
+      );
+  });
+
+  it('reads absent keywords as none, unless the permanent is face down', () => {
+    // The real view leaves `keywords` out of a permanent that has none.
+    const { keywords: _none, ...vanilla } = creature('bear', 'P2', 2, 2);
+    expect(pick([vanilla])).toBe(0);
+    const { typeLine: _hidden, ...faceDown } = { ...vanilla, status: ['faceDown'] };
+    expect(pick([faceDown])).toBe(1);
+  });
+
+  it('does not activate again while its own activation is still on the stack', () => {
+    const board = [creature('t', 'P2', 7, 6, { keywords: ['hexproof'] })];
+    const pending = [{ id: 's1', controller: 'P1', description: 'Shadowspear', targets: [] }];
+    expect(pick(board, { repeats: 1, stack: pending })).toBe(0);
+    // Resolved, then hexproof granted again: the view shows it, so a second activation is worth it.
+    expect(pick(board, { repeats: 1 })).toBe(1);
+  });
+
+  it('respects the selector: a creatures-only strip ignores an opposing hexproof artifact', () => {
+    const lighthouse = knowledge({
+      'Arcane Lighthouse': {
+        types: ['Land'],
+        abilityRoles: [[]],
+        abilityKeywordStrip: [
+          {
+            selector: {
+              kind: 'allOf',
+              of: [
+                { kind: 'type', value: 'Creature' },
+                { kind: 'controller', who: 'opponents' },
+              ],
+            },
+            keywords: ['hexproof', 'shroud'],
+          },
+        ],
+      },
+    });
+    const ability: LegalAction = {
+      ...spear,
+      description: 'Arcane Lighthouse: strip',
+      data: { sourceName: 'Arcane Lighthouse', abilityDescription: 'strip' },
+      interaction: { kind: 'source', sourceId: 'lh', sourceCardId: 'c-lh', abilityIndex: 0 },
+    };
+    const artifact: PermanentView = {
+      id: 'relic',
+      controller: 'P2',
+      name: 'Relic',
+      typeLine: 'Artifact',
+      tapped: false,
+      status: [],
+      keywords: ['hexproof'],
+    };
+    const go = (battlefield: PermanentView[]): number =>
+      decide(request([PASS, ability], upkeep), view({ battlefield }), new Rng('a'), {
+        knowledge: lighthouse,
+      }).actionId;
+    expect(go([artifact])).toBe(0);
+    expect(go([creature('c', 'P2', 1, 1, { keywords: ['shroud'] })])).toBe(1);
   });
 });
 

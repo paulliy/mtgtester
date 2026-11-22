@@ -48,6 +48,34 @@ describe('cardTraits', () => {
     expect(t.manaValue).toBe(manaValue);
   });
 
+  it('records what an ability that only strips keywords takes, and from which permanents', () => {
+    expect(traits('Shadowspear').abilityKeywordStrip).toEqual([
+      {
+        selector: { kind: 'controller', who: 'opponents' },
+        keywords: ['hexproof', 'indestructible'],
+      },
+      null,
+    ]);
+    expect(traits('Arcane Lighthouse').abilityKeywordStrip).toEqual([
+      {
+        selector: {
+          kind: 'allOf',
+          of: [
+            { kind: 'type', value: 'Creature' },
+            { kind: 'controller', who: 'opponents' },
+          ],
+        },
+        keywords: ['hexproof', 'shroud'],
+      },
+    ]);
+    expect(traits('Bonds of Mortality').abilityKeywordStrip?.[0]?.keywords).toEqual([
+      'hexproof',
+      'indestructible',
+    ]);
+    // An ability that does anything else is not a strip, and a card with none has no field.
+    expect(traits('Lightning Greaves').abilityKeywordStrip).toBeUndefined();
+  });
+
   it('marks a removal spell target as hostile and a counterspell target as hostile', () => {
     expect(traits('Path to Exile').spellTargets).toEqual(['hostile']);
     expect(traits('Counterspell').spellTargets).toEqual(['hostile']);

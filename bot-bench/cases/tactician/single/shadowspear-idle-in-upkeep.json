@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "id": "shadowspear-idle-in-upkeep",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Keep the mana: Shadowspear has nothing to strip",
+  "skills": ["mana-discipline", "activated-abilities"],
+  "briefing": "From a paid four-seat game where a bot seat activated Shadowspear 26 times, three times in its own upkeep and again in opponents' upkeeps, with no hexproof or indestructible permanent on the table. P1 is in its upkeep with Shadowspear, Plains, Forest and Forest, and Kalonian Tusker and Serra Angel in hand. No opponent controls a permanent with hexproof or indestructible, so `{1}: Permanents your opponents control lose hexproof and indestructible until end of turn` does nothing and only spends mana P1 needs in its main phase.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P1",
+      "phase": "beginning",
+      "step": "upkeep",
+      "number": 5
+    },
+    "seats": {
+      "P1": {
+        "life": 36,
+        "hand": ["Kalonian Tusker", "Serra Angel"],
+        "battlefield": ["Shadowspear", "Plains", "Forest", "Forest"]
+      },
+      "P2": {
+        "life": 38,
+        "hand": ["Island", "Island", "Island", "Island"],
+        "battlefield": ["Forest", "Forest", "Forest", "Llanowar Elves", "Grizzly Bears"]
+      },
+      "P3": {
+        "life": 37,
+        "hand": ["Island", "Island", "Island", "Island"],
+        "battlefield": ["Plains", "Plains", "Plains", "Savannah Lions"]
+      },
+      "P4": {
+        "life": 40,
+        "hand": ["Island", "Island", "Island", "Island"],
+        "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp"]
+      }
+    }
+  },
+  "reference": {
+    "analysis": "No opposing permanent has hexproof or indestructible, so Shadowspear's ability changes nothing. Its mana is better kept for the main phase.",
+    "options": [
+      {
+        "label": "Pass",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "best",
+        "why": "Nothing to do in the upkeep; the mana stays for the main phase."
+      },
+      {
+        "label": "Yield the turn",
+        "when": {
+          "choose": "Pass and yield until end of turn"
+        },
+        "grade": "weak",
+        "why": "Keeps the mana now but skips the main phase where the Tusker or the Angel is cast."
+      },
+      {
+        "label": "Activate Shadowspear",
+        "when": {
+          "choose": "Shadowspear: {1}"
+        },
+        "grade": "blunder",
+        "why": "Strips keywords nobody has and spends mana the main phase needs."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Another line that spends the upkeep worse."
+    }
+  }
+}

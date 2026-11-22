@@ -10,6 +10,7 @@ export type {
   CardKnowledge,
   CardRole,
   CardTraits,
+  KeywordStrip,
   StatBoost,
   TargetPolarity,
   WipeSelector,

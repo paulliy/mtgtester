@@ -64,6 +64,24 @@ export const ARMS: Record<string, LeagueArm> = {
       'attackReserve',
     ],
   },
+  // The production bot before `keywordStrip`: its gate.
+  'fixed-0052': {
+    name: 'fixed-0052',
+    knowledge: true,
+    fixes: [
+      'ownStack',
+      'neverYield',
+      'lethalTargets',
+      'lethalValue',
+      'castOrder',
+      'landColors',
+      'attackReserve',
+      'scarceAnswer',
+      'faceDamage',
+      'costChoices',
+      'commanderValue',
+    ],
+  },
   ...FIX_ARMS,
   aggro: { name: 'aggro', knowledge: true, steering: { aggression: 0.85 } },
   control: {

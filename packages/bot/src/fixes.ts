@@ -26,6 +26,11 @@ export const POLICY_FIXES = [
   'costChoices',
   /** A commander, ours or theirs, is worth more than its body: never fed to a cost, first to answer. */
   'commanderValue',
+  /**
+   * An ability that only strips keywords (Shadowspear) is pointless when no opponent's permanent it
+   * affects has one of them, or while this seat's activation is still on the stack.
+   */
+  'keywordStrip',
 ] as const;
 export type PolicyFix = (typeof POLICY_FIXES)[number];
 

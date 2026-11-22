@@ -56,7 +56,8 @@ export interface PermanentView {
    * the engine's own `canBlock` already filters the offered menu (brief §1.2).
    *
    * Absent, not empty, for a face-down permanent: keywords are part of the hidden identity
-   * (§7.1), alongside `typeLine`/`oracleText` above.
+   * (§7.1), alongside `typeLine`/`oracleText` above. Also absent for a face-up permanent with no
+   * keywords, so tell the two apart by `typeLine`, which only a face-down permanent lacks.
    */
   keywords?: string[];
   tapped: boolean;

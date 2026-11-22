@@ -23,6 +23,7 @@ import type {
   CardKnowledge,
   CardRole,
   CardTraits,
+  KeywordStrip,
   StatBoost,
   TargetPolarity,
   WipeSelector,
@@ -1240,6 +1241,9 @@ export function actionValue(action: LegalAction, ctx: PolicyContext): number | n
     if (!sorcery) value -= idleReactivePenalty(roles, action, ctx);
     const misuse = attachOrCrewPenalty(action, ctx);
     if (misuse !== null) return misuse;
+    const strip = index === undefined ? null : (traits?.abilityKeywordStrip?.[index] ?? null);
+    if (strip !== null && fixOn(ctx, 'keywordStrip') && !stripHasSubject(strip, action, ctx))
+      return P.pointlessActivation;
   }
 
   // A hostile-only action whose best target is our own stuff is a misplay, whatever its roles.
@@ -1553,6 +1557,34 @@ function attachOrCrewPenalty(action: LegalAction, ctx: PolicyContext): number | 
     return null;
   }
   return null;
+}
+
+/**
+ * `keywordStrip`: whether an ability that only takes keywords away (Shadowspear) has anything to
+ * take. Without this it scored the flat activation bonus, having no role, and the repeat damper
+ * let it through three times in every priority window. The view leaves `keywords` out both when a
+ * permanent has none and when it is face down; only a face-down one (no type line either) might
+ * hide one. While this seat's earlier activation is still on the stack, the view still shows the
+ * keywords it is about to remove, so a second one adds nothing.
+ */
+function stripHasSubject(strip: KeywordStrip, action: LegalAction, ctx: PolicyContext): boolean {
+  const { view } = ctx;
+  if ((ctx.repeatCount?.(action) ?? 0) > 0 && view.stack.some((s) => s.controller === view.seat))
+    return false;
+  // Losing hexproof loses every "hexproof from" too (CR 702.11e), so match by prefix.
+  const stripped = (k: string): boolean =>
+    strip.keywords.some((kw) => k.toLowerCase().startsWith(kw));
+  return view.battlefield.some(
+    (p) =>
+      p.controller !== view.seat &&
+      matchesSelector(strip.selector, p, view.seat) !== false &&
+      (p.keywords?.some(stripped) === true || isFaceDown(p)),
+  );
+}
+
+/** A face-down permanent: the view hides its type line and keywords (CR 708.2). */
+function isFaceDown(p: PermanentView): boolean {
+  return p.typeLine === undefined || p.status.includes('faceDown');
 }
 
 // --- Choices outside the priority menu --------------------------------------------------------

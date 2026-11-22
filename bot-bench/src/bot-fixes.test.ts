@@ -51,6 +51,7 @@ const FIXED_BY: Record<PolicyFix, string[]> = {
   faceDamage: ['shock-the-other-threat'],
   costChoices: ['altar-the-bears-not-the-angel'],
   commanderValue: ['altar-the-beast-not-the-commander', 'swords-the-commander'],
+  keywordStrip: ['shadowspear-idle-in-upkeep', 'shadowspear-idle-in-their-upkeep'],
 };
 
 /**
@@ -58,12 +59,15 @@ const FIXED_BY: Record<PolicyFix, string[]> = {
  * only `neverYield` stops the bot yielding the turn away with it, which would waste the hold.
  * `faceDamage` keeps Shock off a player, and only `ownStack` sees that the Bolt already on the
  * stack kills the Bears, so the Lions are the target. `commanderValue` keeps Kiki-Jiki off Ashnod's
- * Altar, and only `costChoices` scores the Altar's sacrifice at all.
+ * Altar, and only `costChoices` scores the Altar's sacrifice at all. `keywordStrip` keeps
+ * Shadowspear idle in an opponent's upkeep, and only `scarceAnswer` then keeps the Swords in hand
+ * for a real threat instead of a mana elf.
  */
 const BUILDS_ON: Partial<Record<PolicyFix, PolicyFix[]>> = {
   scarceAnswer: ['neverYield'],
   faceDamage: ['ownStack'],
   commanderValue: ['costChoices'],
+  keywordStrip: ['scarceAnswer', 'neverYield'],
 };
 
 const SEEDS = ['gate-1', 'gate-2'];

@@ -17,6 +17,7 @@ import type {
   CardKnowledge,
   CardRole,
   CardTraits,
+  KeywordStrip,
   StatBoost,
   TargetPolarity,
   WipeSelector,
@@ -209,6 +210,31 @@ function selfPump(ability: AbilityLike | null | undefined): StatBoost | null {
     boost = addBoost(boost, b);
   }
   return boost;
+}
+
+const KEYWORD_STRIP_OPS = new Set(['loseKeywordsEachUntilEot', 'denyKeywordsEachUntilEot']);
+
+/**
+ * What an activated ability strips, when stripping keywords is all it does (Shadowspear, Arcane
+ * Lighthouse); null for any other ability. Several strip ops (none today) would join their
+ * selectors with `anyOf` and their keywords.
+ */
+function keywordStrip(ability: AbilityLike | null | undefined): KeywordStrip | null {
+  const ops = collectOps([ability?.effects, ability?.modes]);
+  if (ops.length === 0 || !ops.every((r) => KEYWORD_STRIP_OPS.has(r.op))) return null;
+  const selectors: WipeSelector[] = [];
+  const keywords = new Set<string>();
+  for (const record of ops) {
+    const selector = record.raw['selector'];
+    const list = record.raw['keywords'];
+    if (typeof selector !== 'object' || selector === null || !Array.isArray(list)) return null;
+    selectors.push(selector as WipeSelector);
+    for (const k of list) keywords.add(String(k).toLowerCase());
+  }
+  return {
+    selector: selectors.length === 1 ? selectors[0]! : { kind: 'anyOf', of: selectors },
+    keywords: [...keywords],
+  };
 }
 
 /** A constant team pump with the keywords it grants (Overrun), or undefined. */
@@ -439,6 +465,9 @@ export function cardTraits(def: CardDefinition): CardTraits {
     spellTargets: targetPolarities(main),
     abilityTargets: abilities.map((a) => targetPolarities(a)),
     abilitySorcery: def.activatedAbilities.map((a) => a.timing === 'sorcery'),
+    ...(abilities.some((a) => keywordStrip(a) !== null)
+      ? { abilityKeywordStrip: abilities.map((a) => keywordStrip(a)) }
+      : {}),
     // The engine's own instant-speed test reads the same keyword (`state/queries.ts`).
     ...(def.keywords.includes('flash') ? { flash: true } : {}),
     spellDamage: targetDamage(main),

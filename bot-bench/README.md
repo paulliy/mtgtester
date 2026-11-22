@@ -284,6 +284,18 @@ should not: neither has lethal on the board, so only reading the stack lifts the
 | one decision | `counter-the-lethal-bolt` | `scarceAnswer` | At 3 life, the last Counterspell answers a Bolt aimed at P1 |
 | one decision | `win-the-counter-war`     | `scarceAnswer` | The last Counterspell counters a Negate aimed at our Wrath  |
 
+### Added for `keywordStrip`
+
+From a paid four-seat game where a bot seat activated Shadowspear 26 times with nothing to strip
+(`docs/reviews/bot-keyword-strip-2026-11-22.md`). The third position is a control: the fix must
+still strip hexproof when it opens a target.
+
+| Kind         | Case                               | For            | What it tests                                                  |
+| ------------ | ---------------------------------- | -------------- | -------------------------------------------------------------- |
+| one decision | `shadowspear-idle-in-upkeep`       | `keywordStrip` | Pass in its own upkeep: no opposing hexproof or indestructible |
+| one decision | `shadowspear-idle-in-their-upkeep` | `keywordStrip` | The same in an opponent's upkeep, holding Swords to Plowshares |
+| one decision | `shadowspear-before-murder`        | `keywordStrip` | Strip Carnage Tyrant's hexproof so Murder can target it        |
+
 ### Added with ADR 0044
 
 Four positions per escalation trigger. For `scarce-answer`, two where the last answer should be

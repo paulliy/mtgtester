@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "id": "shadowspear-idle-in-their-upkeep",
+  "role": "tactician",
+  "scope": "single",
+  "title": "Don't fire Shadowspear in an opponent's upkeep with nothing to strip",
+  "skills": ["mana-discipline", "activated-abilities"],
+  "briefing": "Same game as `shadowspear-idle-in-upkeep`: the bot also activated Shadowspear in opponents' upkeeps. It is P2's upkeep. P1 has Shadowspear, Plains and Forest, and Swords to Plowshares in hand. No opponent controls a permanent with hexproof or indestructible, so activating does nothing and taps a land P1 may want for Swords this turn.",
+  "actor": "P1",
+  "position": {
+    "turn": {
+      "player": "P2",
+      "phase": "beginning",
+      "step": "upkeep",
+      "number": 6
+    },
+    "seats": {
+      "P1": {
+        "life": 36,
+        "hand": ["Swords to Plowshares"],
+        "battlefield": ["Shadowspear", "Plains", "Forest"]
+      },
+      "P2": {
+        "life": 38,
+        "hand": ["Island", "Island", "Island", "Island"],
+        "battlefield": ["Forest", "Forest", "Forest", "Llanowar Elves", "Grizzly Bears"]
+      },
+      "P3": {
+        "life": 37,
+        "hand": ["Island", "Island", "Island", "Island"],
+        "battlefield": ["Plains", "Plains", "Plains", "Savannah Lions"]
+      },
+      "P4": {
+        "life": 40,
+        "hand": ["Island", "Island", "Island", "Island"],
+        "battlefield": ["Swamp", "Swamp", "Swamp", "Swamp"]
+      }
+    }
+  },
+  "reference": {
+    "analysis": "No opposing permanent has hexproof or indestructible, so Shadowspear's ability changes nothing; Swords to Plowshares wants the Plains open.",
+    "options": [
+      {
+        "label": "Pass",
+        "when": {
+          "choose": "Pass priority"
+        },
+        "grade": "best",
+        "why": "Nothing to do; Swords stays available for the rest of P2's turn."
+      },
+      {
+        "label": "Activate Shadowspear",
+        "when": {
+          "choose": "Shadowspear: {1}"
+        },
+        "grade": "weak",
+        "why": "Strips keywords nobody has and taps a land for nothing."
+      }
+    ],
+    "otherwise": {
+      "grade": "weak",
+      "why": "Another line that spends the window worse."
+    }
+  }
+}

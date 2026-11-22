@@ -56,6 +56,13 @@ export interface WipeSelector {
   of?: WipeSelector | readonly WipeSelector[];
 }
 
+/** Keywords taken from the permanents a selector picks (`abilityKeywordStrip`). */
+export interface KeywordStrip {
+  selector: WipeSelector;
+  /** Lower-case keyword names, as in a `PermanentView`'s `keywords`. */
+  keywords: readonly string[];
+}
+
 /** A power and toughness change. */
 export interface StatBoost {
   power: number;
@@ -76,6 +83,14 @@ export interface CardTraits {
   abilityTargets?: readonly (readonly TargetPolarity[])[];
   /** Whether each activated ability, by ability index, is limited to sorcery timing. */
   abilitySorcery?: readonly boolean[];
+  /**
+   * By ability index: the keywords an activated ability does nothing but take away from a set of
+   * permanents until end of turn, and which permanents (Shadowspear's "permanents your opponents
+   * control lose hexproof and indestructible", Arcane Lighthouse's hexproof and shroud on
+   * opponents' creatures). Null for an ability that does anything else. The ability has no role,
+   * so this is what lets the bot see it has nothing to act on.
+   */
+  abilityKeywordStrip?: readonly (KeywordStrip | null)[];
   /**
    * Fixed damage each spell target slot takes (Lightning Bolt's 3), or null where the slot takes
    * no damage or the amount is not a constant. Lets the bot tell a kill from a scratch.
