@@ -254,6 +254,53 @@ blind bundle a strategist gets its own alias (`Strategist A`) and a remote tacti
 in several cells gets one too (`Tactician B`), so a judge can read the grid without names; every
 strategist model name is redacted and searched for like a tactician's.
 
+## Games: `duel`, whole games between pairs
+
+Positions measure single decisions and turns. `duel` plays whole four-player Commander games
+between lineup entries ("arms"), for win rates and cost per game. Any entry can be an arm: a
+tactician (bot, bot escalating to a model, chat model, decision model) with its strategist (none,
+or a live model), named the same way as for `run`.
+
+```powershell
+# Free: the wiring, with every model replaced by the bot and fixed knobs.
+bun run bot-bench duel --models bot-led:never,decision:typesafe/jev-1.14 --strategists none,openrouter:z-ai/glm-5.3-flash@low --arms bot-led-never.st-none,typesafe-jev-1.14.st-z-ai-glm-5.3-flash-low --offline
+
+# Paid: the steered bot against the decision model, 5 deals (10 games).
+bun run bot-bench duel --models bot-led:never,decision:typesafe/jev-1.14 --strategists none,openrouter:z-ai/glm-5.3-flash@low --arms bot-led-never.st-z-ai-glm-5.3-flash-low,typesafe-jev-1.14.st-none --deals 5 --spend-cap 2
+
+# Four arms at one table, from the grid lineup.
+bun run bot-bench duel --lineup bot-bench/lineups/strategist-grid.json --arms bot.st-none,bot.st-glm-low,qwen.st-glm-low,jev-1.14.st-glm-low --deals 3
+```
+
+- **Seating.** Two arms take two seats each (P1 and P3 against P2 and P4); four arms take one seat
+  each. Every deal (four generated decks from `--seed`) is played once per rotation of the arms
+  around the table, so deck and seat luck cancel within a deal: `--deals 5` is 10 games for two
+  arms, 20 for four.
+- **Every seat is the production pipeline**: `OpenAiDecisionProvider` and `StrategyCoordinator`,
+  and for a decision model the production Jev lane with `jevFallback: bot`, so the bot plays the
+  attacks, blocks and failures the model cannot. Dominated decisions are answered locally, as a
+  live seat answers them (`production` mode).
+- **Every accepted decision reaches every arm's coordinator**, so an opponent's action invalidates
+  a plan and may start a re-plan, as in a live game. Each arm has its own coordinator only because
+  each has its own strategist model and tactical mode.
+- **Seats wait for their strategist** before their first decision of a turn. `--race` restores the
+  live race; without the wait, fast bot-led seats finish turns before any plan lands.
+- **The turn cap ends a game as a draw** (`--turn-cap`, default 40). A game the engine stops for
+  any other reason is counted as _halted_ and left out of win rates.
+- **Spend cap** (`--spend-cap`, default $2, none offline): chat requests are refused once it is
+  reached, the seat's bot answers instead, and no further game starts. Decision-model requests are
+  checked before each request. A game in progress when the cap is reached is marked `capped`.
+
+The report (`summary.md`, `summary.json`, one line per game in `games.jsonl`) gives per arm: wins
+over games that ended, win rate against the fair rate (50% for two arms, 25% for four), share of
+the life left at the end, mean turn its seats were knocked out, cost per game, chat-tactician
+requests, strategist calls and decision-model requests per game, and the **fallback share**: the
+decisions its model was asked that the bot had to play instead. Above 5%, the report says the arm
+did not get a fair game (ADR 0039's bar).
+
+Not measured yet: per-decision traces (`ai-mode-duel --trace` has them), premade decks, and
+diplomacy.
+
 ## What is measured
 
 Three groups, never blended into one number:

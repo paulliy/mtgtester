@@ -3,7 +3,7 @@
  * run a lineup of models, build the judge bundle, and collate the scorecards that come back.
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describeScenarioRequest } from '../../packages/engine/src';
 import { analyzeCase } from './analysis';
@@ -29,6 +29,7 @@ import {
   type LineupEntry,
   type RunMode,
 } from './models';
+import { checkArms, publicArms, renderDuel, runDuel } from './duel';
 import { openCase, type CaseRun } from './play';
 import { parseStrategistList, resolveStrategistClientConfig } from './strategist';
 import { dollars, milliseconds, percent } from './report';
@@ -170,7 +171,8 @@ function printLeaderboard(runDirectory: string, cases: readonly BenchCase[]): vo
   }
 }
 
-async function run(flags: Flags): Promise<void> {
+/** The entries `--lineup`, `--models` and `--strategists` name together, ids checked unique. */
+function lineupFromFlags(flags: Flags): LineupEntry[] {
   const lineupPath = text(flags, 'lineup');
   const modelList = text(flags, 'models');
   const strategistList = text(flags, 'strategists');
@@ -196,6 +198,11 @@ async function run(flags: Flags): Promise<void> {
     throw new Error(
       `model id ${[...new Set(repeated)].join(', ')} appears more than once across --lineup and --models; give each model its own id`,
     );
+  return lineup;
+}
+
+async function run(flags: Flags): Promise<void> {
+  const lineup = lineupFromFlags(flags);
   const mode = (text(flags, 'mode') ?? 'raw') as RunMode;
   if (mode !== 'raw' && mode !== 'production') throw new Error('--mode must be raw or production');
   const trials = Math.floor(positive(flags, 'trials', 1));
@@ -265,6 +272,77 @@ async function run(flags: Flags): Promise<void> {
 
   printLeaderboard(runDirectory, cases);
   await bundle({ ...flags, run: runDirectory });
+}
+
+/**
+ * Whole games between two or four lineup entries (`duel.ts`). `--arms` picks them by id from the
+ * lineup; without it the lineup itself must hold exactly two or four entries.
+ */
+async function duel(flags: Flags): Promise<void> {
+  const lineup = lineupFromFlags(flags);
+  const armList = text(flags, 'arms');
+  const arms =
+    armList === undefined
+      ? lineup
+      : armList.split(',').map((id) => {
+          const entry = lineup.find((candidate) => candidate.id === id.trim());
+          if (entry === undefined)
+            throw new Error(
+              `--arms names ${id.trim()}, which is not in the lineup (${lineup.map((e) => e.id).join(', ')})`,
+            );
+          return entry;
+        });
+  checkArms(arms);
+  const offline = flags['offline'] === true;
+  const deals = Math.floor(positive(flags, 'deals', 1));
+  const turnCap = Math.floor(positive(flags, 'turn-cap', 40));
+  const jobs = Math.floor(positive(flags, 'jobs', 1));
+  const seed = text(flags, 'seed') ?? 'duel';
+  const capText = text(flags, 'spend-cap');
+  const spendCapUsd = capText === undefined ? (offline ? null : 2) : Number(capText);
+  if (spendCapUsd !== null && !(spendCapUsd >= 0)) throw new Error('--spend-cap must be USD');
+  // A missing key is found now, not after the other arms have been paid for.
+  if (!offline)
+    for (const entry of arms) {
+      if (entry.kind === 'llm') resolveLlmConfig(entry, { env: process.env, mode: 'production' });
+      else if (entry.kind === 'decision')
+        resolveDecisionKey(entry, { env: process.env, mode: 'production' });
+      else if (entry.kind === 'bot-led')
+        resolveBotLedConfig(entry, { env: process.env, mode: 'production' });
+      const strategist = liveStrategist(entry);
+      if (strategist !== undefined) resolveStrategistClientConfig(strategist, { env: process.env });
+    }
+  const runId = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
+  const out = resolve(text(flags, 'out') ?? join('benchmark-output', 'bot-bench-duel', runId));
+  mkdirSync(out, { recursive: true });
+  const gamesPath = join(out, 'games.jsonl');
+  writeFileSync(gamesPath, '');
+  const race = flags['race'] === true;
+  console.log(
+    `bot-bench duel ${runId}: ${arms.map((arm) => arm.id).join(' vs ')}, ${deals} deal(s) × ${arms.length} rotations, turn cap ${turnCap}${offline ? ', OFFLINE' : `, spend cap ${spendCapUsd === null ? 'none' : `$${spendCapUsd}`}`}`,
+  );
+  const { games, summary } = await runDuel({
+    arms,
+    deals,
+    seed,
+    turnCap,
+    jobs,
+    spendCapUsd,
+    env: process.env,
+    race,
+    offline,
+    onGame: (game) => appendFileSync(gamesPath, `${JSON.stringify(game)}\n`),
+    onProgress: (line) => console.log(`  ${line}`),
+  });
+  const options = { arms, seed, turnCap, race, offline };
+  const markdown = renderDuel(options, games, summary);
+  writeFileSync(join(out, 'summary.md'), markdown);
+  writeFileSync(
+    join(out, 'summary.json'),
+    `${JSON.stringify({ runId, seed, turnCap, deals, race, offline, arms: publicArms(arms), summary }, null, 2)}\n`,
+  );
+  console.log(`\n${markdown.split('## Games')[0]!.trim()}\n`);
+  console.log(`  games    ${gamesPath}\n  summary  ${join(out, 'summary.md')}`);
 }
 
 async function bundle(flags: Flags): Promise<void> {
@@ -422,6 +500,9 @@ const USAGE = `bot-bench: tactician benchmark with a judge bundle
         [--cases id,id] [--scope single|turn] [--trials N] [--mode raw|production]
         [--strategists <list>] [--out <run directory>] [--concurrency N] [--spend-cap <USD>]
         [--reveal-models]
+  bun run bot-bench duel --models <list> | --lineup <file.json> [--strategists <list>] [--arms id,id]
+        [--deals N] [--turn-cap N] [--seed S] [--jobs N] [--spend-cap <USD>] [--race] [--offline]
+        [--out <directory>]                         whole four-player games between 2 or 4 entries
   bun run bot-bench bundle --run <run directory> [--reveal-models]
   bun run bot-bench rescore --run <run directory>    grade saved play again against the current references
   bun run bot-bench collate --run <run directory> <scorecard.json> [...]
@@ -451,6 +532,7 @@ async function main(): Promise<void> {
   else if (command === 'inspect') await inspect(positional[0], flags);
   else if (command === 'verify') await verify(flags);
   else if (command === 'run') await run(flags);
+  else if (command === 'duel') await duel(flags);
   else if (command === 'bundle') await bundle(flags);
   else if (command === 'rescore') await rescore(flags);
   else if (command === 'collate') collateCommand(positional, flags);
