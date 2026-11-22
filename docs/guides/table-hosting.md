@@ -97,6 +97,9 @@ one: put its public hostname in the allowlists and `TABLE_PUBLIC_ORIGIN`, and it
 address in `TABLE_TRUSTED_PROXY` with `TABLE_BEHIND_TLS_PROXY=1`. Without that the server refuses
 to start, and in LAN mode it refuses a loopback peer that names a public host.
 
+A worked example, an Oracle Cloud VM behind a Cloudflare Tunnel with a systemd service, is
+[deploying on Oracle Cloud](deploy-oracle-cloud.md).
+
 ## What the host sees and can do
 
 - The host secret, printed at startup, creates tables. The host token, returned once per table,

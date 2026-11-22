@@ -33,6 +33,7 @@ bun run serve --provisional             # also play machine-checked review-queue
 bun run serve:table --dev [--port N] [--oracle-fixture packages/server/fixtures/coverage-oracle.json]
                                         # multiplayer table server, loopback only
 bun run serve:table [--insecure-lan]    # exposed table server; see docs/guides/table-hosting.md
+bun run table:cards                     # prebuilt card file serve:table loads instead of the bulk file
 bun run dev:web
 
 bun run decks <deckUrlOrFile> [more...]

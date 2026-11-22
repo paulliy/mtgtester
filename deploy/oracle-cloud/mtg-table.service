@@ -1,0 +1,40 @@
+# systemd unit for the table server. Install with:
+#   sudo cp deploy/oracle-cloud/mtg-table.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now mtg-table
+# It assumes the repository at /opt/mtgtester, owned by the `mtg` user, with Bun installed for
+# that user. The guide is docs/guides/deploy-oracle-cloud.md.
+
+[Unit]
+Description=MTG Tester table server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mtg
+Group=mtg
+WorkingDirectory=/opt/mtgtester
+EnvironmentFile=/etc/mtg-table.env
+# The home directory is read-only to the service, so Bun's transpiler cache stays off.
+Environment=BUN_RUNTIME_TRANSPILER_CACHE_PATH=0
+ExecStart=/home/mtg/.bun/bin/bun run packages/server/src/cli/serve-table.ts
+Restart=on-failure
+RestartSec=5
+# The server stops its sockets and closes the database on SIGTERM.
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
+# Hardening: the server writes only its database under data/.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/mtgtester/data
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target
