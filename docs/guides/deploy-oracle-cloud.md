@@ -46,6 +46,20 @@ or try 1 OCPU and 6 GB.
 
 Then connect: `ssh ubuntu@<public-ip>`.
 
+### If no Ampere capacity is available: the AMD micro
+
+`VM.Standard.E2.1.Micro` (under "Specialty and previous generation", also Always Free) has 1 GB
+of memory and a small share of one CPU (it can burst briefly). It is enough for a couple of tables,
+with these differences:
+
+- Pick Ubuntu 24.04 for x86-64 (the micro is not ARM). Everything else in this guide is the same.
+- `setup.sh` detects the small VM, adds a 4 GB swap file so the one-time card conversion and web
+  build can finish (expect them to take several minutes longer), and sets `TABLE_MAX_TABLES=2`.
+- Engine steps run several times slower than on Ampere. Ordinary turns stay quick, but a big
+  board can pause noticeably. This shape has not been tried with a full game yet.
+- Move to Ampere later by creating the new VM, running `setup.sh` there, copying
+  `data/tables/tables.sqlite` across, and pointing the tunnel at it.
+
 ## 3. Install the table server (script)
 
 On the VM, as `ubuntu`:

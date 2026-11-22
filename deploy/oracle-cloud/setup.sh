@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# One-time setup of the table server on a fresh Ubuntu VM (Oracle Cloud Ampere A1, arm64, or any
-# x86-64 or arm64 Ubuntu 22.04/24.04). Run as the default `ubuntu` user:
+# One-time setup of the table server on a fresh Ubuntu VM (Oracle Cloud Ampere A1, arm64, the
+# Always Free AMD micro, or any x86-64 or arm64 Ubuntu 22.04/24.04). Run as the default `ubuntu` user:
 #
 #   curl -fsSL https://raw.githubusercontent.com/paulliy/mtgtester/main/deploy/oracle-cloud/setup.sh -o setup.sh
 #   less setup.sh            # read it first
@@ -19,6 +19,22 @@ APP_DIR=/opt/mtgtester
 echo "==> Installing system packages"
 sudo apt-get update -y
 sudo apt-get install -y git curl unzip ca-certificates
+
+# A small VM (the 1 GB Always Free AMD micro) runs out of memory converting the card data and
+# building the web bundle. A swap file lets those one-time steps finish, slowly.
+MEM_KB=$(awk '/MemTotal/{print $2}' /proc/meminfo)
+SMALL_VM=0
+if [ "${MEM_KB}" -lt 3000000 ]; then
+  SMALL_VM=1
+  if ! swapon --show | grep -q .; then
+    echo "==> Small VM (${MEM_KB} kB): adding a 4 GB swap file"
+    sudo fallocate -l 4G /swapfile
+    sudo chmod 600 /swapfile
+    sudo mkswap /swapfile
+    sudo swapon /swapfile
+    grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+  fi
+fi
 
 echo "==> Creating the mtg user"
 if ! id mtg >/dev/null 2>&1; then
@@ -59,6 +75,10 @@ run "mkdir -p data/tables"
 echo "==> Installing the settings file and the service"
 if [ ! -f /etc/mtg-table.env ]; then
   sudo install -m 640 -o root -g mtg "${APP_DIR}/deploy/oracle-cloud/mtg-table.env.example" /etc/mtg-table.env
+  if [ "${SMALL_VM}" = 1 ]; then
+    # Each game runs in its own worker, so keep the number of games small on a 1 GB VM.
+    sudo sed -i 's/^# TABLE_MAX_TABLES=8$/TABLE_MAX_TABLES=2/' /etc/mtg-table.env
+  fi
   echo "    Created /etc/mtg-table.env. Edit it: put your subdomain in the three TABLE_ settings."
 fi
 sudo install -m 644 "${APP_DIR}/deploy/oracle-cloud/mtg-table.service" /etc/systemd/system/mtg-table.service
