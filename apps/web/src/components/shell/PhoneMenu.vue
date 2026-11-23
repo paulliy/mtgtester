@@ -13,6 +13,17 @@ import ThemeControl from './ThemeControl.vue';
 defineProps<{ places: readonly NavPlace[]; current: number }>();
 
 const open = ref(false);
+const toggle = ref<HTMLButtonElement | null>(null);
+
+/**
+ * Escape is caught on the menu's root, which holds both the name button and the sheet: right
+ * after opening, focus is still on the button, outside the sheet. Focus returns to the button.
+ */
+function closeOnEscape(): void {
+  if (!open.value) return;
+  open.value = false;
+  toggle.value?.focus();
+}
 const route = useRoute();
 watch(
   () => route.fullPath,
@@ -23,9 +34,10 @@ watch(
 </script>
 
 <template>
-  <div class="phone-menu">
+  <div class="phone-menu" @keydown.esc="closeOnEscape">
     <button
       type="button"
+      ref="toggle"
       class="brand-button"
       :aria-expanded="open"
       aria-controls="phone-places"
@@ -36,13 +48,7 @@ watch(
         <path d="M1 1 L6 6 L11 1" fill="none" stroke="currentColor" stroke-width="1.2" />
       </svg>
     </button>
-    <nav
-      v-if="open"
-      id="phone-places"
-      class="sheet"
-      aria-label="Places"
-      @keydown.esc="open = false"
-    >
+    <nav v-if="open" id="phone-places" class="sheet" aria-label="Places">
       <template v-for="(place, i) in places" :key="place.key">
         <div v-if="startsGroup(places, i)" class="group-head">
           <span class="group-numeral">{{ place.group }}</span>
