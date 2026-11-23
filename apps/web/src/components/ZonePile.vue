@@ -52,10 +52,11 @@ const shown = computed(() => props.cards.slice(-3));
     :title="`${props.open ? 'Close' : 'Open'} ${props.label.toLowerCase()}`"
     @click.stop="emit('toggle')"
   >
+    <!-- The spaces keep the row's text "Graveyard 2" for readers; the flex row ignores them. -->
     <template v-if="props.variant === 'row'">
-      <span class="pile-label">{{ props.label }}</span>
-      <span v-if="props.detail" class="pile-detail">{{ props.detail }}</span>
-      <span class="pile-num">{{ props.cards.length }}</span>
+      <span class="pile-label">{{ props.label }}</span
+      >{{ ' ' }}<span v-if="props.detail" class="pile-detail">{{ props.detail }}</span
+      >{{ props.detail ? ' ' : '' }}<span class="pile-num">{{ props.cards.length }}</span>
     </template>
     <span v-else class="pile-cards" aria-hidden="true">
       <span

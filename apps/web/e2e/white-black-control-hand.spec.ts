@@ -63,7 +63,7 @@ test('Duress: reveal P2’s hand and choose a noncreature, nonland card', async 
   await artifactChoice.getByRole('button', { name: 'Discard', exact: true }).click();
 
   await expect(opponent(page, 'P2')).toContainText('hand 3');
-  await expect(opponent(page, 'P2').getByText('Graveyard')).toBeVisible();
+  await expect(opponent(page, 'P2').getByRole('heading', { name: /^Graveyard \(/ })).toBeVisible();
   await expect(opponent(page, 'P2').getByRole('img', { name: 'Lab P2 Artifact' })).toBeVisible();
   await expect(page.getByText('Lab Private Library Card')).toHaveCount(0);
 });

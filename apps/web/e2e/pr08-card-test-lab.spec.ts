@@ -489,7 +489,10 @@ test('Cut a Deal: an empty library draws nothing and you draw two', async ({ pag
   await expect(page.locator('.human-zone .hand-card')).toHaveCount(2);
   await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('hand 1');
   await expect(page.locator('.opponent').filter({ hasText: 'P4' })).toContainText('hand 1');
-  await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText('hand 0');
+  // P3's panel reads "out" with the reason instead of its counts.
+  await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText(
+    'Lost drawing from an empty library.',
+  );
 });
 
 function humanPermanent(page: Page, name: string) {

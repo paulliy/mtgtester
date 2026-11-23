@@ -1750,7 +1750,7 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await passUntil(page, permanent(page, 'P1', 'Forest'));
     // The shuffle is an engine event the viewer does not log; the Forest left P2's library.
     await expect(logLine(page, /Praetor's Grasp resolves/)).toBeVisible();
-    await expect(page.locator('.opponent[data-seat="P2"]').getByText(/exile 0/)).toBeVisible();
+    await expect(page.locator('.opponent[data-seat="P2"]').getByText(/Exile 0/)).toBeVisible();
   },
   // EDHREC plan Phase 4: one card per new grammar production.
   'thraben-inspector-investigates': async (page) => {
@@ -1778,7 +1778,7 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await page.locator('.opponent[data-seat="P2"] > header').click();
     await confirmButton(page).click();
     await passStackUntil(page, logLine(page, /Glimpse the Unthinkable[^]*resolves/));
-    await expect(page.locator('.opponent[data-seat="P2"]').getByText(/gy 10/)).toBeVisible();
+    await expect(page.locator('.opponent[data-seat="P2"]').getByText(/Graveyard 10/)).toBeVisible();
     await expect(inZone(page, 'P1', 'Graveyard', 'Glimpse the Unthinkable')).toHaveCount(1);
     await expect(seatZone(page, 'P1', 'Graveyard').getByRole('img')).toHaveCount(1);
   },

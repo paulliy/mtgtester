@@ -1587,17 +1587,24 @@ function abandon(): void {
         v-if="state"
         class="turn-ruler"
         :style="{ '--stop': turnStopIndex, '--stops': TURN_STOPS.length }"
-        :aria-label="turnPositionLabel(state.phase, state.step)"
+        aria-hidden="true"
       >
         <li
           v-for="(stop, i) in TURN_STOPS"
           :key="stop.phase"
           :class="{ reached: i <= turnStopIndex, on: i === turnStopIndex }"
-          :aria-current="i === turnStopIndex ? 'step' : undefined"
         >
           <span class="stop-label">{{ stop.label }}</span>
         </li>
       </ol>
+      <!-- The ruler draws the position; readers get it in words, with who holds priority. -->
+      <span v-if="state" class="dt-sr phase-label">{{
+        turnPositionLabel(state.phase, state.step)
+      }}</span>
+      <span v-if="state?.priorityPlayer" class="dt-sr priority-label"
+        >Priority:
+        {{ state.priorityPlayer === state.viewerSeat ? 'You' : state.priorityPlayer }}</span
+      >
       <span class="bar-spacer" />
       <!-- Your resources, beside the turn they belong to: global counters, the land drop, and the
            mana you can spend right now. -->
@@ -2006,7 +2013,11 @@ function abandon(): void {
           v-if="human"
           :ref="seatAnchorRef(human.seat)"
           class="human-zone"
-          :class="{ 'your-turn': isYourTurn, 'no-hand': (human.hand ?? []).length === 0 }"
+          :class="{
+            'your-turn': isYourTurn,
+            // The hand row also holds a commander waiting in the command zone: keep it then.
+            'no-hand': (human.hand ?? []).length === 0 && humanCommandZoneCount === 0,
+          }"
         >
           <header
             :class="{
@@ -2043,12 +2054,6 @@ function abandon(): void {
               title="You are the monarch"
               >MONARCH</span
             >
-            <GlobalCounters
-              :energy="human.energy"
-              :poison-counters="human.poisonCounters"
-              :counters="human.counters"
-              compact
-            />
           </header>
 
           <div class="me-cols" :style="{ '--me-cols': meColumns }">
@@ -4135,8 +4140,9 @@ button.primary {
 .opp-foot {
   flex-shrink: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.8rem;
+  gap: 0 0.8rem;
   min-width: 0;
   padding-top: 0.35rem;
   border-top: 1px solid var(--ink);
@@ -4158,13 +4164,12 @@ button.primary {
   text-transform: uppercase;
   white-space: nowrap;
 }
+/* The names wrap rather than clip: every land stays in reach for a target or an activation. On a
+   narrow panel the zone buttons move to a line of their own. */
 .land-line {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   color: var(--muted);
 }
 .land-line .object.land-name {
@@ -4282,7 +4287,9 @@ button.primary {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(8.5rem, 11vw, 11rem);
-  grid-template-rows: auto minmax(0, 27fr) minmax(5.5rem, 14fr) auto minmax(10rem, 13fr);
+  /* Your board keeps room for a row of tiles; the decision scrolls inside its share instead of
+     growing over the board on a short screen. */
+  grid-template-rows: auto minmax(7.5rem, 27fr) minmax(5.5rem, 14fr) auto minmax(10rem, 13fr);
   grid-template-areas:
     'head rail'
     'cols rail'
@@ -4297,8 +4304,13 @@ button.primary {
   box-shadow: none;
   overflow: hidden;
 }
+/* With no hand to set its height the band takes what the decision needs, once your board has its
+   row of tiles. */
 .human-zone.no-hand {
-  grid-template-rows: auto minmax(0, 27fr) minmax(5.5rem, 14fr) auto auto;
+  grid-template-rows: auto minmax(7.5rem, 27fr) minmax(5.5rem, 14fr) auto minmax(
+      10rem,
+      max-content
+    );
 }
 .human-zone.your-turn {
   border-color: transparent;
@@ -4790,11 +4802,12 @@ button.link {
   font-size: 0.8rem;
   cursor: pointer;
 }
+/* The brackets are decoration: the empty alternative keeps them out of the button's name. */
 button.link::before {
-  content: '[ ';
+  content: '[ ' / '';
 }
 button.link::after {
-  content: ' ]';
+  content: ' ]' / '';
 }
 .pending-stack {
   border-left-color: var(--ink);
