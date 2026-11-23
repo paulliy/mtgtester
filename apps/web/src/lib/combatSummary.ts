@@ -136,7 +136,6 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
   const lines: string[] = [];
   const prose: string[] = [];
   const incoming = new Map<string, number>();
-  const unblockedAt = new Map<string, number>();
   for (const attacker of attackers) {
     const seat = attacker.attacking!;
     const walker =
@@ -168,7 +167,6 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
       state = `unblocked, ${power} damage`;
       const victim = walker !== undefined ? walker.name : seatLabelOf(input.seats, seat);
       prose.push(`${attacker.name} is unblocked and deals ${power} to ${victim}.`);
-      if (atPlayer) unblockedAt.set(seat, (unblockedAt.get(seat) ?? 0) + 1);
     }
     lines.push(`${attacker.name}${pt(attacker)} → ${target} · ${state}`);
   }
@@ -181,20 +179,37 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
       attacked.set(seat, `Under attack · ${power} incoming`);
       continue;
     }
+    // Regular combat damage is dealt before anyone gets priority in the damage step, and the
+    // attackers stay attacking through end of combat, so by then nothing is incoming any more. In
+    // the first-strike step only first strikers have dealt theirs; double strikers deal again.
+    const allDealt =
+      step === 'endCombat' || (step === 'combatDamage' && input.priorityPlayer !== null);
+    const firstDealt = step === 'firstStrikeCombatDamage' && input.priorityPlayer !== null;
+    const pending = allDealt
+      ? []
+      : onPlayer.filter(
+          (a) =>
+            !firstDealt ||
+            !(a.keywords ?? []).includes('first strike') ||
+            (a.keywords ?? []).includes('double strike'),
+        );
+    if (pending.length === 0) {
+      attacked.set(seat, 'Attacked · damage dealt');
+      continue;
+    }
     // A blocked trampler can still push damage through; how much depends on how its controller
     // assigns damage, so the chip says "+ trample" rather than claiming an exact number.
-    const trample = onPlayer.some(
+    const trample = pending.some(
       (a) => a.blockedBy.length > 0 && (a.keywords ?? []).includes('trample'),
     );
-    const through = onPlayer
-      .filter((a) => a.blockedBy.length === 0)
-      .reduce((sum, a) => sum + Math.max(0, a.power ?? 0), 0);
+    const unblocked = pending.filter((a) => a.blockedBy.length === 0);
+    const through = unblocked.reduce((sum, a) => sum + Math.max(0, a.power ?? 0), 0);
     if (trample) {
       attacked.set(seat, `Under attack · ${through} incoming + trample`);
-    } else if ((unblockedAt.get(seat) ?? 0) === 0) {
+    } else if (unblocked.length === 0) {
       attacked.set(
         seat,
-        onPlayer.length === 1 ? 'Under attack · blocked' : 'Under attack · all blocked',
+        pending.length === 1 ? 'Under attack · blocked' : 'Under attack · all blocked',
       );
     } else {
       attacked.set(seat, `Under attack · ${through} incoming`);

@@ -1910,6 +1910,8 @@ function abandon(): void {
                     'chosen-target': isChosenTarget(group.permanent.id),
                     actionable: actionableSourceIds.has(group.permanent.id),
                   }"
+                  @dragover.prevent
+                  @drop.stop="dropOn(group.permanent.id, opponent.seat)"
                   @click.stop="selectSource(group.permanent.id, opponent.seat)"
                   ><span v-if="i > 0" class="dot" aria-hidden="true">·</span
                   ><PermanentChip

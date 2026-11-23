@@ -100,6 +100,28 @@ test('opponent seats take decks from their menus, and a blocked import holds Sta
   await expect(page.getByRole('button', { name: 'Start game' })).toBeEnabled();
 });
 
+test('Cancel after moving seats brings back the generated deck you started with', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const seats = page.getByLabel('Matchup preview').locator('li');
+  await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
+  const generated = (await seats.nth(0).locator('.seat-title').textContent())?.trim() ?? '';
+  expect(generated).not.toBe('');
+
+  // Try another deck, then move to P2 with the chooser still open: it follows you.
+  await page.getByRole('button', { name: 'Change the deck for P1' }).click();
+  await page.getByRole('button', { name: /^Atarka, World Render Draconic/ }).click();
+  await expect(seats.nth(0)).toContainText('Atarka, World Render', { timeout: 60_000 });
+  await sitAt(page, 'P2');
+  await expect(seats.nth(1)).toContainText('P2 · You');
+  await expect(seats.nth(1)).toContainText('Atarka, World Render', { timeout: 60_000 });
+
+  // Cancel puts back the deck P1 had, not a deck generated for P2.
+  await page.getByRole('button', { name: '[ Cancel ]' }).click();
+  await expect(seats.nth(1).locator('.seat-title')).toHaveText(generated, { timeout: 60_000 });
+});
+
 test('an imported Ur-Dragon deck can be selected again as one saved deck', async ({ page }) => {
   const decklist = readFileSync('packages/server/fixtures/coverage-decks/urdragon.txt', 'utf8');
   const seats = page.getByLabel('Matchup preview').locator('li');

@@ -230,4 +230,50 @@ describe('summarizeCombat', () => {
     expect(summary?.attacked.get('P2')).toBe('Under attack · 2 incoming + trample');
     expect(summary?.attacked.get('P4')).toBe('Under attack · 0 incoming + trample');
   });
+
+  it('stops calling damage incoming once it has been dealt', () => {
+    const at = (step: 'firstStrikeCombatDamage' | 'combatDamage' | 'endCombat') =>
+      summarizeCombat({
+        phase: 'combat',
+        step,
+        priorityPlayer: 'P1',
+        permanents: [
+          creature('a', 'Grizzly Bears', 'P1', { power: 5, toughness: 5, attacking: 'P2' }),
+          creature('f', 'White Knight', 'P1', {
+            power: 2,
+            toughness: 2,
+            attacking: 'P4',
+            keywords: ['first strike'],
+          }),
+          creature('d', 'Boros Swiftblade', 'P1', {
+            power: 1,
+            toughness: 2,
+            attacking: 'P4',
+            keywords: ['double strike'],
+          }),
+        ],
+        seats,
+        plan: null,
+      });
+    // After first-strike damage: the first striker is done, the double striker deals again.
+    expect(at('firstStrikeCombatDamage')?.attacked.get('P2')).toBe('Under attack · 5 incoming');
+    expect(at('firstStrikeCombatDamage')?.attacked.get('P4')).toBe('Under attack · 1 incoming');
+    expect(at('combatDamage')?.attacked.get('P2')).toBe('Attacked · damage dealt');
+    expect(at('endCombat')?.attacked.get('P2')).toBe('Attacked · damage dealt');
+    expect(at('endCombat')?.attacked.get('P4')).toBe('Attacked · damage dealt');
+  });
+
+  it("still predicts damage while a trampler's damage is being assigned", () => {
+    const summary = summarizeCombat({
+      phase: 'combat',
+      step: 'combatDamage',
+      priorityPlayer: null,
+      permanents: [
+        creature('a', 'Grizzly Bears', 'P1', { power: 5, toughness: 5, attacking: 'P2' }),
+      ],
+      seats,
+      plan: null,
+    });
+    expect(summary?.attacked.get('P2')).toBe('Under attack · 5 incoming');
+  });
 });

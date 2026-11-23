@@ -111,6 +111,16 @@ function seconds(ms: number): string {
   return `${Number((ms / 1000).toFixed(2))} s`;
 }
 
+/**
+ * In Play the bots never wait for a step: `MatchSession.pacedBot` runs them on their own and
+ * pauses each decision by a third of the pace, at most half a second, so you can follow along.
+ * Stepping by hand is a Watch control only.
+ */
+const botPauseMs = computed(() => Math.min(500, Math.floor(paceValue.value / 3)));
+watch(gameMode, (mode) => {
+  if (mode === 'singlePlayer') playback.value = 'live';
+});
+
 /** The opening plate: only the compass and "Where to?" until a mode is picked. */
 const opening = ref(!hasOpened());
 watch(opening, (value) => (openingScreen.value = value), { immediate: true });
@@ -216,8 +226,12 @@ watch(humanSeat, (next, previous) => {
   );
   [list[to], list[from]] = [list[from]!, list[to]!];
   choices.value = list;
-  if (pickingSeat.value === from) pickingSeat.value = to;
-  else if (pickingSeat.value === to) pickingSeat.value = from;
+  // The deck Cancel goes back to moves too, pinned to the seat it was generated for.
+  const picking = pickingSeat.value;
+  if (picking === from || picking === to) {
+    if (pickingFrom.value !== null) pickingFrom.value = pinGenerated(pickingFrom.value, picking);
+    pickingSeat.value = picking === from ? to : from;
+  }
 });
 
 function matchesFilter(colors: readonly string[], ...texts: string[]): boolean {
@@ -518,11 +532,15 @@ const botsText = computed(
   () => `${WORDS[botCount.value]} ${providerKind.value === 'ai' ? 'AI' : 'built-in'} bots`,
 );
 const playbackText = computed(() =>
-  playback.value === 'manual'
-    ? 'Step by hand'
-    : paceValue.value === 0
-      ? 'Live, no wait between bot actions'
-      : `Live, ${seconds(paceValue.value)} per action`,
+  gameMode.value === 'singlePlayer'
+    ? botPauseMs.value === 0
+      ? 'Live, bots move without pausing'
+      : `Live, bots pause ${seconds(botPauseMs.value)} per action`
+    : playback.value === 'manual'
+      ? 'Step by hand'
+      : paceValue.value === 0
+        ? 'Live, no wait between bot actions'
+        : `Live, ${seconds(paceValue.value)} per action`,
 );
 const shuffleText = computed(() =>
   customSeed.value.trim() !== '' ? `Seed ${customSeed.value.trim()}` : 'New random shuffle',
@@ -1026,6 +1044,7 @@ const pickingRow = computed(() =>
                 Live
               </button>
               <button
+                v-if="gameMode !== 'singlePlayer'"
                 type="button"
                 :aria-pressed="playback === 'manual'"
                 @click="playback = 'manual'"
@@ -1035,9 +1054,11 @@ const pickingRow = computed(() =>
             </div>
             <p class="hint">
               {{
-                playback === 'live'
-                  ? 'Bots move on their own; you can pause and scrub at any time.'
-                  : 'Nothing moves until you step forward.'
+                gameMode === 'singlePlayer'
+                  ? 'Bots move on their own between your decisions. Stepping by hand is for watching.'
+                  : playback === 'live'
+                    ? 'Bots move on their own; you can pause and scrub at any time.'
+                    : 'Nothing moves until you step forward.'
               }}
             </p>
           </div>
@@ -1057,9 +1078,13 @@ const pickingRow = computed(() =>
               <span>{{
                 playback !== 'live'
                   ? 'Off while stepping by hand'
-                  : paceValue === 0
-                    ? 'No wait between bot actions'
-                    : `${seconds(paceValue)} between bot actions`
+                  : gameMode === 'singlePlayer'
+                    ? botPauseMs === 0
+                      ? 'Bots move without pausing'
+                      : `Bots pause ${seconds(botPauseMs)} after each action`
+                    : paceValue === 0
+                      ? 'No wait between bot actions'
+                      : `${seconds(paceValue)} between bot actions`
               }}</span>
             </label>
           </div>
