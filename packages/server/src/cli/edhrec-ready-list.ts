@@ -12,7 +12,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { loadOracleIndexFromFile } from '../cards/oracle-index';
+import { loadOracleIndexFromFile } from '../cards/oracle-index-file';
 import { measureCoverage } from '../cards/coverage';
 import {
   readiness,

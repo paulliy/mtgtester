@@ -286,6 +286,8 @@ export function outboundAllowlist(
 
 /** Whether this process is a test run. The repo has no other detector; Vitest sets `VITEST`. */
 function underTest(): boolean {
+  // A browser has no `process`; nothing there is a test run.
+  if (typeof process === 'undefined') return false;
   const flag = process.env['VITEST'];
   return flag !== undefined && flag !== '' && flag !== 'false';
 }

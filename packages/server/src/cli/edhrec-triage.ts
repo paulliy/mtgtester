@@ -16,7 +16,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { interpretCardWithDiagnostics } from '@mtg/engine';
-import { loadOracleIndexFromFile } from '../cards/oracle-index';
+import { loadOracleIndexFromFile } from '../cards/oracle-index-file';
 import { readiness, type EdhrecRanking } from '../cards/edhrec-ranking';
 import {
   renderTriageJson,

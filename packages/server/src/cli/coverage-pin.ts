@@ -27,7 +27,7 @@ import {
   type ModeledRatchet,
   type PinnedCard,
 } from '../cards/edhrec-pins';
-import { loadOracleIndexFromFile } from '../cards/oracle-index';
+import { loadOracleIndexFromFile } from '../cards/oracle-index-file';
 
 const RANKING_PATH = 'packages/server/fixtures/edhrec-ranking.json';
 const DEFAULT_BANK = 'data/scryfall-oracle-cards.json';

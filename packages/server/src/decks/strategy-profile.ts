@@ -1,5 +1,4 @@
-import { createHash } from 'node:crypto';
-import type { OracleCard } from '@mtg/shared';
+import { sha256Hex, type OracleCard } from '@mtg/shared';
 import {
   detectCardRoles,
   identityName,
@@ -68,7 +67,7 @@ function definitionsHash(input: ArchetypeInput): string {
     oracleText: card.oracleText,
     keywords: [...card.keywords].sort(),
   }));
-  return createHash('sha256').update(JSON.stringify(canonical)).digest('hex');
+  return sha256Hex(JSON.stringify(canonical));
 }
 
 function commanderProfile(card: OracleCard): CommanderProfile {

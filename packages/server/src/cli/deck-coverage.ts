@@ -34,7 +34,7 @@ import {
   type PopulationReport,
   type ProvisionalLookup,
 } from '../cards/deck-coverage';
-import { loadProvisionalCatalog } from '../cards/provisional';
+import { loadProvisionalCatalog } from '../cards/provisional-load';
 import {
   AVERAGE_DECKS_ORACLE_PATH,
   AVERAGE_DECKS_PATH,
@@ -44,11 +44,8 @@ import {
   type AverageDecksFixture,
   type PinnedAverageDeckOracle,
 } from '../cards/edhrec-average-decks';
-import {
-  buildOracleIndexFromCards,
-  loadOracleIndexFromFile,
-  type OracleIndex,
-} from '../cards/oracle-index';
+import { buildOracleIndexFromCards, type OracleIndex } from '../cards/oracle-index';
+import { loadOracleIndexFromFile } from '../cards/oracle-index-file';
 import { importDeck } from '../decks/source';
 import { resolveDeck } from '../decks/resolve';
 import { PINNED_ORACLE_FIXTURE } from './coverage-input';
