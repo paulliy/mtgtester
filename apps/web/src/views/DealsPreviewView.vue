@@ -5,6 +5,8 @@
  * answers in the browser, so the panel can be looked at and clicked through without starting a
  * game or a server. Development builds only; nothing here is sent anywhere.
  */
+import PageTitle from '../components/shell/PageTitle.vue';
+import PageFoot from '../components/shell/PageFoot.vue';
 import { onMounted, onUnmounted } from 'vue';
 import type { Deal, DiplomacySeatState, PlayerBoardState, TableTalkLine } from '@mtg/shared';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
@@ -232,7 +234,7 @@ function moveSlot(): void {
 <template>
   <div class="preview">
     <header>
-      <h2>Deals preview</h2>
+      <PageTitle place="III. Workshop · b. Deals" :level="2">Deals preview</PageTitle>
       <p>
         Sample data, no game: you are P1, P4 leads, P3 has an offer waiting on you. Bot answers are
         faked in the browser. Development builds only.
@@ -259,6 +261,7 @@ function moveSlot(): void {
       @cancel="store.cancelDealWarning()"
       @confirm="store.confirmDealWarning()"
     />
+    <PageFoot place="III. Workshop · b. Deals" />
   </div>
 </template>
 

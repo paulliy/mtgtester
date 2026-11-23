@@ -24,6 +24,7 @@ import type {
   SetupPreview,
 } from '@mtg/shared';
 import ManaPips from '../components/ManaPips.vue';
+import ModeCompass from '../components/setup/ModeCompass.vue';
 import { scryfallImageUrl } from '../lib/card';
 import { useConfirmedStart } from '../composables/useConfirmedStart';
 import { PROVIDER_LABELS, controllerLabel } from '../lib/providerLabels';
@@ -435,6 +436,16 @@ async function quickStart(mode: StartGameMode): Promise<void> {
  * blocked seat shows only the choice, never the preview's names: those came from a list nothing
  * has validated, and three of the four seats are opponents.
  */
+/** The display title under the compass (the page's `<h1>` stays "New game"). */
+const modeTitle = computed(() =>
+  gameMode.value === 'singlePlayer' ? 'Play against bots' : 'Watch the bots',
+);
+const modeLine = computed(() =>
+  gameMode.value === 'singlePlayer'
+    ? 'You take a seat; three bots take the others.'
+    : 'Four bots play it out. Scrub turns and see every hand.',
+);
+
 const seatRows = computed(() =>
   choices.value.map((choice, index) => {
     const seat = current.value?.seats[index];
@@ -465,49 +476,86 @@ const seatRows = computed(() =>
 
 <template>
   <div class="setup">
-    <h1>New game</h1>
-
-    <section class="quick" aria-label="Quick start">
-      <div class="quick-card quick-play">
-        <span class="kicker">Quick game</span>
-        <strong>Play a random deck against three bots</strong>
-        <span class="quick-copy">Built-in bots, a fresh seed, no setup.</span>
-        <button type="button" :disabled="starting || quickBusy" @click="quickStart('singlePlayer')">
-          {{ quickMode === 'singlePlayer' && (quickBusy || starting) ? 'Starting…' : 'Play now' }}
-        </button>
+    <section class="stage" aria-labelledby="new-game-title">
+      <div class="title-g dt-rise">
+        <h1 id="new-game-title" class="dt-kicker page-h1">New game</h1>
+        <p class="mode-title">{{ modeTitle }}</p>
+        <p class="mode-line">{{ modeLine }}</p>
       </div>
-      <div class="quick-card">
-        <span class="kicker">Spectate</span>
-        <strong>Watch four bots play it out</strong>
-        <span class="quick-copy">Scrub turns and see every hand.</span>
-        <button type="button" :disabled="starting || quickBusy" @click="quickStart('spectator')">
-          {{ quickMode === 'spectator' && (quickBusy || starting) ? 'Starting…' : 'Watch now' }}
-        </button>
-      </div>
-    </section>
-    <p v-if="quickError" class="error-box" role="alert">{{ quickError }}</p>
-    <div v-if="startedFrom === 'quick' && startErrors.length > 0" class="error-box" role="alert">
-      <strong>The game did not start</strong>
-      <ul>
-        <li v-for="(error, index) in startErrors" :key="index">{{ error }}</li>
-      </ul>
-    </div>
 
-    <div class="layout">
+      <ModeCompass v-model="gameMode" :disabled="starting || quickBusy" />
+
+      <section class="quick" aria-label="Quick start">
+        <div class="quick-card quick-play">
+          <span class="dt-kicker">Quick game</span>
+          <strong>Play a random deck against three bots</strong>
+          <span class="quick-copy">Built-in bots, a fresh seed, no setup.</span>
+          <button
+            type="button"
+            class="dt-btn-primary"
+            :disabled="starting || quickBusy"
+            @click="quickStart('singlePlayer')"
+          >
+            {{ quickMode === 'singlePlayer' && (quickBusy || starting) ? 'Starting…' : 'Play now' }}
+          </button>
+        </div>
+        <div class="quick-card">
+          <span class="dt-kicker">Spectate</span>
+          <strong>Watch four bots play it out</strong>
+          <span class="quick-copy">Scrub turns and see every hand.</span>
+          <button
+            type="button"
+            class="dt-btn"
+            :disabled="starting || quickBusy"
+            @click="quickStart('spectator')"
+          >
+            {{ quickMode === 'spectator' && (quickBusy || starting) ? 'Starting…' : 'Watch now' }}
+          </button>
+        </div>
+      </section>
+      <p v-if="quickError" class="dt-note danger" role="alert">{{ quickError }}</p>
+      <div
+        v-if="startedFrom === 'quick' && startErrors.length > 0"
+        class="dt-note danger"
+        role="alert"
+      >
+        <strong>The game did not start</strong>
+        <ul>
+          <li v-for="(error, index) in startErrors" :key="index">{{ error }}</li>
+        </ul>
+      </div>
+
       <section class="gallery-area" aria-labelledby="gallery-title">
         <div class="gallery-head">
-          <h2 id="gallery-title">Or pick a deck for {{ seatName(activeSeat) }}</h2>
+          <h2 id="gallery-title" class="dt-head">
+            <span class="num" aria-hidden="true">{{
+              seatName(activeSeat) === 'you' ? '★' : '◆'
+            }}</span>
+            Or pick a deck for {{ seatName(activeSeat) }}
+          </h2>
           <span class="muted">Every modeled deck plays without engine halts.</span>
+        </div>
+        <div class="seat-switch dt-seg" role="group" aria-label="Seat to choose for">
+          <button
+            v-for="(id, index) in SEAT_IDS"
+            :key="id"
+            type="button"
+            :aria-pressed="activeSeat === index"
+            :aria-label="`Choose the deck for ${seatName(index)}`"
+            @click="activeSeat = index"
+          >
+            {{ id }}
+          </button>
         </div>
         <p v-if="!persistence" class="hint">
           Saved and imported decks are disabled without a database. Generated decks remain
           available.
         </p>
-        <p v-if="knownDecksError !== null" class="error-box">
+        <p v-if="knownDecksError !== null" class="dt-note danger">
           Modeled decks unavailable: {{ knownDecksError }}
         </p>
 
-        <div v-if="activeChoice.kind === 'import'" class="import-panel">
+        <div v-if="activeChoice.kind === 'import'" class="import-panel dt-plate">
           <label class="field">
             <span>Deck URL or decklist for {{ seatName(activeSeat) }}</span>
             <textarea
@@ -608,20 +656,24 @@ const seatRows = computed(() =>
         </div>
         <p v-if="!knownDecksLoaded" class="hint">Loading modeled decks…</p>
       </section>
+    </section>
 
-      <aside class="summary" aria-labelledby="summary-title">
-        <div class="summary-head">
-          <h2 id="summary-title">Your game</h2>
-          <div class="segmented" role="radiogroup" aria-label="Game mode">
-            <label :class="{ on: gameMode === 'singlePlayer' }">
-              <input v-model="gameMode" type="radio" value="singlePlayer" />Play
-            </label>
-            <label :class="{ on: gameMode === 'spectator' }">
-              <input v-model="gameMode" type="radio" value="spectator" />Watch
-            </label>
-          </div>
+    <aside class="summary" aria-labelledby="summary-title">
+      <div class="summary-head">
+        <span class="dt-kicker">Set up</span>
+        <h2 id="summary-title">Your game</h2>
+        <div class="dt-seg mode-seg" role="radiogroup" aria-label="Game mode">
+          <label :class="{ on: gameMode === 'singlePlayer' }">
+            <input v-model="gameMode" type="radio" value="singlePlayer" />Play
+          </label>
+          <label :class="{ on: gameMode === 'spectator' }">
+            <input v-model="gameMode" type="radio" value="spectator" />Watch
+          </label>
         </div>
+      </div>
 
+      <div class="summary-scroll">
+        <h3 class="dt-head"><span class="num">I.</span> Seats</h3>
         <ul class="seats" aria-label="Matchup preview" :aria-busy="previewBusy">
           <li
             v-for="row in seatRows"
@@ -635,25 +687,28 @@ const seatRows = computed(() =>
               :aria-pressed="activeSeat === row.index"
               @click="activeSeat = row.index"
             >
-              <span class="seat-label">{{ row.id }} · {{ row.controller }}</span>
-              <strong class="seat-title">{{ row.title }}</strong>
-              <span class="seat-meta">
-                <ManaPips v-if="row.colors" :colors="row.colors" />
-                <span v-if="row.archetype" class="archetype">{{ row.archetype }}</span>
+              <span class="seat-id" aria-hidden="true">{{ row.id }}</span>
+              <span class="seat-text">
+                <span class="seat-label">{{ row.id }} · {{ row.controller }}</span>
+                <strong class="seat-title">{{ row.title }}</strong>
+                <span class="seat-meta">
+                  <ManaPips v-if="row.colors" :colors="row.colors" />
+                  <span v-if="row.archetype" class="archetype">{{ row.archetype }}</span>
+                </span>
+                <span
+                  class="status"
+                  :class="{
+                    ok: row.status === 'Fully modeled',
+                    bad: row.status.startsWith('Blocked'),
+                  }"
+                  >{{ row.status }}</span
+                >
               </span>
-              <span
-                class="status"
-                :class="{
-                  ok: row.status === 'Fully modeled',
-                  bad: row.status.startsWith('Blocked'),
-                }"
-                >{{ row.status }}</span
-              >
             </button>
             <button
               v-if="row.pool"
               type="button"
-              class="reroll"
+              class="reroll dt-btn small"
               :aria-label="`Reroll the generated deck for ${row.id}`"
               @click="reroll(row.index)"
             >
@@ -665,7 +720,8 @@ const seatRows = computed(() =>
           Select a seat to choose its deck from the gallery. Seed: {{ current?.seed ?? seed }}
         </p>
 
-        <div class="segmented wide" role="radiogroup" aria-label="Bots">
+        <h3 class="dt-head"><span class="num">II.</span> Bots</h3>
+        <div class="dt-seg" role="radiogroup" aria-label="Bots">
           <label :class="{ on: providerKind === 'random' }">
             <input v-model="providerKind" type="radio" value="random" />{{ PROVIDER_LABELS.random }}
           </label>
@@ -690,6 +746,7 @@ const seatRows = computed(() =>
           >
         </label>
 
+        <h3 class="dt-head"><span class="num">III.</span> Extras</h3>
         <label class="check">
           <input v-model="diplomacy" type="checkbox" />
           <span
@@ -706,7 +763,7 @@ const seatRows = computed(() =>
           <summary>More options</summary>
           <div v-if="gameMode === 'singlePlayer'" class="field">
             <span>Your seat</span>
-            <div class="seat-options" role="radiogroup" aria-label="Your seat">
+            <div class="seat-options dt-seg" role="radiogroup" aria-label="Your seat">
               <button
                 v-for="id in SEAT_IDS"
                 :key="id"
@@ -728,13 +785,18 @@ const seatRows = computed(() =>
           <p class="hint">Repeat a known shuffle with its seed. AI decisions may still vary.</p>
         </details>
 
-        <div v-if="previewError" class="error-box" role="alert">
+        <div v-if="previewError" class="dt-note danger" role="alert">
           <p>{{ previewError }}</p>
-          <button type="button" class="retry" :disabled="previewBusy" @click="refreshPreview">
+          <button
+            type="button"
+            class="retry dt-btn small"
+            :disabled="previewBusy"
+            @click="refreshPreview"
+          >
             Try again
           </button>
         </div>
-        <div v-if="current && current.blockers.length" class="error-box" role="alert">
+        <div v-if="current && current.blockers.length" class="dt-note danger" role="alert">
           <strong>This matchup can't start</strong>
           <ul>
             <li v-for="blocker in current.blockers" :key="blocker">{{ blocker }}</li>
@@ -742,7 +804,7 @@ const seatRows = computed(() =>
         </div>
         <div
           v-if="startedFrom === 'custom' && startErrors.length > 0"
-          class="error-box"
+          class="dt-note danger"
           role="alert"
         >
           <strong>The game did not start</strong>
@@ -750,36 +812,27 @@ const seatRows = computed(() =>
             <li v-for="(error, index) in startErrors" :key="index">{{ error }}</li>
           </ul>
         </div>
+      </div>
 
-        <button type="button" class="primary" :disabled="!canStart" @click="start">
-          {{ starting && startedFrom === 'custom' ? 'Starting…' : 'Start game' }}
+      <div class="summary-foot">
+        <button type="button" class="dt-btn-primary wide" :disabled="!canStart" @click="start">
+          {{ starting && startedFrom === 'custom' ? 'Starting…' : 'Start game'
+          }}<span class="dt-arr" aria-hidden="true" />
         </button>
-      </aside>
-    </div>
+      </div>
+    </aside>
   </div>
 </template>
 
 <style scoped>
 .setup {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1.5rem 1rem 3rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  min-height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 28rem);
   font-size: 14px;
 }
-h1,
-h2,
 p {
   margin: 0;
-}
-h1 {
-  font-size: 1.6rem;
-  letter-spacing: -0.02em;
-}
-h2 {
-  font-size: 1.05rem;
 }
 .muted {
   color: var(--muted);
@@ -792,359 +845,366 @@ h2 {
   font-size: 12px;
   line-height: 1.45;
 }
-.error-box {
-  border: 1px solid var(--danger);
-  border-radius: 8px;
-  background: rgb(248 113 113 / 0.06);
-  padding: 0.6rem 0.8rem;
-  color: var(--text);
-  font-size: 13px;
+.dt-note {
   white-space: pre-wrap;
 }
-.error-box strong {
-  color: var(--danger);
-}
-.error-box .retry {
-  margin-top: 0.4rem;
-  min-height: 34px;
-  padding: 0 0.8rem;
-  border-radius: 6px;
-  font-weight: 600;
-}
-.error-box ul {
-  margin: 0.3rem 0 0;
-  padding-left: 1.1rem;
+.dt-note .retry {
+  margin-top: 0.5rem;
 }
 
-/* Quick starts */
+/* The stage: title, compass, quick starts and the deck gallery. */
+.stage {
+  min-width: 0;
+  padding: 1.75rem 2.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+.title-g {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  text-align: center;
+}
+.page-h1 {
+  margin: 0;
+  font-weight: 400;
+}
+.mode-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 4vw, 3.8rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+.mode-line {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
 .quick {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
+  border: 1px solid var(--ink);
 }
 .quick-card {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  padding: 1.1rem 1.2rem;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--surface);
+  padding: 1.1rem 1.25rem 1.25rem;
 }
-.quick-card strong {
-  font-size: 1.15rem;
-  line-height: 1.25;
-}
-.quick-card button {
-  align-self: flex-start;
-  min-height: 44px;
-  margin-top: 0.3rem;
-  padding: 0 1.25rem;
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--accent);
-  font-weight: 700;
+.quick-card + .quick-card {
+  border-left: 1px solid var(--ink);
 }
 .quick-play {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent);
+  background: var(--paper-2);
 }
-.quick-play button {
-  background: var(--accent);
-  color: var(--bg);
-}
-.kicker {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
+.quick-card strong {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 1.05rem;
+  line-height: 1.3;
 }
 .quick-copy {
   color: var(--muted);
+  font-size: 0.8rem;
+}
+.quick-card button {
+  align-self: flex-start;
+  margin-top: 0.4rem;
 }
 
-/* Gallery + summary */
-.layout {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 1.25rem;
-}
+/* Gallery */
 .gallery-area {
-  flex: 999 1 560px;
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 .gallery-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.5rem;
+  display: grid;
+  gap: 0.35rem;
 }
 .gallery-head .muted {
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+}
+.seat-switch {
+  max-width: 18rem;
 }
 .gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 0.7rem;
+  gap: 0.75rem;
 }
 .tile {
+  position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 132px;
   padding: 0;
   overflow: hidden;
   text-align: left;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--text);
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
   cursor: pointer;
-  min-height: 132px;
+  transition:
+    background-color 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
 }
 .tile:hover:not(:disabled) {
-  border-color: var(--accent);
+  background: var(--paper-2);
 }
 .tile.selected {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent);
+  box-shadow:
+    inset 0 0 0 2px var(--paper),
+    inset 0 0 0 3px var(--ink);
+  background: var(--paper-2);
+}
+.tile.selected::after {
+  content: 'Chosen';
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  padding: 0.1rem 0.4rem;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 .tile:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  opacity: 0.45;
+  cursor: default;
 }
 .tile-dashed {
   border-style: dashed;
-  background: transparent;
+  justify-content: center;
 }
 .art {
   display: block;
-  height: 84px;
+  height: 78px;
   overflow: hidden;
-  background: var(--surface-2);
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper-2);
 }
 .art img {
-  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 30%;
+  display: block;
+  filter: saturate(0.75) sepia(0.12);
 }
 .band {
   display: flex;
-  height: 10px;
-  flex-shrink: 0;
+  height: 4px;
 }
 .band > span {
-  flex: 1 1 0;
+  flex: 1;
 }
 .band-W {
-  background: #e9dfb8;
+  background: var(--mana-w);
 }
 .band-U {
-  background: #3b82c4;
+  background: var(--mana-u);
 }
 .band-B {
-  background: #4b4b52;
+  background: var(--mana-b);
 }
 .band-R {
-  background: #c2412d;
+  background: var(--mana-r);
 }
 .band-G {
-  background: #2f8a4b;
+  background: var(--mana-g);
 }
 .band-C {
-  background: #9ca3af;
+  background: var(--mana-c);
 }
 .art-generated {
-  background: repeating-linear-gradient(135deg, var(--line) 0 6px, transparent 6px 12px);
+  background: repeating-linear-gradient(45deg, var(--paper-2) 0 8px, var(--paper) 8px 16px);
 }
 .band-saved {
-  background: var(--accent);
+  background: var(--warm);
 }
 .tile-body {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.7rem 0.8rem 0.8rem;
-  flex: 1 1 auto;
+  gap: 0.25rem;
+  padding: 0.6rem 0.75rem 0.75rem;
 }
 .tile-body.centered {
   align-items: center;
-  justify-content: center;
   text-align: center;
 }
 .tile-body strong {
-  font-size: 14px;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 0.82rem;
   line-height: 1.25;
 }
 .tile-sub {
-  color: var(--muted);
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
   line-height: 1.35;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  color: var(--muted);
 }
 .tile-meta,
 .seat-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
-  margin-top: auto;
+  gap: 0.4rem;
 }
 .archetype {
-  color: var(--muted);
-  font-size: 12px;
-}
-.archetype::first-letter {
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  color: var(--muted);
 }
 .import-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 13rem;
-  gap: 0.75rem;
-  padding: 0.9rem;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
+  grid-template-columns: minmax(0, 1fr) 14rem;
+  gap: 1rem;
+  padding: 1rem;
 }
 .field {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 0.35rem;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
+  align-content: start;
 }
-.field textarea,
-.field input {
-  width: 100%;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--surface-2);
-  color: var(--text);
-  font: inherit;
-  font-weight: 400;
-  font-size: 13px;
+.field > span {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 .field textarea {
+  min-height: 7rem;
+  border: 1px solid var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
   resize: vertical;
 }
+.field input {
+  min-height: 40px;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  background: transparent;
+  font-family: var(--font-body);
+}
 
-/* Summary */
+/* The setup panel */
 .summary {
-  flex: 1 1 320px;
-  max-width: 100%;
-  position: sticky;
-  top: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
-  padding: 1rem;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--surface);
+  min-height: 0;
+  border-left: 1px solid var(--ink);
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  max-height: 100%;
+  align-self: start;
+  height: 100%;
+  animation: dtFade 0.6s var(--ease) 0.25s both;
 }
 .summary-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: grid;
   gap: 0.5rem;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--ink);
 }
-.segmented {
-  display: inline-flex;
-  padding: 3px;
-  gap: 3px;
-  border-radius: 8px;
-  background: var(--surface-2);
+.summary-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
 }
-.segmented.wide {
+.summary-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 1.1rem 1.5rem 1.25rem;
   display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
 }
-.segmented label {
-  flex: 1 1 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 34px;
-  padding: 0 0.8rem;
-  border-radius: 6px;
-  color: var(--muted);
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
+.summary-scroll .dt-head {
+  margin-top: 0.6rem;
 }
-.segmented label.on {
-  background: var(--surface);
-  color: var(--text);
-  font-weight: 600;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
+.summary-scroll .dt-head:first-child {
+  margin-top: 0;
 }
-.segmented label:focus-within {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-.segmented input {
-  position: absolute;
-  opacity: 0;
-  width: 1px;
-  height: 1px;
+.summary-foot {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--ink);
+  background: var(--paper-2);
 }
 .seats {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
+  display: grid;
 }
 .seat {
-  position: relative;
   display: flex;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-}
-.seat.active {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  align-items: stretch;
+  border-bottom: 1px solid var(--rule);
 }
 .seat-main {
-  flex: 1 1 auto;
+  flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.2rem;
-  padding: 0.55rem 0.7rem;
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: start;
+  padding: 0.6rem 0.4rem;
   border: 0;
-  background: transparent;
-  color: var(--text);
   text-align: left;
-  cursor: pointer;
+  transition: background-color 0.3s var(--ease);
+}
+.seat.active .seat-main {
+  background: var(--paper-2);
+  box-shadow: inset 3px 0 0 var(--ink);
+}
+.seat-id {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.seat-text {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
 }
 .seat-label {
-  font-size: 12px;
-  font-weight: 600;
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 .seat.human .seat-label {
-  color: var(--accent);
+  color: var(--ink);
 }
 .seat-title {
-  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.95rem;
 }
 .status {
-  font-size: 11px;
-  font-weight: 600;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
   color: var(--muted);
 }
 .status.ok {
@@ -1155,88 +1215,84 @@ h2 {
 }
 .reroll {
   align-self: center;
-  margin-right: 0.5rem;
-  min-height: 34px;
-  padding: 0 0.6rem;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 600;
+  margin-left: 0.4rem;
 }
 .check {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: start;
   cursor: pointer;
 }
 .check input {
-  margin-top: 0.2rem;
-  accent-color: var(--accent);
+  margin-top: 0.15rem;
+  accent-color: var(--ink);
+  width: 1.05rem;
+  height: 1.05rem;
 }
 .check .hint {
   display: block;
 }
 .more {
-  border-top: 1px solid var(--line);
-  padding-top: 0.6rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  border: 1px solid var(--rule);
 }
 .more > summary {
+  padding: 0.6rem 0.8rem;
   cursor: pointer;
-  color: var(--accent);
-  font-weight: 500;
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 .more[open] {
-  display: flex;
+  display: grid;
+  gap: 0.75rem;
+  padding-bottom: 0.8rem;
 }
 .more[open] > summary {
-  margin-bottom: 0.2rem;
+  border-bottom: 1px solid var(--rule);
+}
+.more > :not(summary) {
+  margin: 0 0.8rem;
 }
 .seat-options {
-  display: flex;
-  gap: 0.35rem;
-}
-.seat-pill {
-  min-width: 2.75rem;
-  min-height: 34px;
-  border-radius: 999px;
-  color: var(--muted);
-  font-weight: 700;
-}
-.seat-pill.on {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--bg);
-}
-button.primary {
-  min-height: 48px;
-  border: 1px solid var(--accent);
-  border-radius: 9px;
-  background: var(--accent);
-  color: var(--bg);
-  font-size: 15px;
-  font-weight: 700;
-}
-button.primary:disabled {
-  border-color: var(--surface-2);
-  background: var(--surface-2);
-  color: var(--muted);
-  opacity: 1;
+  max-width: 16rem;
 }
 
-@media (max-width: 620px) {
-  .quick {
-    grid-template-columns: 1fr;
-  }
-  .import-panel {
-    grid-template-columns: 1fr;
+@media (max-width: 900px) {
+  .setup {
+    grid-template-columns: minmax(0, 1fr);
   }
   .summary {
     position: static;
+    height: auto;
+    max-height: none;
+    border-left: 0;
+    border-top: 1px solid var(--ink);
+  }
+  .summary-scroll {
+    overflow: visible;
+  }
+}
+@media (max-width: 640px) {
+  .stage {
+    padding: 1.25rem 1rem 2rem;
+  }
+  .quick {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .quick-card + .quick-card {
+    border-left: 0;
+    border-top: 1px solid var(--ink);
+  }
+  .import-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .summary-head,
+  .summary-scroll,
+  .summary-foot {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }
 </style>

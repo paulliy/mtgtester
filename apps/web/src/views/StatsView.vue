@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import PageTitle from '../components/shell/PageTitle.vue';
+import PageFoot from '../components/shell/PageFoot.vue';
 import { computed, onMounted, ref } from 'vue';
 
 interface DeckStatistic {
@@ -94,7 +96,9 @@ onMounted(() => void load());
   <section class="stats">
     <header>
       <div>
-        <h1>{{ batchId === null ? 'Deck statistics' : 'Batch deck statistics' }}</h1>
+        <PageTitle place="II. Records · a. Stats">{{
+          batchId === null ? 'Deck statistics' : 'Batch deck statistics'
+        }}</PageTitle>
         <p>Finished games only.</p>
       </div>
       <button @click="load">Refresh</button>
@@ -203,6 +207,7 @@ onMounted(() => void load());
       game yet, including new ones: the recorded turn observations do not capture what each player
       could actually afford, so a percentage would be a guess.
     </aside>
+    <PageFoot place="II. Records · a. Stats" />
   </section>
 </template>
 

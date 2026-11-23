@@ -1,4 +1,6 @@
 ﻿<script setup lang="ts">
+import PageTitle from '../components/shell/PageTitle.vue';
+import PageFoot from '../components/shell/PageFoot.vue';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import type { BatchSpec, ProviderKind, SeatSource } from '@mtg/shared';
@@ -84,7 +86,7 @@ async function start(): Promise<void> {
     <header class="batch-header">
       <div>
         <p class="eyebrow">Commander simulator</p>
-        <h1>Batch simulations</h1>
+        <PageTitle place="II. Records · b. Batch runs">Batch simulations</PageTitle>
         <p class="hint">Run named spectator scenarios sequentially and collect durable results.</p>
       </div>
       <strong>{{ totalGames }} games</strong>
@@ -148,6 +150,7 @@ async function start(): Promise<void> {
         {{ submitting ? 'Starting…' : 'Start batch →' }}
       </button>
     </div>
+    <PageFoot place="II. Records · b. Batch runs" />
   </section>
 </template>
 

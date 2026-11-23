@@ -6,6 +6,7 @@
  */
 
 @import './styles/tokens.css';
+@import './styles/base.css';
 
 * {
   box-sizing: border-box;
