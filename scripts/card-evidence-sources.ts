@@ -526,6 +526,7 @@ export const SOURCE_FILES = [
   'packages/shared/src/mana.ts',
   'packages/shared/src/objects.ts',
   'packages/shared/src/protocol.ts',
+  'packages/shared/src/sha256.ts',
   'packages/shared/src/table-protocol.ts',
   'packages/shared/src/turn-labels.ts',
   'packages/engine/src/cards/ir-graph.ts',
