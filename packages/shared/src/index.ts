@@ -229,12 +229,13 @@ export type {
   GameReportSeat,
 } from './report';
 
-export { BATCH_GAME_STATUSES, BATCH_STATUSES } from './batch';
+export { BATCH_GAME_STATUSES, BATCH_STATUSES, MAX_BATCH_NAME_LENGTH } from './batch';
 export type {
   BatchAggregate,
   BatchFailure,
   BatchGameStatus,
   BatchGameSummary,
+  BatchListItem,
   BatchProgress,
   BatchResults,
   BatchScenarioProgress,

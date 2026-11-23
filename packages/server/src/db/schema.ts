@@ -29,6 +29,8 @@ export const MIGRATIONS_SQL: readonly string[] = [
   `ALTER TABLE games ADD COLUMN config_json TEXT`,
   `ALTER TABLE games ADD COLUMN build_commit TEXT`,
   `ALTER TABLE games ADD COLUMN build_dirty INTEGER`,
+  // An optional run name. Null for every batch created before it existed; the viewer derives a label.
+  `ALTER TABLE batches ADD COLUMN name TEXT`,
 ];
 
 export const SCHEMA_SQL = `
@@ -272,7 +274,7 @@ CREATE INDEX IF NOT EXISTS idx_game_debug_events_filters
   ON game_debug_events(game_id, turn, category);
 CREATE TABLE IF NOT EXISTS batches (
   id TEXT PRIMARY KEY, seed TEXT NOT NULL, status TEXT NOT NULL,
-  created_at TEXT NOT NULL, started_at TEXT, ended_at TEXT, failure_json TEXT
+  created_at TEXT NOT NULL, started_at TEXT, ended_at TEXT, failure_json TEXT, name TEXT
 );
 CREATE TABLE IF NOT EXISTS batch_scenarios (
   batch_id TEXT NOT NULL REFERENCES batches(id), scenario_id TEXT NOT NULL,

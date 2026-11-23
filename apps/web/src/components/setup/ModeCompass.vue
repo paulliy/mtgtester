@@ -49,7 +49,7 @@ interface Stop {
 
 const STOPS: readonly Stop[] = [
   { key: 'play', point: 'N', label: 'Play', sub: '1 v 3', angle: 0, mode: 'singlePlayer' },
-  { key: 'batch', point: 'E', label: 'Batch', sub: 'Many games', angle: 90, to: '/batch' },
+  { key: 'batch', point: 'E', label: 'Batch', sub: 'Many games', angle: 90, to: '/batch/new' },
   {
     key: 'multi',
     point: 'S',

@@ -358,6 +358,18 @@ export class GameServer {
             }),
           );
         }
+        if (url.pathname === '/api/batches' && request.method === 'GET') {
+          if (this.batchManager === null)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          const rawLimit = url.searchParams.get('limit');
+          const limit = rawLimit === null ? 50 : Number(rawLimit);
+          if (!Number.isInteger(limit) || limit < 1 || limit > 200)
+            return Response.json(
+              { message: 'limit must be a whole number from 1 to 200.' },
+              { status: 400 },
+            );
+          return Response.json({ batches: this.batchManager.list(limit) });
+        }
         if (url.pathname === '/api/batches' && request.method === 'POST') {
           if (this.batchManager === null)
             return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });

@@ -1,4 +1,11 @@
-﻿import type { BatchFailure, BatchResults, BatchScenarioSpec, BatchSpec } from '@mtg/shared';
+﻿import type {
+  BatchFailure,
+  BatchListItem,
+  BatchResults,
+  BatchScenarioSpec,
+  BatchSpec,
+} from '@mtg/shared';
+import { MAX_BATCH_NAME_LENGTH } from '@mtg/shared';
 import type { OracleIndex } from '../cards/oracle-index';
 import type { SupportedPool } from '../cards/pool';
 import type { BannedList } from '../decks/banned';
@@ -70,6 +77,18 @@ export function validateBatch(value: unknown): BatchValidation {
     (typeof body['seed'] !== 'string' || body['seed'].trim().length === 0)
   )
     return { ok: false, message: 'seed must be a non-empty string when supplied.' };
+  let name: string | undefined;
+  if (body['name'] !== undefined && body['name'] !== null) {
+    if (typeof body['name'] !== 'string')
+      return { ok: false, message: 'name must be a string when supplied.' };
+    const trimmed = body['name'].trim();
+    if (trimmed.length > MAX_BATCH_NAME_LENGTH)
+      return {
+        ok: false,
+        message: `name cannot be longer than ${MAX_BATCH_NAME_LENGTH} characters.`,
+      };
+    if (trimmed.length > 0) name = trimmed;
+  }
   const scenarios = body['scenarios'];
   if (!scenarios.every(validScenario))
     return {
@@ -83,9 +102,14 @@ export function validateBatch(value: unknown): BatchValidation {
   if (total > MAX_BATCH_GAMES)
     return { ok: false, message: `Batch cannot contain more than ${MAX_BATCH_GAMES} games.` };
   const normalizedScenarios = scenarios as BatchScenarioSpec[];
-  return typeof body['seed'] === 'string'
-    ? { ok: true, spec: { seed: body['seed'], scenarios: normalizedScenarios } }
-    : { ok: true, spec: { scenarios: normalizedScenarios } };
+  return {
+    ok: true,
+    spec: {
+      ...(name === undefined ? {} : { name }),
+      ...(typeof body['seed'] === 'string' ? { seed: body['seed'] } : {}),
+      scenarios: normalizedScenarios,
+    },
+  };
 }
 
 export function deriveBatchGameSeed(
@@ -117,7 +141,7 @@ export class BatchManager {
     const seed = spec.seed?.trim() || crypto.randomUUID().slice(0, 12);
     const normalized: BatchSpec =
       spec.seed === undefined ? { scenarios: spec.scenarios, seed } : { ...spec, seed };
-    this.deps.store.batches().create(batchId, seed, normalized.scenarios);
+    this.deps.store.batches().create(batchId, seed, normalized.scenarios, spec.name ?? null);
     this.cancelled = false;
     this.running = this.run(batchId, normalized).finally(() => {
       this.running = null;
@@ -135,6 +159,9 @@ export class BatchManager {
     return true;
   }
 
+  list(limit?: number): BatchListItem[] {
+    return this.deps.store.batches().list(limit);
+  }
   progress(batchId: string) {
     return this.deps.store.batches().progress(batchId);
   }

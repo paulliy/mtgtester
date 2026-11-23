@@ -1,10 +1,19 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
+/**
+ * New batch (redesign plan, phase 7): a run name and seed, then one card per scenario (how many
+ * games, which bots, what sits in each seat) and the one action that starts the run. The run is
+ * queued by `POST /api/batches` and the page moves on to its results.
+ */
 import PageTitle from '../components/shell/PageTitle.vue';
 import PageFoot from '../components/shell/PageFoot.vue';
 import { computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import type { BatchSpec, ProviderKind, SeatSource } from '@mtg/shared';
+import { MAX_BATCH_NAME_LENGTH } from '@mtg/shared';
 import { PROVIDER_LABELS } from '../lib/providerLabels';
+import { SEAT_LETTERS, plural } from '../lib/batchModel';
+
+const MAX_TOTAL_GAMES = 100;
 
 interface DraftScenario {
   id: string;
@@ -15,26 +24,37 @@ interface DraftScenario {
   seats: string[];
 }
 const router = useRouter();
+const runName = ref('');
 const seed = ref('');
 const error = ref<string | null>(null);
 const submitting = ref(false);
-const scenarios = ref<DraftScenario[]>([makeScenario(1)]);
-function makeScenario(index: number): DraftScenario {
+/** Ids are never reused, so removing a scenario and adding another cannot collide. */
+let counter = 0;
+function makeScenario(): DraftScenario {
+  counter += 1;
   return {
-    id: `scenario-${index}`,
-    name: `Scenario ${index}`,
+    id: `scenario-${counter}`,
+    name: `Scenario ${counter}`,
     games: 3,
     providerKind: 'random',
     reflectionEnabled: false,
     seats: ['', '', '', ''],
   };
 }
+const scenarios = ref<DraftScenario[]>([makeScenario()]);
 function addScenario(): void {
-  scenarios.value.push(makeScenario(scenarios.value.length + 1));
+  scenarios.value.push(makeScenario());
 }
 function removeScenario(index: number): void {
   if (scenarios.value.length > 1) scenarios.value.splice(index, 1);
 }
+function setGames(scenario: DraftScenario, value: number): void {
+  scenario.games = Math.min(MAX_TOTAL_GAMES, Math.max(1, Math.floor(Number(value) || 1)));
+}
+function pickProvider(scenario: DraftScenario): void {
+  if (scenario.providerKind !== 'ai') scenario.reflectionEnabled = false;
+}
+/** A blank seat is a generated deck, an http(s) address is a deck URL, anything else a pasted list. */
 function source(raw: string): SeatSource {
   const value = raw.trim();
   if (value === '') return { kind: 'pool' };
@@ -45,14 +65,22 @@ function source(raw: string): SeatSource {
 const totalGames = computed(() =>
   scenarios.value.reduce((sum, item) => sum + Math.max(0, Math.floor(item.games || 0)), 0),
 );
+const totalText = computed(
+  () => `${plural(totalGames.value, 'game')} across ${plural(scenarios.value.length, 'scenario')}`,
+);
+const startLabel = computed(() =>
+  submitting.value ? 'Starting…' : `Run ${plural(totalGames.value, 'game')}`,
+);
+
 async function start(): Promise<void> {
   error.value = null;
-  if (totalGames.value < 1 || totalGames.value > 100) {
-    error.value = 'Choose between 1 and 100 total games.';
+  if (totalGames.value < 1 || totalGames.value > MAX_TOTAL_GAMES) {
+    error.value = `Choose between 1 and ${MAX_TOTAL_GAMES} total games.`;
     return;
   }
   submitting.value = true;
   const body: BatchSpec = {
+    ...(runName.value.trim() !== '' ? { name: runName.value.trim() } : {}),
     ...(seed.value.trim() !== '' ? { seed: seed.value.trim() } : {}),
     scenarios: scenarios.value.map((item) => ({
       id: item.id.trim(),
@@ -83,186 +111,342 @@ async function start(): Promise<void> {
 
 <template>
   <section class="batch-setup">
-    <header class="batch-header">
-      <div>
-        <p class="eyebrow">Commander simulator</p>
-        <PageTitle place="II. Records · b. Batch runs">Batch simulations</PageTitle>
-        <p class="hint">Run named spectator scenarios sequentially and collect durable results.</p>
-      </div>
-      <strong>{{ totalGames }} games</strong>
+    <header class="top">
+      <PageTitle place="II. Records · b. Batch runs" hide-kicker>New batch</PageTitle>
+      <RouterLink to="/batch" class="dt-btn">All batch runs</RouterLink>
     </header>
-    <section class="panel">
-      <label class="field-label"
-        >Batch seed <span>(optional)</span
-        ><input v-model="seed" type="text" placeholder="fresh seed when blank"
+
+    <section class="run-fields" aria-label="The run">
+      <label class="dt-field"
+        ><span>Run name <em>(optional)</em></span
+        ><input
+          v-model="runName"
+          type="text"
+          :maxlength="MAX_BATCH_NAME_LENGTH"
+          placeholder="Named after its scenarios when blank"
+      /></label>
+      <label class="dt-field"
+        ><span>Batch seed <em>(optional)</em></span
+        ><input v-model="seed" type="text" placeholder="A fresh seed when blank"
       /></label>
     </section>
+
     <section
       v-for="(scenario, scenarioIndex) in scenarios"
       :key="scenario.id"
-      class="panel scenario"
+      class="scenario"
+      :aria-label="`Scenario ${scenarioIndex + 1}`"
     >
-      <header class="scenario-head">
-        <div>
-          <span class="eyebrow">Scenario {{ scenarioIndex + 1 }}</span
-          ><input v-model="scenario.name" class="scenario-name" />
-        </div>
-        <button v-if="scenarios.length > 1" type="button" @click="removeScenario(scenarioIndex)">
+      <header class="sc-head">
+        <label class="dt-field sc-name"
+          ><span>Scenario {{ scenarioIndex + 1 }}</span
+          ><input
+            v-model="scenario.name"
+            type="text"
+            :aria-label="`Name of scenario ${scenarioIndex + 1}`"
+        /></label>
+        <button
+          v-if="scenarios.length > 1"
+          type="button"
+          class="dt-btn small"
+          :aria-label="`Remove scenario ${scenarioIndex + 1}`"
+          @click="removeScenario(scenarioIndex)"
+        >
           Remove
         </button>
       </header>
-      <div class="scenario-options">
-        <label class="field-label">Id<input v-model="scenario.id" type="text" /></label
-        ><label class="field-label"
-          >Games<input v-model.number="scenario.games" type="number" min="1" max="100" /></label
-        ><label class="field-label"
-          >Provider<select v-model="scenario.providerKind">
+
+      <div class="sc-options">
+        <div class="dt-field">
+          <span>Games</span>
+          <div class="stepper" role="group" :aria-label="`Games in scenario ${scenarioIndex + 1}`">
+            <button
+              type="button"
+              aria-label="Fewer games"
+              :disabled="scenario.games <= 1"
+              @click="setGames(scenario, scenario.games - 1)"
+            >
+              −
+            </button>
+            <input
+              :value="scenario.games"
+              type="number"
+              min="1"
+              :max="MAX_TOTAL_GAMES"
+              inputmode="numeric"
+              aria-label="Games"
+              @change="setGames(scenario, Number(($event.target as HTMLInputElement).value))"
+            />
+            <button
+              type="button"
+              aria-label="More games"
+              :disabled="scenario.games >= MAX_TOTAL_GAMES"
+              @click="setGames(scenario, scenario.games + 1)"
+            >
+              +
+            </button>
+          </div>
+        </div>
+        <label class="dt-field"
+          ><span>Provider</span
+          ><select v-model="scenario.providerKind" @change="pickProvider(scenario)">
             <option value="random">{{ PROVIDER_LABELS.random }}</option>
             <option value="ai">{{ PROVIDER_LABELS.ai }}</option>
           </select></label
-        ><label class="check"
+        >
+        <label class="check" :class="{ off: scenario.providerKind !== 'ai' }"
           ><input
             v-model="scenario.reflectionEnabled"
             type="checkbox"
             :disabled="scenario.providerKind !== 'ai'"
           />
-          post-game commentary</label
+          <span>Post-game commentary</span>
+          <small v-if="scenario.providerKind !== 'ai'">AI bots only</small></label
         >
       </div>
+
       <p class="hint">
-        Each seat may be blank for a generated supported-pool deck, a URL, or a pasted decklist.
+        Each seat may be left blank for a generated deck, or hold a deck URL or a pasted decklist.
       </p>
       <div class="seats">
-        <label v-for="seat in 4" :key="seat" class="field-label"
-          >P{{ seat
-          }}<textarea
-            v-model="scenario.seats[seat - 1]"
+        <label v-for="(letter, seat) in SEAT_LETTERS" :key="letter" class="dt-field seat"
+          ><span>Seat {{ letter }}</span
+          ><textarea
+            v-model="scenario.seats[seat]"
             rows="3"
-            :placeholder="`blank for generated deck, URL, or decklist`"
+            placeholder="Blank for a generated deck, a URL, or a decklist"
           ></textarea>
         </label>
       </div>
     </section>
-    <p v-if="error" class="error">{{ error }}</p>
-    <div class="actions">
-      <button type="button" @click="addScenario">Add scenario</button
-      ><button type="button" class="primary" :disabled="submitting" @click="start">
-        {{ submitting ? 'Starting…' : 'Start batch →' }}
-      </button>
+
+    <div class="add-row">
+      <button type="button" class="dt-btn" @click="addScenario">Add scenario</button>
     </div>
+
+    <div class="start-bar">
+      <p v-if="error" class="dt-note danger" role="alert">{{ error }}</p>
+      <div class="start-row">
+        <span class="total" aria-live="polite">{{ totalText }}</span>
+        <button type="button" class="dt-btn-primary" :disabled="submitting" @click="start">
+          {{ startLabel }} <span class="dt-arr" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+
     <PageFoot place="II. Records · b. Batch runs" />
   </section>
 </template>
 
 <style scoped>
 .batch-setup {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 1.25rem 1rem 3rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.75rem 3rem 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1.5rem;
+  font-family: var(--font-body);
+  color: var(--ink);
 }
-.batch-header,
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 1rem;
+p {
+  margin: 0;
 }
-.batch-header {
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.top {
   display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 1rem;
-  align-items: start;
+  gap: 1rem 2rem;
 }
-.batch-header h1 {
-  margin: 0.25rem 0;
+.top :deep(.page-title) {
+  flex: 1 1 18rem;
 }
-.eyebrow,
-.field-label {
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--muted);
+.dt-field input[type='text'] {
+  min-height: 42px;
+  padding: 0.35rem 0.1rem;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  background: transparent;
+  font-size: 1rem;
 }
-.hint {
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.45;
-}
-.field-label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-.field-label span {
+.dt-field em {
+  font-style: normal;
   text-transform: none;
   letter-spacing: 0;
-  font-weight: 400;
+}
+.run-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem 2.5rem;
 }
 .scenario {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem 1.25rem;
+  border: 1px solid var(--ink);
+  background: var(--paper-2);
 }
-.scenario-head {
+.sc-head {
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: start;
+  gap: 1rem;
 }
-.scenario-name {
-  margin-top: 0.35rem;
-  font-size: 1.1rem;
-  font-weight: 600;
+.sc-name {
+  flex: 1 1 auto;
+  min-width: 0;
 }
-.scenario-options {
+.sc-options {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.5fr;
-  gap: 0.6rem;
+  grid-template-columns: 11rem minmax(12rem, 16rem) minmax(0, 1fr);
+  gap: 1rem 2rem;
   align-items: end;
 }
-.scenario-options select {
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--line);
-  padding: 0.35rem;
+.stepper {
+  display: flex;
+  align-items: stretch;
+  min-height: 42px;
+  border-bottom: 1px solid var(--ink);
+}
+.stepper button {
+  width: 42px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition:
+    background-color 0.3s var(--ease),
+    color 0.3s var(--ease);
+}
+.stepper button:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--paper);
+}
+.stepper button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+.stepper input {
+  flex: 1;
+  min-width: 0;
+  border-bottom: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.stepper input::-webkit-outer-spin-button,
+.stepper input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
 }
 .check {
   display: flex;
-  gap: 0.35rem;
   align-items: center;
+  gap: 0.55rem;
+  min-height: 42px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.check input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+  accent-color: var(--ink);
+}
+.check.off {
   color: var(--muted);
-  font-size: 11px;
+  cursor: default;
+}
+.check small {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.hint {
+  font-size: 0.75rem;
+  color: var(--muted);
 }
 .seats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.6rem;
+  gap: 1rem;
 }
-.actions {
+.seat textarea {
+  background: var(--paper);
+}
+.add-row {
   display: flex;
+}
+.start-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0 -3rem;
+  padding: 0.9rem 3rem;
+  border-top: 1px solid var(--ink);
+  background: var(--paper-2);
+}
+.start-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.6rem 1.5rem;
 }
-.primary {
-  background: var(--accent);
-  color: var(--bg);
-  border-color: var(--accent);
+.total {
+  font-size: 0.85rem;
 }
-.error {
-  color: var(--danger);
-  border-left: 2px solid var(--danger);
-  padding-left: 0.5rem;
+:deep(.dt-footline) {
+  margin-bottom: 1.5rem;
 }
-@media (max-width: 700px) {
-  .scenario-options,
-  .seats {
+@media (max-width: 900px) {
+  .sc-options {
     grid-template-columns: 1fr 1fr;
   }
-  .batch-header {
-    display: block;
+  .check {
+    grid-column: 1 / -1;
+  }
+  .seats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .batch-setup {
+    padding: 1.25rem 1rem 0;
+  }
+  .run-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .scenario {
+    padding: 0.9rem;
+  }
+  .start-bar {
+    margin: 0 -1rem;
+    padding: 0.8rem 1rem;
+  }
+  .start-row .dt-btn-primary {
+    flex: 1 1 100%;
+  }
+}
+@media (max-width: 520px) {
+  .sc-options,
+  .seats {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 </style>

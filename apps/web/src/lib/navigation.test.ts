@@ -24,6 +24,8 @@ describe('navigation places', () => {
     const places = navPlaces({ dev: false, gameRunning: false });
     expect(currentPlaceIndex(places, 'stats')).toBe(1);
     expect(currentPlaceIndex(places, 'batch-results')).toBe(2);
+    expect(currentPlaceIndex(places, 'batch-new')).toBe(2);
+    expect(currentPlaceIndex(places, 'batch')).toBe(2);
     expect(currentPlaceIndex(places, 'game')).toBe(-1);
     expect(currentPlaceIndex(places, undefined)).toBe(-1);
   });

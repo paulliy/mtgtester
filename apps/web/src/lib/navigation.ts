@@ -65,8 +65,8 @@ export function navPlaces(options: NavOptions): NavPlace[] {
       group: 'II',
       label: 'Batch runs',
       to: '/batch',
-      description: 'Set up batches and read their results',
-      routes: ['batch', 'batch-results'],
+      description: 'Past batch runs and their results',
+      routes: ['batch', 'batch-results', 'batch-new'],
     },
   );
   if (options.dev) {

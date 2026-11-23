@@ -9,11 +9,14 @@ const routes: RouteRecordRaw[] = [
   { path: '/game', name: 'game', component: () => import('./views/GameView.vue') },
   { path: '/stats', name: 'stats', component: () => import('./views/StatsView.vue') },
   { path: '/debug', name: 'debug', component: () => import('./views/DebugView.vue') },
-  { path: '/batch', name: 'batch', component: () => import('./views/BatchSetupView.vue') },
+  // `/batch/new` is listed first so `new` is never read as a run id.
+  { path: '/batch/new', name: 'batch-new', component: () => import('./views/BatchSetupView.vue') },
+  // One record serves the list (`/batch`) and a chosen run (`/batch/:id`), so picking a run swaps
+  // the route without remounting the page.
   {
-    path: '/batch/:id',
+    path: '/batch/:id?',
     name: 'batch-results',
-    component: () => import('./views/BatchResultsView.vue'),
+    component: () => import('./views/BatchRunsView.vue'),
   },
   ...(import.meta.env['DEV'] === true
     ? [
