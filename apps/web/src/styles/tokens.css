@@ -1,0 +1,149 @@
+/**
+ * Decktank design tokens (ADR 0052). Every colour, font and easing the viewer uses lives here,
+ * once for the day theme and once for night. Components read these names, never hex values.
+ *
+ * Night applies when `<html data-theme="night">` is set, or when the system prefers dark and the
+ * player has not picked Day (`stores/theme.ts` sets the attribute). `tokens.test.ts` reads this
+ * file and checks every text and pip pair against 4.5:1 in both themes, so a new colour needs a
+ * night value and must pass that test.
+ */
+
+@font-face {
+  font-family: 'Bodoni Moda';
+  src: url('../assets/fonts/BodoniModa.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Archivo';
+  src: url('../assets/fonts/Archivo.woff') format('woff');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Cutive Mono';
+  src: url('../assets/fonts/CutiveMono.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+
+  /* Day */
+  --paper: #f5f3ec;
+  --paper-2: #eeeadf;
+  --ink: #2d2a2a;
+  --ink-soft: #413e3d;
+  --muted: #66625f;
+  --rule: #bdbbb6;
+  /* The warm brown of the ticks, needle and planet: decoration only, never text (3.3:1). */
+  --warm: #a77e5f;
+  --ok: #3f6b4c;
+  --warn: #7d5f1c;
+  --danger: #9c4234;
+  --lift-shadow: rgb(45 42 42 / 0.5);
+
+  /* Colour identity: pip fill, and the letter drawn on it */
+  --mana-w: #ddd2b0;
+  --mana-u: #9fb1c1;
+  --mana-b: #5e5753;
+  --mana-r: #c99580;
+  --mana-g: #9cae94;
+  --mana-c: #d6d4ce;
+  --mana-letter: #2d2a2a;
+  --mana-b-letter: #f5f3ec;
+
+  /* Light tints for unselected colour filters */
+  --mana-w-tint: #efe9d8;
+  --mana-u-tint: #d9e0e6;
+  --mana-b-tint: #cfcac6;
+  --mana-r-tint: #ecd7cd;
+  --mana-g-tint: #d8dfd3;
+  --mana-c-tint: #e8e6df;
+
+  /* Type */
+  --font-display: 'Bodoni Moda', Didot, 'Times New Roman', serif;
+  --font-ui: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Cutive Mono', 'Courier New', ui-monospace, monospace;
+
+  /* Motion */
+  --ease: cubic-bezier(0.165, 0.84, 0.44, 1);
+
+  /*
+   * Compatibility aliases: the names every component used before the redesign. They follow the
+   * theme, so a component looks right before it is restyled; a restyled component should read
+   * the tokens above instead.
+   */
+  --bg: var(--paper);
+  --surface: var(--paper);
+  --surface-2: var(--paper-2);
+  --line: var(--ink);
+  --text: var(--ink);
+  --accent: var(--ink);
+  --text-muted: var(--muted);
+}
+
+/* Night: the same design with the lights down — warm charcoal, not blue-black. */
+:root[data-theme='night'] {
+  color-scheme: dark;
+  --paper: #1b1a19;
+  --paper-2: #24221f;
+  --ink: #e9e5da;
+  --ink-soft: #cfcabe;
+  --muted: #a29d95;
+  --rule: #4a4643;
+  --warm: #c49a77;
+  --ok: #8fb59a;
+  --warn: #d1b06e;
+  --danger: #e0937f;
+  --lift-shadow: rgb(0 0 0 / 0.6);
+  --mana-w: #c9bd96;
+  --mana-u: #7f95a8;
+  --mana-b: #3f3936;
+  --mana-r: #b07f6b;
+  --mana-g: #82967b;
+  --mana-c: #8c8984;
+  --mana-letter: #1b1a19;
+  --mana-b-letter: #e9e5da;
+  --mana-w-tint: #3a3629;
+  --mana-u-tint: #2b3138;
+  --mana-b-tint: #2e2a28;
+  --mana-r-tint: #3b2c26;
+  --mana-g-tint: #2c3329;
+  --mana-c-tint: #302e2c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='day']) {
+    color-scheme: dark;
+    --paper: #1b1a19;
+    --paper-2: #24221f;
+    --ink: #e9e5da;
+    --ink-soft: #cfcabe;
+    --muted: #a29d95;
+    --rule: #4a4643;
+    --warm: #c49a77;
+    --ok: #8fb59a;
+    --warn: #d1b06e;
+    --danger: #e0937f;
+    --lift-shadow: rgb(0 0 0 / 0.6);
+    --mana-w: #c9bd96;
+    --mana-u: #7f95a8;
+    --mana-b: #3f3936;
+    --mana-r: #b07f6b;
+    --mana-g: #82967b;
+    --mana-c: #8c8984;
+    --mana-letter: #1b1a19;
+    --mana-b-letter: #e9e5da;
+    --mana-w-tint: #3a3629;
+    --mana-u-tint: #2b3138;
+    --mana-b-tint: #2e2a28;
+    --mana-r-tint: #3b2c26;
+    --mana-g-tint: #2c3329;
+    --mana-c-tint: #302e2c;
+  }
+}

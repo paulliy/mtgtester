@@ -42,26 +42,29 @@ const label = computed(
   align-items: center;
   justify-content: center;
   font-size: 10px;
-  font-weight: 800;
-  color: #1c1917;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35);
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--mana-letter);
+  box-shadow: inset 0 0 0 1px var(--ink);
 }
 .mana-W {
-  background: #f8f4d8;
+  background: var(--mana-w);
 }
 .mana-U {
-  background: #a9cdf0;
+  background: var(--mana-u);
 }
 .mana-B {
-  background: #b5aaa6;
+  background: var(--mana-b);
+  color: var(--mana-b-letter);
 }
 .mana-R {
-  background: #f0a184;
+  background: var(--mana-r);
 }
 .mana-G {
-  background: #9bcb98;
+  background: var(--mana-g);
 }
 .mana-C {
-  background: #d6d3d1;
+  background: var(--mana-c);
 }
 </style>

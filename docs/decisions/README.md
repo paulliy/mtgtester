@@ -48,7 +48,7 @@ To add an ADR, take the next unused number, put a `Status:` line in the form abo
 | [0018](0018-single-player-mode.md)                             | Single-player mode over the authoritative decision contract                                       | Accepted (2026-07-28)  | 2026-07-28 | 0031 (in part)           |
 | [0019](0019-direct-player-controls.md)                         | Direct player controls remain an adapter over legal actions                                       | Accepted (2026-07-28)  | 2026-07-28 | 0032 (amends)            |
 | [0020](0020-remaining-primitives-plan.md)                      | Plan: Closing the Remaining Primitive Backlog (ADR 0013)                                          | Completed (2026-11-14) | 2026-07-29 | —                        |
-| [0021](0021-player-experience-overhaul.md)                     | Player-experience overhaul: async strategist, yield stops, presentation contract, combat batching | Accepted (2026-07-30)  | 2026-07-30 | —                        |
+| [0021](0021-player-experience-overhaul.md)                     | Player-experience overhaul: async strategist, yield stops, presentation contract, combat batching | Accepted (2026-07-30)  | 2026-07-30 | 0052 (amends)            |
 | [0022](0022-deferred-ai-features.md)                           | Building brief §15's three deferred AI-transparency features                                      | Accepted (2026-08-03)  | 2026-08-03 | —                        |
 | [0023](0023-heuristic-bot-and-batched-combat.md)               | Heuristic bot opponent and batched combat declarations                                            | Accepted (2026-08-05)  | 2026-08-05 | —                        |
 | [0024](0024-bounded-combat-search.md)                          | Bounded combat search for the heuristic bot (ADR 0023 Phase 7)                                    | Accepted (2026-11-14)  | 2026-08-06 | —                        |
@@ -79,5 +79,6 @@ To add an ADR, take the next unused number, put a `Status:` line in the form abo
 | [0049](0049-missing-primitives.md)                             | Remaining Card Primitive Backlog                                                                  | Completed (2026-11-14) | 2026-07-29 | —                        |
 | [0050](0050-provisional-card-tier.md)                          | Provisional cards, an opt-in trust tier for machine-checked patches                               | Accepted (2026-11-17)  | 2026-11-14 | —                        |
 | [0051](0051-bot-answer-discipline-and-play-styles.md)          | Bot answer discipline, face damage and play styles                                                | Proposed               | 2026-11-19 | —                        |
+| [0052](0052-decktank-visual-identity.md)                       | Decktank visual identity                                                                          | Accepted (2026-11-22)  | 2026-11-22 | —                        |
 
 <!-- adr-index:end -->

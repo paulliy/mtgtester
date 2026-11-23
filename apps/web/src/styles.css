@@ -1,37 +1,11 @@
 /**
- * Plain CSS. Flat, minimal, functional — no component framework, no animation library
- * (brief §2, §10). Information density matters far more than aesthetics here.
+ * Plain CSS, no component framework and no animation library (brief §2). The look is Decktank's
+ * (ADR 0052): every colour, font and easing comes from `styles/tokens.css`, in a day and a night
+ * theme. Components restyled for Decktank read the tokens directly; the rest read the older
+ * names (`--bg`, `--line`, `--text`, ...), which tokens.css keeps as aliases.
  */
 
-:root {
-  --bg: #0b0d11;
-  --surface: #141820;
-  --surface-2: #1e2430;
-  --line: #2d3545;
-  --text: #f0f4f8;
-  --text-muted: #94a3b8;
-  --muted: #94a3b8;
-  --accent: #60a5fa;
-  --ok: #4ade80;
-  --warn: #fbbf24;
-  --danger: #f87171;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #f8fafc;
-    --surface: #ffffff;
-    --surface-2: #f1f5f9;
-    --line: #cbd5e1;
-    --text: #0f172a;
-    --text-muted: #64748b;
-    --muted: #64748b;
-    --accent: #2563eb;
-    --ok: #16a34a;
-    --warn: #d97706;
-    --danger: #dc2626;
-  }
-}
+@import './styles/tokens.css';
 
 * {
   box-sizing: border-box;
@@ -122,35 +96,49 @@
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  /* Archivo until each screen is restyled; restyled screens set --font-body where the design
+     uses it (ADR 0052 decision 5). */
+  font-family: var(--font-ui);
   font-size: 14px;
 }
 
-h1,
+h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
 h2,
 h3,
 h4 {
-  font-weight: 600;
+  font-family: var(--font-ui);
+  font-weight: 500;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 
 button {
   font: inherit;
-  background: var(--surface-2);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: 3px;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 0;
   padding: 0.25rem 0.6rem;
   cursor: pointer;
+  transition:
+    background-color 0.3s var(--ease),
+    color 0.3s var(--ease);
 }
 
-button:hover:not(:disabled) {
-  border-color: var(--accent);
+/* Zero specificity, so any component's own button style (an ink-filled primary, a selected
+   state) keeps its background on hover instead of turning pale under pale text. */
+:where(button:hover:not(:disabled)) {
+  background: var(--paper-2);
 }
 
 button:disabled {
@@ -161,15 +149,15 @@ button:disabled {
 input[type='text'],
 textarea {
   font: inherit;
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: 3px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 0;
   padding: 0.3rem 0.4rem;
   width: 100%;
 }
 
 code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-body);
   font-size: 0.9em;
 }

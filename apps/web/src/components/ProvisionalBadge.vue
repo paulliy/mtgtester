@@ -26,7 +26,7 @@
   padding: 0.05rem 0.25rem;
   border-radius: 999px;
   background: var(--warn);
-  color: #1f1300;
+  color: var(--paper);
   border: 1px solid rgb(0 0 0 / 0.5);
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
   font-size: 0.6rem;

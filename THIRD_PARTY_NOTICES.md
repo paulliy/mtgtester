@@ -29,3 +29,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Fonts
+
+The viewer ships Latin subsets of three typefaces in `apps/web/src/assets/fonts/`, each under the
+SIL Open Font License 1.1. The full licence text for each sits beside its font file
+(`OFL-*.txt`).
+
+- **Bodoni Moda**: Copyright 2020 The Bodoni Moda Project Authors
+  (https://github.com/indestructible-type/Bodoni). Instanced at weight 400, optical size axis kept.
+- **Archivo**: Copyright 2020 The Archivo Project Authors (https://github.com/Omnibus-Type/Archivo).
+  Instanced at width 100, weights 400 to 500.
+- **Cutive Mono**: Copyright 2012 The Cutive Project Authors
+  (https://github.com/googlefonts/cutivemono).
+
+The files were taken from the Google Fonts repository (https://github.com/google/fonts), subset to
+Latin with fontTools, and saved as WOFF. Under the licence these modified versions keep their
+original family names only because no Reserved Font Name is declared for them.

@@ -303,6 +303,6 @@ const SPEEDS: Array<{ label: string; ms: number }> = [
 }
 .danger-btn:hover {
   background: var(--danger);
-  color: #fff;
+  color: var(--paper);
 }
 </style>

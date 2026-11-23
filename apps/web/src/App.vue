@@ -4,11 +4,18 @@ import { RouterLink, RouterView, useRoute } from 'vue-router';
 import CardPreviewOverlay from './components/CardPreviewOverlay.vue';
 import { useCardPreviewStore } from './stores/cardPreview';
 import { useGameStore } from './stores/game';
+import { THEME_CHOICES, useThemeStore, type ThemeChoice } from './stores/theme';
 
 const cardPreview = useCardPreviewStore();
 const game = useGameStore();
 const route = useRoute();
 const showCardTestLab = import.meta.env['DEV'] === true;
+const theme = useThemeStore();
+const THEME_LABELS: Record<ThemeChoice, string> = {
+  day: 'Day',
+  night: 'Night',
+  system: 'Match system',
+};
 
 /**
  * Alt held while hovering a card = the "look closer" zoom. `window.blur` covers Alt-tabbing
@@ -49,7 +56,18 @@ onUnmounted(() => {
       <!-- The board view fills this with the game's status (round, phase, priority) via a
            Teleport, so the board itself keeps the space a second header bar would take. -->
       <div id="top-bar-status" class="status-slot" />
-      <span v-if="route.name !== 'game'" class="brand">MTG Commander AI Simulator</span>
+      <span v-if="route.name !== 'game'" class="brand">Decktank</span>
+      <div class="theme" role="group" aria-label="Theme">
+        <button
+          v-for="choice in THEME_CHOICES"
+          :key="choice"
+          type="button"
+          :aria-pressed="theme.choice === choice"
+          @click="theme.setChoice(choice)"
+        >
+          {{ THEME_LABELS[choice] }}
+        </button>
+      </div>
     </nav>
     <main class="view">
       <RouterView />
@@ -108,6 +126,27 @@ nav a.router-link-active {
 }
 .brand {
   margin-left: auto;
-  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+/* Day / Night / Match system (ADR 0052). Phase 2 of the redesign moves it into the ruler nav. */
+.theme {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.theme button {
+  margin-left: -1px;
+  padding: 0.15rem 0.5rem;
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.theme button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--paper);
 }
 </style>
