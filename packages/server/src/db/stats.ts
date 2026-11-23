@@ -1,6 +1,12 @@
 /** Phase 5 read models: aggregate deck statistics and one-game debug/export payloads. */
 
-import type { AiAnnotation, AiReflection, ReflectionMoment, TableTalkLine } from '@mtg/shared';
+import type {
+  AiAnnotation,
+  AiReflection,
+  GameListItem,
+  ReflectionMoment,
+  TableTalkLine,
+} from '@mtg/shared';
 import { lossReasonLabel } from '../match/loss-reasons';
 import type { SqliteLike } from './games';
 
@@ -373,6 +379,55 @@ export class StatsRepository {
     // battlefield land counts, or the player's end-turn land drop. They cannot support
     // the advertised heuristic. Never present invented percentages from these rows.
     return { floodRate: null, droughtRate: null };
+  }
+
+  /** Recorded games, newest first, with batch membership and each seat's commanders. */
+  listGames(limit = 30): GameListItem[] {
+    const bounded = Math.max(1, Math.floor(limit));
+    const games = rows(
+      this.db,
+      `SELECT g.id, g.seed, g.status, g.started_at, g.ended_at, g.turn_count, g.winner_seat,
+              g.game_mode, g.build_commit, bg.batch_id, bs.name AS scenario_name
+         FROM games g
+         LEFT JOIN batch_games bg ON bg.game_id = g.id
+         LEFT JOIN batch_scenarios bs ON bs.batch_id = bg.batch_id AND bs.scenario_id = bg.scenario_id
+        ORDER BY COALESCE(g.started_at, '') DESC, g.rowid DESC
+        LIMIT ?`,
+      bounded,
+    );
+    const seatsByGame = new Map<string, GameListItem['seats']>();
+    if (games.length > 0) {
+      const marks = games.map(() => '?').join(', ');
+      for (const row of rows(
+        this.db,
+        `SELECT gp.game_id, gp.seat, ds.commander_names
+           FROM game_players gp
+           LEFT JOIN deck_snapshots ds ON ds.id = gp.deck_snapshot_id
+          WHERE gp.game_id IN (${marks}) ORDER BY gp.seat`,
+        ...games.map((game) => String(game['id'])),
+      )) {
+        const key = String(row['game_id']);
+        seatsByGame.set(key, [
+          ...(seatsByGame.get(key) ?? []),
+          { seat: number(row['seat']), commanders: jsonArray(row['commander_names']) },
+        ]);
+      }
+    }
+    const text = (value: unknown): string | null => (typeof value === 'string' ? value : null);
+    return games.map((row) => ({
+      gameId: String(row['id']),
+      seed: String(row['seed'] ?? ''),
+      status: text(row['status']),
+      startedAt: text(row['started_at']),
+      endedAt: text(row['ended_at']),
+      turnCount: row['turn_count'] === null ? null : number(row['turn_count']),
+      winnerSeat: row['winner_seat'] === null ? null : number(row['winner_seat']),
+      gameMode: String(row['game_mode'] ?? 'spectator'),
+      batchId: text(row['batch_id']),
+      scenarioName: text(row['scenario_name']),
+      buildCommit: text(row['build_commit']),
+      seats: seatsByGame.get(String(row['id'])) ?? [],
+    }));
   }
 
   gameDebug(gameId: string): DebugGameData {

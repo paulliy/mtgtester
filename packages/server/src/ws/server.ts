@@ -484,6 +484,24 @@ export class GameServer {
           // written after the game has ended, so an unfinished game has nothing to leak.
           return Response.json({ reflections: this.deps.store.stats().gameReflections(gameId) });
         }
+        if (url.pathname === '/api/games' && request.method === 'GET') {
+          if (this.deps.store === undefined)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          const rawLimit = url.searchParams.get('limit');
+          const limit = rawLimit === null ? 30 : Number(rawLimit);
+          if (!Number.isInteger(limit) || limit < 1 || limit > 200)
+            return Response.json(
+              { message: 'limit must be a whole number from 1 to 200.' },
+              { status: 400 },
+            );
+          // A player's unfinished game stays out: its seed would reveal the shuffled libraries.
+          return Response.json({
+            games: this.deps.store
+              .stats()
+              .listGames(limit)
+              .filter((game) => !this.holdsUnfinishedGame(game.gameId)),
+          });
+        }
         const debugMatch = /^\/api\/games\/([^/]+)\/(debug|export)$/.exec(url.pathname);
         if (debugMatch !== null) {
           if (this.deps.store === undefined)

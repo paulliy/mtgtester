@@ -250,6 +250,7 @@ export type {
   BatchProgress,
   BatchResults,
   BatchScenarioProgress,
+  GameListItem,
   BatchScenarioSpec,
   BatchSeatResult,
   BatchSpec,

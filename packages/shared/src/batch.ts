@@ -76,6 +76,26 @@ export interface BatchListItem {
   /** Scenario names in run order, so the viewer can label a run that has no name of its own. */
   scenarioNames: string[];
 }
+/** One row of `GET /api/games`: a recorded game, for the Debug page's game picker. */
+export interface GameListItem {
+  gameId: string;
+  seed: string;
+  /** `running`, `finished`, `halted`, ... as stored; null for a row that never got a status. */
+  status: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  turnCount: number | null;
+  /** 1-based seat number of the winner, or null. */
+  winnerSeat: number | null;
+  gameMode: string;
+  batchId: string | null;
+  /** The batch scenario's name when the game belongs to a batch. */
+  scenarioName: string | null;
+  /** The build the game ran on (`games.build_commit`); null for older games. */
+  buildCommit: string | null;
+  /** Commander names per seat, seat 1 first. */
+  seats: { seat: number; commanders: string[] }[];
+}
 export interface BatchSeatResult {
   seat: PlayerId;
   label: string;
