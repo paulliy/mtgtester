@@ -27,6 +27,10 @@ bank is one JSON array, so the output file is still rewritten as a whole. Scryfa
 a change-only bulk feed, so its compressed snapshot must also be downloaded and compared each time.
 The command is manual; it is not scheduled or run automatically.
 
+`serve:table` reads `data/table-oracle-cards.json` instead when it exists: the same cards already
+converted to engine form, about an eighth of the size. Rebuild it with `bun run table:cards` after
+each refresh; the server warns when the bulk file is newer.
+
 The current file was downloaded 2026-08-28 from `oracle-cards-20260828090156.jsonl.gz`
 (38,626 cards, 202,879,599 bytes).
 

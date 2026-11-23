@@ -2640,83 +2640,88 @@ function queueCardZoneTriggers(
   fromBattlefield = false,
   departureFacts: ReadonlyMap<string, ObjectFacts> = new Map(),
 ): void {
-  const sources = ctx.state.battlefield.filter((source) => !enteredIds.includes(source.id));
-  const hasWatcher = sources.some((source) =>
-    triggersOf(ctx, source).some((ability) => ability.trigger?.when === when),
-  );
-  if (!hasWatcher) return;
-  for (const source of sources) {
-    for (const ability of triggersOf(ctx, source)) {
-      const spec = ability.trigger;
-      if (spec === undefined || spec.when !== when || !('subject' in spec)) continue;
-      if (fromBattlefield && spec.fromAnyOrigin !== true) continue;
-      const from: SelectorSource = {
-        cardId: source.cardId,
-        objectId: source.id,
-        ...(source.lastKnownFacts === undefined ? {} : { sourceFacts: source.lastKnownFacts }),
-        controllerId: source.controllerId,
-        attachedToCardId:
-          source.attachedTo === null
-            ? null
-            : (ctx.state.battlefield.find((perm) => perm.id === source.attachedTo)?.cardId ?? null),
-      };
-      const matched = cards.filter((card) => {
-        // "From anywhere" triggers inspect the post-event battlefield (unlike dies).
-        // The dying object's characteristics still come from before it left.
-        if (fromBattlefield) {
-          const facts = departureFacts.get(card.cardId);
-          if (facts === undefined) throw new Error('engine bug: missing graveyard departure facts');
-          if (
-            gatherRuleStatics(ctx).some(
-              (entry) =>
-                entry.static.kind === 'suppressObjectTriggers' &&
-                entry.static.events.includes('dies') &&
-                selectMatches(facts.candidate, entry.static.filter, {
-                  cardId: entry.sourceCardId,
-                  controllerId: entry.controllerId,
-                }),
+  // A read scope: the scan only queues triggers, so it digests the board once, not per source.
+  withReadScope(ctx, () => {
+    const sources = ctx.state.battlefield.filter((source) => !enteredIds.includes(source.id));
+    const hasWatcher = sources.some((source) =>
+      triggersOf(ctx, source).some((ability) => ability.trigger?.when === when),
+    );
+    if (!hasWatcher) return;
+    for (const source of sources) {
+      for (const ability of triggersOf(ctx, source)) {
+        const spec = ability.trigger;
+        if (spec === undefined || spec.when !== when || !('subject' in spec)) continue;
+        if (fromBattlefield && spec.fromAnyOrigin !== true) continue;
+        const from: SelectorSource = {
+          cardId: source.cardId,
+          objectId: source.id,
+          ...(source.lastKnownFacts === undefined ? {} : { sourceFacts: source.lastKnownFacts }),
+          controllerId: source.controllerId,
+          attachedToCardId:
+            source.attachedTo === null
+              ? null
+              : (ctx.state.battlefield.find((perm) => perm.id === source.attachedTo)?.cardId ??
+                null),
+        };
+        const matched = cards.filter((card) => {
+          // "From anywhere" triggers inspect the post-event battlefield (unlike dies).
+          // The dying object's characteristics still come from before it left.
+          if (fromBattlefield) {
+            const facts = departureFacts.get(card.cardId);
+            if (facts === undefined)
+              throw new Error('engine bug: missing graveyard departure facts');
+            if (
+              gatherRuleStatics(ctx).some(
+                (entry) =>
+                  entry.static.kind === 'suppressObjectTriggers' &&
+                  entry.static.events.includes('dies') &&
+                  selectMatches(facts.candidate, entry.static.filter, {
+                    cardId: entry.sourceCardId,
+                    controllerId: entry.controllerId,
+                  }),
+              )
             )
-          )
-            return false;
-        }
-        const candidate = cardZoneCandidate(ctx, card, card.ownerId);
-        return spec.subject.kind === 'self'
-          ? source.cardId === card.cardId
-          : selectMatches(candidate, spec.subject.selector, from);
-      });
-      if (matched.length === 0) continue;
-      const firings = spec.aggregate === true ? [matched] : matched.map((card) => [card]);
-      for (const firing of firings) {
-        const first = firing[0] as EngineCardObject;
-        if (
-          spec.condition !== undefined &&
-          !evaluateCondition(ctx, spec.condition, {
-            ...from,
-            triggerObjectCardId: first.cardId,
-          })
-        ) {
-          continue;
-        }
-        const copies = 1 + additionalTypedTriggerCopies(ctx, source);
-        for (let copy = 0; copy < copies; copy++) {
-          ctx.state.pendingTriggers.push({
-            controllerId: source.controllerId,
-            sourceCardId: source.cardId,
-            sourceObjectId: source.id,
-            sourceOracleId: source.oracleId,
-            sourceName: source.name,
-            ability,
-            ...(spec.subject.kind === 'self' ? {} : { triggerObjectCardId: first.cardId }),
-            scope: {
-              ...(spec.subject.kind === 'self' ? {} : { eventObjectId: first.id }),
-              ...(spec.aggregate === true ? { triggerCount: firing.length } : {}),
-            },
-          });
-          debug(ctx, 'stack', `${when} trigger queued: ${source.name}`);
+              return false;
+          }
+          const candidate = cardZoneCandidate(ctx, card, card.ownerId);
+          return spec.subject.kind === 'self'
+            ? source.cardId === card.cardId
+            : selectMatches(candidate, spec.subject.selector, from);
+        });
+        if (matched.length === 0) continue;
+        const firings = spec.aggregate === true ? [matched] : matched.map((card) => [card]);
+        for (const firing of firings) {
+          const first = firing[0] as EngineCardObject;
+          if (
+            spec.condition !== undefined &&
+            !evaluateCondition(ctx, spec.condition, {
+              ...from,
+              triggerObjectCardId: first.cardId,
+            })
+          ) {
+            continue;
+          }
+          const copies = 1 + additionalTypedTriggerCopies(ctx, source);
+          for (let copy = 0; copy < copies; copy++) {
+            ctx.state.pendingTriggers.push({
+              controllerId: source.controllerId,
+              sourceCardId: source.cardId,
+              sourceObjectId: source.id,
+              sourceOracleId: source.oracleId,
+              sourceName: source.name,
+              ability,
+              ...(spec.subject.kind === 'self' ? {} : { triggerObjectCardId: first.cardId }),
+              scope: {
+                ...(spec.subject.kind === 'self' ? {} : { eventObjectId: first.id }),
+                ...(spec.aggregate === true ? { triggerCount: firing.length } : {}),
+              },
+            });
+            debug(ctx, 'stack', `${when} trigger queued: ${source.name}`);
+          }
         }
       }
     }
-  }
+  });
 }
 
 /**
@@ -4151,57 +4156,64 @@ export function queuePlayerTriggersForEvent(
   firstThisTurn?: boolean,
 ): void {
   assertTriggerEventFamily(when, 'player');
-  for (const perm of ctx.state.battlefield) {
-    for (const ability of triggersOf(ctx, perm)) {
-      const spec = ability.trigger;
-      if (spec === undefined || spec.when !== when) continue;
-      if (spec.when === 'losesLife' && spec.firstTimeEachTurn === true && firstThisTurn !== true)
-        continue;
-      if (
-        spec.when === 'drawsCard' &&
-        spec.ordinalThisTurn !== undefined &&
-        ctx.state.players.find((candidate) => candidate.id === playerId)?.cardsDrawnThisTurn !==
-          spec.ordinalThisTurn
-      )
-        continue;
-      if (spec.player === 'you' && perm.controllerId !== playerId) continue;
-      if (
-        spec.player === 'opponent' &&
-        !opponentsOf(ctx, perm.controllerId).some((opponent) => opponent.id === playerId)
-      )
-        continue;
-      if (
-        spec.when === 'playerDealtDamage' &&
-        spec.sourceController === 'opponent' &&
-        !opponentsOf(ctx, perm.controllerId).some((opponent) => opponent.id === sourceControllerId)
-      )
-        continue;
-      const eventPlayerId =
-        spec.when === 'playerDealtDamage' && sourceControllerId !== undefined
-          ? sourceControllerId
-          : playerId;
-      const source: SelectorSource = {
-        cardId: perm.cardId,
-        controllerId: perm.controllerId,
-        eventPlayerId,
-      };
-      if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source)) continue;
-      const copies = 1 + additionalTypedTriggerCopies(ctx, perm);
-      for (let copy = 0; copy < copies; copy++) {
-        ctx.state.pendingTriggers.push({
+  // One read scope for the scan: it only queues triggers, so the board's characteristics are
+  // digested once rather than once per permanent (quadratic on a wide board).
+  withReadScope(ctx, () => {
+    for (const perm of ctx.state.battlefield) {
+      for (const ability of triggersOf(ctx, perm)) {
+        const spec = ability.trigger;
+        if (spec === undefined || spec.when !== when) continue;
+        if (spec.when === 'losesLife' && spec.firstTimeEachTurn === true && firstThisTurn !== true)
+          continue;
+        if (
+          spec.when === 'drawsCard' &&
+          spec.ordinalThisTurn !== undefined &&
+          ctx.state.players.find((candidate) => candidate.id === playerId)?.cardsDrawnThisTurn !==
+            spec.ordinalThisTurn
+        )
+          continue;
+        if (spec.player === 'you' && perm.controllerId !== playerId) continue;
+        if (
+          spec.player === 'opponent' &&
+          !opponentsOf(ctx, perm.controllerId).some((opponent) => opponent.id === playerId)
+        )
+          continue;
+        if (
+          spec.when === 'playerDealtDamage' &&
+          spec.sourceController === 'opponent' &&
+          !opponentsOf(ctx, perm.controllerId).some(
+            (opponent) => opponent.id === sourceControllerId,
+          )
+        )
+          continue;
+        const eventPlayerId =
+          spec.when === 'playerDealtDamage' && sourceControllerId !== undefined
+            ? sourceControllerId
+            : playerId;
+        const source: SelectorSource = {
+          cardId: perm.cardId,
           controllerId: perm.controllerId,
-          sourceCardId: perm.cardId,
-          sourceObjectId: perm.id,
-          sourceOracleId: perm.oracleId,
-          sourceName: perm.name,
-          ability,
-          scope: {
-            eventPlayerId,
-            ...(amount !== undefined ? { damageDealt: amount } : {}),
-          },
-        });
-        debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
+          eventPlayerId,
+        };
+        if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source))
+          continue;
+        const copies = 1 + additionalTypedTriggerCopies(ctx, perm);
+        for (let copy = 0; copy < copies; copy++) {
+          ctx.state.pendingTriggers.push({
+            controllerId: perm.controllerId,
+            sourceCardId: perm.cardId,
+            sourceObjectId: perm.id,
+            sourceOracleId: perm.oracleId,
+            sourceName: perm.name,
+            ability,
+            scope: {
+              eventPlayerId,
+              ...(amount !== undefined ? { damageDealt: amount } : {}),
+            },
+          });
+          debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
+        }
       }
     }
-  }
+  });
 }

@@ -57,22 +57,28 @@ function general(seat: string): OracleCard {
 }
 
 /** Play a whole game, collecting every per-action snapshot the way the server does. */
-function playGame(seed = 'seek-test'): {
+function playGame(
+  seed = 'seek-test',
+  options: ConstructorParameters<typeof Engine>[1] = {},
+): {
   events: GameEvent[];
   snapshots: Map<number, SpectatorState>;
   engine: Engine;
 } {
-  const engine = new Engine({
-    gameId: 'g-seek',
-    seed,
-    turnCap: 25,
-    players: [1, 2, 3, 4].map((n) => ({
-      id: `P${n}`,
-      deckId: `deck-${n}`,
-      commanders: [general(`P${n}`)],
-      cards: Array.from({ length: 20 }, (_, i) => forest(i)),
-    })),
-  });
+  const engine = new Engine(
+    {
+      gameId: 'g-seek',
+      seed,
+      turnCap: 25,
+      players: [1, 2, 3, 4].map((n) => ({
+        id: `P${n}`,
+        deckId: `deck-${n}`,
+        commanders: [general(`P${n}`)],
+        cards: Array.from({ length: 20 }, (_, i) => forest(i)),
+      })),
+    },
+    options,
+  );
   const providers = new Map(
     [1, 2, 3, 4].map((n) => [`P${n}`, new RandomDecisionProvider(`${seed}-P${n}`)]),
   );
@@ -138,6 +144,13 @@ describe('per-action spectator snapshots (brief §10.1 — "step forward action 
   it('drains: the engine does not accumulate snapshots the server already took', () => {
     const { engine } = playGame('drain-test');
     expect(engine.drainSpectatorSnapshots().size).toBe(0);
+  });
+
+  it('records none when the host turns them off, and the game plays the same', () => {
+    // A table game never seeks, so it turns the per-line boards off (`spectatorSnapshots`).
+    const off = playGame('seek-test', { spectatorSnapshots: false });
+    expect(off.snapshots.size).toBe(0);
+    expect(JSON.stringify(off.events)).toBe(JSON.stringify(events));
   });
 
   it('logs a land play once, on the line whose board has the land', () => {

@@ -12,17 +12,14 @@
  */
 
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
 import { readBuildInfo } from '../build-info';
-import {
-  buildOracleIndex,
-  buildOracleIndexFromCards,
-  type OracleIndex,
-} from '../cards/oracle-index';
+import { buildOracleIndexFromCards, type OracleIndex } from '../cards/oracle-index';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
-import { toOracleCard, type RawScryfallCard } from '../cards/scryfall';
+import type { RawScryfallCard } from '../cards/scryfall';
+import { convertBulkCards, loadTableCards, TABLE_CARDS_PATH } from '../cards/table-cards';
 import { GameStore } from '../db';
 import { loadBannedList } from '../decks/banned';
 import { loadTableConfig, publicOriginFor, type TableConfig } from '../table/config';
@@ -48,24 +45,43 @@ function loadCards(config: TableConfig): {
   if (config.oracleFixture !== null) {
     console.log(`Loading oracle fixture from ${config.oracleFixture} ...`);
     const { parsed, sha256 } = readCards(config.oracleFixture);
-    const cards = parsed as OracleCard[];
-    return { index: buildOracleIndexFromCards(cards), pool: buildSupportedPool(cards), sha256 };
+    return fromCards(parsed as OracleCard[], sha256);
+  }
+  // The prebuilt file (`bun run table:cards`) holds the same converted cards as the bulk file,
+  // at a fraction of the size and with none of the raw Scryfall objects to parse and drop.
+  if (existsSync(resolve(TABLE_CARDS_PATH))) {
+    console.log(`Loading prebuilt cards from ${TABLE_CARDS_PATH} ...`);
+    if (
+      existsSync(resolve(BULK_PATH)) &&
+      statSync(resolve(BULK_PATH)).mtimeMs > statSync(resolve(TABLE_CARDS_PATH)).mtimeMs
+    ) {
+      console.warn(
+        `  WARNING: ${BULK_PATH} is newer than ${TABLE_CARDS_PATH}. Run \`bun run table:cards\` ` +
+          'so tables use the updated cards.',
+      );
+    }
+    const { cards, sha256 } = loadTableCards(resolve(TABLE_CARDS_PATH));
+    return fromCards(cards, sha256);
   }
   if (!existsSync(resolve(BULK_PATH))) {
     console.error(
-      `\nMissing ${BULK_PATH}. See data/README.md for how to download the Scryfall bulk file.\n`,
+      `\nMissing ${TABLE_CARDS_PATH} and ${BULK_PATH}. Run \`bun run scryfall:update\` and then ` +
+        `\`bun run table:cards\`; see data/README.md.\n`,
     );
     process.exit(1);
   }
-  console.log(`Loading oracle data from ${BULK_PATH} ...`);
+  console.log(
+    `Loading oracle data from ${BULK_PATH} ... (run \`bun run table:cards\` to start faster on less memory)`,
+  );
   const { parsed, sha256 } = readCards(BULK_PATH);
-  const raw = parsed as RawScryfallCard[];
-  const cards: OracleCard[] = [];
-  for (const entry of raw) {
-    const card = toOracleCard(entry);
-    if (card !== null) cards.push(card);
-  }
-  return { index: buildOracleIndex(raw), pool: buildSupportedPool(cards), sha256 };
+  return fromCards(convertBulkCards(parsed as RawScryfallCard[]), sha256);
+}
+
+function fromCards(
+  cards: OracleCard[],
+  sha256: string,
+): { index: OracleIndex; pool: SupportedPool; sha256: string } {
+  return { index: buildOracleIndexFromCards(cards), pool: buildSupportedPool(cards), sha256 };
 }
 
 function main(): void {
@@ -129,7 +145,12 @@ function main(): void {
   console.log(`  Max tables:     ${config.maxTables}`);
   console.log(`  Oracle index:   ${index.size.toLocaleString()} cards`);
   console.log(`  Supported pool: ${pool.cards.length.toLocaleString()} cards`);
-  console.log(`\n  Host secret (creates tables; keep it private):\n    ${registry.hostSecret}`);
+  if (config.hostSecret !== null) {
+    // The operator chose it and it outlives this run, so it stays out of the log.
+    console.log('\n  Host secret:    fixed by TABLE_HOST_SECRET (not printed)');
+  } else {
+    console.log(`\n  Host secret (creates tables; keep it private):\n    ${registry.hostSecret}`);
+  }
   console.log(
     `\n  Create a table:\n    curl -s -X POST -H "Authorization: Bearer <secret>" ${origin}/tables\n`,
   );

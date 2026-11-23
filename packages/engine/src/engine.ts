@@ -141,6 +141,14 @@ export interface EngineOptions {
    * `DEFAULT_MAX_TOKEN_CHAIN_DEPTH` whenever `maxObjects` is set; unlimited when both are absent.
    */
   maxTokenChainDepth?: number;
+  /**
+   * Whether to record a board state for each spectator log line (`drainSpectatorSnapshots`), for
+   * seeking to a line in playback. On by default. A host that never seeks (a table game refuses
+   * timeline seeking) turns it off: each record is a whole spectator projection, built on every
+   * loggable event, and a long game makes thousands of them. No rule reads them, so the game
+   * plays the same either way.
+   */
+  spectatorSnapshots?: boolean;
 }
 
 /**
@@ -198,6 +206,7 @@ export class Engine implements EngineDriver {
         objectsAtStart: this.ctx.state.nextObjectNum,
       };
     }
+    if (options.spectatorSnapshots === false) this.ctx.skipSpectatorSnapshots = true;
     if (options.preparedScenario !== undefined) {
       prepareScenario(this.ctx, options.preparedScenario);
       this.gen = playPreparedScenario(this.ctx, options.preparedScenario);

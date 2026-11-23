@@ -401,7 +401,11 @@ export class MatchSession {
             opts.seats.map((s) => s.config),
           ),
         },
-        opts.engineLimits ?? {},
+        {
+          ...opts.engineLimits,
+          // A table game refuses timeline seeking, so the per-line boards would never be read.
+          ...(this.gameMode === 'table' && { spectatorSnapshots: false }),
+        },
       );
     for (const seat of this.humanSeats) this.engine.enableManualMana(seat);
     this.recorder = opts.store?.recorderFor(opts.gameId) ?? null;
