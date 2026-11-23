@@ -95,14 +95,6 @@ function seatAnchorRef(seatId: string): (el: Element | ComponentPublicInstance |
 }
 
 const state = computed(() => store.playerState);
-const thinkingLabel = computed(() => {
-  const board = state.value;
-  if (board === null) return 'Getting the game ready…';
-  const seat = board.priorityPlayer ?? board.activePlayer;
-  if (seat === board.viewerSeat) return 'Resolving your action…';
-  const name = board.seats.find((entry) => entry.seat === seat)?.label ?? seat;
-  return `${name} is deciding…`;
-});
 
 /**
  * MTGA-style attack animation (extends §9.8.1): each batch's damage cues from the server become
@@ -173,7 +165,9 @@ const humanCreatureCount = computed(() => countOf(humanCreatureGroups.value));
 const humanOtherCount = computed(() => countOf(humanOtherGroups.value));
 /** "Artifacts and enchantments" names the usual second column; a planeswalker or battle widens it. */
 const otherZoneLabel = computed(() =>
-  humanOtherGroups.value.every((group) => /Artifact|Enchantment/.test(group.permanent.typeLine))
+  humanOtherGroups.value.every((group) =>
+    (group.permanent.types ?? []).some((type) => type === 'Artifact' || type === 'Enchantment'),
+  )
     ? 'Artifacts and enchantments'
     : 'Other permanents',
 );
@@ -321,6 +315,16 @@ function yieldSelected(mode: 'always' | 'smart'): void {
 }
 const immediateActions = computed(
   () => request.value?.legalActions.filter((action) => isImmediate(action)) ?? [],
+);
+/**
+ * The engine's own declaration action ("Declare attackers (2 eligible creature(s))"). Composing
+ * starts by itself, so while it runs the action stays on the band as the step's count line; after
+ * a reset it is the band's button that starts declaring again.
+ */
+const declarationActions = computed(() =>
+  (request.value?.legalActions ?? []).filter(
+    (action) => action.type === 'attackDeclaration' || action.type === 'blockDeclaration',
+  ),
 );
 const hasOnlyImmediateActions = computed(
   () =>
@@ -913,32 +917,104 @@ function planTagFor(id: ObjectId): string | null {
   return sameTarget ? `${count}Blocks ${nameById.value.get(first) ?? first}` : `${count}blocking`;
 }
 
+/** The seat the game is waiting on when you have no decision, or null while it resolves yours. */
+const waitingSeat = computed(() => {
+  const board = state.value;
+  if (board === null) return null;
+  const seat = board.priorityPlayer ?? board.activePlayer;
+  return seat === board.viewerSeat ? null : seat;
+});
+/** What the waiting seat is doing, in the design's words ("is blocking"). */
+const waitingActivity = computed(() => {
+  const board = state.value;
+  const seat = waitingSeat.value;
+  if (board === null || seat === null) return '';
+  if (board.step === 'declareBlockers' && seat !== board.activePlayer) return 'is blocking';
+  if (board.step === 'declareAttackers' && seat === board.activePlayer) return 'is attacking';
+  if (board.stack.length > 0) return 'is responding';
+  return 'is deciding';
+});
+
+/**
+ * An attacker you are blocking wears the same "blocked" tag as a declared block while you compose,
+ * so the tile and the dashed line agree before you confirm.
+ */
+function plannedBlockTag(id: ObjectId): string | null {
+  if (combatPlan.mode !== 'composing' || combatPlan.kind !== 'blockers') return null;
+  const attacker = state.value?.battlefield.find((permanent) => permanent.id === id);
+  if (attacker === undefined || attacker.attacking == null) return null;
+  const blocked = [...combatPlan.assignment.values()].some((target) => target === id);
+  if (!blocked) return null;
+  const target = attacker.attackingPlaneswalker ?? attacker.attacking;
+  return `Attacking ${nameById.value.get(target) ?? target} · blocked`;
+}
+
+/** With a blocker picked up, the creatures it cannot block fade back, as in the design. */
+function outOfBlockReach(id: ObjectId): boolean {
+  if (combatPlan.mode !== 'composing' || combatPlan.kind !== 'blockers') return false;
+  const source = draggedId.value ?? focusedSourceId.value;
+  if (source === null || !combatPlan.order.some((entry) => entry.subjectId === source))
+    return false;
+  // Blockers themselves never fade: you may be choosing blocks for another seat's creatures.
+  if (combatPlan.order.some((entry) => entry.subjectId === id)) return false;
+  return !combatPlan.isLegalTarget(source, id);
+}
+
 /** The decision band's kicker and title: whose move it is and what it is. */
 const decisionKicker = computed(() => {
   if (request.value !== null) return 'Your move';
-  const board = state.value;
-  if (board === null) return 'Waiting';
-  const seat = board.priorityPlayer ?? board.activePlayer;
-  return seat === board.viewerSeat ? 'Your move' : `Waiting on ${seat}`;
+  if (state.value === null) return 'Waiting';
+  return waitingSeat.value === null ? 'Working' : `Waiting on ${waitingSeat.value}`;
 });
 const decisionTitle = computed(() => {
   const req = request.value;
   if (req === null) {
-    const board = state.value;
-    const seat = board?.priorityPlayer ?? board?.activePlayer;
-    if (board === null || seat === undefined || seat === board.viewerSeat) return 'Resolving';
-    return `${seatLabel(seat)} is deciding`;
+    if (state.value === null) return 'Getting the game ready';
+    const seat = waitingSeat.value;
+    return seat === null ? 'Resolving' : `${seatLabel(seat)} ${waitingActivity.value}`;
   }
   if (combatPlan.mode === 'composing' || combatPlan.mode === 'replaying') {
     if (combatPlan.split !== null) return combatHeading.value;
-    return combatPlan.kind === 'attackers' ? 'Choose attackers' : 'Declare blockers';
+    return combatPlan.kind === 'attackers' ? 'Declare attackers' : 'Declare blockers';
   }
   if (selectedAction.value !== null)
     return sourceNameOf(selectedAction.value) ?? selectedSourceName.value ?? 'Choose targets';
-  if (req.decisionType === 'priority') return 'Your priority';
+  if (req.decisionType === 'priority') return combatPriorityTitle.value ?? 'Your priority';
   return 'Make a choice';
 });
-const waitingBody = computed(() => thinkingLabel.value);
+/**
+ * Priority in the middle of a combat you attacked in reads as the design's combat beats: "Attackers
+ * declared" while the defenders choose blocks, "Blocks are in" once they have.
+ */
+const combatPriorityTitle = computed(() => {
+  const summary = combatSummary.value;
+  const board = state.value;
+  if (summary === null || board === null || board.activePlayer !== board.viewerSeat) return null;
+  if (summary.label === 'Combat · blockers') return 'Attackers declared';
+  if (summary.label === 'Combat · blocks declared') return 'Blocks are in';
+  return null;
+});
+/** The sentence under the title for those beats. */
+const decisionBody = computed(() => {
+  if (request.value?.decisionType !== 'priority' || combatPlan.mode !== 'idle') return '';
+  const title = combatPriorityTitle.value;
+  if (title === 'Attackers declared')
+    return 'Attacks are locked in. Each defending player now chooses blocks.';
+  if (title === 'Blocks are in') return combatSummary.value?.prose.join(' ') ?? '';
+  return '';
+});
+/** The band's body while you wait: the design says plainly that nothing is asked of you yet. */
+const waitingBody = computed(() => {
+  const board = state.value;
+  if (board === null) return 'Getting the game ready…';
+  if (waitingSeat.value === null) return 'Resolving your action…';
+  const yoursAttacking = board.battlefield.some(
+    (p) => p.controller === board.viewerSeat && p.attacking != null,
+  );
+  if (waitingActivity.value === 'is blocking' && yoursAttacking)
+    return 'Nothing to do yet. Their blocks show on the board once they are declared.';
+  return 'Nothing to do yet.';
+});
 
 /**
  * "Send at": the seats your attackers can go to. Picking one sends the creature you last clicked
@@ -1502,7 +1578,9 @@ function abandon(): void {
              separator is hidden and the two halves are styled apart. -->
         <span class="turn-round">Turn {{ state.turnNumber }}</span
         ><span class="dt-sr"> · </span
-        ><span class="turn-tag">{{ isYourTurn ? 'Your turn' : `${state.activePlayer}'s turn` }}</span>
+        ><span class="turn-tag">{{
+          isYourTurn ? 'Your turn' : `${state.activePlayer}'s turn`
+        }}</span>
       </span>
       <!-- Where in the turn: a ruler of the five phases with a warm dot on the current one. -->
       <ol
@@ -1785,6 +1863,7 @@ function abandon(): void {
                   targetable: isLegalTarget(group.permanent.id),
                   'chosen-target': isChosenTarget(group.permanent.id),
                   actionable: actionableSourceIds.has(group.permanent.id),
+                  'out-of-reach': outOfBlockReach(group.permanent.id),
                 }"
                 draggable="true"
                 @dragstart="dragStart(group.permanent.id, $event)"
@@ -1798,6 +1877,7 @@ function abandon(): void {
                   :count="group.count"
                   :name-by-id="nameById"
                   :is-commander="commanderIds.has(group.permanent.id)"
+                  :plan-tag="plannedBlockTag(group.permanent.id)"
                 />
               </div>
             </TransitionGroup>
@@ -2322,9 +2402,7 @@ function abandon(): void {
                         class="art-tag"
                         aria-hidden="true"
                         >{{
-                          card.isToken === true
-                            ? 'Token'
-                            : typePartsOf(card.typeLine).supertypes[0]
+                          card.isToken === true ? 'Token' : typePartsOf(card.typeLine).supertypes[0]
                         }}</span
                       >
                     </span>
@@ -2351,7 +2429,11 @@ function abandon(): void {
                 </span>
                 <span class="decide-title">{{ decisionTitle }}</span>
                 <span
-                  v-if="combatPlan.mode === 'composing' && combatPlan.kind === 'attackers' && sendTargets.length > 0"
+                  v-if="
+                    combatPlan.mode === 'composing' &&
+                    combatPlan.kind === 'attackers' &&
+                    sendTargets.length > 0
+                  "
                   role="group"
                   aria-label="Send the chosen creature at"
                   class="send-at"
@@ -2369,6 +2451,7 @@ function abandon(): void {
                   </button>
                 </span>
               </div>
+              <p v-if="decisionBody" class="decide-body">{{ decisionBody }}</p>
               <StackPanel
                 v-if="state.stack.length > 0"
                 :state="state"
@@ -2471,7 +2554,16 @@ function abandon(): void {
                   </p>
                   <p v-else class="target-instruction">{{ combatInstruction }}</p>
                   <div class="tray-heading combat-count">
-                    <span
+                    <button
+                      v-for="action in declarationActions"
+                      :key="action.id"
+                      type="button"
+                      class="combat-step"
+                      @click="chooseAction(action)"
+                    >
+                      {{ action.description }}
+                    </button>
+                    <span v-if="declarationActions.length === 0"
                       >{{ combatPlan.order.length }} creature{{
                         combatPlan.order.length === 1 ? '' : 's'
                       }}
@@ -2572,8 +2664,15 @@ function abandon(): void {
                     </div>
                   </div>
                 </template>
+                <p v-else-if="!openingHand" class="tray-hint">
+                  Click a highlighted card or permanent to play, cast, or activate it.
+                </p>
               </section>
-              <template v-if="request && !openingHand && selectedAction === null && combatPlan.mode === 'idle'">
+              <template
+                v-if="
+                  request && !openingHand && selectedAction === null && combatPlan.mode === 'idle'
+                "
+              >
                 <DecisionPanel
                   v-if="fallbackRequest && immediateActions.length === 0"
                   :request="fallbackRequest"
@@ -2640,12 +2739,6 @@ function abandon(): void {
               <p v-else-if="!request" class="thinking prompt" role="status">
                 {{ waitingBody }}
               </p>
-              <p
-                v-else-if="request && selectedAction === null && combatPlan.mode === 'idle' && !openingHand"
-                class="tray-hint"
-              >
-                Click a highlighted card or permanent to play, cast, or activate it.
-              </p>
             </section>
           </div>
         </section>
@@ -2655,7 +2748,12 @@ function abandon(): void {
       <aside v-show="infoOpen" id="player-game-info" class="info-drawer" aria-label="Game log">
         <div class="info-head">
           <h2>Game log</h2>
-          <button type="button" class="info-close" aria-label="Close the game log" @click="toggleInfo">
+          <button
+            type="button"
+            class="info-close"
+            aria-label="Close the game log"
+            @click="toggleInfo"
+          >
             ×
           </button>
         </div>
@@ -4593,6 +4691,12 @@ button.primary {
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
+.decide-body {
+  margin: 0;
+  max-width: 44rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
 .send-at {
   display: flex;
   align-items: center;
@@ -4765,6 +4869,19 @@ button.link::after {
   font-size: 0.7rem;
   color: var(--muted);
 }
+/* The engine's declaration action, read as the step's count line: composing is already open. */
+.combat-count .combat-step {
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: default;
+}
 .combat-interrupted {
   color: var(--danger) !important;
 }
@@ -4849,6 +4966,10 @@ button.selected,
   box-shadow:
     0 0 0 2px var(--ink),
     inset 0 0 0 2px var(--paper);
+}
+.object.out-of-reach {
+  opacity: 0.45;
+  transition: opacity 160ms var(--ease);
 }
 .payment-source {
   border-color: var(--warm) !important;

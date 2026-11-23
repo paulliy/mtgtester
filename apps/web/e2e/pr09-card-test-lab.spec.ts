@@ -190,7 +190,7 @@ test('pr09-keen-duelist-viewer-positive', async ({ page }) => {
   await expect(page.locator('.human-zone .life-badge')).toHaveText('39');
   await expect(page.locator('.opponent[data-seat="P2"] .life-badge')).toHaveText('37');
   await expect(hand(page, 'Lab P1 Reveal')).toBeVisible();
-  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('1 in hand');
+  await expect(page.locator('.opponent[data-seat="P2"]')).toContainText('hand 1');
 });
 
 test('pr09-keen-duelist-viewer-cast', async ({ page }) => {

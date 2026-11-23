@@ -6,6 +6,8 @@ import { expect, test } from '@playwright/test';
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     try {
+      // The New game opening ("Where to?") was seen, so specs land on the setup panel.
+      localStorage.setItem('decktank.opened', 'true');
       localStorage.setItem('mtg.playerGameInfoOpen', 'true');
       localStorage.setItem('mtg.playerOpponentZonesOpen', 'true');
       for (const pile of ['lands', 'graveyard', 'exile']) {

@@ -50,6 +50,12 @@ export interface CombatSummary {
   lines: string[];
   /** Seat -> its chip text, for each seat creatures are attacking. */
   attacked: Map<string, string>;
+  /**
+   * Once blocks are declared, the same combat as sentences for the decision band ("Klauth is
+   * blocked by Midnight Reaper. The Ur-Dragon is unblocked and deals 10 to Queen Marchesa.").
+   * Empty before blocks and while you compose a declaration.
+   */
+  prose: string[];
 }
 
 function pt(p: CombatPermanent): string {
@@ -58,7 +64,14 @@ function pt(p: CombatPermanent): string {
 
 function seatName(seats: readonly CombatSeat[], id: string): string {
   const seat = seats.find((s) => s.seat === id);
-  return seat === undefined ? id : `${seat.seat} ${seat.label}`;
+  if (seat === undefined || seat.label.trim() === '' || seat.label === seat.seat) return id;
+  return `${seat.seat} ${seat.label}`;
+}
+
+/** A seat by its player's name alone ("Queen Marchesa"), or its id when it has none. */
+function seatLabelOf(seats: readonly CombatSeat[], id: string): string {
+  const label = seats.find((s) => s.seat === id)?.label.trim() ?? '';
+  return label === '' ? id : label;
 }
 
 /** Names in a list read as English: "A", "A and B", "A, B and C". */
@@ -95,13 +108,14 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
         : [
             `${chosen.length} selected: ${countedNames(chosen.map((p) => p.name)).join(', ')}. Click a creature to add or remove it.`,
           ];
-    return { label: 'Combat · choose attackers', lines, attacked };
+    return { label: 'Combat · choose attackers', lines, attacked, prose: [] };
   }
 
   if (attackers.length === 0) return null;
 
   const step = input.step;
-  const blocksPending = step === 'declareAttackers' || (step === 'declareBlockers' && input.priorityPlayer === null);
+  const blocksPending =
+    step === 'declareAttackers' || (step === 'declareBlockers' && input.priorityPlayer === null);
   const damageStep = step === 'combatDamage' || step === 'firstStrikeCombatDamage';
   const label =
     input.plan?.kind === 'blockers'
@@ -115,6 +129,7 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
             : 'Combat · blocks declared';
 
   const lines: string[] = [];
+  const prose: string[] = [];
   const incoming = new Map<string, number>();
   const unblockedAt = new Map<string, number>();
   for (const attacker of attackers) {
@@ -139,8 +154,12 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
         .filter((p): p is CombatPermanent => p !== undefined)
         .map((p) => `${p.name}${pt(p)}`);
       state = `blocked by ${listNames(blockers.length > 0 ? blockers : ['a creature that left'])}`;
+      const names = attacker.blockedBy.map((id) => byId.get(id)?.name ?? 'a creature that left');
+      prose.push(`${attacker.name} is blocked by ${listNames(names)}.`);
     } else {
       state = `unblocked, ${power} damage`;
+      const victim = walker !== undefined ? walker.name : seatLabelOf(input.seats, seat);
+      prose.push(`${attacker.name} is unblocked and deals ${power} to ${victim}.`);
       unblockedAt.set(seat, (unblockedAt.get(seat) ?? 0) + 1);
     }
     lines.push(`${attacker.name}${pt(attacker)} → ${target} · ${state}`);
@@ -159,5 +178,5 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
       attacked.set(seat, `Under attack · ${through} incoming`);
     }
   }
-  return { label, lines, attacked };
+  return { label, lines, attacked, prose };
 }

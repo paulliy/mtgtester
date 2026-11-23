@@ -293,9 +293,9 @@ async function expectUntapped(page: Page, cards: Array<[string, string]>): Promi
   }
 }
 
-/** An opponent seat's "N in hand" line. */
+/** An opponent seat's "hand N" count. */
 const handCount = (page: Page, seat: string): Locator =>
-  page.locator(`.opponent[data-seat="${seat}"]`).getByText(/\d+ in hand/);
+  page.locator(`.opponent[data-seat="${seat}"]`).getByText(/^hand \d+$/);
 
 /** Cast Urza's Incubator and name `type` as its creature type. */
 async function castIncubator(page: Page, type: string): Promise<void> {
@@ -1408,24 +1408,23 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await activate(page, permanent(page, 'P1', 'Faerie Mastermind'), /Each player draws a card/);
     await passStackUntil(page, hand(page, 'Scenario Ant'));
     await passUntil(page, logLine(page, /game over/));
-    for (const seat of ['P2', 'P3', 'P4'])
-      await expect(handCount(page, seat)).toHaveText('1 in hand');
+    for (const seat of ['P2', 'P3', 'P4']) await expect(handCount(page, seat)).toHaveText('hand 1');
   },
   'mastermind-opponent-second-draw': async (page) => {
     await passUntil(page, hand(page, 'Scenario Ant'));
     await passUntil(page, logLine(page, /game over/));
-    await expect(handCount(page, 'P2')).toHaveText('2 in hand');
+    await expect(handCount(page, 'P2')).toHaveText('hand 2');
     await expect(hand(page, 'Scenario Ant')).toHaveCount(1);
   },
   'mastermind-opponent-first-draw': async (page) => {
     await passUntil(page, logLine(page, /game over/));
-    await expect(handCount(page, 'P2')).toHaveText('1 in hand');
+    await expect(handCount(page, 'P2')).toHaveText('hand 1');
     await expect(hand(page, 'Scenario Ant')).toHaveCount(0);
   },
   'mastermind-third-draw-still-resolves': async (page) => {
     await passUntil(page, hand(page, 'Scenario Ant'));
     await passUntil(page, logLine(page, /game over/));
-    await expect(handCount(page, 'P2')).toHaveText('3 in hand');
+    await expect(handCount(page, 'P2')).toHaveText('hand 3');
     await expect(hand(page, 'Scenario Ant')).toHaveCount(1);
     await expect(hand(page, 'Scenario Dog')).toHaveCount(0);
   },

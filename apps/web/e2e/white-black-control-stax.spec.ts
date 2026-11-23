@@ -85,7 +85,7 @@ test('Rule of Law blocks each player after one spell but allows a land and activ
     page.locator('.log .line').filter({ hasText: 'Lab P2 First Spell resolves' }),
   ).toBeVisible();
   const p2 = opponent(page, 'P2');
-  await expect(p2).toContainText('2 in hand');
+  await expect(p2).toContainText('hand 2');
   await expect(p2.getByRole('heading', { name: 'Graveyard (1)', exact: true })).toBeVisible();
   await expect(p2.getByRole('img', { name: 'Lab P2 First Spell', exact: true })).toBeVisible();
 });
@@ -126,7 +126,7 @@ test('Archon of Emeria limits both players to one spell while allowing a land', 
   await expect(
     page.locator('.log .line').filter({ hasText: 'Lab P2 First Spell resolves' }),
   ).toBeVisible();
-  await expect(opponent(page, 'P2')).toContainText('2 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 2');
   await expect(
     opponent(page, 'P2').getByRole('heading', { name: 'Graveyard (1)', exact: true }),
   ).toBeVisible();

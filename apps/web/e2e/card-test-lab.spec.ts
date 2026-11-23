@@ -1858,7 +1858,7 @@ async function runArcaneDenial(page: Page, drawCount: 0 | 2): Promise<void> {
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(handCard(page, 'Caster Secret Draw')).toBeVisible();
   const p4 = page.locator('.opponent').filter({ hasText: 'P4' });
-  await expect(p4).toContainText(`${drawCount} in hand`);
+  await expect(p4).toContainText(`hand ${drawCount}`);
   await expect(page.getByText('Target Secret Alpha')).toHaveCount(0);
   await expect(page.getByText('Target Secret Beta')).toHaveCount(0);
   await expect(page.getByText(/Lab Pending Spell is countered by Arcane Denial/i)).toBeVisible();
@@ -2732,8 +2732,8 @@ test('Loran of the Third Path: you and target opponent each draw', async ({ page
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/Hand\s*1/).first()).toBeVisible();
-  await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText('1 in hand');
-  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('0 in hand');
+  await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText('hand 1');
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('hand 0');
 });
 
 test('Rishkar, Peema Renegade: two counters, then countered creatures tap for G', async ({
@@ -2943,7 +2943,7 @@ test('Aether Channeler: return another target nonland permanent', async ({ page 
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
-  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('1 in hand');
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('hand 1');
   await expect(permanent(page, 'Aether Channeler')).toBeVisible();
 });
 
@@ -2961,7 +2961,7 @@ test('Aether Channeler: create a 1/1 white Bird with flying', async ({ page }) =
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Bird')).toHaveCount(1);
   await expect(permanent(page, 'Lab Ox')).toBeVisible();
-  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('0 in hand');
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('hand 0');
   await expect(page.getByText(/Hand\s*0/).first()).toBeVisible();
 });
 

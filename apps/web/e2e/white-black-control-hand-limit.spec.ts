@@ -83,9 +83,9 @@ test('Tinybones pays its six-mana activation and affects each opponent by hand c
   const tinybonesPermanent = permanent(page, 'Tinybones, Trinket Thief');
   await expect(tinybonesPermanent).toBeVisible({ timeout: 15_000 });
 
-  await expect(opponent(page, 'P2')).toContainText('0 in hand');
-  await expect(opponent(page, 'P3')).toContainText('1 in hand');
-  await expect(opponent(page, 'P4')).toContainText('0 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 0');
+  await expect(opponent(page, 'P3')).toContainText('hand 1');
+  await expect(opponent(page, 'P4')).toContainText('hand 0');
 
   await expect(tinybonesPermanent).toHaveClass(/actionable/, { timeout: 15_000 });
   await tinybonesPermanent.click();
@@ -95,5 +95,5 @@ test('Tinybones pays its six-mana activation and affects each opponent by hand c
   await expect(opponent(page, 'P2').locator('.life-badge')).toHaveText('30', { timeout: 15_000 });
   await expect(opponent(page, 'P3').locator('.life-badge')).toHaveText('40');
   await expect(opponent(page, 'P4').locator('.life-badge')).toHaveText('30');
-  await expect(opponent(page, 'P3')).toContainText('1 in hand');
+  await expect(opponent(page, 'P3')).toContainText('hand 1');
 });

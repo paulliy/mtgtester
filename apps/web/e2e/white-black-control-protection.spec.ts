@@ -95,12 +95,12 @@ test("Reprieve returns P2's targeted spell to their hand and draws", async ({ pa
   await expect(stack).toContainText('Lab P2 Targeted Growth Spell', { timeout: 15_000 });
   const initialHandSize = await page.locator('.hand-card:not(.hand-card-leave-active)').count();
   const p2Zone = page.locator('.opponent[data-seat="P2"]');
-  const p2Before = (await p2Zone.innerText()).match(/(\d+) in hand/);
+  const p2Before = (await p2Zone.textContent())?.match(/hand (\d+)/);
   expect(p2Before, 'P2 visible hand count before Reprieve resolves').not.toBeNull();
   await castOnStack(page, 'Reprieve', 'Lab P2 Targeted Growth Spell');
 
   await expect(stack).not.toContainText('Lab P2 Targeted Growth Spell', { timeout: 15_000 });
-  await expect(p2Zone).toContainText(`${Number(p2Before![1]) + 1} in hand`);
+  await expect(p2Zone).toContainText(`hand ${Number(p2Before![1]) + 1}`);
   await expect(page.locator('.hand-card:not(.hand-card-leave-active)')).toHaveCount(
     initialHandSize,
     { timeout: 15_000 },

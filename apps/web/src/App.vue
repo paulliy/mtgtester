@@ -6,6 +6,7 @@ import PhoneMenu from './components/shell/PhoneMenu.vue';
 import RulerNav from './components/shell/RulerNav.vue';
 import ThemeControl from './components/shell/ThemeControl.vue';
 import { currentPlaceIndex, navPlaces } from './lib/navigation';
+import { openingScreen } from './lib/opening';
 import { useCardPreviewStore } from './stores/cardPreview';
 import { useGameStore } from './stores/game';
 
@@ -57,7 +58,12 @@ onUnmounted(() => {
 
 <template>
   <div class="app" :class="{ 'reduced-motion': game.reducedMotion }">
-    <header class="topbar" :class="{ 'board-mode': boardMode }">
+    <!-- The New game opening tucks the header away until a mode is picked (Main.dc.html). -->
+    <header
+      class="topbar"
+      :class="{ 'board-mode': boardMode, opening: openingScreen && route.name === 'setup' }"
+      :aria-hidden="openingScreen && route.name === 'setup' ? 'true' : undefined"
+    >
       <RouterLink to="/" class="brand">Decktank</RouterLink>
       <PhoneMenu :places="places" :current="current" />
       <!-- The board view fills this with the game's status (round, phase, priority) via a
@@ -93,9 +99,16 @@ onUnmounted(() => {
   min-height: 0;
   overflow: auto;
 }
+/* The opening plate draws past the setup view, up under the tucked-away header. */
+.app:has(> .topbar.opening) > .view {
+  overflow: visible;
+}
 .topbar {
   position: relative;
   z-index: 40;
+  transition:
+    transform 0.9s var(--ease),
+    opacity 0.6s var(--ease) 0.2s;
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
@@ -104,6 +117,12 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--ink);
   background: var(--paper);
   flex-shrink: 0;
+}
+.topbar.opening {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, -100%, 0);
+  transition: none;
 }
 .brand {
   align-self: center;

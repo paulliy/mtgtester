@@ -43,7 +43,10 @@ const shown = computed(() => props.cards.slice(-3));
   <button
     type="button"
     class="zone-pile"
-    :class="[{ open: props.open, empty: props.cards.length === 0, row: props.variant === 'row' }, props.glow]"
+    :class="[
+      { open: props.open, empty: props.cards.length === 0, row: props.variant === 'row' },
+      props.glow,
+    ]"
     :aria-expanded="props.open"
     :aria-controls="props.controls"
     :title="`${props.open ? 'Close' : 'Open'} ${props.label.toLowerCase()}`"

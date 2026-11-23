@@ -127,11 +127,12 @@ const artTag = computed(() => {
 /** The ink bar across the top in combat: whom it attacks, or what it blocks. */
 const combatTag = computed(() => {
   const p = props.permanent;
-  if (p.attacking === null && p.blocking === null && props.planTag) return props.planTag;
+  // A plan tag speaks for an undeclared creature, or for an attacker you are blocking right now.
+  if (p.blocking === null && props.planTag) return props.planTag;
   if (p.attacking !== null) {
     const target = p.attackingPlaneswalker ?? p.attacking;
-    const blocked = p.blockedBy.length > 0 ? ' · blocked' : '';
-    return `Attacking ${props.nameById?.get(target) ?? target}${blocked}`;
+    const label = props.nameById?.get(target) ?? target;
+    return `Attacking ${label}${p.blockedBy.length > 0 ? ' · blocked' : ''}`;
   }
   if (p.blocking !== null) return `Blocking ${props.nameById?.get(p.blocking) ?? p.blocking}`;
   return null;
@@ -275,6 +276,7 @@ function onLeave(): void {
         class="combat-tag"
         :class="{ blocking: permanent.blocking !== null }"
         aria-hidden="true"
+        :title="combatTag"
         >{{ combatTag }}</span
       >
       <span v-else-if="isCommander" class="combat-tag cmdr" aria-hidden="true">Commander</span>

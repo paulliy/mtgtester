@@ -156,7 +156,7 @@ test("Tergrid's Lantern resolves P2's discard choice, then pays {3}{B} to untap"
   await page.getByRole('button', { name: 'Confirm', exact: true }).click();
 
   await passUntil(page, page.getByText(/discards Swamp/i).first());
-  await expect(opponent(page, 'P2')).toContainText('0 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 0');
   await expect(opponent(page, 'P2').locator('.life-badge')).toHaveText('40');
   await expect(lantern.getByTitle('Tapped', { exact: true })).toBeVisible();
 
