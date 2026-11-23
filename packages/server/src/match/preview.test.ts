@@ -122,7 +122,7 @@ describe('matchup preview', () => {
   });
 });
 
-describe('unmodeled cards in a preview (ADR 0053)', () => {
+describe('unmodeled cards in a preview (ADR 0054)', () => {
   const general = makeOracleCard({
     name: 'Test General',
     typeLine: 'Legendary Creature \u2014 Elf',

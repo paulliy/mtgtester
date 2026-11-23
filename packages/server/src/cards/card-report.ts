@@ -1,5 +1,5 @@
 /**
- * What the Import report shows for a card (ADR 0053): its Oracle text, how far the engine has come
+ * What the Import report shows for a card (ADR 0054): its Oracle text, how far the engine has come
  * with it, the evidence the audit ledger holds, and the Card Test Lab scenarios pinned to it.
  *
  * Status comes from three real sources and is never invented:

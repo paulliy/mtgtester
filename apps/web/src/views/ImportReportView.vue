@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * The Import report (ADR 0053; redesign plan phase 4b; Decktank `CardLab.dc.html`, import mode):
+ * The Import report (ADR 0054; redesign plan phase 4b; Decktank `CardLab.dc.html`, import mode):
  * what stopped the last refused import, card by card, and a work order to hand to a person or an
  * LLM. The list is the preview's unmodeled cards plus, for a pasted list, every other card the
  * server can name; picking a card shows its Oracle text, status and the evidence the audit ledger

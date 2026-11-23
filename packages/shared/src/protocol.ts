@@ -121,7 +121,7 @@ export interface SeatSummary {
 }
 
 /**
- * How a card stands in the rules engine, the three states a preview names (ADR 0053).
+ * How a card stands in the rules engine, the three states a preview names (ADR 0054).
  * `unsupported`: the engine cannot play it and halts if it is drawn. `provisional`: a
  * machine-checked definition that no person has reviewed (ADR 0050), playable only when the
  * server admitted the provisional catalog. `implemented-unreviewed`: modeled, but not yet audited
@@ -139,7 +139,7 @@ export interface UnmodeledCard {
 
 /**
  * Public setup metadata. No decklist or private card data crosses this boundary, with one
- * exception (ADR 0053): `unmodeledCards` names the cards of a user-supplied deck (a URL, pasted or
+ * exception (ADR 0054): `unmodeledCards` names the cards of a user-supplied deck (a URL, pasted or
  * saved list picked at setup) that the engine does not model, so a refused import can say what
  * needs work. A deck that is fully modeled sends no card names at all.
  */
@@ -161,7 +161,7 @@ export interface SetupPreview {
   blockers: string[];
 }
 
-/** How far a card has come, from `docs/plans/card-catalog-audit.json` and the engine (ADR 0053). */
+/** How far a card has come, from `docs/plans/card-catalog-audit.json` and the engine (ADR 0054). */
 export type CardReportStatus = CardModelStatus | 'implemented-reviewed';
 
 /**

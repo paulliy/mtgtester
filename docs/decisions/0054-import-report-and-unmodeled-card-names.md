@@ -1,4 +1,4 @@
-# ADR 0053: Import report and the unmodeled card names a preview sends
+# ADR 0054: Import report and the unmodeled card names a preview sends
 
 Status: Accepted (2026-11-23)
 

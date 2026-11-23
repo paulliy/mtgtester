@@ -12,11 +12,11 @@ import type { OracleCard } from '@mtg/shared';
 import { interpretCard } from '@mtg/engine';
 import { buildSupportedPool } from './pool';
 import {
-  loadProvisionalCatalog,
   provisionalGameConfig,
   provisionalReplayPins,
   type ProvisionalCatalog,
 } from './provisional';
+import { loadProvisionalCatalog } from './provisional-load';
 import { unmodeledCardNames } from '../match/setup';
 
 const REPO = resolve(__dirname, '../../../..');

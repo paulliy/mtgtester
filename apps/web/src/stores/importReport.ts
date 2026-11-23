@@ -1,6 +1,6 @@
 /**
  * The last failed import, kept so the Import report can show it and the New game screen can give
- * the pasted list back (ADR 0053). One entry: a newer failure replaces the old one. It is mirrored
+ * the pasted list back (ADR 0054). One entry: a newer failure replaces the old one. It is mirrored
  * to `sessionStorage` so a reload keeps it, and every storage call is guarded, because storage can
  * be missing or throw in a private window; without it the report simply lives for the page.
  */

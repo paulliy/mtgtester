@@ -12,6 +12,7 @@ import type { BannedList } from '../decks/banned';
 import type { GameStore } from '../db';
 import { testerPolicy } from '../match/disclosure';
 import { MatchSession } from '../match/session';
+import { sessionAi } from '../match/session-ai';
 import { setupSeats } from '../match/setup';
 
 export const MAX_BATCH_SCENARIOS = 20;
@@ -207,6 +208,7 @@ export class BatchManager {
           repo.createGame(batchId, scenario.id, gameIndex, gameId, seed);
           try {
             const session = new MatchSession({
+              ai: sessionAi,
               gameId,
               seed,
               seats: setup.seats,

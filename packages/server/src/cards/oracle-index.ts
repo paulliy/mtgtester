@@ -8,7 +8,6 @@
  * the name and never guess (§8.2 step 2).
  */
 
-import { readFileSync } from 'node:fs';
 import type { OracleCard } from '@mtg/shared';
 import { looseKey, strictKey } from './normalize';
 import { toOracleCard, type RawScryfallCard } from './scryfall';
@@ -40,11 +39,38 @@ export function buildOracleIndex(rawCards: RawScryfallCard[]): OracleIndex {
  * `packages/server/fixtures/coverage-oracle.json`, which lets a server run without the bulk file.
  */
 export function buildOracleIndexFromCards(cards: readonly OracleCard[]): OracleIndex {
-  const byOracleId = new Map<string, OracleCard>();
-  const byStrict = new Map<string, OracleCard>();
-  const byLoose = new Map<string, OracleCard | null>(); // null marks an ambiguous loose key
+  const names = buildNameIndex(cards);
+  return {
+    size: names.size,
+    resolve: (name) => names.resolve(name),
+    getByOracleId: (oracleId) => names.getByOracleId(oracleId),
+  };
+}
 
-  const addStrict = (key: string, card: OracleCard): void => {
+/** The fields name resolution reads. A full `OracleCard` has them; so does a name-only stub. */
+export interface NameIndexEntry {
+  readonly oracleId: string;
+  readonly name: string;
+  readonly commanderLegality: OracleCard['commanderLegality'];
+}
+
+/** `OracleIndex`'s resolution over any entry that carries a name, an id and a legality. */
+export interface NameIndex<T extends NameIndexEntry> {
+  readonly size: number;
+  resolve(name: string): T | null;
+  getByOracleId(oracleId: string): T | null;
+}
+
+/**
+ * The resolution rules behind `buildOracleIndexFromCards`, generic over the entry type so the
+ * site's name file (`site-cards.ts`) resolves through exactly this code without card bodies.
+ */
+export function buildNameIndex<T extends NameIndexEntry>(cards: readonly T[]): NameIndex<T> {
+  const byOracleId = new Map<string, T>();
+  const byStrict = new Map<string, T>();
+  const byLoose = new Map<string, T | null>(); // null marks an ambiguous loose key
+
+  const addStrict = (key: string, card: T): void => {
     const existing = byStrict.get(key);
     // Prefer the full-name mapping; don't let a front-face alias overwrite an exact name.
     if (existing === undefined) {
@@ -60,7 +86,7 @@ export function buildOracleIndexFromCards(cards: readonly OracleCard[]): OracleI
     const isLegal = card.commanderLegality !== 'not_legal';
     if (isLegal && !wasLegal) byStrict.set(key, card);
   };
-  const addLoose = (key: string, card: OracleCard): void => {
+  const addLoose = (key: string, card: T): void => {
     if (!byLoose.has(key)) byLoose.set(key, card);
     else if (byLoose.get(key) !== card) byLoose.set(key, null); // collision → ambiguous
   };
@@ -84,35 +110,14 @@ export function buildOracleIndexFromCards(cards: readonly OracleCard[]): OracleI
 
   return {
     size: byOracleId.size,
-    resolve(name: string): OracleCard | null {
+    resolve(name: string): T | null {
       const strict = byStrict.get(strictKey(name));
       if (strict) return strict;
       const loose = byLoose.get(looseKey(name));
       return loose ?? null; // `null` (ambiguous) and `undefined` (miss) both mean "unresolved"
     },
-    getByOracleId(oracleId: string): OracleCard | null {
+    getByOracleId(oracleId: string): T | null {
       return byOracleId.get(oracleId) ?? null;
     },
   };
-}
-
-/**
- * Load and index the Scryfall bulk file. Reads the whole file once (acceptable for a one-time
- * import; games use the cache). Throws a clear error if the file is missing so the operator
- * knows to run the download in `data/README.md`.
- */
-export function loadOracleIndexFromFile(path: string): OracleIndex {
-  let text: string;
-  try {
-    text = readFileSync(path, 'utf8');
-  } catch {
-    throw new Error(
-      `Scryfall bulk data not found at "${path}". Download it first — see data/README.md.`,
-    );
-  }
-  const parsed: unknown = JSON.parse(text);
-  if (!Array.isArray(parsed)) {
-    throw new Error(`Expected a JSON array of cards in "${path}", got ${typeof parsed}.`);
-  }
-  return buildOracleIndex(parsed as RawScryfallCard[]);
 }

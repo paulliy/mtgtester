@@ -19,7 +19,7 @@ const routes: RouteRecordRaw[] = [
     name: 'batch-results',
     component: () => import('./views/BatchRunsView.vue'),
   },
-  // The last refused import and the work order for its unmodeled cards (ADR 0053).
+  // The last refused import and the work order for its unmodeled cards (ADR 0054).
   {
     path: IMPORT_REPORT_PATH,
     name: 'import-report',

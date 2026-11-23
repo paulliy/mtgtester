@@ -1,5 +1,5 @@
 /**
- * The pure model behind the Import report (ADR 0053): which cards a failed import still needs
+ * The pure model behind the Import report (ADR 0054): which cards a failed import still needs
  * work on, how the list groups and filters, and what evidence a card has. Nothing here is invented:
  * every state comes from the preview's `unmodeledCards` or `GET /api/card-report`, and a fact the
  * server did not send stays "unknown" instead of being filled in.

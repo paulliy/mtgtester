@@ -24,10 +24,12 @@ import {
   type OracleIndex,
 } from '../cards/oracle-index';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
-import { describeCatalog, loadProvisionalCatalog } from '../cards/provisional';
+import { describeCatalog } from '../cards/provisional';
+import { loadProvisionalCatalog } from '../cards/provisional-load';
 import { toOracleCard, type RawScryfallCard } from '../cards/scryfall';
 import { GameStore } from '../db';
-import { loadBannedList, type BannedList } from '../decks/banned';
+import { type BannedList } from '../decks/banned';
+import { loadBannedList } from '../decks/banned-file';
 import { GameServer } from '../ws/server';
 import { readBuildInfo } from '../build-info';
 

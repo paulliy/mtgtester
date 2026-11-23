@@ -56,27 +56,21 @@ import type {
   TableServerToClientMessage,
   YieldPlayerAbilityPayload,
 } from '@mtg/shared';
-import {
+// Types only: the model-backed services arrive as `opts.ai` (`session-ai.ts`), so a session with
+// no model seat loads none of `ai/`.
+import type {
   AiCallLogger,
-  condenseSeatLog,
-  configForRole,
-  createConfiguredJevPolicy,
-  loadAiConfig,
+  AiClient,
+  AiConfig,
+  JevPolicyBinding,
   OpenAiCompatibleClient,
-  OpenAiDecisionProvider,
-  publishReflections,
+  ReflectionContext,
   RequestQueue,
-  readStrategistProposal,
-  runDealDraft,
-  runReflection,
-  seatDiplomacyContext,
   StrategyCoordinator,
-  type AiClient,
-  type AiConfig,
-  type JevPolicyBinding,
-  type ReflectionContext,
 } from '../ai';
-import { knowledgeFor } from '../ai/bot-tactician';
+import { runDealDraft } from '../ai/deal-draft';
+import { knowledgeFor } from './card-knowledge';
+import type { SessionAi } from './session-ai';
 import type { GameStore } from '../db';
 import { finishingPositions, type DecisionSource, type GameRecorder } from '../db/games';
 import { releaseAnchored, releaseAnnotations } from './annotations';
@@ -156,6 +150,11 @@ export interface MatchSessionOptions {
   seed: string;
   seats: readonly SeatSetup[];
   providerKind: ProviderKind;
+  /**
+   * The model-backed services (`sessionAi` from `session-ai.ts`). Required when `providerKind` is
+   * `ai`. Without them reflections are off and a free-text deal draft gets the no-model answer.
+   */
+  ai?: SessionAi;
   gameMode?: GameMode;
   /**
    * The game's random generator (ADR 0031 decision 4). Omitted is `'legacy'`, seeded from `seed`,
@@ -425,8 +424,13 @@ export class MatchSession {
             repairedAttacks: () => this.countRepairedAttacks(),
           })
         : null;
+    if (opts.providerKind === 'ai' && opts.ai === undefined) {
+      throw new Error('A session with model seats needs the AI services (`sessionAi`).');
+    }
     this.logger =
-      opts.providerKind === 'ai' ? new AiCallLogger(opts.store?.raw ?? null, opts.gameId) : null;
+      opts.providerKind === 'ai'
+        ? new (this.requireAi().AiCallLogger)(opts.store?.raw ?? null, opts.gameId)
+        : null;
 
     this.runner = new MatchRunner({
       engine: this.engine,
@@ -1516,7 +1520,7 @@ export class MatchSession {
       this.deferredProposals.push({ turn, seat, raw });
       return;
     }
-    const terms = readStrategistProposal(
+    const terms = this.requireAi().readStrategistProposal(
       raw,
       seat,
       this.engine.view(seat).opponents.map((o) => o.seat),
@@ -1602,21 +1606,29 @@ export class MatchSession {
     const table = this.diplomacy;
     if (table === null) return;
     const state = table.seatState(seat);
-    const config = (this.aiConfig ??= loadAiConfig(process.env));
-    if (this.aiDraftClient === undefined) {
-      this.aiDraftClient =
-        config.apiKey === ''
-          ? null
-          : new OpenAiCompatibleClient(configForRole(config, 'tactician'));
-      this.draftLogger =
-        this.logger ?? new AiCallLogger(this.opts.store?.raw ?? null, this.opts.gameId);
-      this.aiDraftClient?.setAttemptObserver?.(this.draftLogger.attemptObserver());
+    const ai = this.opts.ai;
+    let queue: { enqueue<T>(fn: () => Promise<T>): Promise<T> };
+    if (ai === undefined) {
+      // No model services in this build: the draft gets the same answer as a missing API key.
+      this.aiDraftClient = null;
+      queue = { enqueue: (fn) => fn() };
+    } else {
+      const config = (this.aiConfig ??= ai.loadAiConfig());
+      if (this.aiDraftClient === undefined) {
+        this.aiDraftClient =
+          config.apiKey === ''
+            ? null
+            : new ai.OpenAiCompatibleClient(ai.configForRole(config, 'tactician'));
+        this.draftLogger =
+          this.logger ?? new ai.AiCallLogger(this.opts.store?.raw ?? null, this.opts.gameId);
+        this.aiDraftClient?.setAttemptObserver?.(this.draftLogger.attemptObserver());
+      }
+      // Its own lane, so a draft never waits behind a model seat's tactical decision.
+      queue = this.aiDraftQueue ??= new ai.RequestQueue({
+        rpmLimit: config.rpmLimit,
+        concurrency: 1,
+      });
     }
-    // Its own lane, so a draft never waits behind a model seat's tactical decision.
-    const queue = (this.aiDraftQueue ??= new RequestQueue({
-      rpmLimit: config.rpmLimit,
-      concurrency: 1,
-    }));
     const draft = await runDealDraft(
       this.aiDraftClient,
       queue,
@@ -2174,7 +2186,7 @@ export class MatchSession {
         return assertNever(this.gameMode, 'reflection seats');
     }
     if (this.opts.providerKind !== 'ai') return [];
-    const config = (this.aiConfig ??= loadAiConfig(process.env));
+    const config = (this.aiConfig ??= this.requireAi().loadAiConfig());
     if (!(this.opts.reflectionEnabled ?? config.reflectionEnabled)) return [];
     return this.opts.seats.map((seat) => seat.seat).filter((seat) => !this.humanSeats.has(seat));
   }
@@ -2210,7 +2222,7 @@ export class MatchSession {
       // the seat played behind. The game ending does not widen them.
       view: this.engine.view(seat),
       decisions: this.aiCoordinator?.digestFor(seat) ?? [],
-      publicLog: condenseSeatLog(formatPlayerLog([...events], seat), seat),
+      publicLog: this.requireAi().condenseSeatLog(formatPlayerLog([...events], seat), seat),
       ...(archetype !== undefined && archetype.length > 0 ? { archetypeTag: archetype } : {}),
     };
   }
@@ -2223,12 +2235,15 @@ export class MatchSession {
     if (seats.length === 0) return;
     this.reflectionsStarted = true;
 
+    const ai = this.requireAi();
     const config = this.aiConfig as AiConfig;
-    this.aiReflectionClient ??= new OpenAiCompatibleClient(configForRole(config, 'reflection'));
+    this.aiReflectionClient ??= new ai.OpenAiCompatibleClient(
+      ai.configForRole(config, 'reflection'),
+    );
     this.aiReflectionClient.setAttemptObserver?.(this.logger?.attemptObserver());
     // The strategist lane, reused: no tactical decision can exist any more, so there is nothing
     // left for these to block.
-    const queue = (this.aiStrategistQueue ??= new RequestQueue({
+    const queue = (this.aiStrategistQueue ??= new ai.RequestQueue({
       rpmLimit: config.rpmLimit,
       concurrency: config.strategistConcurrency,
     }));
@@ -2236,10 +2251,10 @@ export class MatchSession {
     const standings = new Map(this.standings().map((entry) => [entry.seat, entry]));
     const events = this.engine.eventsSince(0);
 
-    await publishReflections(
+    await ai.publishReflections(
       seats.map((seat) => this.reflectionContextFor(seat, result, standings, events)),
       (context) =>
-        runReflection(this.aiReflectionClient, queue, context, {
+        ai.runReflection(this.aiReflectionClient, queue, context, {
           gameId: this.opts.gameId,
           logger: this.logger ?? undefined,
         }),
@@ -2403,7 +2418,7 @@ export class MatchSession {
     const config = this.aiConfig as AiConfig;
     const tactician = this.aiTacticianClient as OpenAiCompatibleClient;
     const queue = this.aiQueue as RequestQueue;
-    return new OpenAiDecisionProvider(
+    return new (this.requireAi().OpenAiDecisionProvider)(
       tactician,
       queue,
       this.engine,
@@ -2435,32 +2450,43 @@ export class MatchSession {
     }
   }
 
+  /** The model-backed services; only reached on a path that needs a model. */
+  private requireAi(): SessionAi {
+    const ai = this.opts.ai;
+    if (ai === undefined) {
+      throw new Error('This session was started without the AI services (`sessionAi`).');
+    }
+    return ai;
+  }
+
   private ensureAiCoordinator(): StrategyCoordinator {
-    const config = (this.aiConfig ??= loadAiConfig(process.env));
-    this.aiStrategistClient ??= new OpenAiCompatibleClient(configForRole(config, 'strategist'));
-    this.aiTacticianClient ??= new OpenAiCompatibleClient(configForRole(config, 'tactician'));
+    const ai = this.requireAi();
+    const config = (this.aiConfig ??= ai.loadAiConfig());
+    this.aiStrategistClient ??= new ai.OpenAiCompatibleClient(
+      ai.configForRole(config, 'strategist'),
+    );
+    this.aiTacticianClient ??= new ai.OpenAiCompatibleClient(ai.configForRole(config, 'tactician'));
     this.aiStrategistClient.setAttemptObserver(this.logger?.attemptObserver());
     this.aiTacticianClient.setAttemptObserver(this.logger?.attemptObserver());
     if (this.aiJev === undefined) {
       this.aiJev =
-        createConfiguredJevPolicy(
+        ai.createConfiguredJevPolicy(
           config,
-          process.env,
           this.logger?.attemptObserver(),
           this.logger?.jevTraceObserver(),
           this.logger?.jevComparisonObserver(),
         ) ?? null;
     }
-    this.aiQueue ??= new RequestQueue(config);
+    this.aiQueue ??= new ai.RequestQueue(config);
     // A separate queue instance, not just a separate call: a strategist call must never queue
     // behind a tactical one (or vice versa), which sharing `aiQueue` would force under its
     // concurrency-1 default.
-    this.aiStrategistQueue ??= new RequestQueue({
+    this.aiStrategistQueue ??= new ai.RequestQueue({
       rpmLimit: config.rpmLimit,
       concurrency: config.strategistConcurrency,
     });
     if (this.aiCoordinator === null) {
-      this.aiCoordinator = new StrategyCoordinator(
+      this.aiCoordinator = new ai.StrategyCoordinator(
         this.aiStrategistClient,
         this.aiStrategistQueue,
         this.engine,
@@ -2485,7 +2511,7 @@ export class MatchSession {
       if (table !== null) {
         this.aiCoordinator.diplomacyFor = (seat, role) => {
           const state = table.seatState(seat);
-          return seatDiplomacyContext(
+          return ai.seatDiplomacyContext(
             seat,
             {
               deals: state.deals,

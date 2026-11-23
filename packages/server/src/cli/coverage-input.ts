@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
-import { buildOracleIndexFromCards, loadOracleIndexFromFile } from '../cards/oracle-index';
+import { buildOracleIndexFromCards } from '../cards/oracle-index';
+import { loadOracleIndexFromFile } from '../cards/oracle-index-file';
 
 /** The Oracle projection every coverage gate is pinned to; `coverage-contract.json` hashes it. */
 export const PINNED_ORACLE_FIXTURE = 'packages/server/fixtures/coverage-oracle.json';

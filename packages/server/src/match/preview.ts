@@ -186,7 +186,7 @@ export async function previewMatchup(
           // here would publish unvalidated deck metadata on the one path where validation is
           // known to have failed. The neutral fields the summary was initialized with stand.
           blockers.push(`${seat}: ${result.message}`);
-          // The one card-level fact a refused saved seat publishes (ADR 0053): which of the
+          // The one card-level fact a refused saved seat publishes (ADR 0054): which of the
           // user's own cards the engine does not model. Nothing else cached on the snapshot.
           if (result.unmodeledDetail !== undefined && result.unmodeledDetail.length > 0)
             summary.unmodeledCards = result.unmodeledDetail;

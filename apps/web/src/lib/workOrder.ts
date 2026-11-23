@@ -1,6 +1,6 @@
 /**
  * The work order: Markdown a person can save, or hand to an LLM, asking for one pull request that
- * models the cards a failed import needs (ADR 0053; redesign plan phase 4c). Pure: it formats what
+ * models the cards a failed import needs (ADR 0054; redesign plan phase 4c). Pure: it formats what
  * it is given and never adds a fact. A card's Oracle text, hash, status, missing pieces, scenarios
  * and evidence appear only when the server sent them; otherwise the order says it does not know.
  *

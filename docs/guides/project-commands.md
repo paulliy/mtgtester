@@ -34,6 +34,7 @@ bun run serve:table --dev [--port N] [--oracle-fixture packages/server/fixtures/
                                         # multiplayer table server, loopback only
 bun run serve:table [--insecure-lan]    # exposed table server; see docs/guides/table-hosting.md
 bun run table:cards                     # prebuilt card file serve:table loads instead of the bulk file
+bun run site:cards                      # the website's static card files (data/site-cards/) for single player in the browser
 bun run dev:web
 
 bun run decks <deckUrlOrFile> [more...]
