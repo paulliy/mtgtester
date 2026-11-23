@@ -4,7 +4,7 @@
  * "Tables" mark, the top-bar slot the player board teleports its status into, the theme control,
  * the router view and the card preview. None of the tester's navigation.
  */
-import { RouterLink, RouterView } from 'vue-router';
+import { RouterView } from 'vue-router';
 import CardPreviewOverlay from '../components/CardPreviewOverlay.vue';
 import ThemeControl from '../components/shell/ThemeControl.vue';
 import { useGameStore } from '../stores/game';
@@ -15,10 +15,12 @@ const game = useGameStore();
 <template>
   <div class="app table-app" :class="{ 'reduced-motion': game.reducedMotion }">
     <header class="topbar">
-      <RouterLink to="/" class="brand" aria-label="Decktank tables">
+      <!-- The mark, not a link: leaving a table's page closes its connection (`TableView`), so
+           a click here would drop a seated player out of their game. -->
+      <span class="brand">
         <span class="name">Decktank</span>
-        <span class="mark" aria-hidden="true">Tables</span>
-      </RouterLink>
+        <span class="mark">Tables</span>
+      </span>
       <div id="top-bar-status" class="status-slot" />
       <ThemeControl class="topbar-theme" />
     </header>
