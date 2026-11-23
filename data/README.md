@@ -31,6 +31,12 @@ The command is manual; it is not scheduled or run automatically.
 converted to engine form, about an eighth of the size. Rebuild it with `bun run table:cards` after
 each refresh; the server warns when the bulk file is newer.
 
+`bun run site:cards` turns that file into `data/site-cards/`, the static card files the website
+loads to run single player in the browser (`packages/server/src/cards/site-cards.ts`): a name file
+for every card, the supported pool with full card data, 64 body shards for the rest, the banned
+list and the bot decks. Every file but `manifest.json` carries its SHA-256 in its name, and the
+manifest records the bulk file's hash and the engine commit that built the pool.
+
 The current file was downloaded 2026-08-28 from `oracle-cards-20260828090156.jsonl.gz`
 (38,626 cards, 202,879,599 bytes).
 

@@ -1830,8 +1830,7 @@ test('Zopandrel: indestructible counter grants indestructible', async ({ page })
   await expect(zopandrel).toHaveClass(/actionable/);
   await zopandrel.click();
   await expect(page.getByText('Activate Zopandrel, Hunger Dominus')).toBeVisible();
-  await confirm(page);
-  await permanent(page, 'Two-Mana Bear').click();
+  // The cost sacrifices exactly the two other creatures, so there is no choice to make.
   await confirm(page);
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
