@@ -1,5 +1,5 @@
 import { interpretCard } from '@mtg/engine';
-import { describeUnmodeled } from '../cards/card-report';
+import { describeUnmodeled } from '../cards/unmodeled';
 import { isProvisional } from '../cards/provisional';
 import type {
   Color,

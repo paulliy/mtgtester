@@ -11,7 +11,6 @@
  * `implemented-unreviewed`. Evidence fields are copied only where the ledger has them.
  */
 
-import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { interpretCard } from '@mtg/engine';
@@ -23,9 +22,8 @@ import type {
   CardReportStatus,
   CardTestScenarioMetadata,
   OracleCard,
-  UnmodeledCard,
 } from '@mtg/shared';
-import { canonicalOracle } from './coverage-contract';
+import { oracleSha256 } from './unmodeled';
 import type { OracleIndex } from './oracle-index';
 import { isProvisional, type ProvisionalCatalog } from './provisional';
 
@@ -52,10 +50,7 @@ export interface AuditEntry {
 /** The ledger by Oracle id, merged across its batches. */
 export type CatalogAudit = ReadonlyMap<string, AuditEntry>;
 
-/** SHA-256 of the card's canonical Oracle record, the hash lab scenarios and the ledger pin. */
-export function oracleSha256(card: OracleCard): string {
-  return createHash('sha256').update(canonicalOracle(card)).digest('hex');
-}
+export { describeUnmodeled, oracleSha256 } from './unmodeled';
 
 /**
  * Read and merge the ledger. An entry that says `unsupported` wins over any other batch's entry
@@ -193,25 +188,4 @@ export function buildCardReport(names: readonly string[], deps: CardReportDeps):
     auditAvailable: deps.audit !== null,
     labAvailable: deps.scenarios !== null,
   };
-}
-
-/**
- * The distinct cards of a deck the engine's interpreter does not model on its own, in name order:
- * `unsupported` where nothing else covers them, `provisional` where the server admitted a
- * machine-checked definition (ADR 0050). A fully modeled deck gives an empty list.
- */
-export function describeUnmodeled(
-  cards: readonly OracleCard[],
-  provisional: ProvisionalCatalog | undefined,
-): UnmodeledCard[] {
-  const byName = new Map<string, UnmodeledCard>();
-  for (const card of cards) {
-    if (byName.has(card.name) || interpretCard(card).modeled) continue;
-    byName.set(card.name, {
-      name: card.name,
-      oracleSha256: oracleSha256(card),
-      status: isProvisional(provisional, card) ? 'provisional' : 'unsupported',
-    });
-  }
-  return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
