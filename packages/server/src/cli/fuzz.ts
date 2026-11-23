@@ -50,12 +50,8 @@ import {
   withCard,
   type Outcome,
 } from './fuzz-plan';
-import {
-  describeCatalog,
-  loadProvisionalCatalog,
-  type ProvisionalAdmission,
-  type ProvisionalDemotion,
-} from '../cards/provisional';
+import { describeCatalog, type ProvisionalAdmission } from '../cards/provisional';
+import { loadProvisionalCatalog, type ProvisionalDemotion } from '../cards/provisional-load';
 
 /** Real Oracle data for the EDHREC pool, which holds every review-queue card. */
 const PINNED_ORACLE = 'packages/server/fixtures/edhrec-pinned-oracle.json';

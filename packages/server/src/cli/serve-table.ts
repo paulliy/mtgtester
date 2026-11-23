@@ -21,7 +21,7 @@ import { buildSupportedPool, type SupportedPool } from '../cards/pool';
 import type { RawScryfallCard } from '../cards/scryfall';
 import { convertBulkCards, loadTableCards, TABLE_CARDS_PATH } from '../cards/table-cards';
 import { GameStore } from '../db';
-import { loadBannedList } from '../decks/banned';
+import { loadBannedList } from '../decks/banned-file';
 import { loadTableConfig, publicOriginFor, type TableConfig } from '../table/config';
 import { startTableServer } from '../table/table-http';
 import { wireTables } from '../table/wiring';

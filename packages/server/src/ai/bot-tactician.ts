@@ -12,22 +12,12 @@ import {
   type DiplomacyPlay,
   type ScoredAction,
 } from '@mtg/bot';
-import { buildCardKnowledge } from './card-traits';
+import { knowledgeFor } from '../match/card-knowledge';
 import type { EscalationTrigger } from './config';
 import { firedTriggers } from './escalation';
 
-const knowledgeByEngine = new WeakMap<object, CardKnowledge>();
-
-/** One card-traits lookup per game, shared by every seat. */
-export function knowledgeFor(engine: Engine): CardKnowledge {
-  let knowledge = knowledgeByEngine.get(engine);
-  if (knowledge === undefined) {
-    const defs = typeof engine.cardDefinitions === 'function' ? engine.cardDefinitions() : [];
-    knowledge = buildCardKnowledge(defs);
-    knowledgeByEngine.set(engine, knowledge);
-  }
-  return knowledge;
-}
+// Moved so heuristic-only sessions can use it without loading `ai/`; re-exported for callers here.
+export { knowledgeFor };
 
 /** Decision types where a close call changes the board enough to be worth a model call. */
 const ESCALATABLE: ReadonlySet<string> = new Set([

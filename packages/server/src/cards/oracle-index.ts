@@ -8,7 +8,6 @@
  * the name and never guess (§8.2 step 2).
  */
 
-import { readFileSync } from 'node:fs';
 import type { OracleCard } from '@mtg/shared';
 import { looseKey, strictKey } from './normalize';
 import { toOracleCard, type RawScryfallCard } from './scryfall';
@@ -94,25 +93,4 @@ export function buildOracleIndexFromCards(cards: readonly OracleCard[]): OracleI
       return byOracleId.get(oracleId) ?? null;
     },
   };
-}
-
-/**
- * Load and index the Scryfall bulk file. Reads the whole file once (acceptable for a one-time
- * import; games use the cache). Throws a clear error if the file is missing so the operator
- * knows to run the download in `data/README.md`.
- */
-export function loadOracleIndexFromFile(path: string): OracleIndex {
-  let text: string;
-  try {
-    text = readFileSync(path, 'utf8');
-  } catch {
-    throw new Error(
-      `Scryfall bulk data not found at "${path}". Download it first — see data/README.md.`,
-    );
-  }
-  const parsed: unknown = JSON.parse(text);
-  if (!Array.isArray(parsed)) {
-    throw new Error(`Expected a JSON array of cards in "${path}", got ${typeof parsed}.`);
-  }
-  return buildOracleIndex(parsed as RawScryfallCard[]);
 }

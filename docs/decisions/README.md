@@ -58,7 +58,7 @@ To add an ADR, take the next unused number, put a `Status:` line in the form abo
 | [0028](0028-ai-counterfactual-routing-cache-and-promotion.md)  | Counterfactuals, routing, cache evidence, and promotion                                           | Accepted (2026-09-21)  | 2026-09-21 | —                        |
 | [0029](0029-player-smart-yield.md)                             | Player smart yield                                                                                | Accepted (2026-10-06)  | 2026-10-06 | —                        |
 | [0030](0030-manual-mana-activation.md)                         | Manual mana activation                                                                            | Accepted (2026-10-23)  | 2026-10-23 | 0031 (amends)            |
-| [0031](0031-multiplayer-tables.md)                             | Multiplayer tables                                                                                | Accepted (2026-10-29)  | 2026-10-27 | —                        |
+| [0031](0031-multiplayer-tables.md)                             | Multiplayer tables                                                                                | Accepted (2026-10-29)  | 2026-10-27 | 0053 (amends)            |
 | [0032](0032-server-computed-presentation.md)                   | Server-computed presentation                                                                      | Accepted (2026-10-29)  | 2026-10-27 | —                        |
 | [0033](0033-forge-informed-card-authoring.md)                  | Faster card authoring, informed by Forge                                                          | Accepted (2026-10-29)  | 2026-10-27 | —                        |
 | [0034](0034-fail-loud-execution-and-strict-tests.md)           | Fail loud in card execution and in the tests that prove it                                        | Accepted (2026-10-29)  | 2026-10-27 | 0036 (amends)            |
@@ -79,6 +79,7 @@ To add an ADR, take the next unused number, put a `Status:` line in the form abo
 | [0049](0049-missing-primitives.md)                             | Remaining Card Primitive Backlog                                                                  | Completed (2026-11-14) | 2026-07-29 | —                        |
 | [0050](0050-provisional-card-tier.md)                          | Provisional cards, an opt-in trust tier for machine-checked patches                               | Accepted (2026-11-17)  | 2026-11-14 | —                        |
 | [0051](0051-bot-answer-discipline-and-play-styles.md)          | Bot answer discipline, face damage and play styles                                                | Proposed               | 2026-11-19 | —                        |
-| [0052](0052-decktank-visual-identity.md)                       | Decktank visual identity                                                                          | Accepted (2026-11-22)  | 2026-11-22 | —                        |
+| [0052](0052-decktank-visual-identity.md)                       | Decktank visual identity                                                                          | Accepted (2026-11-22)  | 2026-11-22 | 0053 (amends)            |
+| [0053](0053-single-player-in-the-browser.md)                   | Single player runs in the browser                                                                 | Accepted (2026-11-23)  | 2026-11-23 | —                        |
 
 <!-- adr-index:end -->

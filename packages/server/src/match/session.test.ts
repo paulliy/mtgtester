@@ -42,6 +42,7 @@ import {
   StrategyCoordinator,
   type AiClient,
 } from '../ai';
+import { sessionAi } from './session-ai';
 import { MatchSession } from './session';
 import { strictCardTestScenario } from '../cards/card-test-scenarios';
 import type { SeatSetup } from './setup';
@@ -158,6 +159,7 @@ describe('MatchSession — live pacing and the compute-ahead cap (brief §10.1)'
       seed: 'strategist-event-abandon',
       seats: seats(),
       providerKind: 'ai',
+      ai: sessionAi,
       gameMode: 'spectator',
       livePaceMs: 0,
       reflectionEnabled: false,

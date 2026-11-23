@@ -6,7 +6,6 @@
  * aren't enumerable from the markdown alone — see `validate.ts`.
  */
 
-import { readFileSync } from 'node:fs';
 import { strictKey } from '../cards/normalize';
 
 export interface BannedList {
@@ -38,8 +37,4 @@ export function parseBannedList(markdown: string): BannedList {
 export function bannedListFromNames(names: readonly string[]): BannedList {
   const keys = new Set(names.map((name) => strictKey(name)));
   return { names: [...names], isBanned: (name: string) => keys.has(strictKey(name)) };
-}
-
-export function loadBannedList(path: string): BannedList {
-  return parseBannedList(readFileSync(path, 'utf8'));
 }

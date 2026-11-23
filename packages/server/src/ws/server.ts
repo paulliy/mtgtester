@@ -34,6 +34,7 @@ import type { BannedList } from '../decks/banned';
 import type { ReportSeatSource } from '../match/report';
 import type { ReplayIdentity } from '../match/replay-config';
 import { MatchSession } from '../match/session';
+import { sessionAi } from '../match/session-ai';
 import { withoutActionData } from '../match/presentation';
 import { disclosedSeatSummaries, seedLabel, testerPolicy } from '../match/disclosure';
 import { BatchManager, validateBatch } from '../batch/manager';
@@ -1163,6 +1164,7 @@ export class GameServer {
     const route = routeOf(gameMode);
     const policy = testerPolicy(gameMode);
     const session = new MatchSession({
+      ai: sessionAi,
       gameId,
       seed,
       seats: setup.seats,
@@ -1250,6 +1252,7 @@ export class GameServer {
     }
 
     const session = new MatchSession({
+      ai: sessionAi,
       gameId,
       seed: scenario.seed,
       seats: scenario.seats,

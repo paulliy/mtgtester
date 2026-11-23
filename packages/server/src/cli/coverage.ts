@@ -26,7 +26,7 @@ import { assertCompleteCoverage } from '../cards/coverage-contract';
 import { importDeck } from '../decks/source';
 import { resolveDeck } from '../decks/resolve';
 import { validateDeck } from '../decks/validate';
-import { loadBannedList } from '../decks/banned';
+import { loadBannedList } from '../decks/banned-file';
 
 const FIXTURE_DIR = 'packages/server/fixtures/coverage-decks';
 /** Precon/catalog leftovers that must not re-enter required coverage counts. */

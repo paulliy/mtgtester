@@ -19,6 +19,7 @@ import { DEFAULT_AI_CONFIG, StrategyCoordinator, type AiClient, type AiConfig } 
 import type { GameStore } from '../db';
 import { GameRecorder, type SqliteLike } from '../db/games';
 import type { ReplayIdentity } from './replay-config';
+import { sessionAi } from './session-ai';
 import { MatchSession } from './session';
 import type { SeatSetup } from './setup';
 import { tablePolicy, testerPolicy } from './disclosure';
@@ -121,6 +122,7 @@ function table(
     ...(options.engineLimits !== undefined ? { engineLimits: options.engineLimits } : {}),
     seats: seats(),
     providerKind: options.providerKind ?? 'random',
+    ...(options.providerKind === 'ai' && { ai: sessionAi }),
     gameMode: 'table',
     seatControllers: {
       P1: 'human',

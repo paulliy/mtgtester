@@ -17,15 +17,15 @@ import { resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
 import { Engine, runToCompletion, type EnginePlayerConfig } from '@mtg/engine';
 import { HeuristicDecisionProvider } from '@mtg/bot';
-import { loadOracleIndexFromFile } from '../cards/oracle-index';
+import { loadOracleIndexFromFile } from '../cards/oracle-index-file';
 import { importDeck } from '../decks/source';
 import { resolveDeck } from '../decks/resolve';
 import {
   describeCatalog,
-  loadProvisionalCatalog,
   provisionalGameConfig,
   type ProvisionalCatalog,
 } from '../cards/provisional';
+import { loadProvisionalCatalog } from '../cards/provisional-load';
 
 const BULK_PATH = 'data/scryfall-oracle-cards.json';
 

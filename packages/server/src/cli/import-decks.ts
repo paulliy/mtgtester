@@ -11,8 +11,8 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { loadOracleIndexFromFile } from '../cards/oracle-index';
-import { loadBannedList } from '../decks/banned';
+import { loadOracleIndexFromFile } from '../cards/oracle-index-file';
+import { loadBannedList } from '../decks/banned-file';
 import { runDeckPipeline, type DeckPipelineResult } from '../decks/pipeline';
 import { GameStore } from '../db';
 

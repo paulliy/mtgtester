@@ -15,7 +15,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
-import { loadOracleIndexFromFile } from '../cards/oracle-index';
+import { loadOracleIndexFromFile } from '../cards/oracle-index-file';
 import { importDeck } from '../decks/source';
 import { resolveDeck } from '../decks/resolve';
 

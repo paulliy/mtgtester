@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { resolve } from 'node:path';
-import { parseBannedList, loadBannedList } from './banned';
+import { parseBannedList } from './banned';
+import { loadBannedList } from './banned-file';
 
 describe('parseBannedList', () => {
   it('reads #### headings and matches regardless of apostrophe style', () => {

@@ -24,10 +24,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { ParsedDeck } from '@mtg/shared';
 import { importDeck } from '../decks/source';
-import { loadOracleIndexFromFile } from '../cards/oracle-index';
+import { loadOracleIndexFromFile } from '../cards/oracle-index-file';
 import { resolveDeck } from '../decks/resolve';
 import { validateDeck } from '../decks/validate';
-import { loadBannedList } from '../decks/banned';
+import { loadBannedList } from '../decks/banned-file';
 
 const OUT_DIR = 'packages/server/fixtures/coverage-decks';
 
