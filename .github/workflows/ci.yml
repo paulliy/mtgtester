@@ -385,6 +385,10 @@ jobs:
       # and a seeded player game against built-in bots.
       - if: env.SETUP == 'true'
         run: bun run test:e2e:setup
+      # Single player in the browser (ADR 0053): the bundled game worker plays a bot game in
+      # headless Chromium from the site card files, with no game server.
+      - if: env.SETUP == 'true'
+        run: bun run test:e2e:browser
       # The specs record a trace for every test (trace: 'on', preserveOutput: 'always'); this checks
       # tracing is still on. It runs before the table suite writes test-results/table. Actions
       # storage is limited, so CI uploads the traces only when a step fails; a passing run's viewer

@@ -30,6 +30,8 @@ const BROWSER_MODULES: ReadonlyArray<[module: string, name: string]> = [
   ['decks/banned', 'bannedListFromNames'],
   ['cards/site-cards', 'SiteCards'],
   ['host/game-host', 'GameHost'],
+  ['host/worker-core', 'serveWorker'],
+  ['db/deck-store', 'MemoryDeckStore'],
 ];
 
 /** Packages that arrive only with the model code. */

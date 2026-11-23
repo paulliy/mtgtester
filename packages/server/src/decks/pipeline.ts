@@ -14,7 +14,8 @@ import type {
   ValidationIssue,
 } from '@mtg/shared';
 import type { OracleIndex } from '../cards/oracle-index';
-import type { ArchetypeSource, GameStore } from '../db';
+import type { ArchetypeSource } from '../db';
+import type { DeckStore } from '../db/deck-store';
 import { inferArchetype, type ArchetypeResult } from './archetype';
 import { buildStrategyProfile } from './strategy-profile';
 import type { BannedList } from './banned';
@@ -48,7 +49,7 @@ export interface PipelineDeps {
   index: OracleIndex;
   banned: BannedList;
   /** When provided and the deck is valid, the deck + snapshot are persisted. */
-  store?: GameStore;
+  store?: DeckStore;
   /**
    * Optional AI polish for a heuristic tag (ADR 0022 §5, Stage 2). Returning `null` — which it
    * does whenever it is disabled or anything goes wrong — leaves the heuristic tag standing, so
