@@ -214,6 +214,11 @@ function permanent(page: Page, name: string) {
     .filter({ has: page.getByRole('img', { name, exact: true }) });
 }
 
+/** Your hand count in your seat's header ("hand 2"), which the board writes in lower case. */
+function yourHandCount(page: Page, count: number) {
+  return page.locator('.human-zone .seat-sub').getByText(`hand ${count}`, { exact: true });
+}
+
 function handCard(page: Page, name: string) {
   return page.locator('.hand-card:not(.hand-card-leave-active)', { hasText: name });
 }
@@ -1858,7 +1863,7 @@ async function runArcaneDenial(page: Page, drawCount: 0 | 2): Promise<void> {
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(handCard(page, 'Caster Secret Draw')).toBeVisible();
   const p4 = page.locator('.opponent').filter({ hasText: 'P4' });
-  await expect(p4).toContainText(`${drawCount} in hand`);
+  await expect(p4).toContainText(`hand ${drawCount}`);
   await expect(page.getByText('Target Secret Alpha')).toHaveCount(0);
   await expect(page.getByText('Target Secret Beta')).toHaveCount(0);
   await expect(page.getByText(/Lab Pending Spell is countered by Arcane Denial/i)).toBeVisible();
@@ -2649,7 +2654,7 @@ test('Voice of Many: draw for each opponent with fewer creatures', async ({ page
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Voice of Many')).toBeVisible();
   // Two of the three opponents control fewer creatures, so exactly two cards are drawn.
-  await expect(page.getByText(/Hand\s*2/).first()).toBeVisible();
+  await expect(yourHandCount(page, 2)).toBeVisible();
   await expect(page.getByText(/Library\s*1/).first()).toBeVisible();
 });
 
@@ -2731,9 +2736,9 @@ test('Loran of the Third Path: you and target opponent each draw', async ({ page
   await confirm(page);
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText(/Hand\s*1/).first()).toBeVisible();
-  await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText('1 in hand');
-  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('0 in hand');
+  await expect(yourHandCount(page, 1)).toBeVisible();
+  await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText('hand 1');
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('hand 0');
 });
 
 test('Rishkar, Peema Renegade: two counters, then countered creatures tap for G', async ({
@@ -2943,7 +2948,7 @@ test('Aether Channeler: return another target nonland permanent', async ({ page 
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Lab Ox')).toHaveCount(0);
-  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('1 in hand');
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('hand 1');
   await expect(permanent(page, 'Aether Channeler')).toBeVisible();
 });
 
@@ -2961,8 +2966,8 @@ test('Aether Channeler: create a 1/1 white Bird with flying', async ({ page }) =
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
   await expect(permanent(page, 'Bird')).toHaveCount(1);
   await expect(permanent(page, 'Lab Ox')).toBeVisible();
-  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('0 in hand');
-  await expect(page.getByText(/Hand\s*0/).first()).toBeVisible();
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('hand 0');
+  await expect(yourHandCount(page, 0)).toBeVisible();
 });
 
 test('Aether Channeler: draw a card', async ({ page }) => {
@@ -2977,7 +2982,7 @@ test('Aether Channeler: draw a card', async ({ page }) => {
   await page.getByRole('button', { name: 'Draw a card', exact: true }).click({ timeout: 15_000 });
 
   await expect(page.getByText(/game over/i).first()).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText(/Hand\s*1/).first()).toBeVisible();
+  await expect(yourHandCount(page, 1)).toBeVisible();
   await expect(permanent(page, 'Bird')).toHaveCount(0);
   await expect(permanent(page, 'Lab Ox')).toBeVisible();
 });

@@ -478,7 +478,7 @@ test('Cut a Deal: each opponent draws, then you draw three', async ({ page }) =>
   await resolveCutADeal(page);
   await expect(page.locator('.human-zone .hand-card')).toHaveCount(3);
   for (const seat of ['P2', 'P3', 'P4'] as const)
-    await expect(page.locator('.opponent').filter({ hasText: seat })).toContainText('1 in hand');
+    await expect(page.locator('.opponent').filter({ hasText: seat })).toContainText('hand 1');
 });
 
 test('Cut a Deal: an empty library draws nothing and you draw two', async ({ page }) => {
@@ -487,9 +487,12 @@ test('Cut a Deal: an empty library draws nothing and you draw two', async ({ pag
   // P3 has no library when the spell resolves: P3 draws nothing (and loses at the next
   // state-based action), so the caster draws one per opponent who ACTUALLY drew — two.
   await expect(page.locator('.human-zone .hand-card')).toHaveCount(2);
-  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('1 in hand');
-  await expect(page.locator('.opponent').filter({ hasText: 'P4' })).toContainText('1 in hand');
-  await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText('0 in hand');
+  await expect(page.locator('.opponent').filter({ hasText: 'P2' })).toContainText('hand 1');
+  await expect(page.locator('.opponent').filter({ hasText: 'P4' })).toContainText('hand 1');
+  // P3's panel reads "out" with the reason instead of its counts.
+  await expect(page.locator('.opponent').filter({ hasText: 'P3' })).toContainText(
+    'Lost drawing from an empty library.',
+  );
 });
 
 function humanPermanent(page: Page, name: string) {
@@ -589,7 +592,7 @@ test('Humble Defector: draw two and give it to the chosen opponent', async ({ pa
     before + 2,
   );
   for (const seat of ['P2', 'P3', 'P4'])
-    await expect(page.locator(`.opponent[data-seat="${seat}"]`)).toContainText('0 in hand');
+    await expect(page.locator(`.opponent[data-seat="${seat}"]`)).toContainText('hand 0');
 });
 
 test('Humble Defector: cannot activate off your turn', async ({ page }) => {

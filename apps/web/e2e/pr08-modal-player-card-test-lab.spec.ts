@@ -53,7 +53,7 @@ for (const [index, id] of PR08_MODAL_PLAYER_SCENARIO_IDS.entries()) {
         await chooseTargetPlayer(page, 'P2');
         await chooseTargetPlayer(page, 'P3');
         await expect(opponentPermanent(page, 'Lab P2 Sacrifice Creature', 'P2')).toHaveCount(0);
-        await expect(opponent(page, 'P3').locator('.opp-meta')).toContainText('0 in hand');
+        await expect(opponent(page, 'P3').locator('.seat-sub')).toContainText('hand 0');
         await expect(opponent(page, 'P4').locator('.life-badge')).toHaveText('35');
       } else {
         const pair = page.getByRole('button').filter({
@@ -63,7 +63,7 @@ for (const [index, id] of PR08_MODAL_PLAYER_SCENARIO_IDS.entries()) {
         await pair.click();
         await chooseTargetPlayer(page, 'P2');
         await chooseTargetPlayer(page, 'P3');
-        await expect(opponent(page, 'P2').locator('.opp-meta')).toContainText('0 in hand');
+        await expect(opponent(page, 'P2').locator('.seat-sub')).toContainText('hand 0');
         await expect(opponent(page, 'P3').locator('.life-badge')).toHaveText('35');
       }
       await expect(humanZoneImage(page, 'Vindictive Lich', 'Graveyard')).toHaveCount(1);

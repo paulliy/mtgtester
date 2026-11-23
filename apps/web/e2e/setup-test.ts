@@ -1,21 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-// The player board keeps its log in a Game info column, your lands, graveyard and exile in piles,
-// and opponents' zones behind a button, all closed at first. Specs read them as part of the board, so open them; the board's own
-// spec checks the closed piles.
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    try {
-      localStorage.setItem('mtg.playerGameInfoOpen', 'true');
-      localStorage.setItem('mtg.playerOpponentZonesOpen', 'true');
-      for (const pile of ['lands', 'graveyard', 'exile']) {
-        localStorage.setItem(`mtg.playerPile.${pile}`, 'true');
-      }
-    } catch {
-      // Storage blocked: specs that read the log will say so.
-    }
-  });
-});
+// Each browser's starting storage (the opening counts as seen; the board's log, piles and
+// opponents' zones open) is the `storageState` in playwright.setup.config.ts.
 
 // These specs share one DB-backed server. Release a player seat even when a scenario fails,
 // so the next spec can independently start its game instead of inheriting that failure.

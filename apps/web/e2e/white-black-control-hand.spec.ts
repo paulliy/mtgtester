@@ -62,8 +62,8 @@ test('Duress: reveal P2’s hand and choose a noncreature, nonland card', async 
   ).toHaveCount(0);
   await artifactChoice.getByRole('button', { name: 'Discard', exact: true }).click();
 
-  await expect(opponent(page, 'P2')).toContainText('3 in hand');
-  await expect(opponent(page, 'P2').getByText('Graveyard')).toBeVisible();
+  await expect(opponent(page, 'P2')).toContainText('hand 3');
+  await expect(opponent(page, 'P2').getByRole('heading', { name: /^Graveyard \(/ })).toBeVisible();
   await expect(opponent(page, 'P2').getByRole('img', { name: 'Lab P2 Artifact' })).toBeVisible();
   await expect(page.getByText('Lab Private Library Card')).toHaveCount(0);
 });
@@ -73,7 +73,7 @@ test('Thoughtseize: discard a nonland card and lose 2 life', async ({ page }) =>
   await runScenario(page, title);
   await cast(page, 'Thoughtseize', true);
 
-  await expect(opponent(page, 'P2')).toContainText('1 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 1');
   await expect(opponent(page, 'P2').getByRole('heading', { name: 'Graveyard (1)' })).toBeVisible();
   await expect(page.locator('.human-zone .life-badge')).toHaveText('38');
   await expect(page.getByText(/discards Lab P2 Creature/i).first()).toBeVisible();

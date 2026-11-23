@@ -58,15 +58,15 @@ test('Library of Leng keeps the normal eight-card hand through cleanup', async (
   await page.getByRole('button', { name: 'Confirm', exact: true }).click();
 
   await expect(permanent(page, 'Library of Leng')).toBeVisible({ timeout: 15_000 });
-  // The opponent panel shows its library count as "lib 23", titled "Cards in library".
+  // The opponent panel shows its library count as "library 23", titled "Cards in library".
   const p2Library = opponent(page, 'P2').getByTitle('Cards in library');
-  await passUntil(page, p2Library.filter({ hasText: /^\s*lib\s*23\s*$/ }));
+  await passUntil(page, p2Library.filter({ hasText: /^\s*library\s*23\s*$/ }));
   await expect(
     page.locator('.hand-card:not(.hand-card-leave-active)').filter({ hasText: 'Swamp' }),
   ).toHaveCount(8, {
     timeout: 20_000,
   });
-  await expect(p2Library).toHaveText(/^\s*lib\s*23\s*$/);
+  await expect(p2Library).toHaveText(/^\s*library\s*23\s*$/);
 });
 
 test('Tinybones pays its six-mana activation and affects each opponent by hand count', async ({
@@ -83,9 +83,9 @@ test('Tinybones pays its six-mana activation and affects each opponent by hand c
   const tinybonesPermanent = permanent(page, 'Tinybones, Trinket Thief');
   await expect(tinybonesPermanent).toBeVisible({ timeout: 15_000 });
 
-  await expect(opponent(page, 'P2')).toContainText('0 in hand');
-  await expect(opponent(page, 'P3')).toContainText('1 in hand');
-  await expect(opponent(page, 'P4')).toContainText('0 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 0');
+  await expect(opponent(page, 'P3')).toContainText('hand 1');
+  await expect(opponent(page, 'P4')).toContainText('hand 0');
 
   await expect(tinybonesPermanent).toHaveClass(/actionable/, { timeout: 15_000 });
   await tinybonesPermanent.click();
@@ -95,5 +95,5 @@ test('Tinybones pays its six-mana activation and affects each opponent by hand c
   await expect(opponent(page, 'P2').locator('.life-badge')).toHaveText('30', { timeout: 15_000 });
   await expect(opponent(page, 'P3').locator('.life-badge')).toHaveText('40');
   await expect(opponent(page, 'P4').locator('.life-badge')).toHaveText('30');
-  await expect(opponent(page, 'P3')).toContainText('1 in hand');
+  await expect(opponent(page, 'P3')).toContainText('hand 1');
 });

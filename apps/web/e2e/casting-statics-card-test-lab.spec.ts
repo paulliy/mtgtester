@@ -94,7 +94,7 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await cast(page, 'CS Lab Shock', ['P2']);
     await passStackUntil(page, life(page, 'P2').filter({ hasText: '38' }));
     // {1}{R}: both Mountains paid for the Shock.
-    await expect(page.locator('.human-zone').getByText(/Lands \(2\) · 0 untapped/)).toBeVisible();
+    await expect(page.locator('.human-zone').getByText(/Lands 2 · 0 untapped/)).toBeVisible();
   },
 
   'casting-statics-torbran-thane-of-red-fell-viewer-plus-two': async (page) => {

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import PageTitle from '../components/shell/PageTitle.vue';
+import PageFoot from '../components/shell/PageFoot.vue';
 import { computed, ref, watch } from 'vue';
 import type { DebugFlags } from '@mtg/shared';
 import { useGameStore } from '../stores/game';
@@ -84,7 +86,7 @@ function exportGame(): void {
   <section class="debug">
     <header>
       <div>
-        <h1>Debug panel</h1>
+        <PageTitle place="III. Workshop · c. Debug">Debug panel</PageTitle>
         <p v-if="game.gameId">Game {{ game.gameId }}</p>
         <p v-else>Start a recorded game to inspect diagnostics.</p>
       </div>
@@ -159,6 +161,7 @@ function exportGame(): void {
       <h3>Response</h3>
       <pre>{{ selected.response_json }}</pre>
     </section>
+    <PageFoot place="III. Workshop · c. Debug" />
   </section>
 </template>
 

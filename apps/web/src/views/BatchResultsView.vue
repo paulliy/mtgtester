@@ -1,4 +1,6 @@
 ﻿<script setup lang="ts">
+import PageTitle from '../components/shell/PageTitle.vue';
+import PageFoot from '../components/shell/PageFoot.vue';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import type { BatchGameSummary, BatchResults } from '@mtg/shared';
@@ -57,7 +59,7 @@ onUnmounted(() => {
     <header class="result-head">
       <div>
         <p class="eyebrow">Batch {{ batchId }}</p>
-        <h1>Simulation results</h1>
+        <PageTitle place="II. Records · b. Batch runs">Simulation results</PageTitle>
         <p v-if="data" class="hint">Seed {{ data.progress.seed }} · {{ data.progress.status }}</p>
       </div>
       <div class="actions">
@@ -149,6 +151,7 @@ onUnmounted(() => {
         >Open batch-filtered deck stats →</RouterLink
       >
     </template>
+    <PageFoot place="II. Records · b. Batch runs" />
   </section>
 </template>
 <style scoped>

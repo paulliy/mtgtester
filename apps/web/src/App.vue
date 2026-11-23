@@ -6,6 +6,7 @@ import PhoneMenu from './components/shell/PhoneMenu.vue';
 import RulerNav from './components/shell/RulerNav.vue';
 import ThemeControl from './components/shell/ThemeControl.vue';
 import { currentPlaceIndex, navPlaces } from './lib/navigation';
+import { openingScreen } from './lib/opening';
 import { useCardPreviewStore } from './stores/cardPreview';
 import { useGameStore } from './stores/game';
 
@@ -19,6 +20,14 @@ const places = computed(() =>
 );
 const current = computed(() =>
   currentPlaceIndex(places.value, typeof route.name === 'string' ? route.name : null),
+);
+/**
+ * While you play, the board has the whole window, as the Decktank board design draws it: its own
+ * header (turn, phase ruler, Game log, Leave game) replaces the site's ruler, which comes back on
+ * any other page, including the spectator board and a finished game.
+ */
+const boardMode = computed(
+  () => route.name === 'game' && game.gameMode === 'singlePlayer' && game.gameOver === null,
 );
 
 /**
@@ -49,7 +58,12 @@ onUnmounted(() => {
 
 <template>
   <div class="app" :class="{ 'reduced-motion': game.reducedMotion }">
-    <header class="topbar">
+    <!-- The New game opening tucks the header away until a mode is picked (Main.dc.html). -->
+    <header
+      class="topbar"
+      :class="{ 'board-mode': boardMode, opening: openingScreen && route.name === 'setup' }"
+      :aria-hidden="openingScreen && route.name === 'setup' ? 'true' : undefined"
+    >
       <RouterLink to="/" class="brand">Decktank</RouterLink>
       <PhoneMenu :places="places" :current="current" />
       <!-- The board view fills this with the game's status (round, phase, priority) via a
@@ -85,9 +99,16 @@ onUnmounted(() => {
   min-height: 0;
   overflow: auto;
 }
+/* The opening plate draws past the setup view, up under the tucked-away header. */
+.app:has(> .topbar.opening) > .view {
+  overflow: visible;
+}
 .topbar {
   position: relative;
   z-index: 40;
+  transition:
+    transform 0.9s var(--ease),
+    opacity 0.6s var(--ease) 0.2s;
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
@@ -96,6 +117,12 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--ink);
   background: var(--paper);
   flex-shrink: 0;
+}
+.topbar.opening {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, -100%, 0);
+  transition: none;
 }
 .brand {
   align-self: center;
@@ -117,8 +144,43 @@ onUnmounted(() => {
   min-width: 0;
   font-size: 0.8rem;
 }
+/* A game's status (turn, phase ruler, resources) is a second row under the nav, as the board
+   header in the Decktank design is, so neither crowds the other. */
+.status-slot:not(:empty) {
+  order: 10;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  row-gap: 0.4rem;
+  min-height: 3.4rem;
+  margin: 0 -1.25rem;
+  padding: 0.35rem 1.25rem;
+  border-top: 1px solid var(--rule);
+}
 .topbar-theme {
   align-self: center;
+}
+/* The board's own header: the status row alone, the site's brand, ruler and theme folded away. */
+.topbar.board-mode > .brand,
+.topbar.board-mode > .phone-menu,
+.topbar.board-mode > .ruler,
+.topbar.board-mode > .topbar-theme {
+  display: none;
+}
+.topbar.board-mode .status-slot:not(:empty) {
+  order: 0;
+  margin: 0 -1.25rem;
+  min-height: 3.6rem;
+  padding: 0 1.25rem;
+  border-top: 0;
+  flex-wrap: nowrap;
+  gap: 1rem;
+}
+@media (max-width: 760px) {
+  .topbar.board-mode .status-slot:not(:empty) {
+    flex-wrap: wrap;
+    padding: 0.5rem 1rem;
+    margin: 0 -1rem;
+  }
 }
 @media (max-width: 760px) {
   .topbar {

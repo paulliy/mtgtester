@@ -47,6 +47,27 @@ export default defineConfig({
     ...(chromiumExecutable === undefined
       ? {}
       : { launchOptions: { executablePath: chromiumExecutable } }),
+    // Every browser starts as a returning visitor: the New game opening ("Where to?") counts as
+    // seen, so specs land on the setup panel, and the board's log, piles and opponents' zones are
+    // open because specs read them as part of the board. This lives here rather than in a
+    // `beforeEach` of `setup-test.ts`: a hook in a shared module registers only for the first spec
+    // file that loads it in a worker, so the next file's first test started without it.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: 'http://127.0.0.1:5173',
+          localStorage: [
+            { name: 'decktank.opened', value: 'true' },
+            { name: 'mtg.playerGameInfoOpen', value: 'true' },
+            { name: 'mtg.playerOpponentZonesOpen', value: 'true' },
+            { name: 'mtg.playerPile.lands', value: 'true' },
+            { name: 'mtg.playerPile.graveyard', value: 'true' },
+            { name: 'mtg.playerPile.exile', value: 'true' },
+          ],
+        },
+      ],
+    },
   },
   webServer: [
     {

@@ -170,19 +170,20 @@ function fanStyle(index: number): Record<string, string> {
   padding: 1.5rem 1rem 2rem;
   box-sizing: border-box;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse at 50% 35%, rgb(40 34 52 / 0.82), rgb(6 6 10 / 0.96) 70%),
-    rgb(6 6 10 / 0.6);
-  backdrop-filter: blur(3px);
-  color: #fff;
+  /* Decktank (ADR 0052): the page dimmed under a paper wash, not a dark stage. */
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(4px);
+  color: var(--ink);
 }
 .title {
   margin: 0;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.03em;
   text-transform: uppercase;
-  color: rgb(255 255 255 / 0.75);
+  color: var(--ink);
 }
 /*
  * The fan: cards overlap by a quarter of their width and turn about a point below the row, so the
@@ -205,7 +206,7 @@ function fanStyle(index: number): Record<string, string> {
   border: none;
   background: none;
   border-radius: 5%;
-  box-shadow: 0 12px 28px rgb(0 0 0 / 0.6);
+  box-shadow: 0 10px 24px var(--lift-shadow);
   transform-origin: 50% 140%;
   transform: translateY(calc(var(--d2) * 1.4rem)) rotate(calc(var(--d) * 9deg));
   transition:
@@ -223,7 +224,7 @@ function fanStyle(index: number): Record<string, string> {
   z-index: 10;
   translate: 0 -1.6rem;
   scale: 1.08;
-  box-shadow: 0 18px 40px rgb(0 0 0 / 0.7);
+  box-shadow: 0 16px 34px var(--lift-shadow);
 }
 @keyframes deal {
   from {
@@ -235,7 +236,7 @@ function fanStyle(index: number): Record<string, string> {
   cursor: pointer;
 }
 .fan-card.pick:focus-visible {
-  outline: 3px solid #fbbf24;
+  outline: 2px solid var(--ink);
   outline-offset: 3px;
 }
 .pick-label {
@@ -244,12 +245,12 @@ function fanStyle(index: number): Record<string, string> {
   bottom: 8%;
   translate: -50% 0;
   padding: 0.3rem 0.8rem;
-  border-radius: 999px;
-  background: rgb(11 13 17 / 0.88);
-  border: 1px solid #fbbf24;
-  color: #fde68a;
-  font-size: 0.85rem;
-  font-weight: 700;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   white-space: nowrap;
   opacity: 0;
   transition: opacity 120ms ease;
@@ -272,46 +273,41 @@ function fanStyle(index: number): Record<string, string> {
 }
 .big {
   width: 100%;
-  padding: 0.7rem 1rem;
-  border-radius: 999px;
-  border: 2px solid rgb(255 255 255 / 0.7);
-  color: #fff;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.7rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  text-shadow: 0 2px 4px rgb(0 0 0 / 0.55);
+  min-height: 52px;
+  padding: 0 1rem;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
   transition:
-    transform 120ms ease,
-    box-shadow 120ms ease,
-    filter 120ms ease;
-}
-.big:hover,
-.big:focus-visible {
-  transform: translateY(-2px);
-  filter: brightness(1.12);
+    background-color 0.35s var(--ease),
+    color 0.35s var(--ease);
 }
 .big.mulligan {
-  background: linear-gradient(180deg, #6d8cff 0%, #3b4ef0 55%, #2a2fbf 100%);
-  box-shadow:
-    0 0 18px rgb(99 102 241 / 0.85),
-    0 0 42px rgb(147 51 234 / 0.45);
+  background: var(--paper);
+  color: var(--ink);
+}
+.big.mulligan:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--paper);
 }
 .big.keep {
-  background: linear-gradient(180deg, #ffb057 0%, #f97316 55%, #e2580b 100%);
-  box-shadow:
-    0 0 18px rgb(249 115 22 / 0.85),
-    0 0 42px rgb(236 72 153 / 0.4);
+  background: var(--ink);
+  color: var(--paper);
+}
+.big.keep:hover:not(:disabled) {
+  background: var(--ink-soft);
 }
 .note {
   margin: 0;
   max-width: 17rem;
   text-align: center;
-  font-size: 1rem;
-  font-style: italic;
-  line-height: 1.35;
-  color: rgb(255 255 255 / 0.92);
-  text-shadow: 0 1px 3px rgb(0 0 0 / 0.8);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--muted);
 }
 </style>

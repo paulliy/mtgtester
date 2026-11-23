@@ -179,7 +179,7 @@ test("Bandit's Talent reaches level 3 and draws once for each low-hand opponent"
   for (const seat of ['P2', 'P3', 'P4'])
     await expect(
       page.locator(`.opponent[data-seat="${seat}"], .seat[data-seat="${seat}"]`).first(),
-    ).toContainText('1 in hand');
+    ).toContainText('hand 1');
 });
 
 test('Reluctant Role Model attacks, then chooses a flying counter in the second main phase', async ({

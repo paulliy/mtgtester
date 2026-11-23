@@ -77,7 +77,7 @@ test('Hymn to Tourach: normal cast makes its target discard two cards at random'
   await runScenario(page, title);
   await castAndResolve(page, 'Hymn to Tourach', 'P2');
 
-  await expect(opponent(page, 'P2')).toContainText('0 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 0');
   await expect(opponent(page, 'P2').getByRole('heading', { name: 'Graveyard (2)' })).toBeVisible();
   await expect(page.getByText(/Hymn to Tourach resolves/).first()).toBeVisible();
 });
@@ -91,7 +91,7 @@ test('Bottomless Pit: normal cast triggers random discard at P2’s next upkeep'
   await expect(permanent(page, 'Bottomless Pit')).toBeVisible();
 
   await passUntil(page, opponent(page, 'P2').getByRole('heading', { name: 'Graveyard (1)' }));
-  await expect(opponent(page, 'P2')).toContainText('1 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 1');
 });
 
 test('Necrogen Mists: normal cast lets P2 choose a card at the next upkeep', async ({ page }) => {
@@ -101,7 +101,7 @@ test('Necrogen Mists: normal cast lets P2 choose a card at the next upkeep', asy
   await expect(permanent(page, 'Necrogen Mists')).toBeVisible();
 
   await passUntil(page, opponent(page, 'P2').getByRole('heading', { name: 'Graveyard (1)' }));
-  await expect(opponent(page, 'P2')).toContainText('1 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 1');
   await expect(page.getByText(/discards Lab P2 Mists Card Two/i).first()).toBeVisible();
 });
 
@@ -123,7 +123,7 @@ test('Hypnotic Specter: unblocked combat damage triggers the random discard', as
   await page.getByRole('button', { name: 'Confirm attacks' }).click();
 
   await passUntil(page, opponent(page, 'P2').getByRole('heading', { name: 'Graveyard (1)' }));
-  await expect(opponent(page, 'P2')).toContainText('1 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 1');
   await expect(page.getByText(/discards Lab P2 Specter Card/i).first()).toBeVisible();
 });
 
@@ -137,7 +137,7 @@ test('Oppression: its normal cast makes an opponent discard after a spell cast',
 
   await expect(opponent(page, 'P2').getByRole('heading', { name: 'Graveyard (1)' })).toBeVisible();
   // P2 drew normally on the turn advanced to by the prepared continuation.
-  await expect(opponent(page, 'P2')).toContainText('1 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 1');
   await expect(page.getByText(/Cast Arcane Signet/).first()).toBeVisible();
   await expect(page.getByText(/discards Lab P2 Oppression Discard Card/i).first()).toBeVisible();
 });

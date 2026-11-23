@@ -144,6 +144,6 @@ test('Cloak of Confusion: accept no damage and make P2 discard at random', async
   await expect(p2Life).toHaveText('40');
   const p2 = page.locator('.opponent[data-seat="P2"], .seat[data-seat="P2"]');
   await expect(p2.getByRole('heading', { name: 'Graveyard (1)' })).toBeVisible();
-  await expect(p2).toContainText('2 in hand');
+  await expect(p2).toContainText('hand 2');
   await expect(page.getByText(/discards (Plains|Swamp|Sol Ring)/i).first()).toBeVisible();
 });

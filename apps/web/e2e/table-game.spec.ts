@@ -121,6 +121,21 @@ async function step(page: Page, plan: Plan): Promise<string | null> {
   if (!(await page.locator('.decision').isVisible())) return null;
   const custom = await plan.custom?.(page);
   if (custom !== null && custom !== undefined) return custom;
+  // Cleanup with more than seven cards (CR 514.1): these plans only play lands and pass, so a
+  // long game fills a hand. Discard the first card offered, by clicking it in the hand.
+  if (
+    await page
+      .getByText(/^Discard down to seven cards/)
+      .first()
+      .isVisible()
+  ) {
+    const discard = page.locator('.hand-card.actionable').first();
+    if (await clickIfStill(discard)) {
+      const confirm = page.locator('.tray-actions').getByRole('button', { name: 'Confirm' });
+      if (await confirm.isVisible({ timeout: 500 }).catch(() => false)) await confirm.click();
+      return 'discard';
+    }
+  }
   if (plan.lands) {
     const land = page
       .locator('.playable-now')

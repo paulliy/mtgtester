@@ -7,6 +7,7 @@ import { useBoardFlash } from '../composables/useBoardFlash';
 import { STRIKE_MS, useCombatStrikes } from '../composables/useCombatStrikes';
 import { scryfallImageUrl } from '../lib/card';
 import type { TokenArtKey } from '../lib/tokenArt';
+import { splitTypeLine } from '../lib/typeLine';
 import ProvisionalBadge from './ProvisionalBadge.vue';
 import { useCardPreviewStore } from '../stores/cardPreview';
 import { useTokenArtStore } from '../stores/tokenArt';
@@ -17,8 +18,20 @@ const props = withDefaults(
     count?: number;
     /** Object/card id → display name, for naming a blocked attacker. Optional; falls back to id. */
     nameById?: Map<string, string> | undefined;
+    /** This permanent is its controller's commander: a double ink frame and a tag. */
+    isCommander?: boolean;
+    /**
+     * Your unconfirmed combat choice for it ("→ P4", "Blocks Ghalta"), shown in the top bar until
+     * the declaration is confirmed and the engine's own attacking/blocking state takes over.
+     */
+    planTag?: string | null;
+    /**
+     * `line` draws the permanent as its name in a line of text, the way the board design lists an
+     * opponent's lands under their cards; it keeps the tile's state marks for screen readers.
+     */
+    variant?: 'tile' | 'line';
   }>(),
-  { count: 1 },
+  { count: 1, planTag: null, variant: 'tile' },
 );
 
 const cardPreview = useCardPreviewStore();
@@ -103,24 +116,26 @@ const counterPips = computed(() =>
     })),
 );
 
-/**
- * The frame's border shows the card's colors, as a printed frame does: one color solid, several
- * as bands of each, colorless (artifacts, lands) as silver.
- */
-const FRAME_COLORS: Record<string, string> = {
-  W: '#efe4bf',
-  U: '#3f8fe0',
-  B: '#8b7f99',
-  R: '#e2533c',
-  G: '#3ea85e',
-};
-const framePaint = computed(() => {
-  const colors = (props.permanent.colors ?? []).map((c) => FRAME_COLORS[c]).filter(Boolean);
-  if (colors.length === 0) return 'linear-gradient(#a8a29e, #a8a29e)';
-  if (colors.length === 1) return `linear-gradient(${colors[0]}, ${colors[0]})`;
-  const step = 100 / colors.length;
-  const stops = colors.map((c, i) => `${c} ${i * step}% ${(i + 1) * step}%`);
-  return `linear-gradient(135deg, ${stops.join(', ')})`;
+/** The printed type line, split into its supertypes, card types and subtypes. */
+const typeParts = computed(() => splitTypeLine(props.permanent.typeLine ?? ''));
+/** One tag on the art's lower left: the token mark first, then the first supertype. */
+const artTag = computed(() => {
+  if (isToken.value) return 'Token';
+  return typeParts.value.supertypes[0] ?? null;
+});
+
+/** The ink bar across the top in combat: whom it attacks, or what it blocks. */
+const combatTag = computed(() => {
+  const p = props.permanent;
+  // A plan tag speaks for an undeclared creature, or for an attacker you are blocking right now.
+  if (p.blocking === null && props.planTag) return props.planTag;
+  if (p.attacking !== null) {
+    const target = p.attackingPlaneswalker ?? p.attacking;
+    const label = props.nameById?.get(target) ?? target;
+    return `Attacking ${label}${p.blockedBy.length > 0 ? ' · blocked' : ''}`;
+  }
+  if (p.blocking !== null) return `Blocking ${props.nameById?.get(p.blocking) ?? p.blocking}`;
+  return null;
 });
 
 /** The tile shows these states (rotation, a desaturated or lifted card, glows); hover names them. */
@@ -147,10 +162,10 @@ const damageShare = computed(() => {
 });
 
 /**
- * Arena-style tiles: a real card shows only its illustration (Scryfall's `art_crop`) in a landscape
- * rectangle; the full card, with its text and live state, is the hover preview. A token is an arch
- * carrying its P/T (or its name, when it isn't a creature) over art: a token copy of a real card
- * shows that card's, and any other token borrows a matching printed token's (`tokenArt`).
+ * Decktank tiles (redesign phase 5): a 5:7 paper card in a 1px ink frame with its name, its
+ * illustration (Scryfall's `art_crop`), its type line and a P/T box; the full card, with its text
+ * and live state, is the hover preview. A token copy of a real card shows that card's art, and any
+ * other token borrows a matching printed token's (`tokenArt`).
  */
 const tokenArtKey = computed<TokenArtKey | null>(() => {
   const p = props.permanent;
@@ -227,7 +242,9 @@ function onLeave(): void {
     :ref="setTileEl"
     class="tile"
     :class="{
+      line: variant === 'line',
       token: isToken,
+      commander: isCommander,
       tapped: permanent.tapped,
       sick: permanent.summoningSick && isCreature,
       attacking: isAttacking,
@@ -235,30 +252,36 @@ function onLeave(): void {
       striking,
       'taking-damage': damageFlash === 'damage',
     }"
-    :style="{
-      '--frame-paint': framePaint,
-      ...(strike
+    :style="
+      strike
         ? {
             '--strike-dx': strike.dx + 'px',
             '--strike-dy': strike.dy + 'px',
             '--strike-ms': `${STRIKE_MS}ms`,
           }
-        : {}),
-    }"
+        : undefined
+    "
     @mouseenter="onEnter"
     @mousemove="onMove"
     @mouseleave="onLeave"
   >
-    <div
-      v-if="count && count > 1"
-      class="stack-count-badge"
-      :title="`${count} copies of ${permanent.name}`"
-    >
-      ×{{ count }}
-    </div>
-    <ProvisionalBadge v-if="permanent.provisional === true" />
-    <!-- Everything on the card turns with it when it taps, name and P/T included. -->
-    <div class="card">
+    <ProvisionalBadge v-if="permanent.provisional === true && variant === 'tile'" />
+    <span v-if="variant === 'line'" class="line-name">
+      <span class="frame" role="img" :aria-label="permanent.name">{{ permanent.name }}</span
+      ><span v-if="count && count > 1" class="stack-count-badge">×{{ count }}</span>
+    </span>
+    <div v-else class="card">
+      <span
+        v-if="combatTag"
+        class="combat-tag"
+        :class="{ blocking: permanent.blocking !== null }"
+        aria-hidden="true"
+        :title="combatTag"
+        >{{ combatTag }}</span
+      >
+      <span v-else-if="isCommander" class="combat-tag cmdr" aria-hidden="true">Commander</span>
+      <!-- Hidden from screen readers, which already hear the name from the frame's label. -->
+      <span class="name" aria-hidden="true">{{ permanent.name }}</span>
       <div class="frame" role="img" :aria-label="permanent.name">
         <img
           v-if="artSrc"
@@ -268,41 +291,26 @@ function onLeave(): void {
           decoding="async"
           @error="artFailed = true"
         />
-        <span v-else-if="!isToken" class="frame-name">{{ permanent.name }}</span>
         <span
           v-if="damageShare > 0"
           class="damage-wash"
           :style="{ height: `${damageShare * 100}%` }"
           aria-hidden="true"
         />
-        <span
-          v-if="isToken"
-          class="token-label"
-          :class="{
-            pt: ptText !== null,
-            'is-name': ptText === null,
-            'on-art': artSrc !== null,
-            'flash-damage': damageFlash === 'damage',
-          }"
-        >
-          <template v-if="ptText === null">{{ permanent.name }}</template>
-          <template v-else
-            >{{ permanent.power }}/<span :class="{ hurt }">{{
-              permanent.toughness
-            }}</span></template
-          >
-        </span>
+        <span v-if="permanent.tapped" class="hatch" aria-hidden="true" />
+        <span v-if="artTag" class="art-tag" aria-hidden="true">{{ artTag }}</span>
       </div>
-      <!-- Hidden from screen readers, which already hear the name from the frame's label. -->
-      <span v-if="artSrc && !isToken" class="name-strip" aria-hidden="true">
-        {{ permanent.name }}
-      </span>
-      <!-- Bottom-right, as in Arena: a number per counter kind, then the P/T box. -->
-      <div
-        v-if="counterPips.length > 0 || (ptText !== null && !isToken)"
-        class="corner"
-        :class="{ 'on-token': isToken }"
+      <span
+        v-if="typeParts.types"
+        class="type-line"
+        :class="{ 'beside-pt': ptText !== null }"
+        aria-hidden="true"
       >
+        <span class="types">{{ typeParts.types }}</span>
+        <span v-if="typeParts.subtypes" class="subtypes">{{ typeParts.subtypes }}</span>
+      </span>
+      <!-- Lower right, as on a printed card: a number per counter kind, then the P/T box. -->
+      <div v-if="counterPips.length > 0 || ptText !== null" class="corner">
         <span
           v-for="pip in counterPips"
           :key="pip.kind"
@@ -314,19 +322,22 @@ function onLeave(): void {
           {{ pip.count }}
         </span>
         <span
-          v-if="ptText !== null && !isToken"
+          v-if="ptText !== null"
           class="pt"
           :class="{ 'flash-damage': damageFlash === 'damage' }"
           >{{ permanent.power }}/<span :class="{ hurt }">{{ permanent.toughness }}</span></span
         >
       </div>
-      <!-- Summoning sick: Zs drift up off the card until it can act. Drawn by CSS, so the tile's
-           text stays its name, P/T and counters. -->
-      <div v-if="permanent.summoningSick && isCreature" class="zzz" aria-hidden="true">
-        <span /><span /><span />
+      <span v-if="permanent.tapped" class="tap-word" aria-hidden="true">Tapped</span>
+      <div
+        v-if="count && count > 1"
+        class="stack-count-badge"
+        :title="`${count} copies of ${permanent.name}`"
+      >
+        ×{{ count }}
       </div>
     </div>
-    <!-- The tile shows these states without words; this text keeps them for anyone who can't see
+    <!-- The tile shows these states with marks; this text keeps them for anyone who can't see
          or hover the card. -->
     <span v-if="permanent.tapped" class="tap-badge visually-hidden" title="Tapped">TAP</span>
     <span v-if="permanent.damageMarked > 0" class="dmg visually-hidden">
@@ -348,50 +359,75 @@ function onLeave(): void {
 
 <style scoped>
 /*
- * `container-type` lets the labels below size themselves off the tile's own width (`cqw`): parents
- * shrink tiles with flexbox once a row runs out of room, so a fixed font size would overflow a
- * small tile and look lost on a large one.
+ * `container-type` lets the type below size itself off the tile's own width (`cqw`): parents size
+ * tiles to their zone (`--chip-w`), so a fixed font size would overflow a small tile and look lost
+ * on a large one. Values follow docs/design/decktank/Board.dc.html.
  */
 .tile {
-  --tile-radius: 8px;
   position: relative;
   width: var(--chip-w, 108px);
+  flex: 0 0 auto;
   container-type: inline-size;
   transition:
     transform 120ms ease,
     width 150ms ease,
     opacity 200ms ease;
 }
-/* An arch: a half-circle across the top of the same landscape footprint as a card. */
-.tile.token {
-  --tile-radius: 50% 50% 0 0 / 66.7% 66.7% 0 0;
-}
 .card {
   position: relative;
+  aspect-ratio: 5 / 7;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
   transition:
-    transform 180ms ease,
-    translate 150ms ease;
+    translate 150ms var(--ease),
+    box-shadow 150ms var(--ease);
 }
-/* Tapped: the whole card turns sideways, like the real thing, scaled so it stays in its slot. */
-.tile.tapped .card {
-  transform: rotate(90deg) scale(0.75);
+.tile.commander .card {
+  border: 3px double var(--ink);
 }
-/* Attacking: the card steps forward. */
-.tile.attacking .card {
-  translate: 0 -5px;
+.combat-tag {
+  flex-shrink: 0;
+  padding: 2% 5%;
+  border-bottom: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  font-size: max(9px, 8cqw);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.combat-tag.cmdr,
+.combat-tag.blocking {
+  background: var(--paper);
+  color: var(--ink);
+}
+.name {
+  flex-shrink: 0;
+  margin: 5% 6% 3%;
+  font-family: var(--font-ui);
+  font-size: max(10px, 9.5cqw);
+  line-height: 1.12;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .frame {
   position: relative;
-  aspect-ratio: 4 / 3;
-  box-sizing: border-box;
-  border-radius: var(--tile-radius);
+  flex: 1;
+  min-height: 0;
+  margin: 0 6% 4%;
   overflow: hidden;
-  /* The border paints the card's colors (`--frame-paint`, set per tile), like a printed frame. */
-  border: 3px solid transparent;
-  background:
-    linear-gradient(var(--surface-2), var(--surface-2)) padding-box,
-    var(--frame-paint, linear-gradient(#a8a29e, #a8a29e)) border-box;
-  transition: box-shadow 150ms ease;
+  background: var(--paper-2);
 }
 .frame img {
   position: absolute;
@@ -402,162 +438,80 @@ function onLeave(): void {
   display: block;
   transition: filter 200ms ease;
 }
-.tile.tapped .frame img {
-  filter: brightness(0.82);
-}
-/* Summoning sick: the art drains of color and slowly dims and brightens, as if dozing, while Zs
-   drift up off the card until the creature can act. */
 .tile.sick .frame img {
-  filter: grayscale(0.85) brightness(0.8);
-  animation: doze 2.4s ease-in-out infinite;
+  filter: grayscale(0.7);
 }
-@keyframes doze {
-  50% {
-    filter: grayscale(0.85) brightness(0.62);
-  }
-}
-.zzz {
-  position: absolute;
-  right: 6%;
-  top: 24%;
-  width: 40%;
-  height: 40%;
-  z-index: 3;
-  pointer-events: none;
-}
-.zzz span {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  opacity: 0;
-  font-size: max(0.85rem, 18cqw);
-  font-style: italic;
-  font-weight: 900;
-  line-height: 1;
-  color: #fff;
-  -webkit-text-stroke: 1px #0b0d11;
-  text-shadow:
-    0 0 4px rgb(11 13 17 / 0.9),
-    0 0 10px rgb(56 189 248 / 0.9);
-  animation: zzzFloat 2.4s ease-out infinite;
-}
-.zzz span::before {
-  content: 'z';
-}
-.zzz span:nth-child(2) {
-  animation-delay: 0.8s;
-}
-.zzz span:nth-child(3) {
-  animation-delay: 1.6s;
-}
-.zzz span:nth-child(3)::before {
-  content: 'Z';
-}
-/* With motion reduced the Zs stand still, climbing the corner, rather than vanish. */
-:global(.reduced-motion) .zzz span {
-  opacity: 1;
-}
-:global(.reduced-motion) .zzz span:nth-child(2) {
-  transform: translate(50%, -60%);
-}
-:global(.reduced-motion) .zzz span:nth-child(3) {
-  transform: translate(100%, -120%);
-}
-@keyframes zzzFloat {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0) scale(0.6) rotate(-12deg);
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(100%, -90%) scale(1.3) rotate(8deg);
-  }
-}
-/* Art that hasn't resolved (or never will) still names the card instead of showing a blank. */
-.frame-name {
+/* Tapped: ink hatching over the art, and the word, rather than turning the card. */
+.hatch {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6%;
-  text-align: center;
-  font-size: max(0.6rem, 11cqw);
-  font-weight: 600;
-  line-height: 1.15;
-  color: var(--text);
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--ink) 55%, transparent) 0 1px,
+    transparent 1px 7px
+  );
+  pointer-events: none;
+}
+.tile.tapped .frame img {
+  filter: brightness(0.86) saturate(0.8);
+}
+.art-tag {
+  position: absolute;
+  left: 5%;
+  bottom: 5%;
+  padding: 1px 4px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: max(7px, 6.2cqw);
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.type-line {
+  flex-shrink: 0;
+  padding: 0 6% 6% 6%;
+  font-family: var(--font-body);
+  font-size: 7.5cqw;
+  line-height: 1.3;
+  color: var(--muted);
+  white-space: nowrap;
   overflow: hidden;
+}
+.type-line.beside-pt {
+  padding-right: 42%;
+}
+.type-line > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.type-line .subtypes {
+  font-family: var(--font-display);
+  font-size: 1.3em;
+  line-height: 1.15;
+  color: var(--ink);
 }
 .damage-wash {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(to top, rgb(220 38 38 / 0.6), rgb(220 38 38 / 0.2));
-  border-top: 1px solid rgb(254 202 202 / 0.7);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--danger) 55%, transparent),
+    color-mix(in srgb, var(--danger) 15%, transparent)
+  );
+  border-top: 1px solid var(--danger);
   pointer-events: none;
   transition: height 250ms ease;
-}
-.tile.token .frame {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  background:
-    radial-gradient(circle at 50% 100%, var(--surface) 0%, var(--surface-2) 70%) padding-box,
-    var(--frame-paint, linear-gradient(#a8a29e, #a8a29e)) border-box;
-}
-.token-label {
-  position: relative;
-  z-index: 1;
-  padding-bottom: 4%;
-  text-shadow:
-    0 0 4px var(--surface),
-    0 1px 2px var(--surface);
-  font-size: max(0.75rem, 20cqw);
-  font-weight: 800;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-  white-space: nowrap;
-}
-/* Over art, the label sits on a dark pill so it reads against any illustration. */
-.token-label.on-art {
-  margin-bottom: 4%;
-  padding: 0.05rem 0.4rem;
-  border-radius: 6px;
-  background: rgb(11 13 17 / 0.82);
-  color: #fff;
-  text-shadow: none;
-}
-.token-label.is-name {
-  max-width: 80%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: max(0.6rem, 12cqw);
-  font-weight: 700;
-}
-/* The border keeps the card's colors in combat; the glow around it carries the state. */
-.tile.attacking .frame {
-  box-shadow:
-    0 0 0 2px rgb(248 113 113 / 0.7),
-    0 6px 14px rgb(248 113 113 / 0.45);
-  animation: attackPulse 1s ease-in-out infinite;
-}
-.tile.blocking .frame {
-  box-shadow:
-    0 0 0 2px rgb(96 165 250 / 0.8),
-    0 0 12px rgb(96 165 250 / 0.5);
 }
 .tile.taking-damage::after {
   content: '';
   position: absolute;
-  inset: -2px;
-  border: 2px solid rgb(248 113 113 / 0.85);
-  border-radius: var(--tile-radius);
-  box-shadow: 0 0 16px rgb(248 113 113 / 0.65);
+  inset: -3px;
+  border: 2px solid var(--danger);
   opacity: 0;
   pointer-events: none;
   animation: damageImpact 720ms ease-out;
@@ -602,114 +556,132 @@ function onLeave(): void {
     transform: scale(1);
   }
 }
-/* Outside the card, so the count stays upright when the stack taps. */
 .stack-count-badge {
   position: absolute;
-  top: -5px;
-  right: -5px;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: #ffffff;
-  border: 1.5px solid #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 0.08rem 0.35rem;
-  border-radius: 10px;
-  z-index: 10;
-  pointer-events: none;
+  right: 4%;
+  top: 30%;
+  z-index: 3;
+  padding: 2% 6%;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  font-size: max(9px, 11cqw);
   font-variant-numeric: tabular-nums;
-}
-/* A tapped card is 9/16 of the slot wide, centered: keep the count on its corner. */
-.tile.tapped .stack-count-badge {
-  right: calc(21.9% - 5px);
-}
-/* The card's name across the top of its art, like the title bar of a printed card. */
-.name-strip {
-  --name-size: max(0.6rem, 10.5cqw);
-  position: absolute;
-  left: 3px;
-  right: 3px;
-  top: 3px;
-  z-index: 1;
-  padding: 2px 5px 3px;
-  border-radius: 5px 5px 0 0;
-  background: rgb(11 13 17 / 0.78);
-  color: #fff;
-  font-size: var(--name-size);
-  font-weight: 600;
-  line-height: 1.15;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   pointer-events: none;
 }
-/* Counters and the P/T box share the art's bottom-right corner, as on a printed card. */
+.tap-word {
+  position: absolute;
+  left: 4%;
+  top: 30%;
+  z-index: 3;
+  padding: 2% 5%;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  font-family: var(--font-ui);
+  font-size: max(8px, 8cqw);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+/* Counters and the P/T box share the lower right corner, as on a printed card. */
 .corner {
   position: absolute;
-  right: 5px;
-  bottom: 5px;
+  right: 4%;
+  bottom: 3%;
   z-index: 2;
   display: flex;
   align-items: center;
   gap: 3px;
   pointer-events: none;
 }
-/* An arch's P/T is its centered label, so its counters sit alone in the corner. */
-.corner.on-token {
-  bottom: 6px;
-  right: 6px;
-}
 .corner .pt {
-  padding: 0.05rem 0.35rem;
-  border-radius: 5px;
-  background: rgb(11 13 17 / 0.88);
-  border: 1px solid rgb(255 255 255 / 0.55);
-  color: #fff;
-  font-size: max(0.65rem, 15cqw);
-  font-weight: 800;
-  line-height: 1.2;
+  padding: 3% 5%;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: max(11px, 12cqw);
+  letter-spacing: 0.02em;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  pointer-events: none;
 }
-/* Damaged toughness turns red, as in Arena. */
+/* Damaged toughness turns red. */
 .hurt {
-  color: #fca5a5;
-}
-.token-label:not(.on-art) .hurt {
   color: var(--danger);
 }
-.corner .pt.flash-damage,
-.token-label.flash-damage {
+.corner .pt.flash-damage {
   animation: flash 0.8s ease-out;
 }
-/* A counter is just its number in a circle; blue unless its kind has a color of its own. */
+/* A counter is its number in an ink box; +1/+1 and loyalty filled, -1/-1 in the danger colour. */
 .pip {
-  min-width: max(1.15rem, 15cqw);
-  height: max(1.15rem, 15cqw);
+  min-width: max(1.05rem, 13cqw);
+  height: max(1.05rem, 13cqw);
   padding: 0 0.2rem;
-  border-radius: 999px;
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid rgb(255 255 255 / 0.85);
-  background: radial-gradient(circle at 35% 30%, #60a5fa, #1d4ed8);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.6);
-  color: #fff;
-  font-size: max(0.65rem, 10.5cqw);
-  font-weight: 800;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: max(0.6rem, 10cqw);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
-.pip.plus {
-  background: radial-gradient(circle at 35% 30%, #4ade80, #15803d);
+.pip.plus,
+.pip.loyalty {
+  background: var(--ink);
+  color: var(--paper);
 }
 .pip.minus {
-  background: radial-gradient(circle at 35% 30%, #f87171, #b91c1c);
+  border-color: var(--danger);
+  color: var(--danger);
 }
-.pip.loyalty {
-  background: radial-gradient(circle at 35% 30%, #a78bfa, #4c1d95);
+@container (max-width: 90px) {
+  .type-line {
+    display: none;
+  }
+}
+@container (max-width: 70px) {
+  .art-tag {
+    display: none;
+  }
+}
+@container (max-width: 112px) {
+  .tap-word {
+    display: none;
+  }
+}
+/* A land in an opponent's lands line: its name and copies; a tapped one reads muted. */
+.tile.line {
+  width: auto;
+  container-type: normal;
+  display: inline;
+}
+.line-name {
+  display: inline;
+  white-space: nowrap;
+}
+.line-name .frame {
+  display: inline;
+  margin: 0;
+  overflow: visible;
+  background: none;
+  flex: none;
+}
+.line-name .stack-count-badge {
+  position: static;
+  margin-left: 0.3em;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+}
+.tile.line.tapped .line-name {
+  color: var(--muted);
 }
 .visually-hidden {
   position: absolute;

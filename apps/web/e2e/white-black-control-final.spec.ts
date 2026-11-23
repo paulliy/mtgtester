@@ -83,7 +83,7 @@ test('Aven Interrupter lets P2 cast the plotted spell later and pay the exile ta
   await expect(
     page.getByText(/Cast Lab Opposing Instant \(\{2\}\) from exile/i).first(),
   ).toBeVisible();
-  await expect(p2.getByText('2 in hand')).toBeVisible();
+  await expect(p2.getByText('hand 2')).toBeVisible();
   await expect(p2.getByRole('heading', { name: /^Exile/ })).toHaveCount(0);
   await expect(p2.getByRole('heading', { name: 'Graveyard (1)', exact: true })).toBeVisible();
   const tappedSwamps = p2.locator('.tile.tapped', {
@@ -148,7 +148,7 @@ test("Bilbo's Gambit gifts P3 a Treasure and returns P2's spell", async ({ page 
 
   await expect(page.getByRole('img', { name: /Treasure/i })).toBeVisible({ timeout: 15_000 });
   await expect(stack).not.toContainText('Lab Opposing Instant');
-  await expect(opponent(page, 'P2')).toContainText('1 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 1');
 });
 
 test("Dawn's Truce gifts P2 a card before granting visible protection", async ({ page }) => {
@@ -158,5 +158,5 @@ test("Dawn's Truce gifts P2 a card before granting visible protection", async ({
   const creature = permanent(page, 'Lab Visible P1 Creature');
   await expect(creature).toContainText(/hexproof/i);
   await expect(creature).toContainText(/indestructible/i);
-  await expect(opponent(page, 'P2')).toContainText('1 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 1');
 });

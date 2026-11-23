@@ -1,6 +1,6 @@
 # Decktank redesign: implementation plan
 
-Status: proposed, 2026-11-22. Phase 0 decisions 3, 7 and 8 were settled by the owner the same day (night theme, external multiplayer link, import report deferred). Planned on Claude Opus; the board and combat phases are high-effort and should be re-planned task by task before implementation, per [AGENTS.md](../../AGENTS.md).
+Status: in progress. Phases 0 to 3, 7 (page titles) and 8 (multiplayer tables, redesigned in full rather than tokens only) landed together on 2026-11-23; screenshots are in [docs/reviews/decktank-redesign/](../reviews/decktank-redesign/). Phases 5 and 6 (board, combat) and the deferred phase 4 remain. Proposed 2026-11-22. Phase 0 decisions 3, 7 and 8 were settled by the owner the same day (night theme, external multiplayer link, import report deferred). Planned on Claude Opus; the board and combat phases are high-effort and should be re-planned task by task before implementation, per [AGENTS.md](../../AGENTS.md).
 
 This plan brings the "Decktank" redesign into `apps/web`. The design was mocked up as interactive canvas screens; their source is copied into [docs/design/decktank/](../design/decktank/) as reference. Each `.dc.html` file is one self-contained screen: the markup is the layout and styling, and the `class Component` script at the bottom is the behaviour (state, handlers, animation maths). The scripts use sample data throughout; nothing in them is a source of truth for game data.
 

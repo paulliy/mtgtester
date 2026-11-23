@@ -272,7 +272,7 @@ test('Whispers of Emrakul: delirium makes the opponent discard two at random', a
   await expect(page.getByText('Whispers of Emrakul resolves').first()).toBeVisible({
     timeout: 20_000,
   });
-  await expect(opponent(page, 'P2')).toContainText('0 in hand');
+  await expect(opponent(page, 'P2')).toContainText('hand 0');
   await expect(opponent(page, 'P2').getByRole('heading', { name: 'Graveyard (2)' })).toBeVisible();
   await expect(page.getByText(/discards Lab P2 Random Discard/).first()).toBeVisible();
 });
@@ -383,7 +383,7 @@ test('Rankle attacks with haste and flying, then applies all three modes to ever
       graveyard.getByRole('img', { name: `Lab ${seat} Rankle Sacrifice`, exact: true }),
     ).toBeVisible();
     if (seat !== 'P1') {
-      await expect(opponent(page, seat)).toContainText('1 in hand');
+      await expect(opponent(page, seat)).toContainText('hand 1');
       await expect(life(page, seat)).toHaveText(seat === 'P2' ? '36' : '39');
     }
   }

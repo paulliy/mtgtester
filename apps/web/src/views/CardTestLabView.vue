@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import PageTitle from '../components/shell/PageTitle.vue';
+import PageFoot from '../components/shell/PageFoot.vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import type { CardTestScenarioMetadata } from '@mtg/shared';
@@ -49,7 +51,7 @@ function start(): void {
 <template>
   <section class="lab">
     <p class="eyebrow">Development-only deterministic viewer</p>
-    <h1>Card Test Lab</h1>
+    <PageTitle place="III. Workshop · a. Card lab">Card Test Lab</PageTitle>
     <p>
       Arranged positions that use the production engine, server decision protocol, and player
       controls. Only the starting state is prepared. Pick a scenario, run it, and resolve the
@@ -82,6 +84,7 @@ function start(): void {
       {{ starting ? 'Starting…' : 'Run scenario' }}
     </button>
     <p v-for="error in store.errors" :key="error" class="error">{{ error }}</p>
+    <PageFoot place="III. Workshop · a. Card lab" />
   </section>
 </template>
 

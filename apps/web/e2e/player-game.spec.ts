@@ -42,9 +42,10 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
   };
 
   await page.goto('/');
-  await page.getByText('More options', { exact: true }).click();
-  await page.getByPlaceholder('Fresh seed', { exact: true }).fill(SEED);
-  await expect(page.getByText(`Seed: ${SEED}`)).toBeVisible({ timeout: 60_000 });
+  await page.getByRole('button', { name: 'Extras', exact: true }).click();
+  await page.getByLabel('Replay seed').fill(SEED);
+  await expect(page.getByText(`Seed ${SEED}`)).toBeVisible({ timeout: 60_000 });
+  await page.getByRole('button', { name: 'Seats', exact: true }).click();
   await expect(page.getByLabel('Matchup preview').getByText('Fully modeled')).toHaveCount(4, {
     timeout: 60_000,
   });
@@ -153,9 +154,13 @@ test('a seeded player game plays a land, casts a spell, and abandons cleanly', a
 
   // "Copy game report" puts a filable report on the clipboard: this seed and the player's own
   // deck, but no opponent decklist while the game is live.
+  // The board keeps it in its Settings menu.
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  const settings = page.getByRole('button', { name: 'Settings', exact: true });
+  await settings.click();
   await page.getByRole('button', { name: 'Copy game report' }).click();
   await expect(page.getByText('Game report copied.')).toBeAttached();
+  await settings.click();
   const report = await page.evaluate(() => navigator.clipboard.readText());
   expect(report).toContain('## MTG Tester game report');
   expect(report).toContain(`seed \`${SEED}\``);

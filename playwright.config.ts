@@ -37,13 +37,14 @@ export default defineConfig({
       : { launchOptions: { executablePath: chromiumExecutable } }),
     // The player board folds its log into a Game info column, your lands, graveyard and exile into
     // piles, and opponents' zones behind a button, all closed at first; specs read them as part of
-    // the board, so every browser starts with them open.
+    // the board, so every browser starts with them open. The New game opening counts as seen.
     storageState: {
       cookies: [],
       origins: [
         {
           origin: `http://127.0.0.1:${LAB_WEB_PORT}`,
           localStorage: [
+            { name: 'decktank.opened', value: 'true' },
             { name: 'mtg.playerGameInfoOpen', value: 'true' },
             { name: 'mtg.playerPile.lands', value: 'true' },
             { name: 'mtg.playerPile.graveyard', value: 'true' },

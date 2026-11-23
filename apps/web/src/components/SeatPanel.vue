@@ -21,6 +21,7 @@ import ZoneStrip from './ZoneStrip.vue';
 import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useLifeFlash } from '../composables/useLifeFlash';
 import { useCardPreviewStore } from '../stores/cardPreview';
+import { commanderObjectIds } from '../lib/commanderIds';
 import { groupPermanents, type GroupedPermanent } from '../lib/stackPermanents';
 
 const props = defineProps<{
@@ -36,6 +37,11 @@ const props = defineProps<{
   nameById?: Map<string, string>;
   /** Deals this seat is in right now, one line each (ADR 0035), when the game has table talk. */
   deals?: string[];
+  /**
+   * Every seat's battlefield commanders, for the commander frame. A panel shows what its seat
+   * controls, which can be another seat's commander.
+   */
+  commanderIds?: ReadonlySet<string>;
 }>();
 
 const zonesExpanded = ref(false);
@@ -59,6 +65,8 @@ function hideCommanderPreview(): void {
 const taxedCommanders = computed(() =>
   props.seat.commanders.filter((commander) => commander.taxGeneric > 0),
 );
+/** Commanders on the battlefield, for the commander frame: the table's when given. */
+const commanderIds = computed(() => props.commanderIds ?? commanderObjectIds([props.seat]));
 const ZONES_CAP = 6;
 
 // The server decides the row (`boardGroup`): an animated land groups with creatures, a Dryad
@@ -222,6 +230,7 @@ onBeforeUnmount(() => unregisterAnchor(props.seat.seat));
             :permanent="g.permanent"
             :count="g.count"
             :name-by-id="nameById"
+            :is-commander="commanderIds.has(g.permanent.id)"
           />
         </TransitionGroup>
       </div>
@@ -234,6 +243,7 @@ onBeforeUnmount(() => unregisterAnchor(props.seat.seat));
             :permanent="g.permanent"
             :count="g.count"
             :name-by-id="nameById"
+            :is-commander="commanderIds.has(g.permanent.id)"
           />
         </TransitionGroup>
       </div>

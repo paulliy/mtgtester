@@ -15,6 +15,16 @@ async function abandon(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/$/);
 }
 
+/** Takes a seat from the Bots tab ("Who plays each seat"), then returns to the seats. */
+async function sitAt(page: Page, seat: string): Promise<void> {
+  await page.getByRole('button', { name: 'Bots', exact: true }).click();
+  await page
+    .getByRole('group', { name: `Who plays seat ${seat}` })
+    .getByRole('button', { name: 'You' })
+    .click();
+  await page.getByRole('button', { name: 'Seats', exact: true }).click();
+}
+
 test('real DB-backed supported-pool setup previews and starts a human game', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'New game' })).toBeVisible();
@@ -32,10 +42,11 @@ test('real DB-backed supported-pool setup previews and starts a human game', asy
   await abandon(page);
 });
 
-test('a modeled deck from the gallery fills the selected seat and starts', async ({ page }) => {
+test('a modeled deck from a seat deck menu fills that seat and starts', async ({ page }) => {
   await page.goto('/');
   const preview = page.getByLabel('Matchup preview');
   await expect(preview.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
+  await page.getByRole('button', { name: 'Change the deck for P1' }).click();
   await page.getByRole('button', { name: /^Atarka, World Render Draconic/ }).click();
   await expect(preview.locator('li').first()).toContainText('Atarka, World Render', {
     timeout: 60_000,
@@ -48,42 +59,37 @@ test('a modeled deck from the gallery fills the selected seat and starts', async
   await abandon(page);
 });
 
-test('Play now starts a game with no setup', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Play now' }).click();
-  await expect(page).toHaveURL(/\/game$/, { timeout: 60_000 });
-  await expect(page.getByText(/Turn \d+/).first()).toBeVisible({ timeout: 60_000 });
-
-  await abandon(page);
-});
-
-test('opponent seats take gallery decks, and a blocked import holds Start', async ({ page }) => {
+test('opponent seats take decks from their menus, and a blocked import holds Start', async ({
+  page,
+}) => {
   await page.goto('/');
   const seats = page.getByLabel('Matchup preview').locator('li');
   await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
 
-  // Selecting an opponent's seat points the gallery at it.
-  await seats.nth(3).locator('.seat-main').click();
-  await expect(page.getByRole('heading', { name: 'Or pick a deck for P4' })).toBeVisible();
+  // An opponent's "Change deck" opens the deck chooser for that seat.
+  await page.getByRole('button', { name: 'Change the deck for P4' }).click();
+  await expect(page.getByRole('group', { name: 'Decks for P4' })).toBeVisible();
   await page.getByRole('button', { name: /^The Ur-Dragon Urdragon/ }).click();
   await expect(seats.nth(3)).toContainText('The Ur-Dragon', { timeout: 60_000 });
   await expect(seats.nth(3)).toContainText('Fully modeled');
 
   // Your seat moves with its deck.
-  await seats.nth(0).locator('.seat-main').click();
+  await page.getByRole('button', { name: 'Change the deck for P1' }).click();
   await page.getByRole('button', { name: /^Atarka, World Render Draconic/ }).click();
-  await page.getByText('More options', { exact: true }).click();
-  await page.getByRole('radio', { name: 'P3' }).click();
+  await page.getByRole('button', { name: 'Use this deck' }).click();
+  await sitAt(page, 'P3');
   await expect(seats.nth(2)).toContainText('P3 · You');
+  await expect(seats.nth(2)).toContainText('Atarka, World Render', { timeout: 60_000 });
   await expect(seats.nth(3)).toContainText('The Ur-Dragon', { timeout: 60_000 });
 
   // An import that cannot resolve is caught before the game, and Start stays off.
-  await seats.nth(1).locator('.seat-main').click();
-  await page.getByRole('button', { name: /Import a deck/ }).click();
+  await page.getByRole('button', { name: 'Change the deck for P2' }).click();
   await page
-    .getByLabel('Deck URL or decklist for P2')
+    .getByLabel('Deck link or decklist')
     .fill(['Commander', '1 Azusa, Lost but Seeking', '', 'Deck', '1 Not A Real Card'].join('\n'));
+  await page.getByRole('button', { name: 'Check and import' }).click();
   await expect(seats.nth(1)).toContainText('Blocked', { timeout: 60_000 });
+  await expect(page.getByText('Import stopped')).toBeVisible();
   await expect(seats.nth(1)).not.toContainText('Azusa');
   await expect(page.getByText("This matchup can't start")).toBeVisible();
   await expect(page.getByRole('button', { name: 'Start game' })).toBeDisabled();
@@ -94,11 +100,26 @@ test('opponent seats take gallery decks, and a blocked import holds Start', asyn
   await expect(page.getByRole('button', { name: 'Start game' })).toBeEnabled();
 });
 
-test('Watch now starts a spectator game', async ({ page }) => {
+test('Cancel after moving seats brings back the generated deck you started with', async ({
+  page,
+}) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Watch now' }).click();
-  await expect(page).toHaveURL(/\/game$/, { timeout: 60_000 });
-  await expect(page.getByText(/Turn \d+/).first()).toBeVisible({ timeout: 60_000 });
+  const seats = page.getByLabel('Matchup preview').locator('li');
+  await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
+  const generated = (await seats.nth(0).locator('.seat-title').textContent())?.trim() ?? '';
+  expect(generated).not.toBe('');
+
+  // Try another deck, then move to P2 with the chooser still open: it follows you.
+  await page.getByRole('button', { name: 'Change the deck for P1' }).click();
+  await page.getByRole('button', { name: /^Atarka, World Render Draconic/ }).click();
+  await expect(seats.nth(0)).toContainText('Atarka, World Render', { timeout: 60_000 });
+  await sitAt(page, 'P2');
+  await expect(seats.nth(1)).toContainText('P2 · You');
+  await expect(seats.nth(1)).toContainText('Atarka, World Render', { timeout: 60_000 });
+
+  // Cancel puts back the deck P1 had, not a deck generated for P2.
+  await page.getByRole('button', { name: '[ Cancel ]' }).click();
+  await expect(seats.nth(1).locator('.seat-title')).toHaveText(generated, { timeout: 60_000 });
 });
 
 test('an imported Ur-Dragon deck can be selected again as one saved deck', async ({ page }) => {
@@ -106,17 +127,19 @@ test('an imported Ur-Dragon deck can be selected again as one saved deck', async
   const seats = page.getByLabel('Matchup preview').locator('li');
   await page.goto('/');
   for (let repeat = 0; repeat < 2; repeat++) {
-    await page.getByRole('button', { name: /^Import a deck/ }).click();
-    await page.getByLabel('Deck URL or decklist for you').fill(decklist);
+    await page.getByRole('button', { name: 'Change the deck for P1' }).click();
+    await page.getByLabel('Deck link or decklist').fill(decklist);
+    await page.getByRole('button', { name: 'Check and import' }).click();
     await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
     await page.getByRole('button', { name: 'Start game' }).click();
     await expect(page).toHaveURL(/\/game$/);
     await abandon(page);
   }
   // Two plays of the same list leave one saved deck, beside the modeled Ur-Dragon tile.
-  const savedDeck = page.locator('.tile').filter({ hasText: 'The Ur-Dragon' }).filter({
+  const savedDeck = page.locator('.deck-row').filter({ hasText: 'The Ur-Dragon' }).filter({
     hasText: 'Saved',
   });
+  await page.getByRole('button', { name: 'Change the deck for P1' }).click();
   await expect(savedDeck).toHaveCount(1);
   await savedDeck.click();
   await expect(seats.first()).toContainText('The Ur-Dragon', { timeout: 60_000 });
@@ -130,9 +153,9 @@ test('a generated deck moves with you when you change seats', async ({ page }) =
   await page.goto('/');
   const seats = page.getByLabel('Matchup preview').locator('li');
   await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
-  const yours = await seats.nth(0).locator('.seat-title').innerText();
-  await page.getByText('More options', { exact: true }).click();
-  await page.getByRole('radio', { name: 'P3' }).click();
+  // The card shows the name in capitals; compare the text itself.
+  const yours = (await seats.nth(0).locator('.seat-title').textContent()) ?? '';
+  await sitAt(page, 'P3');
   await expect(seats.nth(2)).toContainText('P3 · You');
   await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
   await expect(seats.nth(2).locator('.seat-title')).toHaveText(yours);
