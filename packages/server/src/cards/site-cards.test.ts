@@ -170,6 +170,23 @@ describe('site card files', () => {
     expect([...again.files]).toEqual([...built.files]);
   });
 
+  it('keep unrelated shards byte for byte when a card is added', () => {
+    // Not Commander-legal, so the pool's `considered` count stays the same too.
+    const added = unmodeled('Newcomer Zyxwv', { commanderLegality: 'not_legal' });
+    const grown = buildSiteCards({
+      cards: [added, ...cards],
+      bannedNames: ['Banned Zyxwv', 'Sol Ring'],
+      decks: [],
+      sourceSha256: 'f'.repeat(64),
+      engine: { version: 'test', commit: null },
+    });
+    const changed = grown.manifest.files.shards.filter(
+      (name, n) => name !== built.manifest.files.shards[n],
+    );
+    expect(changed).toEqual([grown.manifest.files.shards[siteShardOf(added.oracleId)]]);
+    expect(grown.manifest.files.pool).toBe(built.manifest.files.pool);
+  });
+
   it('refuse a file that does not match its hash', async () => {
     const files = new Map(built.files);
     const pool = built.manifest.files.pool;

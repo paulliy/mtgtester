@@ -52,7 +52,10 @@ export interface SiteCardsManifest {
   files: { names: string; pool: string; banned: string; decks: string; shards: string[] };
 }
 
-/** One name entry: `[name, commanderLegal ? 1 : 0, location]`. Its body is keyed by position. */
+/**
+ * One name entry: `[name, commanderLegal ? 1 : 0, location]`. The pool and each shard list their
+ * bodies in the order of the entries that point at them, so no file names an entry by number.
+ */
 type NameEntry = [name: string, legal: 0 | 1, location: number];
 
 interface NamesFile {
@@ -62,11 +65,16 @@ interface NamesFile {
 interface PoolFile {
   format: typeof SITE_CARDS_FORMAT;
   considered: number;
-  cards: Array<[entry: number, card: PoolCard]>;
+  cards: PoolCard[];
 }
+/**
+ * A shard's bodies carry no entry numbers: they follow the order of the name entries that point
+ * at the shard. A card added or removed elsewhere then leaves the shard's bytes, and its hashed
+ * name, unchanged.
+ */
 interface ShardFile {
   format: typeof SITE_CARDS_FORMAT;
-  cards: Array<[entry: number, card: OracleCard]>;
+  cards: OracleCard[];
 }
 interface BannedFile {
   format: typeof SITE_CARDS_FORMAT;
@@ -122,17 +130,13 @@ export function buildSiteCards(input: SiteCardsInput): SiteCardsBuild {
 
   const pool = buildSupportedPool(cards);
   const inPool = new Map(pool.cards.map((entry) => [entry.card.oracleId, entry]));
-  const position = new Map(cards.map((card, i) => [card.oracleId, i]));
 
   const entries: NameEntry[] = [];
-  const shards: Array<Array<[number, OracleCard]>> = Array.from(
-    { length: SITE_CARD_SHARDS },
-    () => [],
-  );
-  cards.forEach((card, i) => {
+  const shards: OracleCard[][] = Array.from({ length: SITE_CARD_SHARDS }, () => []);
+  cards.forEach((card) => {
     const location = inPool.has(card.oracleId) ? POOL_LOCATION : siteShardOf(card.oracleId);
     entries.push([card.name, card.commanderLegality === 'not_legal' ? 0 : 1, location]);
-    if (location !== POOL_LOCATION) shards[location]?.push([i, card]);
+    if (location !== POOL_LOCATION) shards[location]?.push(card);
   });
 
   const files = new Map<string, string>();
@@ -146,7 +150,7 @@ export function buildSiteCards(input: SiteCardsInput): SiteCardsBuild {
   const names = write('names', { entries } satisfies Omit<NamesFile, 'format'>);
   const poolFile = write('pool', {
     considered: pool.considered,
-    cards: pool.cards.map((entry) => [position.get(entry.card.oracleId) ?? -1, entry]),
+    cards: pool.cards,
   } satisfies Omit<PoolFile, 'format'>);
   const shardFiles = shards.map((list, n) =>
     write(`shard-${String(n).padStart(2, '0')}`, { cards: list } satisfies Omit<
@@ -210,9 +214,11 @@ export class SiteCards {
     readonly pool: SupportedPool,
     readonly banned: BannedList,
     readonly decks: readonly KnownDeckSummary[],
-    poolEntries: ReadonlyArray<[number, PoolCard]>,
+    poolEntries: readonly NameStub[],
+    /** The name entries of each shard, in the order the shard lists their bodies. */
+    private readonly shardEntries: ReadonlyArray<readonly NameStub[]>,
   ) {
-    for (const [entry, card] of poolEntries) this.addBody(entry, card.card);
+    poolEntries.forEach((stub, i) => this.addBody(stub.entry, pool.cards[i]!.card));
   }
 
   private addBody(entry: number, card: OracleCard): void {
@@ -247,14 +253,29 @@ export class SiteCards {
       entry,
       location,
     }));
+    const poolEntries: NameStub[] = [];
+    const shardEntries: NameStub[][] = manifest.files.shards.map(() => []);
+    for (const stub of stubs) {
+      if (stub.location === POOL_LOCATION) poolEntries.push(stub);
+      else shardEntries[stub.location]?.push(stub);
+    }
+    const poolMatches =
+      pool.cards.length === poolEntries.length &&
+      poolEntries.every((stub, i) => pool.cards[i]?.card.name === stub.name);
+    if (!poolMatches) {
+      throw new Error(
+        `Card file "${manifest.files.pool}" does not match the names. Reload the page.`,
+      );
+    }
     return new SiteCards(
       read,
       manifest,
       buildNameIndex(stubs),
-      { cards: pool.cards.map(([, card]) => card), considered: pool.considered },
+      { cards: pool.cards, considered: pool.considered },
       bannedListFromNames(banned.names),
       decks.decks,
-      pool.cards,
+      poolEntries,
+      shardEntries,
     );
   }
 
@@ -288,7 +309,13 @@ export class SiteCards {
       return Promise.reject(new Error(`The card data has no shard ${shard}. Reload the page.`));
     }
     const loading = this.read<ShardFile>(file).then((parsed) => {
-      for (const [entry, card] of parsed.cards) this.addBody(entry, card);
+      const entries = this.shardEntries[shard] ?? [];
+      const matches =
+        parsed.cards.length === entries.length &&
+        entries.every((stub, i) => parsed.cards[i]?.name === stub.name);
+      if (!matches)
+        throw new Error(`Card file "${file}" does not match the names. Reload the page.`);
+      entries.forEach((stub, i) => this.addBody(stub.entry, parsed.cards[i]!));
     });
     // A failed fetch must not stick: the next deck retries it.
     loading.catch(() => this.loadedShards.delete(shard));
