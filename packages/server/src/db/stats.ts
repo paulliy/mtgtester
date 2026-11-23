@@ -43,8 +43,13 @@ export type StatsScopeName = 'all' | 'batch' | 'mine';
 export type StatsScope = { kind: 'all' } | { kind: 'batch'; batchId: string } | { kind: 'mine' };
 
 export interface StatsSummary {
+  /** Finished games where at least one seat played a saved or imported deck. */
   finishedGames: number;
-  /** Finished games where at least one seat played a generated deck. */
+  /**
+   * Finished games where every seat played a generated deck: counted apart ("+ N generated") so
+   * the headline number is the games the player's own decks took part in. The two add up to every
+   * finished game in scope.
+   */
   generatedGames: number;
   /** Saved and imported decks that played at least one finished game in scope. */
   decksTracked: number;
@@ -225,11 +230,13 @@ export class StatsRepository {
               SUM(CASE WHEN EXISTS (
                 SELECT 1 FROM game_players gp JOIN deck_snapshots ds ON ds.id = gp.deck_snapshot_id
                   JOIN decks d ON d.id = ds.deck_id
-                 WHERE gp.game_id = g.id AND d.source_type = 'generated') THEN 1 ELSE 0 END) AS generated
+                 WHERE gp.game_id = g.id AND d.source_type <> 'generated') THEN 0 ELSE 1 END) AS generated
          FROM games g WHERE g.status = 'finished' AND ${where.sql('g')}`,
       ...where.params,
     );
-    const finishedGames = number(totals?.['finished']);
+    const allFinished = number(totals?.['finished']);
+    const generatedGames = number(totals?.['generated']);
+    const finishedGames = allFinished - generatedGames;
     const ends = rows(
       this.db,
       `SELECT gp.loss_reason AS reason, COUNT(*) AS count
@@ -250,10 +257,10 @@ export class StatsRepository {
     );
     return {
       finishedGames,
-      generatedGames: number(totals?.['generated']),
+      generatedGames,
       decksTracked: number(tracked?.['decks']),
       averageTurns:
-        finishedGames === 0 || totals?.['average_turns'] === null
+        allFinished === 0 || totals?.['average_turns'] === null
           ? null
           : number(totals?.['average_turns']),
       mostCommonEnd:

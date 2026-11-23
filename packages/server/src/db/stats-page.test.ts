@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest';
  *   g3 (b2): a wins, b 2nd, c 3rd
  *   g4 (human seat on b): a wins, b 2nd, c 4th
  *   g5 running: ignored
+ *   g6: only generated decks (c wins, d 2nd); counted apart as "+ 1 generated"
  */
 const SCRIPT = `
   import { Database } from 'bun:sqlite';
@@ -22,7 +23,7 @@ const SCRIPT = `
   db.exec(SCHEMA_SQL);
   const stats = new StatsRepository(db);
   const out = { empty: stats.statsReport({}), emptyBatch: stats.statsReport({ scope: 'batch' }) };
-  for (const [deck, source] of [['a', 'plaintext'], ['b', 'plaintext'], ['c', 'generated']]) {
+  for (const [deck, source] of [['a', 'plaintext'], ['b', 'plaintext'], ['c', 'generated'], ['d', 'generated']]) {
     db.query("INSERT INTO decks (id, name, source_type, archetype_tag, created_at) VALUES (?, ?, ?, 'tag', 'x')").run(deck, deck.toUpperCase(), source);
     db.query("INSERT INTO deck_snapshots (id, deck_id, commander_names, color_identity, card_list_json, imported_at) VALUES (?, ?, ?, '[]', '[]', 'x')").run('s' + deck, deck, JSON.stringify([deck]));
   }
@@ -43,6 +44,7 @@ const SCRIPT = `
   game('g2', 'finished', 14, '2026-01-01T02', [['b', 1, null, null], ['a', 2, 'lifeZeroOrLess', 1], ['c', 3, 'lifeZeroOrLess', 1]], 'b1', 1);
   game('g3', 'finished', 12, '2026-02-01T01', [['a', 1, null, null], ['b', 2, 'lifeZeroOrLess', 1], ['c', 3, 'lifeZeroOrLess', 1]], 'b2', 0);
   game('g4', 'finished', 8, '2026-03-01T01', [['a', 1, null, null], ['b', 2, 'lifeZeroOrLess', 1], ['c', 4, 'emptyLibraryDraw', null]], null, 0, 'b');
+  game('g6', 'finished', 11, '2026-03-02T01', [['c', 1, null, null], ['d', 2, null, null]], null, 0);
   game('g5', 'running', null, null, [['a', null, null, null], ['b', null, null, null]], null, 0);
   out.all = stats.statsReport({});
   out.latest = stats.statsReport({ scope: 'batch' });
@@ -102,7 +104,7 @@ describe('StatsRepository.statsReport', () => {
     expect(run.emptyBatch).toMatchObject({ scope: 'batch', batchId: null });
   });
 
-  it('counts every finished game for scope all and ignores unfinished ones', () => {
+  it('counts finished games with a tracked deck for scope all and ignores unfinished ones', () => {
     expect(run.all).toMatchObject({ scope: 'all', batchId: null });
     expect(run.all.summary.finishedGames).toBe(4);
     expect(deck(run.all, 'sa').gamesPlayed).toBe(4);
@@ -131,7 +133,7 @@ describe('StatsRepository.statsReport', () => {
   it('builds the finish distribution as 1st, 2nd, 3rd and 4th-or-lower', () => {
     expect(deck(run.all, 'sa').finishDistribution).toEqual([3, 1, 0, 0]);
     expect(deck(run.all, 'sb').finishDistribution).toEqual([1, 3, 0, 0]);
-    expect(deck(run.all, 'sc').finishDistribution).toEqual([0, 0, 3, 1]);
+    expect(deck(run.all, 'sc').finishDistribution).toEqual([1, 0, 3, 1]);
   });
 
   it('names the most recent finished game of each deck inside the scope', () => {
@@ -153,7 +155,7 @@ describe('StatsRepository.statsReport', () => {
   it('summarises games, decks, average length and the most common end', () => {
     expect(run.all.summary).toMatchObject({
       finishedGames: 4,
-      generatedGames: 4,
+      generatedGames: 1,
       decksTracked: 2,
       averageTurns: 11,
     });

@@ -111,11 +111,22 @@ function rowTip(deck: DeckStatistic): string {
 
 // --- Matchups ------------------------------------------------------------------------------
 
-const matrixDecks = computed(() =>
-  [...own.value]
-    .sort((a, b) => b.gamesPlayed - a.gamesPlayed || deckHeading(a).localeCompare(deckHeading(b)))
-    .slice(0, MATRIX_DECKS),
+const matrixAll = ref(false);
+const matrixRanked = computed(() =>
+  [...own.value].sort(
+    (a, b) => b.gamesPlayed - a.gamesPlayed || deckHeading(a).localeCompare(deckHeading(b)),
+  ),
 );
+const matrixDecks = computed(() =>
+  matrixAll.value ? matrixRanked.value : matrixRanked.value.slice(0, MATRIX_DECKS),
+);
+/** Every opponent a deck beat, shown in the grid or not, so Total never changes with the view. */
+const winsTotal = computed(() => {
+  const totals = new Map<string, number>();
+  for (const entry of report.value?.matchups ?? [])
+    totals.set(entry.winner, (totals.get(entry.winner) ?? 0) + entry.games);
+  return totals;
+});
 const matchupCount = computed(() => {
   const counts = new Map<string, number>();
   for (const entry of report.value?.matchups ?? [])
@@ -136,7 +147,7 @@ const matrix = computed(() => {
       id: winner.deckSnapshotId,
       name: deckHeading(winner),
       cells,
-      total: cells.reduce((sum, cell) => sum + cell.games, 0),
+      total: winsTotal.value.get(winner.deckSnapshotId) ?? 0,
     };
   });
   const min = values.length === 0 ? 0 : Math.min(...values);
@@ -284,7 +295,7 @@ const HEAT_LEVELS = Array.from({ length: HEAT_STEPS }, (_, index) => index);
         <dd>
           <span class="big"><TweenNumber :value="summary?.finishedGames ?? 0" /></span>
           <span v-if="summary && summary.generatedGames > 0" class="unit"
-            >{{ summary.generatedGames }} with generated decks</span
+            >+ {{ summary.generatedGames }} generated</span
           >
         </dd>
       </div>
@@ -511,6 +522,16 @@ const HEAT_LEVELS = Array.from({ length: HEAT_STEPS }, (_, index) => index);
             ></span>
             <span>{{ matrix.max }}</span>
           </div>
+          <button
+            v-if="matrixRanked.length > MATRIX_DECKS"
+            type="button"
+            class="toggle"
+            :aria-expanded="matrixAll"
+            @click="matrixAll = !matrixAll"
+          >
+            [
+            {{ matrixAll ? `Show top ${MATRIX_DECKS}` : `Show all ${matrixRanked.length} decks` }} ]
+          </button>
         </section>
       </div>
 
