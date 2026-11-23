@@ -38,6 +38,13 @@ model code (the OpenRouter SDK, zod and `server/src/ai`), `node:crypto` and `nod
 5. **No saves in v1.** A browser game lasts as long as its tab. Saves (a replay log in browser
    storage) come later, with their own decision on versioning and eviction.
 6. **Batch and Stats show as Coming soon** on the public site until they can run locally.
+7. **Card data ships as static, hashed files.** `bun run site:cards` writes `data/site-cards/`
+   (`cards/site-cards.ts`). The browser always loads the names of every card, the supported pool
+   with full card data, the banned list and the bot decks; the bodies of cards outside the pool
+   sit in 64 shards keyed by Oracle id, fetched only when a decklist names one. Names resolve
+   through `buildNameIndex`, the code behind the server's `buildOracleIndexFromCards`, so a
+   decklist resolves to the same cards on both sides. Provisional cards are not in the browser
+   pool. The manifest pins the bulk file's hash and the engine commit.
 
 ## Consequences
 
