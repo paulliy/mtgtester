@@ -133,6 +133,21 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
             ? 'Combat · end'
             : 'Combat · blocks declared';
 
+  // Regular combat damage is dealt before anyone gets priority in the damage step, and the
+  // attackers stay attacking through end of combat, so by then nothing is incoming any more. In
+  // the first-strike step only first strikers have dealt theirs; double strikers deal again.
+  const allDealt =
+    step === 'endCombat' || (step === 'combatDamage' && input.priorityPlayer !== null);
+  const firstDealt = step === 'firstStrikeCombatDamage' && input.priorityPlayer !== null;
+  /** How many more times this attacker deals combat damage: twice for double strike, up front. */
+  const hitsLeft = (a: CombatPermanent): number => {
+    if (allDealt) return 0;
+    const keywords = a.keywords ?? [];
+    if (keywords.includes('double strike')) return firstDealt ? 1 : 2;
+    return firstDealt && keywords.includes('first strike') ? 0 : 1;
+  };
+  const damageOf = (a: CombatPermanent): number => Math.max(0, a.power ?? 0) * hitsLeft(a);
+
   const lines: string[] = [];
   const prose: string[] = [];
   const incoming = new Map<string, number>();
@@ -145,7 +160,7 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
     // `attacking` names the walker's controller when a planeswalker is attacked; that damage goes
     // to the walker, so only attacks on the player themselves count toward the seat's chip.
     const atPlayer = attacker.attackingPlaneswalker == null;
-    if (atPlayer) incoming.set(seat, (incoming.get(seat) ?? 0) + power);
+    if (atPlayer) incoming.set(seat, (incoming.get(seat) ?? 0) + damageOf(attacker));
     let state: string;
     const planned =
       input.plan?.kind === 'blockers'
@@ -164,9 +179,11 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
       const names = attacker.blockedBy.map((id) => byId.get(id)?.name ?? 'a creature that left');
       prose.push(`${attacker.name} is blocked by ${listNames(names)}.`);
     } else {
-      state = `unblocked, ${power} damage`;
+      // Double strike deals the power twice, once in each damage step.
+      const total = hitsLeft(attacker) === 2 ? power * 2 : power;
+      state = `unblocked, ${total} damage`;
       const victim = walker !== undefined ? walker.name : seatLabelOf(input.seats, seat);
-      prose.push(`${attacker.name} is unblocked and deals ${power} to ${victim}.`);
+      prose.push(`${attacker.name} is unblocked and deals ${total} to ${victim}.`);
     }
     lines.push(`${attacker.name}${pt(attacker)} → ${target} · ${state}`);
   }
@@ -179,20 +196,7 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
       attacked.set(seat, `Under attack · ${power} incoming`);
       continue;
     }
-    // Regular combat damage is dealt before anyone gets priority in the damage step, and the
-    // attackers stay attacking through end of combat, so by then nothing is incoming any more. In
-    // the first-strike step only first strikers have dealt theirs; double strikers deal again.
-    const allDealt =
-      step === 'endCombat' || (step === 'combatDamage' && input.priorityPlayer !== null);
-    const firstDealt = step === 'firstStrikeCombatDamage' && input.priorityPlayer !== null;
-    const pending = allDealt
-      ? []
-      : onPlayer.filter(
-          (a) =>
-            !firstDealt ||
-            !(a.keywords ?? []).includes('first strike') ||
-            (a.keywords ?? []).includes('double strike'),
-        );
+    const pending = onPlayer.filter((a) => hitsLeft(a) > 0);
     if (pending.length === 0) {
       attacked.set(seat, 'Attacked · damage dealt');
       continue;
@@ -203,7 +207,7 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
       (a) => a.blockedBy.length > 0 && (a.keywords ?? []).includes('trample'),
     );
     const unblocked = pending.filter((a) => a.blockedBy.length === 0);
-    const through = unblocked.reduce((sum, a) => sum + Math.max(0, a.power ?? 0), 0);
+    const through = unblocked.reduce((sum, a) => sum + damageOf(a), 0);
     if (trample) {
       attacked.set(seat, `Under attack · ${through} incoming + trample`);
     } else if (unblocked.length === 0) {
