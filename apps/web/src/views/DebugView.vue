@@ -3,6 +3,7 @@ import PageTitle from '../components/shell/PageTitle.vue';
 import PageFoot from '../components/shell/PageFoot.vue';
 import { computed, ref, watch } from 'vue';
 import type { DebugFlags } from '@mtg/shared';
+import { useRoute } from 'vue-router';
 import { useGameStore } from '../stores/game';
 
 interface DebugEvent {
@@ -31,6 +32,12 @@ interface DebugData {
   aiCalls: AiCall[];
 }
 const game = useGameStore();
+const route = useRoute();
+/** A `?gameId=` link (the Stats page's "Open last game in Debug") wins; otherwise the live game. */
+const activeGameId = computed<string | null>(() => {
+  const queried = route.query['gameId'];
+  return typeof queried === 'string' && queried !== '' ? queried : game.gameId;
+});
 const data = ref<DebugData | null>(null);
 const error = ref<string | null>(null);
 const turn = ref<number | null>(null);
@@ -43,12 +50,12 @@ function toggle(key: keyof DebugFlags, event: Event): void {
 }
 
 async function load(): Promise<void> {
-  if (game.gameId === null) {
+  if (activeGameId.value === null) {
     data.value = null;
     return;
   }
   try {
-    const response = await fetch(`/api/games/${encodeURIComponent(game.gameId)}/debug`);
+    const response = await fetch(`/api/games/${encodeURIComponent(activeGameId.value)}/debug`);
     if (!response.ok)
       throw new Error(
         ((await response.json()) as { message?: string }).message ?? 'Could not load debug data.',
@@ -60,11 +67,7 @@ async function load(): Promise<void> {
   }
 }
 
-watch(
-  () => game.gameId,
-  () => void load(),
-  { immediate: true },
-);
+watch(activeGameId, () => void load(), { immediate: true });
 const categories = computed(() => [
   ...new Set(data.value?.debugEvents.map((entry) => entry.category) ?? []),
 ]);
@@ -77,8 +80,8 @@ const entries = computed(
     ) ?? [],
 );
 function exportGame(): void {
-  if (game.gameId !== null)
-    window.location.assign(`/api/games/${encodeURIComponent(game.gameId)}/export`);
+  if (activeGameId.value !== null)
+    window.location.assign(`/api/games/${encodeURIComponent(activeGameId.value)}/export`);
 }
 </script>
 
@@ -87,12 +90,12 @@ function exportGame(): void {
     <header>
       <div>
         <PageTitle place="III. Workshop · c. Debug">Debug panel</PageTitle>
-        <p v-if="game.gameId">Game {{ game.gameId }}</p>
+        <p v-if="activeGameId">Game {{ activeGameId }}</p>
         <p v-else>Start a recorded game to inspect diagnostics.</p>
       </div>
       <div>
-        <button :disabled="!game.gameId" @click="load">Refresh</button
-        ><button :disabled="!game.gameId" @click="exportGame">Export JSON</button>
+        <button :disabled="!activeGameId" @click="load">Refresh</button
+        ><button :disabled="!activeGameId" @click="exportGame">Export JSON</button>
       </div>
     </header>
     <p v-if="error" class="error">{{ error }}</p>

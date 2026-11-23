@@ -11,12 +11,10 @@ test('setup loads and navigation reaches the empty statistics view', async ({ pa
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'New game' })).toBeVisible();
   await page.getByRole('link', { name: 'Stats', exact: true }).click();
-  await expect(page.getByText('No finished recorded games yet.')).toBeVisible();
+  await expect(page.getByText('No finished games yet.')).toBeVisible();
 });
 
-test('unreliable mana metrics are unavailable while valid statistics remain visible', async ({
-  page,
-}) => {
+test('a deck-only statistics body still renders, with no mana-rate claims', async ({ page }) => {
   await page.route('**/api/stats', (route) =>
     route.fulfill({
       json: {
@@ -44,11 +42,9 @@ test('unreliable mana metrics are unavailable while valid statistics remain visi
     }),
   );
   await page.goto('/stats');
-  await expect(page.getByText('50% wins')).toBeVisible();
-  // One tile covers both rates when neither can be calculated.
-  await expect(page.getByText('Flood / drought', { exact: true })).toBeVisible();
-  await expect(page.getByText('Unavailable', { exact: true })).toHaveCount(1);
-  await expect(page.getByText('Mana rates unavailable.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Audit Deck' })).toBeVisible();
+  await expect(page.getByText('50%').first()).toBeVisible();
+  await expect(page.getByText(/flood|drought|Mana rates/i)).toHaveCount(0);
 });
 
 test('statistics list saved decks first and fold generated decks away', async ({ page }) => {
@@ -79,13 +75,11 @@ test('statistics list saved decks first and fold generated decks away', async ({
     }),
   );
   await page.goto('/stats');
-  await expect(page.getByRole('heading', { name: 'Saved and imported decks' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'My Deck' })).toBeVisible();
-  const generated = page.locator('details', { hasText: 'Generated decks (1)' });
-  await expect(generated).not.toHaveAttribute('open');
-  await expect(page.getByRole('heading', { name: 'Test Commander (generated)' })).toBeHidden();
-  await generated.locator('summary').click();
-  await expect(page.getByRole('heading', { name: 'Test Commander (generated)' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Standings' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /My Deck/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Test Commander \(generated\)/ })).toBeHidden();
+  await page.getByRole('button', { name: /Show 1 generated deck/ }).click();
+  await expect(page.getByRole('button', { name: /Test Commander \(generated\)/ })).toBeVisible();
 });
 
 test('statistics can recover from a failed request by refreshing', async ({ page }) => {
@@ -99,5 +93,5 @@ test('statistics can recover from a failed request by refreshing', async ({ page
   await page.goto('/stats');
   await expect(page.getByText('Test service unavailable')).toBeVisible();
   await page.getByRole('button', { name: 'Refresh' }).click();
-  await expect(page.getByText('No finished recorded games yet.')).toBeVisible();
+  await expect(page.getByText('No finished games yet.')).toBeVisible();
 });

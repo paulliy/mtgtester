@@ -348,7 +348,15 @@ export class GameServer {
           if (this.deps.store === undefined)
             return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
           const batchId = url.searchParams.get('batchId') ?? undefined;
-          return Response.json({ decks: this.deps.store.stats().deckStatistics(batchId) });
+          const scope = url.searchParams.get('scope') ?? undefined;
+          if (scope !== undefined && scope !== 'all' && scope !== 'batch' && scope !== 'mine')
+            return Response.json({ message: 'scope must be all, batch or mine.' }, { status: 400 });
+          return Response.json(
+            this.deps.store.stats().statsReport({
+              ...(scope === undefined ? {} : { scope }),
+              ...(batchId === undefined ? {} : { batchId }),
+            }),
+          );
         }
         if (url.pathname === '/api/batches' && request.method === 'POST') {
           if (this.batchManager === null)
