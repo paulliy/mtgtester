@@ -40,6 +40,7 @@ import { BatchManager, validateBatch } from '../batch/manager';
 import { setupSeats } from '../match/setup';
 import { previewMatchup, type PreviewRequest } from '../match/preview';
 import { createCardTestScenario, listCardTestScenarios } from '../cards/card-test-scenarios';
+import { buildCardReport, catalogAudit, CARD_REPORT_MAX_NAMES } from '../cards/card-report';
 import { projectSetupProblems, SETUP_REFUSED_MESSAGE } from './setup-privacy';
 
 function replayOption(identity: ReplayIdentity | undefined): { replay?: ReplayIdentity } {
@@ -339,6 +340,9 @@ export class GameServer {
         if (url.pathname === '/api/game-report' && request.method === 'POST') {
           return await this.handleGameReport(request);
         }
+        if (url.pathname === '/api/card-report' && request.method === 'GET') {
+          return this.handleCardReport(url);
+        }
         if (url.pathname === '/api/card-test-scenarios') {
           if (this.deps.cardTestLab !== true)
             return Response.json({ message: 'Card Test Lab is disabled.' }, { status: 404 });
@@ -587,6 +591,39 @@ export class GameServer {
       this.setupPreviews.delete(this.setupPreviews.keys().next().value as string);
     this.setupPreviews.set(previewId, { request: previewRequest, createdAt: Date.now() });
     return Response.json({ ...preview, previewId });
+  }
+
+  /**
+   * `GET /api/card-report?names=A&names=B`: Oracle text, status and audit evidence for cards the
+   * Import report names (ADR 0053). Each `names` value is one card name (names hold commas), and
+   * a value may also carry several names on separate lines. At most `CARD_REPORT_MAX_NAMES`
+   * distinct names; more is a 400. Public card data only, so it needs no deck context.
+   */
+  private handleCardReport(url: URL): Response {
+    const names = [
+      ...new Set(
+        url.searchParams
+          .getAll('names')
+          .flatMap((value) => value.split('\n'))
+          .map((name) => name.trim())
+          .filter((name) => name !== ''),
+      ),
+    ];
+    if (names.length === 0)
+      return Response.json({ message: 'Name at least one card with names=.' }, { status: 400 });
+    if (names.length > CARD_REPORT_MAX_NAMES)
+      return Response.json(
+        { message: `Ask for at most ${CARD_REPORT_MAX_NAMES} cards at a time.` },
+        { status: 400 },
+      );
+    return Response.json(
+      buildCardReport(names, {
+        index: this.deps.index,
+        provisional: this.deps.pool.provisional,
+        audit: catalogAudit(),
+        scenarios: this.deps.cardTestLab === true ? listCardTestScenarios() : null,
+      }),
+    );
   }
 
   /**

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+import { IMPORT_REPORT_PATH } from './lib/navigation';
 
 /**
  * The tester's routes. Every view loads on demand (plan M6 task 1), so a view is a chunk of its
@@ -17,6 +18,12 @@ const routes: RouteRecordRaw[] = [
     path: '/batch/:id?',
     name: 'batch-results',
     component: () => import('./views/BatchRunsView.vue'),
+  },
+  // The last refused import and the work order for its unmodeled cards (ADR 0053).
+  {
+    path: IMPORT_REPORT_PATH,
+    name: 'import-report',
+    component: () => import('./views/ImportReportView.vue'),
   },
   ...(import.meta.env['DEV'] === true
     ? [

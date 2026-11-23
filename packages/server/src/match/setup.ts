@@ -23,6 +23,7 @@ import type {
   PlayerId,
   SeatSource,
   SeatSummary,
+  UnmodeledCard,
   ValidationIssue,
 } from '@mtg/shared';
 import type { OracleIndex } from '../cards/oracle-index';
@@ -51,6 +52,8 @@ export interface SeatProblem {
   unresolvedNames: string[];
   /** Cards the engine cannot model — the ADR 0009 constraint, surfaced at setup. */
   unmodeledCards: string[];
+  /** The same cards with their status, for the setup preview only (ADR 0053). */
+  unmodeledDetail?: UnmodeledCard[];
 }
 
 export interface SeatSetup {

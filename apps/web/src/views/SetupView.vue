@@ -29,20 +29,23 @@ import type {
   SetupPreview,
 } from '@mtg/shared';
 import ManaPips from '../components/ManaPips.vue';
+import { useRouter } from 'vue-router';
 import ModeCompass from '../components/setup/ModeCompass.vue';
 import { useConfirmedStart } from '../composables/useConfirmedStart';
 import { PROVIDER_LABELS } from '../lib/providerLabels';
 import { clearOpened, hasOpened, markOpened, openingScreen } from '../lib/opening';
 import { readRecentIds, syncRecentDeckIds } from '../lib/recentSetup';
 import { DEFAULT_PACE_MS, useGameStore } from '../stores/game';
+import { IMPORT_REPORT_PATH } from '../lib/navigation';
+import { useImportReportStore } from '../stores/importReport';
 
 const store = useGameStore();
 const { starting, startErrors, begin, clearStartErrors } = useConfirmedStart();
 
 const SEATS = 4;
 const SEAT_IDS = ['P1', 'P2', 'P3', 'P4'] as const;
-/** The Card lab route is registered only in development builds (`router.ts`). */
-const cardLabAvailable = import.meta.env['DEV'] === true;
+const router = useRouter();
+const importReport = useImportReportStore();
 
 /**
  * Decks that have already been imported and measured for engine model coverage (`bun run
@@ -200,6 +203,7 @@ onMounted(async () => {
   } finally {
     knownDecksLoaded.value = true;
   }
+  restoreFailedImport();
 });
 
 const humanIndex = computed(() =>
@@ -460,9 +464,48 @@ const importState = computed(() => {
   if (index === null || pickingChoice.value?.kind !== 'import') return null;
   const seat = current.value?.seats[index];
   if (seat === undefined) return previewError.value !== '' ? null : { kind: 'checking' as const };
-  if (!seat.modeled) return { kind: 'stopped' as const, reasons: current.value?.blockers ?? [] };
+  if (!seat.modeled)
+    return {
+      kind: 'stopped' as const,
+      reasons: current.value?.blockers ?? [],
+      cards: seat.unmodeledCards ?? [],
+    };
   return { kind: 'in' as const, name: seat.commanderNames.join(' & ') };
 });
+
+/** How many blocking cards the chooser names before "and N more". */
+const STOPPED_CARDS_SHOWN = 6;
+
+/** The Import report's "Open in Card lab": keeps the list and the cards, then goes there. */
+async function openImportReport(): Promise<void> {
+  const index = pickingSeat.value;
+  const choice = pickingChoice.value;
+  if (index === null || choice?.kind !== 'import') return;
+  const seat = current.value?.seats[index];
+  const raw = choice.text.trim();
+  importReport.fill({
+    seat: SEAT_IDS[index]!,
+    sourceKind: /^https?:\/\//i.test(raw) ? 'url' : 'plaintext',
+    source: raw,
+    archetypeTag: choice.tag.trim(),
+    deckName: seat?.commanderNames.join(' & ') || 'Imported deck',
+    unmodeled: seat?.unmodeledCards ?? [],
+  });
+  await router.push(IMPORT_REPORT_PATH);
+}
+
+/**
+ * Coming back from the Import report: the list that was refused goes back into its seat, with the
+ * chooser open on it, so a failed import never costs the person their paste. Once per report.
+ */
+function restoreFailedImport(): void {
+  const draft = importReport.takeDraft();
+  if (draft === null || opening.value) return;
+  const index = SEAT_IDS.indexOf(draft.seat as (typeof SEAT_IDS)[number]);
+  if (index < 0) return;
+  setChoice(index, { kind: 'import', text: draft.source, tag: draft.archetypeTag });
+  openChooser(index);
+}
 
 /** The chooser's rows: "a." onward through every section, as the design letters them. */
 const rowLetters = computed(() => {
@@ -865,11 +908,32 @@ const pickingRow = computed(() =>
               <ul>
                 <li v-for="reason in importState.reasons" :key="reason">{{ reason }}</li>
               </ul>
-              <div v-if="cardLabAvailable" class="stopped-foot">
-                <span>The Card lab shows which cards still need work in the rules engine.</span>
-                <RouterLink to="/card-test-lab" class="dt-btn small"
-                  >Open in Card lab<span class="dt-arr" aria-hidden="true"
-                /></RouterLink>
+              <ul
+                v-if="importState.cards.length > 0"
+                class="stopped-cards"
+                aria-label="Cards that need work"
+              >
+                <li
+                  v-for="card in importState.cards.slice(0, STOPPED_CARDS_SHOWN)"
+                  :key="card.name"
+                >
+                  <span>{{ card.name }}</span>
+                  <span class="stopped-status">{{
+                    card.status === 'unsupported' ? 'Unsupported' : 'Provisional'
+                  }}</span>
+                </li>
+                <li v-if="importState.cards.length > STOPPED_CARDS_SHOWN" class="more">
+                  and {{ importState.cards.length - STOPPED_CARDS_SHOWN }} more
+                </li>
+              </ul>
+              <div v-if="importState.cards.length > 0" class="stopped-foot">
+                <span
+                  >The Card lab shows what each card still needs, and writes it up as a work
+                  order.</span
+                >
+                <button type="button" class="dt-btn small" @click="openImportReport">
+                  Open in Card lab<span class="dt-arr" aria-hidden="true" />
+                </button>
               </div>
             </div>
           </section>
@@ -1595,6 +1659,21 @@ p {
   border-bottom: 1px solid var(--rule);
   font-size: 0.8rem;
   white-space: pre-wrap;
+}
+.import-stopped ul.stopped-cards li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.stopped-status {
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.import-stopped li.more {
+  color: var(--muted);
 }
 .stopped-foot {
   display: flex;

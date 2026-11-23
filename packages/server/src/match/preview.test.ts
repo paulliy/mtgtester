@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { previewMatchup, resolveSavedSeat, type PreviewDeps } from './preview';
 import { makeOracleCard, forest } from '../test-factory';
+import { buildOracleIndexFromCards } from '../cards/oracle-index';
 import { parseBannedList } from '../decks/banned';
 
 describe('matchup preview', () => {
@@ -118,6 +119,124 @@ describe('matchup preview', () => {
     const result = await previewMatchup(input, deps);
     expect(result.blockers[0]).toMatch(/saved decks.*disabled/i);
     expect(result.seats[0]?.modeled).toBe(false);
+  });
+});
+
+describe('unmodeled cards in a preview (ADR 0053)', () => {
+  const general = makeOracleCard({
+    name: 'Test General',
+    typeLine: 'Legendary Creature \u2014 Elf',
+    supertypes: ['Legendary'],
+    types: ['Creature'],
+    colorIdentity: ['G'],
+  });
+  const odd = makeOracleCard({
+    name: 'Mystery Engine',
+    typeLine: 'Artifact',
+    types: ['Artifact'],
+    oracleText: 'Whenever the moon is full, flarb the zonk.',
+  });
+  const land = forest();
+  const cards = [general, odd, land];
+  const index = buildOracleIndexFromCards(cards);
+  const base = {
+    seed: 'fixed',
+    providerKind: 'random' as const,
+    gameMode: 'singlePlayer' as const,
+    humanSeat: 'P1' as const,
+  };
+  const pool = (n: number) => Array.from({ length: n }, () => ({ kind: 'pool' as const }));
+
+  it('names the unsupported cards of a pasted list, with a hash and no status it did not earn', async () => {
+    const deps = {
+      pool: { cards: [] },
+      index,
+      banned: parseBannedList(''),
+      store: {},
+    } as unknown as PreviewDeps;
+    const text = 'Commander\n1 Test General\n\nDeck\n1 Mystery Engine\n10 Forest';
+    const result = await previewMatchup(
+      { ...base, seats: [{ kind: 'plaintext', text }, ...pool(3)] },
+      deps,
+    );
+    const seat = result.seats[0]!;
+    expect(seat.modeled).toBe(false);
+    expect(result.blockers).toContain('P1: Deck is not fully modeled.');
+    expect(seat.unmodeledCards).toEqual([
+      {
+        name: 'Mystery Engine',
+        oracleSha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+        status: 'unsupported',
+      },
+    ]);
+    // A generated seat sends no card names at all.
+    expect(result.seats[1]).not.toHaveProperty('unmodeledCards');
+  });
+
+  it('sends no card names for a fully modeled pasted list', async () => {
+    const deps = {
+      pool: { cards: [] },
+      index,
+      banned: parseBannedList(''),
+      store: {},
+    } as unknown as PreviewDeps;
+    const text = 'Commander\n1 Test General\n\nDeck\n10 Forest';
+    const result = await previewMatchup(
+      { ...base, seats: [{ kind: 'plaintext', text }, ...pool(3)] },
+      deps,
+    );
+    expect(result.seats[0]?.modeled).toBe(true);
+    expect(result.seats[0]).not.toHaveProperty('unmodeledCards');
+  });
+
+  it('marks an admitted provisional card provisional and does not block on it', async () => {
+    const provisional = { definitions: new Map([[odd.oracleId, {}]]) };
+    const deps = {
+      pool: { cards: [], provisional },
+      index,
+      banned: parseBannedList(''),
+      store: {},
+    } as unknown as PreviewDeps;
+    const text = 'Commander\n1 Test General\n\nDeck\n1 Mystery Engine\n10 Forest';
+    const result = await previewMatchup(
+      { ...base, seats: [{ kind: 'plaintext', text }, ...pool(3)] },
+      deps,
+    );
+    expect(result.seats[0]?.modeled).toBe(true);
+    expect(result.seats[0]?.unmodeledCards?.map((card) => [card.name, card.status])).toEqual([
+      ['Mystery Engine', 'provisional'],
+    ]);
+  });
+
+  it('names the unsupported cards of a saved deck that is no longer fully modeled', async () => {
+    const snapshot = {
+      snapshotId: 'stable',
+      name: 'My deck',
+      commanderNames: ['Test General'],
+      colorIdentity: ['G'],
+      archetypeTag: 'Lands',
+      companionOracleId: null,
+      cards: [
+        { oracleId: general.oracleId, name: general.name, quantity: 1 },
+        { oracleId: odd.oracleId, name: odd.name, quantity: 1 },
+        { oracleId: land.oracleId, name: land.name, quantity: 98 },
+      ],
+    };
+    const deps = {
+      pool: { cards: [] },
+      store: { savedSnapshot: () => snapshot },
+      index,
+      banned: parseBannedList(''),
+    } as unknown as PreviewDeps;
+    const result = await previewMatchup(
+      { ...base, seats: [{ kind: 'snapshot', snapshotId: 'stable' }, ...pool(3)] },
+      deps,
+    );
+    expect(result.blockers[0]).toMatch(/no longer fully modeled/);
+    expect(result.seats[0]?.modeled).toBe(false);
+    expect(result.seats[0]?.unmodeledCards?.map((card) => [card.name, card.status])).toEqual([
+      ['Mystery Engine', 'unsupported'],
+    ]);
   });
 });
 

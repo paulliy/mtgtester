@@ -64,7 +64,7 @@ For the full command reference and contributor guidance, see [AGENTS.md](AGENTS.
 ## Current limitations
 
 - **Rules and cards:** only cards the engine can model are safe to simulate. Original precon fixtures have the strongest coverage; community decks still expose major missing mechanics. Use `bun run coverage` and `bun run staples` as the source of truth.
-- **Product follow-up:** narrow-screen gameplay, failed-import draft preservation, human-abandon confirmation, and statistics presentation/history need more work.
+- **Product follow-up:** narrow-screen gameplay, human-abandon confirmation, and statistics presentation/history need more work.
 - **Metrics:** invalid legacy mana rates now display as unavailable; versioned end-of-turn mana observations are not yet implemented.
 
 ## Documentation map

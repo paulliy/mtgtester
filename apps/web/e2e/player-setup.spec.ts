@@ -100,6 +100,92 @@ test('opponent seats take decks from their menus, and a blocked import holds Sta
   await expect(page.getByRole('button', { name: 'Start game' })).toBeEnabled();
 });
 
+test('a stopped import opens the Import report, keeps the paste and writes a work order', async ({
+  page,
+}) => {
+  // The fixture server models every card it knows, so the two answers that depend on an unmodeled
+  // card are supplied here. The server side of both is covered by `preview.test.ts` and
+  // `card-report.test.ts`; this checks what the screens do with them.
+  await page.route('**/api/setup-preview', async (route) => {
+    const response = await route.fetch();
+    const body = (await response.json()) as {
+      seats: Array<{ modeled: boolean; unmodeledCards?: unknown[] }>;
+      blockers: string[];
+    };
+    const seat = body.seats[1];
+    if (seat !== undefined && !seat.modeled)
+      seat.unmodeledCards = [
+        { name: 'Cauldron Familiar', oracleSha256: 'a'.repeat(64), status: 'unsupported' },
+      ];
+    await route.fulfill({ response, json: body });
+  });
+  await page.route('**/api/card-report**', (route) =>
+    route.fulfill({
+      json: {
+        cards: [
+          {
+            name: 'Cauldron Familiar',
+            oracleId: 'cauldron',
+            typeLine: 'Creature \u2014 Cat',
+            manaCost: '{B}',
+            oracleText:
+              'When this creature enters, each opponent loses 1 life and you gain 1 life.',
+            oracleSha256: 'a'.repeat(64),
+            status: 'unsupported',
+            unmodeledReasons: ['unrecognized rules text: "Sacrifice a Food: Return this card"'],
+            scenarios: null,
+          },
+        ],
+        unresolved: [],
+        auditAvailable: true,
+        labAvailable: false,
+      },
+    }),
+  );
+  await page.goto('/');
+  const seats = page.getByLabel('Matchup preview').locator('li');
+  await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
+  await page.getByRole('button', { name: 'Change the deck for P2' }).click();
+  const list = ['Commander', '1 Azusa, Lost but Seeking', '', 'Deck', '1 Cauldron Familiar'].join(
+    '\n',
+  );
+  await page.getByLabel('Deck link or decklist').fill(list);
+  await page.getByRole('button', { name: 'Check and import' }).click();
+  await expect(page.getByText('Import stopped')).toBeVisible({ timeout: 60_000 });
+  await expect(
+    page.getByLabel('Cards that need work').getByText('Cauldron Familiar'),
+  ).toBeVisible();
+
+  await page.getByRole('button', { name: 'Open in Card lab' }).click();
+  await expect(page).toHaveURL(/\/workshop\/import-report$/);
+  await expect(page.getByRole('heading', { name: 'Import stopped' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Card lab', exact: true })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await page.getByRole('button', { name: /Cauldron Familiar/ }).click();
+  await expect(page.locator('.oracle')).toContainText(
+    'When this creature enters, each opponent loses 1 life',
+  );
+  // Nothing in the ledger was claimed for it, so nothing is shown as done.
+  await expect(
+    page.getByRole('complementary', { name: 'Evidence' }).getByText('No record').first(),
+  ).toBeVisible();
+  await expect(page.getByText('This server has no Card Test Lab catalog')).toBeVisible();
+
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Save work order' }).click();
+  expect((await download).suggestedFilename()).toBe(
+    'decktank-work-order-azusa-lost-but-seeking.md',
+  );
+  await page.getByText('Preview the work order').click();
+  await expect(page.getByLabel('Work order preview')).toContainText('### Cauldron Familiar');
+
+  // Back to New game, the refused list is still in the seat's box.
+  await page.getByRole('link', { name: 'Back to New game' }).click();
+  await expect(page.getByLabel('Deck link or decklist')).toHaveValue(list);
+});
+
 test('Cancel after moving seats brings back the generated deck you started with', async ({
   page,
 }) => {
