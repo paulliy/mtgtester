@@ -68,7 +68,7 @@ export interface TableConfig {
   paceMs: number | null;
   /** Development mode only: every clock duration divided by this (`TABLE_CLOCK_SCALE`). */
   clockScale: number | null;
-  /** Development mode only: a fixed host secret (`TABLE_HOST_SECRET`), for end-to-end tests. */
+  /** A fixed host secret (`TABLE_HOST_SECRET`); null makes a random one at each start. */
   hostSecret: string | null;
   /** Development mode only: the engine's events per step (`TABLE_MAX_STEP_WORK`), to force a halt. */
   maxStepWork: number | null;
@@ -288,11 +288,15 @@ export function loadTableConfig(
     );
   }
 
+  // A fixed host secret: in development for end-to-end tests, in production so the operator can
+  // create tables without reading the log after every restart. Production asks for a longer one,
+  // since it lives for months rather than one test run.
   const hostSecret = setting(env, 'TABLE_HOST_SECRET') ?? null;
-  if (hostSecret !== null && !/^[A-Za-z0-9_-]{16,128}$/.test(hostSecret)) {
+  const minSecret = args.dev ? 16 : 24;
+  if (hostSecret !== null && !new RegExp(`^[A-Za-z0-9_-]{${minSecret},128}$`).test(hostSecret)) {
     return fail(
       'badValue',
-      'TABLE_HOST_SECRET must be 16 to 128 letters, digits, - or _.',
+      `TABLE_HOST_SECRET must be ${minSecret} to 128 letters, digits, - or _.`,
       'TABLE_HOST_SECRET',
     );
   }
@@ -348,7 +352,6 @@ export const DEV_ONLY_SETTINGS = [
   'TABLE_TURN_CAP',
   'TABLE_PACE_MS',
   'TABLE_CLOCK_SCALE',
-  'TABLE_HOST_SECRET',
   'TABLE_MAX_STEP_WORK',
 ] as const;
 

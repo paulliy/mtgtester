@@ -141,6 +141,15 @@ describe('loadTableConfig', () => {
     expect(refusal({ TABLE_MAX_STEP_WORK: '0' }, ['--dev']).setting).toBe('TABLE_MAX_STEP_WORK');
   });
 
+  it('accepts a fixed host secret in production only when it is at least 24 characters', () => {
+    const fixed = 'a-production-host-secret-0001';
+    expect(okConfig({ ...PRODUCTION, TABLE_HOST_SECRET: fixed }, []).hostSecret).toBe(fixed);
+    expect(okConfig(PRODUCTION, []).hostSecret).toBeNull();
+    const short = refusal({ ...PRODUCTION, TABLE_HOST_SECRET: 'only-twenty-chars-01' }, []);
+    expect(short).toMatchObject({ code: 'badValue', setting: 'TABLE_HOST_SECRET' });
+    expect(short.message).toContain('24 to 128');
+  });
+
   it('reads the defaults in dev mode: loopback, clock off, no test key', () => {
     const config = okConfig();
     expect(config).toMatchObject({

@@ -458,6 +458,15 @@ const VERIFY_SCOPES =
 
 const STALE = 'engine bug: a layer input changed inside a read scope';
 
+/**
+ * The open read scope on `ctx`, if any, as an identity token: a query memoized against it can
+ * reuse its answer for as long as the scope is open, because nothing the layer digest covers may
+ * change inside one (the battlefield, its counters, attachments and controllers among them).
+ */
+export function readScopeToken(ctx: GameContext): object | undefined {
+  return SCOPES.get(ctx);
+}
+
 /** Run `read` inside a read scope on `ctx`. A nested scope on the same context joins the outer. */
 export function withReadScope<T>(ctx: GameContext, read: () => T): T {
   if (SCOPES.has(ctx)) return read();

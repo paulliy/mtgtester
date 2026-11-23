@@ -1,3 +1,4 @@
+import { withReadScope } from '../effects/layer-cache';
 import { phaseInAtUntap } from '../state/phasing';
 import { assertTriggerEventFamily } from '../cards/trigger-contracts';
 /**
@@ -229,35 +230,40 @@ export function queueStepTriggers(
 ): void {
   assertTriggerEventFamily(when, 'step');
   const apId = ctx.state.currentTurnPlayer;
-  for (const perm of [...ctx.state.battlefield]) {
-    for (const ability of triggersOf(ctx, perm)) {
-      const spec = ability.trigger;
-      if (spec === undefined || spec.when !== when) continue;
-      if (spec.player === 'you' && perm.controllerId !== apId) continue;
-      if (spec.player === 'enchanted' && perm.attachedTo !== apId) continue;
-      if (spec.player === 'opponent' && perm.controllerId === apId) continue;
-      const source = {
-        cardId: perm.cardId,
-        controllerId: perm.controllerId,
-        eventPlayerId: apId,
-      };
-      // Intervening-if, first check (CR 603.4) — see `queueTriggersForEvent`.
-      if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source)) continue;
-      const copies = 1 + additionalTypedTriggerCopies(ctx, perm);
-      for (let copy = 0; copy < copies; copy++) {
-        ctx.state.pendingTriggers.push({
+  // One read scope for the scan, which only queues triggers: the board is digested once rather
+  // than once per permanent.
+  withReadScope(ctx, () => {
+    for (const perm of [...ctx.state.battlefield]) {
+      for (const ability of triggersOf(ctx, perm)) {
+        const spec = ability.trigger;
+        if (spec === undefined || spec.when !== when) continue;
+        if (spec.player === 'you' && perm.controllerId !== apId) continue;
+        if (spec.player === 'enchanted' && perm.attachedTo !== apId) continue;
+        if (spec.player === 'opponent' && perm.controllerId === apId) continue;
+        const source = {
+          cardId: perm.cardId,
           controllerId: perm.controllerId,
-          sourceCardId: perm.cardId,
-          sourceObjectId: perm.id,
-          sourceOracleId: perm.oracleId,
-          sourceName: perm.name,
-          ability,
-          scope: { eventPlayerId: apId },
-        });
-        debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
+          eventPlayerId: apId,
+        };
+        // Intervening-if, first check (CR 603.4) — see `queueTriggersForEvent`.
+        if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, source))
+          continue;
+        const copies = 1 + additionalTypedTriggerCopies(ctx, perm);
+        for (let copy = 0; copy < copies; copy++) {
+          ctx.state.pendingTriggers.push({
+            controllerId: perm.controllerId,
+            sourceCardId: perm.cardId,
+            sourceObjectId: perm.id,
+            sourceOracleId: perm.oracleId,
+            sourceName: perm.name,
+            ability,
+            scope: { eventPlayerId: apId },
+          });
+          debug(ctx, 'stack', `${when} trigger queued: ${perm.name}`);
+        }
       }
     }
-  }
+  });
 
   for (const player of ctx.state.players) {
     for (const emblem of player.emblems) {

@@ -62,7 +62,8 @@ export function emit(
 
   // Only events the spectator log actually renders are worth a snapshot: seeking is by log
   // line, and a snapshot per raw event cost ~11 MB of retained state per 30 turns.
-  if (formatSpectatorLine(event) !== null) s.pendingSnapshotSequence = seq;
+  if (ctx.skipSpectatorSnapshots !== true && formatSpectatorLine(event) !== null)
+    s.pendingSnapshotSequence = seq;
 }
 
 export function debug(

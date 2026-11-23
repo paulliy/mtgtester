@@ -23,7 +23,7 @@ export interface WorkerCardDeps {
 export function workerCardsFor(
   deps: WorkerCardDeps,
 ): (config: TableSessionConfig) => TableWorkerCards {
-  const poolCards = deps.pool.cards.map((entry) => entry.card);
+  const pool = deps.pool.cards;
   const bannedNames = [...deps.banned.names];
   return (config) => {
     const deckCards = new Map<string, OracleCard>();
@@ -40,6 +40,6 @@ export function workerCardsFor(
         if (card !== null) deckCards.set(card.oracleId, card);
       }
     }
-    return { poolCards, deckCards: [...deckCards.values()], bannedNames };
+    return { pool, deckCards: [...deckCards.values()], bannedNames };
   };
 }

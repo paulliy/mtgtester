@@ -8,13 +8,19 @@
  */
 
 import type { OracleCard } from '@mtg/shared';
+import type { PoolCard } from '../cards/pool';
 import type { ReplayIdentity } from '../match/replay-config';
 import type { TableSessionConfig, TableSessionInput, TableSessionOutput } from './session-port';
 
 /** What a worker needs besides the attempt's configuration. */
 export interface TableWorkerCards {
-  /** The supported pool's cards, in the main thread's order. */
-  poolCards: OracleCard[];
+  /**
+   * The supported pool's entries, in the main thread's order, as the main thread built them. The
+   * worker uses them as they are instead of interpreting every pool card again: a worker's game
+   * reaches a few hundred cards, and interpreting the whole pool in each one cost seconds of CPU
+   * and kept a definition for every pool card in every worker's heap.
+   */
+  pool: PoolCard[];
   /** Every card the approved human decklists resolve to. */
   deckCards: OracleCard[];
   /** The banned list's names as written in the source. */

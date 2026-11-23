@@ -34,7 +34,7 @@ binds (a tunnel or proxy can expose a loopback bind):
 - `TABLE_ALLOWED_HOSTS`: comma-separated `host` or `host:port` values a request may name.
 
 It also refuses to start without TLS unless `--insecure-lan` is passed. Development-only settings
-(`TABLE_TEST_RNG_KEY`, `TABLE_TURN_CAP`, `TABLE_PACE_MS`, `TABLE_CLOCK_SCALE`, `TABLE_HOST_SECRET`, `TABLE_MAX_STEP_WORK`, `TABLE_CLOCK=off`)
+(`TABLE_TEST_RNG_KEY`, `TABLE_TURN_CAP`, `TABLE_PACE_MS`, `TABLE_CLOCK_SCALE`, `TABLE_MAX_STEP_WORK`, `TABLE_CLOCK=off`)
 are refused outside `--dev`.
 
 ## LAN game
@@ -97,7 +97,14 @@ one: put its public hostname in the allowlists and `TABLE_PUBLIC_ORIGIN`, and it
 address in `TABLE_TRUSTED_PROXY` with `TABLE_BEHIND_TLS_PROXY=1`. Without that the server refuses
 to start, and in LAN mode it refuses a loopback peer that names a public host.
 
+A worked example, an Oracle Cloud VM behind a Cloudflare Tunnel with a systemd service, is
+[deploying on Oracle Cloud](deploy-oracle-cloud.md).
+
 ## What the host sees and can do
+
+- By default the server makes a new host secret at every start and prints it. Set
+  `TABLE_HOST_SECRET` (24 to 128 letters, digits, `-` or `_` outside `--dev`) to keep one fixed
+  secret instead; it is then never printed, so keep it in a password manager.
 
 - The host secret, printed at startup, creates tables. The host token, returned once per table,
   approves seat requests, sets bots, kicks, starts and abandons.
