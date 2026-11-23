@@ -124,6 +124,7 @@ export const SOURCE_FILES = [
   'packages/server/src/match/session.ts',
   'packages/server/src/match/session.test.ts',
   'packages/server/src/ws/server.ts',
+  'packages/server/src/host/game-host.ts',
   'packages/server/fixtures/card-verification-manifest.json',
   'apps/web/e2e/card-test-lab.spec.ts',
   'apps/web/src/views/CardTestLabView.vue',
