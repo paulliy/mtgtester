@@ -197,6 +197,13 @@ const gameOverLine = computed(() => store.gameOver?.summary ?? null);
 
 const INFO_OPEN_KEY = 'mtg.playerGameInfoOpen';
 const settingsOpen = ref(false);
+/** The settings menu opens just under its button, wherever the bar has put that button. */
+const settingsTop = ref<number | null>(null);
+function toggleSettings(event: MouseEvent): void {
+  const button = event.currentTarget as HTMLElement | null;
+  if (button) settingsTop.value = Math.round(button.getBoundingClientRect().bottom + 6);
+  settingsOpen.value = !settingsOpen.value;
+}
 const infoOpen = ref(
   (() => {
     try {
@@ -1232,10 +1239,11 @@ function abandon(): void {
          height a second bar took. Settings and game info open from buttons there. -->
     <Teleport to="#top-bar-status" defer>
       <span v-if="state" class="turn-badge" :class="{ 'your-turn': isYourTurn }">
-        <span class="turn-round">Turn {{ state.turnNumber }}</span>
-        <span class="turn-tag">{{
-          isYourTurn ? 'Your turn' : `${state.activePlayer}'s turn`
-        }}</span>
+        <!-- The text reads "Turn 6 · Your turn" as before, for screen readers and the tests; the
+             separator is hidden and the two halves are styled apart. -->
+        <span class="turn-round">Turn {{ state.turnNumber }}</span
+        ><span class="dt-sr"> · </span
+        ><span class="turn-tag">{{ isYourTurn ? 'Your turn' : state.activePlayer }}</span>
       </span>
       <!-- Where in the turn: a ruler of the five phases with a warm dot on the current one. -->
       <ol
@@ -1296,7 +1304,7 @@ function abandon(): void {
         class="bar-toggle"
         :aria-expanded="settingsOpen"
         aria-controls="player-settings"
-        @click="settingsOpen = !settingsOpen"
+        @click="toggleSettings"
       >
         Settings
       </button>
@@ -1312,7 +1320,13 @@ function abandon(): void {
     </Teleport>
 
     <!-- Bot pace, confirmations, motion and Abandon: set once, rarely touched, so folded away. -->
-    <div v-show="settingsOpen" id="player-settings" class="settings-menu" aria-label="Settings">
+    <div
+      v-show="settingsOpen"
+      id="player-settings"
+      class="settings-menu"
+      aria-label="Settings"
+      :style="settingsTop === null ? undefined : { top: settingsTop + 'px' }"
+    >
       <div class="pace">
         Bot turns
         <button type="button" :class="{ active: store.paceMs === 0 }" @click="store.setPace(0)">
@@ -3294,7 +3308,8 @@ button.primary {
 }
 .human-zone {
   gap: 0.45rem;
-  overflow: hidden;
+  /* A short window scrolls your side rather than letting the hand cover the board. */
+  overflow-y: auto;
 }
 .human-zone.your-turn {
   border-color: transparent;
@@ -3443,7 +3458,7 @@ button.selected,
 
 /* Your side: the board, then lands behind a rule, then the zones rail. */
 .battle-row {
-  min-height: 0;
+  min-height: 9.5rem;
   gap: 0;
   border-top: 1px solid var(--ink);
 }
