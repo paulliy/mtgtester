@@ -60,7 +60,7 @@ function join(): void {
 </script>
 
 <template>
-  <div class="table-view">
+  <div class="table-view" :class="{ playing: playing && table.phase !== 'finished' }">
     <p v-if="stoppedText" class="banner dt-note danger" role="alert" data-testid="stopped">
       {{ stoppedText }}
     </p>
@@ -128,6 +128,16 @@ function join(): void {
 </template>
 
 <style scoped>
+/* In play the board fills the window under the table bar. */
+.table-view.playing {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.table-view.playing > :deep(.player-game) {
+  flex: 1;
+  min-height: 0;
+}
 .join {
   max-width: 34rem;
   margin: 4rem auto 2rem;

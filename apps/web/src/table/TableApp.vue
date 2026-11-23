@@ -84,8 +84,22 @@ const game = useGameStore();
   display: flex;
   align-items: center;
   gap: 0.8rem;
+  flex-wrap: wrap;
+  row-gap: 0.4rem;
   min-width: 0;
   font-size: 0.8rem;
+}
+.topbar-theme {
+  margin-left: auto;
+}
+/* A game's status is its own row under the brand, as in the tester's bar. */
+.status-slot:not(:empty) {
+  order: 10;
+  flex: 1 1 100%;
+  min-height: 3.4rem;
+  margin: 0 -1.25rem;
+  padding: 0.35rem 1.25rem;
+  border-top: 1px solid var(--rule);
 }
 @media (max-width: 760px) {
   .topbar {

@@ -7,7 +7,6 @@ import { useRouter } from 'vue-router';
 import type { ObjectId, TargetChoice } from '@mtg/shared';
 import type { DecisionRequest, LegalAction } from '../lib/protocol';
 import ActionLog from '../components/ActionLog.vue';
-import CardImage from '../components/CardImage.vue';
 import CombatOverlay from '../components/CombatOverlay.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
@@ -19,12 +18,17 @@ import ManaTaps from '../components/ManaTaps.vue';
 import OpeningHand from '../components/OpeningHand.vue';
 import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
+import ProvisionalBadge from '../components/ProvisionalBadge.vue';
 import StackPanel from '../components/StackPanel.vue';
 import ZonePile from '../components/ZonePile.vue';
 import ZoneStrip from '../components/ZoneStrip.vue';
 import { useBoardAnchors } from '../composables/useBoardAnchors';
 import { useCombatStrikes } from '../composables/useCombatStrikes';
 import { useLifeFlash, useLifeFlashBySeat } from '../composables/useLifeFlash';
+import { useZoneSizes } from '../composables/useZoneSizes';
+import { fitTileWidth } from '../lib/fitTiles';
+import { scryfallImageUrl } from '../lib/card';
+import { splitTypeLine } from '../lib/typeLine';
 import {
   buttonLabel,
   costChips,
@@ -157,11 +161,13 @@ const untappedLandCount = computed(() => humanLands.value.filter((land) => !land
  */
 type Pile = 'lands' | 'graveyard' | 'exile';
 const PILE_KEY = (pile: Pile) => `mtg.playerPile.${pile}`;
+/** Lands start spread out as tiles, as the Decktank board draws them; the other piles closed. */
 function readPile(pile: Pile): boolean {
   try {
-    return localStorage.getItem(PILE_KEY(pile)) === 'true';
+    const stored = localStorage.getItem(PILE_KEY(pile));
+    return stored === null ? pile === 'lands' : stored === 'true';
   } catch {
-    return false;
+    return pile === 'lands';
   }
 }
 const pilesOpen = ref<Record<Pile, boolean>>({
@@ -346,37 +352,68 @@ const humanLifeFlash = useLifeFlash(() => human.value?.seat);
 const opponentLifeFlash = useLifeFlashBySeat();
 
 /**
- * Card size scales inversely with how crowded its zone is (design handoff: "adaptive card
- * sizing"), so a packed board still fits and a sparse one still reads clearly. `refN` is the
- * "comfortable" reference count for that zone; own and opponent zones carry separate base
- * sizes/scales so opponents render smaller by default without shrinking the human's board.
+ * Card tiles size themselves to fill their zone (redesign phase 5): each zone is measured, and
+ * its tiles take the widest 5:7 size at which all of them fit (`fitTileWidth`), so a sparse board
+ * shows large cards and a crowded one shrinks before it scrolls.
  */
-function adaptiveWidth(
-  baseW: number,
-  count: number,
-  refN: number,
-  scale: number,
-  capH?: number,
-): number {
-  const factor = Math.min(1.35, Math.max(0.6, Math.sqrt(refN / Math.max(count, 1))));
-  const width = baseW * factor * scale;
-  if (capH === undefined) return Math.round(width);
-  // 63:88 card ratio — convert the height cap to the equivalent width cap.
-  return Math.round(Math.min(width, (capH * 63) / 88));
+const { sizes: zoneSizes, zoneRef } = useZoneSizes();
+function zoneTileWidth(key: string, count: number, min: number, max: number, extra = 0): number {
+  const size = zoneSizes.get(key);
+  return fitTileWidth(count, size?.width ?? 0, size?.height ?? 0, { min, max, gap: 6, extra });
+}
+const humanPermWidth = computed(() =>
+  zoneTileWidth('human-board', humanBoardGroups.value.length, 54, 190, 4),
+);
+const humanPermMinWidth = 54;
+const humanLandWidth = computed(() =>
+  zoneTileWidth('human-lands', humanLandGroups.value.length, 44, 130, 4),
+);
+const humanCommandZoneCount = computed(
+  () =>
+    (human.value?.commanders ?? []).filter(
+      (commander) => commander.zone === 'command' && commander.objectId !== null,
+    ).length,
+);
+/** Hand tiles stay in one row: as tall as the band allows, narrower only when they don't fit. */
+const handCardWidth = computed(() => {
+  const size = zoneSizes.get('hand');
+  const count = (human.value?.hand?.length ?? 0) + humanCommandZoneCount.value;
+  if (!size) return 110;
+  const byHeight = (size.height * 5) / 7;
+  const byWidth = count > 0 ? (size.width - (count - 1) * 6 - 12) / count : byHeight;
+  return Math.floor(Math.max(72, Math.min(170, byHeight, byWidth)));
+});
+const opponentPermMinWidth = 40;
+function opponentPermWidth(seat: string): number {
+  return zoneTileWidth(`opp-${seat}`, groupedPermanentsFor(seat).length, 40, 150);
+}
+/** The art crop for a hand tile; tokens and unknown printings show the paper tone instead. */
+function artCropOf(card: { scryfallId: string | null; isToken?: boolean }): string | null {
+  if (card.isToken === true || card.scryfallId === null || card.scryfallId.length < 2) return null;
+  return scryfallImageUrl(card.scryfallId, 'art_crop', 'front');
+}
+/** Art that fails to load leaves the paper tone, not a broken-image mark. */
+function hideBrokenArt(event: Event): void {
+  (event.target as HTMLElement).style.display = 'none';
+}
+function typePartsOf(typeLine: string | undefined) {
+  return splitTypeLine(typeLine ?? '');
 }
 
-/**
- * Battlefield chips no longer scale off card *count* — that shrank a sparse board just because
- * a few more permanents came down, well before the row ran out of room. `--chip-w`/`--chip-min`
- * (below, in `.object`) hand sizing to the browser instead: a flex basis it shrinks from only
- * once the actual row width can't fit everything at full size.
- */
-const humanPermWidth = 120;
-const humanPermMinWidth = 54;
-const humanLandWidth = 96;
-const handCardWidth = computed(() => adaptiveWidth(96, human.value?.hand?.length ?? 0, 5, 1, 150));
-const opponentPermWidth = 92;
-const opponentPermMinWidth = 40;
+/** The turn ruler's stops, one per phase (CR 500.1). */
+const TURN_STOPS = [
+  { phase: 'beginning', label: 'Beginning' },
+  { phase: 'precombatMain', label: 'Main' },
+  { phase: 'combat', label: 'Combat' },
+  { phase: 'postcombatMain', label: 'Second main' },
+  { phase: 'ending', label: 'End' },
+] as const;
+const turnStopIndex = computed(() =>
+  Math.max(
+    0,
+    TURN_STOPS.findIndex((stop) => stop.phase === state.value?.phase),
+  ),
+);
 
 /** "P2" -> "P2 (Krenko, Mob Boss)" for combat-tray option labels; falls back to the raw id. */
 function seatLabel(seatId: string): string {
@@ -434,6 +471,17 @@ const nameById = computed(() => {
   for (const permanent of state.value?.battlefield ?? []) names.set(permanent.id, permanent.name);
   for (const card of state.value?.exile ?? []) names.set(card.id, card.name);
   return names;
+});
+
+/** Battlefield object ids of every seat's commanders, for the commander frame. */
+const commanderIds = computed(() => {
+  const ids = new Set<string>();
+  for (const seat of state.value?.seats ?? []) {
+    for (const commander of seat.commanders) {
+      if (commander.objectId !== null) ids.add(commander.objectId);
+    }
+  }
+  return ids;
 });
 
 function sourceId(action: LegalAction): string | null {
@@ -1184,8 +1232,26 @@ function abandon(): void {
          height a second bar took. Settings and game info open from buttons there. -->
     <Teleport to="#top-bar-status" defer>
       <span v-if="state" class="turn-badge" :class="{ 'your-turn': isYourTurn }">
-        Turn {{ state.turnNumber }} · {{ isYourTurn ? 'Your turn' : state.activePlayer }}
+        <span class="turn-round">Turn {{ state.turnNumber }}</span>
+        <span class="turn-tag">{{
+          isYourTurn ? 'Your turn' : `${state.activePlayer}'s turn`
+        }}</span>
       </span>
+      <!-- Where in the turn: a ruler of the five phases with a warm dot on the current one. -->
+      <ol
+        v-if="state"
+        class="turn-ruler"
+        :style="{ '--stop': turnStopIndex, '--stops': TURN_STOPS.length }"
+        aria-hidden="true"
+      >
+        <li
+          v-for="(stop, i) in TURN_STOPS"
+          :key="stop.phase"
+          :class="{ reached: i <= turnStopIndex, on: i === turnStopIndex }"
+        >
+          {{ stop.label }}
+        </li>
+      </ol>
       <span v-if="state" class="phase-label">{{ turnPositionLabel(state.phase, state.step) }}</span>
       <span v-if="state?.priorityPlayer" class="priority-label"
         >Priority:
@@ -1345,21 +1411,6 @@ function abandon(): void {
                  zones button beside the life total. -->
             <header>
               <span class="id-badge">{{ opponent.seat }}</span>
-              <span
-                v-for="commander in opponent.commanders"
-                :key="commander.cardId"
-                class="cmdr-thumb"
-                @mouseenter="showCardPreview(commander, $event)"
-                @mousemove="moveCardPreview"
-                @mouseleave="hideCardPreview"
-              >
-                <CardImage
-                  :scryfall-id="commander.scryfallId"
-                  :name="commander.name"
-                  size="small"
-                  :provisional="commander.provisional === true"
-                />
-              </span>
               <strong
                 class="seat-name"
                 @mouseenter="
@@ -1413,13 +1464,18 @@ function abandon(): void {
               :counters="opponent.counters"
               compact
             />
-            <TransitionGroup tag="div" name="board-card" class="permanents">
+            <TransitionGroup
+              :ref="zoneRef(`opp-${opponent.seat}`)"
+              tag="div"
+              name="board-card"
+              class="permanents"
+            >
               <div
                 v-for="group in groupedPermanentsFor(opponent.seat)"
                 :key="group.permanent.id"
                 class="object"
                 :style="{
-                  '--chip-w': opponentPermWidth + 'px',
+                  '--chip-w': opponentPermWidth(opponent.seat) + 'px',
                   '--chip-min': opponentPermMinWidth + 'px',
                 }"
                 :class="{
@@ -1438,6 +1494,7 @@ function abandon(): void {
                   :permanent="group.permanent"
                   :count="group.count"
                   :name-by-id="nameById"
+                  :is-commander="commanderIds.has(group.permanent.id)"
                 />
               </div>
             </TransitionGroup>
@@ -1490,48 +1547,6 @@ function abandon(): void {
             @click="chooseOpponent(human.seat)"
           >
             <span class="id-badge you">You · {{ human.seat }}</span>
-            <!-- The commander once, as a thumbnail: in the command zone it is the card you click
-                 to cast it, glowing when you can. -->
-            <span class="command-zone">
-              <template v-for="commander in human.commanders" :key="commander.cardId">
-                <button
-                  v-if="commander.zone === 'command' && commander.objectId !== null"
-                  type="button"
-                  class="commander-card cmdr-thumb"
-                  :title="`${commander.name}: in the command zone`"
-                  :class="{
-                    focused: focusedSourceId === commander.objectId,
-                    actionable: actionableSourceIds.has(commander.objectId),
-                    'chosen-target': isChosenTarget(commander.objectId),
-                  }"
-                  @click.stop="selectSource(commander.objectId)"
-                  @mouseenter="showCardPreview(commander, $event)"
-                  @mousemove="moveCardPreview"
-                  @mouseleave="hideCardPreview"
-                >
-                  <CardImage
-                    :scryfall-id="commander.scryfallId"
-                    :name="commander.name"
-                    size="small"
-                    :provisional="commander.provisional === true"
-                  />
-                </button>
-                <span
-                  v-else
-                  class="cmdr-thumb"
-                  @mouseenter="showCardPreview(commander, $event)"
-                  @mousemove="moveCardPreview"
-                  @mouseleave="hideCardPreview"
-                >
-                  <CardImage
-                    :scryfall-id="commander.scryfallId"
-                    :name="commander.name"
-                    size="small"
-                    :provisional="commander.provisional === true"
-                  />
-                </span>
-              </template>
-            </span>
             <strong
               class="seat-name"
               @mouseenter="human.commanders[0] && showCardPreview(human.commanders[0], $event)"
@@ -1572,6 +1587,7 @@ function abandon(): void {
           <!-- Your board, then your lands, then your graveyard and exile as piles: Arena's layout. -->
           <div class="battle-row">
             <TransitionGroup
+              :ref="zoneRef('human-board')"
               tag="div"
               name="board-card"
               class="permanents"
@@ -1605,6 +1621,7 @@ function abandon(): void {
                   :permanent="group.permanent"
                   :count="group.count"
                   :name-by-id="nameById"
+                  :is-commander="commanderIds.has(group.permanent.id)"
                 />
                 <ManaTaps
                   v-if="(manaByGroup.get(group.permanent.id) ?? []).length > 0"
@@ -1631,7 +1648,12 @@ function abandon(): void {
                 >
                   ▾ Lands ({{ humanLands.length }}) · {{ untappedLandCount }} untapped
                 </button>
-                <TransitionGroup tag="div" name="board-card" class="permanents lands">
+                <TransitionGroup
+                  :ref="zoneRef('human-lands')"
+                  tag="div"
+                  name="board-card"
+                  class="permanents lands"
+                >
                   <div
                     v-for="group in humanLandGroups"
                     :key="group.permanent.id"
@@ -1659,6 +1681,7 @@ function abandon(): void {
                       :permanent="group.permanent"
                       :count="group.count"
                       :name-by-id="nameById"
+                      :is-commander="commanderIds.has(group.permanent.id)"
                     />
                     <!-- Tap it for mana by hand: one button per kind of mana it can make. -->
                     <ManaTaps
@@ -1717,44 +1740,103 @@ function abandon(): void {
             </div>
           </div>
 
-          <TransitionGroup
-            tag="div"
-            name="hand-card"
-            class="hand"
-            :class="{ 'has-playable': playableSources.length > 0 && selectedAction === null }"
-          >
-            <button
-              v-for="card in human.hand ?? []"
-              :key="card.id"
-              type="button"
-              class="hand-card"
-              :style="{ width: handCardWidth + 'px' }"
-              :class="{
-                focused: focusedSourceId === card.id,
-                actionable: actionableSourceIds.has(card.id),
-                'chosen-target': isChosenTarget(card.id),
-              }"
-              draggable="true"
-              @dragstart="dragStart(card.id, $event)"
-              @dragend="dragEnd"
-              @click="selectSource(card.id)"
-              @mouseenter="showCardPreview(card, $event)"
-              @mousemove="moveCardPreview"
-              @mouseleave="hideCardPreview"
+          <!-- Your hand, led by your commander while it waits in the command zone. -->
+          <div :ref="zoneRef('hand')" class="hand-row">
+            <span v-if="humanCommandZoneCount > 0" class="command-zone">
+              <template v-for="commander in human.commanders" :key="commander.cardId">
+                <button
+                  v-if="commander.zone === 'command' && commander.objectId !== null"
+                  type="button"
+                  class="commander-card hand-tile"
+                  :style="{ width: handCardWidth + 'px' }"
+                  :title="`${commander.name}: in the command zone`"
+                  :class="{
+                    focused: focusedSourceId === commander.objectId,
+                    actionable: actionableSourceIds.has(commander.objectId),
+                    'chosen-target': isChosenTarget(commander.objectId),
+                  }"
+                  @click.stop="selectSource(commander.objectId)"
+                  @mouseenter="showCardPreview(commander, $event)"
+                  @mousemove="moveCardPreview"
+                  @mouseleave="hideCardPreview"
+                >
+                  <span class="tile-bar cmdr" aria-hidden="true">Commander</span>
+                  <span class="tile-name">{{ commander.name }}</span>
+                  <span class="tile-art">
+                    <img
+                      v-if="artCropOf(commander)"
+                      :src="artCropOf(commander)!"
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      @error="hideBrokenArt"
+                    />
+                  </span>
+                  <span v-if="commander.taxGeneric > 0" class="tile-type"
+                    >Tax +{{ commander.taxGeneric }}</span
+                  >
+                  <ProvisionalBadge v-if="commander.provisional === true" />
+                </button>
+              </template>
+            </span>
+            <TransitionGroup
+              tag="div"
+              name="hand-card"
+              class="hand"
+              :class="{ 'has-playable': playableSources.length > 0 && selectedAction === null }"
             >
-              <CardImage
-                :scryfall-id="card.scryfallId"
-                :name="card.name"
-                :is-token="card.isToken === true"
-                :provisional="card.provisional === true"
-                size="small"
-              />
-              <span v-if="playableVerbById.get(card.id)" class="play-tag">{{
-                playableVerbById.get(card.id)
-              }}</span>
-              <span>{{ card.name }}</span>
-            </button>
-          </TransitionGroup>
+              <button
+                v-for="card in human.hand ?? []"
+                :key="card.id"
+                type="button"
+                class="hand-card hand-tile"
+                :style="{ width: handCardWidth + 'px' }"
+                :class="{
+                  focused: focusedSourceId === card.id,
+                  actionable: actionableSourceIds.has(card.id),
+                  'chosen-target': isChosenTarget(card.id),
+                }"
+                draggable="true"
+                @dragstart="dragStart(card.id, $event)"
+                @dragend="dragEnd"
+                @click="selectSource(card.id)"
+                @mouseenter="showCardPreview(card, $event)"
+                @mousemove="moveCardPreview"
+                @mouseleave="hideCardPreview"
+              >
+                <span v-if="playableVerbById.get(card.id)" class="play-tag tile-bar">{{
+                  playableVerbById.get(card.id)
+                }}</span>
+                <span class="tile-name">{{ card.name }}</span>
+                <span class="tile-art">
+                  <img
+                    v-if="artCropOf(card)"
+                    :src="artCropOf(card)!"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    @error="hideBrokenArt"
+                  />
+                  <span
+                    v-if="card.isToken === true || typePartsOf(card.typeLine).supertypes[0]"
+                    class="art-tag"
+                    aria-hidden="true"
+                    >{{
+                      card.isToken === true ? 'Token' : typePartsOf(card.typeLine).supertypes[0]
+                    }}</span
+                  >
+                </span>
+                <span class="tile-type" aria-hidden="true">
+                  <span>{{ typePartsOf(card.typeLine).types }}</span>
+                  <span v-if="typePartsOf(card.typeLine).subtypes" class="subtypes">{{
+                    typePartsOf(card.typeLine).subtypes
+                  }}</span>
+                </span>
+                <ProvisionalBadge v-if="card.provisional === true" />
+              </button>
+            </TransitionGroup>
+            <p v-if="(human.hand ?? []).length === 0" class="hand-empty">Your hand is empty</p>
+          </div>
 
           <!-- An open graveyard or exile pile spreads its cards here, under your hand. -->
           <div id="player-zones" class="zones-strip">
@@ -3056,6 +3138,603 @@ button.primary {
   font-weight: 700;
   color: var(--accent);
 }
+/*
+ * Decktank board (redesign phases 5 and 6, docs/design/decktank/Board.dc.html): paper, ink
+ * hairlines and no rounded boxes; Bodoni numerals for the turn and life totals; seats in columns
+ * divided by ink rules; your hand a band of framed tiles. These rules come after the base ones
+ * above and override them.
+ */
+.player-game {
+  gap: 0;
+  padding: 0;
+}
+.turn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--ink);
+  font-weight: 400;
+}
+.turn-badge.your-turn {
+  color: var(--ink);
+}
+.turn-round {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.turn-tag {
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--ink);
+  font-family: var(--font-ui);
+  /* Small capitals, not text-transform: tests and screen readers read the turn as written. */
+  font-size: 0.74rem;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.turn-badge.your-turn .turn-tag {
+  background: var(--ink);
+  color: var(--paper);
+}
+.turn-ruler {
+  --stop-w: 5.2rem;
+  position: relative;
+  display: flex;
+  margin: 0;
+  padding: 0 0 0.6rem;
+  list-style: none;
+}
+.turn-ruler::before,
+.turn-ruler::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--stop-w) / 2);
+  bottom: 0.2rem;
+  height: 1px;
+  background: var(--rule);
+}
+.turn-ruler::before {
+  right: calc(var(--stop-w) / 2);
+}
+.turn-ruler::after {
+  height: 2px;
+  bottom: calc(0.2rem - 0.5px);
+  width: calc(var(--stop-w) * var(--stop));
+  background: var(--ink);
+  transition: width 0.6s var(--ease);
+}
+.turn-ruler li {
+  position: relative;
+  flex: 0 0 var(--stop-w);
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.turn-ruler li.reached {
+  color: var(--ink-soft);
+}
+.turn-ruler li.on {
+  color: var(--ink);
+  font-weight: 500;
+}
+.turn-ruler li::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -0.55rem;
+  width: 1px;
+  height: 5px;
+  background: var(--ink);
+}
+.turn-ruler li.on::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: calc(-0.4rem - 4.5px);
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--paper);
+  border-radius: 50%;
+  background: var(--warm);
+  transform: translateX(-50%);
+}
+.phase-label,
+.priority-label {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+}
+.resource {
+  border-radius: 0;
+}
+
+/* The board: seats in bands, divided by ink hairlines. */
+.player-layout {
+  gap: 0;
+  border-top: 1px solid var(--ink);
+}
+.player-layout.info-open {
+  grid-template-columns: minmax(0, 1fr) 22rem 20rem;
+}
+.table {
+  grid-template-rows: minmax(0, 30fr) minmax(0, 54fr);
+  gap: 0;
+}
+.opponents {
+  gap: 0;
+  border-bottom: 1px solid var(--ink);
+}
+.opponent,
+.human-zone {
+  border: 0;
+  border-radius: 0;
+  background: var(--paper);
+  padding: 0.55rem 0.9rem 0.5rem;
+  box-shadow: none;
+}
+.opponent + .opponent {
+  border-left: 1px solid var(--ink);
+}
+.opponent.active {
+  border-color: var(--ink);
+  background: var(--paper-2);
+  box-shadow: none;
+}
+.opponent.chosen-target,
+.human-zone > header.chosen-target {
+  background: var(--paper-2);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.human-zone {
+  gap: 0.45rem;
+  overflow: hidden;
+}
+.human-zone.your-turn {
+  border-color: transparent;
+  box-shadow: none;
+}
+.opponent > header,
+.human-zone > header {
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+  border: 0;
+  border-radius: 0;
+  padding: 0 0 0.35rem;
+}
+.id-badge {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.id-badge.you {
+  font-size: 1.5rem;
+}
+.seat-name {
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.meta-item {
+  font-family: var(--font-body);
+  font-size: 0.66rem;
+}
+.meta-item b {
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+.monarch-badge,
+.cmdr-tax {
+  align-self: center;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+.zones-toggle {
+  align-self: center;
+  padding: 0.1rem 0.2rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+}
+.zones-toggle::before {
+  content: '[ ';
+}
+.zones-toggle::after {
+  content: ' ]';
+}
+.life-badge {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 2.3rem;
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+.opponent,
+.human-zone {
+  position: relative;
+}
+/* Life sits in the seat's top right corner, clear of a header that wraps. */
+.opponent > header,
+.human-zone > header {
+  padding-right: 4.2rem;
+}
+.opponent > header > .life-badge,
+.human-zone > header > .life-badge {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.9rem;
+}
+.human-zone .life-badge {
+  font-size: 2.65rem;
+}
+.life-badge.low {
+  border: 0;
+  background: none;
+  color: var(--danger);
+}
+.permanents {
+  gap: 6px;
+  padding: 0.35rem 0;
+  align-content: safe center;
+}
+.opponent > .permanents {
+  flex: 1;
+  justify-content: center;
+  border-top: 1px solid var(--ink);
+}
+.object {
+  flex: 0 0 auto;
+  width: var(--chip-w, 108px);
+  min-width: 0;
+  border-radius: 0;
+}
+
+/* Interaction marks: ink and the warm accent instead of blue and green glows. */
+button.active,
+button.selected,
+.focused {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+.actionable {
+  border-color: var(--warm) !important;
+  box-shadow:
+    0 0 0 2px var(--warm),
+    0 6px 14px color-mix(in srgb, var(--warm) 30%, transparent);
+}
+.targetable {
+  border-color: var(--ink) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ink) 45%, transparent);
+}
+.chosen-target {
+  border-color: var(--ink) !important;
+  box-shadow:
+    0 0 0 2px var(--ink),
+    inset 0 0 0 2px var(--paper);
+}
+
+/* Your side: the board, then lands behind a rule, then the zones rail. */
+.battle-row {
+  min-height: 0;
+  gap: 0;
+  border-top: 1px solid var(--ink);
+}
+.battle-row .permanents {
+  padding-right: 0.8rem;
+}
+.land-area {
+  gap: 0.3rem;
+  padding: 0.35rem 0.8rem 0;
+  border-left: 1px solid var(--rule);
+}
+.pile-close {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.piles {
+  justify-content: flex-start;
+  gap: 0.4rem;
+  margin-right: -0.9rem;
+  padding: 0.5rem 0.6rem;
+  border-left: 1px solid var(--ink);
+  background: var(--paper-2);
+}
+
+/* Your hand: a band of framed tiles, your commander first behind a rule. */
+.hand-row {
+  position: relative;
+  flex-shrink: 0;
+  height: clamp(8.5rem, 22vh, 14rem);
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.45rem 0 0.2rem;
+  border-top: 1px solid var(--ink);
+  box-sizing: border-box;
+}
+.command-zone {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding-right: 0.6rem;
+  border-right: 1px solid var(--ink);
+}
+.hand {
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 0 0 4px;
+  border-top: 0;
+  scrollbar-width: thin;
+}
+.hand-tile {
+  position: relative;
+  flex: 0 0 auto;
+  aspect-ratio: 5 / 7;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  container-type: inline-size;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+  transition:
+    translate 0.2s var(--ease),
+    box-shadow 0.2s var(--ease),
+    opacity 0.2s var(--ease);
+}
+.hand-tile:hover {
+  translate: 0 -4px;
+  box-shadow: var(--lift-shadow);
+}
+.commander-card.hand-tile {
+  border: 3px double var(--ink);
+  cursor: pointer;
+}
+.play-tag,
+.tile-bar {
+  position: static;
+  transform: none;
+  flex-shrink: 0;
+  padding: 2% 5%;
+  border-radius: 0;
+  border-bottom: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  font-size: max(8px, 7.5cqw);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tile-bar.cmdr {
+  background: var(--paper);
+  color: var(--ink);
+}
+.tile-name {
+  flex-shrink: 0;
+  margin: 5% 6% 3%;
+  font-family: var(--font-ui);
+  font-size: max(10px, 9.5cqw);
+  line-height: 1.12;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tile-art {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0 6% 4%;
+  overflow: hidden;
+  background: var(--paper-2);
+}
+.tile-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.art-tag {
+  position: absolute;
+  left: 5%;
+  bottom: 5%;
+  padding: 1px 4px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  font-family: var(--font-ui);
+  font-size: max(7px, 6.2cqw);
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tile-type {
+  flex-shrink: 0;
+  padding: 0 6% 6%;
+  font-family: var(--font-body);
+  font-size: max(8px, 7.5cqw);
+  line-height: 1.3;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.tile-type > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tile-type .subtypes {
+  font-family: var(--font-display);
+  font-size: 1.3em;
+  line-height: 1.15;
+  color: var(--ink);
+}
+@container (max-width: 90px) {
+  .tile-type {
+    display: none;
+  }
+}
+.hand-empty {
+  align-self: center;
+  margin: 0 auto;
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.resource.ready {
+  border-color: var(--ink);
+  background: var(--paper-2);
+  color: var(--ink);
+}
+/* The tray under your hand: a paper-2 band under an ink rule. */
+.interaction-tray {
+  min-height: 0;
+  margin: 0 -0.9rem -0.5rem;
+  border: 0;
+  border-top: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper-2);
+  padding: 0.55rem 0.9rem;
+}
+
+/* The rail: your move, then the stack and deals, on paper-2 behind an ink rule. */
+.rail {
+  gap: 0.9rem;
+  padding: 0.8rem 0.9rem;
+  overflow-y: auto;
+  border-left: 1px solid var(--ink);
+  background: var(--paper-2);
+}
+.decision {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+.decision h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.5rem;
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.decision h3::before {
+  content: '';
+  width: 0.7rem;
+  height: 0.7rem;
+  background: var(--warm);
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+}
+.decision .prompt {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+.quick-actions {
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+button.primary {
+  min-height: 40px;
+  padding: 0 1.1rem;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.playable-now > strong,
+.bot-summary > strong,
+.ignored-abilities > strong {
+  font-family: var(--font-ui);
+  font-size: 0.64rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.playable-list button {
+  border-color: var(--ink);
+}
+.playable-list .verb {
+  font-weight: 400;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.playable-list button.focused {
+  background: var(--ink);
+  color: var(--paper);
+}
+.info-drawer,
+.settings-menu {
+  border-radius: 0;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+}
+.info-drawer {
+  border-width: 0 0 0 1px;
+  background: var(--paper-2);
+}
+.yield-banner,
+.paused {
+  border-radius: 0;
+}
 @media (max-width: 900px) {
   .player-layout {
     display: flex;
@@ -3076,6 +3755,26 @@ button.primary {
   .info-drawer {
     flex-shrink: 0;
     min-height: 24rem;
+  }
+  /* Stacked seats get fixed heights, so their tiles have a zone to size to. */
+  .opponent {
+    height: 15rem;
+  }
+  .opponent + .opponent {
+    border-left: 0;
+    border-top: 1px solid var(--ink);
+  }
+  .human-zone {
+    height: 38rem;
+  }
+  .piles {
+    margin-right: 0;
+  }
+  .turn-ruler {
+    --stop-w: 3.6rem;
+  }
+  .turn-ruler li:not(.on) {
+    color: transparent;
   }
 }
 </style>

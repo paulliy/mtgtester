@@ -117,6 +117,18 @@ onUnmounted(() => {
   min-width: 0;
   font-size: 0.8rem;
 }
+/* A game's status (turn, phase ruler, resources) is a second row under the nav, as the board
+   header in the Decktank design is, so neither crowds the other. */
+.status-slot:not(:empty) {
+  order: 10;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  row-gap: 0.4rem;
+  min-height: 3.4rem;
+  margin: 0 -1.25rem;
+  padding: 0.35rem 1.25rem;
+  border-top: 1px solid var(--rule);
+}
 .topbar-theme {
   align-self: center;
 }

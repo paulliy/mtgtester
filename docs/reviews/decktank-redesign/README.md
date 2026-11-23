@@ -21,3 +21,10 @@ offline placeholder because the capture machine had no Scryfall access. Downscal
 
 The board itself (seat panels, card tiles, combat) is phase 5 and 6 of the plan and still uses
 the pre-redesign components, which follow the theme through the compatibility aliases.
+
+## Game screen (phases 5 and 6, first pass)
+
+`board-game-day.jpg`, `board-game-night.jpg` and `board-table-game-day.jpg`: the player board with
+5:7 ink-framed tiles sized to fill each zone, Bodoni seat letters and life totals, the turn ruler
+in a second bar row, hand tiles led by the commander, and the decision rail on paper-2. Card art
+shows the paper tone here because the screenshot container cannot reach Scryfall.

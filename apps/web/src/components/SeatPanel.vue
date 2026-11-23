@@ -59,6 +59,15 @@ function hideCommanderPreview(): void {
 const taxedCommanders = computed(() =>
   props.seat.commanders.filter((commander) => commander.taxGeneric > 0),
 );
+/** This seat's commanders on the battlefield, for the commander frame. */
+const commanderIds = computed(
+  () =>
+    new Set(
+      props.seat.commanders.flatMap((commander) =>
+        commander.objectId === null ? [] : [commander.objectId],
+      ),
+    ),
+);
 const ZONES_CAP = 6;
 
 // The server decides the row (`boardGroup`): an animated land groups with creatures, a Dryad
@@ -222,6 +231,7 @@ onBeforeUnmount(() => unregisterAnchor(props.seat.seat));
             :permanent="g.permanent"
             :count="g.count"
             :name-by-id="nameById"
+            :is-commander="commanderIds.has(g.permanent.id)"
           />
         </TransitionGroup>
       </div>
@@ -234,6 +244,7 @@ onBeforeUnmount(() => unregisterAnchor(props.seat.seat));
             :permanent="g.permanent"
             :count="g.count"
             :name-by-id="nameById"
+            :is-commander="commanderIds.has(g.permanent.id)"
           />
         </TransitionGroup>
       </div>

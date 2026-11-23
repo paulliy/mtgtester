@@ -74,35 +74,34 @@ const shown = computed(() => props.cards.slice(-3));
   width: 84px;
   padding: 0.3rem 0.2rem 0.25rem;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 0;
   background: transparent;
-  color: var(--text);
+  color: var(--ink);
   cursor: pointer;
 }
 .zone-pile:hover {
-  background: var(--surface-2);
+  background: var(--paper);
 }
 .zone-pile.open {
-  border-color: var(--line);
-  background: var(--surface-2);
+  border-color: var(--ink);
+  background: var(--paper);
 }
 /* A fixed card-shaped slot; each card below the top one peeks out up and to the left. */
 .pile-cards {
   position: relative;
   width: 60px;
-  aspect-ratio: 63 / 88;
-  border-radius: 4px;
+  aspect-ratio: 5 / 7;
 }
 .zone-pile.empty .pile-cards {
-  border: 1px dashed var(--line);
+  border: 1px solid var(--rule);
 }
 .pile-card {
   position: absolute;
   inset: 0;
   transform: translate(calc(var(--depth) * -3px), calc(var(--depth) * -3px));
-  border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.45);
+  border: 1px solid var(--ink);
+  background: var(--paper);
 }
 .pile-card :deep(img) {
   display: block;
@@ -121,32 +120,32 @@ const shown = computed(() => props.cards.slice(-3));
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  background: #1c1917;
-  border: 2px solid var(--surface);
-  color: #fff;
-  font-size: 0.72rem;
-  font-weight: 800;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
 }
 .pile-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
 }
 .pile-detail {
   margin-top: -0.15rem;
-  font-size: 0.66rem;
-  color: var(--ok);
+  font-family: var(--font-body);
+  font-size: 0.64rem;
+  color: var(--muted);
   white-space: nowrap;
 }
 /* Same affordances as an actionable or targetable card elsewhere on the board. */
 .zone-pile.actionable .pile-cards {
-  box-shadow:
-    0 0 0 2px rgb(96 165 250 / 0.55),
-    0 0 14px rgb(96 165 250 / 0.45);
+  box-shadow: 0 0 0 2px var(--warm);
 }
 .zone-pile.targetable .pile-cards {
-  outline: 2px solid var(--accent, #7ab3f5);
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 </style>
