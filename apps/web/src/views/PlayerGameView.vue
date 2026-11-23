@@ -3,7 +3,7 @@ import type { ComponentPublicInstance } from 'vue';
 import type { ManaPool } from '@mtg/shared';
 import { ATTACKS_TARGET, turnPositionLabel } from '@mtg/shared';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import type { ObjectId, TargetChoice } from '@mtg/shared';
 import type { DecisionRequest, LegalAction } from '../lib/protocol';
 import ActionLog from '../components/ActionLog.vue';
@@ -1666,9 +1666,15 @@ function abandon(): void {
         >
           <span aria-hidden="true">[ </span>Settings<span aria-hidden="true"> ]</span>
         </button>
-        <RouterLink v-if="store.gameMode !== 'table'" to="/" class="leave-game"
-          >Leave game</RouterLink
+        <!-- Leaving ends the game, so it asks first, as Abandon does; a table's game is its host's. -->
+        <button
+          v-if="store.gameMode !== 'table'"
+          type="button"
+          class="leave-game"
+          @click="confirmingAbandon = true"
         >
+          Leave game
+        </button>
       </span>
     </Teleport>
 
@@ -3866,6 +3872,8 @@ button.primary {
   align-items: center;
   padding: 0 0.75rem;
   border: 1px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: 0.7rem;
@@ -3873,6 +3881,7 @@ button.primary {
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
   transition:
     background 0.2s var(--ease),
     color 0.2s var(--ease);

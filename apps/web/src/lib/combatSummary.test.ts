@@ -87,6 +87,60 @@ describe('summarizeCombat', () => {
     ]);
   });
 
+  it('keeps an attack on a planeswalker off its controller’s chip', () => {
+    const blocks = (step: 'declareBlockers', priorityPlayer: string | null) =>
+      summarizeCombat({
+        phase: 'combat',
+        step,
+        priorityPlayer,
+        permanents: [
+          creature('d', 'Shivan Dragon', 'P1', {
+            power: 6,
+            toughness: 6,
+            attacking: 'P2',
+            attackingPlaneswalker: 'w',
+          }),
+          creature('o', 'Grizzly Bears', 'P1', { power: 2, toughness: 2, attacking: 'P2' }),
+          creature('w', 'Teferi, Hero of Dominaria', 'P2', { power: null, toughness: null }),
+        ],
+        seats,
+        plan: null,
+      });
+
+    // Waiting for blocks: only the Bears threaten P2's life.
+    expect(blocks('declareBlockers', null)?.attacked.get('P2')).toBe('Under attack · 2 incoming');
+
+    // Both unblocked: the Dragon's 6 goes to Teferi, not to P2.
+    const declared = blocks('declareBlockers', 'P1');
+    expect(declared?.attacked.get('P2')).toBe('Under attack · 2 incoming');
+    expect(declared?.prose).toContain(
+      'Shivan Dragon is unblocked and deals 6 to Teferi, Hero of Dominaria.',
+    );
+  });
+
+  it('gives no chip to a player whose planeswalker alone is attacked', () => {
+    const summary = summarizeCombat({
+      phase: 'combat',
+      step: 'declareBlockers',
+      priorityPlayer: 'P1',
+      permanents: [
+        creature('d', 'Shivan Dragon', 'P1', {
+          power: 6,
+          toughness: 6,
+          attacking: 'P2',
+          attackingPlaneswalker: 'w',
+        }),
+        creature('w', 'Teferi, Hero of Dominaria', 'P2', { power: null, toughness: null }),
+      ],
+      seats,
+      plan: null,
+    });
+    expect(summary?.lines).toEqual([
+      'Shivan Dragon 6/6 → Teferi, Hero of Dominaria · unblocked, 6 damage',
+    ]);
+    expect(summary?.attacked.has('P2')).toBe(false);
+  });
+
   it('does not repeat a seat id that doubles as its label', () => {
     const summary = summarizeCombat({
       phase: 'combat',

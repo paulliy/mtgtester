@@ -48,7 +48,10 @@ export interface CombatSummaryInput {
 export interface CombatSummary {
   label: string;
   lines: string[];
-  /** Seat -> its chip text, for each seat creatures are attacking. */
+  /**
+   * Seat -> its chip text, for each player creatures are attacking. An attack on a planeswalker
+   * is not one on its controller, so it adds nothing to the controller's chip.
+   */
   attacked: Map<string, string>;
   /**
    * Once blocks are declared, the same combat as sentences for the decision band ("Klauth is
@@ -138,7 +141,10 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
       attacker.attackingPlaneswalker != null ? byId.get(attacker.attackingPlaneswalker) : undefined;
     const target = walker !== undefined ? walker.name : seatName(input.seats, seat);
     const power = Math.max(0, attacker.power ?? 0);
-    incoming.set(seat, (incoming.get(seat) ?? 0) + power);
+    // `attacking` names the walker's controller when a planeswalker is attacked; that damage goes
+    // to the walker, so only attacks on the player themselves count toward the seat's chip.
+    const atPlayer = attacker.attackingPlaneswalker == null;
+    if (atPlayer) incoming.set(seat, (incoming.get(seat) ?? 0) + power);
     let state: string;
     const planned =
       input.plan?.kind === 'blockers'
@@ -160,20 +166,22 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
       state = `unblocked, ${power} damage`;
       const victim = walker !== undefined ? walker.name : seatLabelOf(input.seats, seat);
       prose.push(`${attacker.name} is unblocked and deals ${power} to ${victim}.`);
-      unblockedAt.set(seat, (unblockedAt.get(seat) ?? 0) + 1);
+      if (atPlayer) unblockedAt.set(seat, (unblockedAt.get(seat) ?? 0) + 1);
     }
     lines.push(`${attacker.name}${pt(attacker)} → ${target} · ${state}`);
   }
 
+  const attacksOnPlayer = (seat: string) =>
+    attackers.filter((a) => a.attacking === seat && a.attackingPlaneswalker == null);
   for (const [seat, power] of incoming) {
-    const count = attackers.filter((a) => a.attacking === seat).length;
+    const count = attacksOnPlayer(seat).length;
     if (blocksPending || input.plan?.kind === 'blockers') {
       attacked.set(seat, `Under attack · ${power} incoming`);
     } else if ((unblockedAt.get(seat) ?? 0) === 0) {
       attacked.set(seat, count === 1 ? 'Under attack · blocked' : 'Under attack · all blocked');
     } else {
-      const through = attackers
-        .filter((a) => a.attacking === seat && a.blockedBy.length === 0)
+      const through = attacksOnPlayer(seat)
+        .filter((a) => a.blockedBy.length === 0)
         .reduce((sum, a) => sum + Math.max(0, a.power ?? 0), 0);
       attacked.set(seat, `Under attack · ${through} incoming`);
     }

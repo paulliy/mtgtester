@@ -41,6 +41,8 @@ const { starting, startErrors, begin, clearStartErrors } = useConfirmedStart();
 
 const SEATS = 4;
 const SEAT_IDS = ['P1', 'P2', 'P3', 'P4'] as const;
+/** The Card lab route is registered only in development builds (`router.ts`). */
+const cardLabAvailable = import.meta.env['DEV'] === true;
 
 /**
  * Decks that have already been imported and measured for engine model coverage (`bun run
@@ -845,7 +847,7 @@ const pickingRow = computed(() =>
               <ul>
                 <li v-for="reason in importState.reasons" :key="reason">{{ reason }}</li>
               </ul>
-              <div class="stopped-foot">
+              <div v-if="cardLabAvailable" class="stopped-foot">
                 <span>The Card lab shows which cards still need work in the rules engine.</span>
                 <RouterLink to="/card-test-lab" class="dt-btn small"
                   >Open in Card lab<span class="dt-arr" aria-hidden="true"
