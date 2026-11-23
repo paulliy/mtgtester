@@ -24,8 +24,13 @@ const props = withDefaults(
     glow?: 'actionable' | 'targetable' | null;
     /** id of the region this pile opens, for `aria-controls`. */
     controls?: string;
+    /**
+     * `row` draws the zone as a ruled line of text, its name left and its count right, the way
+     * the board design's rail lists your graveyard and exile.
+     */
+    variant?: 'pile' | 'row';
   }>(),
-  { glow: null },
+  { glow: null, variant: 'pile' },
 );
 
 const emit = defineEmits<{ toggle: [] }>();
@@ -38,13 +43,18 @@ const shown = computed(() => props.cards.slice(-3));
   <button
     type="button"
     class="zone-pile"
-    :class="[{ open: props.open, empty: props.cards.length === 0 }, props.glow]"
+    :class="[{ open: props.open, empty: props.cards.length === 0, row: props.variant === 'row' }, props.glow]"
     :aria-expanded="props.open"
     :aria-controls="props.controls"
     :title="`${props.open ? 'Close' : 'Open'} ${props.label.toLowerCase()}`"
     @click.stop="emit('toggle')"
   >
-    <span class="pile-cards" aria-hidden="true">
+    <template v-if="props.variant === 'row'">
+      <span class="pile-label">{{ props.label }}</span>
+      <span v-if="props.detail" class="pile-detail">{{ props.detail }}</span>
+      <span class="pile-num">{{ props.cards.length }}</span>
+    </template>
+    <span v-else class="pile-cards" aria-hidden="true">
       <span
         v-for="(card, i) in shown"
         :key="card.id"
@@ -60,8 +70,10 @@ const shown = computed(() => props.cards.slice(-3));
       </span>
       <span class="pile-count">{{ props.cards.length }}</span>
     </span>
-    <span class="pile-label">{{ props.label }}</span>
-    <span v-if="props.detail" class="pile-detail">{{ props.detail }}</span>
+    <template v-if="props.variant !== 'row'">
+      <span class="pile-label">{{ props.label }}</span>
+      <span v-if="props.detail" class="pile-detail">{{ props.detail }}</span>
+    </template>
   </button>
 </template>
 
@@ -147,5 +159,50 @@ const shown = computed(() => props.cards.slice(-3));
 .zone-pile.targetable .pile-cards {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
+}
+/* Row: a ruled line in the rail, "Graveyard ........ 4", in the body face. */
+.zone-pile.row {
+  width: 100%;
+  min-height: 40px;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  border: 0;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+.zone-pile.row:hover,
+.zone-pile.row.open {
+  border: 0;
+  background: transparent;
+}
+.zone-pile.row .pile-label {
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.zone-pile.row.open .pile-label {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+.zone-pile.row .pile-detail {
+  margin: 0;
+  font-size: 0.72rem;
+}
+.pile-num {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.zone-pile.row.actionable {
+  box-shadow: inset 3px 0 0 var(--warm);
+  padding-left: 0.5rem;
+}
+.zone-pile.row.targetable {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+  padding-left: 0.5rem;
 }
 </style>

@@ -20,6 +20,14 @@ const places = computed(() =>
 const current = computed(() =>
   currentPlaceIndex(places.value, typeof route.name === 'string' ? route.name : null),
 );
+/**
+ * While you play, the board has the whole window, as the Decktank board design draws it: its own
+ * header (turn, phase ruler, Game log, Leave game) replaces the site's ruler, which comes back on
+ * any other page, including the spectator board and a finished game.
+ */
+const boardMode = computed(
+  () => route.name === 'game' && game.gameMode === 'singlePlayer' && game.gameOver === null,
+);
 
 /**
  * Alt held while hovering a card = the "look closer" zoom. `window.blur` covers Alt-tabbing
@@ -49,7 +57,7 @@ onUnmounted(() => {
 
 <template>
   <div class="app" :class="{ 'reduced-motion': game.reducedMotion }">
-    <header class="topbar">
+    <header class="topbar" :class="{ 'board-mode': boardMode }">
       <RouterLink to="/" class="brand">Decktank</RouterLink>
       <PhoneMenu :places="places" :current="current" />
       <!-- The board view fills this with the game's status (round, phase, priority) via a
@@ -131,6 +139,29 @@ onUnmounted(() => {
 }
 .topbar-theme {
   align-self: center;
+}
+/* The board's own header: the status row alone, the site's brand, ruler and theme folded away. */
+.topbar.board-mode > .brand,
+.topbar.board-mode > .phone-menu,
+.topbar.board-mode > .ruler,
+.topbar.board-mode > .topbar-theme {
+  display: none;
+}
+.topbar.board-mode .status-slot:not(:empty) {
+  order: 0;
+  margin: 0 -1.25rem;
+  min-height: 3.6rem;
+  padding: 0 1.25rem;
+  border-top: 0;
+  flex-wrap: nowrap;
+  gap: 1rem;
+}
+@media (max-width: 760px) {
+  .topbar.board-mode .status-slot:not(:empty) {
+    flex-wrap: wrap;
+    padding: 0.5rem 1rem;
+    margin: 0 -1rem;
+  }
 }
 @media (max-width: 760px) {
   .topbar {

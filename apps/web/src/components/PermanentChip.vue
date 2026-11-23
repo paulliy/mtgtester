@@ -20,8 +20,18 @@ const props = withDefaults(
     nameById?: Map<string, string> | undefined;
     /** This permanent is its controller's commander: a double ink frame and a tag. */
     isCommander?: boolean;
+    /**
+     * Your unconfirmed combat choice for it ("→ P4", "Blocks Ghalta"), shown in the top bar until
+     * the declaration is confirmed and the engine's own attacking/blocking state takes over.
+     */
+    planTag?: string | null;
+    /**
+     * `line` draws the permanent as its name in a line of text, the way the board design lists an
+     * opponent's lands under their cards; it keeps the tile's state marks for screen readers.
+     */
+    variant?: 'tile' | 'line';
   }>(),
-  { count: 1 },
+  { count: 1, planTag: null, variant: 'tile' },
 );
 
 const cardPreview = useCardPreviewStore();
@@ -117,9 +127,11 @@ const artTag = computed(() => {
 /** The ink bar across the top in combat: whom it attacks, or what it blocks. */
 const combatTag = computed(() => {
   const p = props.permanent;
+  if (p.attacking === null && p.blocking === null && props.planTag) return props.planTag;
   if (p.attacking !== null) {
     const target = p.attackingPlaneswalker ?? p.attacking;
-    return `Attacking ${props.nameById?.get(target) ?? target}`;
+    const blocked = p.blockedBy.length > 0 ? ' · blocked' : '';
+    return `Attacking ${props.nameById?.get(target) ?? target}${blocked}`;
   }
   if (p.blocking !== null) return `Blocking ${props.nameById?.get(p.blocking) ?? p.blocking}`;
   return null;
@@ -229,6 +241,7 @@ function onLeave(): void {
     :ref="setTileEl"
     class="tile"
     :class="{
+      line: variant === 'line',
       token: isToken,
       commander: isCommander,
       tapped: permanent.tapped,
@@ -251,9 +264,19 @@ function onLeave(): void {
     @mousemove="onMove"
     @mouseleave="onLeave"
   >
-    <ProvisionalBadge v-if="permanent.provisional === true" />
-    <div class="card">
-      <span v-if="combatTag" class="combat-tag" aria-hidden="true">{{ combatTag }}</span>
+    <ProvisionalBadge v-if="permanent.provisional === true && variant === 'tile'" />
+    <span v-if="variant === 'line'" class="line-name">
+      <span class="frame" role="img" :aria-label="permanent.name">{{ permanent.name }}</span
+      ><span v-if="count && count > 1" class="stack-count-badge">×{{ count }}</span>
+    </span>
+    <div v-else class="card">
+      <span
+        v-if="combatTag"
+        class="combat-tag"
+        :class="{ blocking: permanent.blocking !== null }"
+        aria-hidden="true"
+        >{{ combatTag }}</span
+      >
       <span v-else-if="isCommander" class="combat-tag cmdr" aria-hidden="true">Commander</span>
       <!-- Hidden from screen readers, which already hear the name from the frame's label. -->
       <span class="name" aria-hidden="true">{{ permanent.name }}</span>
@@ -275,7 +298,12 @@ function onLeave(): void {
         <span v-if="permanent.tapped" class="hatch" aria-hidden="true" />
         <span v-if="artTag" class="art-tag" aria-hidden="true">{{ artTag }}</span>
       </div>
-      <span v-if="typeParts.types" class="type-line" aria-hidden="true">
+      <span
+        v-if="typeParts.types"
+        class="type-line"
+        :class="{ 'beside-pt': ptText !== null }"
+        aria-hidden="true"
+      >
         <span class="types">{{ typeParts.types }}</span>
         <span v-if="typeParts.subtypes" class="subtypes">{{ typeParts.subtypes }}</span>
       </span>
@@ -360,11 +388,6 @@ function onLeave(): void {
 .tile.commander .card {
   border: 3px double var(--ink);
 }
-/* Attacking: the card lifts off the table. */
-.tile.attacking .card {
-  translate: 0 -5px;
-  box-shadow: var(--lift-shadow);
-}
 .combat-tag {
   flex-shrink: 0;
   padding: 2% 5%;
@@ -379,7 +402,8 @@ function onLeave(): void {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.combat-tag.cmdr {
+.combat-tag.cmdr,
+.combat-tag.blocking {
   background: var(--paper);
   color: var(--ink);
 }
@@ -445,13 +469,16 @@ function onLeave(): void {
 }
 .type-line {
   flex-shrink: 0;
-  padding: 0 32% 6% 6%;
+  padding: 0 6% 6% 6%;
   font-family: var(--font-body);
   font-size: 7.5cqw;
   line-height: 1.3;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
+}
+.type-line.beside-pt {
+  padding-right: 42%;
 }
 .type-line > span {
   display: block;
@@ -624,6 +651,35 @@ function onLeave(): void {
   .tap-word {
     display: none;
   }
+}
+/* A land in an opponent's lands line: its name and copies; a tapped one reads muted. */
+.tile.line {
+  width: auto;
+  container-type: normal;
+  display: inline;
+}
+.line-name {
+  display: inline;
+  white-space: nowrap;
+}
+.line-name .frame {
+  display: inline;
+  margin: 0;
+  overflow: visible;
+  background: none;
+  flex: none;
+}
+.line-name .stack-count-badge {
+  position: static;
+  margin-left: 0.3em;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+}
+.tile.line.tapped .line-name {
+  color: var(--muted);
 }
 .visually-hidden {
   position: absolute;
