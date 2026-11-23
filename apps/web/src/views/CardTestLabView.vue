@@ -2,20 +2,23 @@
 /**
  * The Card Test Lab (dev-only), laid out as the approved single-card design (redesign plan, phase
  * 4d): a card finder on the left, the chosen card and its clauses in the middle, and what the lab
- * records as evidence on the right. Every value comes from `/api/card-test-scenarios`, grouped by
- * `oracleSha256` and `clauseIds` (`lib/cardLabModel.ts`).
+ * records as evidence on the right. Scenarios come from `/api/card-test-scenarios`, grouped by
+ * `oracleSha256` (`lib/cardLabModel.ts`); the card's name, status, clauses and evidence come from
+ * `/api/card-test-lab/cards`, which reads the verification manifest and the audit ledger by hash.
  *
  * The server reports no pass or fail for a scenario: running one opens the real board and the
  * player resolves it by hand. So a scenario is "Ran" (started in this browser session) or "Not
- * run", and the evidence list shows only what the catalog holds; the rest reads "Not recorded".
+ * run", and the evidence list shows only what the manifest or ledger holds; the rest reads
+ * "Not recorded".
  */
 import PageTitle from '../components/shell/PageTitle.vue';
 import PageFoot from '../components/shell/PageFoot.vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import type { CardTestScenarioMetadata } from '@mtg/shared';
+import type { CardTestLabCard, CardTestScenarioMetadata } from '@mtg/shared';
 import { useGameStore } from '../stores/game';
 import {
+  evidenceRows,
   filterCards,
   groupScenariosByCard,
   parseQueue,
@@ -28,6 +31,7 @@ const store = useGameStore();
 const router = useRouter();
 
 const scenarios = ref<CardTestScenarioMetadata[]>([]);
+const labCards = ref<Map<string, CardTestLabCard>>(new Map());
 const catalogError = ref<string | null>(null);
 const selectedScenarioId = ref<string | null>(null);
 const query = ref('');
@@ -73,7 +77,33 @@ function persist(): void {
 
 const starting = computed(() => store.gameId === null && store.connection !== 'closed');
 
-const cards = computed(() => groupScenariosByCard(scenarios.value));
+const cards = computed(() =>
+  groupScenariosByCard(
+    scenarios.value,
+    new Map(
+      [...labCards.value.values()].flatMap((info): [string, string][] =>
+        info.name === undefined ? [] : [[info.oracleSha256, info.name]],
+      ),
+    ),
+  ),
+);
+const info = computed(() =>
+  card.value === null ? undefined : labCards.value.get(card.value.oracleSha256),
+);
+const scenarioById = computed(() => new Map(scenarios.value.map((entry) => [entry.id, entry])));
+const clauseRows = computed(() => {
+  const current = info.value;
+  if (current === undefined || !current.manifestPinned || current.clauses.length === 0) return null;
+  return current.clauses.map((clause) => ({
+    key: clause.id ?? clause.oracleText,
+    clause,
+    scenarios: clause.scenarioIds.flatMap((id) => scenarioById.value.get(id) ?? []),
+  }));
+});
+const unmapped = computed(() =>
+  (info.value?.unmappedScenarioIds ?? []).flatMap((id) => scenarioById.value.get(id) ?? []),
+);
+const statusText = computed(() => info.value?.implementationStatus ?? null);
 const cardByScenario = computed(() => {
   const map = new Map<string, LabCard>();
   for (const card of cards.value) for (const entry of card.scenarios) map.set(entry.id, card);
@@ -135,40 +165,22 @@ const runNote = computed(() => {
     : `${cardRanCount.value} of ${current.scenarios.length} started in this session.`;
 });
 
-/** The evidence rows. Only the Oracle pin is in the lab catalog; the rest is not served here. */
-const evidence = computed(() => {
-  const current = card.value;
-  if (current === null) return [];
-  const notRecorded = (extra = ''): { recorded: boolean; state: string } => ({
-    recorded: false,
-    state: extra === '' ? 'Not recorded' : `Not recorded. ${extra}`,
-  });
-  const clauseCount = current.clauses.length;
-  return [
-    {
-      label: 'Pinned Oracle text',
-      recorded: true,
-      state: `Recorded: sha256 ${current.oracleSha256.slice(0, 12)}…`,
-    },
-    {
-      label: 'Every clause mapped to scenarios',
-      ...notRecorded(
-        `${clauseCount} ${clauseCount === 1 ? 'clause names' : 'clauses name'} scenarios here; the full clause list is not served.`,
-      ),
-    },
-    {
-      label: 'Positive and negative engine scenarios',
-      ...notRecorded(`${current.scenarios.length} here, not marked positive or negative.`),
-    },
-    { label: 'Normal cast and activation path', ...notRecorded() },
-    { label: 'Seen working in the real viewer', ...notRecorded() },
-    { label: 'Gameplay AI uses it sensibly', ...notRecorded() },
-  ];
-});
+const evidence = computed(() =>
+  card.value === null
+    ? []
+    : evidenceRows(card.value.oracleSha256, card.value.scenarios.length, info.value),
+);
+const isViewerScenario = (id: string): boolean => info.value?.ledger?.viewerScenarioId === id;
 
 onMounted(async () => {
   ran.value = loadRan();
   queue.value = parseQueue(readStorage(QUEUE_KEY));
+  // The card report is extra: without it names come from titles and evidence reads "Not recorded".
+  const reportRequest = fetch('/api/card-test-lab/cards')
+    .then(async (response) =>
+      response.ok ? ((await response.json()) as { cards: CardTestLabCard[] }).cards : [],
+    )
+    .catch(() => [] as CardTestLabCard[]);
   try {
     const response = await fetch('/api/card-test-scenarios');
     if (!response.ok) {
@@ -176,6 +188,7 @@ onMounted(async () => {
       return;
     }
     const body = (await response.json()) as { scenarios: CardTestScenarioMetadata[] };
+    labCards.value = new Map((await reportRequest).map((entry) => [entry.oracleSha256, entry]));
     scenarios.value = body.scenarios;
     // Coming back to a run in progress lands on the card it was running.
     const waiting = queue.value?.remaining[0];
@@ -294,9 +307,14 @@ function startOver(): void {
               <dt>Scenarios</dt>
               <dd>{{ card.scenarios.length }}</dd>
               <dt>Status</dt>
-              <dd class="muted">Not recorded in the lab catalog</dd>
+              <dd v-if="statusText" class="status">{{ statusText }}</dd>
+              <dd v-else class="muted">Not recorded</dd>
+              <template v-if="info?.unsupportedReason">
+                <dt>Unsupported</dt>
+                <dd>{{ info.unsupportedReason }}</dd>
+              </template>
               <dt>Seed</dt>
-              <dd class="muted">Not recorded in the lab catalog</dd>
+              <dd class="muted">Not recorded</dd>
             </dl>
             <div class="run-row">
               <button type="button" class="dt-btn run-all" :disabled="starting" @click="runAll">
@@ -348,11 +366,27 @@ function startOver(): void {
 
         <section class="clauses" aria-labelledby="clauses-title">
           <h2 id="clauses-title" class="dt-head">Clauses and their scenarios</h2>
-          <ol class="clause-list">
-            <li v-for="clause in card.clauses" :key="clause.id" class="clause">
-              <code class="clause-id">{{ clause.id }}</code>
+          <ol v-if="clauseRows" class="clause-list">
+            <li v-for="row in clauseRows" :key="row.key" class="clause">
+              <div class="clause-text">
+                <code v-if="row.clause.id" class="clause-id">{{ row.clause.id }}</code>
+                <p class="clause-oracle">{{ row.clause.oracleText }}</p>
+                <p v-if="row.clause.implementation.length > 0" class="clause-meta">
+                  Implementation: {{ row.clause.implementation.join('; ') }}
+                </p>
+                <p class="clause-meta">
+                  {{
+                    row.clause.engineTestIds.length === 0
+                      ? 'No engine test named in the manifest.'
+                      : `${row.clause.engineTestIds.length} engine ${row.clause.engineTestIds.length === 1 ? 'test' : 'tests'} named in the manifest.`
+                  }}
+                </p>
+              </div>
               <ul class="clause-scenarios">
-                <li v-for="entry in clause.scenarios" :key="entry.id">
+                <li v-if="row.scenarios.length === 0" class="gap">
+                  Gap: no lab scenario for this clause.
+                </li>
+                <li v-for="entry in row.scenarios" :key="entry.id">
                   <button
                     type="button"
                     class="clause-scenario"
@@ -362,12 +396,63 @@ function startOver(): void {
                     <span class="chip" :class="{ ran: ran.has(entry.id) }">
                       {{ ran.has(entry.id) ? 'Ran' : 'Not run' }}
                     </span>
+                    <span v-if="isViewerScenario(entry.id)" class="chip mark">Viewer evidence</span>
+                    <span class="clause-scenario-title">{{ entry.title }}</span>
+                  </button>
+                </li>
+              </ul>
+            </li>
+            <li v-if="unmapped.length > 0" class="clause">
+              <div class="clause-text">
+                <p class="clause-oracle">Scenarios no manifest clause names</p>
+              </div>
+              <ul class="clause-scenarios">
+                <li v-for="entry in unmapped" :key="entry.id">
+                  <button
+                    type="button"
+                    class="clause-scenario"
+                    :aria-pressed="entry.id === selectedScenarioId"
+                    @click="selectedScenarioId = entry.id"
+                  >
+                    <span class="chip" :class="{ ran: ran.has(entry.id) }">
+                      {{ ran.has(entry.id) ? 'Ran' : 'Not run' }}
+                    </span>
+                    <span v-if="isViewerScenario(entry.id)" class="chip mark">Viewer evidence</span>
                     <span class="clause-scenario-title">{{ entry.title }}</span>
                   </button>
                 </li>
               </ul>
             </li>
           </ol>
+          <template v-else>
+            <p class="clause-meta" role="status">
+              The verification manifest does not pin this Oracle text, so the full clause list is
+              not known. Showing the clause IDs the scenarios name.
+            </p>
+            <ol class="clause-list">
+              <li v-for="clause in card.clauses" :key="clause.id" class="clause">
+                <code class="clause-id">{{ clause.id }}</code>
+                <ul class="clause-scenarios">
+                  <li v-for="entry in clause.scenarios" :key="entry.id">
+                    <button
+                      type="button"
+                      class="clause-scenario"
+                      :aria-pressed="entry.id === selectedScenarioId"
+                      @click="selectedScenarioId = entry.id"
+                    >
+                      <span class="chip" :class="{ ran: ran.has(entry.id) }">
+                        {{ ran.has(entry.id) ? 'Ran' : 'Not run' }}
+                      </span>
+                      <span v-if="isViewerScenario(entry.id)" class="chip mark">
+                        Viewer evidence
+                      </span>
+                      <span class="clause-scenario-title">{{ entry.title }}</span>
+                    </button>
+                  </li>
+                </ul>
+              </li>
+            </ol>
+          </template>
         </section>
       </div>
 
@@ -375,15 +460,23 @@ function startOver(): void {
       <aside class="evidence" aria-labelledby="evidence-title">
         <h2 id="evidence-title" class="evidence-title">Evidence</h2>
         <p class="evidence-note">
-          The lab catalog holds the Oracle pin and the clause IDs only. Engine, viewer and gameplay
-          AI evidence is not served to this page, so it reads “Not recorded” and never complete.
+          From the verification manifest and the audit ledger, matched by Oracle hash. What neither
+          records reads “Not recorded”, never complete.
         </p>
         <ol class="evidence-list">
-          <li v-for="item in evidence" :key="item.label" :class="{ recorded: item.recorded }">
-            <span class="box" aria-hidden="true">{{ item.recorded ? '✓' : '' }}</span>
+          <li
+            v-for="item in evidence"
+            :key="item.label"
+            :class="{ recorded: item.recorded, info: item.info }"
+          >
+            <span v-if="!item.info" class="box" aria-hidden="true">{{
+              item.recorded ? '✓' : ''
+            }}</span>
+            <span v-else class="box-gap" aria-hidden="true"></span>
             <span class="evidence-text">
               <span>{{ item.label }}</span>
               <span class="evidence-state">{{ item.state }}</span>
+              <span v-if="item.detail" class="evidence-state">{{ item.detail }}</span>
             </span>
           </li>
         </ol>
@@ -738,10 +831,36 @@ select:focus-visible {
   line-height: 1.6;
   overflow-wrap: anywhere;
 }
+.clause-text {
+  display: grid;
+  gap: 0.3rem;
+  align-content: start;
+  min-width: 0;
+}
+.clause-oracle {
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+.clause-meta {
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
 .clause-scenarios {
   display: grid;
   gap: 0.15rem;
+  align-content: start;
 }
+.gap {
+  padding: 0.3rem 0.4rem;
+  border: 1px dashed var(--rule);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.chip.mark {
+  border-style: solid;
+}
+
 .clause-scenario {
   width: 100%;
   min-height: 44px;
@@ -808,6 +927,10 @@ select:focus-visible {
   border: 1px dashed var(--rule);
   font-size: 0.7rem;
   line-height: 1;
+}
+.box-gap {
+  flex: 0 0 auto;
+  width: 1.1rem;
 }
 .recorded .box {
   border: 1px solid var(--ink);

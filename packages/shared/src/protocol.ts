@@ -262,6 +262,55 @@ export interface CardTestScenarioMetadata {
   clauseIds: string[];
 }
 
+/**
+ * One Card Test Lab card as `GET /api/card-test-lab/cards` reports it, keyed by the Oracle hash its
+ * scenarios pin. Every field is copied from the verification manifest or the audit ledger and is
+ * absent when neither holds it; nothing is defaulted to "complete".
+ */
+export interface CardTestLabClause {
+  /** The manifest clause id, when the manifest gives one. */
+  id?: string;
+  oracleText: string;
+  implementation: string[];
+  engineTestIds: string[];
+  /** The viewer scenarios the manifest requires for this clause. */
+  viewerScenarioIds: string[];
+  /** The lab scenarios of this card tied to the clause, by its id or its viewer scenario ids. */
+  scenarioIds: string[];
+}
+
+export type CardTestLabAuditState = 'current' | 'stale' | 'unpinned' | 'absent';
+
+export interface CardTestLabLedgerEvidence {
+  engine?: string;
+  viewer?: string;
+  gameplayAi?: string;
+  note?: string;
+  engineTestIds?: string[];
+  viewerScenarioId?: string;
+}
+
+export interface CardTestLabCard {
+  oracleSha256: string;
+  name?: string;
+  oracleId?: string;
+  implementationStatus?: string;
+  unsupportedReason?: string;
+  /** Whether the verification manifest pins this exact hash. False: no clause list is known. */
+  manifestPinned: boolean;
+  clauses: CardTestLabClause[];
+  /** Lab scenarios of the card that no manifest clause names. */
+  unmappedScenarioIds: string[];
+  gameplayAiScenarioIds: string[];
+  /**
+   * `current`: the ledger entry pins this very hash and its evidence is in `ledger`. `stale`: it
+   * pins another hash, so its evidence is left out. `unpinned`: the entry has no hash, so it
+   * cannot be tied to this Oracle text and is left out. `absent`: the ledger has no entry.
+   */
+  audit: CardTestLabAuditState;
+  ledger?: CardTestLabLedgerEvidence;
+}
+
 /** The board at one turn. Sent on start, on jump, and whenever the viewer's position moves. */
 export interface StateSnapshotPayload {
   turn: number;

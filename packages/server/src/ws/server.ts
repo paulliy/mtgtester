@@ -40,6 +40,7 @@ import { BatchManager, validateBatch } from '../batch/manager';
 import { setupSeats } from '../match/setup';
 import { previewMatchup, type PreviewRequest } from '../match/preview';
 import { createCardTestScenario, listCardTestScenarios } from '../cards/card-test-scenarios';
+import { cardTestLabCards } from '../cards/card-test-lab-cards';
 import { buildCardReport, catalogAudit, CARD_REPORT_MAX_NAMES } from '../cards/card-report';
 import { projectSetupProblems, SETUP_REFUSED_MESSAGE } from './setup-privacy';
 
@@ -347,6 +348,11 @@ export class GameServer {
           if (this.deps.cardTestLab !== true)
             return Response.json({ message: 'Card Test Lab is disabled.' }, { status: 404 });
           return Response.json({ scenarios: listCardTestScenarios() });
+        }
+        if (url.pathname === '/api/card-test-lab/cards') {
+          if (this.deps.cardTestLab !== true)
+            return Response.json({ message: 'Card Test Lab is disabled.' }, { status: 404 });
+          return Response.json({ cards: cardTestLabCards(listCardTestScenarios()) });
         }
         if (url.pathname === '/api/stats') {
           if (this.deps.store === undefined)
