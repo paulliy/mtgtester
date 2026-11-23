@@ -1,21 +1,25 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 import { RouterLink, RouterView, useRoute } from 'vue-router';
 import CardPreviewOverlay from './components/CardPreviewOverlay.vue';
+import PhoneMenu from './components/shell/PhoneMenu.vue';
+import RulerNav from './components/shell/RulerNav.vue';
+import ThemeControl from './components/shell/ThemeControl.vue';
+import { currentPlaceIndex, navPlaces } from './lib/navigation';
 import { useCardPreviewStore } from './stores/cardPreview';
 import { useGameStore } from './stores/game';
-import { THEME_CHOICES, useThemeStore, type ThemeChoice } from './stores/theme';
 
 const cardPreview = useCardPreviewStore();
 const game = useGameStore();
 const route = useRoute();
-const showCardTestLab = import.meta.env['DEV'] === true;
-const theme = useThemeStore();
-const THEME_LABELS: Record<ThemeChoice, string> = {
-  day: 'Day',
-  night: 'Night',
-  system: 'Match system',
-};
+
+/** The ruler's places: dev-only ones in a dev build, and the way back while a game runs. */
+const places = computed(() =>
+  navPlaces({ dev: import.meta.env['DEV'] === true, gameRunning: game.gameId !== null }),
+);
+const current = computed(() =>
+  currentPlaceIndex(places.value, typeof route.name === 'string' ? route.name : null),
+);
 
 /**
  * Alt held while hovering a card = the "look closer" zoom. `window.blur` covers Alt-tabbing
@@ -45,30 +49,15 @@ onUnmounted(() => {
 
 <template>
   <div class="app" :class="{ 'reduced-motion': game.reducedMotion }">
-    <nav>
-      <RouterLink to="/">Setup</RouterLink>
-      <RouterLink to="/game">Board</RouterLink>
-      <RouterLink to="/stats">Stats</RouterLink>
-      <RouterLink to="/debug">Debug</RouterLink>
-      <RouterLink to="/batch">Batch</RouterLink>
-      <RouterLink v-if="showCardTestLab" to="/card-test-lab">Card Test Lab</RouterLink>
-      <RouterLink v-if="showCardTestLab" to="/deals-preview">Deals</RouterLink>
+    <header class="topbar">
+      <RouterLink to="/" class="brand">Decktank</RouterLink>
+      <PhoneMenu :places="places" :current="current" />
       <!-- The board view fills this with the game's status (round, phase, priority) via a
            Teleport, so the board itself keeps the space a second header bar would take. -->
       <div id="top-bar-status" class="status-slot" />
-      <span v-if="route.name !== 'game'" class="brand">Decktank</span>
-      <div class="theme" role="group" aria-label="Theme">
-        <button
-          v-for="choice in THEME_CHOICES"
-          :key="choice"
-          type="button"
-          :aria-pressed="theme.choice === choice"
-          @click="theme.setChoice(choice)"
-        >
-          {{ THEME_LABELS[choice] }}
-        </button>
-      </div>
-    </nav>
+      <RulerNav :places="places" :current="current" />
+      <ThemeControl class="topbar-theme" />
+    </header>
     <main class="view">
       <RouterView />
     </main>
@@ -96,57 +85,49 @@ onUnmounted(() => {
   min-height: 0;
   overflow: auto;
 }
-nav {
+.topbar {
+  position: relative;
+  z-index: 40;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.4rem 0.8rem;
-  border-bottom: 1px solid var(--line);
-  font-size: 0.8rem;
+  align-items: stretch;
+  gap: 0 1.5rem;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper);
   flex-shrink: 0;
 }
-nav a {
-  color: var(--muted);
+.brand {
+  align-self: center;
+  flex-shrink: 0;
+  padding: 0.55rem 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
   text-decoration: none;
-}
-nav a.router-link-active {
-  color: var(--text);
-  font-weight: 600;
+  color: var(--ink);
 }
 .status-slot {
-  margin-left: auto;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   gap: 0.8rem;
   min-width: 0;
+  font-size: 0.8rem;
 }
-.status-slot:empty {
-  display: none;
+.topbar-theme {
+  align-self: center;
 }
-.brand {
-  margin-left: auto;
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  color: var(--ink);
-}
-/* Day / Night / Match system (ADR 0052). Phase 2 of the redesign moves it into the ruler nav. */
-.theme {
-  display: inline-flex;
-  flex-shrink: 0;
-}
-.theme button {
-  margin-left: -1px;
-  padding: 0.15rem 0.5rem;
-  font-family: var(--font-ui);
-  font-size: 0.65rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.theme button[aria-pressed='true'] {
-  background: var(--ink);
-  color: var(--paper);
+@media (max-width: 760px) {
+  .topbar {
+    gap: 0 0.75rem;
+    padding: 0 1rem;
+  }
+  .topbar > .brand,
+  .topbar > .topbar-theme {
+    display: none;
+  }
 }
 </style>
