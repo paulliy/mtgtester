@@ -11,6 +11,7 @@ import type { SpectatorCard, SpectatorPermanent } from '@mtg/shared';
 import ActionLog from '../components/ActionLog.vue';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { dealLinesFor } from '../lib/tableTalk';
+import { commanderObjectIds } from '../lib/commanderIds';
 import CombatOverlay from '../components/CombatOverlay.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import CopyGameReportButton from '../components/CopyGameReportButton.vue';
@@ -78,6 +79,8 @@ function exileFor(seat: string): SpectatorCard[] {
 }
 
 /** Object id -> name, table-wide — lets a chip name the actual attacker/blocker it's tied to. */
+/** Every seat's commanders: a panel can hold another seat's commander it controls. */
+const tableCommanderIds = computed(() => commanderObjectIds(state.value?.seats ?? []));
 const permanentNameById = computed(() => {
   const map = new Map<string, string>();
   for (const p of state.value?.battlefield ?? []) map.set(p.id, p.name);
@@ -268,6 +271,7 @@ const roundLabel = computed(() => {
           :commander-damage="state.commanderDamage"
           :exile="exileFor(seat.seat)"
           :name-by-id="permanentNameById"
+          :commander-ids="tableCommanderIds"
           :deals="store.diplomacy ? dealLinesFor(seat.seat, store.dealsNow) : []"
         />
       </div>
