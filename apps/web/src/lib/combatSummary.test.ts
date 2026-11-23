@@ -199,4 +199,35 @@ describe('summarizeCombat', () => {
     ]);
     expect(summary?.attacked.get('P1')).toBe('Under attack · 12 incoming');
   });
+
+  it('does not claim an exact number while a blocked trampler can push damage through', () => {
+    const summary = summarizeCombat({
+      phase: 'combat',
+      step: 'declareBlockers',
+      priorityPlayer: 'P1',
+      permanents: [
+        creature('g', 'Ghalta, Primal Hunger', 'P1', {
+          power: 12,
+          toughness: 12,
+          attacking: 'P2',
+          blockedBy: ['w'],
+          keywords: ['trample'],
+        }),
+        creature('b', 'Grizzly Bears', 'P1', { power: 2, toughness: 2, attacking: 'P2' }),
+        creature('w', 'Wall of Omens', 'P2', { power: 0, toughness: 4, blocking: 'g' }),
+        creature('t', 'Craterhoof Behemoth', 'P1', {
+          power: 5,
+          toughness: 5,
+          attacking: 'P4',
+          blockedBy: ['r'],
+          keywords: ['haste', 'trample'],
+        }),
+        creature('r', 'Midnight Reaper', 'P4', { power: 3, toughness: 2, blocking: 't' }),
+      ],
+      seats,
+      plan: null,
+    });
+    expect(summary?.attacked.get('P2')).toBe('Under attack · 2 incoming + trample');
+    expect(summary?.attacked.get('P4')).toBe('Under attack · 0 incoming + trample');
+  });
 });

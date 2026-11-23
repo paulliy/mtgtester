@@ -20,6 +20,8 @@ export interface CombatPermanent {
   attackingPlaneswalker?: string | null;
   blocking: string | null;
   blockedBy: readonly string[];
+  /** Current keywords, lowercase engine ids ("trample"). Absent for a face-down permanent. */
+  keywords?: readonly string[];
 }
 
 export interface CombatSeat {
@@ -174,15 +176,27 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
   const attacksOnPlayer = (seat: string) =>
     attackers.filter((a) => a.attacking === seat && a.attackingPlaneswalker == null);
   for (const [seat, power] of incoming) {
-    const count = attacksOnPlayer(seat).length;
+    const onPlayer = attacksOnPlayer(seat);
     if (blocksPending || input.plan?.kind === 'blockers') {
       attacked.set(seat, `Under attack · ${power} incoming`);
+      continue;
+    }
+    // A blocked trampler can still push damage through; how much depends on how its controller
+    // assigns damage, so the chip says "+ trample" rather than claiming an exact number.
+    const trample = onPlayer.some(
+      (a) => a.blockedBy.length > 0 && (a.keywords ?? []).includes('trample'),
+    );
+    const through = onPlayer
+      .filter((a) => a.blockedBy.length === 0)
+      .reduce((sum, a) => sum + Math.max(0, a.power ?? 0), 0);
+    if (trample) {
+      attacked.set(seat, `Under attack · ${through} incoming + trample`);
     } else if ((unblockedAt.get(seat) ?? 0) === 0) {
-      attacked.set(seat, count === 1 ? 'Under attack · blocked' : 'Under attack · all blocked');
+      attacked.set(
+        seat,
+        onPlayer.length === 1 ? 'Under attack · blocked' : 'Under attack · all blocked',
+      );
     } else {
-      const through = attacksOnPlayer(seat)
-        .filter((a) => a.blockedBy.length === 0)
-        .reduce((sum, a) => sum + Math.max(0, a.power ?? 0), 0);
       attacked.set(seat, `Under attack · ${through} incoming`);
     }
   }
