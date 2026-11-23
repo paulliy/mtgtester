@@ -1,12 +1,11 @@
 <script setup lang="ts">
 /**
- * The new-game screen (brief §10.2, §8): quick starts on top, a deck gallery, and a summary of
- * the four seats with the one Start button.
+ * The new-game screen (brief §10.2, §8): the mode compass, and a summary of the four seats with
+ * the one Start button.
  *
- * There is one setup flow. Two quick starts cover the common cases with no choices at all; past
- * them, every option edits the same four seats. The gallery fills whichever seat is selected in
- * the summary, which is the human's by default, so choosing opponents' decks is the same gesture
- * as choosing your own rather than a separate "advanced" form.
+ * There is one setup flow: every option edits the same four seats. Each seat opens its own deck
+ * menu (a new generated deck, a modeled deck, a saved deck or an import), so choosing opponents'
+ * decks is the same gesture as choosing your own rather than a separate "advanced" form.
  *
  * Generated decks stay the default. The engine halts on any unmodeled card, so a real decklist is
  * all-or-nothing (ADR 0009); generated and modeled decks are always playable, and an import is
@@ -89,7 +88,7 @@ const seed = computed(() => customSeed.value.trim() || sessionSeed.value);
 const choices = ref<SeatChoice[]>(
   Array.from({ length: SEATS }, () => ({ kind: 'pool', seed: null })),
 );
-/** The seat the gallery fills. Follows the human seat until another seat is picked. */
+/** The seat a deck pick fills: the one whose menu is open. Follows your seat when it moves. */
 const activeSeat = ref(0);
 
 const knownDecks = ref<KnownDeck[]>([]);
@@ -104,11 +103,10 @@ const preview = ref<SetupPreview | null>(null);
 const previewKey = ref('');
 const previewBusy = ref(false);
 const previewError = ref('');
-const quickError = ref('');
-/** Which start is in flight or last failed, so its outcome shows beside the button pressed. */
-const startedFrom = ref<'quick' | 'custom' | null>(null);
-const quickBusy = ref(false);
-const quickMode = ref<StartGameMode | null>(null);
+/** The seat whose deck menu is open, if any. */
+const openSeat = ref<number | null>(null);
+/** Narrows a deck menu by commander, deck name or archetype. */
+const deckFilter = ref('');
 /** Commander art that failed to load, by URL, so the tile falls back to its color band. */
 const brokenArt = ref<string[]>([]);
 
@@ -167,16 +165,27 @@ watch(humanSeat, (next, previous) => {
   [list[to], list[from]] = [list[from]!, list[to]!];
   choices.value = list;
   if (activeSeat.value === from) activeSeat.value = to;
+  if (openSeat.value === from) openSeat.value = to;
 });
 
-const galleryDecks = computed(() => knownDecks.value.map((deck) => ({ deck, art: deckArt(deck) })));
+function matchesFilter(...texts: string[]): boolean {
+  const needle = deckFilter.value.trim().toLowerCase();
+  return needle === '' || texts.some((text) => text.toLowerCase().includes(needle));
+}
+const galleryDecks = computed(() =>
+  knownDecks.value
+    .filter((deck) => matchesFilter(deck.name, deck.archetypeTag, ...deck.commanderNames))
+    .map((deck) => ({ deck, art: deckArt(deck) })),
+);
 
 const orderedSaved = computed(() =>
-  [...saved.value].sort((a, b) => {
-    const ai = recentDecks.value.indexOf(a.snapshotId);
-    const bi = recentDecks.value.indexOf(b.snapshotId);
-    return (ai < 0 ? 100 : ai) - (bi < 0 ? 100 : bi);
-  }),
+  saved.value
+    .filter((deck) => matchesFilter(deck.archetypeTag, ...deck.commanderNames))
+    .sort((a, b) => {
+      const ai = recentDecks.value.indexOf(a.snapshotId);
+      const bi = recentDecks.value.indexOf(b.snapshotId);
+      return (ai < 0 ? 100 : ai) - (bi < 0 ? 100 : bi);
+    }),
 );
 
 function seatName(index: number): string {
@@ -286,13 +295,8 @@ const requestKey = computed(() => JSON.stringify(request.value));
 const current = computed(() =>
   preview.value !== null && previewKey.value === requestKey.value ? preview.value : null,
 );
-// One start at a time: a quick start holds this button for its whole preview-then-start.
 const canStart = computed(
-  () =>
-    current.value !== null &&
-    current.value.blockers.length === 0 &&
-    !starting.value &&
-    !quickBusy.value,
+  () => current.value !== null && current.value.blockers.length === 0 && !starting.value,
 );
 
 async function fetchPreview(body: object): Promise<SetupPreview> {
@@ -342,7 +346,6 @@ watch(
   requestKey,
   () => {
     clearStartErrors();
-    quickError.value = '';
     schedulePreview();
   },
   { immediate: true },
@@ -359,33 +362,43 @@ function setChoice(index: number, choice: SeatChoice): void {
   choices.value = list;
 }
 
+/** Opens one seat's deck menu, or closes it when it is already open. */
+function toggleDeckMenu(index: number): void {
+  activeSeat.value = index;
+  deckFilter.value = '';
+  openSeat.value = openSeat.value === index ? null : index;
+}
 function pickKnown(slug: string): void {
   setChoice(activeSeat.value, { kind: 'known', slug });
+  openSeat.value = null;
 }
 function pickSaved(snapshotId: string): void {
   setChoice(activeSeat.value, { kind: 'saved', snapshotId });
+  openSeat.value = null;
 }
+/** A generated deck; picked again on a seat that already has one, it deals a new one. */
 function pickGenerated(): void {
   const choice = choices.value[activeSeat.value];
-  if (choice?.kind !== 'pool') setChoice(activeSeat.value, { kind: 'pool', seed: null });
+  setChoice(
+    activeSeat.value,
+    choice?.kind === 'pool' ? { kind: 'pool', seed: freshSeed() } : { kind: 'pool', seed: null },
+  );
+  openSeat.value = null;
 }
+/** An import stays open: its list is typed into the menu. */
 function pickImport(): void {
   const choice = choices.value[activeSeat.value];
   if (choice?.kind !== 'import') setChoice(activeSeat.value, { kind: 'import', text: '', tag: '' });
-}
-function reroll(index: number): void {
-  setChoice(index, { kind: 'pool', seed: freshSeed() });
 }
 
 const activeChoice = computed(() => choices.value[activeSeat.value]!);
 
 function start(): void {
   const matchup = current.value;
-  if (!matchup || matchup.blockers.length > 0 || quickBusy.value) return;
+  if (!matchup || matchup.blockers.length > 0) return;
   // The start redeems this preview, so it must not be offered again. A refused start brings a
   // fresh one through the `startErrors` watch.
   preview.value = null;
-  startedFrom.value = 'custom';
   begin(() =>
     store.startGame(
       request.value.seats,
@@ -401,34 +414,6 @@ function start(): void {
       },
     ),
   );
-}
-
-/** One click: four generated decks, built-in bots, a fresh seed. */
-async function quickStart(mode: StartGameMode): Promise<void> {
-  if (quickBusy.value || starting.value) return;
-  quickBusy.value = true;
-  quickMode.value = mode;
-  quickError.value = '';
-  startedFrom.value = 'quick';
-  const seats: SeatSource[] = Array.from({ length: SEATS }, () => ({ kind: 'pool' }));
-  const body = {
-    seats,
-    providerKind: 'random' as const,
-    seed: freshSeed(),
-    gameMode: mode,
-    ...(mode === 'singlePlayer' && { humanSeat: 'P1' }),
-  };
-  try {
-    const result = await fetchPreview(body);
-    if (result.blockers.length > 0) throw new Error(result.blockers.join('\n'));
-    // Another start may have gone out while this preview was in flight.
-    if (starting.value) return;
-    begin(() => store.startGame(seats, 'random', result.seed, mode, 'P1', false, result.previewId));
-  } catch (reason) {
-    quickError.value = reason instanceof Error ? reason.message : String(reason);
-  } finally {
-    quickBusy.value = false;
-  }
 }
 
 /**
@@ -483,179 +468,7 @@ const seatRows = computed(() =>
         <p class="mode-line">{{ modeLine }}</p>
       </div>
 
-      <ModeCompass v-model="gameMode" :disabled="starting || quickBusy" />
-
-      <section class="quick" aria-label="Quick start">
-        <div class="quick-card quick-play">
-          <span class="dt-kicker">Quick game</span>
-          <strong>Play a random deck against three bots</strong>
-          <span class="quick-copy">Built-in bots, a fresh seed, no setup.</span>
-          <button
-            type="button"
-            class="dt-btn-primary"
-            :disabled="starting || quickBusy"
-            @click="quickStart('singlePlayer')"
-          >
-            {{ quickMode === 'singlePlayer' && (quickBusy || starting) ? 'Starting…' : 'Play now' }}
-          </button>
-        </div>
-        <div class="quick-card">
-          <span class="dt-kicker">Spectate</span>
-          <strong>Watch four bots play it out</strong>
-          <span class="quick-copy">Scrub turns and see every hand.</span>
-          <button
-            type="button"
-            class="dt-btn"
-            :disabled="starting || quickBusy"
-            @click="quickStart('spectator')"
-          >
-            {{ quickMode === 'spectator' && (quickBusy || starting) ? 'Starting…' : 'Watch now' }}
-          </button>
-        </div>
-      </section>
-      <p v-if="quickError" class="dt-note danger" role="alert">{{ quickError }}</p>
-      <div
-        v-if="startedFrom === 'quick' && startErrors.length > 0"
-        class="dt-note danger"
-        role="alert"
-      >
-        <strong>The game did not start</strong>
-        <ul>
-          <li v-for="(error, index) in startErrors" :key="index">{{ error }}</li>
-        </ul>
-      </div>
-
-      <section class="gallery-area" aria-labelledby="gallery-title">
-        <div class="gallery-head">
-          <h2 id="gallery-title" class="dt-head">
-            <span class="num" aria-hidden="true">{{
-              seatName(activeSeat) === 'you' ? '★' : '◆'
-            }}</span>
-            Or pick a deck for {{ seatName(activeSeat) }}
-          </h2>
-          <span class="muted">Every modeled deck plays without engine halts.</span>
-        </div>
-        <div class="seat-switch dt-seg" role="group" aria-label="Seat to choose for">
-          <button
-            v-for="(id, index) in SEAT_IDS"
-            :key="id"
-            type="button"
-            :aria-pressed="activeSeat === index"
-            :aria-label="`Choose the deck for ${seatName(index)}`"
-            @click="activeSeat = index"
-          >
-            {{ id }}
-          </button>
-        </div>
-        <p v-if="!persistence" class="hint">
-          Saved and imported decks are disabled without a database. Generated decks remain
-          available.
-        </p>
-        <p v-if="knownDecksError !== null" class="dt-note danger">
-          Modeled decks unavailable: {{ knownDecksError }}
-        </p>
-
-        <div v-if="activeChoice.kind === 'import'" class="import-panel dt-plate">
-          <label class="field">
-            <span>Deck URL or decklist for {{ seatName(activeSeat) }}</span>
-            <textarea
-              v-model="activeChoice.text"
-              rows="5"
-              placeholder="https://moxfield.com/decks/… or a pasted decklist"
-            ></textarea>
-          </label>
-          <!-- Leaving this blank is the normal path: the server classifies the resolved list
-               (ADR 0022 §5). Anything typed here wins outright and is never overwritten. -->
-          <label class="field tag-field">
-            <span>Archetype tag (optional)</span>
-            <input v-model="activeChoice.tag" type="text" placeholder="Detected if blank" />
-          </label>
-        </div>
-
-        <div class="gallery">
-          <button
-            type="button"
-            class="tile tile-generated"
-            :class="{ selected: activeChoice.kind === 'pool' }"
-            :aria-pressed="activeChoice.kind === 'pool'"
-            @click="pickGenerated"
-          >
-            <span class="art art-generated" aria-hidden="true"></span>
-            <span class="tile-body">
-              <strong>Generated deck</strong>
-              <span class="tile-sub">Built from cards the engine fully supports.</span>
-            </span>
-          </button>
-          <button
-            v-for="{ deck, art } in galleryDecks"
-            :key="deck.slug"
-            type="button"
-            class="tile"
-            :class="{ selected: activeChoice.kind === 'known' && activeChoice.slug === deck.slug }"
-            :aria-pressed="activeChoice.kind === 'known' && activeChoice.slug === deck.slug"
-            :disabled="!persistence"
-            :title="deckTitle(deck)"
-            @click="pickKnown(deck.slug)"
-          >
-            <span v-if="art" class="art" aria-hidden="true">
-              <img :src="art" alt="" loading="lazy" @error="markBroken(art)" />
-            </span>
-            <span class="band" aria-hidden="true">
-              <span
-                v-for="c in deck.colorIdentity.length ? deck.colorIdentity : ['C']"
-                :key="c"
-                :class="`band-${c}`"
-              ></span>
-            </span>
-            <span class="tile-body">
-              <strong>{{ deck.commanderNames.join(' & ') }}</strong>
-              <span v-if="deckSubtitle(deck)" class="tile-sub">{{ deckSubtitle(deck) }}</span>
-              <span class="tile-meta">
-                <ManaPips :colors="deck.colorIdentity" />
-                <span class="archetype">{{ deck.archetypeTag }}</span>
-              </span>
-            </span>
-          </button>
-          <button
-            v-for="deck in orderedSaved"
-            :key="deck.snapshotId"
-            type="button"
-            class="tile"
-            :class="{
-              selected:
-                activeChoice.kind === 'saved' && activeChoice.snapshotId === deck.snapshotId,
-            }"
-            :aria-pressed="
-              activeChoice.kind === 'saved' && activeChoice.snapshotId === deck.snapshotId
-            "
-            @click="pickSaved(deck.snapshotId)"
-          >
-            <span class="band band-saved" aria-hidden="true"></span>
-            <span class="tile-body">
-              <strong>{{ deck.commanderNames.join(' & ') }}</strong>
-              <span class="tile-sub">{{ savedSubtitle(deck) }}</span>
-              <span class="tile-meta">
-                <ManaPips :colors="deck.colorIdentity" />
-                <span class="archetype">{{ deck.archetypeTag }}</span>
-              </span>
-            </span>
-          </button>
-          <button
-            type="button"
-            class="tile tile-dashed"
-            :class="{ selected: activeChoice.kind === 'import' }"
-            :aria-pressed="activeChoice.kind === 'import'"
-            :disabled="!persistence"
-            @click="pickImport"
-          >
-            <span class="tile-body centered">
-              <strong>Import a deck</strong>
-              <span class="tile-sub">Moxfield, Archidekt or a pasted list</span>
-            </span>
-          </button>
-        </div>
-        <p v-if="!knownDecksLoaded" class="hint">Loading modeled decks…</p>
-      </section>
+      <ModeCompass v-model="gameMode" :disabled="starting" />
     </section>
 
     <aside class="summary" aria-labelledby="summary-title">
@@ -684,8 +497,8 @@ const seatRows = computed(() =>
             <button
               type="button"
               class="seat-main"
-              :aria-pressed="activeSeat === row.index"
-              @click="activeSeat = row.index"
+              :aria-expanded="openSeat === row.index"
+              @click="toggleDeckMenu(row.index)"
             >
               <span class="seat-id" aria-hidden="true">{{ row.id }}</span>
               <span class="seat-text">
@@ -706,19 +519,147 @@ const seatRows = computed(() =>
               </span>
             </button>
             <button
-              v-if="row.pool"
               type="button"
-              class="reroll dt-btn small"
-              :aria-label="`Reroll the generated deck for ${row.id}`"
-              @click="reroll(row.index)"
+              class="deck-btn dt-btn small"
+              :aria-expanded="openSeat === row.index"
+              :aria-controls="`deck-menu-${row.id}`"
+              :aria-label="`Change the deck for ${row.id}`"
+              @click="toggleDeckMenu(row.index)"
             >
-              Reroll
+              {{ openSeat === row.index ? 'Close' : 'Deck' }}
             </button>
+            <div
+              v-if="openSeat === row.index"
+              :id="`deck-menu-${row.id}`"
+              class="deck-menu"
+              role="group"
+              :aria-label="`Decks for ${seatName(row.index)}`"
+            >
+              <input
+                v-model="deckFilter"
+                type="search"
+                class="deck-filter"
+                :aria-label="`Filter decks for ${seatName(row.index)}`"
+                placeholder="Filter by commander or archetype"
+              />
+              <p v-if="!knownDecksLoaded" class="hint">Loading modeled decks…</p>
+              <p v-if="!persistence" class="hint">
+                Saved and imported decks are disabled without a database. Generated decks remain
+                available.
+              </p>
+              <p v-if="knownDecksError !== null" class="dt-note danger">
+                Modeled decks unavailable: {{ knownDecksError }}
+              </p>
+
+              <div v-if="activeChoice.kind === 'import'" class="import-panel dt-plate">
+                <label class="field">
+                  <span>Deck URL or decklist for {{ seatName(activeSeat) }}</span>
+                  <textarea
+                    v-model="activeChoice.text"
+                    rows="5"
+                    placeholder="https://moxfield.com/decks/… or a pasted decklist"
+                  ></textarea>
+                </label>
+                <!-- Leaving this blank is the normal path: the server classifies the resolved list
+                     (ADR 0022 §5). Anything typed here wins outright and is never overwritten. -->
+                <label class="field tag-field">
+                  <span>Archetype tag (optional)</span>
+                  <input v-model="activeChoice.tag" type="text" placeholder="Detected if blank" />
+                </label>
+              </div>
+
+              <div class="gallery">
+                <button
+                  type="button"
+                  class="tile tile-generated"
+                  :class="{ selected: activeChoice.kind === 'pool' }"
+                  :aria-pressed="activeChoice.kind === 'pool'"
+                  @click="pickGenerated"
+                >
+                  <span class="art art-generated" aria-hidden="true"></span>
+                  <span class="tile-body">
+                    <strong>Generated deck</strong>
+                    <span class="tile-sub"
+                      >Built from cards the engine fully supports.{{
+                        activeChoice.kind === 'pool' ? ' Pick again for a new one.' : ''
+                      }}</span
+                    >
+                  </span>
+                </button>
+                <button
+                  v-for="{ deck, art } in galleryDecks"
+                  :key="deck.slug"
+                  type="button"
+                  class="tile"
+                  :class="{
+                    selected: activeChoice.kind === 'known' && activeChoice.slug === deck.slug,
+                  }"
+                  :aria-pressed="activeChoice.kind === 'known' && activeChoice.slug === deck.slug"
+                  :disabled="!persistence"
+                  :title="deckTitle(deck)"
+                  @click="pickKnown(deck.slug)"
+                >
+                  <span v-if="art" class="art" aria-hidden="true">
+                    <img :src="art" alt="" loading="lazy" @error="markBroken(art)" />
+                  </span>
+                  <span class="band" aria-hidden="true">
+                    <span
+                      v-for="c in deck.colorIdentity.length ? deck.colorIdentity : ['C']"
+                      :key="c"
+                      :class="`band-${c}`"
+                    ></span>
+                  </span>
+                  <span class="tile-body">
+                    <strong>{{ deck.commanderNames.join(' & ') }}</strong>
+                    <span v-if="deckSubtitle(deck)" class="tile-sub">{{ deckSubtitle(deck) }}</span>
+                    <span class="tile-meta">
+                      <ManaPips :colors="deck.colorIdentity" />
+                      <span class="archetype">{{ deck.archetypeTag }}</span>
+                    </span>
+                  </span>
+                </button>
+                <button
+                  v-for="deck in orderedSaved"
+                  :key="deck.snapshotId"
+                  type="button"
+                  class="tile"
+                  :class="{
+                    selected:
+                      activeChoice.kind === 'saved' && activeChoice.snapshotId === deck.snapshotId,
+                  }"
+                  :aria-pressed="
+                    activeChoice.kind === 'saved' && activeChoice.snapshotId === deck.snapshotId
+                  "
+                  @click="pickSaved(deck.snapshotId)"
+                >
+                  <span class="band band-saved" aria-hidden="true"></span>
+                  <span class="tile-body">
+                    <strong>{{ deck.commanderNames.join(' & ') }}</strong>
+                    <span class="tile-sub">{{ savedSubtitle(deck) }}</span>
+                    <span class="tile-meta">
+                      <ManaPips :colors="deck.colorIdentity" />
+                      <span class="archetype">{{ deck.archetypeTag }}</span>
+                    </span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="tile tile-dashed"
+                  :class="{ selected: activeChoice.kind === 'import' }"
+                  :aria-pressed="activeChoice.kind === 'import'"
+                  :disabled="!persistence"
+                  @click="pickImport"
+                >
+                  <span class="tile-body centered">
+                    <strong>Import a deck</strong>
+                    <span class="tile-sub">Moxfield, Archidekt or a pasted list</span>
+                  </span>
+                </button>
+              </div>
+            </div>
           </li>
         </ul>
-        <p class="muted small">
-          Select a seat to choose its deck from the gallery. Seed: {{ current?.seed ?? seed }}
-        </p>
+        <p class="muted small">Open a seat to change its deck. Seed: {{ current?.seed ?? seed }}</p>
 
         <h3 class="dt-head"><span class="num">II.</span> Bots</h3>
         <div class="dt-seg" role="radiogroup" aria-label="Bots">
@@ -802,11 +743,7 @@ const seatRows = computed(() =>
             <li v-for="blocker in current.blockers" :key="blocker">{{ blocker }}</li>
           </ul>
         </div>
-        <div
-          v-if="startedFrom === 'custom' && startErrors.length > 0"
-          class="dt-note danger"
-          role="alert"
-        >
+        <div v-if="startErrors.length > 0" class="dt-note danger" role="alert">
           <strong>The game did not start</strong>
           <ul>
             <li v-for="(error, index) in startErrors" :key="index">{{ error }}</li>
@@ -816,8 +753,7 @@ const seatRows = computed(() =>
 
       <div class="summary-foot">
         <button type="button" class="dt-btn-primary wide" :disabled="!canStart" @click="start">
-          {{ starting && startedFrom === 'custom' ? 'Starting…' : 'Start game'
-          }}<span class="dt-arr" aria-hidden="true" />
+          {{ starting ? 'Starting…' : 'Start game' }}<span class="dt-arr" aria-hidden="true" />
         </button>
       </div>
     </aside>
@@ -826,6 +762,7 @@ const seatRows = computed(() =>
 
 <style scoped>
 .setup {
+  height: 100%;
   min-height: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(20rem, 28rem);
@@ -852,13 +789,15 @@ p {
   margin-top: 0.5rem;
 }
 
-/* The stage: title, compass, quick starts and the deck gallery. */
+/* The stage: title and compass. */
 .stage {
   min-width: 0;
   padding: 1.75rem 2.5rem 3rem;
   display: flex;
   flex-direction: column;
+  justify-content: safe center;
   gap: 1.75rem;
+  overflow-y: auto;
 }
 .title-g {
   display: flex;
@@ -884,65 +823,44 @@ p {
   color: var(--muted);
 }
 
-.quick {
+/* A seat's deck menu: a filter and a scrolling list of decks, one row each. */
+.deck-menu {
+  flex: 1 0 100%;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  border: 1px solid var(--ink);
-}
-.quick-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  padding: 1.1rem 1.25rem 1.25rem;
-}
-.quick-card + .quick-card {
-  border-left: 1px solid var(--ink);
-}
-.quick-play {
+  gap: 0.6rem;
+  padding: 0.6rem 0.4rem 0.8rem;
   background: var(--paper-2);
+  box-shadow: inset 3px 0 0 var(--ink);
 }
-.quick-card strong {
+.deck-filter {
+  width: 100%;
+  padding: 0.35rem 0.1rem;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
   font-family: var(--font-body);
-  font-weight: 400;
-  font-size: 1.05rem;
-  line-height: 1.3;
+  font-size: 0.82rem;
 }
-.quick-copy {
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-.quick-card button {
-  align-self: flex-start;
-  margin-top: 0.4rem;
-}
-
-/* Gallery */
-.gallery-area {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-.gallery-head {
-  display: grid;
-  gap: 0.35rem;
-}
-.gallery-head .muted {
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-}
-.seat-switch {
-  max-width: 18rem;
+.deck-filter:focus {
+  outline: none;
+  border-bottom-width: 2px;
 }
 .gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 22rem;
+  overflow-y: auto;
+  padding-right: 0.15rem;
 }
 .tile {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 132px;
+  display: grid;
+  grid-template-columns: 3.6rem minmax(0, 1fr);
+  grid-template-rows: 4px auto;
+  flex-shrink: 0;
+  min-height: 3.6rem;
   padding: 0;
   overflow: hidden;
   text-align: left;
@@ -982,13 +900,13 @@ p {
 }
 .tile-dashed {
   border-style: dashed;
-  justify-content: center;
 }
 .art {
+  grid-column: 1;
+  grid-row: 1 / 3;
   display: block;
-  height: 78px;
   overflow: hidden;
-  border-bottom: 1px solid var(--ink);
+  border-right: 1px solid var(--ink);
   background: var(--paper-2);
 }
 .art img {
@@ -999,6 +917,8 @@ p {
   filter: saturate(0.75) sepia(0.12);
 }
 .band {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   height: 4px;
 }
@@ -1030,14 +950,16 @@ p {
   background: var(--warm);
 }
 .tile-body {
+  grid-column: 2;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.6rem 0.75rem 0.75rem;
+  gap: 0.2rem;
+  padding: 0.4rem 0.6rem 0.5rem;
 }
-.tile-body.centered {
-  align-items: center;
-  text-align: center;
+.tile:not(:has(.art)) .tile-body,
+.tile:not(:has(.art)) .band {
+  grid-column: 1 / 3;
 }
 .tile-body strong {
   font-family: var(--font-ui);
@@ -1067,9 +989,8 @@ p {
 }
 .import-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 14rem;
-  gap: 1rem;
-  padding: 1rem;
+  gap: 0.75rem;
+  padding: 0.75rem;
 }
 .field {
   display: grid;
@@ -1155,6 +1076,7 @@ p {
 }
 .seat {
   display: flex;
+  flex-wrap: wrap;
   align-items: stretch;
   border-bottom: 1px solid var(--rule);
 }
@@ -1169,6 +1091,9 @@ p {
   border: 0;
   text-align: left;
   transition: background-color 0.3s var(--ease);
+}
+.seat:has(.deck-menu) {
+  background: var(--paper-2);
 }
 .seat.active .seat-main {
   background: var(--paper-2);
@@ -1213,7 +1138,7 @@ p {
 .status.bad {
   color: var(--danger);
 }
-.reroll {
+.deck-btn {
   align-self: center;
   margin-left: 0.4rem;
 }
@@ -1261,7 +1186,11 @@ p {
 
 @media (max-width: 900px) {
   .setup {
+    height: auto;
     grid-template-columns: minmax(0, 1fr);
+  }
+  .stage {
+    overflow-y: visible;
   }
   .summary {
     position: static;
@@ -1277,16 +1206,6 @@ p {
 @media (max-width: 640px) {
   .stage {
     padding: 1.25rem 1rem 2rem;
-  }
-  .quick {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .quick-card + .quick-card {
-    border-left: 0;
-    border-top: 1px solid var(--ink);
-  }
-  .import-panel {
-    grid-template-columns: minmax(0, 1fr);
   }
   .summary-head,
   .summary-scroll,

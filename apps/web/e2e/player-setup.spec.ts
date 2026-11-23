@@ -32,10 +32,11 @@ test('real DB-backed supported-pool setup previews and starts a human game', asy
   await abandon(page);
 });
 
-test('a modeled deck from the gallery fills the selected seat and starts', async ({ page }) => {
+test('a modeled deck from a seat deck menu fills that seat and starts', async ({ page }) => {
   await page.goto('/');
   const preview = page.getByLabel('Matchup preview');
   await expect(preview.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
+  await page.getByRole('button', { name: 'Change the deck for P1' }).click();
   await page.getByRole('button', { name: /^Atarka, World Render Draconic/ }).click();
   await expect(preview.locator('li').first()).toContainText('Atarka, World Render', {
     timeout: 60_000,
@@ -48,23 +49,16 @@ test('a modeled deck from the gallery fills the selected seat and starts', async
   await abandon(page);
 });
 
-test('Play now starts a game with no setup', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Play now' }).click();
-  await expect(page).toHaveURL(/\/game$/, { timeout: 60_000 });
-  await expect(page.getByText(/Turn \d+/).first()).toBeVisible({ timeout: 60_000 });
-
-  await abandon(page);
-});
-
-test('opponent seats take gallery decks, and a blocked import holds Start', async ({ page }) => {
+test('opponent seats take decks from their menus, and a blocked import holds Start', async ({
+  page,
+}) => {
   await page.goto('/');
   const seats = page.getByLabel('Matchup preview').locator('li');
   await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
 
-  // Selecting an opponent's seat points the gallery at it.
+  // Opening an opponent's seat shows its deck menu.
   await seats.nth(3).locator('.seat-main').click();
-  await expect(page.getByRole('heading', { name: 'Or pick a deck for P4' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Decks for P4' })).toBeVisible();
   await page.getByRole('button', { name: /^The Ur-Dragon Urdragon/ }).click();
   await expect(seats.nth(3)).toContainText('The Ur-Dragon', { timeout: 60_000 });
   await expect(seats.nth(3)).toContainText('Fully modeled');
@@ -94,18 +88,12 @@ test('opponent seats take gallery decks, and a blocked import holds Start', asyn
   await expect(page.getByRole('button', { name: 'Start game' })).toBeEnabled();
 });
 
-test('Watch now starts a spectator game', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Watch now' }).click();
-  await expect(page).toHaveURL(/\/game$/, { timeout: 60_000 });
-  await expect(page.getByText(/Turn \d+/).first()).toBeVisible({ timeout: 60_000 });
-});
-
 test('an imported Ur-Dragon deck can be selected again as one saved deck', async ({ page }) => {
   const decklist = readFileSync('packages/server/fixtures/coverage-decks/urdragon.txt', 'utf8');
   const seats = page.getByLabel('Matchup preview').locator('li');
   await page.goto('/');
   for (let repeat = 0; repeat < 2; repeat++) {
+    await page.getByRole('button', { name: 'Change the deck for P1' }).click();
     await page.getByRole('button', { name: /^Import a deck/ }).click();
     await page.getByLabel('Deck URL or decklist for you').fill(decklist);
     await expect(seats.getByText('Fully modeled')).toHaveCount(4, { timeout: 60_000 });
@@ -117,6 +105,7 @@ test('an imported Ur-Dragon deck can be selected again as one saved deck', async
   const savedDeck = page.locator('.tile').filter({ hasText: 'The Ur-Dragon' }).filter({
     hasText: 'Saved',
   });
+  await page.getByRole('button', { name: 'Change the deck for P1' }).click();
   await expect(savedDeck).toHaveCount(1);
   await savedDeck.click();
   await expect(seats.first()).toContainText('The Ur-Dragon', { timeout: 60_000 });
