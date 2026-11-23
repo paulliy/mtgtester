@@ -40,6 +40,7 @@ import {
 import { summarizeCombat } from '../lib/combatSummary';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { groupByXFamily, type XActionGroup } from '../lib/xFamilies';
+import { commanderObjectIds } from '../lib/commanderIds';
 import { groupPermanents, stackKey, type GroupedPermanent } from '../lib/stackPermanents';
 import { useCardPreviewStore } from '../stores/cardPreview';
 import { useCombatPlanStore } from '../stores/combatPlan';
@@ -449,9 +450,14 @@ function openLandCount(seat: string): number {
   return opponentBoards.value.get(seat)?.openLands ?? 0;
 }
 const opponentPermMinWidth = 40;
-function opponentPermWidth(seat: string): number {
-  return zoneTileWidth(`opp-${seat}`, opponentBoardGroups(seat).length, 40, 140);
-}
+/** One tile width per opponent zone, set on the zone so its tiles inherit it. */
+const opponentPermWidths = computed(() => {
+  const widths = new Map<string, number>();
+  for (const seat of opponentBoards.value.keys()) {
+    widths.set(seat, zoneTileWidth(`opp-${seat}`, opponentBoardGroups(seat).length, 40, 140));
+  }
+  return widths;
+});
 /** The art crop for a hand tile; tokens and unknown printings show the paper tone instead. */
 function artCropOf(card: { scryfallId: string | null; isToken?: boolean }): string | null {
   if (card.isToken === true || card.scryfallId === null || card.scryfallId.length < 2) return null;
@@ -539,15 +545,7 @@ const nameById = computed(() => {
 });
 
 /** Battlefield object ids of every seat's commanders, for the commander frame. */
-const commanderIds = computed(() => {
-  const ids = new Set<string>();
-  for (const seat of state.value?.seats ?? []) {
-    for (const commander of seat.commanders) {
-      if (commander.objectId !== null) ids.add(commander.objectId);
-    }
-  }
-  return ids;
-});
+const commanderIds = computed(() => commanderObjectIds(state.value?.seats ?? []));
 
 function sourceId(action: LegalAction): string | null {
   const interaction = action.interaction ?? { kind: 'choice' as const };
@@ -1444,6 +1442,16 @@ function hideCardPreview(): void {
   cardPreview.hide();
 }
 
+/** Keyboard focus on a commander peek shows its card beside the control, as hovering does. */
+function focusCardPreview(
+  card: { scryfallId: string | null; name: string },
+  event: FocusEvent,
+): void {
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  cardPreview.show({ scryfallId: card.scryfallId, name: card.name });
+  cardPreview.updateCursor(rect.right, rect.bottom);
+}
+
 /** Each commander's own tax: partners are taxed separately (CR 903.8). */
 const taxedCommanders = computed(() =>
   (human.value?.commanders ?? []).filter((commander) => commander.taxGeneric > 0),
@@ -1826,6 +1834,26 @@ function abandon(): void {
                   </template>
                 </span>
               </span>
+              <!-- One peek per commander, so a partner in the command zone, with no tile on the
+                   board, can still be read. -->
+              <span class="cmdr-peeks">
+                <button
+                  v-for="commander in opponent.commanders"
+                  :key="commander.cardId"
+                  type="button"
+                  class="cmdr-peek"
+                  :aria-label="`Show ${commander.name}`"
+                  :title="commander.name"
+                  @click.stop
+                  @mouseenter="showCardPreview(commander, $event)"
+                  @mousemove="moveCardPreview"
+                  @mouseleave="hideCardPreview"
+                  @focus="focusCardPreview(commander, $event)"
+                  @blur="hideCardPreview"
+                >
+                  {{ commander.name.split(/[ ,]/)[0] }}
+                </button>
+              </span>
               <span v-if="combatSummary?.attacked.get(opponent.seat)" class="attacked-chip">{{
                 combatSummary.attacked.get(opponent.seat)
               }}</span>
@@ -1863,15 +1891,15 @@ function abandon(): void {
               tag="div"
               name="board-card"
               class="permanents"
+              :style="{
+                '--chip-w': (opponentPermWidths.get(opponent.seat) ?? 140) + 'px',
+                '--chip-min': opponentPermMinWidth + 'px',
+              }"
             >
               <div
                 v-for="group in opponentBoardGroups(opponent.seat)"
                 :key="group.permanent.id"
                 class="object"
-                :style="{
-                  '--chip-w': opponentPermWidth(opponent.seat) + 'px',
-                  '--chip-min': opponentPermMinWidth + 'px',
-                }"
                 :class="{
                   targetable: isLegalTarget(group.permanent.id),
                   'chosen-target': isChosenTarget(group.permanent.id),
@@ -3056,6 +3084,31 @@ button.selected,
 }
 /* A seat's header: who, their colors and counts, then (pushed right) zones and life. */
 /* In a narrow seat the counts wrap under the name rather than squeeze it out. */
+.cmdr-peeks {
+  display: inline-flex;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.cmdr-peek {
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: help;
+}
+.cmdr-peek:hover,
+.cmdr-peek:focus-visible {
+  border-color: var(--ink);
+  color: var(--ink);
+}
 .seat-name {
   flex: 0 1 auto;
   min-width: min(6rem, 40%);
