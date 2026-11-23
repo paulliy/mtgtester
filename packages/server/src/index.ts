@@ -52,6 +52,7 @@ export {
   type SetupResult,
 } from './match/setup';
 export { GameServer, type GameServerDeps } from './ws/server';
+export { GameHost, type GameHostDeps, type HostConnection, type HostReply } from './host/game-host';
 
 export { BatchRepository } from './db/batches';
 

@@ -29,6 +29,7 @@ const BROWSER_MODULES: ReadonlyArray<[module: string, name: string]> = [
   ['cards/pool', 'buildSupportedPool'],
   ['decks/banned', 'bannedListFromNames'],
   ['cards/site-cards', 'SiteCards'],
+  ['host/game-host', 'GameHost'],
 ];
 
 /** Packages that arrive only with the model code. */

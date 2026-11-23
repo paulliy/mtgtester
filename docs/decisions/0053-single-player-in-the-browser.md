@@ -45,6 +45,11 @@ model code (the OpenRouter SDK, zod and `server/src/ai`), `node:crypto` and `nod
    through `buildNameIndex`, the code behind the server's `buildOracleIndexFromCards`, so a
    decklist resolves to the same cards on both sides. Provisional cards are not in the browser
    pool. The manifest pins the bulk file's hash and the engine commit.
+8. **One game host for both sides.** Single-player and watch games run in `GameHost`
+   (`host/game-host.ts`), which takes protocol frames as text and answers through each
+   connection's `send`. The Bun server extends it with sockets, HTTP routes, batches and the Card
+   Test Lab; a browser worker runs it as it is. The host has no model services unless given
+   `deps.ai`, so in the browser a game with model seats is refused.
 
 ## Consequences
 
