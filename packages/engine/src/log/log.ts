@@ -7,7 +7,7 @@
  *   action sets, zone changes — never part of `GameState`.
  */
 
-import type { GameEvent, PlayerId } from '@mtg/shared';
+import type { GameEvent, PlayerId, SpectatorState } from '@mtg/shared';
 import type { DebugEntry, GameContext } from '../state/types';
 import { EngineBudgetError } from '../errors';
 import { buildSpectatorState, formatSpectatorLine } from '../view/spectator';
@@ -29,7 +29,68 @@ export function settleSpectatorSnapshot(ctx: GameContext): void {
   const seq = s.pendingSnapshotSequence;
   if (seq === null || seq === undefined) return;
   s.pendingSnapshotSequence = null;
-  (s.sequenceSnapshots ??= new Map()).set(seq, buildSpectatorState(ctx));
+  const snapshot = shareUnchanged(LAST_SNAPSHOT.get(ctx), buildSpectatorState(ctx));
+  LAST_SNAPSHOT.set(ctx, snapshot);
+  (s.sequenceSnapshots ??= new Map()).set(seq, snapshot);
+}
+
+/**
+ * The last board each game recorded. Consecutive log lines usually change one or two objects,
+ * so a new board shares every part equal to this one's (`shareUnchanged`): a retained board then
+ * costs about what changed, not a copy of the whole game. Only the playback UI reads them, as
+ * values, and nothing writes to a recorded board.
+ */
+const LAST_SNAPSHOT = new WeakMap<GameContext, SpectatorState>();
+
+/**
+ * `next`, with every part that equals the same part of `prev` replaced by `prev`'s object, and
+ * `prev` itself when the two are equal. Array elements with an `id` are matched by it (a
+ * permanent that left shifts the ones after it); others by position. Equal means the same keys
+ * in the same order with equal values, so the result serializes exactly as `next` does. `next`
+ * must be freshly built: its objects are updated in place.
+ */
+export function shareUnchanged<T>(prev: unknown, next: T): T {
+  if (prev === (next as unknown)) return next;
+  if (typeof next !== 'object' || next === null || typeof prev !== 'object' || prev === null)
+    return next;
+  if (Array.isArray(next)) {
+    if (!Array.isArray(prev)) return next;
+    let byId: Map<unknown, unknown> | undefined;
+    let same = prev.length === next.length;
+    for (let i = 0; i < next.length; i++) {
+      const item: unknown = next[i];
+      const id =
+        typeof item === 'object' && item !== null ? (item as { id?: unknown }).id : undefined;
+      let match: unknown = prev[i];
+      if (typeof id === 'string' && (match as { id?: unknown } | undefined)?.id !== id) {
+        if (byId === undefined) {
+          byId = new Map();
+          for (const old of prev as unknown[])
+            if (typeof old === 'object' && old !== null)
+              byId.set((old as { id?: unknown }).id, old);
+        }
+        match = byId.get(id);
+      }
+      const shared = shareUnchanged(match, item);
+      next[i] = shared;
+      if (shared !== prev[i]) same = false;
+    }
+    return (same ? prev : next) as T;
+  }
+  if (Array.isArray(prev)) return next;
+  const before = prev as Record<string, unknown>;
+  const after = next as Record<string, unknown>;
+  const beforeKeys = Object.keys(before);
+  const afterKeys = Object.keys(after);
+  let same = beforeKeys.length === afterKeys.length;
+  for (let i = 0; i < afterKeys.length; i++) {
+    const key = afterKeys[i]!;
+    const shared = shareUnchanged(before[key], after[key]);
+    after[key] = shared;
+    if (!same) continue;
+    if (beforeKeys[i] !== key || shared !== before[key]) same = false;
+  }
+  return (same ? prev : next) as T;
 }
 
 export function emit(
