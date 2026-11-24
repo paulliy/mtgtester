@@ -75,6 +75,8 @@ export default defineConfig(({ mode }) => ({
           }
         : {
             '/ws': { target: `ws://${gameServerHost}`, ws: true },
+            // The site's multiplayer pages talk to the table server (`serve:table --dev`).
+            '/tables': { target: `http://${tableServerHost}`, ws: true },
             '/health': { target: `http://${gameServerHost}` },
             '/api': { target: `http://${gameServerHost}` },
           },

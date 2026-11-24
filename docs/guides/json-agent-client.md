@@ -132,7 +132,7 @@ with its real status. Without it one server process would be good for exactly on
 game:
 
 ```bash
-bun run agent-client --table 'http://127.0.0.1:3002/t/<table>#<invite>' --name Ann \
+bun run agent-client --table 'http://127.0.0.1:3002/multiplayer/<table>#<invite>' --name Ann \
   --deck deck.txt --seat P2 [--policy first-legal]
 ```
 

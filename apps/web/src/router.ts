@@ -1,8 +1,9 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import { LOCAL_GAMES } from './lib/localMode';
+import { tableRoutes } from './table/routes';
 
 /**
- * The tester's routes. Every view loads on demand (plan M6 task 1), so a view is a chunk of its
+ * The site's routes: single player, and the multiplayer tables under `/multiplayer`. Every view loads on demand (plan M6 task 1), so a view is a chunk of its
  * own and the table app's bundle can be checked to hold none of them.
  */
 const comingSoon = () => import('./views/ComingSoonView.vue');
@@ -32,6 +33,8 @@ const routes: RouteRecordRaw[] = [
   { path: '/', name: 'setup', component: () => import('./views/SetupView.vue') },
   { path: '/game', name: 'game', component: () => import('./views/GameView.vue') },
   ...serverRoutes,
+  // The multiplayer tables, on their own paths with their own header (`SiteApp.vue`).
+  ...tableRoutes,
   ...(import.meta.env['DEV'] === true
     ? [
         {
