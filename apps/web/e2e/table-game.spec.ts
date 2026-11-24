@@ -54,7 +54,7 @@ async function hostTable(page: Page, name: string): Promise<string> {
   await page.goto('/');
   await page.getByTestId('host-secret').fill(TABLE_HOST_SECRET);
   await page.getByTestId('create-table').click();
-  await expect(page).toHaveURL(/\/t\/[\w-]+#/);
+  await expect(page).toHaveURL(/\/multiplayer\/[\w-]+#/);
   await page.getByTestId('display-name').fill(name);
   await page.getByTestId('join').click();
   await expect(page.getByTestId('lobby')).toBeVisible();
@@ -269,7 +269,9 @@ test('two people and two bots play a table game through to the post-game replay'
   await guest.close();
   await expect(host.getByTestId('bar-seat-P2').locator('.dot')).not.toHaveClass(/\bon\b/);
   guest = await guest.context().newPage();
-  await guest.goto(tablePath);
+  // Through an invite path from before the tables moved under /multiplayer: it is sent on.
+  await guest.goto(tablePath.replace(/^\/multiplayer\//, '/t/'));
+  await expect(guest).toHaveURL(new RegExp(`${tablePath}$`));
   await expect(guest.getByTestId('table-bar')).toBeVisible();
   await expect(guest.locator('.decision')).toBeVisible({ timeout: 30_000 });
   await expect(host.getByTestId('bar-seat-P2').locator('.dot')).toHaveClass(/\bon\b/);

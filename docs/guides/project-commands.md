@@ -25,6 +25,7 @@ bun run lab:select --seed S --out F [--base B] [--sample] [--latest] [--per-fami
                                         # write the sample CI plays; LAB_SELECTION=F bun run test:e2e plays it
 bun run test:e2e:setup                  # Playwright: setup screen + a seeded player game (DB-backed)
 bun run test:e2e:table                  # Playwright: table games in two browsers on the built table bundle
+bun run test:e2e:browser                # the single-player worker in headless Chromium, no game server
 
 bun run dev                             # server :3001 and UI :5173
 bun run dev --table [--oracle-fixture F] # serve:table --dev :3002 and the table app on :5173
@@ -35,6 +36,7 @@ bun run serve:table --dev [--port N] [--oracle-fixture packages/server/fixtures/
 bun run serve:table [--insecure-lan]    # exposed table server; see docs/guides/table-hosting.md
 bun run table:cards                     # prebuilt card file serve:table loads instead of the bulk file
 bun run site:cards                      # the website's static card files (data/site-cards/) for single player in the browser
+VITE_LOCAL_GAMES=true bun run dev:web  # the tester playing in a browser worker, no game server (reads data/site-cards/ at /cards/)
 bun run dev:web
 
 bun run decks <deckUrlOrFile> [more...]

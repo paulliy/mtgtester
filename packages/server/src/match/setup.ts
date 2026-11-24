@@ -29,7 +29,7 @@ import type {
 import type { OracleIndex } from '../cards/oracle-index';
 import type { SupportedPool } from '../cards/pool';
 import { isProvisional, type ProvisionalCatalog } from '../cards/provisional';
-import type { GameStore } from '../db';
+import type { DeckStore } from '../db/deck-store';
 import type { BannedList } from '../decks/banned';
 import { inferArchetype } from '../decks/archetype';
 import { generateCommanderDeck } from '../decks/generate';
@@ -41,7 +41,8 @@ export interface SeatSetupDeps {
   pool: SupportedPool;
   index: OracleIndex;
   banned: BannedList;
-  store?: GameStore | undefined;
+  /** Deck rows for imported and generated decks: the database, or memory in the browser. */
+  store?: DeckStore | undefined;
 }
 
 /** One seat failed to set up. Every failing seat is reported, never just the first (brief §8.3). */

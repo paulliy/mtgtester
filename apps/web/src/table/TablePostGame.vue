@@ -5,6 +5,7 @@
  */
 import { computed, ref, watch } from 'vue';
 import { useTableStore } from '../stores/table';
+import SinglePlayerLink from './SinglePlayerLink.vue';
 
 const table = useTableStore();
 const results = computed(() => table.results);
@@ -106,6 +107,7 @@ const deckSize = (deck: { cards: Array<{ quantity: number }> }): number =>
       <h1 class="dt-title">{{ headline }}</h1>
       <div class="dt-ornament" aria-hidden="true"><span class="star" /></div>
       <p class="ending" data-testid="ending">{{ endingText }}</p>
+      <SinglePlayerLink />
     </header>
 
     <section

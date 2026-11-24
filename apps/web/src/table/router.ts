@@ -1,16 +1,11 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
+import { TABLES_PATH, tableRoutes } from './routes';
 
 /**
- * The table app's routes (plan M6 task 1): create a table, and one page per table that is the
- * lobby, the board and the post-game view in turn. Lazy, like the tester's, so each loads on
- * demand; the table bundle holds none of the tester's views.
+ * The tables-only build (`vite build --mode table`), which the table server serves itself until
+ * the site moves to static hosting: its front page is the tables' home.
  */
-const routes: RouteRecordRaw[] = [
-  { path: '/', name: 'table-home', component: () => import('./TableHomeView.vue') },
-  { path: '/t/:id', name: 'table', component: () => import('./TableView.vue') },
-];
-
 export const tableRouter = createRouter({
   history: createWebHistory(),
-  routes,
+  routes: [{ path: '/', redirect: TABLES_PATH }, ...tableRoutes],
 });

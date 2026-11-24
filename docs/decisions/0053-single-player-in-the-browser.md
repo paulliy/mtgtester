@@ -50,6 +50,35 @@ model code (the OpenRouter SDK, zod and `server/src/ai`), `node:crypto` and `nod
    connection's `send`. The Bun server extends it with sockets, HTTP routes, batches and the Card
    Test Lab; a browser worker runs it as it is. The host has no model services unless given
    `deps.ai`, so in the browser a game with model seats is refused.
+9. **The browser worker.** `host/browser-worker.ts` is the Web Worker entry and `host/worker-core.ts`
+   its message loop: `init` reads the card files, `frame` carries protocol frames both ways,
+   `request` answers what the server serves over HTTP (setup preview, game report, bot decks),
+   and `ping` is answered at once. Before a start or preview reaches the host, the worker fetches
+   the card shards a pasted decklist names. Imported decks are kept in a `MemoryDeckStore`
+   (`db/deck-store.ts`), the part of `GameStore` deck setup uses, so setup needs no database;
+   games are not recorded. Tester games use the legacy seeded RNG, so the worker needs no
+   `crypto.getRandomValues` key.
+10. **The tester in local mode.** A web build with `VITE_LOCAL_GAMES=true` plays in the worker:
+    `lib/localEngine.ts` owns it, `LocalGameSocket` (`lib/socket.ts`) carries the game store's
+    frames as `GameSocket` does, and `lib/api.ts` sends the setup preview, game report and bot
+    decks to the worker instead of `/api`. Other builds swap `localEngine.ts` for an empty
+    stand-in, so they never emit the worker. Saved decks are decklists in browser storage
+    (`lib/localDecks.ts`), saved when a game starts with them and exportable as one text file;
+    deck links are refused, since the browser cannot fetch deck sites. Stats and Batch show
+    Coming soon, Debug and AI bots are left out, and nothing is resumed after a reload: closing
+    the tab mid-game asks first. A new game replaces the last inside the same worker (it redeems
+    that worker's setup preview); leaving a game terminates the worker to free its memory.
+11. **One site with both modes.** The default web build is single player and the multiplayer
+    tables under one router (`SiteApp.vue` picks the tester's shell or the tables' own by
+    `meta.shell`). The tables live under `/multiplayer` and `/multiplayer/<id>`; invite links at
+    `/t/<id>` are redirected with their fragment, and the table server serves both paths and
+    now hands out `/multiplayer` invites. The compass's Multiplayer stop goes there in the same
+    tab, and the tables' home, lobby and post-game screens link back to single player. The
+    tables' origin comes from `VITE_TABLE_ORIGIN` (`lib/tableOrigin.ts`), the page's own by
+    default. `vite build --mode table` still builds the tables alone for `serve:table` until the
+    site moves to static hosting. A bundle test checks that the local-games site build carries
+    the tables and the worker, loads the worker only from the local engine chunk, and leaves out
+    the Card Test Lab, the deal preview and the server-only views.
 
 ## Consequences
 

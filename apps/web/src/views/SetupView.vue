@@ -32,6 +32,15 @@ import ManaPips from '../components/ManaPips.vue';
 import { useRouter } from 'vue-router';
 import ModeCompass from '../components/setup/ModeCompass.vue';
 import { useConfirmedStart } from '../composables/useConfirmedStart';
+import { requestKnownDecks, requestSetupPreview } from '../lib/api';
+import {
+  exportLocalDecks,
+  readLocalDecks,
+  saveLocalDeck,
+  touchLocalDeck,
+  type LocalSavedDeck,
+} from '../lib/localDecks';
+import { LOCAL_GAMES, supportsModuleWorkers } from '../lib/localMode';
 import { PROVIDER_LABELS } from '../lib/providerLabels';
 import { clearOpened, hasOpened, markOpened, openingScreen } from '../lib/opening';
 import { readRecentIds, syncRecentDeckIds } from '../lib/recentSetup';
@@ -46,6 +55,10 @@ const SEATS = 4;
 const SEAT_IDS = ['P1', 'P2', 'P3', 'P4'] as const;
 const router = useRouter();
 const importReport = useImportReportStore();
+/** The Import report asks the server about each card, so a local-games build has none (`router.ts`). */
+const importReportAvailable = !LOCAL_GAMES;
+/** A local-games build plays in a module worker; an older browser is told so instead of failing. */
+const workerMissing = LOCAL_GAMES && !supportsModuleWorkers();
 
 /**
  * Decks that have already been imported and measured for engine model coverage (`bun run
@@ -174,30 +187,54 @@ const colorFilter = ref<Color[]>([]);
 const importText = ref('');
 const importTag = ref('');
 const importEmpty = ref(false);
+/** Local games read pasted lists only: a deck site's link needs the server to fetch it. */
+const importLinkRefused = ref(false);
+
+/** Local games keep saved decks as lists in this browser (`lib/localDecks.ts`). */
+const localSaved = ref<LocalSavedDeck[]>([]);
+
+function loadLocalSaved(): void {
+  localSaved.value = readLocalDecks();
+  saved.value = localSaved.value;
+  persistence.value = true;
+}
+
+/** Download every saved list as one text file. */
+function exportSaved(): void {
+  const blob = new Blob([exportLocalDecks(localSaved.value)], { type: 'text/plain' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'decktank-saved-decks.txt';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 0);
+}
 
 onMounted(async () => {
+  if (LOCAL_GAMES) loadLocalSaved();
+  else
+    try {
+      const response = await fetch('/api/saved-decks');
+      if (!response.ok) throw new Error('Could not load saved decks.');
+      const data = (await response.json()) as { enabled: boolean; decks: SavedDeckOption[] };
+      persistence.value = data.enabled;
+      saved.value = data.decks;
+      // Only a database-backed server can say which saved decks still exist; without one the deck
+      // recents are left exactly as stored.
+      recentDecks.value = syncRecentDeckIds('mtg-recent-deck-ids', recentDecks.value, {
+        enabled: data.enabled,
+        available: data.decks.map((deck) => deck.snapshotId),
+      });
+    } catch {
+      persistence.value = false;
+    }
   try {
-    const response = await fetch('/api/saved-decks');
-    if (!response.ok) throw new Error('Could not load saved decks.');
-    const data = (await response.json()) as { enabled: boolean; decks: SavedDeckOption[] };
-    persistence.value = data.enabled;
-    saved.value = data.decks;
-    // Only a database-backed server can say which saved decks still exist; without one the deck
-    // recents are left exactly as stored.
-    recentDecks.value = syncRecentDeckIds('mtg-recent-deck-ids', recentDecks.value, {
-      enabled: data.enabled,
-      available: data.decks.map((deck) => deck.snapshotId),
-    });
-  } catch {
-    persistence.value = false;
-  }
-  try {
-    const response = await fetch('/api/known-decks');
+    if (workerMissing) throw new Error('This browser cannot run games.');
+    const response = await requestKnownDecks();
     if (!response.ok)
       throw new Error(
-        ((await response.json()) as { message?: string }).message ?? 'Could not load known decks.',
+        (response.body as { message?: string }).message ?? 'Could not load known decks.',
       );
-    knownDecks.value = ((await response.json()) as { decks: KnownDeck[] }).decks;
+    knownDecks.value = (response.body as { decks: KnownDeck[] }).decks;
   } catch (reason) {
     knownDecksError.value = reason instanceof Error ? reason.message : String(reason);
   } finally {
@@ -323,8 +360,16 @@ function sourceFor(choice: SeatChoice): SeatSource {
       const deck = knownDecks.value.find((d) => d.slug === choice.slug);
       return { kind: 'plaintext', text: deck?.text ?? '' };
     }
-    case 'saved':
-      return { kind: 'snapshot', snapshotId: choice.snapshotId };
+    case 'saved': {
+      if (!LOCAL_GAMES) return { kind: 'snapshot', snapshotId: choice.snapshotId };
+      // A local saved deck is its list: the worker reads it as if it were pasted again.
+      const deck = localSaved.value.find((d) => d.snapshotId === choice.snapshotId);
+      return {
+        kind: 'plaintext',
+        text: deck?.text ?? '',
+        ...(deck !== undefined && deck.archetypeTag !== '' && { archetypeTag: deck.archetypeTag }),
+      };
+    }
     case 'import': {
       const raw = choice.text.trim();
       const tag = choice.tag.trim();
@@ -335,7 +380,7 @@ function sourceFor(choice: SeatChoice): SeatSource {
   }
 }
 
-const ready = computed(() => choices.value.every(isComplete));
+const ready = computed(() => !workerMissing && choices.value.every(isComplete));
 
 /** Exactly what the server compares between a preview and the start that redeems it. */
 const request = computed(() => ({
@@ -355,12 +400,8 @@ const canStart = computed(
 );
 
 async function fetchPreview(body: object): Promise<SetupPreview> {
-  const response = await fetch('/api/setup-preview', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  const result = (await response.json()) as SetupPreview & { message?: string };
+  const response = await requestSetupPreview(body);
+  const result = response.body as SetupPreview & { message?: string };
   if (!response.ok) throw new Error(result.message ?? 'Preview failed.');
   return result;
 }
@@ -454,7 +495,8 @@ function pickGenerated(): void {
 function checkImport(): void {
   if (pickingSeat.value === null) return;
   importEmpty.value = importText.value.trim() === '';
-  if (importEmpty.value) return;
+  importLinkRefused.value = LOCAL_GAMES && /^https?:\/\//i.test(importText.value.trim());
+  if (importEmpty.value || importLinkRefused.value) return;
   setChoice(pickingSeat.value, { kind: 'import', text: importText.value, tag: importTag.value });
 }
 
@@ -535,6 +577,26 @@ function setSeatPlayer(index: number, you: boolean): void {
   else if (humanSeat.value === id) humanSeat.value = SEAT_IDS[(index + 1) % SEATS]!;
 }
 
+/**
+ * Local games: keep each list brought to this game, as the server keeps an import with its first
+ * game, and move each saved deck played to the top of the list.
+ */
+function saveLocalSeats(matchup: SetupPreview): void {
+  choices.value.forEach((choice, index) => {
+    if (choice.kind === 'saved') touchLocalDeck(choice.snapshotId);
+    if (choice.kind !== 'import') return;
+    const seat = matchup.seats[index];
+    if (seat === undefined) return;
+    saveLocalDeck({
+      text: choice.text,
+      commanderNames: seat.commanderNames,
+      colorIdentity: seat.colorIdentity,
+      archetypeTag: choice.tag.trim() !== '' ? choice.tag.trim() : seat.archetypeTag,
+    });
+  });
+  loadLocalSaved();
+}
+
 function start(): void {
   const matchup = current.value;
   if (!matchup || matchup.blockers.length > 0) return;
@@ -543,6 +605,7 @@ function start(): void {
   preview.value = null;
   store.playbackMode = playback.value;
   store.paceMs = paceValue.value;
+  if (LOCAL_GAMES) saveLocalSeats(matchup);
   begin(() =>
     store.startGame(
       request.value.seats,
@@ -821,7 +884,18 @@ const pickingRow = computed(() =>
           <section class="deck-group">
             <div class="group-head">
               <h2>III. Your saved decks</h2>
-              <span class="note">Decks you imported before.</span>
+              <span class="note">{{
+                LOCAL_GAMES ? 'Kept in this browser.' : 'Decks you imported before.'
+              }}</span>
+              <button
+                v-if="LOCAL_GAMES && localSaved.length > 0"
+                type="button"
+                class="dt-btn small"
+                title="Download every saved list as one text file"
+                @click="exportSaved"
+              >
+                Export
+              </button>
             </div>
             <p v-if="!persistence" class="hint">
               Saved and imported decks are disabled without a database. Generated decks remain
@@ -863,7 +937,9 @@ const pickingRow = computed(() =>
           <section class="deck-group own">
             <div class="group-head">
               <h2>IV. Bring your own</h2>
-              <span class="note">Moxfield, Archidekt, or a pasted list.</span>
+              <span class="note">{{
+                LOCAL_GAMES ? 'A pasted list.' : 'Moxfield, Archidekt, or a pasted list.'
+              }}</span>
             </div>
             <label class="own-field">
               <span class="field-label">Deck link or decklist</span>
@@ -871,7 +947,11 @@ const pickingRow = computed(() =>
                 v-model="importText"
                 rows="4"
                 :disabled="!persistence"
-                placeholder="https://moxfield.com/decks/… or one card per line"
+                :placeholder="
+                  LOCAL_GAMES
+                    ? 'One card per line, commander first'
+                    : 'https://moxfield.com/decks/… or one card per line'
+                "
               ></textarea>
             </label>
             <!-- Leaving this blank is the normal path: the server classifies the resolved list
@@ -893,7 +973,13 @@ const pickingRow = computed(() =>
             >
               Check and import
             </button>
-            <p v-if="importEmpty" role="status" class="hint">Paste a deck link or a list first.</p>
+            <p v-if="importEmpty" role="status" class="hint">
+              {{ LOCAL_GAMES ? 'Paste a list first.' : 'Paste a deck link or a list first.' }}
+            </p>
+            <p v-else-if="importLinkRefused" role="status" class="hint">
+              Deck links can't be read here yet. Export the list from the deck site and paste it
+              instead.
+            </p>
             <p v-else-if="importState?.kind === 'checking'" role="status" class="hint">
               Checking every card against the rules engine…
             </p>
@@ -926,7 +1012,10 @@ const pickingRow = computed(() =>
                   and {{ importState.cards.length - STOPPED_CARDS_SHOWN }} more
                 </li>
               </ul>
-              <div v-if="importState.cards.length > 0" class="stopped-foot">
+              <div
+                v-if="importReportAvailable && importState.cards.length > 0"
+                class="stopped-foot"
+              >
                 <span
                   >The Card lab shows what each card still needs, and writes it up as a work
                   order.</span
@@ -1070,6 +1159,7 @@ const pickingRow = computed(() =>
                 {{ PROVIDER_LABELS.random }}
               </button>
               <button
+                v-if="!LOCAL_GAMES"
                 type="button"
                 :aria-pressed="providerKind === 'ai'"
                 title="Language-model bots: slower, and they spend API budget"
@@ -1086,7 +1176,7 @@ const pickingRow = computed(() =>
               }}
             </p>
           </div>
-          <div class="option" :class="{ off: providerKind !== 'ai' }">
+          <div v-if="!LOCAL_GAMES" class="option" :class="{ off: providerKind !== 'ai' }">
             <span class="option-label">Post-game commentary</span>
             <label class="toggle">
               <input
@@ -1208,6 +1298,13 @@ const pickingRow = computed(() =>
           <ul>
             <li v-for="blocker in current.blockers" :key="blocker">{{ blocker }}</li>
           </ul>
+        </div>
+        <div v-if="workerMissing" class="dt-note danger" role="alert">
+          <strong>This browser is too old to play here</strong>
+          <p>
+            Games run inside your browser, which needs module worker support. Use a current version
+            of Chrome, Edge, Firefox or Safari.
+          </p>
         </div>
         <div v-if="startErrors.length > 0" class="dt-note danger" role="alert">
           <strong>The game did not start</strong>

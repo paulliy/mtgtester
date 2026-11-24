@@ -50,7 +50,13 @@ vi.stubGlobal('localStorage', {
   setItem: (key: string, value: string) => memory.set(key, value),
   removeItem: (key: string) => memory.delete(key),
 });
-vi.stubGlobal('window', { location: { protocol: 'https:', host: 'tables.example.com' } });
+vi.stubGlobal('window', {
+  location: {
+    protocol: 'https:',
+    host: 'tables.example.com',
+    origin: 'https://tables.example.com',
+  },
+});
 
 let sockets: FakeSocket[] = [];
 let now = 1_000;

@@ -31,7 +31,14 @@ export interface NavOptions {
   dev: boolean;
   /** A game is running, so the board can be returned to. */
   gameRunning: boolean;
+  /**
+   * A local-games build (`lib/localMode.ts`): Stats and Batch need the server's database, so they
+   * say they are coming soon, and Debug, which reads the server's logs, is left out.
+   */
+  local?: boolean;
 }
+
+const SOON = 'Coming soon';
 
 export function navPlaces(options: NavOptions): NavPlace[] {
   const places: NavPlace[] = [
@@ -60,7 +67,7 @@ export function navPlaces(options: NavOptions): NavPlace[] {
       group: 'II',
       label: 'Stats',
       to: '/stats',
-      description: 'Standings, matchups and how each deck fares',
+      description: options.local ? SOON : 'Standings, matchups and how each deck fares',
       routes: ['stats'],
     },
     {
@@ -68,22 +75,24 @@ export function navPlaces(options: NavOptions): NavPlace[] {
       group: 'II',
       label: 'Batch runs',
       to: '/batch',
-      description: 'Past batch runs and their results',
+      description: options.local ? SOON : 'Past batch runs and their results',
       routes: ['batch', 'batch-results', 'batch-new'],
     },
   );
   // The Card lab is the Import report in a production build, and the dev-only scenario lab in a
-  // dev build. The report is a place of its own in both, so "Card lab" stays lit there.
-  places.push({
-    key: 'card-test-lab',
-    group: 'III',
-    label: 'Card lab',
-    to: options.dev ? '/card-test-lab' : IMPORT_REPORT_PATH,
-    description: options.dev
-      ? 'Put single cards through the rules engine'
-      : 'Which cards of a refused import still need work',
-    routes: ['card-test-lab', 'import-report'],
-  });
+  // dev build. The report is a place of its own in both, so "Card lab" stays lit there. The report
+  // asks the server about each card, so a local-games build without the dev lab leaves it out.
+  if (options.dev || !options.local)
+    places.push({
+      key: 'card-test-lab',
+      group: 'III',
+      label: 'Card lab',
+      to: options.dev ? '/card-test-lab' : IMPORT_REPORT_PATH,
+      description: options.dev
+        ? 'Put single cards through the rules engine'
+        : 'Which cards of a refused import still need work',
+      routes: ['card-test-lab', 'import-report'],
+    });
   if (options.dev) {
     places.push({
       key: 'deals-preview',
@@ -94,6 +103,7 @@ export function navPlaces(options: NavOptions): NavPlace[] {
       routes: ['deals-preview'],
     });
   }
+  if (options.local) return places;
   places.push({
     key: 'debug',
     group: 'III',

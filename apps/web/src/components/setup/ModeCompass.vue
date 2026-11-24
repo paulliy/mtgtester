@@ -2,7 +2,8 @@
 /**
  * The New game compass (Decktank `Main.dc.html`). Four stops on a plate that turns so the chosen
  * mode comes to north: Play (N) and Watch (W) choose the game mode, Batch (E) goes to the batch
- * page and Multiplayer (S) opens the hosted tables in a new tab (ADR 0052 decision 7). The bezel,
+ * page and Multiplayer (S) goes to the multiplayer tables in the same tab (ADR 0053, plan
+ * section 7). The bezel,
  * three rings and the eight-point rose are drawn as the design draws them; the rings spin about a
  * turn on each change and land square, and the needle leans toward a hovered stop.
  *
@@ -14,6 +15,8 @@
  * move between them). Every ring, rose and tick is decoration and hidden from assistive
  * technology. Under reduced motion nothing spins or drifts; a choice lands at once.
  */
+import { LOCAL_GAMES } from '../../lib/localMode';
+import { TABLES_PATH } from '../../table/routes';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
 import type { StartGameMode } from '@mtg/shared';
@@ -25,7 +28,6 @@ import {
   ringLanding,
   wrap,
 } from '../../lib/compass';
-import { HOSTED_TABLES_URL } from '../../lib/links';
 import OpeningGarnish from './OpeningGarnish.vue';
 
 const props = defineProps<{ modelValue: StartGameMode; disabled?: boolean; opening?: boolean }>();
@@ -44,19 +46,26 @@ interface Stop {
   angle: number;
   mode?: StartGameMode;
   to?: string;
-  href?: string;
 }
 
 const STOPS: readonly Stop[] = [
   { key: 'play', point: 'N', label: 'Play', sub: '1 v 3', angle: 0, mode: 'singlePlayer' },
-  { key: 'batch', point: 'E', label: 'Batch', sub: 'Many games', angle: 90, to: '/batch/new' },
+  {
+    key: 'batch',
+    point: 'E',
+    label: 'Batch',
+    // Batch runs need the server's database, which a local-games build has none of.
+    sub: LOCAL_GAMES ? 'Coming soon' : 'Many games',
+    angle: 90,
+    to: LOCAL_GAMES ? '/batch' : '/batch/new',
+  },
   {
     key: 'multi',
     point: 'S',
     label: 'Multiplayer',
     sub: 'Hosted tables',
     angle: 180,
-    href: HOSTED_TABLES_URL,
+    to: TABLES_PATH,
   },
   { key: 'watch', point: 'W', label: 'Watch', sub: '4 bots', angle: 270, mode: 'spectator' },
 ];
@@ -289,8 +298,8 @@ const ROSE = (() => {
           <span class="sub">{{ stop.sub }}</span>
         </button>
         <RouterLink
-          v-else-if="stop.to"
-          :to="stop.to"
+          v-else
+          :to="stop.to ?? '/'"
           class="stop"
           :data-stop="stop.key"
           :style="stopStyle(stop, i)"
@@ -303,20 +312,6 @@ const ROSE = (() => {
           <span class="label">{{ stop.label }}</span>
           <span class="sub">{{ stop.sub }}</span>
         </RouterLink>
-        <a
-          v-else
-          :href="stop.href"
-          target="_blank"
-          rel="noopener"
-          class="stop faint"
-          :data-stop="stop.key"
-          :style="stopStyle(stop, i)"
-        >
-          <span class="point" aria-hidden="true">{{ stop.point }}</span>
-          <span class="label">{{ stop.label }} <span class="ext" aria-hidden="true">↗</span></span>
-          <span class="sub">{{ stop.sub }}</span>
-          <span class="dt-sr">(opens in a new tab)</span>
-        </a>
       </template>
     </div>
   </div>
@@ -494,10 +489,6 @@ const ROSE = (() => {
   background: var(--ink-soft);
   outline: 1px solid var(--paper);
 }
-.stop.faint {
-  border-color: color-mix(in srgb, var(--ink) 40%, transparent);
-  color: var(--muted);
-}
 .point {
   font-family: var(--font-display);
   font-size: 1.15rem;
@@ -516,9 +507,6 @@ const ROSE = (() => {
   letter-spacing: 0.06em;
   white-space: nowrap;
   opacity: 0.85;
-}
-.ext {
-  font-size: 0.8em;
 }
 .garnish-leave-active,
 .garnish-enter-active {

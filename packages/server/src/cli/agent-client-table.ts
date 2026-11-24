@@ -272,7 +272,8 @@ export class TableAgentSession {
 
 /**
  * The table socket url from what a host hands out: an invite link
- * (`https://host/t/<table>#<invite>`) or the socket url itself (`wss://host/tables/<table>/ws`).
+ * (`https://host/multiplayer/<table>#<invite>`, or `/t/<table>` from before) or the socket url
+ * itself (`wss://host/tables/<table>/ws`).
  * The invite comes from the link's fragment unless given separately. An https or wss table may
  * be anywhere; a plain http or ws one only on loopback, or on a LAN with `insecureLan` (plan M5
  * task 6), since its traffic, seat token included, crosses the network unencrypted.
@@ -294,7 +295,7 @@ export function tableSocketTarget(
     return { ok: false, message: 'Pass --invite, or a table link that ends in #<invite>.' };
   }
   let tableId: string | undefined;
-  const link = /^\/t\/([^/]+)\/?$/.exec(parsed.pathname);
+  const link = /^\/(?:multiplayer|t)\/([^/]+)\/?$/.exec(parsed.pathname);
   const socket = /^\/tables\/([^/]+)\/ws$/.exec(parsed.pathname);
   if (link !== null) tableId = link[1];
   else if (socket !== null) tableId = socket[1];

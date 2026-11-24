@@ -1,7 +1,7 @@
 /**
  * The table app's connection and lobby (ADR 0031, plan M6 task 2).
  *
- * One socket per table, `/tables/<id>/ws` on the page's own origin. Table frames (lobby, clocks,
+ * One socket per table, `/tables/<id>/ws` on the table server (`lib/tableOrigin.ts`). Table frames (lobby, clocks,
  * seat status, post-game) are kept here; every game frame goes to the game store's own handler,
  * so the player board works exactly as it does in single-player. The game store's in-game
  * answers come back out through this socket.
@@ -33,6 +33,7 @@ import {
   type TableStatePayload,
 } from '@mtg/shared';
 import type { ServerToClientMessage } from '../lib/protocol';
+import { tableSocketUrl } from '../lib/tableOrigin';
 import { useGameStore } from './game';
 
 /** The part of a WebSocket the store uses; tests supply a fake. */
@@ -70,8 +71,7 @@ function browserSocket(url: string): TableSocketLike {
 }
 
 function socketUrl(tableId: string): string {
-  const scheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${scheme}//${window.location.host}/tables/${encodeURIComponent(tableId)}/ws`;
+  return tableSocketUrl(`/tables/${encodeURIComponent(tableId)}/ws`);
 }
 
 const seatKey = (tableId: string): string => `mtg-table-seat:${tableId}`;

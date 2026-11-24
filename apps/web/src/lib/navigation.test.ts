@@ -20,6 +20,15 @@ describe('navigation places', () => {
     ]);
   });
 
+  it('shows Stats and Batch as coming soon and leaves Debug out of a local-games build', () => {
+    const places = navPlaces({ dev: false, gameRunning: false, local: true });
+    expect(places.map((p) => [p.label, p.description])).toEqual([
+      ['New game', 'Play, watch or batch a four-seat table'],
+      ['Stats', 'Coming soon'],
+      ['Batch runs', 'Coming soon'],
+    ]);
+  });
+
   it('finds the current place by route name, including batch results', () => {
     const places = navPlaces({ dev: false, gameRunning: false });
     expect(currentPlaceIndex(places, 'stats')).toBe(1);

@@ -210,8 +210,15 @@ export function createStaticFiles(webDir: string): StaticFiles {
         return new Response('Bad path', { status: 400 });
       }
       const relative = decoded.slice(1);
-      if (relative === '' || relative === 't' || relative.startsWith('t/')) {
-        // The invite path: its segments are data for the page, never a file name.
+      if (
+        relative === '' ||
+        relative === 't' ||
+        relative.startsWith('t/') ||
+        relative === 'multiplayer' ||
+        relative.startsWith('multiplayer/')
+      ) {
+        // The tables' pages and invite paths (`/multiplayer/<id>`, and `/t/<id>` from before
+        // the tables moved there): their segments are data for the page, never a file name.
         if (relative.split('/').includes('..')) return new Response('Bad path', { status: 400 });
         return page();
       }
@@ -332,7 +339,7 @@ async function createTable(
     return json({ error: 'The server is hosting as many tables as it allows.' }, 503);
   const origin = publicOriginFor(ctx.config, ctx.boundPort());
   // The invite code rides in the fragment, which a browser never sends to any server.
-  const inviteUrl = `${origin}/t/${created.tableId}#${created.inviteCode}`;
+  const inviteUrl = `${origin}/multiplayer/${created.tableId}#${created.inviteCode}`;
   return json({ tableId: created.tableId, hostToken: created.hostToken, inviteUrl }, 201);
 }
 
