@@ -137,7 +137,9 @@ export function playBenchGame(
   hash.update(JSON.stringify(engine.eventsSince(0)));
   hash.update(outcome);
   const work = engineWorkSince(workBefore);
-  const snapshots = engine.getState().sequenceSnapshots;
+  // Engine-internal state, not part of the public `GameState` contract every consumer compiles.
+  const snapshots = (engine.getState() as { sequenceSnapshots?: Map<number, unknown> })
+    .sequenceSnapshots;
   return {
     seed,
     turns: engine.getState().turnNumber,
