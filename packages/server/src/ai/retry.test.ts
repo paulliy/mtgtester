@@ -52,6 +52,7 @@ describe('Error Classification & Retry', () => {
     expect(classifyError(new DailyQuotaExhaustedError())).toBe('daily_quota');
     expect(classifyError({ status: 429 })).toBe('rpm_quota');
     expect(classifyError({ status: 503 })).toBe('retryable');
+    expect(classifyError({ status: 529 })).toBe('retryable');
     expect(classifyError(new Error('something bad'))).toBe('fatal');
   });
 
