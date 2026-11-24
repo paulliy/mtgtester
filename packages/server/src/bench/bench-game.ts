@@ -34,6 +34,24 @@ export interface GameRun {
   fingerprint: string;
   /** Exact counts of the engine's expensive operations in this game, the bot's queries included. */
   work: EngineWork;
+  /**
+   * Distinct objects and arrays the game's per-log-line boards (`sequenceSnapshots`) hold at the
+   * end: what playback retains, the largest thing a game accumulates. Exact on any machine.
+   */
+  snapshotObjects: number;
+}
+
+/** Distinct objects and arrays reachable from `roots`, each counted once however often shared. */
+export function countDistinctObjects(roots: Iterable<unknown>): number {
+  const seen = new Set<object>();
+  const pending: unknown[] = [...roots];
+  while (pending.length > 0) {
+    const value = pending.pop();
+    if (typeof value !== 'object' || value === null || seen.has(value)) continue;
+    seen.add(value);
+    for (const child of Object.values(value)) pending.push(child);
+  }
+  return seen.size;
 }
 
 /** The work of several games, added up counter by counter. */
@@ -119,6 +137,7 @@ export function playBenchGame(
   hash.update(JSON.stringify(engine.eventsSince(0)));
   hash.update(outcome);
   const work = engineWorkSince(workBefore);
+  const snapshots = engine.getState().sequenceSnapshots;
   return {
     seed,
     turns: engine.getState().turnNumber,
@@ -128,5 +147,6 @@ export function playBenchGame(
     outcome,
     fingerprint: hash.digestHex().slice(0, 16),
     work,
+    snapshotObjects: snapshots === undefined ? 0 : countDistinctObjects(snapshots.values()),
   };
 }
