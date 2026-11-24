@@ -68,6 +68,17 @@ model code (the OpenRouter SDK, zod and `server/src/ai`), `node:crypto` and `nod
     Coming soon, Debug and AI bots are left out, and nothing is resumed after a reload: closing
     the tab mid-game asks first. A new game replaces the last inside the same worker (it redeems
     that worker's setup preview); leaving a game terminates the worker to free its memory.
+11. **One site with both modes.** The default web build is single player and the multiplayer
+    tables under one router (`SiteApp.vue` picks the tester's shell or the tables' own by
+    `meta.shell`). The tables live under `/multiplayer` and `/multiplayer/<id>`; invite links at
+    `/t/<id>` are redirected with their fragment, and the table server serves both paths and
+    now hands out `/multiplayer` invites. The compass's Multiplayer stop goes there in the same
+    tab, and the tables' home, lobby and post-game screens link back to single player. The
+    tables' origin comes from `VITE_TABLE_ORIGIN` (`lib/tableOrigin.ts`), the page's own by
+    default. `vite build --mode table` still builds the tables alone for `serve:table` until the
+    site moves to static hosting. A bundle test checks that the local-games site build carries
+    the tables and the worker, loads the worker only from the local engine chunk, and leaves out
+    the Card Test Lab, the deal preview and the server-only views.
 
 ## Consequences
 

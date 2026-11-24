@@ -6,6 +6,8 @@ interface ImportMetaEnv {
   readonly VITE_LOCAL_GAMES?: string;
   /** Where a local-games build reads the site card files; `/cards/` on the page's host by default. */
   readonly VITE_CARDS_URL?: string;
+  /** The multiplayer table server's origin (`lib/tableOrigin.ts`); the page's own by default. */
+  readonly VITE_TABLE_ORIGIN?: string;
 }
 
 interface ImportMeta {

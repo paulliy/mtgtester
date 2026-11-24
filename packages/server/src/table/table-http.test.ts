@@ -149,7 +149,7 @@ describe('creating a table', () => {
     expect(created.hostToken).toBe(table?.issuedHostToken);
     // The invite code is in the fragment, which a browser never sends.
     expect(created.inviteUrl).toBe(
-      `${ORIGIN}/t/${created.tableId}#${table?.currentInviteCode ?? ''}`,
+      `${ORIGIN}/multiplayer/${created.tableId}#${table?.currentInviteCode ?? ''}`,
     );
     expect(created.hostToken.length).toBeGreaterThanOrEqual(40);
     // Later reads of the table do not repeat the host token.
@@ -165,7 +165,9 @@ describe('creating a table', () => {
   it('builds invite links from TABLE_PUBLIC_ORIGIN', async () => {
     const ctx = context({ publicOrigin: 'http://localhost:8080' });
     const created = await createTable(ctx);
-    expect(created.inviteUrl.startsWith(`http://localhost:8080/t/${created.tableId}#`)).toBe(true);
+    expect(
+      created.inviteUrl.startsWith(`http://localhost:8080/multiplayer/${created.tableId}#`),
+    ).toBe(true);
   });
 
   it('throttles a client address that guesses the secret, and no other', async () => {
@@ -306,6 +308,10 @@ describe('static files', () => {
     expect(csp).not.toMatch(/script-src[^;]*'unsafe-(inline|eval)'/);
     const invitePage = asResponse(await handle(ctx, request('/t/abcdefghijklmnop')));
     expect(await invitePage.text()).toContain('<title>built</title>');
+    for (const path of ['/multiplayer', '/multiplayer/abcdefghijklmnop']) {
+      const page = asResponse(await handle(ctx, request(path)));
+      expect(await page.text(), path).toContain('<title>built</title>');
+    }
     const script = asResponse(await handle(ctx, request('/assets/app-abc.js')));
     expect(script.status).toBe(200);
     expect(script.headers.get('content-security-policy')).toBe(csp);
@@ -350,6 +356,7 @@ describe('static files', () => {
       '/%252e%252e/secret.txt',
       '/assets/app-abc.js%00.png',
       '/t/..%2f..%2fsecret.txt',
+      '/multiplayer/..%2f..%2fsecret.txt',
       '/%c0%ae%c0%ae/secret.txt',
       '/%',
     ]) {

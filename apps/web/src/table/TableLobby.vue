@@ -7,6 +7,8 @@
 import { computed, ref } from 'vue';
 import type { PlayerId } from '@mtg/shared';
 import { useTableStore } from '../stores/table';
+import { tablePath } from './routes';
+import SinglePlayerLink from './SinglePlayerLink.vue';
 
 const table = useTableStore();
 const decklist = ref('');
@@ -21,7 +23,7 @@ const myClaim = computed(() => table.you?.claim ?? null);
 const inviteLink = computed(() =>
   state.value?.inviteCode === undefined || table.tableId === null
     ? null
-    : `${window.location.origin}/t/${table.tableId}#${state.value.inviteCode}`,
+    : `${window.location.origin}${tablePath(table.tableId)}#${state.value.inviteCode}`,
 );
 
 function request(): void {
@@ -74,6 +76,7 @@ const phaseLabel = computed(() => PHASE_LABELS[state.value?.phase ?? 'open'] ?? 
         </p>
         <h1 class="dt-title">Table lobby</h1>
         <div class="dt-ornament" aria-hidden="true"><span class="star" /></div>
+        <SinglePlayerLink />
       </header>
 
       <div class="table-plan">

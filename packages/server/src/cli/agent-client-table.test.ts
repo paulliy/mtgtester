@@ -252,6 +252,11 @@ describe('tableSocketTarget', () => {
       url: 'ws://localhost:3002/tables/abc/ws',
       inviteCode: 'inv2',
     });
+    expect(tableSocketTarget('http://127.0.0.1:3002/multiplayer/abc#inv2', undefined)).toEqual({
+      ok: true,
+      url: 'ws://127.0.0.1:3002/tables/abc/ws',
+      inviteCode: 'inv2',
+    });
     expect(tableSocketTarget('http://127.0.0.1:3002/t/abc', undefined).ok).toBe(false);
     expect(tableSocketTarget('http://example.com/t/abc#inv', undefined).ok).toBe(false);
     expect(tableSocketTarget('https://tables.example.com/t/abc#inv', undefined)).toEqual({

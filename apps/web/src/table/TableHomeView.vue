@@ -6,7 +6,9 @@
  */
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { tableHttpUrl } from '../lib/tableOrigin';
 import { useTableStore } from '../stores/table';
+import SinglePlayerLink from './SinglePlayerLink.vue';
 
 const router = useRouter();
 const table = useTableStore();
@@ -33,7 +35,7 @@ async function create(): Promise<void> {
   error.value = null;
   busy.value = true;
   try {
-    const response = await fetch('/tables', {
+    const response = await fetch(tableHttpUrl('/tables'), {
       method: 'POST',
       headers: { authorization: `Bearer ${secret.value.trim()}` },
     });
@@ -93,6 +95,7 @@ async function create(): Promise<void> {
       </form>
       <p v-if="error" class="dt-note danger" role="alert">{{ error }}</p>
       <p class="hint">Joining a table? Open the invite link your host sent you.</p>
+      <SinglePlayerLink />
     </div>
 
     <ol class="steps" aria-label="How a table works">
