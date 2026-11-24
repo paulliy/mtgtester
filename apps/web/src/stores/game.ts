@@ -42,7 +42,13 @@ import type {
   ServerToClientMessage,
 } from '../lib/protocol';
 import { assertNever } from '@mtg/shared';
-import { GameSocket, type ConnectionState } from '../lib/socket';
+import { LOCAL_GAMES } from '../lib/localMode';
+import {
+  GameSocket,
+  LocalGameSocket,
+  type ConnectionState,
+  type GameTransport,
+} from '../lib/socket';
 import { resetBoardAnchors } from '../composables/useBoardAnchors';
 import { resetCombatStrikes } from '../composables/useCombatStrikes';
 import { applyLifeCues, resetLifeFlashes } from '../composables/useLifeFlash';
@@ -79,8 +85,11 @@ export const useGameStore = defineStore('game', () => {
   const seed = ref<string | null>(null);
   const seats = ref<SeatSummary[]>([]);
   const providerKind = ref<ProviderKind>('random');
+  // A local game ends with its page, so a stored session is never one this page can resume.
   const sessionToken = ref<string | null>(
-    typeof localStorage === 'undefined' ? null : localStorage.getItem('mtg-player-session'),
+    LOCAL_GAMES || typeof localStorage === 'undefined'
+      ? null
+      : localStorage.getItem('mtg-player-session'),
   );
   const gameMode = ref<GameMode>(sessionToken.value === null ? 'spectator' : 'singlePlayer');
   const humanSeat = ref<string | null>(null);
@@ -243,6 +252,8 @@ export const useGameStore = defineStore('game', () => {
 
   /** Backfill table talk for a game already in progress or finished (survives a reload). */
   async function loadTableTalk(): Promise<void> {
+    // Local games have no server to backfill from, and no AI to say anything.
+    if (LOCAL_GAMES) return;
     const id = gameId.value;
     if (id === null) return;
     try {
@@ -270,6 +281,8 @@ export const useGameStore = defineStore('game', () => {
 
   /** Backfill commentary for a finished game (a reload loses the live `gameReflections`). */
   async function loadReflections(): Promise<void> {
+    // Local games have no server to backfill from, and no AI to say anything.
+    if (LOCAL_GAMES) return;
     if (gameId.value === null) return;
     try {
       const response = await fetch(`/api/games/${encodeURIComponent(gameId.value)}/reflections`);
@@ -287,6 +300,8 @@ export const useGameStore = defineStore('game', () => {
 
   /** Backfill reasoning for a game already in progress or finished (survives a page reload). */
   async function loadAnnotations(): Promise<void> {
+    // Local games have no server to backfill from, and no AI to say anything.
+    if (LOCAL_GAMES) return;
     if (gameId.value === null) return;
     try {
       const response = await fetch(`/api/games/${encodeURIComponent(gameId.value)}/annotations`);
@@ -303,7 +318,7 @@ export const useGameStore = defineStore('game', () => {
     () => gameId.value !== null && gameOver.value === null && halt.value === null,
   );
 
-  let socket: GameSocket | null = null;
+  let socket: GameTransport | null = null;
   /**
    * Table mode (multiplayer M6): the table store owns the socket, feeds this store its game
    * frames through `receive`, and carries this store's in-game answers. Null in the tester.
@@ -350,7 +365,11 @@ export const useGameStore = defineStore('game', () => {
     saveRecentIds(key, pushRecentId(readRecentIds(key), id));
   }
 
+  /** When the last frame arrived (`Date.now()`), so a long quiet spell can read as bots thinking. */
+  const lastFrameAt = ref(0);
+
   function handle(message: ServerToClientMessage): void {
+    lastFrameAt.value = Date.now();
     if (message.type !== 'gameStarted') {
       const payload = message.payload;
       const incomingGameId =
@@ -618,21 +637,28 @@ export const useGameStore = defineStore('game', () => {
 
   function connect(): void {
     if (tableTransport !== null) return;
-    socket ??= new GameSocket(handle, (next) => {
+    const onState = (next: ConnectionState): void => {
       connection.value = next;
       // A start whose answer never arrived is not a start either.
       if (next === 'closed') {
         clearPendingRecents();
         resumePending = false;
       }
-      if (next === 'open' && sessionToken.value !== null && gameMode.value === 'singlePlayer') {
+      if (
+        !LOCAL_GAMES &&
+        next === 'open' &&
+        sessionToken.value !== null &&
+        gameMode.value === 'singlePlayer'
+      ) {
         resumePending = true;
         send({
           type: 'resumeGame',
           payload: { sessionToken: sessionToken.value },
         });
       }
-    });
+    };
+    // A local game lives only in this page's worker, so there is never one to resume.
+    socket ??= LOCAL_GAMES ? new LocalGameSocket(handle, onState) : new GameSocket(handle, onState);
     socket.connect();
   }
 
@@ -957,6 +983,7 @@ export const useGameStore = defineStore('game', () => {
 
   return {
     connection,
+    lastFrameAt,
     gameId,
     seed,
     seats,

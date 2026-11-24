@@ -58,6 +58,16 @@ model code (the OpenRouter SDK, zod and `server/src/ai`), `node:crypto` and `nod
    (`db/deck-store.ts`), the part of `GameStore` deck setup uses, so setup needs no database;
    games are not recorded. Tester games use the legacy seeded RNG, so the worker needs no
    `crypto.getRandomValues` key.
+10. **The tester in local mode.** A web build with `VITE_LOCAL_GAMES=true` plays in the worker:
+    `lib/localEngine.ts` owns it, `LocalGameSocket` (`lib/socket.ts`) carries the game store's
+    frames as `GameSocket` does, and `lib/api.ts` sends the setup preview, game report and bot
+    decks to the worker instead of `/api`. Other builds swap `localEngine.ts` for an empty
+    stand-in, so they never emit the worker. Saved decks are decklists in browser storage
+    (`lib/localDecks.ts`), saved when a game starts with them and exportable as one text file;
+    deck links are refused, since the browser cannot fetch deck sites. Stats and Batch show
+    Coming soon, Debug and AI bots are left out, and nothing is resumed after a reload: closing
+    the tab mid-game asks first. A new game replaces the last inside the same worker (it redeems
+    that worker's setup preview); leaving a game terminates the worker to free its memory.
 
 ## Consequences
 

@@ -15,6 +15,7 @@ import { commanderObjectIds } from '../lib/commanderIds';
 import CombatOverlay from '../components/CombatOverlay.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import CopyGameReportButton from '../components/CopyGameReportButton.vue';
+import { useBotsThinking } from '../composables/useBotsThinking';
 import GameOverPanel from '../components/GameOverPanel.vue';
 import HeldDecision from '../components/HeldDecision.vue';
 import PlaybackControls from '../components/PlaybackControls.vue';
@@ -110,6 +111,7 @@ const phaseLabel = computed(() => {
  * permanent, meaningless warning. The cap itself lives on the server; `LOOKAHEAD_TURNS` is
  * shared so this cannot quietly disagree with it.
  */
+const botsThinking = useBotsThinking();
 const waitingForView = computed(
   () =>
     store.isRunning &&
@@ -225,6 +227,7 @@ const roundLabel = computed(() => {
       <span v-if="waitingForView && !playbackOpen" class="waiting-hint"
         >Paused · open playback to step on</span
       >
+      <span v-else-if="botsThinking" class="waiting-hint" role="status">Bots are thinking…</span>
       <button
         type="button"
         class="info-toggle"

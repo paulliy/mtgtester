@@ -28,7 +28,14 @@ export interface NavOptions {
   dev: boolean;
   /** A game is running, so the board can be returned to. */
   gameRunning: boolean;
+  /**
+   * A local-games build (`lib/localMode.ts`): Stats and Batch need the server's database, so they
+   * say they are coming soon, and Debug, which reads the server's logs, is left out.
+   */
+  local?: boolean;
 }
+
+const SOON = 'Coming soon';
 
 export function navPlaces(options: NavOptions): NavPlace[] {
   const places: NavPlace[] = [
@@ -57,7 +64,7 @@ export function navPlaces(options: NavOptions): NavPlace[] {
       group: 'II',
       label: 'Stats',
       to: '/stats',
-      description: 'Standings, matchups and how each deck fares',
+      description: options.local ? SOON : 'Standings, matchups and how each deck fares',
       routes: ['stats'],
     },
     {
@@ -65,7 +72,7 @@ export function navPlaces(options: NavOptions): NavPlace[] {
       group: 'II',
       label: 'Batch runs',
       to: '/batch',
-      description: 'Set up batches and read their results',
+      description: options.local ? SOON : 'Set up batches and read their results',
       routes: ['batch', 'batch-results'],
     },
   );
@@ -89,6 +96,7 @@ export function navPlaces(options: NavOptions): NavPlace[] {
       },
     );
   }
+  if (options.local) return places;
   places.push({
     key: 'debug',
     group: 'III',

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { GameReport } from '@mtg/shared';
+import { requestGameReport } from '../lib/api';
 import { formatGameReport } from '../lib/gameReport';
 import { useGameStore } from '../stores/game';
 
@@ -35,12 +36,8 @@ async function copyReport(): Promise<void> {
   state.value = 'working';
   let text: string;
   try {
-    const response = await fetch('/api/game-report', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ sessionToken: token }),
-    });
-    const body = (await response.json()) as GameReport | { message?: string };
+    const response = await requestGameReport({ sessionToken: token });
+    const body = response.body as GameReport | { message?: string };
     if (!response.ok) {
       throw new Error(('message' in body && body.message) || 'The server refused the report.');
     }
