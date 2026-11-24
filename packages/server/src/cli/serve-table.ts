@@ -24,6 +24,7 @@ import { GameStore } from '../db';
 import { loadBannedList } from '../decks/banned-file';
 import { loadTableConfig, publicOriginFor, type TableConfig } from '../table/config';
 import { startTableServer } from '../table/table-http';
+import { loadPremadeDecks } from '../table/premade-decks';
 import { wireTables } from '../table/wiring';
 
 const BULK_PATH = 'data/scryfall-oracle-cards.json';
@@ -84,7 +85,7 @@ function fromCards(
   return { index: buildOracleIndexFromCards(cards), pool: buildSupportedPool(cards), sha256 };
 }
 
-function main(): void {
+async function main(): Promise<void> {
   // Bun 1.3's `server.stop()` never settles once a table socket has closed, so shutdown would hang.
   if (!Bun.semver.satisfies(Bun.version, '>=1.4.3')) {
     console.error(`\nserve:table needs Bun 1.4.3 or later (this is ${Bun.version}).\n`);
@@ -116,7 +117,8 @@ function main(): void {
   });
   // `/health` names the release, so the deploy agent can confirm the new one came up.
   const version = readReleaseCommit(process.cwd()) ?? 'dev';
-  const server = startTableServer({ config, registry, hub, version });
+  const premadeDecks = await loadPremadeDecks(index, banned);
+  const server = startTableServer({ config, registry, hub, version, premadeDecks });
 
   const origin = publicOriginFor(config, server.port);
   const mode = config.dev
@@ -149,6 +151,7 @@ function main(): void {
   console.log(`  Max tables:     ${config.maxTables}`);
   console.log(`  Oracle index:   ${index.size.toLocaleString()} cards`);
   console.log(`  Supported pool: ${pool.cards.length.toLocaleString()} cards`);
+  console.log(`  Premade decks:  ${premadeDecks.length}`);
   if (config.hostSecret !== null) {
     // The operator chose it and it outlives this run, so it stays out of the log.
     console.log('\n  Host secret:    fixed by TABLE_HOST_SECRET (not printed)');
@@ -169,4 +172,4 @@ function main(): void {
   process.on('SIGTERM', shutdown);
 }
 
-main();
+await main();
