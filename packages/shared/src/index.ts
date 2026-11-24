@@ -298,4 +298,4 @@ export type {
   TableStatePayload,
   TableYouView,
 } from './table-protocol';
-export { sha256Hex } from './sha256';
+export { createSha256, sha256Hex, type Sha256 } from './sha256';

@@ -190,6 +190,13 @@ const scenarioFlows: Record<string, (page: Page) => Promise<void>> = {
     await attack(page, 'Gut, True Soul Zealot');
     // Lab Bear is the only other creature, so accepting sacrifices it without a further choice.
     await choose(page, 'Yes');
+    // The Skeleton enters attacking a player of your choice.
+    const attackP2 = page
+      .locator('.decision-panel .panel-group')
+      .filter({ hasText: 'P2' })
+      .getByRole('button', { name: 'Attack' });
+    await passUntil(page, attackP2);
+    await attackP2.click();
     await passUntil(page, life(page, 'P2').filter({ hasText: '34' }));
     await expect(permanent(page, 'P1', 'Skeleton')).toBeVisible();
     await expect(inZone(page, 'P1', 'Graveyard', 'PR11 Lab Bear')).toBeVisible();

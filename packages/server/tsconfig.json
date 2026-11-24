@@ -22,7 +22,8 @@
     "src/cli/engine-bench-game.ts",
     "src/cli/definition-bench.ts",
     "src/cli/hill-climb.ts",
-    "src/hill-climb"
+    "src/hill-climb",
+    "src/bench"
   ],
   "references": [{ "path": "../shared" }, { "path": "../engine" }, { "path": "../bot" }]
 }

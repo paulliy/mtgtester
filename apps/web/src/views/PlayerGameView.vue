@@ -552,9 +552,15 @@ function sourceId(action: LegalAction): string | null {
   if (interaction.kind === 'source') return interaction.sourceId;
   if (interaction.kind === 'attack') return interaction.attackerId;
   if (interaction.kind === 'block') return interaction.blockerId;
-  if (interaction.kind === 'choice') return interaction.subjectId ?? null;
+  // A choice about a player (who a token attacks, which opponent to pick) has no card to click:
+  // it goes to the decision panel, which shows each player's buttons.
+  if (interaction.kind === 'choice')
+    return interaction.subjectId === undefined || seatIds.value.has(interaction.subjectId)
+      ? null
+      : interaction.subjectId;
   return null;
 }
+const seatIds = computed(() => new Set((state.value?.seats ?? []).map((seat) => seat.seat)));
 
 /**
  * Every source action but making mana by hand (ADR 0030): that lives on the land itself, in the

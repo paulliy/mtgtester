@@ -25,7 +25,9 @@ bun run lab:select --seed S --out F [--base B] [--sample] [--latest] [--per-fami
                                         # write the sample CI plays; LAB_SELECTION=F bun run test:e2e plays it
 bun run test:e2e:setup                  # Playwright: setup screen + a seeded player game (DB-backed)
 bun run test:e2e:table                  # Playwright: table games in two browsers on the built table bundle
-bun run test:e2e:browser                # the single-player worker in headless Chromium, no game server
+bun run test:e2e:browser                # the single-player worker in headless Chromium, and browser-vs-Bun fingerprint parity
+bun run test:e2e:site                   # the shipped site (local games) in Chromium: solo, watch, links
+bun run test:e2e:site:smoke             # the site smoke test in Chromium, Firefox, then WebKit (SITE_BROWSER picks one with the smoke config)
 
 bun run dev                             # server :3001 and UI :5173
 bun run dev --table [--oracle-fixture F] # serve:table --dev :3002 and the table app on :5173
