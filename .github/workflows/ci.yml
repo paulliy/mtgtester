@@ -398,6 +398,8 @@ jobs:
         run: bunx playwright install-deps firefox webkit && bunx playwright install firefox webkit
       - if: env.SETUP == 'true'
         run: bun run test:e2e:site
+      - if: env.SETUP == 'true'
+        run: bun run test:e2e:site:smoke
       # The specs record a trace for every test (trace: 'on', preserveOutput: 'always'); this checks
       # tracing is still on. It runs before the table suite writes test-results/table. Actions
       # storage is limited, so CI uploads the traces only when a step fails; a passing run's viewer
