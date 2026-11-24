@@ -15,7 +15,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import type { OracleCard } from '@mtg/shared';
-import { readBuildInfo } from '../build-info';
+import { readBuildInfo, readReleaseCommit } from '../build-info';
 import { buildOracleIndexFromCards, type OracleIndex } from '../cards/oracle-index';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
 import type { RawScryfallCard } from '../cards/scryfall';
@@ -105,15 +105,18 @@ function main(): void {
   mkdirSync(dirname(config.dbPath), { recursive: true });
   const store = new GameStore(config.dbPath);
 
+  const build = readBuildInfo(process.cwd());
   const { registry, hub } = wireTables({
     config,
     index,
     pool,
     banned,
     store,
-    replay: { cardDataSha256: sha256, build: readBuildInfo(process.cwd()) },
+    replay: { cardDataSha256: sha256, build },
   });
-  const server = startTableServer({ config, registry, hub });
+  // `/health` names the release, so the deploy agent can confirm the new one came up.
+  const version = readReleaseCommit(process.cwd()) ?? 'dev';
+  const server = startTableServer({ config, registry, hub, version });
 
   const origin = publicOriginFor(config, server.port);
   const mode = config.dev
@@ -126,6 +129,7 @@ function main(): void {
   console.log(`\nMTG Commander AI Simulator - table server (${mode})`);
   console.log('-'.repeat(60));
   console.log(`  Bound:          ${config.host}:${server.port}`);
+  console.log(`  Release:        ${version}`);
   console.log(`  Invite links:   ${origin}`);
   if (!config.dev) {
     console.log(`  Allowed hosts:  ${config.allowedHosts.join(', ')}`);

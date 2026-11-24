@@ -1250,6 +1250,8 @@ describe('worker health', () => {
     const rig = makeRig({ health, ended });
     const stuck = await startedGame(rig);
     const healthy = await startedGame(rig);
+    // `/health` counts the games a deploy must wait for.
+    expect(rig.registry.activeGames()).toBe(2);
     stuck.port.hung = true;
     await clock.advance(40_000);
     expect(stuck.port.terminations).toEqual(['workerFailure']);
@@ -1259,6 +1261,7 @@ describe('worker health', () => {
     expect(rig.hub.stats.unhealthy).toBe(1);
     expect(healthy.port.terminations).toEqual([]);
     expect(rig.registry.get(healthy.t.tableId)?.currentPhase).toBe('playing');
+    expect(rig.registry.activeGames()).toBe(1);
     // The stuck attempt's watchdog stopped; the healthy one's still runs.
     expect(clock.running()).toBe(1);
   });

@@ -9,8 +9,11 @@ rules and limits first.
 What runs where:
 
 - **Cloudflare:** DNS for the subdomain, TLS, and the tunnel's public hostname.
-- **VM:** `cloudflared` and the table server (`mtg-table.service`), bound to `127.0.0.1:3002`,
-  with its SQLite database under `/opt/mtgtester/data/tables/`.
+- **GitHub:** builds each server release from main (`.github/workflows/deploy.yml`) and moves the
+  `server-live` tag to it. Nothing is built on the VM.
+- **VM:** `cloudflared`, the table server (`mtg-table.service`) bound to `127.0.0.1:3002` and
+  running the release `/opt/mtgtester-releases/current` points at, its SQLite database in
+  `/var/lib/mtgtester/`, and the deploy agent (`mtg-deploy.timer`) that switches releases.
 
 The files are in [`deploy/oracle-cloud/`](../../deploy/oracle-cloud/).
 
@@ -53,12 +56,12 @@ of memory and a small share of one CPU (it can burst briefly). It is enough for 
 with these differences:
 
 - Pick Ubuntu 24.04 for x86-64 (the micro is not ARM). Everything else in this guide is the same.
-- `setup.sh` detects the small VM, adds a 4 GB swap file so the one-time card conversion and web
-  build can finish (expect them to take several minutes longer), and sets `TABLE_MAX_TABLES=2`.
+- `setup.sh` detects the small VM, adds a 4 GB swap file, and sets `TABLE_MAX_TABLES=2`.
 - Engine steps run several times slower than on Ampere. Ordinary turns stay quick, but a big
   board can pause noticeably. This shape has not been tried with a full game yet.
-- Move to Ampere later by creating the new VM, running `setup.sh` there, copying
-  `data/tables/tables.sqlite` across, and pointing the tunnel at it.
+- Releases are built for x86-64. Moving to Ampere (arm64) needs an arm64 build in `deploy.yml`
+  first; then create the new VM, run `setup.sh` there, copy `/var/lib/mtgtester/tables.sqlite`
+  across, and point the tunnel at it.
 
 ## 3. Install the table server (script)
 
@@ -70,11 +73,11 @@ less setup.sh   # read it before running it
 bash setup.sh
 ```
 
-[`setup.sh`](../../deploy/oracle-cloud/setup.sh) installs git and Bun (arm64 builds exist for
-both), creates an `mtg` system user, clones the repository to `/opt/mtgtester`, runs
-`bun install`, builds the table web bundle (`apps/web/dist-table`), downloads the Scryfall card
-data, builds the prebuilt card file (`bun run table:cards`), and installs and enables
-`mtg-table.service` without starting it. It takes a few minutes, most of it the card download.
+[`setup.sh`](../../deploy/oracle-cloud/setup.sh) installs Bun, creates an `mtg` system user,
+installs the settings files (`/etc/mtg-table.env`, `/etc/mtg-deploy.env`), caps the journal at
+100 MB, and installs and enables `mtg-table.service` and the deploy agent (`mtg-deploy.timer`). Once
+`/etc/mtg-table.env` names your subdomain it runs the agent, which downloads the live release and
+starts the server. Run it again after editing the file (step 4).
 
 ## 4. Configure and start (you)
 
@@ -88,7 +91,7 @@ Replace `tables.example.com` with your subdomain in `TABLE_PUBLIC_ORIGIN`,
 The file is documented line by line ([`mtg-table.env.example`](../../deploy/oracle-cloud/mtg-table.env.example)).
 
 ```bash
-sudo systemctl start mtg-table
+sudo systemctl start mtg-deploy.service    # downloads the live release and starts the server
 sudo journalctl -u mtg-table -n 40 --no-pager
 ```
 
@@ -148,21 +151,65 @@ Player addresses: Cloudflare puts the visitor's address last in `X-Forwarded-For
 entry the server's throttles and per-address caps use. Players behind one shared address (one
 household) share those caps: 8 sockets and 30 socket opens a minute.
 
-## Updating
+## Releases and updates
+
+Merging to main updates the server on its own:
+
+1. [`deploy.yml`](../../.github/workflows/deploy.yml) builds the release on GitHub: production
+   dependencies, the table web bundle, and the prebuilt card file from the pinned Scryfall bank
+   (the `SCRYFALL_BULK_URL` and `SCRYFALL_BULK_SHA256` repository variables). It publishes it as the
+   GitHub release `server-<commit>` and moves the `server-live` tag to the commit. The second job
+   runs in the `production` environment, so a required reviewer can be added in the repository's
+   settings.
+2. Every three minutes the deploy agent ([`deploy-agent.sh`](../../deploy/oracle-cloud/deploy-agent.sh))
+   reads the tag. For a new release it downloads `server-<commit>.tar.gz`, checks its SHA-256, and
+   unpacks it into `/opt/mtgtester-releases/releases/<commit>`.
+3. It waits for games in progress to end (`activeGames` on `/health`), for up to an hour.
+4. It stops the server, copies the database to `/var/lib/mtgtester/backups/`, points `current` at
+   the new release, and starts the server.
+5. It waits up to five minutes for `/health` to name the new commit. If it never does, it restores
+   the database copy, points `current` back, starts the old release, and records the commit in
+   `/var/lib/mtgtester/failed-release` so it is not retried. A newer release, or deleting that
+   file, tries again.
+
+`/health` answers `{ ok, version, protocol, activeGames }`, where `version` is the release's commit
+(`dev` outside a release).
+
+Watching it:
 
 ```bash
-sudo -u mtg -H bash -c 'cd /opt/mtgtester && git pull --ff-only && ~/.bun/bin/bun install --frozen-lockfile && ~/.bun/bin/bun run --cwd apps/web build:table'
-sudo systemctl restart mtg-table
+systemctl list-timers mtg-deploy.timer
+sudo journalctl -u mtg-deploy -n 60 --no-pager
+readlink /opt/mtgtester-releases/current
 ```
 
-A restart ends games in progress. To refresh card data:
-`sudo -u mtg -H bash -c 'cd /opt/mtgtester && ~/.bun/bin/bun run scryfall:update && ~/.bun/bin/bun run table:cards'`,
-then restart. The server warns at startup when the bulk file is newer than the prebuilt file.
+To go back to an older release, move the tag on your own machine
+(`git tag -f server-live <commit> && git push -f origin refs/tags/server-live`); the agent switches
+within three minutes. The last three releases stay on disk and the last ten database copies in
+`backups/`.
+
+Alerts: put a [healthchecks.io](https://healthchecks.io) check's ping URL in `/etc/mtg-deploy.env`
+(`HEARTBEAT_URL`, period 10 minutes). The agent pings it after each run that finds the right release
+answering, and pings `/fail` after a rollback. Add an uptime check (UptimeRobot or Better Stack) on
+`https://tables.<your-site>/health` for the public side.
+
+### Moving an existing VM to releases
+
+A VM set up with the old `setup.sh` runs a git checkout at `/opt/mtgtester`. To move it:
+
+1. Make sure the first `Deploy` run on main has finished (the `server-live` tag exists).
+2. Run the new `setup.sh` as in step 3. It copies the database from
+   `/opt/mtgtester/data/tables/tables.sqlite` to `/var/lib/mtgtester/`, comments out any
+   `TABLE_DB_PATH` in `/etc/mtg-table.env`, replaces `mtg-table.service`, and starts the live
+   release.
+3. Check `https://tables.<your-site>/health` names the commit, then play a game.
+4. Delete the old checkout when you no longer need it: `sudo rm -rf /opt/mtgtester`.
 
 ## Backups
 
-The only state is the table database, `/opt/mtgtester/data/tables/tables.sqlite` (decklists, game
-logs, replays). Copy it while the service is stopped, or with
+The only state is the table database, `/var/lib/mtgtester/tables.sqlite` (decklists, game
+logs, replays). The deploy agent copies it before every release switch. To copy it yourself, do it
+while the service is stopped, or with
 `sqlite3 tables.sqlite ".backup /path/backup.sqlite"` while it runs (`sudo apt-get install sqlite3`).
 
 ## Memory
@@ -172,3 +219,7 @@ parsing the ~200 MB Scryfall file. On a synthetic Scryfall-shaped bank of 172 MB
 not available in CI), peak startup memory fell from about 1.5 GB to about 480 MB, and resident
 memory after start from about 680 MB to about 370 MB. The synthetic bank's supported pool is larger
 than the real one, so real figures should be lower. Each running game adds its own worker on top.
+
+`mtg-table.service` sets `MemoryHigh=700M`, which makes the kernel reclaim from the server before
+the VM runs short, and `MemorySwapMax=1500M`, which stops it from thrashing the whole VM through
+swap.
