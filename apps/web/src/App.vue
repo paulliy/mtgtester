@@ -5,6 +5,7 @@ import CardPreviewOverlay from './components/CardPreviewOverlay.vue';
 import PhoneMenu from './components/shell/PhoneMenu.vue';
 import RulerNav from './components/shell/RulerNav.vue';
 import ThemeControl from './components/shell/ThemeControl.vue';
+import { LOCAL_GAMES } from './lib/localMode';
 import { currentPlaceIndex, navPlaces } from './lib/navigation';
 import { openingScreen } from './lib/opening';
 import { useCardPreviewStore } from './stores/cardPreview';
@@ -16,7 +17,11 @@ const route = useRoute();
 
 /** The ruler's places: dev-only ones in a dev build, and the way back while a game runs. */
 const places = computed(() =>
-  navPlaces({ dev: import.meta.env['DEV'] === true, gameRunning: game.gameId !== null }),
+  navPlaces({
+    dev: import.meta.env['DEV'] === true,
+    gameRunning: game.gameId !== null,
+    local: LOCAL_GAMES,
+  }),
 );
 const current = computed(() =>
   currentPlaceIndex(places.value, typeof route.name === 'string' ? route.name : null),
@@ -44,12 +49,24 @@ function onBlur(): void {
   cardPreview.setAltHeld(false);
 }
 
+/**
+ * A local game lives only in this page (ADR 0053, no saves in v1), so closing or reloading the
+ * tab mid-game asks first. The browser shows its own wording; this only asks it to.
+ */
+function onBeforeUnload(event: BeforeUnloadEvent): void {
+  if (!LOCAL_GAMES || !game.isRunning) return;
+  event.preventDefault();
+  event.returnValue = '';
+}
+
 onMounted(() => {
+  window.addEventListener('beforeunload', onBeforeUnload);
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
   window.addEventListener('blur', onBlur);
 });
 onUnmounted(() => {
+  window.removeEventListener('beforeunload', onBeforeUnload);
   window.removeEventListener('keydown', onKeyDown);
   window.removeEventListener('keyup', onKeyUp);
   window.removeEventListener('blur', onBlur);

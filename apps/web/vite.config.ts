@@ -1,4 +1,6 @@
-import { defineConfig } from 'vite';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { join, normalize, resolve } from 'node:path';
+import { defineConfig, loadEnv, type Connect, type Plugin } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
 /**
@@ -13,8 +15,46 @@ const gameServerHost = `127.0.0.1:${Number.isFinite(gameServerPort) ? gameServer
 const tableServerPort = Number.parseInt(process.env.TABLE_SERVER_PORT ?? '3002', 10);
 const tableServerHost = `127.0.0.1:${Number.isFinite(tableServerPort) ? tableServerPort : 3002}`;
 
+/**
+ * Local games in dev (`VITE_LOCAL_GAMES=true bun run dev:web`, ADR 0053): the game worker reads
+ * the site card files from `/cards/`, so the dev server serves the folder `bun run site:cards`
+ * wrote (`SITE_CARDS_DIR`, `data/site-cards` by default). A production build serves them itself.
+ */
+function siteCards(): Plugin {
+  const root = resolve(__dirname, '../..', process.env.SITE_CARDS_DIR ?? 'data/site-cards');
+  const serve: Connect.NextHandleFunction = (request, response, next) => {
+    const path = normalize(decodeURIComponent((request.url ?? '/').split('?')[0]!));
+    const file = join(root, path);
+    if (!file.startsWith(root) || !existsSync(file) || !statSync(file).isFile()) return next();
+    response.setHeader('content-type', 'application/json');
+    response.end(readFileSync(file));
+  };
+  return {
+    name: 'decktank-site-cards',
+    configureServer(server) {
+      server.middlewares.use('/cards/', serve);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use('/cards/', serve);
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => ({
-  plugins: [vue()],
+  plugins: [vue(), siteCards()],
+  // Only a local-games build carries the game worker: every other build gets the empty stand-in.
+  ...(loadEnv(mode, __dirname, 'VITE_').VITE_LOCAL_GAMES !== 'true' && {
+    resolve: {
+      alias: [
+        {
+          find: /^\.\/localEngine$/,
+          replacement: resolve(__dirname, 'src/lib/localEngine.off.ts'),
+        },
+      ],
+    },
+  }),
+  // The game worker imports chunks of its own, which only module workers can do.
+  worker: { format: 'es' },
   // `--mode table` builds the table app (ADR 0031, plan M6) into its own directory, with the
   // manifest `serve:table` reads to decide which files it may serve.
   ...(mode === 'table' && {

@@ -14,6 +14,7 @@
  * move between them). Every ring, rose and tick is decoration and hidden from assistive
  * technology. Under reduced motion nothing spins or drifts; a choice lands at once.
  */
+import { LOCAL_GAMES } from '../../lib/localMode';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
 import type { StartGameMode } from '@mtg/shared';
@@ -49,7 +50,15 @@ interface Stop {
 
 const STOPS: readonly Stop[] = [
   { key: 'play', point: 'N', label: 'Play', sub: '1 v 3', angle: 0, mode: 'singlePlayer' },
-  { key: 'batch', point: 'E', label: 'Batch', sub: 'Many games', angle: 90, to: '/batch' },
+  {
+    key: 'batch',
+    point: 'E',
+    label: 'Batch',
+    // Batch runs need the server's database, which a local-games build has none of.
+    sub: LOCAL_GAMES ? 'Coming soon' : 'Many games',
+    angle: 90,
+    to: '/batch',
+  },
   {
     key: 'multi',
     point: 'S',
