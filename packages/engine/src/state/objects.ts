@@ -3384,71 +3384,76 @@ export function queueCastTriggers(ctx: GameContext, spell: EngineStackObject): v
       (record) => spec.filter === undefined || selectMatches(record.candidate, spec.filter, from),
     ).length === spec.ordinal;
 
-  for (const source of ctx.state.battlefield) {
-    for (const ability of triggersOf(ctx, source)) {
-      const spec = ability.trigger;
-      if (spec === undefined || spec.when !== 'castsSpell') continue;
-      // A graveyard-only ability does not function on the battlefield (CR 112.6).
-      if (ability.functionsInGraveyard === true) continue;
+  // The scan queues triggers and changes nothing a layer reads, so it digests the board once
+  // rather than once per permanent (`withReadScope`).
+  withReadScope(ctx, () => {
+    for (const source of ctx.state.battlefield) {
+      for (const ability of triggersOf(ctx, source)) {
+        const spec = ability.trigger;
+        if (spec === undefined || spec.when !== 'castsSpell') continue;
+        // A graveyard-only ability does not function on the battlefield (CR 112.6).
+        if (ability.functionsInGraveyard === true) continue;
 
-      const isController = spell.controllerId === source.controllerId;
-      if (spec.caster === 'you' && !isController) continue;
-      if (spec.caster === 'opponent' && isController) continue;
-      if (!castFromMatches(spec, spell)) continue;
+        const isController = spell.controllerId === source.controllerId;
+        if (spec.caster === 'you' && !isController) continue;
+        if (spec.caster === 'opponent' && isController) continue;
+        if (!castFromMatches(spec, spell)) continue;
 
-      const from: SelectorSource = {
-        cardId: source.cardId,
-        objectId: source.id,
-        controllerId: source.controllerId,
-        eventPlayerId: spell.controllerId,
-        ...(spell.triggerScope?.manaSpent !== undefined
-          ? { manaSpent: spell.triggerScope.manaSpent }
-          : {}),
-        attachedToCardId:
-          source.attachedTo === null
-            ? null
-            : (ctx.state.battlefield.find((perm) => perm.id === source.attachedTo)?.cardId ?? null),
-      };
-      // `selectMatches`, not `matchesSelector`: the spell is not a permanent, so there are no
-      // layered characteristics to compute — the candidate above is already the whole answer.
-      if (spec.filter !== undefined && !selectMatches(candidate, spec.filter, from)) continue;
-      if (!ordinalMatches(spec, from)) continue;
-      if (spec.targetFilter !== undefined) {
-        const hasMatchingTarget = spell.targets.some((targetId) => {
-          const target = ctx.state.battlefield.find(
-            (permanent) => permanent.id === targetId || permanent.cardId === targetId,
-          );
-          return (
-            target !== undefined &&
-            matchesSelector(ctx, target, spec.targetFilter as Selector, from)
-          );
-        });
-        if (!hasMatchingTarget) continue;
-      }
-      if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) continue;
-
-      const copies = 1 + additionalTypedTriggerCopies(ctx, source);
-      for (let copy = 0; copy < copies; copy++) {
-        ctx.state.pendingTriggers.push({
+        const from: SelectorSource = {
+          cardId: source.cardId,
+          objectId: source.id,
           controllerId: source.controllerId,
-          sourceCardId: source.cardId,
-          sourceObjectId: source.id,
-          sourceOracleId: source.oracleId,
-          sourceName: source.name,
-          ability: bindCastSpell(ctx, ability, spell),
-          scope: {
-            spellManaValue: manaValue,
-            spellColorCount: candidate.colors.length,
-            eventPlayerId: spell.controllerId,
-            ...(spell.triggerScope?.manaSpent !== undefined
-              ? { manaSpent: spell.triggerScope.manaSpent }
-              : {}),
-          },
-        });
-        debug(ctx, 'stack', `cast trigger queued: ${source.name} — ${spell.description}`);
+          eventPlayerId: spell.controllerId,
+          ...(spell.triggerScope?.manaSpent !== undefined
+            ? { manaSpent: spell.triggerScope.manaSpent }
+            : {}),
+          attachedToCardId:
+            source.attachedTo === null
+              ? null
+              : (ctx.state.battlefield.find((perm) => perm.id === source.attachedTo)?.cardId ??
+                null),
+        };
+        // `selectMatches`, not `matchesSelector`: the spell is not a permanent, so there are no
+        // layered characteristics to compute — the candidate above is already the whole answer.
+        if (spec.filter !== undefined && !selectMatches(candidate, spec.filter, from)) continue;
+        if (!ordinalMatches(spec, from)) continue;
+        if (spec.targetFilter !== undefined) {
+          const hasMatchingTarget = spell.targets.some((targetId) => {
+            const target = ctx.state.battlefield.find(
+              (permanent) => permanent.id === targetId || permanent.cardId === targetId,
+            );
+            return (
+              target !== undefined &&
+              matchesSelector(ctx, target, spec.targetFilter as Selector, from)
+            );
+          });
+          if (!hasMatchingTarget) continue;
+        }
+        if (spec.condition !== undefined && !evaluateCondition(ctx, spec.condition, from)) continue;
+
+        const copies = 1 + additionalTypedTriggerCopies(ctx, source);
+        for (let copy = 0; copy < copies; copy++) {
+          ctx.state.pendingTriggers.push({
+            controllerId: source.controllerId,
+            sourceCardId: source.cardId,
+            sourceObjectId: source.id,
+            sourceOracleId: source.oracleId,
+            sourceName: source.name,
+            ability: bindCastSpell(ctx, ability, spell),
+            scope: {
+              spellManaValue: manaValue,
+              spellColorCount: candidate.colors.length,
+              eventPlayerId: spell.controllerId,
+              ...(spell.triggerScope?.manaSpent !== undefined
+                ? { manaSpent: spell.triggerScope.manaSpent }
+                : {}),
+            },
+          });
+          debug(ctx, 'stack', `cast trigger queued: ${source.name} — ${spell.description}`);
+        }
       }
     }
-  }
+  });
 
   // Delayed cast triggers (Galvanic Iteration's "when you next cast an instant or sorcery spell
   // this turn"): only the controller's own matching spells, and a `once` trigger fires once.
@@ -3911,6 +3916,14 @@ export function queueAttackDeclarationTriggers(
 ): void {
   if (declared.length === 0) return;
   assertTriggerEventFamily('attackDeclared', 'attackDeclaration');
+  // Queueing changes only the pending triggers, which no layer reads (`withReadScope`).
+  withReadScope(ctx, () => queueAttackDeclarationTriggersIn(ctx, declared));
+}
+
+function queueAttackDeclarationTriggersIn(
+  ctx: GameContext,
+  declared: readonly EnginePermanent[],
+): void {
   const attackingPlayers = [...new Set(declared.map((a) => a.controllerId))];
   for (const source of ctx.state.battlefield) {
     for (const ability of triggersOf(ctx, source)) {
@@ -4048,6 +4061,15 @@ export function queueActivationTriggers(
   lifePaid: number,
 ): void {
   assertTriggerEventFamily('activatesAbility', 'player');
+  // Queueing changes only the pending triggers, which no layer reads (`withReadScope`).
+  withReadScope(ctx, () => queueActivationTriggersIn(ctx, ability, lifePaid));
+}
+
+function queueActivationTriggersIn(
+  ctx: GameContext,
+  ability: EngineStackObject,
+  lifePaid: number,
+): void {
   const playerId = ability.controllerId;
   const watchers: {
     controllerId: PlayerId;
