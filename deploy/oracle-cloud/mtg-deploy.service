@@ -1,0 +1,13 @@
+# One run of the deploy agent (deploy-agent.sh): switch to the release server-live names, if it is
+# not running already. mtg-deploy.timer starts it every three minutes; setup.sh installs both.
+[Unit]
+Description=MTG Tester deploy agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/mtg-deploy.env
+ExecStart=/usr/local/lib/mtgtester/deploy-agent.sh
+# Waiting for games may take an hour, and a cold start on the 1 GB VM a few minutes more.
+TimeoutStartSec=80min

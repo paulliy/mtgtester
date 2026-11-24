@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { PROTOCOL_VERSION } from '@mtg/shared';
 import { makeResolvedDeck } from '../test-factory';
 import type { TableConfig } from './config';
 import type { DeckChecker } from './deck-check';
@@ -94,6 +95,7 @@ function context(overrides: Partial<TableConfig> = {}, dir = webDir) {
     registry,
     files: createStaticFiles(dir),
     boundPort: () => PORT,
+    version: 'test-release',
   };
   return ctx;
 }
@@ -124,6 +126,23 @@ async function createTable(ctx: TableHttpContext, address = '10.0.0.1') {
   expect(response.status).toBe(201);
   return (await response.json()) as { tableId: string; hostToken: string; inviteUrl: string };
 }
+
+describe('the health endpoint', () => {
+  it('names the release and protocol and counts running games', async () => {
+    const ctx = context();
+    await createTable(ctx);
+    const response = asResponse(await handle(ctx, request('/health')));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    // An open table has no game yet, so a deploy need not wait for it.
+    expect(await response.json()).toEqual({
+      ok: true,
+      version: 'test-release',
+      protocol: PROTOCOL_VERSION,
+      activeGames: 0,
+    });
+  });
+});
 
 describe('creating a table', () => {
   it('needs the host secret', async () => {

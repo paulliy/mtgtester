@@ -108,6 +108,16 @@ export class TableRegistry {
     return [...this.tables.keys()];
   }
 
+  /** Tables whose game has started and not finished: a deploy waits for these to end. */
+  activeGames(): number {
+    let count = 0;
+    for (const table of this.tables.values()) {
+      const phase = table.currentPhase;
+      if (phase === 'starting' || phase === 'playing') count++;
+    }
+    return count;
+  }
+
   /**
    * Reap every table that has been `finished` long enough, and forget it. Called by the timer the
    * server owns. The effects close the sockets each table still held.

@@ -19,7 +19,7 @@
 
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
-import { parseStrictJson } from '@mtg/shared';
+import { parseStrictJson, PROTOCOL_VERSION } from '@mtg/shared';
 import { publicOriginFor, type TableConfig } from './config';
 import { checkExposure, SocketLimiter } from './exposure';
 
@@ -240,6 +240,8 @@ export interface TableHttpContext {
   files: StaticFiles;
   /** The port in use (the configured one, or the one the OS gave for port 0). */
   boundPort: () => number;
+  /** The release this server runs (a commit), or `dev` outside a release. `/health` reports it. */
+  version: string;
 }
 
 /** The request is a WebSocket upgrade for this table; the caller completes it. */
@@ -289,7 +291,15 @@ export async function handleTableRequest(
   const path = url.pathname;
   const method = request.method;
 
-  if (path === '/health') return json({ ok: true });
+  // The deploy agent reads this to wait for games to end and to confirm a new release came up;
+  // the site compares the protocol before it opens a table socket.
+  if (path === '/health')
+    return json({
+      ok: true,
+      version: ctx.version,
+      protocol: PROTOCOL_VERSION,
+      activeGames: ctx.registry.activeGames(),
+    });
 
   if (path === '/tables') {
     if (method !== 'POST') return json({ error: 'Method not allowed.' }, 405, { allow: 'POST' });
@@ -393,6 +403,8 @@ export interface TableServerDeps {
   reapIntervalMs?: number;
   /** Per-address socket caps (plan M5 task 2). */
   sockets?: SocketLimiter;
+  /** The release this server runs; `dev` when absent. */
+  version?: string;
 }
 
 /** The largest inbound socket frame, in bytes (plan M5 task 2). */
@@ -429,7 +441,13 @@ export function startTableServer(deps: TableServerDeps): RunningTableServer {
   const { config, registry, hub } = deps;
   const files = createStaticFiles(config.webDir);
   let boundPort = config.port;
-  const ctx: TableHttpContext = { config, registry, files, boundPort: () => boundPort };
+  const ctx: TableHttpContext = {
+    config,
+    registry,
+    files,
+    boundPort: () => boundPort,
+    version: deps.version ?? 'dev',
+  };
 
   const limiter = deps.sockets ?? new SocketLimiter();
   const server = Bun.serve<SocketData, never>({

@@ -1,0 +1,12 @@
+# Check for a new release every three minutes (deploy-agent.sh).
+[Unit]
+Description=MTG Tester deploy agent, every three minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=3min
+RandomizedDelaySec=20s
+Persistent=false
+
+[Install]
+WantedBy=timers.target
