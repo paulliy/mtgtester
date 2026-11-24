@@ -11,7 +11,7 @@ const chromiumExecutable = process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE'];
 
 export default defineConfig({
   testDir: './apps/web/e2e',
-  testMatch: /browser-worker\.spec\.ts$/,
+  testMatch: /browser-(worker|parity)\.spec\.ts$/,
   // Leave the lab and setup suites' traces in test-results/ alone.
   outputDir: 'test-results/browser',
   workers: 1,

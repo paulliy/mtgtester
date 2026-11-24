@@ -386,9 +386,18 @@ jobs:
       - if: env.SETUP == 'true'
         run: bun run test:e2e:setup
       # Single player in the browser (ADR 0053): the bundled game worker plays a bot game in
-      # headless Chromium from the site card files, with no game server.
+      # headless Chromium from the site card files, with no game server, and the benchmark pods
+      # give the same fingerprints there as in Bun.
       - if: env.SETUP == 'true'
         run: bun run test:e2e:browser
+      # The public site as it ships (ADR 0053): the local-games build, with no game server.
+      # Chromium plays a solo game and a watch game and follows the links to the tables; Firefox
+      # and WebKit start a game in the worker.
+      - name: Install Firefox and WebKit
+        if: env.SETUP == 'true'
+        run: bunx playwright install-deps firefox webkit && bunx playwright install firefox webkit
+      - if: env.SETUP == 'true'
+        run: bun run test:e2e:site
       # The specs record a trace for every test (trace: 'on', preserveOutput: 'always'); this checks
       # tracing is still on. It runs before the table suite writes test-results/table. Actions
       # storage is limited, so CI uploads the traces only when a step fails; a passing run's viewer

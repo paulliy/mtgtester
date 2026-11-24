@@ -40,12 +40,13 @@ async function cast(page: Page, name: string, targetSeat?: string): Promise<void
   await spell.click();
   const autoPay = page.getByText(/Auto-pay/);
   const confirmAction = page.getByRole('button', { name: 'Confirm', exact: true });
+  // Cards with several actions (for example, cycling) first show an action picker, whose cast
+  // button names the cost. The playable list also has "Cast <card>" buttons for the rest of the
+  // hand, so the picker's is the one to press; wait for whichever of the two screens comes up.
+  const castFromPicker = page.getByRole('button', { name: /^Cast \{/ }).first();
+  await expect(autoPay.or(confirmAction).or(castFromPicker).first()).toBeVisible();
   if (!(await autoPay.isVisible()) && !(await confirmAction.isVisible())) {
-    // Cards with multiple actions (for example, cycling) first show an action picker.
-    await page
-      .getByRole('button', { name: /^Cast / })
-      .first()
-      .click();
+    await castFromPicker.click();
   }
   await expect(confirmAction).toBeVisible();
   if (targetSeat !== undefined) {

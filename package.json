@@ -70,6 +70,7 @@
     "test:e2e:setup": "playwright test --config playwright.setup.config.ts",
     "test:e2e:table": "playwright test --config playwright.table.config.ts",
     "test:e2e:browser": "playwright test --config playwright.browser.config.ts",
+    "test:e2e:site": "playwright test --config playwright.site.config.ts",
     "coverage:complete": "bun run coverage --complete && bun run staples",
     "audit:card-ir": "bun run scripts/audit-card-ir.ts",
     "check:suite-integrity": "bun run scripts/check-suite-integrity.ts",
