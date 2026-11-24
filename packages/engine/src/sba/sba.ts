@@ -309,36 +309,36 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   // the first creature early loses dying watchers and can remove an anthem before
   // deciding whether another creature belongs to this event (CR 704.3/603.10).
   const dying: EnginePermanent[] = [];
-  // One layer pass for the whole board, retaken after a regeneration changes it.
-  let charsOf = battlefieldCharacteristics(ctx);
-  for (const perm of s.battlefield) {
-    const chars = charsOf(perm);
-    let reason: string | undefined;
-    if (chars.types.includes('Creature')) {
-      if (chars.toughness <= 0) reason = 'zeroToughness';
-      else if (
-        perm.damageMarked > 0 &&
-        (perm.damageMarked >= chars.toughness || perm.damagedByDeathtouch) &&
-        !chars.keywords.includes('indestructible')
-      ) {
-        if (consumeRegenerationShield(ctx, perm)) {
-          acted = true;
-          charsOf = battlefieldCharacteristics(ctx);
-          continue;
-        }
-        reason = 'lethalDamage';
-      }
+  // The scan reads the board in a read scope and stops at a regeneration, which changes the
+  // board; the scan then resumes after that permanent on the changed board. When nothing dies
+  // and nothing regenerates, the other battlefield checks and the legend rule below read the
+  // same board, so they are judged in the same scope: every check there reads and changes
+  // nothing until one fires, and the first that fires ends the pass. The change is made after
+  // the scope closes.
+  let found: BattlefieldSba | undefined;
+  for (let start = 0; ;) {
+    const first = start === 0;
+    const pass = withReadScope(ctx, () => {
+      const lethal = scanLethal(ctx, start);
+      const quiet = first && lethal.regenerate === undefined && lethal.dying.length === 0;
+      return { lethal, found: quiet ? findBattlefieldSba(ctx) : undefined };
+    });
+    for (const death of pass.lethal.dying) {
+      if (death.kind === 'creature')
+        emit(ctx, 'sbaCreatureDies', { name: death.perm.name, reason: death.reason });
+      else if (death.kind === 'planeswalker')
+        emit(ctx, 'sbaPlaneswalkerDies', { name: death.perm.name });
+      else emit(ctx, 'sbaBattleDies', { name: death.perm.name });
+      dying.push(death.perm);
     }
-    if (reason !== undefined) {
-      emit(ctx, 'sbaCreatureDies', { name: perm.name, reason });
-      dying.push(perm);
-    } else if (chars.types.includes('Planeswalker') && (perm.counters['loyalty'] ?? 0) <= 0) {
-      emit(ctx, 'sbaPlaneswalkerDies', { name: perm.name });
-      dying.push(perm);
-    } else if (chars.types.includes('Battle') && (perm.counters['defense'] ?? 0) <= 0) {
-      emit(ctx, 'sbaBattleDies', { name: perm.name });
-      dying.push(perm);
+    const regenerate = pass.lethal.regenerate;
+    if (regenerate === undefined) {
+      found = pass.found;
+      break;
     }
+    consumeRegenerationShield(ctx, s.battlefield[regenerate]!);
+    acted = true;
+    start = regenerate + 1;
   }
   if (dying.length > 0) {
     yield* movePermanentsToGraveyard(ctx, dying);
@@ -346,11 +346,7 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   }
   if (acted) return true;
 
-  // --- Other battlefield checks, then the legend rule ---
-  // Every check reads the board and changes nothing until one fires, and the first that fires
-  // ends the pass, so they are judged in one read scope: the board is digested once instead of
-  // once per characteristics query, and the change is made after the scope closes.
-  const found = withReadScope(ctx, () => findBattlefieldSba(ctx));
+  // --- Other battlefield checks, then the legend rule (judged with the scan above) ---
   if (found !== undefined) {
     const perm = found.kind === 'legendRule' ? undefined : found.perm;
     switch (found.kind) {
@@ -447,6 +443,51 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   }
 
   return false;
+}
+
+interface LethalScan {
+  dying: Array<
+    | { kind: 'creature'; perm: EnginePermanent; reason: string }
+    | { kind: 'planeswalker' | 'battle'; perm: EnginePermanent }
+  >;
+  /** Index on the battlefield of a creature with lethal damage and a regeneration shield. */
+  regenerate?: number;
+}
+
+/**
+ * Lethal and zero-characteristic deaths (CR 704.5f-g, 704.5i, 704.5v) from the battlefield index
+ * `start` on, all from one board state. Stops at a creature a regeneration shield would save,
+ * since using the shield changes the board. Reads only, so it can run in a read scope.
+ */
+function scanLethal(ctx: GameContext, start: number): LethalScan {
+  const s = ctx.state;
+  const dying: LethalScan['dying'] = [];
+  const charsOf = battlefieldCharacteristics(ctx);
+  for (let index = start; index < s.battlefield.length; index++) {
+    const perm = s.battlefield[index]!;
+    const chars = charsOf(perm);
+    if (chars.types.includes('Creature')) {
+      if (chars.toughness <= 0) {
+        dying.push({ kind: 'creature', perm, reason: 'zeroToughness' });
+        continue;
+      }
+      if (
+        perm.damageMarked > 0 &&
+        (perm.damageMarked >= chars.toughness || perm.damagedByDeathtouch) &&
+        !chars.keywords.includes('indestructible')
+      ) {
+        // `consumeRegenerationShield` replaces the destruction exactly when a shield is left.
+        if (perm.regenerationShields > 0) return { dying, regenerate: index };
+        dying.push({ kind: 'creature', perm, reason: 'lethalDamage' });
+        continue;
+      }
+    }
+    if (chars.types.includes('Planeswalker') && (perm.counters['loyalty'] ?? 0) <= 0)
+      dying.push({ kind: 'planeswalker', perm });
+    else if (chars.types.includes('Battle') && (perm.counters['defense'] ?? 0) <= 0)
+      dying.push({ kind: 'battle', perm });
+  }
+  return { dying };
 }
 
 /** A battlefield state-based action `sbaPass` found, judged before anything changes. */
