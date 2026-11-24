@@ -91,7 +91,7 @@ export interface LocalEntry {
 
 /** Fields that name a model and how to reach it, shared by `llm` and `bot-led` entries. */
 interface ModelFields {
-  /** A provider preset from `ai/config.ts` (openrouter, groq, gemini, deepseek, openai). */
+  /** A provider preset from `ai/config.ts` (openrouter, groq, gemini, deepseek, openai, anthropic). */
   provider?: string;
   /** Any OpenAI-compatible endpoint; overrides the preset's. */
   baseUrl?: string;
@@ -128,7 +128,7 @@ export interface LlmEntry {
   id: string;
   label?: string;
   kind: 'llm';
-  /** A provider preset from `ai/config.ts` (openrouter, groq, gemini, deepseek, openai). */
+  /** A provider preset from `ai/config.ts` (openrouter, groq, gemini, deepseek, openai, anthropic). */
   provider?: string;
   /** Any OpenAI-compatible endpoint; overrides the preset's. */
   baseUrl?: string;
@@ -575,6 +575,14 @@ function modelConfig(entry: LlmEntry | BotLedEntry, model: string, runtime: LlmR
   const keyEnv = entry.apiKeyEnv ?? preset?.keyEnv;
   const apiKey = keyEnv === undefined ? base.apiKey : (runtime.env[keyEnv] ?? '');
   const baseUrl = entry.baseUrl ?? preset?.baseUrl ?? base.baseUrl;
+  // The protocol follows the endpoint: an entry's preset speaks its own, a bare base URL is
+  // OpenAI-compatible, and only an entry with neither inherits the environment's.
+  const apiFormat =
+    preset !== undefined
+      ? (preset.apiFormat ?? 'openai')
+      : entry.baseUrl !== undefined
+        ? 'openai'
+        : base.apiFormat;
   const local = /\/\/(localhost|127\.0\.0\.1|\[::1\])[:/]/.test(baseUrl);
   if (apiKey === '' && !local && runtime.fetchImpl === undefined)
     throw new Error(
@@ -583,6 +591,7 @@ function modelConfig(entry: LlmEntry | BotLedEntry, model: string, runtime: LlmR
   const reasoning = entry.reasoning ?? (role.reasoningEnabled ? role.reasoningEffort : 'none');
   return {
     ...role,
+    apiFormat,
     baseUrl,
     apiKey,
     models: [model],
