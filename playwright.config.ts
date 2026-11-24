@@ -18,9 +18,13 @@ const chromiumExecutable = process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE'];
 
 export default defineConfig({
   testDir: './apps/web/e2e',
-  // These run against their own backends: playwright.setup.config.ts and
-  // playwright.table.config.ts.
-  testIgnore: [/player-(setup|game)\.spec\.ts$/, /table-.*\.spec\.ts$/],
+  // These run against their own backends: playwright.setup.config.ts,
+  // playwright.table.config.ts and playwright.browser.config.ts.
+  testIgnore: [
+    /player-(setup|game)\.spec\.ts$/,
+    /table-.*\.spec\.ts$/,
+    /browser-worker\.spec\.ts$/,
+  ],
   ...(sampleExclusions === undefined ? {} : { grepInvert: sampleExclusions }),
   fullyParallel: true,
   retries: 0,

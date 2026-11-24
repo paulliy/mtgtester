@@ -31,6 +31,7 @@ import type { OracleIndex } from '../cards/oracle-index';
 import type { SupportedPool } from '../cards/pool';
 import type { CardTestScenario } from '../cards/card-test-scenarios';
 import type { GameStore } from '../db';
+import type { DeckStore } from '../db/deck-store';
 import type { BannedList } from '../decks/banned';
 import type { ReportSeatSource } from '../match/report';
 import type { ReplayIdentity } from '../match/replay-config';
@@ -38,7 +39,7 @@ import { MatchSession } from '../match/session';
 import type { SessionAi } from '../match/session-ai';
 import { withoutActionData } from '../match/presentation';
 import { disclosedSeatSummaries, seedLabel, testerPolicy } from '../match/disclosure';
-import { setupSeats } from '../match/setup';
+import { setupSeats, type SeatSetupDeps } from '../match/setup';
 import { previewMatchup, type PreviewRequest } from '../match/preview';
 import { projectSetupProblems, SETUP_REFUSED_MESSAGE } from '../ws/setup-privacy';
 
@@ -150,6 +151,11 @@ export interface GameHostDeps {
   index: OracleIndex;
   banned: BannedList;
   store?: GameStore | undefined;
+  /**
+   * Where deck setup keeps imported decks when there is no `store`: memory, in the browser.
+   * Ignored when a `store` is given. Games are recorded only in a `store`.
+   */
+  decks?: DeckStore | undefined;
   /** The model-backed seat services. Without them a game with model seats is refused. */
   ai?: SessionAi | undefined;
   /** Explicit opt-in for closed, unpersisted deterministic viewer scenarios. */
@@ -255,6 +261,14 @@ export class GameHost<C extends HostConnection = HostConnection> {
   /** The "Copy game report" payload for a request body (`POST /api/game-report`). */
   gameReport(body: string): HostReply {
     return this.gameReportFor(body);
+  }
+
+  /** What deck setup reads: the database when there is one, else the memory deck store. */
+  private setupDeps(): SeatSetupDeps {
+    const decks = this.deps.decks;
+    return this.deps.store !== undefined || decks === undefined
+      ? this.deps
+      : { ...this.deps, store: decks };
   }
 
   /** Whether a batch is running, which blocks starting a game. Only the Bun server runs them. */
@@ -367,7 +381,7 @@ export class GameHost<C extends HostConnection = HostConnection> {
       selected.seats,
       selected.seed?.trim() || crypto.randomUUID().slice(0, 8),
     );
-    const preview = await previewMatchup(previewRequest, this.deps);
+    const preview = await previewMatchup(previewRequest, this.setupDeps());
     const previewId = crypto.randomUUID();
     for (const [id, entry] of this.setupPreviews)
       if (Date.now() - entry.createdAt > 600_000) this.setupPreviews.delete(id);
@@ -901,7 +915,7 @@ export class GameHost<C extends HostConnection = HostConnection> {
         });
         return;
       }
-      const fresh = await previewMatchup(entry.request, this.deps);
+      const fresh = await previewMatchup(entry.request, this.setupDeps());
       if (generation !== this.startGeneration) return;
       if (fresh.blockers.length > 0) {
         // A blocker is per-seat free text and names unmodeled cards, so it leaves setup by
@@ -927,7 +941,7 @@ export class GameHost<C extends HostConnection = HostConnection> {
       return;
     }
     // Prepare the replacement before abandoning the current game.
-    const setup = await setupSeats(seats, this.deps, seed);
+    const setup = await setupSeats(seats, this.setupDeps(), seed);
     if (generation !== this.startGeneration) return;
     if (!setup.ok) {
       // A spectator watches every seat, so a spectator refusal may name every failing deck.

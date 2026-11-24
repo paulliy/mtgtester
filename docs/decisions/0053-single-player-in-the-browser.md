@@ -50,6 +50,14 @@ model code (the OpenRouter SDK, zod and `server/src/ai`), `node:crypto` and `nod
    connection's `send`. The Bun server extends it with sockets, HTTP routes, batches and the Card
    Test Lab; a browser worker runs it as it is. The host has no model services unless given
    `deps.ai`, so in the browser a game with model seats is refused.
+9. **The browser worker.** `host/browser-worker.ts` is the Web Worker entry and `host/worker-core.ts`
+   its message loop: `init` reads the card files, `frame` carries protocol frames both ways,
+   `request` answers what the server serves over HTTP (setup preview, game report, bot decks),
+   and `ping` is answered at once. Before a start or preview reaches the host, the worker fetches
+   the card shards a pasted decklist names. Imported decks are kept in a `MemoryDeckStore`
+   (`db/deck-store.ts`), the part of `GameStore` deck setup uses, so setup needs no database;
+   games are not recorded. Tester games use the legacy seeded RNG, so the worker needs no
+   `crypto.getRandomValues` key.
 
 ## Consequences
 
