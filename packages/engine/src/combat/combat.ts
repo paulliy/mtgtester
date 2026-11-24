@@ -37,6 +37,7 @@ import {
   permanentSource,
 } from '../effects/resolve';
 import { computeCharacteristics, matchesSelector } from '../effects/continuous';
+import { withReadScope } from '../effects/layer-cache';
 import { payLife, payManaCost } from '../effects/resolve';
 import { canPay, emptyCost, totalPips } from '../mana/cost';
 import type { ManaSource, ParsedManaCost } from '../mana/cost';
@@ -856,6 +857,15 @@ function buildAttackSubjects(
   eligible: readonly EnginePermanent[],
   opponents: readonly EnginePlayerState[],
 ): AttackDeclarationSubject[] {
+  // Building the menu only reads the board: one digest for every legality query in it.
+  return withReadScope(ctx, () => buildAttackSubjectsIn(ctx, eligible, opponents));
+}
+
+function buildAttackSubjectsIn(
+  ctx: GameContext,
+  eligible: readonly EnginePermanent[],
+  opponents: readonly EnginePlayerState[],
+): AttackDeclarationSubject[] {
   return eligible.map((creature) => {
     const pt = effectivePT(ctx, creature);
     const legal = attackTargetsFor(ctx, creature, opponents);
@@ -1000,6 +1010,20 @@ function validateAttackDeclaration(
   /** False while only WHICH creatures attack is known (Master Warcraft): no defender, so no cost yet. */
   costs = true,
 ): CombatViolation[] {
+  // Validation only reads the board: one digest for every legality query in it.
+  return withReadScope(ctx, () =>
+    validateAttackDeclarationIn(ctx, attackingPlayerId, eligible, assignment, costs),
+  );
+}
+
+function validateAttackDeclarationIn(
+  ctx: GameContext,
+  attackingPlayerId: PlayerId,
+  eligible: readonly EnginePermanent[],
+  assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
+  /** False while only WHICH creatures attack is known (Master Warcraft): no defender, so no cost yet. */
+  costs = true,
+): CombatViolation[] {
   // CR 506.5: a creature that can't attack alone is declared only with another attacker.
   const declared = eligible.filter((creature) => (assignment.get(creature.id) ?? null) !== null);
   const lone = declared.length === 1 ? declared[0] : undefined;
@@ -1100,6 +1124,20 @@ function* applyAttackDeclaration(
  * Bounded by `eligible.length` retries, so a validator that can never be satisfied can't loop.
  */
 function repairAttackDeclaration(
+  ctx: GameContext,
+  attackingPlayerId: PlayerId,
+  eligible: readonly EnginePermanent[],
+  opponents: readonly EnginePlayerState[],
+  assignment: ReadonlyMap<ObjectId, AttackChoice | null>,
+  costs = true,
+): Map<ObjectId, AttackChoice | null> {
+  // The repair edits only its own copy of the assignment and reads the board (`withReadScope`).
+  return withReadScope(ctx, () =>
+    repairAttackDeclarationIn(ctx, attackingPlayerId, eligible, opponents, assignment, costs),
+  );
+}
+
+function repairAttackDeclarationIn(
   ctx: GameContext,
   attackingPlayerId: PlayerId,
   eligible: readonly EnginePermanent[],
@@ -1340,6 +1378,28 @@ function* declareChosenAttackers(
 }
 
 /**
+ * Each creature's "had to attack this combat" flag starts the declaration cleared. The flag is a
+ * layer input only when set (the layer digest folds `=== true`), so the scan runs in a read scope
+ * and leaves it to set a flag that is already off; a flag that is on is cleared outside the scope,
+ * and the scan resumes after it on the changed board, as the one-by-one loop did.
+ */
+function clearHadToAttack(ctx: GameContext): void {
+  const battlefield = ctx.state.battlefield;
+  for (let start = 0; start < battlefield.length;) {
+    start = withReadScope(ctx, () => {
+      for (let index = start; index < battlefield.length; index++) {
+        const perm = battlefield[index]!;
+        if (!isCreaturePermanent(ctx, perm)) continue;
+        if (perm.hadToAttackThisCombat === true) return index;
+        perm.hadToAttackThisCombat = false;
+      }
+      return battlefield.length;
+    });
+    if (start < battlefield.length) battlefield[start++]!.hadToAttackThisCombat = false;
+  }
+}
+
+/**
  * Declare attackers (CR 508.1): one batched propose-and-validate decision for the whole set
  * (ADR 0023 items 13/14), replacing the old per-creature loop. Attacking as a joint decision
  * can't be expressed as a flat "pick one option" menu — n creatures against k opponents is
@@ -1356,12 +1416,12 @@ function* declareChosenAttackers(
 function* declareAttackers(ctx: GameContext): GameGen<void> {
   const ap = playerById(ctx, ctx.state.currentTurnPlayer);
   const opponents = playersInApnapOrder(ctx).filter((p) => p.id !== ap.id);
-  for (const perm of ctx.state.battlefield) {
-    if (isCreaturePermanent(ctx, perm)) perm.hadToAttackThisCombat = false;
-  }
+  clearHadToAttack(ctx);
   // Snapshot up front: declaring the set taps attackers but cannot change whether any *other*
   // creature was eligible to be in it.
-  const eligible = creaturesOf(ctx, ap.id).filter((c) => canAttack(ctx, c));
+  const eligible = withReadScope(ctx, () =>
+    creaturesOf(ctx, ap.id).filter((c) => canAttack(ctx, c)),
+  );
 
   const chooserId = combatChooserId(ctx);
   if (chooserId !== null && chooserId !== ap.id)
