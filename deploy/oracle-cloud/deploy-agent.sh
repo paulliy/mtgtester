@@ -31,6 +31,8 @@ DOWNLOAD_BASE="${DOWNLOAD_BASE:-https://github.com/$REPO/releases/download}"
 LOCK_FILE="${LOCK_FILE:-/run/mtg-deploy.lock}"
 
 log() { echo "deploy-agent: $*"; }
+# The lock's descriptor stays out of anything the service starts.
+unit() { systemctl "$1" "$SERVICE" 9>&-; }
 ping_heartbeat() {
   [[ -n "$HEARTBEAT_URL" ]] || return 0
   curl -fsS -m 10 --retry 3 -o /dev/null "$HEARTBEAT_URL${1:-}" || log "heartbeat ping failed"
@@ -48,7 +50,7 @@ PORT="${PORT:-3002}"
 HOST="$(env_value TABLE_ALLOWED_HOSTS | cut -d, -f1)"
 HOST="${HOST:-127.0.0.1:$PORT}"
 health() {
-  curl -fsS -m 5 -H "Host: $HOST" -H 'X-Forwarded-For: 127.0.0.1' "http://127.0.0.1:$PORT/health"
+  curl -fs -m 5 -H "Host: $HOST" -H 'X-Forwarded-For: 127.0.0.1' "http://127.0.0.1:$PORT/health"
 }
 health_field() { sed -n "s/.*\"$1\":\"\{0,1\}\([^\",}]*\).*/\1/p"; }
 
@@ -127,7 +129,7 @@ done
 db="$(env_value TABLE_DB_PATH)"
 db="${db:-$STATE_DIR/tables.sqlite}"
 previous="$(readlink "$APP_ROOT/current" 2>/dev/null || true)"
-systemctl stop "$SERVICE"
+unit stop
 backup=""
 if [[ -f "$db" ]]; then
   backup="$STATE_DIR/backups/tables-$(date -u +%Y%m%dT%H%M%SZ)-${have:0:12}.sqlite"
@@ -142,7 +144,7 @@ switch_to() {
   mv -T "$APP_ROOT/current.next" "$APP_ROOT/current"
 }
 switch_to "$release_dir"
-systemctl start "$SERVICE"
+unit start
 
 # 5. Confirm, or roll back.
 came_up() {
@@ -160,14 +162,14 @@ if came_up "$want"; then
   ls -1t "$APP_ROOT/releases" | tail -n +$((KEEP_RELEASES + 1)) | while read -r old; do
     [[ "$APP_ROOT/releases/$old" == "$release_dir" ]] || rm -rf "${APP_ROOT:?}/releases/$old"
   done
-  ls -1t "$STATE_DIR/backups" | grep -E '\.sqlite$' | tail -n +$((KEEP_BACKUPS + 1)) |
+  { ls -1t "$STATE_DIR/backups" | grep -E '\.sqlite$' || true; } | tail -n +$((KEEP_BACKUPS + 1)) |
     while read -r old; do rm -f "$STATE_DIR/backups/$old" "$STATE_DIR/backups/$old"-wal "$STATE_DIR/backups/$old"-shm; done
   exit 0
 fi
 
 log "release $want did not answer /health in ${START_SECONDS}s; rolling back"
 journalctl -u "$SERVICE" -n 40 --no-pager || true
-systemctl stop "$SERVICE"
+unit stop
 if [[ -n "$backup" ]]; then
   for suffix in "" -wal -shm; do
     rm -f "$db$suffix"
@@ -176,7 +178,7 @@ if [[ -n "$backup" ]]; then
 fi
 if [[ -n "$previous" ]]; then
   switch_to "$previous"
-  systemctl start "$SERVICE"
+  unit start
   came_up "$have" && log "rolled back to $have" || log "the old release $have did not come back either"
 fi
 # Remember the failure so the next tick does not retry the same broken release every 3 minutes.
