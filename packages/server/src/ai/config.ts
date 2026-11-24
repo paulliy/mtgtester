@@ -31,8 +31,21 @@ export interface AiModelProfile {
   ignoreProviders: string[];
 }
 
+/**
+ * The wire protocol a provider speaks. `openai`: OpenAI-style `chat/completions` (every preset
+ * but Anthropic, and any endpoint set through `AI_BASE_URL`). `anthropic`: the Claude Messages
+ * API, called through the official SDK.
+ */
+export type AiApiFormat = 'openai' | 'anthropic';
+export const AI_API_FORMATS: readonly AiApiFormat[] = ['openai', 'anthropic'];
+
+/** The four call roles that have their own model profile. */
+export type AiRole = 'strategist' | 'tactician' | 'archetype' | 'reflection';
+
 export interface AiConfig {
-  /** API Base URL (OpenAI-compatible). */
+  /** Which wire protocol `baseUrl` speaks. Default: `openai`. */
+  apiFormat: AiApiFormat;
+  /** API Base URL (OpenAI-compatible, or the Anthropic API root for `apiFormat: anthropic`). */
   baseUrl: string;
   /** API Key for authentication. */
   apiKey: string;
@@ -261,6 +274,10 @@ export interface ProviderPreset {
   keyEnv: string;
   /** Env var prefix for per-provider overrides, e.g. `GROQ_MODELS`. */
   envPrefix: string;
+  /** Wire protocol; omitted means `openai`. */
+  apiFormat?: AiApiFormat;
+  /** Per-role default chains for this vendor; a role with no entry uses `models`. */
+  roleModels?: Partial<Record<AiRole, string[]>>;
 }
 
 /**
@@ -326,19 +343,44 @@ const OPENAI: ProviderPreset = {
   envPrefix: 'OPENAI',
 };
 
-/** Auto-detection order when `AI_PROVIDER` is unset: first one with a key present wins. */
+/**
+ * Claude, through the Messages API (not an OpenAI shim). Thinking cannot be switched off on the
+ * current models, so effort is the cost control: see `anthropicRequest` in `anthropic.ts`.
+ * The strategist gets Opus for the once-per-turn plan; every other role gets Sonnet.
+ */
+const ANTHROPIC: ProviderPreset = {
+  baseUrl: 'https://api.anthropic.com',
+  models: ['claude-sonnet-5-5', 'claude-opus-5-5'],
+  keyEnv: 'ANTHROPIC_API_KEY',
+  envPrefix: 'ANTHROPIC',
+  apiFormat: 'anthropic',
+  roleModels: {
+    strategist: ['claude-opus-5-5', 'claude-sonnet-5-5'],
+    tactician: ['claude-sonnet-5-5'],
+    archetype: ['claude-sonnet-5-5'],
+    reflection: ['claude-sonnet-5-5'],
+  },
+};
+
+/**
+ * Auto-detection order when `AI_PROVIDER` is unset: first one with a key present wins. Anthropic
+ * is last so that adding an Anthropic key to a host that already has another key changes nothing
+ * until `AI_PROVIDER=anthropic` says so.
+ */
 export const PROVIDERS: Record<string, ProviderPreset> = {
   openrouter: OPENROUTER,
   groq: GROQ,
   gemini: GEMINI,
   deepseek: DEEPSEEK,
   openai: OPENAI,
+  anthropic: ANTHROPIC,
 };
 
 export const DEFAULT_PROVIDER = 'openrouter';
 export const DEFAULT_MODEL_CHAIN = OPENROUTER.models;
 
 export const DEFAULT_AI_CONFIG: AiConfig = {
+  apiFormat: 'openai',
   baseUrl: OPENROUTER.baseUrl,
   apiKey: '',
   models: OPENROUTER.models,
@@ -599,6 +641,14 @@ function parseEffort(
     : fallback;
 }
 
+/** `AI_API_FORMAT`: unset keeps the provider's own format; an unknown value stops start-up. */
+export function parseApiFormat(raw: string | undefined, fallback: AiApiFormat): AiApiFormat {
+  const value = raw?.trim().toLowerCase() ?? '';
+  if (value === '') return fallback;
+  if ((AI_API_FORMATS as readonly string[]).includes(value)) return value as AiApiFormat;
+  throw new Error(`Unknown AI_API_FORMAT "${raw}". Supported: ${AI_API_FORMATS.join(', ')}.`);
+}
+
 /**
  * Which vendor to talk to: an explicit `AI_PROVIDER`, else the first provider whose key is
  * present, else the default. Returns the preset plus the resolved name (for logging).
@@ -635,6 +685,7 @@ export function resolveProvider(env: Record<string, string | undefined>): {
  */
 export function loadAiConfig(env: Record<string, string | undefined> = process.env): AiConfig {
   const { name: providerName, preset } = resolveProvider(env);
+  const apiFormat = parseApiFormat(env['AI_API_FORMAT'], preset.apiFormat ?? 'openai');
 
   const baseUrl = env['AI_BASE_URL'] || env[`${preset.envPrefix}_BASE_URL`] || preset.baseUrl;
   const apiKey = env['AI_API_KEY'] || env[preset.keyEnv] || '';
@@ -663,10 +714,12 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
 
   const globalModelsExplicit =
     parseModels(env['AI_MODELS']) ?? parseModels(env[`${preset.envPrefix}_MODELS`]);
-  const defaultStrategistModels =
-    providerName === 'openrouter' ? DEFAULT_AI_CONFIG.strategist.models : models;
-  const defaultTacticianModels =
-    providerName === 'openrouter' ? DEFAULT_AI_CONFIG.tactician.models : models;
+  const roleDefault = (role: AiRole): string[] =>
+    providerName === 'openrouter'
+      ? DEFAULT_AI_CONFIG[role].models
+      : (preset.roleModels?.[role] ?? models);
+  const defaultStrategistModels = roleDefault('strategist');
+  const defaultTacticianModels = roleDefault('tactician');
   const strategist: AiModelProfile = {
     models:
       parseModels(env['AI_STRATEGIST_MODELS']) ?? globalModelsExplicit ?? defaultStrategistModels,
@@ -748,9 +801,7 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
   const archetype: AiModelProfile = {
     ...DEFAULT_AI_CONFIG.archetype,
     models:
-      parseModels(env['AI_ARCHETYPE_MODELS']) ??
-      globalModelsExplicit ??
-      (providerName === 'openrouter' ? DEFAULT_AI_CONFIG.archetype.models : models),
+      parseModels(env['AI_ARCHETYPE_MODELS']) ?? globalModelsExplicit ?? roleDefault('archetype'),
     requestTimeoutMs: parseNumber(
       env['AI_ARCHETYPE_REQUEST_TIMEOUT_MS'],
       DEFAULT_AI_CONFIG.archetype.requestTimeoutMs,
@@ -759,9 +810,7 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
   const reflection: AiModelProfile = {
     ...DEFAULT_AI_CONFIG.reflection,
     models:
-      parseModels(env['AI_REFLECTION_MODELS']) ??
-      globalModelsExplicit ??
-      (providerName === 'openrouter' ? DEFAULT_AI_CONFIG.reflection.models : models),
+      parseModels(env['AI_REFLECTION_MODELS']) ?? globalModelsExplicit ?? roleDefault('reflection'),
     maxOutputTokens: parseNumber(
       env['AI_REFLECTION_MAX_OUTPUT_TOKENS'],
       DEFAULT_AI_CONFIG.reflection.maxOutputTokens,
@@ -774,6 +823,7 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
 
   return {
     ...DEFAULT_AI_CONFIG,
+    apiFormat,
     baseUrl,
     apiKey,
     models,
@@ -968,10 +1018,7 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
 }
 
 /** Flatten one role's profile for the existing OpenAI-compatible client. */
-export function configForRole(
-  config: AiConfig,
-  role: 'strategist' | 'tactician' | 'archetype' | 'reflection',
-): AiConfig {
+export function configForRole(config: AiConfig, role: AiRole): AiConfig {
   const profile = config[role];
   return {
     ...config,
