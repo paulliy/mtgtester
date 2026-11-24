@@ -313,10 +313,18 @@ export async function handleTableRequest(
     if (method !== 'GET' && method !== 'HEAD') {
       return json({ error: 'Method not allowed.' }, 405, { allow: 'GET, HEAD' });
     }
-    // The list changes only with a release, so a browser may keep it for a few minutes.
+    // The list changes only with a release, so a browser may keep it for a few minutes. A site
+    // on another origin may read it: `checkExposure` has already refused any origin not allowed.
+    const origin = request.headers.get('origin');
     return Response.json(
       { decks: ctx.premadeDecks ?? [] },
-      { headers: { 'cache-control': 'public, max-age=300' } },
+      {
+        headers: {
+          'cache-control': 'public, max-age=300',
+          vary: 'origin',
+          ...(origin !== null && { 'access-control-allow-origin': origin }),
+        },
+      },
     );
   }
 

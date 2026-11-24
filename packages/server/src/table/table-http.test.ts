@@ -160,6 +160,34 @@ describe('the premade deck list', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toBe('public, max-age=300');
     expect(await response.json()).toEqual({ decks: [deck] });
+    expect(response.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
+  it('lets an allowed site on another origin read it, and refuses any other origin', async () => {
+    const site = 'https://site.example';
+    const production = context({
+      dev: false,
+      allowedHosts: [`127.0.0.1:${PORT}`],
+      allowedOrigins: [ORIGIN, site],
+    });
+    const ctx = { ...production, premadeDecks: [deck] };
+    const allowed = asResponse(
+      await handle(
+        ctx,
+        request('/tables/decks', { headers: { origin: site, host: `127.0.0.1:${PORT}` } }),
+      ),
+    );
+    expect(allowed.status).toBe(200);
+    expect(allowed.headers.get('access-control-allow-origin')).toBe(site);
+    const other = asResponse(
+      await handle(
+        ctx,
+        request('/tables/decks', {
+          headers: { origin: 'https://evil.example', host: `127.0.0.1:${PORT}` },
+        }),
+      ),
+    );
+    expect(other.status).toBe(403);
   });
 
   it('is an empty list when the server has none, and refuses other methods', async () => {
