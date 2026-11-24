@@ -70,6 +70,64 @@ export function setCached(ctx: GameContext, entry: LayerCacheEntry): void {
 }
 
 /**
+ * Recent layer passes shared by the casting previews of one game. Previews of one state differ
+ * only in which card left which zone, which the digest sees as zone sizes, so a priority round
+ * that previews each player's cards in turn moved one preview's results back and forth between
+ * a few digests and recomputed a full pass at each switch. A preview that misses its own entry
+ * checks these first. Each is matched on the digest of the preview's own state, computed with
+ * that pass's flags, so a match is exactly as sound as a hit on the preview's own entry.
+ */
+interface SharedPasses {
+  entries: LayerCacheEntry[];
+}
+const SHARED_PASSES = new WeakMap<GameContext, SharedPasses>();
+/** Enough for one preview per seat of a four-player game, and its command-zone variants. */
+const SHARED_PASS_LIMIT = 8;
+
+/** Let `preview` share recent passes with the other previews made from `base`. */
+export function sharePassesWith(base: GameContext, preview: GameContext): void {
+  let shared = SHARED_PASSES.get(base);
+  if (shared === undefined) {
+    shared = { entries: [] };
+    SHARED_PASSES.set(base, shared);
+  }
+  SHARED_PASSES.set(preview, shared);
+}
+
+/**
+ * A recent pass another preview computed for this state, if any: one read with the same flags
+ * as the preview's own entry and recorded under the digest the preview just computed with them.
+ * Only those are checked, so a lookup computes no digest of its own.
+ */
+export function sharedPassFor(
+  ctx: GameContext,
+  digest: number,
+  includeGraveyards: boolean,
+  includeTapped: boolean,
+  extraCardId: string | null,
+): LayerCacheEntry | undefined {
+  const shared = SHARED_PASSES.get(ctx);
+  if (shared === undefined) return undefined;
+  for (const entry of shared.entries)
+    if (
+      entry.digest === digest &&
+      entry.extraCardId === extraCardId &&
+      entry.usedGraveyards === includeGraveyards &&
+      entry.usedTapped === includeTapped
+    )
+      return entry;
+  return undefined;
+}
+
+/** Offer a pass a preview computed to the other previews of its game, newest first. */
+export function sharePass(ctx: GameContext, entry: LayerCacheEntry): void {
+  const shared = SHARED_PASSES.get(ctx);
+  if (shared === undefined) return;
+  shared.entries.unshift(entry);
+  if (shared.entries.length > SHARED_PASS_LIMIT) shared.entries.length = SHARED_PASS_LIMIT;
+}
+
+/**
  * Under `strictInvariants` (ADR 0034 decision 8) one cache hit in `SAMPLE_EVERY` is recomputed
  * and compared, as `MTG_VERIFY_LAYER_CACHE=1` does for every hit. A per-game count picks the
  * sample, so it draws no randomness and a game plays the same with it on or off.

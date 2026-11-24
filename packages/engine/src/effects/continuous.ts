@@ -51,9 +51,12 @@ import { cardZoneCandidate } from '../state/queries';
 import {
   battlefieldHasCard,
   getCached,
+  type LayerCacheEntry,
   sampleCacheHit,
   scopedDigestOf,
   setCached,
+  sharePass,
+  sharedPassFor,
   tappedDigestForChecks,
 } from './layer-cache';
 import { countWork } from '../work-counters';
@@ -1335,7 +1338,7 @@ export function computeAllCharacteristics(
   extra?: EnginePermanent,
 ): Map<string, Characteristics> {
   const extraCardId = extra?.cardId ?? null;
-  const cached = getCached(ctx);
+  let cached = getCached(ctx);
   // On the first pass nothing is known, so include graveyards; thereafter follow what the
   // last pass actually read.
   const includeGraveyards = cached?.usedGraveyards ?? true;
@@ -1347,6 +1350,19 @@ export function computeAllCharacteristics(
   // the pass, with the flags the pass established.
   const digest =
     cached === undefined ? undefined : scopedDigestOf(ctx, extra, includeGraveyards, includeTapped);
+  // A casting preview that misses its own entry may match a recent pass of another preview
+  // (`sharedPassFor`): each is checked against this state's digest, as the entry above is.
+  if (
+    cached !== undefined &&
+    digest !== undefined &&
+    (cached.digest !== digest || cached.extraCardId !== extraCardId)
+  ) {
+    const shared = sharedPassFor(ctx, digest, includeGraveyards, includeTapped, extraCardId);
+    if (shared !== undefined) {
+      setCached(ctx, shared);
+      cached = shared;
+    }
+  }
 
   if (cached !== undefined && cached.digest === digest && cached.extraCardId === extraCardId) {
     countWork('layerCacheHits');
@@ -1376,7 +1392,7 @@ export function computeAllCharacteristics(
 
   countWork('layerPasses');
   const { map, usedGraveyards, usedTapped } = runLayers(ctx, permsFor(ctx, extra));
-  setCached(ctx, {
+  const entry: LayerCacheEntry = {
     // Re-digest with the flags this pass actually established, so the next comparison matches.
     digest:
       digest !== undefined && usedGraveyards === includeGraveyards && usedTapped === includeTapped
@@ -1386,7 +1402,9 @@ export function computeAllCharacteristics(
     usedTapped,
     extraCardId,
     map,
-  });
+  };
+  setCached(ctx, entry);
+  sharePass(ctx, entry);
   return map;
 }
 
