@@ -1,5 +1,5 @@
 import { copyData } from '../state/copy-data';
-import { getCached, setCached, shareDefinitionIds } from '../effects/layer-cache';
+import { getCached, setCached, shareDefinitionIds, withReadScope } from '../effects/layer-cache';
 import { playerLifeLocked } from '../state/phasing';
 import type { EnginePlayerState, GameContext } from '../state/types';
 import type {
@@ -1296,23 +1296,29 @@ export function searchPayment(
     if (extended && sacrificing && ownAbilities.some((ability) => ability.condition !== undefined))
       return handBack;
     const permanentOf = new Map(ctx.state.battlefield.map((p) => [p.cardId, p]));
-    for (const source of rootSources) {
-      if (source.convoke === true || source.productionSpec === undefined) continue;
-      if (sacrificing && !BOARD_BLIND_DYNAMIC.has(source.productionSpec.dynamic ?? ''))
-        return handBack;
-      const perm = permanentOf.get(source.cardId);
-      if (perm === undefined) return handBack;
-      const production = resolveDynamicAmount(
-        ctx,
-        resolveDynamicUnits(ctx, resolveConditionalUnits(ctx, source.productionSpec, perm), perm),
-        perm,
-      );
-      if (
-        JSON.stringify(production.units) !== JSON.stringify(source.units) ||
-        (production.linked === true) !== (source.linked === true)
-      )
-        return handBack;
-    }
+    // Re-deriving each source's production only reads the board, so one read scope digests it
+    // once rather than once per characteristics query.
+    const productionDiffers = withReadScope(ctx, () => {
+      for (const source of rootSources) {
+        if (source.convoke === true || source.productionSpec === undefined) continue;
+        if (sacrificing && !BOARD_BLIND_DYNAMIC.has(source.productionSpec.dynamic ?? ''))
+          return true;
+        const perm = permanentOf.get(source.cardId);
+        if (perm === undefined) return true;
+        const production = resolveDynamicAmount(
+          ctx,
+          resolveDynamicUnits(ctx, resolveConditionalUnits(ctx, source.productionSpec, perm), perm),
+          perm,
+        );
+        if (
+          JSON.stringify(production.units) !== JSON.stringify(source.units) ||
+          (production.linked === true) !== (source.linked === true)
+        )
+          return true;
+      }
+      return false;
+    });
+    if (productionDiffers) return handBack;
     const lifeLocked = playerLifeLocked(ctx, payer.id);
     if (
       payer.energy < energyReserved ||
