@@ -1,11 +1,12 @@
 <script setup lang="ts">
 /**
- * The lobby (plan M6 task 4): the seat grid, asking for a seat with a pasted decklist (and its
- * problems, which only you see), and for the host the approval queue, a bot or an open seat per
+ * The lobby (plan M6 task 4): the seat grid, asking for a seat with a pasted or premade decklist
+ * (and its problems, which only you see), and for the host the approval queue, a bot or an open seat per
  * seat, kicking, the invite link, starting and abandoning.
  */
-import { computed, ref } from 'vue';
-import type { PlayerId } from '@mtg/shared';
+import { computed, onMounted, ref } from 'vue';
+import type { PlayerId, TablePremadeDeck } from '@mtg/shared';
+import { tableHttpUrl } from '../lib/tableOrigin';
 import { useTableStore } from '../stores/table';
 import { tablePath } from './routes';
 import SinglePlayerLink from './SinglePlayerLink.vue';
@@ -14,6 +15,34 @@ const table = useTableStore();
 const decklist = ref('');
 const seat = ref<PlayerId>('P1');
 const copied = ref(false);
+
+/** Premade decks from the table server. Picking one puts its list in the decklist box. */
+const premadeDecks = ref<TablePremadeDeck[]>([]);
+const premadeSlug = computed({
+  get: () => premadeDecks.value.find((deck) => deck.text === decklist.value)?.slug ?? '',
+  set: (slug: string) => {
+    const deck = premadeDecks.value.find((entry) => entry.slug === slug);
+    decklist.value = deck?.text ?? '';
+  },
+});
+
+function premadeLabel(deck: TablePremadeDeck): string {
+  const colors = deck.colorIdentity.length === 0 ? 'C' : deck.colorIdentity.join('');
+  return `${deck.name} · ${deck.commanderNames.join(' & ')} · ${colors}`;
+}
+
+onMounted(async () => {
+  try {
+    const response = await fetch(tableHttpUrl('/tables/decks'), {
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) return;
+    const body = (await response.json()) as { decks?: TablePremadeDeck[] };
+    premadeDecks.value = Array.isArray(body.decks) ? body.decks : [];
+  } catch {
+    // No list: pasting a decklist still works.
+  }
+});
 
 const state = computed(() => table.state);
 const openSeats = computed(() =>
@@ -189,6 +218,15 @@ const phaseLabel = computed(() => PHASE_LABELS[state.value?.phase ?? 'open'] ?? 
             <span>Seat</span>
             <select v-model="seat" data-testid="claim-seat">
               <option v-for="open in openSeats" :key="open" :value="open">{{ open }}</option>
+            </select>
+          </label>
+          <label v-if="premadeDecks.length > 0" class="dt-field premade">
+            <span>Premade deck</span>
+            <select v-model="premadeSlug" data-testid="premade-deck">
+              <option value="">Paste my own</option>
+              <option v-for="deck in premadeDecks" :key="deck.slug" :value="deck.slug">
+                {{ premadeLabel(deck) }}
+              </option>
             </select>
           </label>
           <label class="dt-field deck">
@@ -526,6 +564,9 @@ const phaseLabel = computed(() => PHASE_LABELS[state.value?.phase ?? 'open'] ?? 
   grid-template-columns: 9rem minmax(0, 1fr);
   gap: 1rem 1.5rem;
   align-items: start;
+}
+.claim .deck {
+  grid-column: 1 / -1;
 }
 .claim .deck textarea {
   min-height: 14rem;

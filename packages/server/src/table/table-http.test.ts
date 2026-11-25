@@ -144,6 +144,61 @@ describe('the health endpoint', () => {
   });
 });
 
+describe('the premade deck list', () => {
+  const deck = {
+    slug: 'mono-white',
+    name: 'Mono White',
+    commanderNames: ['Test Commander'],
+    colorIdentity: ['W'],
+    archetypeTag: 'Mono-White midrange',
+    text: 'Commander\n1 Test Commander\n\nDeck\n99 Plains\n',
+  };
+
+  it('lists the decks the server was started with, without a table or a secret', async () => {
+    const ctx = { ...context(), premadeDecks: [deck] };
+    const response = asResponse(await handle(ctx, request('/tables/decks')));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('public, max-age=300');
+    expect(await response.json()).toEqual({ decks: [deck] });
+    expect(response.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
+  it('lets an allowed site on another origin read it, and refuses any other origin', async () => {
+    const site = 'https://site.example';
+    const production = context({
+      dev: false,
+      allowedHosts: [`127.0.0.1:${PORT}`],
+      allowedOrigins: [ORIGIN, site],
+    });
+    const ctx = { ...production, premadeDecks: [deck] };
+    const allowed = asResponse(
+      await handle(
+        ctx,
+        request('/tables/decks', { headers: { origin: site, host: `127.0.0.1:${PORT}` } }),
+      ),
+    );
+    expect(allowed.status).toBe(200);
+    expect(allowed.headers.get('access-control-allow-origin')).toBe(site);
+    const other = asResponse(
+      await handle(
+        ctx,
+        request('/tables/decks', {
+          headers: { origin: 'https://evil.example', host: `127.0.0.1:${PORT}` },
+        }),
+      ),
+    );
+    expect(other.status).toBe(403);
+  });
+
+  it('is an empty list when the server has none, and refuses other methods', async () => {
+    const ctx = context();
+    const empty = asResponse(await handle(ctx, request('/tables/decks')));
+    expect(await empty.json()).toEqual({ decks: [] });
+    const posted = asResponse(await handle(ctx, post('/tables/decks', {})));
+    expect(posted.status).toBe(405);
+  });
+});
+
 describe('creating a table', () => {
   it('needs the host secret', async () => {
     const ctx = context();

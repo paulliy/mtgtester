@@ -287,6 +287,7 @@ export type {
   TableParseFailure,
   TableParseResult,
   TablePendingClaimView,
+  TablePremadeDeck,
   TablePhase,
   TableSeatController,
   TableSeatView,

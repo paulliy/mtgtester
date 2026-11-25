@@ -5,6 +5,7 @@
  *   and returns the table id, the host token and the invite URL once.
  * - `POST /tables/<id>/summary` takes the invite code in the body, never in the URL, and returns
  *   the table's public summary.
+ * - `GET /tables/decks` lists the premade decks a player can pick instead of pasting a list.
  * - `GET /tables/<id>/ws` upgrades to the table socket (`table-ws.ts`).
  * - Everything else is the static table web build: only `index.html` and the files its Vite
  *   manifest names are served, never a directory path. Until M6 ships the build, a placeholder
@@ -19,7 +20,7 @@
 
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
-import { parseStrictJson, PROTOCOL_VERSION } from '@mtg/shared';
+import { parseStrictJson, PROTOCOL_VERSION, type TablePremadeDeck } from '@mtg/shared';
 import { publicOriginFor, type TableConfig } from './config';
 import { checkExposure, SocketLimiter } from './exposure';
 
@@ -242,6 +243,8 @@ export interface TableHttpContext {
   boundPort: () => number;
   /** The release this server runs (a commit), or `dev` outside a release. `/health` reports it. */
   version: string;
+  /** What `GET /tables/decks` lists. */
+  premadeDecks?: readonly TablePremadeDeck[];
 }
 
 /** The request is a WebSocket upgrade for this table; the caller completes it. */
@@ -304,6 +307,25 @@ export async function handleTableRequest(
   if (path === '/tables') {
     if (method !== 'POST') return json({ error: 'Method not allowed.' }, 405, { allow: 'POST' });
     return createTable(ctx, request, address);
+  }
+
+  if (path === '/tables/decks') {
+    if (method !== 'GET' && method !== 'HEAD') {
+      return json({ error: 'Method not allowed.' }, 405, { allow: 'GET, HEAD' });
+    }
+    // The list changes only with a release, so a browser may keep it for a few minutes. A site
+    // on another origin may read it: `checkExposure` has already refused any origin not allowed.
+    const origin = request.headers.get('origin');
+    return Response.json(
+      { decks: ctx.premadeDecks ?? [] },
+      {
+        headers: {
+          'cache-control': 'public, max-age=300',
+          vary: 'origin',
+          ...(origin !== null && { 'access-control-allow-origin': origin }),
+        },
+      },
+    );
   }
 
   const tableRoute = /^\/tables\/([^/]+)\/(summary|ws)$/.exec(path);
@@ -405,6 +427,8 @@ export interface TableServerDeps {
   sockets?: SocketLimiter;
   /** The release this server runs; `dev` when absent. */
   version?: string;
+  /** Premade decks for `GET /tables/decks`. None when absent. */
+  premadeDecks?: readonly TablePremadeDeck[];
 }
 
 /** The largest inbound socket frame, in bytes (plan M5 task 2). */
@@ -447,6 +471,7 @@ export function startTableServer(deps: TableServerDeps): RunningTableServer {
     files,
     boundPort: () => boundPort,
     version: deps.version ?? 'dev',
+    premadeDecks: deps.premadeDecks ?? [],
   };
 
   const limiter = deps.sockets ?? new SocketLimiter();

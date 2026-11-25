@@ -413,3 +413,28 @@ test('a forced engine halt opens the post-game view', async ({ browser }) => {
   await expect(host.getByTestId('ending')).toHaveText('The game stopped before it was decided.');
   await expect(host.getByTestId('rng-key')).toHaveText(TABLE_TEST_KEY);
 });
+
+test('a guest takes a seat with a premade deck instead of pasting one', async ({ browser }) => {
+  const host = await openPage(browser, `http://127.0.0.1:${TABLE_PORTS.main}`);
+  const guest = await openPage(browser, `http://127.0.0.1:${TABLE_PORTS.main}`);
+  const invite = await hostTable(host, 'Ada');
+  await guest.goto(invite);
+  await guest.getByTestId('display-name').fill('Grace');
+  await guest.getByTestId('join').click();
+  await guest.getByTestId('claim-seat').selectOption('P2');
+
+  const picker = guest.getByTestId('premade-deck');
+  await expect(picker.locator('option', { hasText: 'Token Triumph' })).toHaveCount(1);
+  await picker.selectOption('token-triumph');
+  await expect(guest.getByTestId('decklist')).toHaveValue(/Emmara, Soul of the Accord/);
+  // Editing the list makes it the player's own again.
+  await guest.getByTestId('decklist').fill(DECKS.P2);
+  await expect(picker).toHaveValue('');
+  await picker.selectOption('token-triumph');
+
+  await guest.getByTestId('request-seat').click();
+  await expect(guest.getByTestId('claim-pending')).toBeVisible();
+  await expect(guest.getByTestId('problems')).toHaveCount(0);
+  await host.getByTestId('approve-P2').click();
+  await expect(guest.getByTestId('seat-P2')).toContainText('Grace');
+});

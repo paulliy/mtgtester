@@ -55,6 +55,21 @@ export interface TableDeckProblem {
   cardName?: string;
 }
 
+/**
+ * One premade deck a player can pick instead of pasting a list (`GET /tables/decks`). `text` is
+ * the plaintext list, which the client sends unchanged as its `requestSeat` decklist, so the
+ * table checks it like any other.
+ */
+export interface TablePremadeDeck {
+  slug: string;
+  name: string;
+  commanderNames: string[];
+  /** WUBRG letters of the commanders' color identity. */
+  colorIdentity: string[];
+  archetypeTag: string;
+  text: string;
+}
+
 // ── Client to server ────────────────────────────────────────────────────────────────────────
 
 export const TABLE_CLIENT_TO_SERVER_TYPES = [
