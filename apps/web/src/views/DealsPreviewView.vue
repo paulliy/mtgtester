@@ -8,7 +8,13 @@
 import PageTitle from '../components/shell/PageTitle.vue';
 import PageFoot from '../components/shell/PageFoot.vue';
 import { onMounted, onUnmounted } from 'vue';
-import type { Deal, DiplomacySeatState, PlayerBoardState, TableTalkLine } from '@mtg/shared';
+import type {
+  Deal,
+  DiplomacySeatState,
+  PlayerBoardState,
+  PlayerId,
+  TableTalkLine,
+} from '@mtg/shared';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import DealPanel from '../components/DealPanel.vue';
 import { useGameStore } from '../stores/game';
@@ -68,10 +74,10 @@ function talk(text: string, message: TableTalkLine['message']): TableTalkLine {
   return { sequence: sequence++, turn: 9, message, text };
 }
 
-function say(text: string): void {
+function say(text: string, from: PlayerId): void {
   store.tableTalk = [
     ...store.tableTalk,
-    talk(text, { kind: 'threatCall', turn: 9, from: 'P2', leader: 'P4', reasons: [] }),
+    talk(text, { kind: 'threatCall', turn: 9, from, leader: 'P4', reasons: [] }),
   ];
 }
 
@@ -96,7 +102,12 @@ onMounted(() => {
   store.humanSeat = 'P1';
   store.diplomacy = true;
   store.playerState = {
-    seats: ['P1', 'P2', 'P3', 'P4'].map((seat) => ({ seat, graveyard: [] })),
+    seats: [
+      ['P1', 'Queen Marchesa'],
+      ['P2', 'The Ur-Dragon'],
+      ['P3', 'Atraxa, Praetors’ Voice'],
+      ['P4', 'Korvold, Fae-Cursed King'],
+    ].map(([seat, commander]) => ({ seat, graveyard: [], commanders: [{ name: commander }] })),
     eliminatedPlayers: [],
     battlefield: [],
     stack: [],
@@ -141,7 +152,7 @@ onMounted(() => {
           status: 'active',
         };
         patch((s) => ({ ...s, canPropose: false }));
-        say(`P1 to ${terms.to}: deal? (${terms.obligations.length} promises)`);
+        say(`P1 to ${terms.to}: deal? (${terms.obligations.length} promises)`, 'P1');
         later(() => {
           // In the preview a reciprocal offer is accepted and a one-sided ask declined.
           const reciprocal = terms.obligations.some((o) => o.by === terms.to);
@@ -149,10 +160,10 @@ onMounted(() => {
           if (reciprocal && mine) {
             patch((s) => ({ ...s, deals: [...s.deals, deal] }));
             store.lastDealOutcome = { kind: 'accepted', dealId: deal.id };
-            say(`${terms.to}: deal.`);
+            say(`${terms.to}: deal.`, terms.to);
           } else {
             store.lastDealOutcome = { kind: 'declined' };
-            say(`${terms.to}: no deal.`);
+            say(`${terms.to}: no deal.`, terms.to);
           }
         });
       } else if (name === 'answerDeal') {
@@ -163,14 +174,14 @@ onMounted(() => {
         if (answer === 'accept') {
           patch((s) => ({ ...s, deals: [...s.deals, { ...answered, status: 'active' }] }));
           store.lastDealOutcome = { kind: 'accepted', dealId };
-          say('P1: deal.');
+          say('P1: deal.', 'P1');
         } else if (counter !== undefined) {
           store.lastDealOutcome = { kind: 'declined' };
-          say('P1: no. Counter sent.');
-          later(() => say(`${answered.proposer}: no deal.`));
+          say('P1: no. Counter sent.', 'P1');
+          later(() => say(`${answered.proposer}: no deal.`, answered.proposer));
         } else {
           store.lastDealOutcome = { kind: 'declined' };
-          say('P1: no deal.');
+          say('P1: no deal.', 'P1');
         }
       } else if (name === 'requestDealDraft') {
         later(() => {
@@ -232,24 +243,19 @@ function moveSlot(): void {
 </script>
 
 <template>
-  <div class="preview">
-    <header>
-      <PageTitle place="III. Workshop · b. Deals" :level="2">Deals preview</PageTitle>
-      <p>
+  <section class="preview">
+    <header class="top">
+      <PageTitle place="III. Workshop · b. Deals" :level="2" hide-kicker>Deals preview</PageTitle>
+      <p class="lede">
         Sample data, no game: you are P1, P4 leads, P3 has an offer waiting on you. Bot answers are
         faked in the browser. Development builds only.
       </p>
-      <div v-if="!blocked" class="controls">
-        <button type="button" @click="showWarning">Show the deal warning</button>
-        <button type="button" @click="moveSlot">Switch negotiation slot</button>
-        <button type="button" @click="reset">Reset sample</button>
-      </div>
     </header>
-    <p v-if="blocked" class="blocked" role="status">
+    <p v-if="blocked" class="dt-note" role="status">
       A game is loaded. Abandon it, or reload the page, to open the preview: it would overwrite the
       game's state.
     </p>
-    <div v-else class="rail">
+    <div v-else class="panel">
       <DealPanel />
     </div>
     <ConfirmDialog
@@ -261,28 +267,74 @@ function moveSlot(): void {
       @cancel="store.cancelDealWarning()"
       @confirm="store.confirmDealWarning()"
     />
-    <PageFoot place="III. Workshop · b. Deals" />
-  </div>
+    <footer class="foot">
+      <div v-if="!blocked" class="controls" role="group" aria-label="Preview controls">
+        <button type="button" @click="reset">[ Reset sample ]</button>
+        <button type="button" @click="showWarning">[ Show the deal warning ]</button>
+        <button type="button" @click="moveSlot">[ Switch negotiation slot ]</button>
+      </div>
+      <PageFoot place="III. Workshop · b. Deals" />
+    </footer>
+  </section>
 </template>
 
 <style scoped>
 .preview {
-  padding: 16px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 3rem;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-width: 720px;
+  gap: 2rem;
+  font-family: var(--font-body);
+  color: var(--ink);
 }
-header p {
-  margin: 4px 0 8px;
-  color: var(--muted, #888);
+.lede {
+  margin: 0.75rem 0 0;
+  max-width: 46rem;
+  font-size: 0.85rem;
+  color: var(--muted);
 }
+.panel {
+  min-width: 0;
+}
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+/* Preview controls are not game actions: quiet bracketed text, set apart above the footer line. */
 .controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 0 1.25rem;
+  font-size: 0.75rem;
+  color: var(--muted);
 }
-.rail {
-  max-width: 380px;
+.controls button {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.controls button:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
+}
+.controls button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.foot :deep(.dt-footline) {
+  margin-top: 0;
+}
+@media (max-width: 760px) {
+  .preview {
+    padding: 1rem 1rem 2rem;
+  }
 }
 </style>

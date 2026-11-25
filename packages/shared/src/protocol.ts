@@ -120,7 +120,29 @@ export interface SeatSummary {
   archetypeTag: string;
 }
 
-/** Public setup metadata. No card list or private card data crosses this boundary. */
+/**
+ * How a card stands in the rules engine, the three states a preview names (ADR 0054).
+ * `unsupported`: the engine cannot play it and halts if it is drawn. `provisional`: a
+ * machine-checked definition that no person has reviewed (ADR 0050), playable only when the
+ * server admitted the provisional catalog. `implemented-unreviewed`: modeled, but not yet audited
+ * against the completion standard.
+ */
+export type CardModelStatus = 'unsupported' | 'implemented-unreviewed' | 'provisional';
+
+/** One card of a previewed deck that the engine does not model on its own. */
+export interface UnmodeledCard {
+  name: string;
+  /** SHA-256 of the card's canonical Oracle record: what the Card Test Lab pins scenarios to. */
+  oracleSha256?: string;
+  status: CardModelStatus;
+}
+
+/**
+ * Public setup metadata. No decklist or private card data crosses this boundary, with one
+ * exception (ADR 0054): `unmodeledCards` names the cards of a user-supplied deck (a URL, pasted or
+ * saved list picked at setup) that the engine does not model, so a refused import can say what
+ * needs work. A deck that is fully modeled sends no card names at all.
+ */
 export interface SetupPreviewSeat {
   seat: PlayerId;
   commanderNames: string[];
@@ -128,6 +150,8 @@ export interface SetupPreviewSeat {
   archetypeTag: string;
   controller: SeatControllerKind;
   modeled: boolean;
+  /** Present only for a URL, plaintext or saved seat with at least one unmodeled card. */
+  unmodeledCards?: UnmodeledCard[];
 }
 
 export interface SetupPreview {
@@ -135,6 +159,68 @@ export interface SetupPreview {
   seed: string;
   seats: SetupPreviewSeat[];
   blockers: string[];
+}
+
+/** How far a card has come, from `docs/plans/card-catalog-audit.json` and the engine (ADR 0054). */
+export type CardReportStatus = CardModelStatus | 'implemented-reviewed';
+
+/**
+ * The audit ledger's evidence for one card, copied only where the ledger has it. A field the
+ * ledger does not record is absent here, never filled with a default: no field means "unknown".
+ */
+export interface CardReportEvidence {
+  engine?: string;
+  viewer?: string;
+  gameplayAi?: string;
+  note?: string;
+  engineTestIds?: string[];
+  viewerScenarioId?: string;
+  /**
+   * Whether the ledger's Oracle hash equals the card the server holds now. Absent when the ledger
+   * recorded no hash for the card, so nothing can be said either way.
+   */
+  oracleMatchesAudit?: boolean;
+}
+
+/** A Card Test Lab scenario that pins this card's Oracle hash. */
+export interface CardReportScenario {
+  id: string;
+  title: string;
+  clauseIds: string[];
+}
+
+/** One card of `GET /api/card-report`. */
+export interface CardReportEntry {
+  name: string;
+  oracleId: string;
+  typeLine: string;
+  manaCost: string | null;
+  oracleText: string;
+  oracleSha256: string;
+  status: CardReportStatus;
+  /** Why the engine cannot model the card, verbatim from the interpreter, when it cannot. */
+  unmodeledReasons: string[];
+  /** The ledger's reason when it records the card as unsupported. */
+  unsupportedReason?: string;
+  /** Present only when the ledger has an entry for the card that agrees with the engine today. */
+  evidence?: CardReportEvidence;
+  /**
+   * Set when the ledger and the engine disagree (a ledger entry from before a fix, say). The
+   * ledger's evidence is then left out, because it describes a different state of the card.
+   */
+  auditConflict?: string;
+  /** Lab scenarios for the card, or null when this server has no Card Test Lab catalog. */
+  scenarios: CardReportScenario[] | null;
+}
+
+/** The `GET /api/card-report` reply: asked names in order, with the ones that did not resolve. */
+export interface CardReport {
+  cards: CardReportEntry[];
+  unresolved: string[];
+  /** False when the audit ledger could not be read, so no card has evidence here. */
+  auditAvailable: boolean;
+  /** True when this server runs the Card Test Lab, so `scenarios` is a list rather than null. */
+  labAvailable: boolean;
 }
 
 export interface SavedDeckOption {
@@ -174,6 +260,55 @@ export interface CardTestScenarioMetadata {
   expectedOutcome: string;
   oracleSha256: string;
   clauseIds: string[];
+}
+
+/**
+ * One Card Test Lab card as `GET /api/card-test-lab/cards` reports it, keyed by the Oracle hash its
+ * scenarios pin. Every field is copied from the verification manifest or the audit ledger and is
+ * absent when neither holds it; nothing is defaulted to "complete".
+ */
+export interface CardTestLabClause {
+  /** The manifest clause id, when the manifest gives one. */
+  id?: string;
+  oracleText: string;
+  implementation: string[];
+  engineTestIds: string[];
+  /** The viewer scenarios the manifest requires for this clause. */
+  viewerScenarioIds: string[];
+  /** The lab scenarios of this card tied to the clause, by its id or its viewer scenario ids. */
+  scenarioIds: string[];
+}
+
+export type CardTestLabAuditState = 'current' | 'stale' | 'unpinned' | 'absent';
+
+export interface CardTestLabLedgerEvidence {
+  engine?: string;
+  viewer?: string;
+  gameplayAi?: string;
+  note?: string;
+  engineTestIds?: string[];
+  viewerScenarioId?: string;
+}
+
+export interface CardTestLabCard {
+  oracleSha256: string;
+  name?: string;
+  oracleId?: string;
+  implementationStatus?: string;
+  unsupportedReason?: string;
+  /** Whether the verification manifest pins this exact hash. False: no clause list is known. */
+  manifestPinned: boolean;
+  clauses: CardTestLabClause[];
+  /** Lab scenarios of the card that no manifest clause names. */
+  unmappedScenarioIds: string[];
+  gameplayAiScenarioIds: string[];
+  /**
+   * `current`: the ledger entry pins this very hash and its evidence is in `ledger`. `stale`: it
+   * pins another hash, so its evidence is left out. `unpinned`: the entry has no hash, so it
+   * cannot be tied to this Oracle text and is left out. `absent`: the ledger has no entry.
+   */
+  audit: CardTestLabAuditState;
+  ledger?: CardTestLabLedgerEvidence;
 }
 
 /** The board at one turn. Sent on start, on jump, and whenever the viewer's position moves. */

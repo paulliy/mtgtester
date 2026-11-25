@@ -34,6 +34,16 @@ describe('batch validation', () => {
       }).ok,
     ).toBe(false);
   });
+  it('trims the optional run name, drops a blank one, and rejects a long or non-string one', () => {
+    const scenarios = [{ id: 'pod', name: 'Pod', seats, providerKind: 'random', games: 1 }];
+    const named = validateBatch({ name: '  Ur-Dragon seat test  ', scenarios });
+    expect(named.ok && named.spec.name).toBe('Ur-Dragon seat test');
+    const blank = validateBatch({ name: '   ', scenarios });
+    expect(blank.ok && 'name' in blank.spec).toBe(false);
+    expect(validateBatch({ name: 'x'.repeat(80), scenarios }).ok).toBe(true);
+    expect(validateBatch({ name: 'x'.repeat(81), scenarios }).ok).toBe(false);
+    expect(validateBatch({ name: 7, scenarios }).ok).toBe(false);
+  });
   it('rejects malformed seat lists', () => {
     expect(
       validateBatch({

@@ -1,4 +1,5 @@
 import { interpretCard } from '@mtg/engine';
+import { describeUnmodeled } from '../cards/unmodeled';
 import { isProvisional } from '../cards/provisional';
 import type {
   Color,
@@ -124,6 +125,10 @@ export function resolveSavedSeat(
     return {
       ...fail('Saved deck is no longer fully modeled.'),
       unmodeledCards: unmodeled.map((card) => card.name),
+      unmodeledDetail: describeUnmodeled(
+        [...resolved.commanders, ...(companion ? [companion] : []), ...cards],
+        deps.pool?.provisional,
+      ),
     };
   return {
     seat,
@@ -181,6 +186,10 @@ export async function previewMatchup(
           // here would publish unvalidated deck metadata on the one path where validation is
           // known to have failed. The neutral fields the summary was initialized with stand.
           blockers.push(`${seat}: ${result.message}`);
+          // The one card-level fact a refused saved seat publishes (ADR 0054): which of the
+          // user's own cards the engine does not model. Nothing else cached on the snapshot.
+          if (result.unmodeledDetail !== undefined && result.unmodeledDetail.length > 0)
+            summary.unmodeledCards = result.unmodeledDetail;
         } else {
           Object.assign(summary, {
             commanderNames: result.summary.commanderNames,
@@ -188,6 +197,11 @@ export async function previewMatchup(
             archetypeTag: result.summary.archetypeTag,
             modeled: true,
           });
+          const unmodeled = describeUnmodeled(
+            [...result.config.commanders, ...result.config.cards],
+            deps.pool?.provisional,
+          );
+          if (unmodeled.length > 0) summary.unmodeledCards = unmodeled;
         }
       } else if (!deps.store) {
         blockers.push(`${seat}: Imported decks are disabled without a database.`);
@@ -219,6 +233,8 @@ export async function previewMatchup(
             (card) => interpretCard(card).modeled || isProvisional(deps.pool?.provisional, card),
           );
           if (!summary.modeled) blockers.push(`${seat}: Deck is not fully modeled.`);
+          const unmodeled = describeUnmodeled(cards, deps.pool?.provisional);
+          if (unmodeled.length > 0) summary.unmodeledCards = unmodeled;
         }
       }
     } catch {

@@ -1,6 +1,12 @@
 /** Phase 5 read models: aggregate deck statistics and one-game debug/export payloads. */
 
-import type { AiAnnotation, AiReflection, ReflectionMoment, TableTalkLine } from '@mtg/shared';
+import type {
+  AiAnnotation,
+  AiReflection,
+  GameListItem,
+  ReflectionMoment,
+  TableTalkLine,
+} from '@mtg/shared';
 import { lossReasonLabel } from '../match/loss-reasons';
 import type { SqliteLike } from './games';
 
@@ -20,6 +26,10 @@ export interface DeckStatistic {
   averageFinish: number | null;
   averageGameLength: number | null;
   averageMulligans: number;
+  /** Games finished 1st, 2nd, 3rd and 4th or lower. */
+  finishDistribution: [number, number, number, number];
+  /** The deck's most recent finished game in this scope, for "Open last game in Debug". */
+  lastGameId: string | null;
   mulliganDistribution: Array<{ mulligans: number; games: number }>;
   /** `label` is `reason` in player terms, written here so no screen translates the code. */
   eliminationCauses: Array<{ reason: string; label: string; count: number }>;
@@ -31,6 +41,72 @@ export interface DeckStatistic {
   }>;
   manaFloodRate: number | null;
   manaDroughtRate: number | null;
+}
+
+export type StatsScopeName = 'all' | 'batch' | 'mine';
+
+/** Which finished games a statistics request counts. */
+export type StatsScope = { kind: 'all' } | { kind: 'batch'; batchId: string } | { kind: 'mine' };
+
+export interface StatsSummary {
+  /** Finished games where at least one seat played a saved or imported deck. */
+  finishedGames: number;
+  /**
+   * Finished games where every seat played a generated deck: counted apart ("+ N generated") so
+   * the headline number is the games the player's own decks took part in. The two add up to every
+   * finished game in scope.
+   */
+  generatedGames: number;
+  /** Saved and imported decks that played at least one finished game in scope. */
+  decksTracked: number;
+  averageTurns: number | null;
+  /** The most frequent recorded way a player went out, and its share of all recorded exits. */
+  mostCommonEnd: { reason: string; label: string; share: number } | null;
+}
+
+export interface StatsMatchup {
+  winner: string;
+  beaten: string;
+  games: number;
+}
+
+export interface StatsReport {
+  scope: StatsScopeName;
+  batchId: string | null;
+  decks: DeckStatistic[];
+  summary: StatsSummary;
+  matchups: StatsMatchup[];
+}
+
+function emptySummary(): StatsSummary {
+  return {
+    finishedGames: 0,
+    generatedGames: 0,
+    decksTracked: 0,
+    averageTurns: null,
+    mostCommonEnd: null,
+  };
+}
+
+interface ScopeSql {
+  /** A predicate on the games table under `alias`; its placeholders are `params`, in order. */
+  sql(alias: string): string;
+  params: unknown[];
+}
+
+function scopeSql(scope: StatsScope): ScopeSql {
+  if (scope.kind === 'batch')
+    return {
+      sql: (a) => `${a}.id IN (SELECT game_id FROM batch_games WHERE batch_id = ?)`,
+      params: [scope.batchId],
+    };
+  if (scope.kind === 'mine')
+    return {
+      sql: (a) =>
+        `EXISTS (SELECT 1 FROM game_players h WHERE h.game_id = ${a}.id AND h.controller_kind = 'human')`,
+      params: [],
+    };
+  return { sql: () => '1 = 1', params: [] };
 }
 
 export interface DebugGameData {
@@ -88,90 +164,143 @@ const ATTRIBUTED_LOSS = `victim.loss_reason IS NOT NULL AND victim.loss_reason <
 export class StatsRepository {
   constructor(private readonly db: SqliteLike) {}
 
-  deckStatistics(batchId?: string): DeckStatistic[] {
-    if (batchId !== undefined) return this.batchDeckStatistics(batchId);
+  /** Per-deck statistics for one scope. A plain batch id keeps the old `?batchId=` call working. */
+  deckStatistics(scope: StatsScope | string = { kind: 'all' }): DeckStatistic[] {
+    const resolved: StatsScope =
+      typeof scope === 'string' ? { kind: 'batch', batchId: scope } : scope;
+    const where = scopeSql(resolved);
+    // Selected-column order is the placeholder order: the `last_game_id` subquery comes first.
     const base = rows(
       this.db,
       `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag, d.source_type,
               ds.commander_names, ds.color_identity, COUNT(g.id) AS games_played,
               SUM(CASE WHEN g.id IS NOT NULL AND gp.finished_position = 1 THEN 1 ELSE 0 END) AS wins,
+              SUM(CASE WHEN g.id IS NOT NULL AND gp.finished_position = 2 THEN 1 ELSE 0 END) AS second,
+              SUM(CASE WHEN g.id IS NOT NULL AND gp.finished_position = 3 THEN 1 ELSE 0 END) AS third,
+              SUM(CASE WHEN g.id IS NOT NULL AND gp.finished_position >= 4 THEN 1 ELSE 0 END) AS fourth,
               AVG(CASE WHEN g.id IS NOT NULL THEN gp.finished_position END) AS average_finish,
               AVG(g.turn_count) AS average_game_length,
-              AVG(CASE WHEN g.id IS NOT NULL THEN gp.mulligans_taken END) AS average_mulligans
+              AVG(CASE WHEN g.id IS NOT NULL THEN gp.mulligans_taken END) AS average_mulligans,
+              (SELECT g2.id FROM game_players gp2 JOIN games g2 ON g2.id = gp2.game_id
+                WHERE gp2.deck_snapshot_id = ds.id AND g2.status = 'finished' AND ${where.sql('g2')}
+                ORDER BY COALESCE(g2.ended_at, g2.started_at) DESC, g2.rowid DESC LIMIT 1) AS last_game_id
          FROM deck_snapshots ds
          JOIN decks d ON d.id = ds.deck_id
          LEFT JOIN game_players gp ON gp.deck_snapshot_id = ds.id
-         LEFT JOIN games g ON g.id = gp.game_id AND g.status = 'finished'
-        GROUP BY ds.id ORDER BY games_played DESC, name ASC`,
+         LEFT JOIN games g ON g.id = gp.game_id AND g.status = 'finished' AND ${where.sql('g')}
+        GROUP BY ds.id ${resolved.kind === 'all' ? '' : 'HAVING COUNT(g.id) > 0'}
+        ORDER BY games_played DESC, name ASC`,
+      ...where.params,
+      ...where.params,
     );
-    return base.map((row) => this.deckStatistic(row));
+    return base.map((row) => this.deckStatistic(row, where));
   }
 
-  private batchDeckStatistics(batchId: string): DeckStatistic[] {
-    const base = rows(
+  /** The batch a `scope=batch` request with no id means: the most recently created one. */
+  latestBatchId(): string | null {
+    const row = first(
       this.db,
-      `SELECT ds.id AS snapshot_id, COALESCE(d.name, ds.id) AS name, d.archetype_tag, d.source_type,
-              ds.commander_names, ds.color_identity, COUNT(g.id) AS games_played,
-              SUM(CASE WHEN gp.finished_position = 1 THEN 1 ELSE 0 END) AS wins,
-              AVG(gp.finished_position) AS average_finish, AVG(g.turn_count) AS average_game_length,
-              AVG(gp.mulligans_taken) AS average_mulligans
-         FROM deck_snapshots ds JOIN decks d ON d.id = ds.deck_id
-         JOIN game_players gp ON gp.deck_snapshot_id = ds.id
-         JOIN games g ON g.id = gp.game_id AND g.status = 'finished'
-         JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ?
-        GROUP BY ds.id ORDER BY games_played DESC, name ASC`,
-      batchId,
+      `SELECT id FROM batches ORDER BY created_at DESC, rowid DESC LIMIT 1`,
     );
-    return base.map((row) => {
-      const snapshotId = String(row['snapshot_id']);
-      const gamesPlayed = number(row['games_played']);
-      const mana = this.manaRates(snapshotId, batchId);
-      return {
-        deckSnapshotId: snapshotId,
-        name: String(row['name'] ?? snapshotId),
-        generated: row['source_type'] === 'generated',
-        commanders: jsonArray(row['commander_names']),
-        colorIdentity: jsonArray(row['color_identity']),
-        archetypeTag: String(row['archetype_tag'] ?? ''),
-        gamesPlayed,
-        wins: number(row['wins']),
-        winRate: gamesPlayed === 0 ? 0 : number(row['wins']) / gamesPlayed,
-        averageFinish: gamesPlayed === 0 ? null : number(row['average_finish']),
-        averageGameLength: gamesPlayed === 0 ? null : number(row['average_game_length']),
-        averageMulligans: gamesPlayed === 0 ? 0 : number(row['average_mulligans']),
-        mulliganDistribution: rows(
-          this.db,
-          `SELECT gp.mulligans_taken AS mulligans, COUNT(*) AS games FROM game_players gp JOIN games g ON g.id = gp.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' GROUP BY gp.mulligans_taken ORDER BY gp.mulligans_taken`,
-          batchId,
-          snapshotId,
-        ).map((item) => ({ mulligans: number(item['mulligans']), games: number(item['games']) })),
-        eliminationCauses: rows(
-          this.db,
-          `SELECT gp.loss_reason AS reason, COUNT(*) AS count FROM game_players gp JOIN games g ON g.id = gp.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND gp.loss_reason IS NOT NULL GROUP BY gp.loss_reason`,
-          batchId,
-          snapshotId,
-        ).map((item) => ({
-          reason: String(item['reason']),
-          label: lossReasonLabel(String(item['reason'])),
-          count: number(item['count']),
-        })),
-        lossesTo: rows(
-          this.db,
-          `SELECT killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag, COUNT(*) AS count FROM game_players victim JOIN games g ON g.id = victim.game_id JOIN batch_games bg ON bg.game_id = g.id AND bg.batch_id = ? JOIN game_players killer ON killer.game_id = victim.game_id AND killer.seat = victim.eliminated_by_seat JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id JOIN decks killer_d ON killer_d.id = killer_ds.deck_id WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND ${ATTRIBUTED_LOSS} GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`,
-          batchId,
-          snapshotId,
-        ).map((item) => ({
-          commanders: jsonArray(item['commander_names']),
-          colorIdentity: jsonArray(item['color_identity']),
-          archetypeTag: String(item['archetype_tag'] ?? ''),
-          count: number(item['count']),
-        })),
-        manaFloodRate: mana.floodRate,
-        manaDroughtRate: mana.droughtRate,
-      };
-    });
+    return row === null ? null : String(row['id']);
   }
-  private deckStatistic(row: Row): DeckStatistic {
+
+  /** Everything the Stats page shows, for one scope. */
+  statsReport(request: { scope?: StatsScopeName; batchId?: string }): StatsReport {
+    const scope: StatsScopeName =
+      request.scope ?? (request.batchId === undefined ? 'all' : 'batch');
+    const batchId = scope === 'batch' ? (request.batchId ?? this.latestBatchId()) : null;
+    const resolved: StatsScope =
+      scope === 'batch'
+        ? { kind: 'batch', batchId: batchId ?? '' }
+        : scope === 'mine'
+          ? { kind: 'mine' }
+          : { kind: 'all' };
+    // No batch exists yet: there are no games to count, not "every game".
+    const decks = scope === 'batch' && batchId === null ? [] : this.deckStatistics(resolved);
+    const empty = scope === 'batch' && batchId === null;
+    return {
+      scope,
+      batchId,
+      decks,
+      summary: empty ? emptySummary() : this.summary(resolved),
+      matchups: empty ? [] : this.matchups(resolved),
+    };
+  }
+
+  private summary(scope: StatsScope): StatsSummary {
+    const where = scopeSql(scope);
+    const totals = first(
+      this.db,
+      `SELECT COUNT(*) AS finished, AVG(g.turn_count) AS average_turns,
+              SUM(CASE WHEN EXISTS (
+                SELECT 1 FROM game_players gp JOIN deck_snapshots ds ON ds.id = gp.deck_snapshot_id
+                  JOIN decks d ON d.id = ds.deck_id
+                 WHERE gp.game_id = g.id AND d.source_type <> 'generated') THEN 0 ELSE 1 END) AS generated
+         FROM games g WHERE g.status = 'finished' AND ${where.sql('g')}`,
+      ...where.params,
+    );
+    const allFinished = number(totals?.['finished']);
+    const generatedGames = number(totals?.['generated']);
+    const finishedGames = allFinished - generatedGames;
+    const ends = rows(
+      this.db,
+      `SELECT gp.loss_reason AS reason, COUNT(*) AS count
+         FROM game_players gp JOIN games g ON g.id = gp.game_id
+        WHERE g.status = 'finished' AND gp.loss_reason IS NOT NULL AND ${where.sql('g')}
+        GROUP BY gp.loss_reason ORDER BY count DESC, gp.loss_reason ASC`,
+      ...where.params,
+    );
+    const totalEnds = ends.reduce((sum, row) => sum + number(row['count']), 0);
+    const top = ends[0];
+    const tracked = first(
+      this.db,
+      `SELECT COUNT(DISTINCT ds.id) AS decks
+         FROM game_players gp JOIN games g ON g.id = gp.game_id
+         JOIN deck_snapshots ds ON ds.id = gp.deck_snapshot_id JOIN decks d ON d.id = ds.deck_id
+        WHERE g.status = 'finished' AND d.source_type <> 'generated' AND ${where.sql('g')}`,
+      ...where.params,
+    );
+    return {
+      finishedGames,
+      generatedGames,
+      decksTracked: number(tracked?.['decks']),
+      averageTurns:
+        allFinished === 0 || totals?.['average_turns'] === null
+          ? null
+          : number(totals?.['average_turns']),
+      mostCommonEnd:
+        top === undefined || totalEnds === 0
+          ? null
+          : {
+              reason: String(top['reason']),
+              label: lossReasonLabel(String(top['reason'])),
+              share: number(top['count']) / totalEnds,
+            },
+    };
+  }
+
+  /** Finished games the winner (seat finishing first) took with each other deck at the table. */
+  private matchups(scope: StatsScope): StatsMatchup[] {
+    const where = scopeSql(scope);
+    return rows(
+      this.db,
+      `SELECT w.deck_snapshot_id AS winner, l.deck_snapshot_id AS beaten, COUNT(*) AS games
+         FROM games g
+         JOIN game_players w ON w.game_id = g.id AND w.finished_position = 1
+         JOIN game_players l ON l.game_id = g.id AND l.seat <> w.seat
+        WHERE g.status = 'finished' AND w.deck_snapshot_id <> l.deck_snapshot_id AND ${where.sql('g')}
+        GROUP BY w.deck_snapshot_id, l.deck_snapshot_id
+        ORDER BY games DESC, winner ASC, beaten ASC`,
+      ...where.params,
+    ).map((row) => ({
+      winner: String(row['winner']),
+      beaten: String(row['beaten']),
+      games: number(row['games']),
+    }));
+  }
+
+  private deckStatistic(row: Row, where: ScopeSql): DeckStatistic {
     const snapshotId = String(row['snapshot_id']);
     const gamesPlayed = number(row['games_played']);
     const mana = this.manaRates(snapshotId);
@@ -185,20 +314,34 @@ export class StatsRepository {
       gamesPlayed,
       wins: number(row['wins']),
       winRate: gamesPlayed === 0 ? 0 : number(row['wins']) / gamesPlayed,
+      finishDistribution: [
+        number(row['wins']),
+        number(row['second']),
+        number(row['third']),
+        number(row['fourth']),
+      ],
+      lastGameId: typeof row['last_game_id'] === 'string' ? row['last_game_id'] : null,
       averageFinish: gamesPlayed === 0 ? null : number(row['average_finish']),
       averageGameLength: gamesPlayed === 0 ? null : number(row['average_game_length']),
       averageMulligans: gamesPlayed === 0 ? 0 : number(row['average_mulligans']),
       mulliganDistribution: rows(
         this.db,
-        `SELECT mulligans_taken AS mulligans, COUNT(*) AS games FROM game_players gp JOIN games g ON g.id = gp.game_id
-         WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' GROUP BY mulligans_taken ORDER BY mulligans_taken`,
+        `SELECT gp.mulligans_taken AS mulligans, COUNT(*) AS games
+           FROM game_players gp JOIN games g ON g.id = gp.game_id
+          WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND ${where.sql('g')}
+          GROUP BY gp.mulligans_taken ORDER BY gp.mulligans_taken`,
         snapshotId,
+        ...where.params,
       ).map((item) => ({ mulligans: number(item['mulligans']), games: number(item['games']) })),
       eliminationCauses: rows(
         this.db,
-        `SELECT loss_reason AS reason, COUNT(*) AS count FROM game_players gp JOIN games g ON g.id = gp.game_id
-         WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND loss_reason IS NOT NULL GROUP BY loss_reason`,
+        `SELECT gp.loss_reason AS reason, COUNT(*) AS count
+           FROM game_players gp JOIN games g ON g.id = gp.game_id
+          WHERE gp.deck_snapshot_id = ? AND g.status = 'finished' AND gp.loss_reason IS NOT NULL
+            AND ${where.sql('g')}
+          GROUP BY gp.loss_reason`,
         snapshotId,
+        ...where.params,
       ).map((item) => ({
         reason: String(item['reason']),
         label: lossReasonLabel(String(item['reason'])),
@@ -213,8 +356,10 @@ export class StatsRepository {
            JOIN deck_snapshots killer_ds ON killer_ds.id = killer.deck_snapshot_id
            JOIN decks killer_d ON killer_d.id = killer_ds.deck_id
           WHERE victim.deck_snapshot_id = ? AND g.status = 'finished' AND ${ATTRIBUTED_LOSS}
+            AND ${where.sql('g')}
           GROUP BY killer_ds.commander_names, killer_ds.color_identity, killer_d.archetype_tag`,
         snapshotId,
+        ...where.params,
       ).map((item) => ({
         commanders: jsonArray(item['commander_names']),
         colorIdentity: jsonArray(item['color_identity']),
@@ -234,6 +379,55 @@ export class StatsRepository {
     // battlefield land counts, or the player's end-turn land drop. They cannot support
     // the advertised heuristic. Never present invented percentages from these rows.
     return { floodRate: null, droughtRate: null };
+  }
+
+  /** Recorded games, newest first, with batch membership and each seat's commanders. */
+  listGames(limit = 30): GameListItem[] {
+    const bounded = Math.max(1, Math.floor(limit));
+    const games = rows(
+      this.db,
+      `SELECT g.id, g.seed, g.status, g.started_at, g.ended_at, g.turn_count, g.winner_seat,
+              g.game_mode, g.build_commit, bg.batch_id, bs.name AS scenario_name
+         FROM games g
+         LEFT JOIN batch_games bg ON bg.game_id = g.id
+         LEFT JOIN batch_scenarios bs ON bs.batch_id = bg.batch_id AND bs.scenario_id = bg.scenario_id
+        ORDER BY COALESCE(g.started_at, '') DESC, g.rowid DESC
+        LIMIT ?`,
+      bounded,
+    );
+    const seatsByGame = new Map<string, GameListItem['seats']>();
+    if (games.length > 0) {
+      const marks = games.map(() => '?').join(', ');
+      for (const row of rows(
+        this.db,
+        `SELECT gp.game_id, gp.seat, ds.commander_names
+           FROM game_players gp
+           LEFT JOIN deck_snapshots ds ON ds.id = gp.deck_snapshot_id
+          WHERE gp.game_id IN (${marks}) ORDER BY gp.seat`,
+        ...games.map((game) => String(game['id'])),
+      )) {
+        const key = String(row['game_id']);
+        seatsByGame.set(key, [
+          ...(seatsByGame.get(key) ?? []),
+          { seat: number(row['seat']), commanders: jsonArray(row['commander_names']) },
+        ]);
+      }
+    }
+    const text = (value: unknown): string | null => (typeof value === 'string' ? value : null);
+    return games.map((row) => ({
+      gameId: String(row['id']),
+      seed: String(row['seed'] ?? ''),
+      status: text(row['status']),
+      startedAt: text(row['started_at']),
+      endedAt: text(row['ended_at']),
+      turnCount: row['turn_count'] === null ? null : number(row['turn_count']),
+      winnerSeat: row['winner_seat'] === null ? null : number(row['winner_seat']),
+      gameMode: String(row['game_mode'] ?? 'spectator'),
+      batchId: text(row['batch_id']),
+      scenarioName: text(row['scenario_name']),
+      buildCommit: text(row['build_commit']),
+      seats: seatsByGame.get(String(row['id'])) ?? [],
+    }));
   }
 
   gameDebug(gameId: string): DebugGameData {

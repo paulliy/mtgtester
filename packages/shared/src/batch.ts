@@ -21,7 +21,10 @@ export interface BatchScenarioSpec {
   games: number;
   reflectionEnabled?: boolean;
 }
+export const MAX_BATCH_NAME_LENGTH = 80;
 export interface BatchSpec {
+  /** An optional label for the run, trimmed, at most `MAX_BATCH_NAME_LENGTH` characters. */
+  name?: string;
   seed?: string;
   scenarios: BatchScenarioSpec[];
 }
@@ -35,12 +38,15 @@ export interface BatchFailure {
 export interface BatchScenarioProgress {
   id: string;
   name: string;
+  providerKind: ProviderKind;
   games: number;
   completedGames: number;
   status: BatchStatus;
 }
 export interface BatchProgress {
   batchId: string;
+  /** The run's own name, or null when none was given (the viewer derives a label). */
+  name: string | null;
   seed: string;
   status: BatchStatus;
   totalGames: number;
@@ -52,6 +58,43 @@ export interface BatchProgress {
   createdAt: string;
   startedAt: string | null;
   endedAt: string | null;
+}
+/** One row of `GET /api/batches`: a run's headline numbers without its games. */
+export interface BatchListItem {
+  batchId: string;
+  name: string | null;
+  seed: string;
+  status: BatchStatus;
+  createdAt: string;
+  startedAt: string | null;
+  endedAt: string | null;
+  totalGames: number;
+  completedGames: number;
+  finishedGames: number;
+  failedGames: number;
+  scenarioCount: number;
+  /** Scenario names in run order, so the viewer can label a run that has no name of its own. */
+  scenarioNames: string[];
+}
+/** One row of `GET /api/games`: a recorded game, for the Debug page's game picker. */
+export interface GameListItem {
+  gameId: string;
+  seed: string;
+  /** `running`, `finished`, `halted`, ... as stored; null for a row that never got a status. */
+  status: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  turnCount: number | null;
+  /** 1-based seat number of the winner, or null. */
+  winnerSeat: number | null;
+  gameMode: string;
+  batchId: string | null;
+  /** The batch scenario's name when the game belongs to a batch. */
+  scenarioName: string | null;
+  /** The build the game ran on (`games.build_commit`); null for older games. */
+  buildCommit: string | null;
+  /** Commander names per seat, seat 1 first. */
+  seats: { seat: number; commanders: string[] }[];
 }
 export interface BatchSeatResult {
   seat: PlayerId;

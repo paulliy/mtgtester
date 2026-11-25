@@ -3,6 +3,7 @@
   BatchFailure,
   BatchGameStatus,
   BatchGameSummary,
+  BatchListItem,
   BatchProgress,
   BatchResults,
   BatchScenarioProgress,
@@ -10,6 +11,7 @@
   BatchSeatResult,
   BatchStatus,
   PlayerId,
+  ProviderKind,
 } from '@mtg/shared';
 import type { SqliteLike } from './games';
 
@@ -29,8 +31,21 @@ function first(db: SqliteLike, sql: string, ...args: unknown[]): Row | null {
   return (db.query(sql).get(...args) as Row | null) ?? null;
 }
 
+/** The scenario's provider as stored in its spec; `random` (the built-in bots) if unreadable. */
+function providerKindOf(specJson: unknown): ProviderKind {
+  if (typeof specJson !== 'string') return 'random';
+  try {
+    return (JSON.parse(specJson) as { providerKind?: unknown }).providerKind === 'ai'
+      ? 'ai'
+      : 'random';
+  } catch {
+    return 'random';
+  }
+}
+
 export interface BatchRow {
   id: string;
+  name: string | null;
   seed: string;
   status: BatchStatus;
   createdAt: string;
@@ -76,12 +91,19 @@ export class BatchRepository {
     return interrupted.length;
   }
 
-  create(id: string, seed: string, scenarios: readonly BatchScenarioSpec[]): void {
+  create(
+    id: string,
+    seed: string,
+    scenarios: readonly BatchScenarioSpec[],
+    name: string | null = null,
+  ): void {
     const now = new Date().toISOString();
     const write = (): void => {
       this.db
-        .query(`INSERT INTO batches (id, seed, status, created_at) VALUES (?, ?, 'queued', ?)`)
-        .run(id, seed, now);
+        .query(
+          `INSERT INTO batches (id, name, seed, status, created_at) VALUES (?, ?, ?, 'queued', ?)`,
+        )
+        .run(id, name, seed, now);
       const stmt = this.db.query(
         `INSERT INTO batch_scenarios (batch_id, scenario_id, scenario_index, name, games, spec_json) VALUES (?, ?, ?, ?, ?, ?)`,
       );
@@ -147,6 +169,7 @@ export class BatchRepository {
     }
     return {
       id,
+      name: str(row['name']),
       seed: String(row['seed'] ?? ''),
       status: String(row['status'] ?? 'failed') as BatchStatus,
       createdAt: String(row['created_at'] ?? ''),
@@ -156,12 +179,53 @@ export class BatchRepository {
     };
   }
 
+  /** Newest runs first, with counts from one query so the list never loads a run's games. */
+  list(limit = 50): BatchListItem[] {
+    const bounded = Math.max(1, Math.floor(limit));
+    const batches = rows(
+      this.db,
+      `SELECT b.id, b.name, b.seed, b.status, b.created_at, b.started_at, b.ended_at, (SELECT COUNT(*) FROM batch_scenarios bs WHERE bs.batch_id = b.id) AS scenario_count, (SELECT COALESCE(SUM(bs.games), 0) FROM batch_scenarios bs WHERE bs.batch_id = b.id) AS total_games, (SELECT COUNT(*) FROM batch_games bg WHERE bg.batch_id = b.id AND bg.status NOT IN ('running', 'queued')) AS completed_games, (SELECT COUNT(*) FROM batch_games bg WHERE bg.batch_id = b.id AND bg.status = 'finished') AS finished_games FROM batches b ORDER BY b.created_at DESC, b.rowid DESC LIMIT ?`,
+      bounded,
+    );
+    const namesByBatch = new Map<string, string[]>();
+    if (batches.length > 0) {
+      const marks = batches.map(() => '?').join(', ');
+      for (const row of rows(
+        this.db,
+        `SELECT batch_id, name FROM batch_scenarios WHERE batch_id IN (${marks}) ORDER BY scenario_index`,
+        ...batches.map((row) => String(row['id'])),
+      )) {
+        const key = String(row['batch_id']);
+        namesByBatch.set(key, [...(namesByBatch.get(key) ?? []), String(row['name'])]);
+      }
+    }
+    return batches.map((row) => {
+      const completed = n(row['completed_games']);
+      const finished = n(row['finished_games']);
+      return {
+        batchId: String(row['id']),
+        name: str(row['name']),
+        seed: String(row['seed'] ?? ''),
+        status: String(row['status'] ?? 'failed') as BatchStatus,
+        createdAt: String(row['created_at'] ?? ''),
+        startedAt: str(row['started_at']),
+        endedAt: str(row['ended_at']),
+        totalGames: n(row['total_games']),
+        completedGames: completed,
+        finishedGames: finished,
+        failedGames: completed - finished,
+        scenarioCount: n(row['scenario_count']),
+        scenarioNames: namesByBatch.get(String(row['id'])) ?? [],
+      };
+    });
+  }
+
   progress(id: string): BatchProgress | null {
     const batch = this.get(id);
     if (batch === null) return null;
     const scenarioRows = rows(
       this.db,
-      `SELECT scenario_id, name, games FROM batch_scenarios WHERE batch_id = ? ORDER BY scenario_index`,
+      `SELECT scenario_id, name, games, spec_json FROM batch_scenarios WHERE batch_id = ? ORDER BY scenario_index`,
       id,
     );
     const gameRows = rows(
@@ -201,6 +265,7 @@ export class BatchRepository {
       return {
         id: String(row['scenario_id']),
         name: String(row['name']),
+        providerKind: providerKindOf(row['spec_json']),
         games,
         completedGames: count.done,
         status,
@@ -209,6 +274,7 @@ export class BatchRepository {
     const finishedGames = ended.filter((row) => row['status'] === 'finished').length;
     return {
       batchId: id,
+      name: batch.name,
       seed: batch.seed,
       status: batch.status,
       totalGames: scenarioRows.reduce((sum, row) => sum + n(row['games']), 0),

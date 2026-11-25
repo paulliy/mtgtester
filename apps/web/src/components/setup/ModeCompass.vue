@@ -57,7 +57,7 @@ const STOPS: readonly Stop[] = [
     // Batch runs need the server's database, which a local-games build has none of.
     sub: LOCAL_GAMES ? 'Coming soon' : 'Many games',
     angle: 90,
-    to: '/batch',
+    to: LOCAL_GAMES ? '/batch' : '/batch/new',
   },
   {
     key: 'multi',

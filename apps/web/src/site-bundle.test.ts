@@ -38,7 +38,8 @@ const NEVER_ON_SITE = [
   'DebugView',
   'StatsView',
   'BatchSetupView',
-  'BatchResultsView',
+  'BatchRunsView',
+  'ImportReportView',
 ];
 
 describe('the site build with local games', () => {

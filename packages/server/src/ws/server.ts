@@ -16,6 +16,8 @@ import {
   type CardTestScenario,
 } from '../cards/card-test-scenarios';
 import { BatchManager, validateBatch } from '../batch/manager';
+import { cardTestLabCards } from '../cards/card-test-lab-cards';
+import { buildCardReport, catalogAudit, CARD_REPORT_MAX_NAMES } from '../cards/card-report';
 import { sessionAi } from '../match/session-ai';
 import {
   GameHost,
@@ -105,6 +107,39 @@ export class GameServer extends GameHost<ServerWebSocket<SocketData>> {
     return reply(await this.previewSetup(text));
   }
 
+  /**
+   * `GET /api/card-report?names=A&names=B`: Oracle text, status and audit evidence for cards the
+   * Import report names (ADR 0054). Each `names` value is one card name (names hold commas), and
+   * a value may also carry several names on separate lines. At most `CARD_REPORT_MAX_NAMES`
+   * distinct names; more is a 400. Public card data only, so it needs no deck context.
+   */
+  private handleCardReport(url: URL): Response {
+    const names = [
+      ...new Set(
+        url.searchParams
+          .getAll('names')
+          .flatMap((value) => value.split('\n'))
+          .map((name) => name.trim())
+          .filter((name) => name !== ''),
+      ),
+    ];
+    if (names.length === 0)
+      return Response.json({ message: 'Name at least one card with names=.' }, { status: 400 });
+    if (names.length > CARD_REPORT_MAX_NAMES)
+      return Response.json(
+        { message: `Ask for at most ${CARD_REPORT_MAX_NAMES} cards at a time.` },
+        { status: 400 },
+      );
+    return Response.json(
+      buildCardReport(names, {
+        index: this.deps.index,
+        provisional: this.deps.pool.provisional,
+        audit: catalogAudit(),
+        scenarios: this.deps.cardTestLab === true ? listCardTestScenarios() : null,
+      }),
+    );
+  }
+
   /** `POST /api/game-report` with `{ sessionToken }`. POST keeps the token out of URLs and logs. */
   private async handleGameReport(request: Request): Promise<Response> {
     let text: string;
@@ -154,16 +189,44 @@ export class GameServer extends GameHost<ServerWebSocket<SocketData>> {
         if (url.pathname === '/api/game-report' && request.method === 'POST') {
           return await this.handleGameReport(request);
         }
+        if (url.pathname === '/api/card-report' && request.method === 'GET') {
+          return this.handleCardReport(url);
+        }
         if (url.pathname === '/api/card-test-scenarios') {
           if (this.deps.cardTestLab !== true)
             return Response.json({ message: 'Card Test Lab is disabled.' }, { status: 404 });
           return Response.json({ scenarios: listCardTestScenarios() });
         }
+        if (url.pathname === '/api/card-test-lab/cards') {
+          if (this.deps.cardTestLab !== true)
+            return Response.json({ message: 'Card Test Lab is disabled.' }, { status: 404 });
+          return Response.json({ cards: cardTestLabCards(listCardTestScenarios()) });
+        }
         if (url.pathname === '/api/stats') {
           if (this.deps.store === undefined)
             return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
           const batchId = url.searchParams.get('batchId') ?? undefined;
-          return Response.json({ decks: this.deps.store.stats().deckStatistics(batchId) });
+          const scope = url.searchParams.get('scope') ?? undefined;
+          if (scope !== undefined && scope !== 'all' && scope !== 'batch' && scope !== 'mine')
+            return Response.json({ message: 'scope must be all, batch or mine.' }, { status: 400 });
+          return Response.json(
+            this.deps.store.stats().statsReport({
+              ...(scope === undefined ? {} : { scope }),
+              ...(batchId === undefined ? {} : { batchId }),
+            }),
+          );
+        }
+        if (url.pathname === '/api/batches' && request.method === 'GET') {
+          if (this.batchManager === null)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          const rawLimit = url.searchParams.get('limit');
+          const limit = rawLimit === null ? 50 : Number(rawLimit);
+          if (!Number.isInteger(limit) || limit < 1 || limit > 200)
+            return Response.json(
+              { message: 'limit must be a whole number from 1 to 200.' },
+              { status: 400 },
+            );
+          return Response.json({ batches: this.batchManager.list(limit) });
         }
         if (url.pathname === '/api/batches' && request.method === 'POST') {
           if (this.batchManager === null)
@@ -268,6 +331,24 @@ export class GameServer extends GameHost<ServerWebSocket<SocketData>> {
           // No single-player lock here, unlike the two routes above: a reflection is only ever
           // written after the game has ended, so an unfinished game has nothing to leak.
           return Response.json({ reflections: this.deps.store.stats().gameReflections(gameId) });
+        }
+        if (url.pathname === '/api/games' && request.method === 'GET') {
+          if (this.deps.store === undefined)
+            return Response.json({ message: 'Persistence is disabled.' }, { status: 503 });
+          const rawLimit = url.searchParams.get('limit');
+          const limit = rawLimit === null ? 30 : Number(rawLimit);
+          if (!Number.isInteger(limit) || limit < 1 || limit > 200)
+            return Response.json(
+              { message: 'limit must be a whole number from 1 to 200.' },
+              { status: 400 },
+            );
+          // A player's unfinished game stays out: its seed would reveal the shuffled libraries.
+          return Response.json({
+            games: this.deps.store
+              .stats()
+              .listGames(limit)
+              .filter((game) => !this.holdsUnfinishedGame(game.gameId)),
+          });
         }
         const debugMatch = /^\/api\/games\/([^/]+)\/(debug|export)$/.exec(url.pathname);
         if (debugMatch !== null) {
