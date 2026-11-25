@@ -276,4 +276,35 @@ describe('summarizeCombat', () => {
     });
     expect(summary?.attacked.get('P2')).toBe('Under attack · 5 incoming');
   });
+
+  it('counts double strike twice until its first hit lands', () => {
+    const at = (
+      step: 'declareBlockers' | 'firstStrikeCombatDamage',
+      priorityPlayer: string | null,
+    ) =>
+      summarizeCombat({
+        phase: 'combat',
+        step,
+        priorityPlayer,
+        permanents: [
+          creature('d', 'Boros Swiftblade', 'P1', {
+            power: 5,
+            toughness: 5,
+            attacking: 'P2',
+            keywords: ['double strike'],
+          }),
+        ],
+        seats,
+        plan: null,
+      });
+    expect(at('declareBlockers', null)?.attacked.get('P2')).toBe('Under attack · 10 incoming');
+    const declared = at('declareBlockers', 'P1');
+    expect(declared?.attacked.get('P2')).toBe('Under attack · 10 incoming');
+    expect(declared?.prose).toEqual([
+      'Boros Swiftblade is unblocked and deals 10 to Queen Marchesa.',
+    ]);
+    expect(at('firstStrikeCombatDamage', 'P1')?.attacked.get('P2')).toBe(
+      'Under attack · 5 incoming',
+    );
+  });
 });
