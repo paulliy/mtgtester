@@ -8,7 +8,8 @@
     "build": "vite build",
     "build:table": "vite build --mode table",
     "preview": "vite preview",
-    "typecheck": "vue-tsc --noEmit -p tsconfig.json"
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "build:site": "vite build --mode site"
   },
   "dependencies": {
     "@mtg/shared": "workspace:*",

@@ -25,6 +25,7 @@ import type { Ability, Effect } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import { optionAt } from '../decisions';
 import { battlefieldCharacteristics, matchesSelector } from '../effects/continuous';
+import { withReadScope } from '../effects/layer-cache';
 import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
@@ -308,36 +309,36 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   // the first creature early loses dying watchers and can remove an anthem before
   // deciding whether another creature belongs to this event (CR 704.3/603.10).
   const dying: EnginePermanent[] = [];
-  // One layer pass for the whole board, retaken after a regeneration changes it.
-  let charsOf = battlefieldCharacteristics(ctx);
-  for (const perm of s.battlefield) {
-    const chars = charsOf(perm);
-    let reason: string | undefined;
-    if (chars.types.includes('Creature')) {
-      if (chars.toughness <= 0) reason = 'zeroToughness';
-      else if (
-        perm.damageMarked > 0 &&
-        (perm.damageMarked >= chars.toughness || perm.damagedByDeathtouch) &&
-        !chars.keywords.includes('indestructible')
-      ) {
-        if (consumeRegenerationShield(ctx, perm)) {
-          acted = true;
-          charsOf = battlefieldCharacteristics(ctx);
-          continue;
-        }
-        reason = 'lethalDamage';
-      }
+  // The scan reads the board in a read scope and stops at a regeneration, which changes the
+  // board; the scan then resumes after that permanent on the changed board. When nothing dies
+  // and nothing regenerates, the other battlefield checks and the legend rule below read the
+  // same board, so they are judged in the same scope: every check there reads and changes
+  // nothing until one fires, and the first that fires ends the pass. The change is made after
+  // the scope closes.
+  let found: BattlefieldSba | undefined;
+  for (let start = 0; ;) {
+    const first = start === 0;
+    const pass = withReadScope(ctx, () => {
+      const lethal = scanLethal(ctx, start);
+      const quiet = first && lethal.regenerate === undefined && lethal.dying.length === 0;
+      return { lethal, found: quiet ? findBattlefieldSba(ctx) : undefined };
+    });
+    for (const death of pass.lethal.dying) {
+      if (death.kind === 'creature')
+        emit(ctx, 'sbaCreatureDies', { name: death.perm.name, reason: death.reason });
+      else if (death.kind === 'planeswalker')
+        emit(ctx, 'sbaPlaneswalkerDies', { name: death.perm.name });
+      else emit(ctx, 'sbaBattleDies', { name: death.perm.name });
+      dying.push(death.perm);
     }
-    if (reason !== undefined) {
-      emit(ctx, 'sbaCreatureDies', { name: perm.name, reason });
-      dying.push(perm);
-    } else if (chars.types.includes('Planeswalker') && (perm.counters['loyalty'] ?? 0) <= 0) {
-      emit(ctx, 'sbaPlaneswalkerDies', { name: perm.name });
-      dying.push(perm);
-    } else if (chars.types.includes('Battle') && (perm.counters['defense'] ?? 0) <= 0) {
-      emit(ctx, 'sbaBattleDies', { name: perm.name });
-      dying.push(perm);
+    const regenerate = pass.lethal.regenerate;
+    if (regenerate === undefined) {
+      found = pass.found;
+      break;
     }
+    consumeRegenerationShield(ctx, s.battlefield[regenerate]!);
+    acted = true;
+    start = regenerate + 1;
   }
   if (dying.length > 0) {
     yield* movePermanentsToGraveyard(ctx, dying);
@@ -345,167 +346,66 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   }
   if (acted) return true;
 
-  // --- Other battlefield checks ---
-  // Every check below that changes the state returns, so one layer pass serves the loop.
-  const otherCharsOf = battlefieldCharacteristics(ctx);
-  for (const perm of [...s.battlefield]) {
-    if (!s.battlefield.includes(perm)) continue;
-    const chars = otherCharsOf(perm);
-
-    // A bestowed Aura that is unattached or attached to an illegal object, by its enchant
-    // restriction or protection, becomes unattached and ceases to be bestowed, staying on the
-    // battlefield as the creature it is printed as (CR 702.103f, an exception to 704.5m).
-    if (perm.bestowed === true) {
-      const host =
-        perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
-      if (host === undefined || enchantAllows(ctx, perm, host) !== true) {
-        debug(ctx, 'sba', `bestowed ${perm.name} unattached — it is a creature again`);
-        emit(ctx, 'bestowEnded', { name: perm.name });
-        perm.attachedTo = null;
-        delete perm.bestowed;
+  // --- Other battlefield checks, then the legend rule (judged with the scan above) ---
+  if (found !== undefined) {
+    const perm = found.kind === 'legendRule' ? undefined : found.perm;
+    switch (found.kind) {
+      case 'bestowEnded':
+        debug(ctx, 'sba', `bestowed ${perm!.name} unattached — it is a creature again`);
+        emit(ctx, 'bestowEnded', { name: perm!.name });
+        perm!.attachedTo = null;
+        delete perm!.bestowed;
         return true;
-      }
-    }
-
-    // An Aura must remain attached to a permanent allowed by its enchant restriction for its
-    // current controller, without protection from it (CR 704.5m, 303.4d, 702.16c).
-    if (chars.subtypes.includes('Aura')) {
-      const host =
-        perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
-      // An Aura enchanting a player (Curse of Bounty) stays while that player is still one its
-      // enchant ability allows ("enchant opponent" of its current controller), CR 303.4d.
-      const playerHostLegal =
-        perm.attachedTo !== null &&
-        s.players.some((p) => p.id === perm.attachedTo) &&
-        auraPlayerHostIsLegal(ctx, perm, perm.attachedTo);
-      // Animate Dead before its enters trigger resolves: "enchant creature card in a graveyard"
-      // is satisfied by that card while it stays there.
-      const graveyardHostLegal =
-        perm.attachedTo !== null &&
-        perm.reanimatedHostId === undefined &&
-        auraGraveyardHostIsLegal(ctx, perm, perm.attachedTo);
-      // After it: only the creature put onto the battlefield with it, while it is a creature
-      // without protection from the Aura (CR 702.16c).
-      const reanimatedHostIllegal =
-        perm.reanimatedHostId !== undefined &&
-        (host === undefined ||
-          host.id !== perm.reanimatedHostId ||
-          !isCreaturePermanent(ctx, host) ||
-          hasProtectionFrom(ctx, host, chars));
-      // Any other permanent host must satisfy the enchant restriction.
-      const hostIllegal =
-        host !== undefined &&
-        perm.reanimatedHostId === undefined &&
-        enchantAllows(ctx, perm, host) === false;
-      if (
-        (host === undefined && !playerHostLegal && !graveyardHostLegal) ||
-        reanimatedHostIllegal ||
-        hostIllegal
-      ) {
+      case 'auraDies':
         debug(
           ctx,
           'sba',
-          `aura ${perm.name} attached to nothing or an illegal host — to graveyard`,
+          `aura ${perm!.name} attached to nothing or an illegal host — to graveyard`,
         );
-        emit(ctx, 'sbaAuraDies', { name: perm.name });
-        yield* moveObject(ctx, perm, { zone: 'graveyard' });
+        emit(ctx, 'sbaAuraDies', { name: perm!.name });
+        yield* moveObject(ctx, perm!, { zone: 'graveyard' });
         return true;
-      }
-    }
-
-    // Equipment illegally attached becomes unattached (CR 704.5p).
-    if (chars.subtypes.includes('Equipment') && perm.attachedTo !== null) {
-      const host = s.battlefield.find((p) => p.id === perm.attachedTo);
-      if (host === undefined || !isCreaturePermanent(ctx, host)) {
-        debug(ctx, 'sba', `equipment ${perm.name} illegally attached — unattached`);
-        emit(ctx, 'sbaEquipmentUnattached', { name: perm.name });
-        perm.attachedTo = null;
+      case 'equipmentUnattached':
+        debug(ctx, 'sba', `equipment ${perm!.name} illegally attached — unattached`);
+        emit(ctx, 'sbaEquipmentUnattached', { name: perm!.name });
+        perm!.attachedTo = null;
         return true;
-      }
-    }
-
-    // CR 714.4: a Saga at or past its final chapter is sacrificed once none of its chapter
-    // abilities is still waiting to be put on, or sitting on, the stack.
-    if (chars.subtypes.includes('Saga')) {
-      const final = sagaFinalChapter(ctx, perm);
-      const isChapter = (ability: { trigger?: object } | null): boolean =>
-        ability?.trigger !== undefined && 'chapter' in ability.trigger;
-      if (
-        final > 0 &&
-        (perm.counters['lore'] ?? 0) >= final &&
-        !s.pendingTriggers.some(
-          (pending) => pending.sourceObjectId === perm.id && isChapter(pending.ability),
-        ) &&
-        !s.stack.some((entry) => entry.sourceId === perm.id && isChapter(entry.ability))
-      ) {
-        emit(ctx, 'sbaSagaSacrificed', { name: perm.name });
-        yield* moveObject(ctx, perm, { zone: 'graveyard', reason: 'sacrifice' });
+      case 'sagaSacrificed':
+        emit(ctx, 'sbaSagaSacrificed', { name: perm!.name });
+        yield* moveObject(ctx, perm!, { zone: 'graveyard', reason: 'sacrifice' });
         return true;
-      }
-    }
-
-    // +1/+1 and -1/-1 counters annihilate in pairs (CR 704.5r).
-    {
-      const plus = perm.counters['+1/+1'] ?? 0;
-      const minus = perm.counters['-1/-1'] ?? 0;
-      if (plus > 0 && minus > 0) {
+      case 'countersAnnihilate': {
+        const plus = perm!.counters['+1/+1'] ?? 0;
+        const minus = perm!.counters['-1/-1'] ?? 0;
         const n = Math.min(plus, minus);
-        perm.counters['+1/+1'] = plus - n;
-        perm.counters['-1/-1'] = minus - n;
-        if (perm.counters['+1/+1'] === 0) delete perm.counters['+1/+1'];
-        if (perm.counters['-1/-1'] === 0) delete perm.counters['-1/-1'];
-        debug(ctx, 'sba', `${perm.name}: ${n} +1/+1 and -1/-1 counter pair(s) annihilate`);
-        emit(ctx, 'sbaCountersAnnihilate', { name: perm.name, count: n });
+        perm!.counters['+1/+1'] = plus - n;
+        perm!.counters['-1/-1'] = minus - n;
+        if (perm!.counters['+1/+1'] === 0) delete perm!.counters['+1/+1'];
+        if (perm!.counters['-1/-1'] === 0) delete perm!.counters['-1/-1'];
+        debug(ctx, 'sba', `${perm!.name}: ${n} +1/+1 and -1/-1 counter pair(s) annihilate`);
+        emit(ctx, 'sbaCountersAnnihilate', { name: perm!.name, count: n });
         return true;
       }
-    }
-  }
-
-  // --- Legend rule (CR 704.5j) — controller chooses which to keep (brief §5.6). ---
-  const legendRuleExemptions = gatherRuleStatics(ctx).filter(
-    (entry) => entry.static.kind === 'legendRuleDoesntApply',
-  );
-  const legendCharsOf = battlefieldCharacteristics(ctx);
-  for (const player of playersInApnapOrder(ctx)) {
-    const byName = new Map<string, EnginePermanent[]>();
-    for (const perm of s.battlefield) {
-      if (perm.controllerId !== player.id) continue;
-      if (!legendCharsOf(perm).supertypes.includes('Legendary')) continue;
-      if (
-        legendRuleExemptions.some(
-          (entry) =>
-            entry.controllerId === player.id &&
-            entry.static.kind === 'legendRuleDoesntApply' &&
-            matchesSelector(ctx, perm, entry.static.filter, {
-              cardId: entry.sourceCardId,
-              controllerId: entry.controllerId,
-            }),
-        )
-      )
-        continue;
-      const group = byName.get(perm.name) ?? [];
-      group.push(perm);
-      byName.set(perm.name, group);
-    }
-    for (const [name, group] of byName) {
-      if (group.length < 2) continue;
-      debug(ctx, 'sba', `legend rule: ${player.id} controls ${group.length}× ${name}`);
-      const outcome = yield {
-        decisionType: 'legendRule',
-        player: player.id,
-        prompt: `You control ${group.length} legendary permanents named ${name}. Choose one to keep; the rest go to their owners' graveyards.`,
-        options: group.map((perm) => ({
-          type: 'keepLegend',
-          description: `Keep ${name} (${perm.id})`,
-          payload: perm.id,
-        })),
-      };
-      const keepId = (group[outcome.index] as EnginePermanent).id;
-      emit(ctx, 'sbaLegendRule', { name, kept: keepId }, player.id);
-      for (const perm of group) {
-        if (perm.id !== keepId) yield* moveObject(ctx, perm, { zone: 'graveyard' });
+      case 'legendRule': {
+        const { player, name, group } = found;
+        debug(ctx, 'sba', `legend rule: ${player} controls ${group.length}× ${name}`);
+        const outcome = yield {
+          decisionType: 'legendRule',
+          player,
+          prompt: `You control ${group.length} legendary permanents named ${name}. Choose one to keep; the rest go to their owners' graveyards.`,
+          options: group.map((p) => ({
+            type: 'keepLegend',
+            description: `Keep ${name} (${p.id})`,
+            payload: p.id,
+          })),
+        };
+        const keepId = (group[outcome.index] as EnginePermanent).id;
+        emit(ctx, 'sbaLegendRule', { name, kept: keepId }, player);
+        for (const p of group) {
+          if (p.id !== keepId) yield* moveObject(ctx, p, { zone: 'graveyard' });
+        }
+        return true;
       }
-      return true;
     }
   }
 
@@ -543,6 +443,183 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   }
 
   return false;
+}
+
+interface LethalScan {
+  dying: Array<
+    | { kind: 'creature'; perm: EnginePermanent; reason: string }
+    | { kind: 'planeswalker' | 'battle'; perm: EnginePermanent }
+  >;
+  /** Index on the battlefield of a creature with lethal damage and a regeneration shield. */
+  regenerate?: number;
+}
+
+/**
+ * Lethal and zero-characteristic deaths (CR 704.5f-g, 704.5i, 704.5v) from the battlefield index
+ * `start` on, all from one board state. Stops at a creature a regeneration shield would save,
+ * since using the shield changes the board. Reads only, so it can run in a read scope.
+ */
+function scanLethal(ctx: GameContext, start: number): LethalScan {
+  const s = ctx.state;
+  const dying: LethalScan['dying'] = [];
+  const charsOf = battlefieldCharacteristics(ctx);
+  for (let index = start; index < s.battlefield.length; index++) {
+    const perm = s.battlefield[index]!;
+    const chars = charsOf(perm);
+    if (chars.types.includes('Creature')) {
+      if (chars.toughness <= 0) {
+        dying.push({ kind: 'creature', perm, reason: 'zeroToughness' });
+        continue;
+      }
+      if (
+        perm.damageMarked > 0 &&
+        (perm.damageMarked >= chars.toughness || perm.damagedByDeathtouch) &&
+        !chars.keywords.includes('indestructible')
+      ) {
+        // `consumeRegenerationShield` replaces the destruction exactly when a shield is left.
+        if (perm.regenerationShields > 0) return { dying, regenerate: index };
+        dying.push({ kind: 'creature', perm, reason: 'lethalDamage' });
+        continue;
+      }
+    }
+    if (chars.types.includes('Planeswalker') && (perm.counters['loyalty'] ?? 0) <= 0)
+      dying.push({ kind: 'planeswalker', perm });
+    else if (chars.types.includes('Battle') && (perm.counters['defense'] ?? 0) <= 0)
+      dying.push({ kind: 'battle', perm });
+  }
+  return { dying };
+}
+
+/** A battlefield state-based action `sbaPass` found, judged before anything changes. */
+type BattlefieldSba =
+  | {
+      kind:
+        | 'bestowEnded'
+        | 'auraDies'
+        | 'equipmentUnattached'
+        | 'sagaSacrificed'
+        | 'countersAnnihilate';
+      perm: EnginePermanent;
+    }
+  | { kind: 'legendRule'; player: PlayerId; name: string; group: EnginePermanent[] };
+
+/**
+ * The first battlefield state-based action that applies, in the order `sbaPass` performs them:
+ * bestow ending, Auras, Equipment, Sagas and counter annihilation per permanent, then the legend
+ * rule in APNAP order. Reads only, so it can run in a read scope.
+ */
+function findBattlefieldSba(ctx: GameContext): BattlefieldSba | undefined {
+  const s = ctx.state;
+  const charsOf = battlefieldCharacteristics(ctx);
+  for (const perm of s.battlefield) {
+    const chars = charsOf(perm);
+
+    // A bestowed Aura that is unattached or attached to an illegal object, by its enchant
+    // restriction or protection, becomes unattached and ceases to be bestowed, staying on the
+    // battlefield as the creature it is printed as (CR 702.103f, an exception to 704.5m).
+    if (perm.bestowed === true) {
+      const host =
+        perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
+      if (host === undefined || enchantAllows(ctx, perm, host) !== true)
+        return { kind: 'bestowEnded', perm };
+    }
+
+    // An Aura must remain attached to a permanent allowed by its enchant restriction for its
+    // current controller, without protection from it (CR 704.5m, 303.4d, 702.16c).
+    if (chars.subtypes.includes('Aura')) {
+      const host =
+        perm.attachedTo === null ? undefined : s.battlefield.find((p) => p.id === perm.attachedTo);
+      // An Aura enchanting a player (Curse of Bounty) stays while that player is still one its
+      // enchant ability allows ("enchant opponent" of its current controller), CR 303.4d.
+      const playerHostLegal =
+        perm.attachedTo !== null &&
+        s.players.some((p) => p.id === perm.attachedTo) &&
+        auraPlayerHostIsLegal(ctx, perm, perm.attachedTo);
+      // Animate Dead before its enters trigger resolves: "enchant creature card in a graveyard"
+      // is satisfied by that card while it stays there.
+      const graveyardHostLegal =
+        perm.attachedTo !== null &&
+        perm.reanimatedHostId === undefined &&
+        auraGraveyardHostIsLegal(ctx, perm, perm.attachedTo);
+      // After it: only the creature put onto the battlefield with it, while it is a creature
+      // without protection from the Aura (CR 702.16c).
+      const reanimatedHostIllegal =
+        perm.reanimatedHostId !== undefined &&
+        (host === undefined ||
+          host.id !== perm.reanimatedHostId ||
+          !isCreaturePermanent(ctx, host) ||
+          hasProtectionFrom(ctx, host, chars));
+      // Any other permanent host must satisfy the enchant restriction.
+      const hostIllegal =
+        host !== undefined &&
+        perm.reanimatedHostId === undefined &&
+        enchantAllows(ctx, perm, host) === false;
+      if (
+        (host === undefined && !playerHostLegal && !graveyardHostLegal) ||
+        reanimatedHostIllegal ||
+        hostIllegal
+      )
+        return { kind: 'auraDies', perm };
+    }
+
+    // Equipment illegally attached becomes unattached (CR 704.5p).
+    if (chars.subtypes.includes('Equipment') && perm.attachedTo !== null) {
+      const host = s.battlefield.find((p) => p.id === perm.attachedTo);
+      if (host === undefined || !isCreaturePermanent(ctx, host))
+        return { kind: 'equipmentUnattached', perm };
+    }
+
+    // CR 714.4: a Saga at or past its final chapter is sacrificed once none of its chapter
+    // abilities is still waiting to be put on, or sitting on, the stack.
+    if (chars.subtypes.includes('Saga')) {
+      const final = sagaFinalChapter(ctx, perm);
+      const isChapter = (ability: { trigger?: object } | null): boolean =>
+        ability?.trigger !== undefined && 'chapter' in ability.trigger;
+      if (
+        final > 0 &&
+        (perm.counters['lore'] ?? 0) >= final &&
+        !s.pendingTriggers.some(
+          (pending) => pending.sourceObjectId === perm.id && isChapter(pending.ability),
+        ) &&
+        !s.stack.some((entry) => entry.sourceId === perm.id && isChapter(entry.ability))
+      )
+        return { kind: 'sagaSacrificed', perm };
+    }
+
+    // +1/+1 and -1/-1 counters annihilate in pairs (CR 704.5r).
+    if ((perm.counters['+1/+1'] ?? 0) > 0 && (perm.counters['-1/-1'] ?? 0) > 0)
+      return { kind: 'countersAnnihilate', perm };
+  }
+
+  // --- Legend rule (CR 704.5j) — controller chooses which to keep (brief §5.6). ---
+  const legendRuleExemptions = gatherRuleStatics(ctx).filter(
+    (entry) => entry.static.kind === 'legendRuleDoesntApply',
+  );
+  for (const player of playersInApnapOrder(ctx)) {
+    const byName = new Map<string, EnginePermanent[]>();
+    for (const perm of s.battlefield) {
+      if (perm.controllerId !== player.id) continue;
+      if (!charsOf(perm).supertypes.includes('Legendary')) continue;
+      if (
+        legendRuleExemptions.some(
+          (entry) =>
+            entry.controllerId === player.id &&
+            entry.static.kind === 'legendRuleDoesntApply' &&
+            matchesSelector(ctx, perm, entry.static.filter, {
+              cardId: entry.sourceCardId,
+              controllerId: entry.controllerId,
+            }),
+        )
+      )
+        continue;
+      const group = byName.get(perm.name) ?? [];
+      group.push(perm);
+      byName.set(perm.name, group);
+    }
+    for (const [name, group] of byName)
+      if (group.length >= 2) return { kind: 'legendRule', player: player.id, name, group };
+  }
+  return undefined;
 }
 
 /** Put waiting triggers on the stack in APNAP order; same-player order is a choice (§5.5). */

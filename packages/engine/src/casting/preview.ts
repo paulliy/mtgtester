@@ -1,5 +1,5 @@
 import type { CardDefinition } from '../cards/definition';
-import { getCached, setCached } from '../effects/layer-cache';
+import { getCached, setCached, sharePassesWith } from '../effects/layer-cache';
 import type { EngineCardObject, EngineStackObject, GameContext } from '../state/types';
 import { countWork } from '../work-counters';
 
@@ -86,6 +86,7 @@ export function castingPreviewContext(
   const last = LAST_PREVIEW.get(ctx);
   const layers = (last === undefined ? undefined : getCached(last)) ?? getCached(ctx);
   if (layers !== undefined) setCached(preview, layers);
+  sharePassesWith(ctx, preview);
   LAST_PREVIEW.set(ctx, preview);
   return preview;
 }
