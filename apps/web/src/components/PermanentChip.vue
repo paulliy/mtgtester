@@ -124,7 +124,10 @@ const artTag = computed(() => {
   return typeParts.value.supertypes[0] ?? null;
 });
 
-/** The ink bar across the top in combat: whom it attacks, or what it blocks. */
+/**
+ * The ink bar across the top in combat, kept short so it fits a tile: "→ P3" for whom it attacks,
+ * "Blocks Lab Ox" for what it blocks. The combat lane says the rest.
+ */
 const combatTag = computed(() => {
   const p = props.permanent;
   // A plan tag speaks for an undeclared creature, or for an attacker you are blocking right now.
@@ -132,9 +135,9 @@ const combatTag = computed(() => {
   if (p.attacking !== null) {
     const target = p.attackingPlaneswalker ?? p.attacking;
     const label = props.nameById?.get(target) ?? target;
-    return `Attacking ${label}${p.blockedBy.length > 0 ? ' · blocked' : ''}`;
+    return `→ ${label}${p.blockedBy.length > 0 ? ' · blocked' : ''}`;
   }
-  if (p.blocking !== null) return `Blocking ${props.nameById?.get(p.blocking) ?? p.blocking}`;
+  if (p.blocking !== null) return `Blocks ${props.nameById?.get(p.blocking) ?? p.blocking}`;
   return null;
 });
 

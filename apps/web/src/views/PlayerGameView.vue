@@ -7,6 +7,7 @@ import { useRouter } from 'vue-router';
 import type { ObjectId, TargetChoice } from '@mtg/shared';
 import type { DecisionRequest, LegalAction } from '../lib/protocol';
 import ActionLog from '../components/ActionLog.vue';
+import CombatLane from '../components/CombatLane.vue';
 import CombatOverlay from '../components/CombatOverlay.vue';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
@@ -38,6 +39,7 @@ import {
   promptOf,
 } from '../lib/actionPresentation';
 import { summarizeCombat } from '../lib/combatSummary';
+import { buildCombatLane, combatRecap, withDeparted, type LaneModel } from '../lib/combatLane';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { groupByXFamily, type XActionGroup } from '../lib/xFamilies';
 import { commanderObjectIds } from '../lib/commanderIds';
@@ -73,6 +75,14 @@ onUnmounted(() => {
   // Hide the App-level preview so a leftover Lab Ox image cannot outlive the battlefield.
   cardPreview.hide();
 });
+
+/** While you hold a creature during a declaration, a line follows the pointer from it. */
+const aimPointer = ref<{ x: number; y: number } | null>(null);
+function onBoardPointerMove(event: PointerEvent): void {
+  if (tableRef.value === null || combatAimSourceId.value === null) return;
+  const rect = tableRef.value.getBoundingClientRect();
+  aimPointer.value = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+}
 
 function onBoardDragOver(event: DragEvent): void {
   if (tableRef.value === null || draggedId.value === null) return;
@@ -805,6 +815,109 @@ const combatSummary = computed(() => {
   });
 });
 
+/**
+ * The combat lane (`combatLane.ts`): the board's combat as columns, your plan while you compose
+ * it, and the creatures that fell during damage. `laneMemory` remembers this turn's lane so the
+ * damage beat can show who left and the recap can say what happened.
+ */
+let laneMemory: { turn: number; model: LaneModel } | null = null;
+const combatLane = computed<LaneModel | null>(() => {
+  const board = state.value;
+  if (board === null) return null;
+  const planned = combatPlan.mode === 'composing' || combatPlan.mode === 'replaying';
+  const raw = buildCombatLane({
+    phase: board.phase,
+    step: board.step,
+    priorityPlayer: board.priorityPlayer,
+    viewerSeat: board.viewerSeat,
+    permanents: board.battlefield,
+    seats: board.seats.map((seat) => ({ seat: seat.seat, label: seat.label, life: seat.life })),
+    plan:
+      planned && combatPlan.kind !== null
+        ? {
+            kind: combatPlan.kind,
+            assignment: combatPlan.assignment,
+            options: combatPlan.order.map((entry) => entry.optionIds),
+          }
+        : null,
+  });
+  if (raw === null) return null;
+  const damaging =
+    board.step === 'firstStrikeCombatDamage' ||
+    board.step === 'combatDamage' ||
+    board.step === 'endCombat';
+  const previous = laneMemory?.turn === board.turnNumber ? laneMemory.model : null;
+  const model = damaging
+    ? withDeparted(raw, previous, new Set(board.battlefield.map((p) => p.id)))
+    : raw;
+  laneMemory = { turn: board.turnNumber, model };
+  return model;
+});
+
+/** Life totals when this turn's combat first showed, for the recap. */
+const combatStart = ref<{ turn: number; attacker: string; life: Map<string, number> } | null>(null);
+const lastCombat = ref<{ turn: number; model: LaneModel } | null>(null);
+watch(combatLane, (model) => {
+  const board = state.value;
+  if (model === null || board === null) return;
+  if (combatStart.value?.turn !== board.turnNumber) {
+    // A new combat shows its lane again, even if the last one was hidden.
+    combatStripHidden.value = false;
+    combatStart.value = {
+      turn: board.turnNumber,
+      attacker: board.activePlayer,
+      life: new Map(board.seats.map((seat) => [seat.seat, seat.life])),
+    };
+  }
+  if (model.kind !== 'attackers') lastCombat.value = { turn: board.turnNumber, model };
+});
+/** The line the lane folds into for the rest of the turn once combat is over. */
+const combatRecapLine = computed(() => {
+  const board = state.value;
+  const last = lastCombat.value;
+  const start = combatStart.value;
+  if (board === null || last === null || start === null) return null;
+  if (board.phase === 'combat' || last.turn !== board.turnNumber) return null;
+  if (board.phase !== 'postcombatMain' && board.phase !== 'ending') return null;
+  return combatRecap(
+    last.model,
+    start.attacker,
+    start.life,
+    board.seats.map((seat) => ({ seat: seat.seat, label: seat.label, life: seat.life })),
+    board.viewerSeat,
+  );
+});
+const laneShowing = computed(
+  () => !combatStripHidden.value && (combatLane.value !== null || combatRecapLine.value !== null),
+);
+
+/** The creature you are holding while you declare, and where it may go. */
+const combatAimSourceId = computed(() =>
+  combatPlan.mode === 'composing' ? (draggedId.value ?? focusedSourceId.value) : null,
+);
+watch(combatAimSourceId, (id) => {
+  if (id === null) aimPointer.value = null;
+});
+const combatAimTargets = computed<ReadonlySet<string>>(() => {
+  const id = combatAimSourceId.value;
+  if (id === null) return new Set();
+  return new Set(combatPlan.order.find((entry) => entry.subjectId === id)?.optionIds ?? []);
+});
+/** A click on a lane group or slot: the creature you hold goes there. */
+function laneTarget(targetId: string): void {
+  if (combatPlan.kind === 'attackers' && sendTargets.value.includes(targetId)) {
+    sendAt(targetId);
+    return;
+  }
+  tryPlanAssign(targetId);
+}
+/** Who the lane says the game is waiting on, when it isn't you. */
+const laneWaiting = computed(() => {
+  if (request.value !== null) return null;
+  const seat = waitingSeat.value;
+  return seat === null ? null : `Waiting on ${seatLabel(seat)}: ${seat} ${waitingActivity.value}.`;
+});
+
 /** Each life total registers as an anchor, so an attack's arrow ends at the number it threatens. */
 const lifeAnchorRefs = new Map<string, (el: Element | ComponentPublicInstance | null) => void>();
 function lifeAnchorRef(seatId: string): (el: Element | ComponentPublicInstance | null) => void {
@@ -950,7 +1063,7 @@ function plannedBlockTag(id: ObjectId): string | null {
   const blocked = [...combatPlan.assignment.values()].some((target) => target === id);
   if (!blocked) return null;
   const target = attacker.attackingPlaneswalker ?? attacker.attacking;
-  return `Attacking ${nameById.value.get(target) ?? target} · blocked`;
+  return `→ ${nameById.value.get(target) ?? target} · blocked`;
 }
 
 /** With a blocker picked up, the creatures it cannot block fade back, as in the design. */
@@ -1655,7 +1768,7 @@ function abandon(): void {
       }}</span>
       <span class="bar-links">
         <button
-          v-if="combatSummary !== null && combatStripHidden"
+          v-if="combatStripHidden && (combatLane !== null || combatRecapLine !== null)"
           type="button"
           class="bar-link"
           @click="combatStripHidden = false"
@@ -1782,13 +1895,13 @@ function abandon(): void {
       <section
         ref="tableRef"
         class="table"
-        :class="{ 'has-combat': combatSummary !== null && !combatStripHidden }"
+        :class="{ 'has-combat': laneShowing }"
         @dragover="onBoardDragOver"
+        @pointermove="onBoardPointerMove"
       >
         <CombatOverlay
-          :drag-source-id="draggedId"
-          :pointer="dragPointer"
-          :permanents="state.battlefield"
+          :drag-source-id="combatAimSourceId ?? draggedId"
+          :pointer="dragPointer ?? aimPointer"
         />
         <!-- Opponents: one panel each, wider for the one whose turn it is. -->
         <div class="opponents" :style="{ '--opponent-columns': opponentColumns }">
@@ -1860,9 +1973,12 @@ function abandon(): void {
                   {{ commander.name.split(/[ ,]/)[0] }}
                 </button>
               </span>
-              <span v-if="combatSummary?.attacked.get(opponent.seat)" class="attacked-chip">{{
-                combatSummary.attacked.get(opponent.seat)
-              }}</span>
+              <span
+                v-if="combatSummary?.attacked.get(opponent.seat)"
+                class="attacked-chip"
+                :title="combatSummary.attacked.get(opponent.seat)"
+                >{{ combatSummary.chips.get(opponent.seat) }}</span
+              >
               <span
                 v-if="state.monarchSeat === opponent.seat"
                 class="monarch-badge"
@@ -2009,45 +2125,26 @@ function abandon(): void {
           </article>
         </div>
 
-        <!-- Combat: who is attacking whom, in words; the arrows say the same in ink. -->
-        <section
-          v-if="combatSummary !== null && !combatStripHidden"
+        <!-- Combat: one lane between the opponents and you, a column per attacker. -->
+        <CombatLane
+          v-if="laneShowing"
           class="combat-strip"
-          aria-label="Combat"
-          aria-live="polite"
-        >
-          <span class="strip-label">{{ combatSummary.label }}</span>
-          <span v-for="(line, i) in combatSummary.lines" :key="i" class="strip-line">{{
-            line
-          }}</span>
-          <span class="strip-legend" aria-hidden="true">
-            <span
-              ><svg width="30" height="8"><line x1="1" y1="4" x2="29" y2="4" /></svg>Attacking</span
-            >
-            <span
-              ><svg width="30" height="8">
-                <line x1="1" y1="4" x2="29" y2="4" stroke-dasharray="10 6" /></svg
-              >Chosen, not confirmed</span
-            >
-            <span
-              ><svg width="30" height="12">
-                <line class="dots" x1="2" y1="6" x2="24" y2="6" stroke-dasharray="0.1 6" />
-                <rect x="26" y="1" width="3" height="10" /></svg
-              >Blocking</span
-            >
-          </span>
-          <button
-            type="button"
-            class="strip-close"
-            aria-label="Hide the combat summary"
-            title="Hide"
-            @click="combatStripHidden = true"
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-              <path d="M1 1 L11 11 M11 1 L1 11" />
-            </svg>
-          </button>
-        </section>
+          :model="combatLane"
+          :lines="combatSummary?.lines ?? []"
+          :recap="combatRecapLine"
+          :composing="combatPlan.mode === 'composing'"
+          :aim-targets="combatAimTargets"
+          :rejection="combatPlan.rejectionMessage"
+          :can-attack-all="combatPlan.kind === 'attackers' && combatPlan.split === null"
+          :waiting="laneWaiting"
+          :hint="combatInstruction"
+          @target="laneTarget"
+          @send-home="combatPlan.clear"
+          @confirm="confirmCombatPlan"
+          @attack-all="attackWithAll"
+          @reset="cancelCombatPlan"
+          @hide="combatStripHidden = true"
+        />
 
         <!-- Your side: who you are, your creatures and the rest of your board in two columns, your
              lands under them; your life and the zones that are only counts in the rail. -->
@@ -2576,30 +2673,19 @@ function abandon(): void {
                   </div>
                 </template>
                 <template v-else-if="combatPlan.mode === 'composing'">
-                  <div class="tray-actions">
-                    <button type="button" class="primary" @click="confirmCombatPlan">
-                      Confirm {{ combatPlan.kind === 'attackers' ? 'attacks' : 'blocks' }}
+                  <!-- Confirm, reset and the hint live in the combat lane above; this list is
+                       the exact, keyboard-friendly way to make the same choices. -->
+                  <p v-if="!laneShowing" class="tray-actions">
+                    <button type="button" class="primary" @click="combatStripHidden = false">
+                      Show combat
                     </button>
-                    <button
-                      v-if="combatPlan.kind === 'attackers' && combatPlan.split === null"
-                      type="button"
-                      class="link"
-                      @click="attackWithAll"
-                    >
-                      Attack with all
-                    </button>
-                    <button type="button" class="link" @click="cancelCombatPlan">
-                      Reset declaration
-                    </button>
-                  </div>
+                  </p>
                   <p
                     v-if="combatPlan.rejectionMessage !== null"
                     class="target-instruction combat-interrupted"
                   >
-                    The engine rejected that declaration: {{ combatPlan.rejectionMessage }} Fix the
-                    flagged creature(s) and confirm again.
+                    Fix the flagged creature(s) and confirm again.
                   </p>
-                  <p v-else class="target-instruction">{{ combatInstruction }}</p>
                   <div class="tray-heading combat-count">
                     <button
                       v-for="action in declarationActions"
@@ -4123,13 +4209,15 @@ button.primary {
 .opponent.out .cmdr-state {
   color: inherit;
 }
+/* "5 incoming" beside the life it threatens: outlined and small, the lane says the rest. */
 .attacked-chip {
   flex-shrink: 0;
-  padding: 0.3rem 0.5rem;
-  background: var(--ink);
-  color: var(--paper);
+  align-self: center;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--ink);
+  color: var(--ink);
   font-family: var(--font-ui);
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -4276,79 +4364,6 @@ button.primary {
 .zones-toggle[aria-expanded='true'] {
   text-decoration: underline;
   text-underline-offset: 0.2em;
-}
-
-/* The combat strip: who attacks whom, in words, on paper-2 between the opponents and you. */
-.combat-strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem 2rem;
-  padding: 0.55rem 1.25rem;
-  border-bottom: 1px solid var(--ink);
-  background: var(--paper-2);
-}
-.combat-strip > * {
-  position: relative;
-  z-index: 6;
-  background: var(--paper-2);
-}
-.strip-label {
-  font-family: var(--font-ui);
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.strip-line {
-  padding: 0 0.25rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-.strip-legend {
-  margin-left: auto;
-  padding: 0.15rem 0.4rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem 1rem;
-  font-family: var(--font-body);
-  font-size: 0.6rem;
-  line-height: 1.8;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.strip-legend > span {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-.strip-legend line {
-  stroke: var(--ink);
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-.strip-legend line.dots {
-  stroke-width: 3;
-}
-.strip-legend rect {
-  fill: var(--ink);
-}
-.strip-close {
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: -0.5rem;
-  padding: 0;
-  border: 0;
-  color: var(--ink);
-  cursor: pointer;
-}
-.strip-close path {
-  stroke: currentColor;
-  stroke-width: 1.3;
 }
 
 /* Your side: who you are, two columns of your board, your lands; the rail on the right; then

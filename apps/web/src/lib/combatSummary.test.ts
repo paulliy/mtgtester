@@ -81,6 +81,9 @@ describe('summarizeCombat', () => {
     ]);
     expect(summary?.attacked.get('P4')).toBe('Under attack · blocked');
     expect(summary?.attacked.get('P2')).toBe('Under attack · 10 incoming');
+    // The seat's own tag drops the lead the combat lane already gives.
+    expect(summary?.chips.get('P4')).toBe('blocked');
+    expect(summary?.chips.get('P2')).toBe('10 incoming');
     expect(summary?.prose).toEqual([
       'Klauth, Unrivaled Ancient is blocked by Midnight Reaper.',
       'The Ur-Dragon is unblocked and deals 10 to Queen Marchesa.',
