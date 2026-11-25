@@ -452,12 +452,14 @@ function allAttackTargets(
   ctx: GameContext,
   opponents: readonly EnginePlayerState[],
 ): AttackTarget[] {
-  return opponents.flatMap((player) => [
-    { player, planeswalker: null },
-    ...controlledPermanents(ctx, player.id)
-      .filter((p) => computeCharacteristics(ctx, p).types.includes('Planeswalker'))
-      .map((planeswalker) => ({ player, planeswalker })),
-  ]);
+  return withReadScope(ctx, () =>
+    opponents.flatMap((player) => [
+      { player, planeswalker: null },
+      ...controlledPermanents(ctx, player.id)
+        .filter((p) => computeCharacteristics(ctx, p).types.includes('Planeswalker'))
+        .map((planeswalker) => ({ player, planeswalker })),
+    ]),
+  );
 }
 
 /**
@@ -1538,9 +1540,11 @@ function blockCandidatesFor(
   defenderId: PlayerId,
   incoming: readonly EnginePermanent[],
 ): BlockCandidate[] {
-  return creaturesOf(ctx, defenderId)
-    .map((blocker) => ({ blocker, blockable: incoming.filter((a) => canBlock(ctx, blocker, a)) }))
-    .filter(({ blocker, blockable }) => !blocker.tapped && blockable.length > 0);
+  return withReadScope(ctx, () =>
+    creaturesOf(ctx, defenderId)
+      .map((blocker) => ({ blocker, blockable: incoming.filter((a) => canBlock(ctx, blocker, a)) }))
+      .filter(({ blocker, blockable }) => !blocker.tapped && blockable.length > 0),
+  );
 }
 
 /** Build the per-creature legal-attacker set for every blocking candidate — the blocker-side

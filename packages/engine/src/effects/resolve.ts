@@ -1,4 +1,5 @@
 import { playersInTurnOrderFrom } from '../targets/per-player';
+import { withReadScope } from './layer-cache';
 import { targetingSourceFields } from '../targets/context';
 import type { TargetingSource } from '../targets/context';
 import { copyData } from '../state/copy-data';
@@ -1549,11 +1550,13 @@ function addCounterPlacements(
  * gets a lore counter. A turn-based action, not an ability, so the controller places it.
  */
 export function addSagaLoreCounters(ctx: GameContext, playerId: PlayerId): void {
-  const sagas = ctx.state.battlefield.filter(
-    (perm) =>
-      perm.controllerId === playerId &&
-      computeCharacteristics(ctx, perm).subtypes.includes('Saga') &&
-      sagaFinalChapter(ctx, perm) > 0,
+  const sagas = withReadScope(ctx, () =>
+    ctx.state.battlefield.filter(
+      (perm) =>
+        perm.controllerId === playerId &&
+        computeCharacteristics(ctx, perm).subtypes.includes('Saga') &&
+        sagaFinalChapter(ctx, perm) > 0,
+    ),
   );
   for (const saga of sagas) {
     addCounterPlacements(

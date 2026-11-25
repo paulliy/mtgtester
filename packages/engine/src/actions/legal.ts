@@ -730,9 +730,11 @@ export function targetLifeTaxFor(
 export function computePriorityOptions(
   ctx: GameContext,
   player: EnginePlayerState,
+  /** A closed read scope of this same, unchanged state (`checkpointBoard`), to continue. */
+  board?: object,
 ): EngineActionOption[] {
   // Building the menu only reads the state, so the layer digest is computed once for it.
-  return withReadScope(ctx, () => priorityOptions(ctx, player));
+  return withReadScope(ctx, () => priorityOptions(ctx, player), board);
 }
 
 const VERIFY_MANA_CAPACITY =

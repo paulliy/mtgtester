@@ -25,7 +25,7 @@ import type { Ability, Effect } from '../cards/ability';
 import type { GameGen } from '../decisions';
 import { optionAt } from '../decisions';
 import { battlefieldCharacteristics, matchesSelector } from '../effects/continuous';
-import { withReadScope } from '../effects/layer-cache';
+import { lastReadScope, withReadScope } from '../effects/layer-cache';
 import { evaluateValueIn } from '../effects/values';
 import { debug, emit } from '../log/log';
 import { GameOverSignal } from '../signals';
@@ -242,7 +242,7 @@ function* processEliminations(ctx: GameContext): GameGen<void> {
  * One full SBA pass (CR 704.5 subset per brief §5.6). Returns true if anything happened.
  * A generator: the legend rule and CR 903.9a command-zone returns are player choices.
  */
-function* sbaPass(ctx: GameContext): GameGen<boolean> {
+function* sbaPass(ctx: GameContext, resume?: object): GameGen<boolean> {
   const s = ctx.state;
   let acted = false;
 
@@ -318,11 +318,16 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
   let found: BattlefieldSba | undefined;
   for (let start = 0; ;) {
     const first = start === 0;
-    const pass = withReadScope(ctx, () => {
-      const lethal = scanLethal(ctx, start);
-      const quiet = first && lethal.regenerate === undefined && lethal.dying.length === 0;
-      return { lethal, found: quiet ? findBattlefieldSba(ctx) : undefined };
-    });
+    const pass = withReadScope(
+      ctx,
+      () => {
+        const lethal = scanLethal(ctx, start);
+        const quiet = first && lethal.regenerate === undefined && lethal.dying.length === 0;
+        return { lethal, found: quiet ? findBattlefieldSba(ctx) : undefined };
+      },
+      // A scope the caller vouches for: valid only while this pass has changed nothing yet.
+      first && !acted ? resume : undefined,
+    );
     for (const death of pass.lethal.dying) {
       if (death.kind === 'creature')
         emit(ctx, 'sbaCreatureDies', { name: death.perm.name, reason: death.reason });
@@ -1113,24 +1118,40 @@ function* pushTriggerOnStack(ctx: GameContext, trigger: PendingTrigger): GameGen
   debug(ctx, 'stack', `trigger on stack: ${trigger.sourceName} — ${description}`);
 }
 
+/** The read scope of the board each context's last checkpoint ended on (`checkpointBoard`). */
+const CHECKPOINT_BOARDS = new WeakMap<GameContext, object>();
+
+/**
+ * The read scope of the board the last `priorityCheckpoint` on `ctx` ended on: its final SBA
+ * pass changed nothing and no trigger was placed after it, so a caller that reads the state
+ * right after the checkpoint, before any change or yield, can `resume` it (`withReadScope`).
+ */
+export function checkpointBoard(ctx: GameContext): object | undefined {
+  return CHECKPOINT_BOARDS.get(ctx);
+}
+
 /**
  * The checkpoint performed whenever a player would receive priority (CR 117.5, brief
  * §5.6): repeat SBAs until none apply, then place triggers; repeat until stable.
  * Returns true if anything happened (the priority loop must then restart its passes).
  */
-export function* priorityCheckpoint(ctx: GameContext): GameGen<boolean> {
+export function* priorityCheckpoint(ctx: GameContext, resume?: object): GameGen<boolean> {
   let anything = false;
+  CHECKPOINT_BOARDS.delete(ctx);
   for (;;) {
     let sbaActed = false;
     for (;;) {
       debug(ctx, 'sba', 'SBA check');
-      const acted = yield* sbaPass(ctx);
+      const acted = yield* sbaPass(ctx, anything || sbaActed ? undefined : resume);
       if (!acted) break;
       sbaActed = true;
     }
+    // A pass that changed nothing ends with its battlefield scan, the last read scope it opened.
+    const board = lastReadScope(ctx);
     const placed = yield* placePendingTriggers(ctx);
     if (sbaActed || placed) anything = true;
     if (!placed && !sbaActed) {
+      if (board !== undefined) CHECKPOINT_BOARDS.set(ctx, board);
       // Tests and tools check whole-state invariants here (ADR 0034 decision 8).
       runCheckpointHook(ctx);
       return anything;

@@ -19,7 +19,7 @@ import { applyPriorityAction } from '../actions/apply';
 import { computePriorityOptions } from '../actions/legal';
 import type { PriorityActionPayload } from '../actions/legal';
 import { drainPool } from '../mana/pool';
-import { priorityCheckpoint } from '../sba/sba';
+import { checkpointBoard, priorityCheckpoint } from '../sba/sba';
 import { resolveTopOfStack } from '../stack/stack';
 import { playersInApnapOrder } from '../state/queries';
 import { playerById } from '../state/objects';
@@ -139,11 +139,16 @@ export function* runPrioritySequence(ctx: GameContext): GameGen<void> {
   let holder: PlayerId | null = null; // null → (re)start from the active player
   let passesInARow = 0;
   let lastAction = null as RepeatRecord | null; // last non-pass priority action in this sequence
+  // The read scope of the board as the last checkpoint left it, while nothing has changed it
+  // since: the next checkpoint's SBA scan and the next menu reuse its layer digests rather than
+  // take them again. Cleared by anything that changes the state or yields to the outside.
+  let board: object | undefined;
 
   for (;;) {
     // Checkpoint before anyone receives priority (CR 117.5). Anything happening (SBAs,
     // triggers hitting the stack) voids accumulated passes.
-    const acted = yield* priorityCheckpoint(ctx);
+    const acted = yield* priorityCheckpoint(ctx, board);
+    board = checkpointBoard(ctx);
     if (acted) passesInARow = 0;
 
     if (activePlayerHasLeft(ctx)) {
@@ -168,6 +173,7 @@ export function* runPrioritySequence(ctx: GameContext): GameGen<void> {
           s.priorityPlayerIndex = null;
           return;
         }
+        board = undefined;
         yield* resolveTopOfStack(ctx);
         passesInARow = 0;
         holder = null;
@@ -178,7 +184,9 @@ export function* runPrioritySequence(ctx: GameContext): GameGen<void> {
       continue;
     }
 
-    let options = computePriorityOptions(ctx, player);
+    let options = computePriorityOptions(ctx, player, board);
+    // The menu is offered next, and the answer may come after any outside change (a concession).
+    board = undefined;
     // Signature work only when this player's own non-pass action came last (no cost otherwise).
     const fullMenu = options;
     let sameMenu = false;

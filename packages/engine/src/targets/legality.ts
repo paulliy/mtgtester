@@ -7,6 +7,7 @@ import { playerFilterAlwaysTrue } from '../cards/effect-reference-contracts';
 import type { SelectorCandidate } from '../cards/selector';
 import { selectMatches, selectorReadsSourcePower } from '../cards/selector';
 import { candidateOf, computeCharacteristics, matchesSelector } from '../effects/continuous';
+import { withReadScope } from '../effects/layer-cache';
 import { spellTargetOccurrences } from '../stack/target-occurrences';
 import { offBattlefieldCdaPower } from '../effects/values';
 import { spellManaValue } from '../state/objects';
@@ -286,8 +287,11 @@ export function targetCandidates(
   spec: TargetKind | TargetSpec,
   context: TargetContext,
 ): ObjectId[] {
-  return targetDomainCandidates(ctx, typeof spec === 'string' ? spec : spec.kind).filter(
-    (candidate) => targetIsLegal(ctx, spec, candidate, context),
+  // Reads only: one layer digest serves every candidate's checks (`withReadScope`).
+  return withReadScope(ctx, () =>
+    targetDomainCandidates(ctx, typeof spec === 'string' ? spec : spec.kind).filter((candidate) =>
+      targetIsLegal(ctx, spec, candidate, context),
+    ),
   );
 }
 
