@@ -54,9 +54,22 @@ describe('layer digest', () => {
           p2!.life = life2;
           a.counters['+1/+1'] = counters & 3;
           b.counters['-1/-1'] = counters >> 2;
-          seen.add(digestOf(ctx, undefined, false, true));
+          // Life is game state, folded when the last pass read any.
+          seen.add(digestOf(ctx, undefined, true, true));
         }
     expect(seen.size).toBe(160_000);
+  });
+
+  it('layer-digest-game-state — turn, step and life are folded only with game state on', () => {
+    const ctx = game();
+    spawn(ctx, 'P1', bear());
+    const before = [digestOf(ctx, undefined, false, false), digestOf(ctx, undefined, true, false)];
+    ctx.state.turnNumber += 1;
+    ctx.state.currentTurnPlayer = 'P2';
+    ctx.state.step = 'draw';
+    ctx.state.players[0]!.life -= 3;
+    expect(digestOf(ctx, undefined, false, false)).toBe(before[0]);
+    expect(digestOf(ctx, undefined, true, false)).not.toBe(before[1]);
   });
 
   it('layer-digest-wide — digests use more than 32 bits and stay exact integers', () => {

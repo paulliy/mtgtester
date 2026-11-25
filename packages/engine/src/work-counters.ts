@@ -39,6 +39,8 @@ export interface EngineWork {
   stateCopies: number;
   /** Selector candidates built: a permanent's characteristics as a selector reads them, once per permanent and effect or query. */
   selectorCandidates: number;
+  /** Permanents folded into layer digests: the bulk of a digest's cost, since each folds every permanent. */
+  layerDigestPermanents: number;
 }
 
 const WORK: EngineWork = {
@@ -55,6 +57,7 @@ const WORK: EngineWork = {
   manaPlannerStates: 0,
   stateCopies: 0,
   selectorCandidates: 0,
+  layerDigestPermanents: 0,
 };
 
 /** Depth of `uncounted` calls: a check's own work is not the engine's. */

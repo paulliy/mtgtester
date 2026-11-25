@@ -40,7 +40,12 @@ import type { Condition } from '../cards/condition';
 import type { ManaAbilitySpec, WardCost } from '../cards/ability';
 import type { Characteristics, ContinuousOp, StaticEffect } from '../cards/continuous-types';
 import type { Selector, SelectorCandidate, SelectorSource } from '../cards/selector';
-import { selectMatches, selectorIsEventOnly, tapReadCount } from '../cards/selector';
+import {
+  gameStateReadCount,
+  selectMatches,
+  selectorIsEventOnly,
+  tapReadCount,
+} from '../cards/selector';
 import { CREATURE_TYPES } from '../cards/creature-types';
 import { evaluateValue, isDynamicValue } from '../cards/value';
 import type { LayerValueScope } from '../cards/value';
@@ -53,6 +58,7 @@ import {
   getCached,
   type LayerCacheEntry,
   sampleCacheHit,
+  scopedDigestAfterPass,
   scopedDigestOf,
   setCached,
   sharePass,
@@ -1188,7 +1194,8 @@ function readsGameState(effects: LayerEffect[]): boolean {
 
 interface LayerPassResult {
   map: Map<string, Characteristics>;
-  usedGraveyards: boolean;
+  /** Whether the pass read graveyards or any other game state (`gameStateRead`). */
+  usedGameState: boolean;
   /** Whether the pass read any permanent's tapped status (`tappedState`). */
   usedTapped: boolean;
 }
@@ -1206,9 +1213,14 @@ function runLayers(ctx: GameContext, perms: EnginePermanent[]): LayerPassResult 
   // the answer cannot depend on what is tapped. A nested pass's reads count too, which only
   // makes the outer pass keep tapped in its key.
   const tapReadsBefore = tapReadCount();
+  const gameStateReadsBefore = gameStateReadCount();
   try {
     const result = withAttachmentIndex(ctx, () => runLayerPass(ctx, perms));
-    return { ...result, usedTapped: tapReadCount() !== tapReadsBefore };
+    return {
+      ...result,
+      usedGameState: result.usedGameState || gameStateReadCount() !== gameStateReadsBefore,
+      usedTapped: tapReadCount() !== tapReadsBefore,
+    };
   } finally {
     layerPassDepth--;
   }
@@ -1313,7 +1325,7 @@ function runLayerPass(
   // Trazyn-style abilities are sourced from graveyard contents even though their layer op
   // itself is static. Keep those card identities in the layer-cache digest so an artifact
   // entering or leaving the graveyard immediately changes the computed ability list.
-  const usedGraveyards =
+  const usedGameState =
     readsGameState(effects) ||
     ctx.state.battlefield.some(
       (perm) => ctx.defs.get(perm.oracleId)?.artifactGraveyardAbilities === true,
@@ -1343,7 +1355,7 @@ function runLayerPass(
 
   const out = new Map<string, Characteristics>();
   for (const [cardId, entry] of work) out.set(cardId, entry.chars);
-  return { map: out, usedGraveyards };
+  return { map: out, usedGameState };
 }
 
 /** Set `MTG_VERIFY_LAYER_CACHE=1` to recompute on every cache hit and assert they agree. */
@@ -1384,9 +1396,9 @@ export function computeAllCharacteristics(
 ): Map<string, Characteristics> {
   const extraCardId = extra?.cardId ?? null;
   let cached = getCached(ctx);
-  // On the first pass nothing is known, so include graveyards; thereafter follow what the
+  // On the first pass nothing is known, so include game state; thereafter follow what the
   // last pass actually read.
-  const includeGraveyards = cached?.usedGraveyards ?? true;
+  const includeGameState = cached?.usedGameState ?? true;
   // Tapped status likewise (ADR 0007, amendment 2): a pass that read none is the answer for
   // every tapped/untapped mix of the same board, so a tap alone is no miss. That is what keeps
   // each state the mana planner searches from costing a full pass.
@@ -1394,7 +1406,7 @@ export function computeAllCharacteristics(
   // With nothing cached the lookup is a miss whatever the digest, so it is computed once, after
   // the pass, with the flags the pass established.
   const digest =
-    cached === undefined ? undefined : scopedDigestOf(ctx, extra, includeGraveyards, includeTapped);
+    cached === undefined ? undefined : scopedDigestOf(ctx, extra, includeGameState, includeTapped);
   // A context that misses its own entry may match a recent pass of its game's pool, the live
   // context and its casting previews (`sharedPassFor`), checked against this state's digest.
   if (
@@ -1402,7 +1414,7 @@ export function computeAllCharacteristics(
     digest !== undefined &&
     (cached.digest !== digest || cached.extraCardId !== extraCardId)
   ) {
-    const shared = sharedPassFor(ctx, digest, includeGraveyards, includeTapped, extraCardId);
+    const shared = sharedPassFor(ctx, digest, includeGameState, includeTapped, extraCardId);
     if (shared !== undefined) {
       setCached(ctx, shared);
       cached = shared;
@@ -1417,7 +1429,7 @@ export function computeAllCharacteristics(
       cached.verified === true &&
       !cached.usedTapped &&
       ctx.strictInvariants === true &&
-      tappedDigestForChecks(ctx, extra, includeGraveyards) !== cached.verifiedTappedDigest
+      tappedDigestForChecks(ctx, extra, includeGameState) !== cached.verifiedTappedDigest
     )
       delete cached.verified;
     if (!VERIFY_CACHE && !sampleCacheHit(ctx, cached)) return cached.map;
@@ -1431,19 +1443,19 @@ export function computeAllCharacteristics(
     }
     cached.verified = true;
     if (!cached.usedTapped)
-      cached.verifiedTappedDigest = tappedDigestForChecks(ctx, extra, includeGraveyards);
+      cached.verifiedTappedDigest = tappedDigestForChecks(ctx, extra, includeGameState);
     return cached.map;
   }
 
   countWork('layerPasses');
-  const { map, usedGraveyards, usedTapped } = runLayers(ctx, permsFor(ctx, extra));
+  const { map, usedGameState, usedTapped } = runLayers(ctx, permsFor(ctx, extra));
   const entry: LayerCacheEntry = {
     // Re-digest with the flags this pass actually established, so the next comparison matches.
     digest:
-      digest !== undefined && usedGraveyards === includeGraveyards && usedTapped === includeTapped
+      digest !== undefined && usedGameState === includeGameState && usedTapped === includeTapped
         ? digest
-        : scopedDigestOf(ctx, extra, usedGraveyards, usedTapped),
-    usedGraveyards,
+        : scopedDigestAfterPass(ctx, extra, usedGameState, usedTapped),
+    usedGameState,
     usedTapped,
     extraCardId,
     map,
