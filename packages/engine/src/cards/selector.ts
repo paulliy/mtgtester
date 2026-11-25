@@ -298,6 +298,26 @@ export function tapReadCount(): number {
   return tapReads;
 }
 
+/**
+ * Reads of game state beyond the permanents' own layer inputs, counted the same way: a condition
+ * or a dynamic value (either may read anything, so each counts as a read), and the selector tests
+ * whose answer follows the turn (entered this turn, controlled since the turn began, attacked this
+ * turn). The layer cache leaves the game-level scalars (turn, phase, step, active player, life and
+ * zone counts) and graveyard contents out of its key while the last pass read none, so a pass is
+ * not redone each time the step changes on a board whose statics read none of it.
+ */
+let gameStateReads = 0;
+
+/** Count one read of game state by a layer pass (see `gameStateReads`). */
+export function gameStateRead(): void {
+  gameStateReads++;
+}
+
+/** How many times `gameStateRead` has run, for a layer pass to compare before and after. */
+export function gameStateReadCount(): number {
+  return gameStateReads;
+}
+
 export const SELF: Selector = { kind: 'self' };
 export const OTHER: Selector = { kind: 'other' };
 export const YOURS: Selector = { kind: 'controller', who: 'you' };
@@ -479,8 +499,10 @@ export function selectMatches(
         ? candidate.controllerId === source.controllerId
         : candidate.controllerId !== source.controllerId;
     case 'attackedThisTurn':
+      gameStateRead();
       return candidate.attackedThisTurn === true;
     case 'controlledSinceTurnStart':
+      gameStateRead();
       return candidate.controlledSinceTurnStart === true;
     case 'powerAtLeast':
       return candidate.power >= selector.n;
@@ -522,6 +544,7 @@ export function selectMatches(
     case 'tapped':
       return tappedState(candidate);
     case 'enteredThisTurn':
+      gameStateRead();
       return candidate.enteredThisTurn;
     case 'isCommander':
       return candidate.isCommander === true;

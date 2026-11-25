@@ -69,6 +69,7 @@ fails if two repeats of the same games count differently.
 | `manaPlannerSearches`              | Payments the stateful mana planner searched.                                            |
 | `manaPlannerStates`, `stateCopies` | States that planner visited, and the deep copies of the game it made for them.          |
 | `selectorCandidates`               | Permanents' characteristics built as a selector reads them, in and out of layer passes. |
+| `layerDigestPermanents`            | Permanents folded into layer digests: what a digest costs.                              |
 
 A count measures the work the games needed, so it compares only when every fingerprint is
 identical. When the games differ the row says `INCOMPARABLE` and does not fail. Counters include

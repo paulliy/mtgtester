@@ -19,6 +19,11 @@
  * of the key — which is sound, because a change no effect reads cannot change the answer, and
  * a Tarmogoyf *entering* changes the battlefield portion of the digest and forces a miss.
  *
+ * The game-level scalars (turn, phase, step, active player, monarch, life and zone counts) share
+ * that flag. They are cheap to fold but change at every step, and only a condition, a dynamic
+ * value or a turn-scoped selector test reads them, each counted by `gameStateRead`. A pass that
+ * read none answers for every step and turn of the same board.
+ *
  * Tapped status is gated the same way (ADR 0007, amendment 2), for a different reason: it is
  * cheap to fold but changes constantly, and the mana planner taps a land in every state it
  * searches. Only a few conditions and values read it (Iymrith's "as long as it's untapped"), each
@@ -38,8 +43,12 @@ import { countWork } from '../work-counters';
 
 export interface LayerCacheEntry {
   digest: number;
-  /** Whether the computed pass read graveyard contents (a state-dependent `Value`). */
-  usedGraveyards: boolean;
+  /**
+   * Whether the computed pass read game state beyond the permanents: graveyard contents, a
+   * condition, a dynamic value or a turn-scoped selector test (`gameStateRead`). When it did not,
+   * graveyards and the game-level scalars are left out of the next lookup's key.
+   */
+  usedGameState: boolean;
   /**
    * Whether the computed pass read any permanent's tapped status. When it did not, `tapped` is
    * left out of the next lookup's key, so a tap alone does not cost a pass.
@@ -108,7 +117,7 @@ export function sharePassesWith(base: GameContext, preview: GameContext): void {
 export function sharedPassFor(
   ctx: GameContext,
   digest: number,
-  includeGraveyards: boolean,
+  includeGameState: boolean,
   includeTapped: boolean,
   extraCardId: string | null,
 ): LayerCacheEntry | undefined {
@@ -118,7 +127,7 @@ export function sharedPassFor(
     if (
       entry.digest === digest &&
       entry.extraCardId === extraCardId &&
-      entry.usedGraveyards === includeGraveyards &&
+      entry.usedGameState === includeGameState &&
       entry.usedTapped === includeTapped
     )
       return entry;
@@ -343,11 +352,14 @@ function foldCounters(perm: EnginePermanent): void {
 export function digestOf(
   ctx: GameContext,
   extra: EnginePermanent | undefined,
-  includeGraveyards: boolean,
+  includeGameState: boolean,
   includeTapped: boolean,
+  /** Count the permanents this digest folds (`layerDigestPermanents`): engine work, not a check. */
+  counted = false,
 ): number {
   const s = ctx.state;
   startDigest();
+  if (counted) for (let i = 0; i < s.battlefield.length; i++) countWork('layerDigestPermanents');
   feed(s.battlefield.length);
   for (const perm of s.battlefield) {
     feed(perm.timestamp);
@@ -455,47 +467,104 @@ export function digestOf(
   feed(extra === undefined ? 0 : extra.timestamp + 1);
   if (extra !== undefined) feed(definitionId(ctx, ctx.defs.get(extra.oracleId)));
 
+  // Everything before the game state, kept so a re-digest after a pass that changed only that
+  // flag finishes from here (`scopedDigestAfterPass`).
+  prefixCtx = ctx;
+  prefixExtra = extra;
+  prefixTapped = includeTapped;
+  prefixA = laneA;
+  prefixB = laneB;
+  prefixWords = words;
+  foldGameState(ctx, includeGameState);
+  return finishDigest();
+}
+
+/** The game-state part of `digestOf`, last so a digest can be finished either way from one walk. */
+function foldGameState(ctx: GameContext, includeGameState: boolean): void {
+  const s = ctx.state;
   // A static ability's `condition` can read game-level state no permanent carries: "as long as
   // it entered this turn" (the turn number), "during your turn" (the active player), graveyard,
   // hand and life counts, spells cast this turn, the monarch. Each is a cheap scalar, so fold
-  // them all rather than learn which one a new condition starts reading from a stale cache.
-  feed(s.turnNumber + 0x10000);
-  feedString(s.currentTurnPlayer ?? '');
-  feedString(s.phase ?? '');
-  feedString(s.step ?? '');
-  if (s.monarchPlayerId === null) feed(0);
-  else {
-    feed(1);
-    feedString(s.monarchPlayerId);
-  }
-  feed(s.eliminatedPlayers.length);
-  feed(s.creaturesDiedThisTurn + 0x10000);
-  feed(Object.keys(s.modifiedCreatureDiedThisTurn ?? {}).length);
-  feed(s.excessDamageControllerIds.length);
-  for (const player of s.players) {
-    // A player who has lost is no opponent (Nighthawk Scavenger's count), from the loss until
-    // the elimination that removes their cards: `eliminatedPlayers` alone misses that window.
-    feed(player.hasLost ? 1 : 0);
-    feed(player.life + 0x10000);
-    feed(player.hand.length);
-    feed(player.library.length);
-    feed(player.graveyard.length);
-    feed(player.spellsCastThisTurn);
-    feed(player.noncreatureSpellsCastThisTurn);
-    feed(player.cardsDrawnThisTurn);
-    feed(player.cardsDrawnThisDrawStep);
-    feed((s.damageDealtToPlayersThisTurn[player.id] ?? 0) + 0x10000);
-    feed(s.createdTokenThisTurn?.[player.id] === true ? 1 : 0);
+  // them all rather than learn which one a new condition starts reading from a stale cache, but
+  // only when the last pass read any game state (`gameStateRead`): on a board whose statics read
+  // none, a new step or turn is no reason for a fresh pass.
+  if (includeGameState) {
+    feed(s.turnNumber + 0x10000);
+    feedString(s.currentTurnPlayer ?? '');
+    feedString(s.phase ?? '');
+    feedString(s.step ?? '');
+    if (s.monarchPlayerId === null) feed(0);
+    else {
+      feed(1);
+      feedString(s.monarchPlayerId);
+    }
+    feed(s.eliminatedPlayers.length);
+    feed(s.creaturesDiedThisTurn + 0x10000);
+    feed(Object.keys(s.modifiedCreatureDiedThisTurn ?? {}).length);
+    feed(s.excessDamageControllerIds.length);
+    for (const player of s.players) {
+      // A player who has lost is no opponent (Nighthawk Scavenger's count), from the loss until
+      // the elimination that removes their cards: `eliminatedPlayers` alone misses that window.
+      feed(player.hasLost ? 1 : 0);
+      feed(player.life + 0x10000);
+      feed(player.hand.length);
+      feed(player.library.length);
+      feed(player.graveyard.length);
+      feed(player.spellsCastThisTurn);
+      feed(player.noncreatureSpellsCastThisTurn);
+      feed(player.cardsDrawnThisTurn);
+      feed(player.cardsDrawnThisDrawStep);
+      feed((s.damageDealtToPlayersThisTurn[player.id] ?? 0) + 0x10000);
+      feed(s.createdTokenThisTurn?.[player.id] === true ? 1 : 0);
+    }
   }
 
-  if (includeGraveyards) {
+  if (includeGameState) {
     for (const player of s.players) {
       feed(player.graveyard.length);
       for (const card of player.graveyard) feedString(card.oracleId);
     }
   }
+}
 
-  return finishDigest();
+/** The lanes of the last `digestOf` before its game state, and what that digest was of. */
+let prefixCtx: GameContext | null = null;
+let prefixExtra: EnginePermanent | undefined;
+let prefixTapped = false;
+let prefixA = 0;
+let prefixB = 0;
+let prefixWords = 0;
+
+/**
+ * The digest a pass's own flags call for, right after the lookup that missed: `scopedDigestOf`,
+ * except that when only the game-state flag differs from the lookup's, it is finished from the
+ * lookup's walk (the battlefield, effects and commander parts are the same) rather than walking
+ * the board again. A pass changes nothing the digest reads, so that walk still describes the
+ * state; the saved part is used only when the last digest walked was of this context, `extra`
+ * and tapped flag, and `MTG_VERIFY_LAYER_CACHE=1` checks it against a full digest.
+ */
+export function scopedDigestAfterPass(
+  ctx: GameContext,
+  extra: EnginePermanent | undefined,
+  includeGameState: boolean,
+  includeTapped: boolean,
+): number {
+  if (prefixCtx !== ctx || prefixExtra !== extra || prefixTapped !== includeTapped)
+    return scopedDigestOf(ctx, extra, includeGameState, includeTapped);
+  const scope = SCOPES.get(ctx);
+  const key = scope === undefined ? undefined : scopeKey(extra, includeGameState, includeTapped);
+  const known = key === undefined ? undefined : scope!.get(key);
+  if (known !== undefined) return known;
+  startDigest();
+  laneA = prefixA;
+  laneB = prefixB;
+  words = prefixWords;
+  foldGameState(ctx, includeGameState);
+  const digest = finishDigest();
+  if (VERIFY_SCOPES && digestOf(ctx, extra, includeGameState, includeTapped) !== digest)
+    throw new Error(STALE);
+  if (key !== undefined) scope!.set(key, digest);
+  return digest;
 }
 
 /**
@@ -591,10 +660,10 @@ const CHECK_DIGESTS = new WeakMap<Map<string, number>, Map<string, number>>();
 export function tappedDigestForChecks(
   ctx: GameContext,
   extra: EnginePermanent | undefined,
-  includeGraveyards: boolean,
+  includeGameState: boolean,
 ): number {
   const scope = SCOPES.get(ctx);
-  if (scope === undefined) return digestOf(ctx, extra, includeGraveyards, true);
+  if (scope === undefined) return digestOf(ctx, extra, includeGameState, true);
   let checks = CHECK_DIGESTS.get(scope);
   if (checks === undefined) {
     checks = new Map();
@@ -602,50 +671,57 @@ export function tappedDigestForChecks(
   }
   const key =
     (extra === undefined ? '-' : `${extra.cardId}:${extra.timestamp}:${extra.oracleId}`) +
-    (includeGraveyards ? '|g' : '|n');
+    (includeGameState ? '|g' : '|n');
   let digest = checks.get(key);
   if (digest === undefined) {
-    digest = digestOf(ctx, extra, includeGraveyards, true);
+    digest = digestOf(ctx, extra, includeGameState, true);
     checks.set(key, digest);
   }
   return digest;
 }
 
 /**
- * The scope keys of the board alone, by flags (graveyards 2, tapped 1): the key nearly every query
+ * The scope keys of the board alone, by flags (game state 2, tapped 1): the key nearly every query
  * asks for, built once rather than concatenated on each of them.
  */
 const BOARD_KEYS = ['-|nn', '-|nt', '-|gn', '-|gt'] as const;
+
+function scopeKey(
+  extra: EnginePermanent | undefined,
+  includeGameState: boolean,
+  includeTapped: boolean,
+): string {
+  return extra === undefined
+    ? BOARD_KEYS[(includeGameState ? 2 : 0) + (includeTapped ? 1 : 0)]!
+    : `${extra.cardId}:${extra.timestamp}:${extra.oracleId}` +
+        (includeGameState ? '|g' : '|n') +
+        (includeTapped ? 't' : 'n');
+}
 
 /** `digestOf`, computed once per read scope for each distinct `extra` and pair of flags. */
 export function scopedDigestOf(
   ctx: GameContext,
   extra: EnginePermanent | undefined,
-  includeGraveyards: boolean,
+  includeGameState: boolean,
   includeTapped: boolean,
 ): number {
   const scope = SCOPES.get(ctx);
   if (scope === undefined) {
     countWork('layerDigests');
-    return digestOf(ctx, extra, includeGraveyards, includeTapped);
+    return digestOf(ctx, extra, includeGameState, includeTapped, true);
   }
   // `-|` then the two flags for the board alone, which `withReadScope` re-checks on close.
-  const key =
-    extra === undefined
-      ? BOARD_KEYS[(includeGraveyards ? 2 : 0) + (includeTapped ? 1 : 0)]!
-      : `${extra.cardId}:${extra.timestamp}:${extra.oracleId}` +
-        (includeGraveyards ? '|g' : '|n') +
-        (includeTapped ? 't' : 'n');
+  const key = scopeKey(extra, includeGameState, includeTapped);
   const known = scope.get(key);
   if (known === undefined) {
     countWork('layerDigests');
-    const digest = digestOf(ctx, extra, includeGraveyards, includeTapped);
+    const digest = digestOf(ctx, extra, includeGameState, includeTapped, true);
     scope.set(key, digest);
     return digest;
   }
   if (
     (VERIFY_SCOPES || sampleHit(SCOPED_HITS, ctx)) &&
-    digestOf(ctx, extra, includeGraveyards, includeTapped) !== known
+    digestOf(ctx, extra, includeGameState, includeTapped) !== known
   )
     throw new Error(STALE);
   return known;

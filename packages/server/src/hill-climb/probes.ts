@@ -110,6 +110,7 @@ const WORK_UNITS: Record<keyof EngineWork, string> = {
   manaPlannerStates: 'states',
   stateCopies: 'copies',
   selectorCandidates: 'candidates',
+  layerDigestPermanents: 'permanents',
 };
 
 /**

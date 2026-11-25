@@ -47,7 +47,7 @@ import { canPay, describeManaCost } from '../mana/cost';
 import type { ParsedManaCost } from '../mana/cost';
 import { computeCharacteristics, selectPermanents } from '../effects/continuous';
 import type { Selector, SelectorSource } from './selector';
-import { ofType, selectMatches, tappedState } from './selector';
+import { gameStateRead, ofType, selectMatches, tappedState } from './selector';
 import type { PlayerId } from '@mtg/shared';
 import type { EnginePermanent } from '../state/types';
 
@@ -365,6 +365,7 @@ export function evaluateCondition(
   condition: Condition,
   source: SelectorSource,
 ): boolean {
+  gameStateRead();
   const scope = {
     ...source,
     sourceCardId: source.cardId,

@@ -22,6 +22,7 @@ import { assertNever } from '../utils/assert-never';
 import type { Color, PlayerId } from '@mtg/shared';
 import type { GameContext } from '../state/types';
 import type { Selector } from './selector';
+import { gameStateRead } from './selector';
 import type { ObjectFacts, SourceCastState } from './source-identity';
 import type { EffectRef } from './ability';
 import { selectedPermanentDefinition } from './spell-faces';
@@ -595,6 +596,7 @@ export type LayerValueScope = Pick<ValueScope, 'controllerId' | 'countPermanents
 };
 
 export function evaluateValue(ctx: GameContext, value: Value, scope?: LayerValueScope): number {
+  gameStateRead();
   switch (value.kind) {
     case 'const':
       return value.n;
