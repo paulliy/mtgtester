@@ -12,25 +12,25 @@
         "authoring",
         "compiler"
       ],
-      "commit": "93335509",
+      "commit": "0279c931",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 56.41,
+      "calibrationMs": 58.21,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 5.25,
+          "value": 3.58,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.018
+          "spread": 0.672
         },
         "engine.medianGameMsPerDecision": {
-          "value": 5.34,
+          "value": 3.71,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.02
+          "spread": 0.63
         },
         "engine.work.layerPasses": {
           "value": 354,
@@ -40,7 +40,7 @@
           "sameGames": true
         },
         "engine.work.layerCacheHits": {
-          "value": 96010,
+          "value": 95008,
           "unit": "hits",
           "better": "lower",
           "kind": "exact",
@@ -48,7 +48,7 @@
           "informational": true
         },
         "engine.work.layerDigests": {
-          "value": 11999,
+          "value": 8792,
           "unit": "digests",
           "better": "lower",
           "kind": "exact",
@@ -125,7 +125,7 @@
           "sameGames": true
         },
         "engine.work.layerDigestPermanents": {
-          "value": 217881,
+          "value": 156006,
           "unit": "permanents",
           "better": "lower",
           "kind": "exact",
@@ -139,11 +139,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 1.15,
+          "value": 1.29,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.631
+          "spread": 0.576
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -403,25 +403,25 @@
         "authoring",
         "compiler"
       ],
-      "commit": "93335509",
+      "commit": "0279c931",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 60.09,
+      "calibrationMs": 63.81,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.08,
+          "value": 6.31,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.242
+          "spread": 0.071
         },
         "engine.medianGameMsPerDecision": {
-          "value": 5.64,
+          "value": 5.76,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.227
+          "spread": 0.111
         },
         "engine.work.layerPasses": {
           "value": 3030,
@@ -431,7 +431,7 @@
           "sameGames": true
         },
         "engine.work.layerCacheHits": {
-          "value": 1046133,
+          "value": 1039792,
           "unit": "hits",
           "better": "lower",
           "kind": "exact",
@@ -439,7 +439,7 @@
           "informational": true
         },
         "engine.work.layerDigests": {
-          "value": 69467,
+          "value": 47983,
           "unit": "digests",
           "better": "lower",
           "kind": "exact",
@@ -516,7 +516,7 @@
           "sameGames": true
         },
         "engine.work.layerDigestPermanents": {
-          "value": 2240046,
+          "value": 1497114,
           "unit": "permanents",
           "better": "lower",
           "kind": "exact",
@@ -530,11 +530,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 0.73,
+          "value": 0.85,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.216
+          "spread": 0.109
         },
         "model.default.callsPerTurn": {
           "value": 6.735,
