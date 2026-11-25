@@ -246,10 +246,7 @@ async function answerSylvan(page: Page, answer: RegExp): Promise<void> {
 async function bowmastersTarget(page: Page, target: string | [string, string]): Promise<void> {
   // A spell's trigger as it resolves says "Target 1 of 1"; one put on the stack during an
   // opponent's spell says "Targets for Orcish Bowmasters".
-  await passUntil(
-    page,
-    page.getByText(/Target 1 of 1|Targets for Orcish Bowmasters/).first(),
-  );
+  await passUntil(page, page.getByText(/Target 1 of 1|Targets for Orcish Bowmasters/).first());
   if (typeof target === 'string')
     await page.locator(`.opponent[data-seat="${target}"] > header`).click();
   else await permanent(page, target[0], target[1]).first().click();

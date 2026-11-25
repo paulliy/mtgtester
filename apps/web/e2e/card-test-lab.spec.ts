@@ -2218,7 +2218,9 @@ test('War Room: dynamic commander identity life activation', async ({ page }) =>
   await expect(handCard(page, 'Three Color Commander')).toBeVisible();
   await expect(life).toHaveText('37');
   await expect(ownDrawLines(page)).toHaveCount(1);
-  await expect(ownDrawLines(page).locator('.text')).toHaveText('draws Three Color Commander');
+  await expect(ownDrawLines(page).locator('.text')).toHaveText(
+    'draws Three Color Commander (War Room)',
+  );
   await expect(
     page.locator('.player-game .log .line .text').filter({ hasText: /Pay life.*resolves/ }),
   ).toHaveCount(1);
@@ -3193,8 +3195,9 @@ test('Kogla, the Titan Ape: bounce a Human, then attack', async ({ page }) => {
     .filter({ hasText: 'Kogla, the Titan Ape' })
     .getByRole('button', { name: 'P2' })
     .click();
-  // Blur the assignment button to exercise the view-level Enter shortcut, not a native click.
-  await page.locator('.interaction-tray .tray-heading').click();
+  // Blur the assignment button to exercise the view-level Enter shortcut, not a native click. The
+  // combat tray's heading holds the declaration button, so click its instruction text instead.
+  await page.locator('.interaction-tray .target-instruction').click();
   await page.keyboard.press('Enter');
 
   // Lab Hex is P2's only artifact or enchantment, so the target is forced; P3's Lab Idol is not.
@@ -7775,7 +7778,9 @@ test('Kor Spiritdancer: a second attached Aura adds another +2/+2 to the pump', 
     await confirm(page);
     await expect(page.getByText(/use this ability/i).first()).toBeVisible({ timeout: 15_000 });
     await page.getByRole('button', { name: 'No', exact: true }).click();
-    await awaitResolution(page, aura, before);
+    // Nobody else acts, so the Aura resolves right after the declined trigger with no pass from
+    // you. Passing here would pass on the empty stack that follows and end the lab game.
+    await expect(page.getByText(`${aura} resolves`)).toHaveCount(before + 1, { timeout: 15_000 });
     await expect.poll(() => boards.at(-1)?.find((p) => p.name === aura)?.attachedTo).toBe(korId);
     await expect(permanent(page, 'Kor Spiritdancer')).toContainText(size);
   };
@@ -8370,7 +8375,7 @@ test('Eldrazi Conscription: a blocked 12/12 trampler tramples over to the defend
   // so the second "Sacrifice" button is a Forest (a missing block below would expose a mistake).
   const prompt = (position: string) =>
     page
-      .getByRole('complementary')
+      .locator('.decision-panel')
       .filter({ hasText: `choose a permanent to sacrifice (${position})` });
   await expect(prompt('1 of 2').last()).toBeVisible({ timeout: 15_000 });
   await prompt('1 of 2').last().getByRole('button', { name: 'Sacrifice' }).nth(1).click();
@@ -8919,7 +8924,7 @@ test('Thunderbreak Regent: the opponent who targets your Dragon takes 3', async 
   await runScenario(page, 'Thunderbreak Regent: the opponent who targets your Dragon takes 3');
   await expect(permanent(page, 'Thunderbreak Regent')).toContainText(/flying/i);
   // Take the land drop so passing is not interrupted by the land reminder.
-  await page.getByRole('button', { name: 'Play Forest', exact: true }).click();
+  await handCard(page, 'Forest').click();
   // P2 casts Lab Doom on the Regent when you pass; the Regent's trigger resolves above it.
   await passUntil(page, page.getByText(/game over/i).first());
   await expect(page.getByText(/Thunderbreak Regent.* deals 3 to P2/).first()).toBeVisible();
