@@ -5974,7 +5974,9 @@ test('Aetheric Amplifier: double the counters on a target permanent', async ({ p
 
   const amplifier = permanent(page, 'Aetheric Amplifier');
   await expect(amplifier).toHaveClass(/actionable/, { timeout: 15_000 });
-  await amplifier.click();
+  // Click its name strip: its five any-color mana buttons cover the rest of the small tile, and a
+  // click on one of them taps it for mana instead.
+  await amplifier.click({ position: { x: 20, y: 6 } });
   // The choose-one is offered as one action per mode.
   const permanentMode = page.getByRole('button', {
     name: /double the number of each kind of counter on target permanent/i,

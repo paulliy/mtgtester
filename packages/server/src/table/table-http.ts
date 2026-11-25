@@ -18,7 +18,7 @@
  * `startTableServer` is the thin Bun glue around it and the hub.
  */
 
-import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 import { parseStrictJson, PROTOCOL_VERSION, type TablePremadeDeck } from '@mtg/shared';
 import { publicOriginFor, type TableConfig } from './config';
@@ -145,18 +145,36 @@ export interface StaticFiles {
   serve(pathname: string): Response | null;
 }
 
+export interface StaticFileOptions {
+  /**
+   * The whole public site (`vite build --mode site`, ADR 0053) rather than the tables-only app:
+   * any path that names no file gets the page, as the site's own router decides what it shows,
+   * and every file Vite wrote to `assets/` is served, the game worker included (Vite's manifest
+   * leaves worker files out).
+   */
+  site?: boolean;
+}
+
 /**
- * Serve only `index.html` and the manifest's files from `webDir`. The set is read once at
- * creation. Every candidate is decoded once, checked for traversal, looked up by exact name, and
- * then resolved through `realpath` to confirm it still lies inside the directory.
+ * Serve only `index.html` and the manifest's files from `webDir` (and, for the site, the files in
+ * its `assets/`). The set is read once at creation. Every candidate is decoded once, checked for
+ * traversal, looked up by exact name, and then resolved through `realpath` to confirm it still
+ * lies inside the directory.
  */
-export function createStaticFiles(webDir: string): StaticFiles {
+export function createStaticFiles(webDir: string, options: StaticFileOptions = {}): StaticFiles {
   const root = resolve(webDir);
   const manifestPath = resolve(root, '.vite', 'manifest.json');
   const allowed = new Set<string>();
   if (existsSync(resolve(root, 'index.html'))) allowed.add('index.html');
   if (existsSync(manifestPath)) {
     for (const file of manifestFiles(readFileSync(manifestPath, 'utf8'))) allowed.add(file);
+  }
+  if (options.site === true && existsSync(resolve(root, 'assets'))) {
+    for (const entry of readdirSync(resolve(root, 'assets'), { withFileTypes: true })) {
+      if (entry.isFile() && isPlainRelativePath(`assets/${entry.name}`)) {
+        allowed.add(`assets/${entry.name}`);
+      }
+    }
   }
   const hasBuild = allowed.has('index.html');
   let realRoot: string | null = null;
@@ -227,8 +245,52 @@ export function createStaticFiles(webDir: string): StaticFiles {
       if (segments.some((segment) => segment === '..' || segment === '.')) {
         return new Response('Bad path', { status: 400 });
       }
-      if (!allowed.has(relative)) return null;
-      return readFile(relative);
+      if (allowed.has(relative)) return readFile(relative);
+      // The site's own routes (`/stats`, `/setup`): a path whose last segment names no file. A
+      // missing script or style stays a 404, so a stale page fails loudly instead of parsing HTML.
+      const last = segments.at(-1) ?? '';
+      if (options.site === true && segments[0] !== 'assets' && !last.includes('.')) return page();
+      return null;
+    },
+  };
+}
+
+/** The site's card files (`bun run site:cards`, ADR 0053), served at `/cards/<name>`. */
+export interface CardFiles {
+  /** A response for one file name, or `null` when the folder holds no such file. */
+  serve(name: string): Response | null;
+}
+
+const CARD_FILE_NAME = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*\.json$/;
+
+/**
+ * Serve the card files in `dir`, listed once at creation. The data files are named by their
+ * content, so they are cached for a year; `manifest.json` names them and is never cached, so a
+ * new release's cards reach the next page load.
+ */
+export function createCardFiles(dir: string): CardFiles {
+  const root = resolve(dir);
+  const names = new Set<string>();
+  if (existsSync(root)) {
+    for (const entry of readdirSync(root, { withFileTypes: true })) {
+      if (entry.isFile() && CARD_FILE_NAME.test(entry.name)) names.add(entry.name);
+    }
+  }
+  return {
+    serve(name) {
+      if (!names.has(name)) return null;
+      try {
+        return new Response(readFileSync(resolve(root, name)), {
+          headers: {
+            'content-type': 'application/json; charset=utf-8',
+            'cache-control':
+              name === 'manifest.json' ? 'no-cache' : 'public, max-age=31536000, immutable',
+            'x-content-type-options': 'nosniff',
+          },
+        });
+      } catch {
+        return null;
+      }
     },
   };
 }
@@ -239,6 +301,8 @@ export interface TableHttpContext {
   config: TableConfig;
   registry: TableRegistry;
   files: StaticFiles;
+  /** The site's card files, when the server serves the whole site. */
+  cards?: CardFiles;
   /** The port in use (the configured one, or the one the OS gave for port 0). */
   boundPort: () => number;
   /** The release this server runs (a commit), or `dev` outside a release. `/health` reports it. */
@@ -347,6 +411,11 @@ export async function handleTableRequest(
   if (method !== 'GET' && method !== 'HEAD') {
     return json({ error: 'Method not allowed.' }, 405, { allow: 'GET, HEAD' });
   }
+  if (ctx.cards !== undefined && path.startsWith('/cards/')) {
+    return (
+      ctx.cards.serve(path.slice('/cards/'.length)) ?? new Response('Not found', { status: 404 })
+    );
+  }
   return ctx.files.serve(path) ?? new Response('Not found', { status: 404 });
 }
 
@@ -427,6 +496,11 @@ export interface TableServerDeps {
   sockets?: SocketLimiter;
   /** The release this server runs; `dev` when absent. */
   version?: string;
+  /**
+   * Serve the whole public site from `config.webDir` (a `--mode site` build) with its card files
+   * from `cardsDir`, instead of the tables-only app.
+   */
+  site?: { cardsDir: string };
   /** Premade decks for `GET /tables/decks`. None when absent. */
   premadeDecks?: readonly TablePremadeDeck[];
 }
@@ -463,7 +537,8 @@ export interface RunningTableServer {
 /** Listen on the configured loopback address, serve HTTP and sockets, and own the reaper timer. */
 export function startTableServer(deps: TableServerDeps): RunningTableServer {
   const { config, registry, hub } = deps;
-  const files = createStaticFiles(config.webDir);
+  const files = createStaticFiles(config.webDir, { site: deps.site !== undefined });
+  const cards = deps.site === undefined ? undefined : createCardFiles(deps.site.cardsDir);
   let boundPort = config.port;
   const ctx: TableHttpContext = {
     config,
@@ -472,6 +547,7 @@ export function startTableServer(deps: TableServerDeps): RunningTableServer {
     boundPort: () => boundPort,
     version: deps.version ?? 'dev',
     premadeDecks: deps.premadeDecks ?? [],
+    ...(cards !== undefined && { cards }),
   };
 
   const limiter = deps.sockets ?? new SocketLimiter();
