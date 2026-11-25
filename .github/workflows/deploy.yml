@@ -3,7 +3,8 @@ name: Deploy
 # Server releases for the VM (docs/guides/deploy-oracle-cloud.md, "Releases"). A push to main that
 # touches what the table server runs builds a release here, on GitHub, not on the 1 GB VM:
 #
-#   1. Install the production dependencies, build the table web bundle and the prebuilt card file
+#   1. Install the production dependencies, build the public site, the tables-only bundle and the
+#      card files (the server's and the site's)
 #      from the pinned Scryfall bank (the SCRYFALL_BULK_URL and SCRYFALL_BULK_SHA256 variables).
 #   2. Pack them with the server sources into server-<sha>.tar.gz, with release.json naming the
 #      commit, and publish them as the GitHub release server-<sha>.
@@ -59,10 +60,12 @@ jobs:
           curl -fsSL -A 'mtg-commander-sim/0.1' "$SCRYFALL_BULK_URL" -o oracle-cards.jsonl.gz
           echo "$SCRYFALL_BULK_SHA256  oracle-cards.jsonl.gz" | sha256sum -c -
           bun run scryfall:update --from oracle-cards.jsonl.gz
-      - name: Build the table web bundle and the prebuilt card file
+      - name: Build the web bundles and the card files
         run: |
           bun run --cwd apps/web build:table
+          bun run --cwd apps/web build:site
           bun run table:cards
+          bun run site:cards
       - id: pack
         name: Pack the release
         shell: bash

@@ -15,6 +15,12 @@ What runs where:
   running the release `/opt/mtgtester-releases/current` points at, its SQLite database in
   `/var/lib/mtgtester/`, and the deploy agent (`mtg-deploy.timer`) that switches releases.
 
+A release carries the whole public site (ADR 0053), built with `vite build --mode site`
+(`apps/web/dist-site`) next to the site's card files (`data/site-cards`). When both are present and
+`TABLE_WEB_DIR` is unset, the server serves the site: single player runs in the visitor's browser,
+the tables live under `/multiplayer`, and `/cards/` holds the card files. Without them it serves
+the tables-only app, as before.
+
 The files are in [`deploy/oracle-cloud/`](../../deploy/oracle-cloud/).
 
 ## 1. Create the Oracle Cloud account (you)

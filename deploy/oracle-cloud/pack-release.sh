@@ -6,8 +6,9 @@
 #
 # Writes <out-dir>/server-<short>.tar.gz and its .sha256, and prints tag=server-<short> to
 # $GITHUB_OUTPUT when set. The archive unpacks to a directory the service runs from as it is: the
-# server sources at that commit, production dependencies, the table web bundle, the card file, the
-# banned list, and release.json naming the commit. Tests and docs stay out.
+# server sources at that commit, production dependencies, the public site and the tables-only web
+# bundle, the server's card file and the site's card files, the banned list, and release.json
+# naming the commit. Tests and docs stay out.
 set -euo pipefail
 
 COMMIT="${1:?usage: pack-release.sh <commit> <out-dir>}"
@@ -17,7 +18,8 @@ if ! [[ "$COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
   exit 1
 fi
 TAG="server-${COMMIT:0:12}"
-for required in apps/web/dist-table/index.html data/table-oracle-cards.json; do
+for required in apps/web/dist-table/index.html apps/web/dist-site/index.html \
+  data/table-oracle-cards.json data/site-cards/manifest.json; do
   [[ -f "$required" ]] || { echo "pack-release: missing $required; build it first" >&2; exit 1; }
 done
 
@@ -37,6 +39,9 @@ find "$ROOT/packages" \( -name '*.test.ts' -o -name 'dist' -o -name 'tests' \) -
 
 mkdir -p "$ROOT/apps/web" "$ROOT/data"
 cp -R apps/web/dist-table "$ROOT/apps/web/dist-table"
+# The whole public site, which the server serves when it is present (ADR 0053).
+cp -R apps/web/dist-site "$ROOT/apps/web/dist-site"
+cp -R data/site-cards "$ROOT/data/site-cards"
 cp data/table-oracle-cards.json "$ROOT/data/table-oracle-cards.json"
 printf '{"commit":"%s","builtAt":"%s"}\n' "$COMMIT" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$ROOT/release.json"
 

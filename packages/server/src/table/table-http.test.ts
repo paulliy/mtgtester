@@ -8,6 +8,7 @@ import type { TableConfig } from './config';
 import type { DeckChecker } from './deck-check';
 import { TableRegistry } from './registry';
 import {
+  createCardFiles,
   createStaticFiles,
   handleTableRequest,
   isLoopbackRequest,
@@ -440,6 +441,39 @@ describe('static files', () => {
     }
     const traversal = asResponse(await handle(ctx, request('/assets/..%2f..%2fsecret.txt')));
     expect(traversal.status).toBe(400);
+  });
+
+  it('serves the whole site: its routes, every built asset and the card files', async () => {
+    const cardsDir = join(workDir, 'cards');
+    mkdirSync(cardsDir, { recursive: true });
+    writeFileSync(join(cardsDir, 'manifest.json'), '{"files":[]}');
+    writeFileSync(join(cardsDir, 'pool.0123456789abcdef.json'), '[]');
+    writeFileSync(join(cardsDir, 'notes.txt'), 'not a card file');
+    const ctx: TableHttpContext = {
+      ...context(),
+      files: createStaticFiles(webDir, { site: true }),
+      cards: createCardFiles(cardsDir),
+    };
+    const get = async (path: string) => asResponse(await handle(ctx, request(path)));
+    // The site's router owns any path that names no file.
+    for (const path of ['/', '/setup', '/stats', '/multiplayer/abcdefghijklmnop']) {
+      expect(await (await get(path)).text(), path).toContain('<title>built</title>');
+    }
+    // Vite leaves the game worker out of its manifest; the site serves what it built.
+    expect(await (await get('/assets/unlisted.js')).text()).toBe('console.log("not in manifest")');
+    // A missing script stays a 404 rather than the page, and nothing outside the build is served.
+    for (const path of ['/assets/gone.js', '/assets/next', '/secret.txt', '/.vite/manifest.json']) {
+      expect((await get(path)).status, path).toBe(404);
+    }
+    const manifest = await get('/cards/manifest.json');
+    expect(manifest.status).toBe(200);
+    expect(manifest.headers.get('cache-control')).toBe('no-cache');
+    const pool = await get('/cards/pool.0123456789abcdef.json');
+    expect(pool.headers.get('cache-control')).toContain('immutable');
+    expect(pool.headers.get('content-type')).toContain('application/json');
+    for (const path of ['/cards/notes.txt', '/cards/../secret.txt', '/cards/missing.json']) {
+      expect((await get(path)).status, path).toBe(404);
+    }
   });
 
   it('serves a placeholder page until the web build exists', async () => {

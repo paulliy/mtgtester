@@ -29,6 +29,9 @@ import { wireTables } from '../table/wiring';
 
 const BULK_PATH = 'data/scryfall-oracle-cards.json';
 const BANNED_PATH = 'docs/rules/commander-banned-list.md';
+/** The site build (`bun run --cwd apps/web build:site`) and its cards (`bun run site:cards`). */
+const SITE_WEB_DIR = 'apps/web/dist-site';
+const SITE_CARDS_DIR = 'data/site-cards';
 
 /** Read a card file once, hashing the exact bytes parsed (the replay's card-data identity). */
 function readCards(path: string): { parsed: unknown[]; sha256: string } {
@@ -91,7 +94,15 @@ async function main(): Promise<void> {
     console.error(`\nserve:table needs Bun 1.4.3 or later (this is ${Bun.version}).\n`);
     process.exit(1);
   }
-  const result = loadTableConfig(process.env, process.argv.slice(2));
+  // A release carries the whole public site (ADR 0053): single player in the browser, with the
+  // tables under /multiplayer. Serve it when it is built and no web folder is set; otherwise
+  // the tables-only app, as before.
+  const site =
+    process.env['TABLE_WEB_DIR'] === undefined &&
+    existsSync(resolve(SITE_WEB_DIR, 'index.html')) &&
+    existsSync(resolve(SITE_CARDS_DIR, 'manifest.json'));
+  const env = site ? { ...process.env, TABLE_WEB_DIR: SITE_WEB_DIR } : process.env;
+  const result = loadTableConfig(env, process.argv.slice(2));
   if (!result.ok) {
     console.error(`\nserve:table refused to start: ${result.error.message}\n`);
     process.exit(1);
@@ -118,7 +129,14 @@ async function main(): Promise<void> {
   // `/health` names the release, so the deploy agent can confirm the new one came up.
   const version = readReleaseCommit(process.cwd()) ?? 'dev';
   const premadeDecks = await loadPremadeDecks(index, banned);
-  const server = startTableServer({ config, registry, hub, version, premadeDecks });
+  const server = startTableServer({
+    config,
+    registry,
+    hub,
+    version,
+    premadeDecks,
+    ...(site && { site: { cardsDir: resolve(SITE_CARDS_DIR) } }),
+  });
 
   const origin = publicOriginFor(config, server.port);
   const mode = config.dev
@@ -146,7 +164,9 @@ async function main(): Promise<void> {
     );
   }
   console.log(`  Database:       ${config.dbPath}`);
-  console.log(`  Web build:      ${config.webDir}`);
+  console.log(
+    `  Web build:      ${config.webDir}${site ? ' (the whole site, cards from ' + SITE_CARDS_DIR + ')' : ''}`,
+  );
   console.log(`  Clock:          ${config.clock}`);
   console.log(`  Max tables:     ${config.maxTables}`);
   console.log(`  Oracle index:   ${index.size.toLocaleString()} cards`);

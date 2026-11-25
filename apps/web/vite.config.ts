@@ -60,6 +60,11 @@ export default defineConfig(({ mode }) => ({
   ...(mode === 'table' && {
     build: { outDir: 'dist-table', manifest: true, emptyOutDir: true },
   }),
+  // `--mode site` builds the whole public site with single player in the worker (`.env.site`),
+  // with the same manifest, for `serve:table` to serve in place of the tables-only app.
+  ...(mode === 'site' && {
+    build: { outDir: 'dist-site', manifest: true, emptyOutDir: true },
+  }),
   server: {
     port: 5173,
     // The server only accepts browser origins on 5173 (`isAllowedLocalRequest`). Falling back
