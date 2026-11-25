@@ -37,6 +37,8 @@ export interface EngineWork {
   manaPlannerStates: number;
   /** Deep copies of the game state, made by the stateful mana planner for each state it tries. */
   stateCopies: number;
+  /** Selector candidates built: a permanent's characteristics as a selector reads them, once per permanent and effect or query. */
+  selectorCandidates: number;
 }
 
 const WORK: EngineWork = {
@@ -52,11 +54,28 @@ const WORK: EngineWork = {
   manaPlannerSearches: 0,
   manaPlannerStates: 0,
   stateCopies: 0,
+  selectorCandidates: 0,
 };
+
+/** Depth of `uncounted` calls: a check's own work is not the engine's. */
+let uncountedDepth = 0;
 
 /** Count one more `kind` of work. */
 export function countWork(kind: keyof EngineWork): void {
-  WORK[kind]++;
+  if (uncountedDepth === 0) WORK[kind]++;
+}
+
+/**
+ * Run a verification check without counting its work, so that turning a check on
+ * (`MTG_VERIFY_LAYER_CACHE=1`, `strictInvariants`) changes no count.
+ */
+export function uncounted<T>(run: () => T): T {
+  uncountedDepth++;
+  try {
+    return run();
+  } finally {
+    uncountedDepth--;
+  }
 }
 
 /** The counts so far in this process, as a copy. */

@@ -59,7 +59,7 @@ import {
   sharedPassFor,
   tappedDigestForChecks,
 } from './layer-cache';
-import { countWork } from '../work-counters';
+import { countWork, uncounted } from '../work-counters';
 import { EVERYTHING, readsOf, SUBTYPES, selectorReads, TYPES, writesOf } from './layer-dependency';
 
 /** Basic-land subtype → intrinsic mana ability (CR 305.6), for Blood Moon's mana override. */
@@ -560,6 +560,7 @@ export function candidateOf(
   chars: Characteristics,
   includeCombatDefender = false,
 ): SelectorCandidate {
+  countWork('selectorCandidates');
   const { isEnchanted, isEquipped, auraControllerIds } = attachmentsOf(ctx, perm);
   // Absent (not 0) when the def can't be found, so `manaValueAtMost`/`manaValueAtLeast`
   // correctly never match rather than matching everything as mana value 0. Off the battlefield,
@@ -1069,7 +1070,7 @@ function applyGroup(
     const { candidates } = probe;
     const dependsOn = (effect: LayerEffect, other: LayerEffect): boolean => {
       const may = mayDepend(effect, other);
-      if (verify && !may && check.dependsOn(effect, other)) {
+      if (verify && !may && uncounted(() => check.dependsOn(effect, other))) {
         throw new Error(
           `engine bug: layer dependency prefilter said independent, probe says dependent.\neffect: ${JSON.stringify(effect.op)}\nother:  ${JSON.stringify(other.op)}`,
         );
@@ -1376,7 +1377,7 @@ export function computeAllCharacteristics(
     )
       delete cached.verified;
     if (!VERIFY_CACHE && !sampleCacheHit(ctx, cached)) return cached.map;
-    const fresh = runLayers(ctx, permsFor(ctx, extra));
+    const fresh = uncounted(() => runLayers(ctx, permsFor(ctx, extra)));
     const a = canonicalJson(cached.map);
     const b = canonicalJson(fresh.map);
     if (a !== b) {

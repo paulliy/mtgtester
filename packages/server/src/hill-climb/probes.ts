@@ -109,6 +109,7 @@ const WORK_UNITS: Record<keyof EngineWork, string> = {
   manaPlannerSearches: 'searches',
   manaPlannerStates: 'states',
   stateCopies: 'copies',
+  selectorCandidates: 'candidates',
 };
 
 /**
