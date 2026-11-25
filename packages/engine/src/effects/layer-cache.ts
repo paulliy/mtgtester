@@ -602,10 +602,27 @@ export function readScopeToken(ctx: GameContext): object | undefined {
   return SCOPES.get(ctx);
 }
 
-/** Run `read` inside a read scope on `ctx`. A nested scope on the same context joins the outer. */
-export function withReadScope<T>(ctx: GameContext, read: () => T): T {
+/** The last read scope closed on each context (`lastReadScope`). */
+const CLOSED_SCOPES = new WeakMap<GameContext, Map<string, number>>();
+
+/**
+ * The token of the read scope that closed last on `ctx`. A caller that knows nothing has changed
+ * since it closed (no mutation and no yield to the outside in between) passes it to the next
+ * `withReadScope` as `resume`, which then starts from that scope's digests rather than taking
+ * them again. The closing check under `strictInvariants` re-checks them like any others.
+ */
+export function lastReadScope(ctx: GameContext): object | undefined {
+  return CLOSED_SCOPES.get(ctx);
+}
+
+/**
+ * Run `read` inside a read scope on `ctx`. A nested scope on the same context joins the outer.
+ * `resume` continues a closed scope (`lastReadScope`) on the same, unchanged state.
+ */
+export function withReadScope<T>(ctx: GameContext, read: () => T, resume?: object): T {
   if (SCOPES.has(ctx)) return read();
-  const digests = new Map<string, number>();
+  const closed = CLOSED_SCOPES.get(ctx);
+  const digests = resume !== undefined && resume === closed ? closed : new Map<string, number>();
   SCOPES.set(ctx, digests);
   let result: T;
   try {
@@ -613,6 +630,7 @@ export function withReadScope<T>(ctx: GameContext, read: () => T): T {
   } finally {
     SCOPES.delete(ctx);
     SCOPE_BATTLEFIELDS.delete(ctx);
+    CLOSED_SCOPES.set(ctx, digests);
   }
   if (ctx.strictInvariants === true || VERIFY_SCOPES) {
     for (const [key, digest] of digests) {
