@@ -248,19 +248,15 @@ function* sbaPass(ctx: GameContext): GameGen<boolean> {
 
   // CR 704.5e: copies of cards can be cast during the creating effect, then cease if
   // they remain in exile or have left the stack. This is not a zone change.
-  // A zone with no copy is kept as it is: filtering every library on every pass cost a new array
-  // per zone per pass for nothing.
   const removeCopies = (cards: EngineCardObject[]): EngineCardObject[] =>
-    !cards.some((card) => card.isCardCopy === true)
-      ? cards
-      : cards.filter((card) => {
-          if (card.isCardCopy !== true) return true;
-          // A prepare spell's copy stays in exile while its permanent stays prepared (CR 722.3c).
-          if (card.zone === 'exile' && preparedCopyHolder(ctx, card) !== undefined) return true;
-          emit(ctx, 'cardCopyCeased', { name: card.name, cardId: card.cardId });
-          acted = true;
-          return false;
-        });
+    cards.filter((card) => {
+      if (card.isCardCopy !== true) return true;
+      // A prepare spell's copy stays in exile while its permanent stays prepared (CR 722.3c).
+      if (card.zone === 'exile' && preparedCopyHolder(ctx, card) !== undefined) return true;
+      emit(ctx, 'cardCopyCeased', { name: card.name, cardId: card.cardId });
+      acted = true;
+      return false;
+    });
   // zone-mutation: a card copy outside the stack and battlefield ceases to exist (CR 704.5e); it goes nowhere
   s.exile = removeCopies(s.exile);
   for (const player of s.players) {
