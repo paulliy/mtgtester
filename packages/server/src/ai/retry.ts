@@ -172,8 +172,8 @@ export function classifyError(
     return isHardBarrierQuota(text) ? 'daily_quota' : 'rpm_quota';
   }
 
-  // Server errors (500, 502, 503, 504)
-  if (status === 500 || status === 502 || status === 503 || status === 504) {
+  // Server errors (500, 502, 503, 504), and Anthropic's 529 overloaded_error: temporary, so retry
+  if (status === 500 || status === 502 || status === 503 || status === 504 || status === 529) {
     return 'retryable';
   }
 

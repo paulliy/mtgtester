@@ -11,7 +11,7 @@ The engine is authoritative: it produces legal actions. Humans, the heuristic bo
 - Seeded four-player Commander games with priority, stack resolution, combat, commander damage, state-based actions, continuous effects, and player/spectator projections.
 - Spectator and single-player modes, replay controls, local history, batches, statistics, and a Vue web application.
 - Generated supported-pool decks; Moxfield, Archidekt, and plaintext imports with validation and model-coverage reporting.
-- A seeded heuristic bot, optional OpenAI-compatible strategist/tactician provider, and bounded combat search with a reproducible A/B sweep harness.
+- A seeded heuristic bot, optional LLM strategist/tactician provider (any OpenAI-compatible endpoint, or Anthropic's Claude API), and bounded combat search with a reproducible A/B sweep harness.
 - A card template/override system, real-deck fixtures, and coverage reports for planning rules support.
 
 ## Repository layout
@@ -76,4 +76,4 @@ For the full command reference and contributor guidance, see [AGENTS.md](AGENTS.
 
 ## Privacy
 
-When configured, AI requests go to the selected OpenAI-compatible provider and may include the acting player's legal decision context and visible game state. The engine must never expose hidden game state to a player or model, and it never sends the Comprehensive Rules as prompt context.
+When configured, AI requests go to the selected provider (OpenAI-compatible or Anthropic) and may include the acting player's legal decision context and visible game state. The engine must never expose hidden game state to a player or model, and it never sends the Comprehensive Rules as prompt context.

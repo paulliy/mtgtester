@@ -51,6 +51,7 @@
       "name": "@mtg/server",
       "version": "0.1.0",
       "dependencies": {
+        "@anthropic-ai/sdk": "^1.7.0",
         "@mtg/bot": "workspace:*",
         "@mtg/engine": "workspace:*",
         "@mtg/shared": "workspace:*",

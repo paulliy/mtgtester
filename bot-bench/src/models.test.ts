@@ -71,6 +71,19 @@ describe('lineup parsing', () => {
       heuristicsEnabled: true,
     });
   });
+
+  it("takes each entry's wire protocol from its own provider, not the environment's", () => {
+    const env = { OPENROUTER_API_KEY: 'or', ANTHROPIC_API_KEY: 'ant' };
+    const [claude, routed] = parseModelList('anthropic:claude-sonnet-5-5,openrouter:vendor/m');
+    if (claude?.kind !== 'llm' || routed?.kind !== 'llm') throw new Error('expected models');
+    expect(resolveLlmConfig(claude, { env, mode: 'raw' })).toMatchObject({
+      apiFormat: 'anthropic',
+      apiKey: 'ant',
+      baseUrl: 'https://api.anthropic.com',
+    });
+    const forced = { env: { ...env, AI_PROVIDER: 'anthropic' }, mode: 'raw' as const };
+    expect(resolveLlmConfig(routed, forced)).toMatchObject({ apiFormat: 'openai', apiKey: 'or' });
+  });
 });
 
 describe('a model in the tested seat, through the production pipeline', () => {

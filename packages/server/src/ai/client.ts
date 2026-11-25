@@ -22,6 +22,7 @@ import {
 import { DEFAULT_AI_CONFIG } from './config';
 import { getNonCachingProviders } from './openrouter-provider-filter';
 import { withRetry } from './retry';
+import { AnthropicHttpFailure, anthropicRequest, callAnthropic } from './anthropic';
 import {
   type ChatCompletionBody,
   type GenerationCost,
@@ -274,6 +275,9 @@ export class OpenAiCompatibleClient implements AiClient {
   }
 
   private resolveEndpoint(): string {
+    if (this.config.apiFormat === 'anthropic') {
+      return `${this.config.baseUrl.replace(/\/+$/, '')}/v1/messages`;
+    }
     const base = this.config.baseUrl.endsWith('/')
       ? this.config.baseUrl
       : `${this.config.baseUrl}/`;
@@ -327,7 +331,8 @@ export class OpenAiCompatibleClient implements AiClient {
       }
 
       const startTime = Date.now();
-      const isOpenRouter = this.config.baseUrl.includes('openrouter.ai');
+      const isOpenRouter =
+        this.config.apiFormat !== 'anthropic' && this.config.baseUrl.includes('openrouter.ai');
       const ignoreProviders =
         isOpenRouter &&
         this.config.filterNonCachingProviders !== false &&
@@ -360,6 +365,10 @@ export class OpenAiCompatibleClient implements AiClient {
               this.config.reasoningEnabled === true && this.config.reasoningEffort !== 'none';
             const answerTokens = this.config.maxOutputTokens ?? DEFAULT_AI_CONFIG.maxOutputTokens;
 
+            const anthropicBody =
+              this.config.apiFormat === 'anthropic'
+                ? anthropicRequest(this.config, currentModel, prompt, answerTokens)
+                : undefined;
             const bodyPayload: Record<string, unknown> = {
               model: currentModel,
               messages: prompt.messages,
@@ -387,18 +396,32 @@ export class OpenAiCompatibleClient implements AiClient {
               }
               if (Object.keys(provider).length > 0) bodyPayload['provider'] = provider;
             }
-            const effectiveConfig = {
-              endpoint,
-              model: currentModel,
-              temperature: bodyPayload['temperature'],
-              maxTokens: bodyPayload['max_tokens'],
-              responseFormat: bodyPayload['response_format'],
-              reasoning: bodyPayload['reasoning'] ?? bodyPayload['reasoning_effort'] ?? 'omitted',
-              provider: bodyPayload['provider'] ?? 'default',
-              promptCache: prompt.promptCache ?? 'disabled',
-              stream,
-              timeoutMs: this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
-            };
+            const effectiveConfig =
+              anthropicBody !== undefined
+                ? {
+                    endpoint,
+                    apiFormat: 'anthropic',
+                    model: currentModel,
+                    maxTokens: anthropicBody.max_tokens,
+                    reasoning: anthropicBody.output_config,
+                    fallbacks: anthropicBody.fallbacks,
+                    promptCache: prompt.promptCache ?? 'disabled',
+                    stream: false,
+                    timeoutMs: this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
+                  }
+                : {
+                    endpoint,
+                    model: currentModel,
+                    temperature: bodyPayload['temperature'],
+                    maxTokens: bodyPayload['max_tokens'],
+                    responseFormat: bodyPayload['response_format'],
+                    reasoning:
+                      bodyPayload['reasoning'] ?? bodyPayload['reasoning_effort'] ?? 'omitted',
+                    provider: bodyPayload['provider'] ?? 'default',
+                    promptCache: prompt.promptCache ?? 'disabled',
+                    stream,
+                    timeoutMs: this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
+                  };
             const recordAttempt = async (
               attempt: Omit<
                 AiNetworkAttempt,
@@ -439,24 +462,12 @@ export class OpenAiCompatibleClient implements AiClient {
               this.config.requestTimeoutMs ?? DEFAULT_AI_CONFIG.requestTimeoutMs,
             );
             try {
-              const res = await this.fetchImpl(endpoint, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  ...(this.config.apiKey ? { Authorization: `Bearer ${this.config.apiKey}` } : {}),
-                },
-                body: JSON.stringify(bodyPayload),
-                signal:
-                  signal !== undefined ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal,
-              });
-
-              if (!res.ok) {
-                const errorText = await res.text();
+              const failHttp = async (status: number, errorText: string): Promise<never> => {
                 attemptRawResponse = errorText;
                 await recordAttempt({
                   status: 'http_error',
                   rawResponse: errorText,
-                  error: `HTTP ${res.status}`,
+                  error: `HTTP ${status}`,
                   usage: {
                     promptTokenSource: 'unknown',
                     responseTokenSource: 'unknown',
@@ -465,29 +476,59 @@ export class OpenAiCompatibleClient implements AiClient {
                   },
                 });
                 if (
-                  res.status === 401 ||
-                  res.status === 403 ||
+                  status === 401 ||
+                  status === 403 ||
                   errorText.includes('API_KEY_INVALID') ||
                   errorText.includes('UNAUTHENTICATED') ||
                   errorText.includes('invalid_api_key')
                 ) {
                   throw new AuthenticationError(
-                    `API authentication failed (HTTP ${res.status}): ${errorText}`,
+                    `API authentication failed (HTTP ${status}): ${errorText}`,
                   );
                 }
                 if (
-                  res.status === 404 ||
+                  status === 404 ||
                   errorText.includes('model_not_found') ||
                   errorText.includes('NOT_FOUND')
                 ) {
                   throw new ModelUnavailableError(currentModel, errorText);
                 }
-                throw new HttpError(res.status, errorText);
+                throw new HttpError(status, errorText);
+              };
+              const requestSignal =
+                signal !== undefined ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
+              let data: ChatCompletionBody;
+              if (anthropicBody !== undefined) {
+                try {
+                  data = await callAnthropic(
+                    this.config,
+                    anthropicBody,
+                    requestSignal,
+                    this.fetchImpl,
+                  );
+                } catch (failure) {
+                  if (failure instanceof AnthropicHttpFailure) {
+                    await failHttp(failure.status, failure.text);
+                  }
+                  throw failure;
+                }
+              } else {
+                const res = await this.fetchImpl(endpoint, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(this.config.apiKey
+                      ? { Authorization: `Bearer ${this.config.apiKey}` }
+                      : {}),
+                  },
+                  body: JSON.stringify(bodyPayload),
+                  signal: requestSignal,
+                });
+                if (!res.ok) await failHttp(res.status, await res.text());
+                data = isEventStream(res)
+                  ? await readChatCompletionStream(res, progress)
+                  : ((await res.json()) as ChatCompletionBody);
               }
-
-              const data: ChatCompletionBody = isEventStream(res)
-                ? await readChatCompletionStream(res, progress)
-                : ((await res.json()) as ChatCompletionBody);
 
               const choice = data.choices?.[0];
               const message = choice?.message;

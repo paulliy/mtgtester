@@ -83,3 +83,24 @@ users."` The listing reflects the model catalogue, not what this key may call. O
 - If the project later wants Gemini-specific features the OpenAI shim does not expose —
   **context caching for the static primer block (§7.4) is the concrete one** — that is the
   point to revisit this. The primer is currently re-sent as a system message on every call.
+
+## Addendum (2026-11-24): Anthropic as a second wire format
+
+The provider is no longer OpenAI-compatible only. `AiConfig.apiFormat` names the protocol:
+`openai` for every existing preset and any `AI_BASE_URL`, `anthropic` for the new `anthropic`
+preset (`ANTHROPIC_API_KEY`, or `AI_PROVIDER=anthropic`). `AI_API_FORMAT` overrides it, so a
+gateway that speaks the Messages API works through `AI_BASE_URL` too.
+
+`OpenAiCompatibleClient` keeps the model chain, retries, deadlines, attempt logging and answer
+parsing; only the transport differs (`ai/anthropic.ts`, the official SDK, loaded on first use
+so it never reaches a browser bundle). Choices made for the Messages API:
+
+- Thinking cannot be disabled on the current Claude models, so reasoning "off" sends effort
+  `low`, and `max_tokens` always keeps 2048 tokens of thinking room above the answer budget.
+- No `temperature` (current models reject sampling parameters) and no `response_format`; the
+  existing JSON extractor reads the answer.
+- One cache breakpoint on the last stable-prefix message (the system primer by default).
+- Server-side refusal fallback (`fallbacks: "default"`) is on; a refusal that survives it is an
+  empty answer, which the bot answers like any other failed call.
+- Anthropic is last in key auto-detection, so adding its key beside another changes nothing
+  until `AI_PROVIDER=anthropic` is set.
