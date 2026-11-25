@@ -611,6 +611,12 @@ export function tappedDigestForChecks(
   return digest;
 }
 
+/**
+ * The scope keys of the board alone, by flags (graveyards 2, tapped 1): the key nearly every query
+ * asks for, built once rather than concatenated on each of them.
+ */
+const BOARD_KEYS = ['-|nn', '-|nt', '-|gn', '-|gt'] as const;
+
 /** `digestOf`, computed once per read scope for each distinct `extra` and pair of flags. */
 export function scopedDigestOf(
   ctx: GameContext,
@@ -625,9 +631,11 @@ export function scopedDigestOf(
   }
   // `-|` then the two flags for the board alone, which `withReadScope` re-checks on close.
   const key =
-    (extra === undefined ? '-' : `${extra.cardId}:${extra.timestamp}:${extra.oracleId}`) +
-    (includeGraveyards ? '|g' : '|n') +
-    (includeTapped ? 't' : 'n');
+    extra === undefined
+      ? BOARD_KEYS[(includeGraveyards ? 2 : 0) + (includeTapped ? 1 : 0)]!
+      : `${extra.cardId}:${extra.timestamp}:${extra.oracleId}` +
+        (includeGraveyards ? '|g' : '|n') +
+        (includeTapped ? 't' : 'n');
   const known = scope.get(key);
   if (known === undefined) {
     countWork('layerDigests');

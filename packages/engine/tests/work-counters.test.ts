@@ -121,6 +121,7 @@ describe('engine work counters', () => {
     expect(digest()).toBe(first);
   });
 
+  // `uncounted` only stops a check's own work from being counted: it reads no count either.
   it('work-counters-write-only — no engine code reads the counters, so they cannot change play', () => {
     const src = join(__dirname, '../src');
     const files = (dir: string): string[] =>
@@ -134,7 +135,9 @@ describe('engine work counters', () => {
       const text = readFileSync(path, 'utf8');
       const imports = [...text.matchAll(/import\s*\{([^}]*)\}\s*from\s*'[./]+work-counters'/g)];
       return imports.some((match) =>
-        match[1]!.split(',').some((name) => name.trim() !== 'countWork'),
+        match[1]!
+          .split(',')
+          .some((name) => name.trim() !== 'countWork' && name.trim() !== 'uncounted'),
       );
     });
     expect(readers).toEqual([]);

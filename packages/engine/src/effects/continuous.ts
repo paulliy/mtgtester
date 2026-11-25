@@ -59,7 +59,7 @@ import {
   sharedPassFor,
   tappedDigestForChecks,
 } from './layer-cache';
-import { countWork } from '../work-counters';
+import { countWork, uncounted } from '../work-counters';
 import { EVERYTHING, readsOf, SUBTYPES, selectorReads, TYPES, writesOf } from './layer-dependency';
 
 /** Basic-land subtype → intrinsic mana ability (CR 305.6), for Blood Moon's mana override. */
@@ -179,12 +179,15 @@ function attachedCardId(ctx: GameContext, perm: EnginePermanent): string | null 
   return ctx.state.battlefield.find((p) => p.id === perm.attachedTo)?.cardId ?? null;
 }
 
+/** `KEYWORD_COUNTERS` as pairs, listed once rather than for every permanent in every pass. */
+const KEYWORD_COUNTER_ENTRIES = Object.entries(KEYWORD_COUNTERS);
+
 /** Every continuous effect in play, from static abilities and until-end-of-turn effects. */
 function gatherEffects(ctx: GameContext): LayerEffect[] {
   const out: LayerEffect[] = [];
 
   for (const source of ctx.state.battlefield) {
-    for (const [counter, keyword] of Object.entries(KEYWORD_COUNTERS)) {
+    for (const [counter, keyword] of KEYWORD_COUNTER_ENTRIES) {
       if (counterCount(source.counters, counter) <= 0) continue;
       out.push({
         applies: { kind: 'fixed', cardIds: [source.cardId], objectIds: [source.id] },
@@ -560,6 +563,7 @@ export function candidateOf(
   chars: Characteristics,
   includeCombatDefender = false,
 ): SelectorCandidate {
+  countWork('selectorCandidates');
   const { isEnchanted, isEquipped, auraControllerIds } = attachmentsOf(ctx, perm);
   // Absent (not 0) when the def can't be found, so `manaValueAtMost`/`manaValueAtLeast`
   // correctly never match rather than matching everything as mana value 0. Off the battlefield,
@@ -647,6 +651,17 @@ export function matchesSelector(
  */
 type CandidateCache = Map<string, SelectorCandidate>;
 
+/**
+ * Candidates of a layer pass's working set, shared by every effect the pass applies. An entry's
+ * candidate is a pure function of its characteristics and of state the pass never changes (the
+ * permanent, the attachment index), so it stays exact until something writes the entry's
+ * characteristics: `applyOne` drops an entry's candidate as its op writes that entry, and the
+ * pass clears the cache before each step that writes every entry (`finishLayer4`, base power and
+ * counters). A trial working set (`cloneWork`) has none. Before this every effect built a fresh
+ * candidate for every permanent, the largest part of a pass on a board with several statics.
+ */
+const PASS_CANDIDATES = new WeakMap<WorkMap, CandidateCache>();
+
 function affects(
   ctx: GameContext,
   effect: LayerEffect,
@@ -720,8 +735,14 @@ function scopeOf(
     countPermanents: (selector, who) =>
       counted(selector, who, selectorReads(selector), () => {
         let count = 0;
+        const passCandidates = PASS_CANDIDATES.get(work);
         for (const entry of work.values()) {
-          if (!selectMatches(candidateOf(ctx, entry.perm, entry.chars), selector, source)) continue;
+          let candidate = passCandidates?.get(entry.perm.cardId);
+          if (candidate === undefined) {
+            candidate = candidateOf(ctx, entry.perm, entry.chars);
+            passCandidates?.set(entry.perm.cardId, candidate);
+          }
+          if (!selectMatches(candidate, selector, source)) continue;
           if (who === 'you' && entry.perm.controllerId !== source.controllerId) continue;
           if (who === 'opponents' && entry.perm.controllerId === source.controllerId) continue;
           count += 1;
@@ -891,8 +912,9 @@ function applyOne(
     op.layer === 7 &&
     ((typeof op.power !== 'number' && op.power.kind === 'timesAttackedThisTurn') ||
       (typeof op.toughness !== 'number' && op.toughness.kind === 'timesAttackedThisTurn'));
+  const passCandidates = PASS_CANDIDATES.get(work);
   for (const entry of work.values()) {
-    if (!affects(ctx, effect, entry, candidates)) continue;
+    if (!affects(ctx, effect, entry, candidates ?? passCandidates)) continue;
     applyOpTo(
       ctx,
       entry.chars,
@@ -901,6 +923,9 @@ function applyOne(
         ? { ...scope, affectedTimesAttacked: entry.perm.timesAttackedThisTurn ?? 0 }
         : scope,
     );
+    // The op changed this entry, so a candidate built from it before, or while the op counted
+    // the board, no longer describes it.
+    passCandidates?.delete(entry.perm.cardId);
   }
 }
 
@@ -1069,7 +1094,7 @@ function applyGroup(
     const { candidates } = probe;
     const dependsOn = (effect: LayerEffect, other: LayerEffect): boolean => {
       const may = mayDepend(effect, other);
-      if (verify && !may && check.dependsOn(effect, other)) {
+      if (verify && !may && uncounted(() => check.dependsOn(effect, other))) {
         throw new Error(
           `engine bug: layer dependency prefilter said independent, probe says dependent.\neffect: ${JSON.stringify(effect.op)}\nother:  ${JSON.stringify(other.op)}`,
         );
@@ -1093,6 +1118,11 @@ function applyGroup(
  * After layer 4: rules-text abilities lost to a subtype change disappear, and a land's mana
  * abilities follow its *current* basic land types (CR 305.6/305.7).
  */
+function hasBasicLandType(subtypes: readonly string[]): boolean {
+  for (const subtype of subtypes) if (BASIC_LAND_MANA[subtype] !== undefined) return true;
+  return false;
+}
+
 function finishLayer4(ctx: GameContext, work: WorkMap): void {
   for (const entry of work.values()) {
     const chars = entry.chars;
@@ -1107,10 +1137,21 @@ function finishLayer4(ctx: GameContext, work: WorkMap): void {
       chars.protectionFrom = [];
     }
 
+    // Most permanents have no basic land type, printed or current: nothing changed.
+    if (
+      !chars.loseAbilities &&
+      !hasBasicLandType(def.subtypes) &&
+      !hasBasicLandType(chars.subtypes)
+    )
+      continue;
     const printedBasics = def.subtypes.filter((s) => BASIC_LAND_MANA[s] !== undefined);
     const currentBasics = chars.subtypes.filter((s) => BASIC_LAND_MANA[s] !== undefined);
+    // The same types in the same order (a basic land untouched) is unchanged without sorting.
     const subtypesChanged =
-      [...currentBasics].sort().join(',') !== [...printedBasics].sort().join(',');
+      !(
+        currentBasics.length === printedBasics.length &&
+        currentBasics.every((subtype, i) => subtype === printedBasics[i])
+      ) && [...currentBasics].sort().join(',') !== [...printedBasics].sort().join(',');
     if (!chars.loseAbilities && !subtypesChanged) continue;
 
     const intrinsic = (types: string[]): ManaAbilitySpec[] =>
@@ -1279,8 +1320,11 @@ function runLayerPass(
     );
   const group = (key: string): LayerEffect[] => effects.filter((e) => groupOf(e.op) === key);
 
+  const passCandidates: CandidateCache = new Map();
+  PASS_CANDIDATES.set(work, passCandidates);
   applyGroup(ctx, work, group('4'));
   finishLayer4(ctx, work);
+  passCandidates.clear();
   applyGroup(ctx, work, group('5'));
   applyGroup(ctx, work, group('6'));
   // "Can't have" (Arcane Lighthouse) holds against every grant, whatever its timestamp.
@@ -1294,6 +1338,7 @@ function runLayerPass(
     entry.chars.baseToughness = entry.chars.toughness;
   }
   applyCounters(work); // 7c
+  passCandidates.clear();
   applyGroup(ctx, work, group('7d'), false);
 
   const out = new Map<string, Characteristics>();
@@ -1376,7 +1421,7 @@ export function computeAllCharacteristics(
     )
       delete cached.verified;
     if (!VERIFY_CACHE && !sampleCacheHit(ctx, cached)) return cached.map;
-    const fresh = runLayers(ctx, permsFor(ctx, extra));
+    const fresh = uncounted(() => runLayers(ctx, permsFor(ctx, extra)));
     const a = canonicalJson(cached.map);
     const b = canonicalJson(fresh.map);
     if (a !== b) {

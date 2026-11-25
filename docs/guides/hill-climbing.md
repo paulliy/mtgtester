@@ -57,17 +57,18 @@ clock. The engine counts its expensive operations (`engineWork()` in `@mtg/engin
 games. They repeat to the last digit on any machine, under the test suite's load too, and the probe
 fails if two repeats of the same games count differently.
 
-| Counter                            | Counts                                                                         |
-| ---------------------------------- | ------------------------------------------------------------------------------ |
-| `layerPasses`                      | Full CR 613 layer passes over the battlefield (layer-cache misses).            |
-| `layerCacheHits`                   | Characteristics queries answered from the cache. Shown only, never a verdict.  |
-| `layerDigests`                     | Hashes of every layer input, once per read scope or per query outside one.     |
-| `castCheckpoints`                  | Casting checkpoints, each capturing every object in the game for rollback.     |
-| `castPreviews`                     | Casting previews: shallow projections of the game with a card on the stack.    |
-| `manaSourceListings`               | Listings of a player's mana sources: every mana ability judged payable now.    |
-| `spellPaymentSearches`             | Searches for a spell's joint payment of mana and non-mana costs.               |
-| `manaPlannerSearches`              | Payments the stateful mana planner searched.                                   |
-| `manaPlannerStates`, `stateCopies` | States that planner visited, and the deep copies of the game it made for them. |
+| Counter                            | Counts                                                                                  |
+| ---------------------------------- | --------------------------------------------------------------------------------------- |
+| `layerPasses`                      | Full CR 613 layer passes over the battlefield (layer-cache misses).                     |
+| `layerCacheHits`                   | Characteristics queries answered from the cache. Shown only, never a verdict.           |
+| `layerDigests`                     | Hashes of every layer input, once per read scope or per query outside one.              |
+| `castCheckpoints`                  | Casting checkpoints, each capturing every object in the game for rollback.              |
+| `castPreviews`                     | Casting previews: shallow projections of the game with a card on the stack.             |
+| `manaSourceListings`               | Listings of a player's mana sources: every mana ability judged payable now.             |
+| `spellPaymentSearches`             | Searches for a spell's joint payment of mana and non-mana costs.                        |
+| `manaPlannerSearches`              | Payments the stateful mana planner searched.                                            |
+| `manaPlannerStates`, `stateCopies` | States that planner visited, and the deep copies of the game it made for them.          |
+| `selectorCandidates`               | Permanents' characteristics built as a selector reads them, in and out of layer passes. |
 
 A count measures the work the games needed, so it compares only when every fingerprint is
 identical. When the games differ the row says `INCOMPARABLE` and does not fail. Counters include
