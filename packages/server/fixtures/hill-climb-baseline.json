@@ -12,25 +12,25 @@
         "authoring",
         "compiler"
       ],
-      "commit": "c589b940",
+      "commit": "07a9c006",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 46.9,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 60.42,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 4.56,
+          "value": 4.14,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.351
+          "spread": 0.673
         },
         "engine.medianGameMsPerDecision": {
-          "value": 4.72,
+          "value": 4.11,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.267
+          "spread": 0.478
         },
         "engine.work.layerPasses": {
           "value": 2375,
@@ -76,7 +76,7 @@
           "sameGames": true
         },
         "engine.work.castPreviews": {
-          "value": 12662,
+          "value": 1941,
           "unit": "previews",
           "better": "lower",
           "kind": "exact",
@@ -117,6 +117,13 @@
           "kind": "exact",
           "sameGames": true
         },
+        "engine.work.selectorCandidates": {
+          "value": 15379,
+          "unit": "candidates",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
         "engine.snapshotObjects": {
           "value": 11389,
           "unit": "objects",
@@ -125,11 +132,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 0.78,
+          "value": 0.8,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.062
+          "spread": 0.773
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -389,25 +396,25 @@
         "authoring",
         "compiler"
       ],
-      "commit": "c589b940",
+      "commit": "07a9c006",
       "dirty": false,
-      "machine": "Intel(R) Xeon(R) Processor @ 2.30GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 52.61,
+      "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
+      "calibrationMs": 65.46,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.09,
+          "value": 7.07,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.126
+          "spread": 0.078
         },
         "engine.medianGameMsPerDecision": {
-          "value": 5.62,
+          "value": 6.24,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.189
+          "spread": 0.111
         },
         "engine.work.layerPasses": {
           "value": 10216,
@@ -453,7 +460,7 @@
           "sameGames": true
         },
         "engine.work.castPreviews": {
-          "value": 55662,
+          "value": 7666,
           "unit": "previews",
           "better": "lower",
           "kind": "exact",
@@ -494,6 +501,13 @@
           "kind": "exact",
           "sameGames": true
         },
+        "engine.work.selectorCandidates": {
+          "value": 415573,
+          "unit": "candidates",
+          "better": "lower",
+          "kind": "exact",
+          "sameGames": true
+        },
         "engine.snapshotObjects": {
           "value": 142613,
           "unit": "objects",
@@ -502,11 +516,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 0.86,
+          "value": 0.79,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.374
+          "spread": 0.215
         },
         "model.default.callsPerTurn": {
           "value": 6.735,
