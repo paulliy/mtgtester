@@ -1152,9 +1152,9 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
         // could make is ruled out here at the same verdict. Convoke adds creatures as sources and an
         // additional X is enumerated (and refused) differently, so those take the full path.
         // `MTG_VERIFY_MANA_CAPACITY=1` runs the full check anyway and throws if it offers the spell.
-        // One read scope, so the bound and the sources share one layer digest of the preview.
+        // Inside the option's read scope, so the bound and the sources share its layer digest.
         let ruledOutAt: number | null = null;
-        const castSources = withReadScope(castCtx, (): ManaSource[] | null => {
+        const castSources = ((): ManaSource[] | null => {
           if (!spellHasConvoke(castingDef) && castingDef.announcesX !== true) {
             const floor = reduceBest(addManaCosts(costWithX(0), additionalManaCost));
             const capacity = fixedManaCapacity(castCtx, paymentPlayer);
@@ -1166,7 +1166,7 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
           return spellHasConvoke(castingDef)
             ? [...manaSourcesFor(castCtx, player.id), ...convokeSourcesFor(castCtx, player.id)]
             : manaSourcesFor(castCtx, player.id);
-        });
+        })();
         if (castSources === null) return;
         paymentSources = castSources;
 

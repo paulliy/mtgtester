@@ -175,7 +175,10 @@ export function engineProbe(
         'the same games did different engine work on a repeat: a counter is not exact',
       );
     work = total;
-    snapshotObjects = runs.reduce((sum, run) => sum + run.snapshotObjects, 0);
+    const objects = runs.reduce((sum, run) => sum + run.snapshotObjects, 0);
+    if (repeat > 0 && objects !== snapshotObjects)
+      throw new Error('the same games retained different playback boards on a repeat');
+    snapshotObjects = objects;
     const engineMs = runs.reduce((sum, run) => sum + run.engineMs, 0);
     const decisions = runs.reduce((sum, run) => sum + run.decisions, 0);
     perDecision.push(engineMs / Math.max(1, decisions));

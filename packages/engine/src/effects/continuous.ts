@@ -1350,8 +1350,8 @@ export function computeAllCharacteristics(
   // the pass, with the flags the pass established.
   const digest =
     cached === undefined ? undefined : scopedDigestOf(ctx, extra, includeGraveyards, includeTapped);
-  // A casting preview that misses its own entry may match a recent pass of another preview
-  // (`sharedPassFor`): each is checked against this state's digest, as the entry above is.
+  // A context that misses its own entry may match a recent pass of its game's pool, the live
+  // context and its casting previews (`sharedPassFor`), checked against this state's digest.
   if (
     cached !== undefined &&
     digest !== undefined &&

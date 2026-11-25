@@ -70,21 +70,27 @@ export function setCached(ctx: GameContext, entry: LayerCacheEntry): void {
 }
 
 /**
- * Recent layer passes shared by the casting previews of one game. Previews of one state differ
- * only in which card left which zone, which the digest sees as zone sizes, so a priority round
- * that previews each player's cards in turn moved one preview's results back and forth between
- * a few digests and recomputed a full pass at each switch. A preview that misses its own entry
- * checks these first. Each is matched on the digest of the preview's own state, computed with
- * that pass's flags, so a match is exactly as sound as a hit on the preview's own entry.
+ * Recent layer passes shared by one game's live context and the casting previews made from it.
+ * Previews of one state differ only in which card left which zone, which the digest sees as zone
+ * sizes (and a command-zone cast as no change at all), so a priority round that previews each
+ * player's cards in turn moved one preview's results back and forth between a few digests and
+ * recomputed a full pass at each switch. A context that misses its own entry checks these first.
+ * Each is matched on the digest of that context's own state, computed with that pass's flags, so a
+ * match is exactly as sound as a hit on its own entry. The live context takes part both ways:
+ * measured, leaving it out gave back nearly all of the saving.
+ *
+ * An entry's strict-mode `verified` mark travels with it, as it already did when a preview was
+ * seeded with its base's entry: a pass verified fresh is the same pass whatever context holds it.
  */
 interface SharedPasses {
   entries: LayerCacheEntry[];
 }
+/** The pool of each context in it: a game's live context and every preview made from it. */
 const SHARED_PASSES = new WeakMap<GameContext, SharedPasses>();
 /** Enough for one preview per seat of a four-player game, and its command-zone variants. */
 const SHARED_PASS_LIMIT = 8;
 
-/** Let `preview` share recent passes with the other previews made from `base`. */
+/** Put `preview` in the pool of `base`, the context it was made from. */
 export function sharePassesWith(base: GameContext, preview: GameContext): void {
   let shared = SHARED_PASSES.get(base);
   if (shared === undefined) {
@@ -95,8 +101,8 @@ export function sharePassesWith(base: GameContext, preview: GameContext): void {
 }
 
 /**
- * A recent pass another preview computed for this state, if any: one read with the same flags
- * as the preview's own entry and recorded under the digest the preview just computed with them.
+ * A recent pass from this context's pool for this state, if any: one read with the same flags as
+ * the context's own entry and recorded under the digest the context just computed with them.
  * Only those are checked, so a lookup computes no digest of its own.
  */
 export function sharedPassFor(
@@ -119,7 +125,7 @@ export function sharedPassFor(
   return undefined;
 }
 
-/** Offer a pass a preview computed to the other previews of its game, newest first. */
+/** Offer a pass to the rest of its context's pool, newest first. */
 export function sharePass(ctx: GameContext, entry: LayerCacheEntry): void {
   const shared = SHARED_PASSES.get(ctx);
   if (shared === undefined) return;
@@ -500,7 +506,9 @@ export function digestOf(
  * those reads quadratic in board size: about 40% of engine CPU in measured bot games.
  *
  * A scope belongs to one context object. A speculative copy (the mana planner's `clone`, a
- * casting preview) is a different object and digests as before, so it may be changed freely.
+ * casting preview) is a different object and digests as before, so it may be changed freely
+ * outside a scope of its own. A casting preview has one while its cast options are built
+ * (`offerCast`), and must not be changed then.
  * State the digest does not read (the event log, pending triggers) may change inside a scope;
  * anything it does read must not. The safety net: `MTG_VERIFY_LAYER_CACHE=1` re-digests on every
  * scoped hit, and under `strictInvariants` one scoped hit in `SAMPLE_EVERY` is re-digested and

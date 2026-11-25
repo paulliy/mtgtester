@@ -1378,24 +1378,28 @@ function* declareChosenAttackers(
 }
 
 /**
- * Each creature's "had to attack this combat" flag starts the declaration cleared. The flag is a
- * layer input only when set (the layer digest folds `=== true`), so the scan runs in a read scope
- * and leaves it to set a flag that is already off; a flag that is on is cleared outside the scope,
- * and the scan resumes after it on the changed board, as the one-by-one loop did.
+ * Each creature's "had to attack this combat" flag starts the declaration cleared, judged one
+ * creature at a time on the board as the clearing leaves it. Which permanents are creatures is
+ * judged in a read scope and the flags are cleared after it closes. Clearing a flag that is
+ * already off changes nothing a layer reads, so the scan goes on past it; clearing one that is on
+ * can (a "had to attack" condition), so the scan stops there and resumes after it on the changed
+ * board, as the one-by-one loop did.
  */
 function clearHadToAttack(ctx: GameContext): void {
   const battlefield = ctx.state.battlefield;
   for (let start = 0; start < battlefield.length;) {
-    start = withReadScope(ctx, () => {
+    const scan = withReadScope(ctx, () => {
+      const creatures: EnginePermanent[] = [];
       for (let index = start; index < battlefield.length; index++) {
         const perm = battlefield[index]!;
         if (!isCreaturePermanent(ctx, perm)) continue;
-        if (perm.hadToAttackThisCombat === true) return index;
-        perm.hadToAttackThisCombat = false;
+        creatures.push(perm);
+        if (perm.hadToAttackThisCombat === true) return { creatures, next: index + 1 };
       }
-      return battlefield.length;
+      return { creatures, next: battlefield.length };
     });
-    if (start < battlefield.length) battlefield[start++]!.hadToAttackThisCombat = false;
+    for (const perm of scan.creatures) perm.hadToAttackThisCombat = false;
+    start = scan.next;
   }
 }
 
