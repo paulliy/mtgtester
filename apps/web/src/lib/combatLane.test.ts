@@ -112,13 +112,36 @@ describe('predictOutcome', () => {
     );
   });
 
-  it('says how much tramples over', () => {
+  it('says trample damage over a blocker is at most the excess, since it is a choice', () => {
     const wurm = creature('a', 'Wurm', 'P2', 6, 6, { keywords: ['trample'] });
     expect(predictOutcome(wurm, [creature('b', 'Bear', 'P1', 2, 2)], 'P1', both, true)).toEqual({
-      text: 'Bear dies, 4 tramples over',
+      text: 'Bear dies, up to 4 tramples over',
       tone: 'danger',
       trampled: 4,
+      upTo: true,
     });
+  });
+
+  it('sends all trample damage on once the blocker has left', () => {
+    const wurm = creature('a', 'Wurm', 'P2', 6, 6, { keywords: ['trample'] });
+    expect(predictOutcome(wurm, [], 'P1', both, true, true)).toEqual({
+      text: 'blocker gone, 6 tramples over',
+      tone: 'danger',
+      trampled: 6,
+    });
+    const ox = creature('a', 'Ox', 'P2', 4, 4);
+    expect(predictOutcome(ox, [], 'P1', both, true, true)?.text).toBe('blocked');
+  });
+
+  it('lets infect shrink a creature to death through indestructible', () => {
+    const rat = creature('a', 'Rat', 'P2', 2, 2, { keywords: ['infect'] });
+    const idol = creature('b', 'Idol', 'P1', 0, 2, { keywords: ['indestructible'] });
+    expect(predictOutcome(rat, [idol], 'P1', both, true)?.text).toBe('Idol dies');
+    // First-strike infect counters shrink the blocker before it strikes back.
+    const fencer = creature('a', 'Fencer', 'P2', 1, 1, { keywords: ['infect', 'first strike'] });
+    expect(predictOutcome(fencer, [creature('b', 'Imp', 'P1', 1, 3)], 'P1', both, true)?.text).toBe(
+      'both survive',
+    );
   });
 
   it('names poison for infect', () => {
@@ -186,6 +209,23 @@ describe('buildCombatLane', () => {
     expect(lane.groups[1]!.ifUnblocked).toBe(true);
   });
 
+  it('leaves infect out of the life preview while you choose attackers', () => {
+    const rat = creature('rat', 'Lab Rat', 'P1', 2, 2, { keywords: ['infect'] });
+    const ox = creature('ox', 'Lab Ox', 'P1', 4, 4);
+    const plan = (assignment: Map<string, string>) =>
+      input({
+        step: 'declareAttackers',
+        permanents: [rat, ox],
+        plan: { kind: 'attackers', assignment, options: [['P2'], ['P2']] },
+      });
+    expect(buildCombatLane(plan(new Map([['rat', 'P2']])))!.groups[0]!.lifeAfter).toBeNull();
+    const both = new Map([
+      ['rat', 'P2'],
+      ['ox', 'P2'],
+    ]);
+    expect(buildCombatLane(plan(both))!.groups[0]!.lifeAfter).toBe(36);
+  });
+
   it('previews your blocks and leaves the other defender alone', () => {
     const ox = creature('ox', 'Lab Ox', 'P2', 4, 4, { attacking: 'P1', tapped: true });
     const servo = creature('servo', 'Lab Servo', 'P2', 1, 1, { attacking: 'P1' });
@@ -221,6 +261,23 @@ describe('buildCombatLane', () => {
     expect(p3!.pairs[0]!.blockable).toBe(false);
     expect(p3!.pairs[0]!.outcome).toBeNull();
     expect(p3!.ifUnblocked).toBe(true);
+  });
+
+  it('shows trample life loss as the lowest it can go, and keeps it after the blocker leaves', () => {
+    const wurm = creature('wurm', 'Lab Wurm', 'P2', 6, 6, {
+      keywords: ['trample'],
+      attacking: 'P1',
+      blockedBy: ['bear'],
+    });
+    const bear = creature('bear', 'Lab Bear', 'P1', 2, 2, { blocking: 'wurm' });
+    const blocked = buildCombatLane(input({ priorityPlayer: 'P2', permanents: [wurm, bear] }))!
+      .groups[0]!;
+    expect(blocked.lifeAfter).toBe(36);
+    expect(blocked.atLowest).toBe(true);
+    const gone = buildCombatLane(input({ priorityPlayer: 'P2', permanents: [wurm] }))!.groups[0]!;
+    expect(gone.pairs[0]!.outcome?.text).toBe('blocker gone, 6 tramples over');
+    expect(gone.lifeAfter).toBe(34);
+    expect(gone.atLowest).toBe(false);
   });
 
   it('reads declared blocks and puts an attacker on a planeswalker under the walker', () => {

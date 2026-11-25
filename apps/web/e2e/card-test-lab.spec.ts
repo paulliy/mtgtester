@@ -3196,8 +3196,8 @@ test('Kogla, the Titan Ape: bounce a Human, then attack', async ({ page }) => {
     .getByRole('button', { name: 'P2' })
     .click();
   // Blur the assignment button to exercise the view-level Enter shortcut, not a native click. The
-  // combat tray's heading holds the declaration button, so click its instruction text instead.
-  await page.locator('.interaction-tray .target-instruction').click();
+  // combat lane holds the declaration button, so click its instruction text instead.
+  await page.locator('.combat-strip .lane-hint').click();
   await page.keyboard.press('Enter');
 
   // Lab Hex is P2's only artifact or enchantment, so the target is forced; P3's Lab Idol is not.

@@ -74,6 +74,8 @@ export interface LaneOutcome {
   tone: 'neutral' | 'danger';
   /** Damage a blocked trampler pushes through to what it attacks. */
   trampled?: number;
+  /** `trampled` is the most it can be: the attacker may assign more of it to the blocker. */
+  upTo?: boolean;
 }
 
 export interface LanePair {
@@ -97,6 +99,8 @@ export interface LaneGroup {
   lifeAfter: number | null;
   /** True when that number assumes nothing is blocked yet. */
   ifUnblocked: boolean;
+  /** `lifeAfter` is the lowest it can go, because some trample damage is the attacker's choice. */
+  atLowest: boolean;
   /** You attack this group's target, or block for it. */
   yours: boolean;
   /** Your plan can send a creature here. */
@@ -165,6 +169,8 @@ interface Fighter {
   hp: number;
   /** Took deathtouch damage. */
   touched: boolean;
+  /** -1/-1 counters from infect damage, which shrink power too and kill through indestructible. */
+  shrunk: number;
   dead: boolean;
 }
 
@@ -173,19 +179,28 @@ function fighter(p: LanePermanent): Fighter {
     p,
     hp: (p.toughness ?? 0) - p.damageMarked,
     touched: false,
+    shrunk: 0,
     dead: false,
   };
+}
+
+function powerOf(f: Fighter): number {
+  return Math.max(0, (f.p.power ?? 0) - f.shrunk);
 }
 
 function hit(target: Fighter, source: LanePermanent, amount: number): void {
   if (amount <= 0) return;
   target.hp -= amount;
+  if (has(source, 'infect')) target.shrunk += amount;
   if (has(source, 'deathtouch')) target.touched = true;
 }
 
 function settle(f: Fighter): void {
-  if (f.dead || has(f.p, 'indestructible')) return;
-  if (f.hp <= 0 || f.touched) f.dead = true;
+  if (f.dead) return;
+  // Zero toughness is not destruction, so indestructible doesn't save it.
+  if ((f.p.toughness ?? 0) - f.shrunk <= 0) f.dead = true;
+  else if (has(f.p, 'indestructible')) return;
+  else if (f.hp <= 0 || f.touched) f.dead = true;
 }
 
 /** Damage the attacker deals per step to whatever is in front of it. */
@@ -196,7 +211,9 @@ function strikes(p: LanePermanent, steps: readonly DamageStep[]): number {
 /**
  * What an attacker and its blockers will do to each other if nothing changes, or null when that
  * can't be told from the board (protection, or damage split between several blockers before the
- * outcome is settled). `victim` names who an unblocked attacker hits.
+ * outcome is settled). `victim` names who an unblocked attacker hits. `wasBlocked` says the
+ * attacker was blocked, for when `blockers` is empty because they have all left: it stays
+ * blocked, and only trample gets its damage through.
  */
 export function predictOutcome(
   attacker: LanePermanent,
@@ -204,6 +221,7 @@ export function predictOutcome(
   victim: string,
   steps: readonly DamageStep[],
   blocksKnown: boolean,
+  wasBlocked = false,
 ): LaneOutcome | null {
   if (steps.length === 0) return null;
   const fighters = [attacker, ...blockers];
@@ -211,15 +229,27 @@ export function predictOutcome(
 
   if (blockers.length === 0) {
     if (!blocksKnown) return null;
+    const unit = has(attacker, 'infect') ? ' poison' : '';
+    if (wasBlocked) {
+      // With no blocker left, a trampler assigns all its damage to the player.
+      const amount = has(attacker, 'trample') ? strikes(attacker, steps) : 0;
+      if (amount === 0) return { text: 'blocked', tone: 'neutral', trampled: 0 };
+      return {
+        text: `blocker gone, ${amount}${unit} tramples over`,
+        tone: 'danger',
+        trampled: amount,
+      };
+    }
     const amount = strikes(attacker, steps);
     if (amount === 0) return { text: 'no damage', tone: 'neutral' };
-    const unit = has(attacker, 'infect') ? ' poison' : '';
     return { text: `${amount}${unit} to ${victim}`, tone: 'danger' };
   }
 
   const a = fighter(attacker);
   const bs = blockers.map(fighter);
   let trampled = 0;
+  /** Part of `trampled` is the controller's choice: they may put more than lethal on a blocker. */
+  let upTo = false;
   /** The attacker's controller divides its damage among several blockers as they like. */
   let split = false;
   for (const [i, step] of steps.entries()) {
@@ -227,9 +257,9 @@ export function predictOutcome(
     // A split earlier than the last step leaves later damage unknown too.
     if (split) return null;
     // Damage within a step is dealt at once: work it all out, then see who died.
-    const attackerDeals = !a.dead && dealsIn(attacker, step) ? Math.max(0, attacker.power ?? 0) : 0;
+    const attackerDeals = !a.dead && dealsIn(attacker, step) ? powerOf(a) : 0;
     for (const b of bs) {
-      if (!b.dead && dealsIn(b.p, step)) hit(a, b.p, Math.max(0, b.p.power ?? 0));
+      if (!b.dead && dealsIn(b.p, step)) hit(a, b.p, powerOf(b));
     }
     if (attackerDeals > 0) {
       const alive = bs.filter((b) => !b.dead);
@@ -241,6 +271,7 @@ export function predictOutcome(
           ? Math.min(attackerDeals, lethal)
           : attackerDeals;
         hit(b, attacker, toBlocker);
+        if (attackerDeals > toBlocker) upTo = true;
         trampled += attackerDeals - toBlocker;
       } else if (alive.length > 1) {
         // Any division is legal (it need not kill each in turn), so which blockers die is the
@@ -269,8 +300,13 @@ export function predictOutcome(
   if (dead.length === 0) text = all === 2 ? 'both survive' : 'all survive';
   else if (dead.length === all) text = all === 2 ? 'both die' : 'all die';
   else text = `${listNames(dead)} ${dead.length === 1 ? 'dies' : 'die'}`;
-  if (trampled > 0) text += `, ${trampled} tramples over`;
-  return { text, tone: dead.length > 0 || trampled > 0 ? 'danger' : 'neutral', trampled };
+  if (trampled > 0) text += `, ${upTo ? 'up to ' : ''}${trampled} tramples over`;
+  return {
+    text,
+    tone: dead.length > 0 || trampled > 0 ? 'danger' : 'neutral',
+    trampled,
+    ...(upTo ? { upTo } : {}),
+  };
 }
 
 function beatsFor(
@@ -319,7 +355,10 @@ export function buildCombatLane(input: LaneInput): LaneModel | null {
         .map(([from]) => byId.get(from))
         .filter((p): p is LanePermanent => p !== undefined);
       const life = walker === undefined ? lifeOf(targetId) : null;
-      const damage = sent.reduce((sum, p) => sum + strikes(p, ['first', 'regular']), 0);
+      // Infect damage gives poison counters instead of costing life.
+      const damage = sent
+        .filter((p) => !has(p, 'infect'))
+        .reduce((sum, p) => sum + strikes(p, ['first', 'regular']), 0);
       const known = walker !== undefined || input.seats.some((s) => s.seat === targetId);
       return {
         targetId,
@@ -328,6 +367,7 @@ export function buildCombatLane(input: LaneInput): LaneModel | null {
         life,
         lifeAfter: life !== null && damage > 0 ? life - damage : null,
         ifUnblocked: true,
+        atLowest: false,
         yours: true,
         droppable: true,
         pairs: sent.map((p) => ({
@@ -381,6 +421,7 @@ export function buildCombatLane(input: LaneInput): LaneModel | null {
         life: walker === undefined ? lifeOf(targetId) : null,
         lifeAfter: null,
         ifUnblocked: false,
+        atLowest: false,
         yours: false,
         droppable: false,
         pairs: [],
@@ -400,11 +441,8 @@ export function buildCombatLane(input: LaneInput): LaneModel | null {
     const blocksKnown = !blocksPending && !othersBlocking;
     const victim = walker !== undefined ? walker.name : targetId;
     const declaredBlocked = declaredBlockedOf(attacker);
-    // Blocked by a creature that has since left: still blocked, so no damage to the player.
-    const outcome =
-      blockers.length === 0 && declaredBlocked
-        ? { text: 'blocked', tone: 'neutral' as const }
-        : predictOutcome(attacker, blockers, victim, steps, blocksKnown);
+    // Blocked by a creature that has since left: still blocked, so only trample gets through.
+    const outcome = predictOutcome(attacker, blockers, victim, steps, blocksKnown, declaredBlocked);
     group.pairs.push({
       attacker: card(attacker),
       blockers: blockers.map((b) => card(b, planned.length > 0)),
@@ -420,6 +458,8 @@ export function buildCombatLane(input: LaneInput): LaneModel | null {
     if (group.life === null || steps.length === 0) continue;
     let damage = 0;
     let guessed = blocksPending;
+    /** Some trample damage is the attacker's choice, so the total is the most it can be. */
+    let lowest = false;
     for (const attacker of declared) {
       const target = attacker.attackingPlaneswalker ?? attacker.attacking;
       if (target !== group.targetId || has(attacker, 'infect')) continue;
@@ -434,12 +474,15 @@ export function buildCombatLane(input: LaneInput): LaneModel | null {
             : attacker.blockedBy
                 .map((id) => byId.get(id))
                 .filter((p): p is LanePermanent => p !== undefined);
-        damage += predictOutcome(attacker, blockers, '', steps, true)?.trampled ?? 0;
+        const outcome = predictOutcome(attacker, blockers, '', steps, true, true);
+        damage += outcome?.trampled ?? 0;
+        if (outcome?.upTo === true) lowest = true;
       }
     }
     if (damage > 0) {
       group.lifeAfter = group.life - damage;
       group.ifUnblocked = guessed;
+      group.atLowest = !guessed && lowest;
     }
   }
 

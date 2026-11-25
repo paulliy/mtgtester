@@ -88,7 +88,8 @@ function slotHot(pair: LanePair): boolean {
 
 function lifeLine(group: LaneGroup): string | null {
   if (group.lifeAfter === null) return null;
-  return `→ ${group.lifeAfter}${group.ifUnblocked ? ' if unblocked' : ''}`;
+  const note = group.ifUnblocked ? ' if unblocked' : group.atLowest ? ' at lowest' : '';
+  return `→ ${group.lifeAfter}${note}`;
 }
 
 function clickGroup(group: LaneGroup): void {
