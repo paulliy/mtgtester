@@ -337,7 +337,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true' && needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # Every lab scenario (ci:lab-verbose, the weekly run) takes over an hour on its own, before the
+    # setup, browser, site and table suites; a sampled lab fits well inside the hour.
+    timeout-minutes: ${{ needs.changes.outputs.lab_full == 'true' && 150 || 60 }}
     env:
       LAB: ${{ needs.changes.outputs.lab }}
       LAB_FULL: ${{ needs.changes.outputs.lab_full }}

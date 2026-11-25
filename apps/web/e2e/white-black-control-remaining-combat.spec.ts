@@ -111,9 +111,12 @@ test('Promise of Loyalty: each creature player keeps one and gets a public vow c
   for (const seat of ['P1', 'P2', 'P3', 'P4']) {
     const kept =
       seat === 'P1' ? page.locator('.human-zone') : page.locator(`.opponent[data-seat="${seat}"]`);
-    await expect(kept.getByRole('img', { name: 'Mother of Runes', exact: true })).toBeVisible({
-      timeout: 20_000,
-    });
+    // The permanent, not its art: once Scryfall art loads, the tile holds two "Mother of Runes" images.
+    await expect(
+      kept
+        .locator('.object')
+        .filter({ has: page.getByRole('img', { name: 'Mother of Runes', exact: true }) }),
+    ).toBeVisible({ timeout: 20_000 });
     await expect(kept.locator('.counters').filter({ hasText: /vow/i })).toBeVisible();
     await expect(
       kept

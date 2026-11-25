@@ -245,11 +245,8 @@ async function answerSylvan(page: Page, answer: RegExp): Promise<void> {
 /** Answer Orcish Bowmasters' "any target" prompt with a player seat or a [seat, name] permanent. */
 async function bowmastersTarget(page: Page, target: string | [string, string]): Promise<void> {
   // A spell's trigger as it resolves says "Target 1 of 1"; one put on the stack during an
-  // opponent's spell says "Choose targets for Orcish Bowmasters".
-  await passUntil(
-    page,
-    page.getByText(/Target 1 of 1|Choose targets for Orcish Bowmasters/).first(),
-  );
+  // opponent's spell says "Targets for Orcish Bowmasters".
+  await passUntil(page, page.getByText(/Target 1 of 1|Targets for Orcish Bowmasters/).first());
   if (typeof target === 'string')
     await page.locator(`.opponent[data-seat="${target}"] > header`).click();
   else await permanent(page, target[0], target[1]).first().click();
