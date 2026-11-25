@@ -76,6 +76,8 @@ export interface LaneOutcome {
   trampled?: number;
   /** `trampled` is the most it can be: the attacker may assign more of it to the blocker. */
   upTo?: boolean;
+  /** The attacker divides its damage among several blockers, so what reaches the player is unknown. */
+  split?: boolean;
 }
 
 export interface LanePair {
@@ -292,7 +294,7 @@ export function predictOutcome(
     const text = a.dead
       ? `${attacker.name} dies, splitting its damage`
       : `${attacker.name} splits its damage`;
-    return { text, tone: a.dead ? 'danger' : 'neutral', trampled: 0 };
+    return { text, tone: a.dead ? 'danger' : 'neutral', trampled: 0, split: true };
   }
   const dead = [a, ...bs].filter((f) => f.dead).map((f) => f.p.name);
   const all = 1 + bs.length;
@@ -460,6 +462,8 @@ export function buildCombatLane(input: LaneInput): LaneModel | null {
     let guessed = blocksPending;
     /** Some trample damage is the attacker's choice, so the total is the most it can be. */
     let lowest = false;
+    /** Some change to this player's life can't be told yet: show no number rather than a wrong one. */
+    let unknown = false;
     for (const attacker of declared) {
       const target = attacker.attackingPlaneswalker ?? attacker.attacking;
       if (target !== group.targetId || has(attacker, 'infect')) continue;
@@ -474,12 +478,17 @@ export function buildCombatLane(input: LaneInput): LaneModel | null {
             : attacker.blockedBy
                 .map((id) => byId.get(id))
                 .filter((p): p is LanePermanent => p !== undefined);
+        // The defender gains life from its lifelink blockers' damage, which isn't modelled here.
+        if (blockers.some((b) => b.controller === group.seat && has(b, 'lifelink'))) unknown = true;
         const outcome = predictOutcome(attacker, blockers, '', steps, true, true);
+        // How much a trampler gets past several blockers (or protection) is not known yet.
+        if (has(attacker, 'trample') && (outcome === null || outcome.split === true))
+          unknown = true;
         damage += outcome?.trampled ?? 0;
         if (outcome?.upTo === true) lowest = true;
       }
     }
-    if (damage > 0) {
+    if (damage > 0 && !unknown) {
       group.lifeAfter = group.life - damage;
       group.ifUnblocked = guessed;
       group.atLowest = !guessed && lowest;
@@ -543,6 +552,17 @@ export function withDeparted(
       if (group === undefined) {
         group = { ...old, pairs: [], lifeAfter: null };
         groups.push(group);
+      }
+      // Still on the battlefield but out of combat (regenerated, or removed by an effect).
+      if (present.has(pair.attacker.id)) {
+        group.pairs.push({
+          ...pair,
+          attacker: { ...pair.attacker, pending: false },
+          blockers: [...pair.blockers.filter((b) => present.has(b.id)), ...goneBlockers],
+          blockable: false,
+          outcome: { text: `${pair.attacker.name} was removed from combat`, tone: 'neutral' },
+        });
+        continue;
       }
       group.pairs.push({
         ...pair,

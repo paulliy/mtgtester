@@ -280,6 +280,32 @@ describe('buildCombatLane', () => {
     expect(gone.atLowest).toBe(false);
   });
 
+  it('shows no life total when part of the change to it is not known yet', () => {
+    const bear = creature('bear', 'Lab Bear', 'P2', 2, 2, { attacking: 'P1' });
+    const wurm = creature('wurm', 'Lab Wurm', 'P2', 6, 6, {
+      keywords: ['trample'],
+      attacking: 'P1',
+      blockedBy: ['m1', 'm2'],
+    });
+    const m1 = creature('m1', 'Lab Mole', 'P1', 1, 1, { blocking: 'wurm' });
+    const m2 = creature('m2', 'Lab Rat', 'P1', 1, 1, { blocking: 'wurm' });
+    const split = buildCombatLane(
+      input({ priorityPlayer: 'P2', permanents: [bear, wurm, m1, m2] }),
+    );
+    expect(split!.groups[0]!.lifeAfter).toBeNull();
+
+    const ox = creature('ox', 'Lab Ox', 'P2', 1, 4, { attacking: 'P1', blockedBy: ['priest'] });
+    const priest = creature('priest', 'Lab Priest', 'P1', 3, 3, {
+      keywords: ['lifelink'],
+      blocking: 'ox',
+    });
+    const linked = buildCombatLane(input({ priorityPlayer: 'P2', permanents: [bear, ox, priest] }));
+    expect(linked!.groups[0]!.lifeAfter).toBeNull();
+    expect(
+      buildCombatLane(input({ priorityPlayer: 'P2', permanents: [bear] }))!.groups[0]!.lifeAfter,
+    ).toBe(38);
+  });
+
   it('reads declared blocks and puts an attacker on a planeswalker under the walker', () => {
     const jace = creature(
       'jace',
@@ -343,6 +369,20 @@ describe('withDeparted and combatRecap', () => {
     expect(pairs[1]!.attacker.gone).toBe(true);
     expect(pairs[1]!.blockers.map((b) => b.id)).toEqual(['bear']);
     expect(pairs[1]!.outcome?.text).toBe('Lab Servo left the battlefield');
+  });
+
+  it('says a regenerated attacker was removed from combat, not that it left', () => {
+    const after = buildCombatLane(
+      input({
+        step: 'combatDamage',
+        priorityPlayer: 'P2',
+        permanents: [{ ...ox }, { ...servo, attacking: null, blockedBy: [] }, wall, bear],
+      }),
+    )!;
+    const merged = withDeparted(after, before, new Set(['ox', 'servo', 'wall', 'bear']));
+    const servoPair = merged.groups[0]!.pairs[1]!;
+    expect(servoPair.attacker.gone).toBeFalsy();
+    expect(servoPair.outcome?.text).toBe('Lab Servo was removed from combat');
   });
 
   it('folds into one line', () => {
