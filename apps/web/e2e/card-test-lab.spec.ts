@@ -2466,7 +2466,7 @@ test("Mordant Dragon: redirect combat damage to that player's creature", async (
   await page.getByRole('button', { name: 'Confirm attacks' }).click();
 
   // The trigger targets a creature P2 controls; Lab Ox and Lab Servo are both legal.
-  await expect(page.getByText(/Choose targets for Mordant Dragon/).first()).toBeVisible({
+  await expect(page.getByText(/Targets for Mordant Dragon/).first()).toBeVisible({
     timeout: 15_000,
   });
   // The target tray opens directly for a triggered ability's target choice.
@@ -3815,7 +3815,7 @@ test("Soul-Guide Lantern: enter and exile a card from P2's graveyard", async ({ 
   await lantern.click();
   await expect(page.getByText(/Auto-pay/)).toBeVisible();
   await confirm(page);
-  await expect(page.getByText(/Choose targets for Soul-Guide Lantern/).first()).toBeVisible({
+  await expect(page.getByText(/Targets for Soul-Guide Lantern/).first()).toBeVisible({
     timeout: 15_000,
   });
   await page
