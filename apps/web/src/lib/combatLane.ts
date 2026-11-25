@@ -220,8 +220,12 @@ export function predictOutcome(
   const a = fighter(attacker);
   const bs = blockers.map(fighter);
   let trampled = 0;
-  for (const step of steps) {
+  /** The attacker's controller divides its damage among several blockers as they like. */
+  let split = false;
+  for (const [i, step] of steps.entries()) {
     if (a.dead && bs.every((b) => b.dead)) break;
+    // A split earlier than the last step leaves later damage unknown too.
+    if (split) return null;
     // Damage within a step is dealt at once: work it all out, then see who died.
     const attackerDeals = !a.dead && dealsIn(attacker, step) ? Math.max(0, attacker.power ?? 0) : 0;
     for (const b of bs) {
@@ -239,15 +243,11 @@ export function predictOutcome(
         hit(b, attacker, toBlocker);
         trampled += attackerDeals - toBlocker;
       } else if (alive.length > 1) {
-        // Its controller splits the damage; enough for all of them settles it either way.
-        const lethalAll = alive.reduce(
-          (sum, b) => sum + (has(attacker, 'deathtouch') ? 1 : Math.max(0, b.hp)),
-          0,
-        );
-        if (attackerDeals < lethalAll) return null;
-        for (const b of alive)
-          hit(b, attacker, has(attacker, 'deathtouch') ? 1 : Math.max(1, b.hp));
-        if (has(attacker, 'trample')) trampled += attackerDeals - lethalAll;
+        // Any division is legal (it need not kill each in turn), so which blockers die is the
+        // controller's choice: say only that it splits, and what happens to the attacker.
+        split = true;
+        if (i < steps.length - 1 && steps.slice(i + 1).some((next) => dealsIn(attacker, next)))
+          return null;
       } else if (has(attacker, 'trample')) {
         // Every blocker is gone: a trampler assigns it all to the player.
         trampled += attackerDeals;
@@ -257,6 +257,12 @@ export function predictOutcome(
     for (const b of bs) settle(b);
   }
 
+  if (split) {
+    const text = a.dead
+      ? `${attacker.name} dies, splitting its damage`
+      : `${attacker.name} splits its damage`;
+    return { text, tone: a.dead ? 'danger' : 'neutral', trampled: 0 };
+  }
   const dead = [a, ...bs].filter((f) => f.dead).map((f) => f.p.name);
   const all = 1 + bs.length;
   let text: string;

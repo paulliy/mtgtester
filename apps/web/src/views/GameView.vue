@@ -69,6 +69,13 @@ const state = computed(() => store.state);
 
 /** Combat as the lane draws it, read-only for watchers (`combatLane.ts`). */
 const laneHidden = ref(false);
+// Hiding the lane lasts for that turn's combat; the next turn shows it again.
+watch(
+  () => state.value?.turnNumber,
+  () => {
+    laneHidden.value = false;
+  },
+);
 const noTargets: ReadonlySet<string> = new Set();
 const combatLane = computed(() => {
   const board = state.value;

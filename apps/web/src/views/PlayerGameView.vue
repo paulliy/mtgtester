@@ -841,15 +841,33 @@ const combatLane = computed<LaneModel | null>(() => {
           }
         : null,
   });
-  if (raw === null) return null;
   const damaging =
-    board.step === 'firstStrikeCombatDamage' ||
-    board.step === 'combatDamage' ||
-    board.step === 'endCombat';
+    board.phase === 'combat' &&
+    (board.step === 'firstStrikeCombatDamage' ||
+      board.step === 'combatDamage' ||
+      board.step === 'endCombat');
   const previous = laneMemory?.turn === board.turnNumber ? laneMemory.model : null;
+  // Every attacker may have fallen: the lane then keeps them, from what it last showed.
+  const current =
+    raw ??
+    (damaging && previous !== null && previous.kind !== 'attackers'
+      ? {
+          ...previous,
+          kind: 'declared' as const,
+          title:
+            board.step === 'endCombat'
+              ? 'End of combat'
+              : board.step === 'firstStrikeCombatDamage'
+                ? 'First strike damage'
+                : 'Damage',
+          beat: board.step === 'firstStrikeCombatDamage' ? 2 : previous.beats.length - 1,
+          groups: [],
+        }
+      : null);
+  if (current === null) return null;
   const model = damaging
-    ? withDeparted(raw, previous, new Set(board.battlefield.map((p) => p.id)))
-    : raw;
+    ? withDeparted(current, previous, new Set(board.battlefield.map((p) => p.id)))
+    : current;
   laneMemory = { turn: board.turnNumber, model };
   return model;
 });

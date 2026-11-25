@@ -128,18 +128,19 @@ describe('predictOutcome', () => {
 
   it('says nothing it cannot know', () => {
     const ox = creature('a', 'Ox', 'P2', 4, 4);
-    const two = [creature('b', 'Bear', 'P1', 2, 3), creature('c', 'Elk', 'P1', 1, 3)];
-    expect(predictOutcome(ox, two, 'P1', both, true)).toBeNull();
     const knight = creature('b', 'Knight', 'P1', 2, 2, { keywords: ['protection from green'] });
     expect(predictOutcome(ox, [knight], 'P1', both, true)).toBeNull();
     expect(predictOutcome(ox, [], 'P1', both, false)).toBeNull();
     expect(predictOutcome(ox, [], 'P1', [], true)).toBeNull();
   });
 
-  it('settles a split when the attacker has enough for everyone', () => {
+  it('never guesses how an attacker splits its damage between blockers', () => {
+    // Any division is legal, even all of it on one blocker, so only the attacker's fate is told.
     const ox = creature('a', 'Ox', 'P2', 4, 4);
     const two = [creature('b', 'Mole', 'P1', 1, 1), creature('c', 'Rat', 'P1', 1, 1)];
-    expect(predictOutcome(ox, two, 'P1', both, true)?.text).toBe('Mole and Rat die');
+    expect(predictOutcome(ox, two, 'P1', both, true)?.text).toBe('Ox splits its damage');
+    const big = [creature('b', 'Ogre', 'P1', 3, 3), creature('c', 'Elk', 'P1', 2, 3)];
+    expect(predictOutcome(ox, big, 'P1', both, true)?.text).toBe('Ox dies, splitting its damage');
   });
 });
 
