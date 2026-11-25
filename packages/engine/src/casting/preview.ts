@@ -56,7 +56,10 @@ export function castingPreviewContext(
     castInProgress: true,
     ...(spellDefinition === undefined ? {} : { spellDefinition }),
   };
-  const without = (cards: EngineCardObject[]) => cards.filter((entry) => entry !== card);
+  // The card is in one zone at most, so the others are shared as they are, as every other
+  // player's zones already are: a preview changes none of them.
+  const without = (cards: EngineCardObject[]) =>
+    cards.includes(card) ? cards.filter((entry) => entry !== card) : cards;
   // A preview is speculative: it records nothing in the diagnostics sink (ADR 0034 decision 4).
   const { diagnostics: _diagnostics, ...game } = ctx;
   const preview: GameContext = {

@@ -1070,10 +1070,12 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
       !canPlayFromZone(ctx, player.id, obj, 'graveyard')
     )
       return;
-    const castCtx = castingPreviewContext(ctx, obj, player.id);
-    const castPlayer = castCtx.state.players.find((entry) => entry.id === player.id)!;
-    paymentCtx = castCtx;
-    paymentPlayer = castPlayer;
+    // An alternative cost's condition reads the game as the card is cast (CR 601.2a): a preview,
+    // made only when a condition is asked. Every other read here is of the battlefield or the
+    // definitions, which a preview shares with the game, and each `offerCast` makes its own.
+    let conditionPreview: GameContext | undefined;
+    const conditionCtx = (): GameContext =>
+      (conditionPreview ??= castingPreviewContext(ctx, obj, player.id));
     // Every payment check runs inside `offerCast`, which first passes the timing check and then
     // sets the payment context and sources for the face being cast. Computing this preview's
     // sources here as well cost a full mana-source pass for every card at every priority stop,
@@ -1175,7 +1177,7 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
         // the contract: an action offered here must be applicable with no further legality check.
         // Restricted mana ("spend only to cast a Dragon spell") may or may not pay for THIS card,
         // so affordability is asked with the purpose attached — see `mana/cost.ts::ManaAllowance`.
-        const allows = allowanceFor(castCtx, castPlayer.id, {
+        const allows = allowanceFor(castCtx, player.id, {
           kind: 'castSpell',
           oracleId: obj.oracleId,
           isCommander: obj.isCommander,
@@ -1238,7 +1240,7 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
         // single iteration when `modes` is absent.
         const selections = modalSelections(
           castingDef,
-          maxChoicesFor(castCtx, castingDef, { cardId: obj.cardId, controllerId: castPlayer.id }),
+          maxChoicesFor(castCtx, castingDef, { cardId: obj.cardId, controllerId: player.id }),
         );
 
         for (const x of xChoices) {
@@ -1292,14 +1294,14 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
               const fullCost = reduce(addManaCosts(cost, manaPortionOf(additionalCosts)));
               const taxesTargets = gatherRuleStatics(castCtx).some(
                 (entry) =>
-                  entry.static.kind === 'targetLifeTax' && entry.controllerId !== castPlayer.id,
+                  entry.static.kind === 'targetLifeTax' && entry.controllerId !== player.id,
               );
               const menusAt = (price: ParsedManaCost, discount: number, requiredSlot?: number) =>
                 legalTargetMenus(
                   castCtx,
                   castingDef.spellAbility ?? { kind: 'spell', targets: [], effects: [] },
                   {
-                    controllerId: castPlayer.id,
+                    controllerId: player.id,
                     sourceCardId: obj.cardId,
                     ...targetingSourceFields(targetingFromDefinition(castingDef, 'spell')),
                     x,
@@ -1324,7 +1326,7 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
                         price,
                         additionalCosts,
                         x,
-                        targetLifeTaxFor(castCtx, castPlayer.id, all),
+                        targetLifeTaxFor(castCtx, player.id, all),
                         energyCost,
                       )
                     );
@@ -1447,7 +1449,7 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
                         : describeManaCost(selectionCost),
                     ...paymentPreview(
                       castCtx,
-                      castPlayer,
+                      paymentPlayer,
                       selectionCost,
                       castSources,
                       allows,
@@ -1481,9 +1483,9 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
         plotCast || reboundCast ? emptyCost() : foretold !== null ? foretold.cost : def.manaCost!,
         spellAdditionalCosts,
       );
-    const energyAlternativeCost = castCtx.state.battlefield
-      .filter((perm) => perm.controllerId === castPlayer.id)
-      .map((perm) => getDefByOracleId(castCtx, perm.oracleId, perm.name).energyAlternativeCost)
+    const energyAlternativeCost = ctx.state.battlefield
+      .filter((perm) => perm.controllerId === player.id)
+      .map((perm) => getDefByOracleId(ctx, perm.oracleId, perm.name).energyAlternativeCost)
       .find((amount): amount is number => amount !== undefined);
     if (
       def.types.some((type) =>
@@ -1509,9 +1511,7 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
       // Its payload is hand-only; a foretold card is cast only for its foretell cost.
       !fromExile &&
       !fromLibraryTop &&
-      castCtx.state.battlefield.some(
-        (perm) => perm.controllerId === castPlayer.id && perm.isCommander,
-      )
+      ctx.state.battlefield.some((perm) => perm.controllerId === player.id && perm.isCommander)
     ) {
       offerCast(
         emptyCost(),
@@ -1697,9 +1697,9 @@ function priorityOptions(ctx: GameContext, player: EnginePlayerState): EngineAct
           continue;
         if (
           alt.condition !== undefined &&
-          !evaluateCondition(castCtx, alt.condition, {
+          !evaluateCondition(conditionCtx(), alt.condition, {
             cardId: obj.cardId,
-            controllerId: castPlayer.id,
+            controllerId: player.id,
           })
         )
           continue;
