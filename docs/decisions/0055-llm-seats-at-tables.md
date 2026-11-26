@@ -100,10 +100,11 @@ turn 15 when the models changed) had Haiku tactician decisions at 1.1 s p50 and 
    `usage.cost` (`ai/client.ts:567`); the Messages API path reports tokens but no price. Model seats
    on the Anthropic API therefore need a local price table per model (input, output, cache read,
    cache write), applied to each attempt's usage, including failed and timed-out attempts that were
-   billed. A model with no price entry cannot be used at a table: the server refuses to start rather
+   billed. An attempt sent with no usage reported is charged its whole prompt and output allowance. A model with no price entry cannot be used at a table: the server refuses to start rather
    than run an uncapped game.
 6. **Clock.** A tactician call gets a hard wall-clock deadline (15 s to start with, about twice the
-   measured p95). Retries happen only inside it. When it passes, the heuristic fallback answers,
+   measured p95). Retries happen only inside it, the AI provider's corrective retry after an
+   invalid answer included: the deadline is per decision, not per call. When it passes, the heuristic fallback answers,
    recorded as `fallback`. The strategist call at turn start has its own deadline (30 s to start
    with); when it passes, the seat plays on without a plan for that turn. Paul asked for the
    strategist to start earlier so people would not wait for it, but the wait was the duel
