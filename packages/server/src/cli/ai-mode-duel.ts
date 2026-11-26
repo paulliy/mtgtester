@@ -554,7 +554,9 @@ async function main(): Promise<void> {
                 async decide(request) {
                   const view = engine.view(request.decidingPlayer);
                   const life = lifeNow();
+                  const asked = performance.now();
                   const response = await live.decide(request);
+                  const elapsedMs = performance.now() - asked;
                   const bot = botOutcomes.get(request.requestId);
                   botOutcomes.delete(request.requestId);
                   const steering = coordinator.steeringFor(request.decidingPlayer);
@@ -568,6 +570,7 @@ async function main(): Promise<void> {
                       ...(bot !== undefined && { bot }),
                       ...(steering !== undefined && { steering }),
                       life,
+                      elapsedMs,
                     }),
                   );
                   return response;

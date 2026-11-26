@@ -322,6 +322,10 @@ async function main(): Promise<void> {
       promptTokensPerTurn: Math.round(
         (total.tacticianPromptTokens + total.strategistPromptTokens) / total.turns,
       ),
+      // Per role, so a provider whose tactician and strategist models are priced differently can
+      // be costed (the Anthropic preset: Haiku tactician, Sonnet strategist).
+      tacticianPromptTokensPerTurn: Math.round(total.tacticianPromptTokens / total.turns),
+      strategistPromptTokensPerTurn: Math.round(total.strategistPromptTokens / total.turns),
       strategistReused: total.strategistReused,
       strategistWakes: total.strategistWakes,
       tacticianByDecisionType: total.byDecisionType,

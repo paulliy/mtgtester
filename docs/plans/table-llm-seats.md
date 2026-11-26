@@ -1,6 +1,6 @@
 # Plan: LLM seats at tables
 
-Status: scoped (2026-11-26), ready for Phase 0. Amends
+Status: Phase 0 in progress (2026-11-26): ADR 0055 drafted, offline census done, paid game pending. Amends
 [ADR 0031](../decisions/0031-multiplayer-tables.md) decision 10 once accepted.
 
 ## Goal
@@ -123,8 +123,12 @@ Each phase is its own pull request. I stop after each one for your review.
    deadline, with `retryOnTimeout: false`. When the deadline passes, the existing heuristic
    fallback answers, and the decision is recorded as `fallback`.
 
-3. **Per-game cap**, `TABLE_AI_MAX_USD_PER_GAME`, default `1.00`. It uses the billed cost each call
-   already reports (ADR 0040) and counts across all model seats at the table. A call is sent only
+3. **Per-game cap**, `TABLE_AI_MAX_USD_PER_GAME`, default `1.00`. On OpenRouter it uses the billed
+   cost each call reports (ADR 0040). **The Anthropic API path reports no dollar cost today**
+   (`ai/client.ts:567` reads only OpenRouter's `usage.cost`), so this phase adds a per-model price
+   table (input, output, cache read, cache write) applied to every billed attempt's usage, and the
+   server refuses to enable model seats for a model with no price entry (ADR 0055 decision 5). The
+   cap counts across all model seats at the table. A call is sent only
    if the running total is under the cap. Once the cap is reached, every model seat switches to
    the heuristic bot for the rest of the game, with one public log line ("AI budget reached; bots
    continue on built-in play"). No exception and no halt. The strategist is checked first, because
