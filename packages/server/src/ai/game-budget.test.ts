@@ -98,6 +98,28 @@ describe('GameAiBudget', () => {
     expect(budget.unpricedAttempts).toBe(1);
   });
 
+  it('charges a sent attempt that reported no usage as its whole prompt and output allowance', () => {
+    // A request that timed out after it was sent may be billed, with no token counts to go on.
+    const budget = new GameAiBudget(1);
+    const silent = {
+      messages: [{ role: 'user' as const, content: 'x'.repeat(40_000) }],
+      effectiveConfig: { maxTokens: 2_000 },
+      usage: {
+        promptTokenSource: 'unknown' as const,
+        responseTokenSource: 'unknown' as const,
+        costSource: 'unknown' as const,
+      },
+    };
+    budget.charge(attempt({ ...silent, status: 'transport_error', error: 'aborted' }));
+    expect(budget.spentUsd).toBeCloseTo(10_000 * 0.1e-6 + 2_000 * 0.5e-6, 10);
+    expect(budget.unpricedAttempts).toBe(0);
+
+    // An HTTP error was refused before generation and is not billed.
+    budget.charge(attempt({ ...silent, status: 'http_error', error: 'HTTP 500' }));
+    expect(budget.spentUsd).toBeCloseTo(10_000 * 0.1e-6 + 2_000 * 0.5e-6, 10);
+    expect(budget.unpricedAttempts).toBe(1);
+  });
+
   it("stops for the key's own limit, but not for an ordinary rate limit", () => {
     const failed = (status: number, body: string) =>
       attempt({ status: 'http_error', error: `HTTP ${status}`, rawResponse: body });
@@ -156,6 +178,58 @@ describe('limitedClient', () => {
     const client = limitedClient(inner, new GameAiBudget(1), 30);
     await expect(client.requestDecision(prompt, request)).rejects.toThrow();
     expect(Date.now() - started).toBeLessThan(1_000);
+  });
+
+  it("gives a corrective retry for the same request only the first call's remaining time", async () => {
+    let calls = 0;
+    const inner: AiClient = {
+      activeModel: 'claude-haiku-5-5',
+      requestDecision: (_prompt, _request, signal) => {
+        calls++;
+        // The first call answers after 300 ms (an invalid answer, say); the retry never does.
+        if (calls === 1) {
+          return new Promise((resolve) =>
+            setTimeout(
+              () => resolve({ response: { requestId: 'r1', actionId: 99 }, meta: {} as never }),
+              300,
+            ),
+          );
+        }
+        return new Promise((_resolve, reject) => {
+          signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        });
+      },
+    };
+    const client = limitedClient(inner, new GameAiBudget(1), 400);
+    await client.requestDecision(prompt, request);
+    const started = Date.now();
+    await expect(client.requestDecision(prompt, request)).rejects.toThrow();
+    // A fresh deadline would wait the full 400 ms; the shared one has about 100 ms left.
+    expect(Date.now() - started).toBeLessThan(300);
+
+    // A different decision gets its own full deadline.
+    const other = { ...request, requestId: 'r2' } as DecisionRequest;
+    const startedOther = Date.now();
+    await expect(client.requestDecision(prompt, other)).rejects.toThrow();
+    expect(Date.now() - startedOther).toBeGreaterThanOrEqual(390);
+  });
+
+  it('refuses a retry that arrives after its decision ran out of time, without sending it', async () => {
+    const requestDecision = vi.fn(
+      () =>
+        new Promise<never>((_resolve, reject) =>
+          setTimeout(() => reject(new Error('invalid answer')), 40),
+        ),
+    );
+    const client = limitedClient(
+      { activeModel: 'claude-haiku-5-5', requestDecision },
+      new GameAiBudget(1),
+      20,
+    );
+    await expect(client.requestDecision(prompt, request)).rejects.toThrow();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    await expect(client.requestDecision(prompt, request)).rejects.toThrow('ran out of time');
+    expect(requestDecision).toHaveBeenCalledOnce();
   });
 
   it('sends no retry once an attempt inside the same call crosses the cap', async () => {
