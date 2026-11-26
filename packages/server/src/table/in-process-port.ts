@@ -74,6 +74,8 @@ export class InProcessSessionPort implements TableSessionPort {
   private rngKey = '';
   /** Each human seat's `gameStarted`, built once at start and re-sent on a resync. */
   private readonly startedFrames = new Map<PlayerId, ServerToClientMessage>();
+  /** Why the model seats switched to the built-in bot, once they have; re-sent on a resync. */
+  private aiBudgetReason: 'cap' | 'key' | null = null;
 
   constructor(options: InProcessSessionPortOptions) {
     this.generation = options.generation;
@@ -135,6 +137,9 @@ export class InProcessSessionPort implements TableSessionPort {
             });
           }
           session.resyncPlayer(input.seat);
+          // A player who reloads after the switch still learns of it. The table frame goes to
+          // every bound seat; setting the same reason again changes nothing for the others.
+          if (this.aiBudgetReason !== null) this.emitAiBudget(this.aiBudgetReason);
           break;
         }
         default: {
@@ -202,14 +207,19 @@ export class InProcessSessionPort implements TableSessionPort {
         config: aiConfig,
         limits,
         onBudgetStop: (reason) => {
-          this.emit({
-            type: 'tableFrame',
-            generation: this.generation,
-            message: { type: 'aiBudget', payload: { reason } },
-          });
+          this.aiBudgetReason = reason;
+          this.emitAiBudget(reason);
         },
       },
     };
+  }
+
+  private emitAiBudget(reason: 'cap' | 'key'): void {
+    this.emit({
+      type: 'tableFrame',
+      generation: this.generation,
+      message: { type: 'aiBudget', payload: { reason } },
+    });
   }
 
   private async prepareAndRun(config: TableSessionConfig): Promise<void> {

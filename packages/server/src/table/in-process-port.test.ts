@@ -362,6 +362,7 @@ describe('InProcessSessionPort - setup', () => {
         },
       ]);
       expect(terminals(h.outputs).map((o) => o.type)).toEqual(['gameOver']);
+
       // Nothing the port emits carries the key.
       expect(JSON.stringify(h.outputs)).not.toContain('sk-ant-test');
     } finally {
@@ -369,6 +370,23 @@ describe('InProcessSessionPort - setup', () => {
       vi.unstubAllGlobals();
     }
   }, 60_000);
+
+  it('tells a reconnecting seat that the AI bots switched, after the one-time notice (PR review, #164)', async () => {
+    const h = harness({ answer: false });
+    await h.port.start(configOf());
+    const deadline = Date.now() + 10_000;
+    while (!h.outputs.some((o) => o.type === 'started') && Date.now() < deadline) await settle(10);
+    // As if the game's budget had stopped earlier, while this player was away.
+    (h.port as unknown as { aiBudgetReason: 'cap' | 'key' | null }).aiBudgetReason = 'key';
+    const before = h.outputs.length;
+    await h.port.send({ type: 'resyncPlayer', seat: 'P1' });
+    expect(h.outputs.slice(before)).toContainEqual({
+      type: 'tableFrame',
+      generation: GENERATION,
+      message: { type: 'aiBudget', payload: { reason: 'key' } },
+    });
+    await h.port.terminate('hostAbandoned');
+  });
 
   it('starts once', async () => {
     const h = harness({ answer: false });
