@@ -1,6 +1,6 @@
 # Plan: LLM seats at tables
 
-Status: Phase 0 in progress (2026-11-26): ADR 0055 drafted, offline census done, paid game pending. Amends
+Status: Phase 0 done (2026-11-26): ADR 0055 proposed with census and paid-game figures. Next: Phase 1. Amends
 [ADR 0031](../decisions/0031-multiplayer-tables.md) decision 10 once accepted.
 
 ## Goal
@@ -11,9 +11,9 @@ unless the server operator turns it on and supplies a key.
 
 ## Decisions (Paul, 2026-11-26)
 
-- **Provider:** the Anthropic preset. Haiku 5.5 is the tactician (Sonnet as its backup) and
-  Sonnet 5.5 is the strategist (`PROVIDERS.anthropic.roleModels` in `ai/config.ts`), through the
-  Messages API with the stable-prefix cache layout.
+- **Models (revised 2026-11-26):** Claude Haiku 5.5 for both roles. Strategist reasoning at
+  medium effort; tactician reasoning off, with low effort as the alternative (ADR 0055 decision 2
+  and its paid-game table). Anthropic API directly or through OpenRouter is a deployment choice.
 - **Server:** the existing Oracle Cloud VM (`docs/guides/deploy-oracle-cloud.md`).
 - **Account-wide spending** is bounded by the limit set on the API key itself, outside this code.
   The server does not keep its own daily cap.
@@ -78,12 +78,12 @@ Each phase is its own pull request. I stop after each one for your review.
 2. Measure a 4-seat game with three model seats on the Anthropic preset: offline with
    `bun run ai-call-census` first, then one paid game through the tester. Record:
    - calls per turn by role and by `decisionType`;
-   - dollars per game, to check that **$1 covers a full game**. Haiku and Sonnet at tables have
+   - dollars per game, to check that **$1 covers a full game**. Claude models at tables had
      never been measured. The only paid figure is from cheaper OpenRouter models: about $0.13
      billed for one model seat over a 98-minute duel (ADR 0039, ADR 0040). If a typical game
      costs more than $1, the cap would hand most games to the bot partway through, and we should
      talk before Phase 2;
-   - p50, p95 and maximum seconds per Haiku decision and per Sonnet strategist call. These set the
+   - p50, p95 and maximum seconds per tactician decision and per strategist call. These set the
      deadline.
 
 ### Phase 1: per-seat provider kind in the session (tester behavior unchanged)
@@ -118,10 +118,11 @@ Each phase is its own pull request. I stop after each one for your review.
    `bun run bot-league` or a mode duel with the route on and off, with no drop in model-seat win
    rate and fewer tactician calls per turn. Recorded as `bot` in `game_decision_sources`.
 
-2. **Per-decision deadline.** A table model seat gets its own `AiConfig` override with a hard
-   wall-clock deadline per decision (default from Phase 0's p95). Retries happen only within that
-   deadline, with `retryOnTimeout: false`. When the deadline passes, the existing heuristic
-   fallback answers, and the decision is recorded as `fallback`.
+2. **Deadlines.** A table model seat gets its own `AiConfig` override: 15 s per tactician call and
+   30 s for the turn-start strategist call (ADR 0055 decision 6, from Phase 0's measurements).
+   Retries happen only within the deadline, with `retryOnTimeout: false`. A tactician call past its
+   deadline gets the heuristic fallback, recorded as `fallback`; a strategist call past its
+   deadline leaves the seat on its previous knobs.
 
 3. **Per-game cap**, `TABLE_AI_MAX_USD_PER_GAME`, default `1.00`. On OpenRouter it uses the billed
    cost each call reports (ADR 0040). **The Anthropic API path reports no dollar cost today**
@@ -132,7 +133,7 @@ Each phase is its own pull request. I stop after each one for your review.
    if the running total is under the cap. Once the cap is reached, every model seat switches to
    the heuristic bot for the rest of the game, with one public log line ("AI budget reached; bots
    continue on built-in play"). No exception and no halt. The strategist is checked first, because
-   Sonnet calls are the large ones.
+   strategist calls are the large ones.
 
 4. **The key's own limit.** When the provider says the key is out of credit or over its limit
    (a billing or quota error, not an ordinary 429 rate limit), the table treats it the same as

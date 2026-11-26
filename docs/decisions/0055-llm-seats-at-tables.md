@@ -38,27 +38,47 @@ Tactician calls by decision type over 158 turns (796 calls): `priority` 458, `ge
 `declareAttackers` 78, `declareBlockers` 24, `orderTriggers` 23, `mulligan` 20, `chooseTargets` 16,
 `optionalTrigger` 9, `assignCombatDamage` 6, `bottomCards` 1.
 
-Input tokens alone, at OpenRouter's listed prices for Haiku 5.5 ($0.10 per million) and Sonnet 5.5
-($2 per million), come to about $0.07 (tactician) and $0.28 (strategist) per 40-turn, four-seat game.
-Output, including the thinking that current Claude models cannot turn off, is not in the census and
-is expected to dominate: Sonnet output is $10 per million. The paid game in the plan's Phase 0
-settles the real figure.
+### Paid games (2026-11-26, OpenRouter, one game per setting)
+
+`bun run ai-mode-duel --max-usd 2 --trace` on the default seed, every role on
+`anthropic/claude-haiku-5.5` through OpenRouter (no provider cache reads on that path), strategist
+reasoning at medium effort. P2 and P4 play model-led; P1 and P3 play bot-led. Costs are billed
+figures OpenRouter reported.
+
+| Two model-led seats                            | A: tactician reasoning off | B: tactician reasoning low |
+| ---------------------------------------------- | -------------------------- | -------------------------- |
+| Game                                           | 28 turns, 7.9 min          | 34 turns, 30.8 min         |
+| Model seats' own turns                         | 14                         | 19                         |
+| Cost, both model seats                         | $0.14                      | $0.55                      |
+| Tactician calls (per own turn)                 | 176 (12.6)                 | 623 (32.8)                 |
+| Decisions other than turn start: p50, p95, max | 0.9 s, 7.5 s, 14.3 s       | 1.9 s, 5.4 s, 18.5 s       |
+| Turn-start wait for the strategist (median)    | 16.2 s (14 waits)          | 14.6 s (31 waits)          |
+| Winner                                         | P1 (bot-led)               | P4 (model-led)             |
+
+Three things follow. A seat costs roughly $0.07 to $0.28 a game on Haiku, so three model seats fit
+under $1 in both games, though B's rate is close to it on a longer game. The time a person waits is
+dominated by one strategist call at the start of each model seat's turn, not by the tactician. One
+game per setting says nothing about strength. A partial game with a Sonnet strategist (stopped at
+turn 15 when the models changed) had Haiku tactician decisions at 1.1 s p50 and 6.2 s p90.
 
 ## Decision
 
 1. **Host-only, operator opt-in.** A seat becomes a model seat only through `hostSetSeat`, and only
    when the server runs with `TABLE_AI_SEATS=1` and a usable provider key. Without the setting, the
    lobby does not offer it and the protocol parser refuses it.
-2. **Models.** The Anthropic preset: Haiku 5.5 tactician (Sonnet 5.5 as its backup), Sonnet 5.5
-   strategist (`PROVIDERS.anthropic.roleModels`). The table's `AiConfig` is built in code from the
-   preset plus the overrides below, so stray `AI_*` variables on the host cannot turn on JEV,
-   reflection or other experiments.
+2. **Models.** Claude Haiku 5.5 for every role (Paul, 2026-11-26): the strategist with reasoning at
+   medium effort, the tactician with reasoning off (setting A above, cheaper and faster per
+   decision), with low effort kept as the alternative until a multi-game strength check picks
+   between them. The table's `AiConfig` is built in code from these settings, so stray `AI_*`
+   variables on the host cannot turn on JEV, reflection or other experiments. Whether the server
+   calls the Anthropic API directly or through OpenRouter is a deployment choice; decision 5 is what
+   makes the direct API usable.
 3. **Model-led play, with routine decision types on the card-aware bot.** `tacticalMode: 'model'`.
    A new `botDecisionTypes` list sends whole decision types to the card-aware bot
    ([ADR 0039](0039-bot-led-tactics.md)) after the plan, heuristics and cache, and before the
    tactician. Starting set: `mulligan`, `bottomCards`, `orderTriggers`, `optionalTrigger`,
    `commanderReplacement`, `legendRule`, `assignCombatDamage`. That is 7% of tactician calls in the
-   census, so it is mainly a latency saving; the cost driver is the strategist. Empty by default, so
+   census and 3% to 6% in the paid games, so it is a small saving. Empty by default, so
    the tester is unchanged. Accepted only with a duel or league showing no loss in model-seat
    strength.
 4. **Spending.** Account-wide spending is bounded by the limit on the API key itself, which the
@@ -73,9 +93,12 @@ settles the real figure.
    cache write), applied to each attempt's usage, including failed and timed-out attempts that were
    billed. A model with no price entry cannot be used at a table: the server refuses to start rather
    than run an uncapped game.
-6. **Clock.** A model seat gets a hard wall-clock deadline per decision, set from the paid game's
-   measured latency. Retries happen only inside it. When it passes, the heuristic fallback answers,
-   recorded as `fallback`.
+6. **Clock.** A tactician call gets a hard wall-clock deadline (15 s to start with, about twice the
+   measured p95). Retries happen only inside it. When it passes, the heuristic fallback answers,
+   recorded as `fallback`. The strategist call at turn start has its own deadline (30 s to start
+   with); when it passes, the seat plays that turn with its previous knobs or none. Starting the
+   strategist call before the seat's turn begins, so people do not wait for it, is a later
+   improvement.
 7. **Randomness.** The heuristic fallback inside the AI provider draws from the seat's own ChaCha20
    fallback stream at tables (ADR 0031 decision 4), not from `HeuristicRng(requestId)`.
 8. **Disclosure.** ADR 0031 decision 3 stands: no `apiWaiting`, AI note, strategist plan or cost
