@@ -215,7 +215,6 @@ const REFUSAL_TEXT: Record<Refusal, string> = {
   cannotStart: 'The table cannot start yet.',
   staleAttempt: 'That start attempt is no longer current.',
   alreadyAbandoning: 'The game is already being ended.',
-  claudeUnavailable: 'Claude bots are not available on this server.',
 };
 
 const UNRECOGNISED = 'Unrecognised message.';
@@ -588,9 +587,6 @@ export class TableSocketHub {
         return;
       case 'hostSetSeat':
         this.finish(runtime, socket, table.hostSetSeat(conn, message.payload));
-        return;
-      case 'hostSetBots':
-        this.finish(runtime, socket, table.hostSetBots(conn, message.payload));
         return;
       case 'hostKick': {
         const result = table.hostKick(conn, message.payload);

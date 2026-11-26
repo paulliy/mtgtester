@@ -141,17 +141,6 @@ describe('loadTableConfig', () => {
     expect(refusal({ TABLE_MAX_STEP_WORK: '0' }, ['--dev']).setting).toBe('TABLE_MAX_STEP_WORK');
   });
 
-  it('offers Claude bots only when the AI configuration has a key, unless turned off', () => {
-    expect(okConfig().claudeBots).toBe(false);
-    expect(okConfig({ AI_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: 'k' }).claudeBots).toBe(true);
-    expect(
-      okConfig({ AI_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: 'k', TABLE_CLAUDE_BOTS: 'off' })
-        .claudeBots,
-    ).toBe(false);
-    expect(okConfig({ AI_PROVIDER: 'nope', AI_API_KEY: 'k' }).claudeBots).toBe(false);
-    expect(refusal({ TABLE_CLAUDE_BOTS: 'on' }, ['--dev']).setting).toBe('TABLE_CLAUDE_BOTS');
-  });
-
   it('accepts a fixed host secret in production only when it is at least 24 characters', () => {
     const fixed = 'a-production-host-secret-0001';
     expect(okConfig({ ...PRODUCTION, TABLE_HOST_SECRET: fixed }, []).hostSecret).toBe(fixed);
@@ -177,7 +166,6 @@ describe('loadTableConfig', () => {
       clockScale: null,
       hostSecret: null,
       maxStepWork: null,
-      claudeBots: false,
     });
     expect(config.dbPath).toBe('/work/repo/data/tables/tables.sqlite');
     expect(config.webDir).toBe('/work/repo/apps/web/dist-table');

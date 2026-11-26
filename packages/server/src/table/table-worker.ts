@@ -50,7 +50,6 @@ function boot(input: TableWorkerBoot): void {
       banned: bannedListFromNames(cards.bannedNames),
       store,
       replay: input.replay,
-      loadAi: async () => (await import('../match/session-ai')).sessionAi,
     },
   });
   port = session;

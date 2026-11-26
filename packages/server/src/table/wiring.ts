@@ -48,7 +48,6 @@ export function wireTables(deps: TableWiringDeps): TableWiring {
     deckChecker: createDeckChecker({ index: deps.index, banned: deps.banned }),
     maxTables: config.maxTables,
     clock: config.clock,
-    claudeBots: config.claudeBots,
     // Every player sees the no-TLS banner at an --insecure-lan table (plan M5 task 5).
     insecureLan: config.insecureLan,
     ...(config.hostSecret !== null && { hostSecret: config.hostSecret }),
@@ -77,7 +76,6 @@ export function wireTables(deps: TableWiringDeps): TableWiring {
       gameId: session.gameId,
       rngKey: session.rngKey,
       seats: session.seats,
-      bots: session.bots,
       limits: {
         maxStepWork: session.maxStepWork,
         maxObjects: session.maxObjects,

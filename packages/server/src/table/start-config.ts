@@ -75,7 +75,6 @@ export function buildSessionConfig(
     seed: `table-${attempt.attemptId}`,
     rngKey,
     seats,
-    bots: attempt.bots,
     maxStepWork: TABLE_ENGINE_LIMITS.maxStepWork,
     maxObjects: TABLE_ENGINE_LIMITS.maxObjects,
     ...(opts.turnCap !== undefined && { turnCap: opts.turnCap }),

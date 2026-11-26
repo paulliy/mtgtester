@@ -81,13 +81,7 @@ async function copyInvite(): Promise<void> {
 }
 
 const controllerLabel = (controller: string): string =>
-  controller === 'human'
-    ? 'Player'
-    : controller === 'bot'
-      ? state.value?.bots === 'claude'
-        ? 'Claude bot'
-        : 'Bot'
-      : 'Open';
+  controller === 'human' ? 'Player' : controller === 'bot' ? 'Bot' : 'Open';
 
 /** Seats with someone or something in them, for the plate in the middle of the table. */
 const filled = computed(
@@ -107,8 +101,7 @@ const phaseLabel = computed(() => PHASE_LABELS[state.value?.phase ?? 'open'] ?? 
     <div class="main">
       <header class="head dt-rise">
         <p class="dt-kicker">
-          {{ phaseLabel }}<template v-if="state.clock"> · {{ state.clock }} clock</template
-          ><template v-if="state.bots === 'claude'"> · Claude bots</template>
+          {{ phaseLabel }}<template v-if="state.clock"> · {{ state.clock }} clock</template>
         </p>
         <h1 class="dt-title">Table lobby</h1>
         <div class="dt-ornament" aria-hidden="true"><span class="star" /></div>
@@ -329,34 +322,6 @@ const phaseLabel = computed(() => PHASE_LABELS[state.value?.phase ?? 'open'] ?? 
         <section class="block">
           <h3 class="dt-head"><span class="num">III.</span> Start</h3>
           <p v-if="state.clock" class="hint">Clock: {{ state.clock }}</p>
-          <div v-if="state.claudeBots" class="bots" data-testid="bot-play">
-            <span class="hint">Bots play as</span>
-            <span class="seg" role="group" aria-label="Who plays the bots">
-              <button
-                type="button"
-                class="dt-btn small"
-                :aria-pressed="state.bots === 'builtin'"
-                :disabled="state.phase !== 'open'"
-                data-testid="bots-builtin"
-                @click="table.setBots('builtin')"
-              >
-                Built-in
-              </button>
-              <button
-                type="button"
-                class="dt-btn small"
-                :aria-pressed="state.bots === 'claude'"
-                :disabled="state.phase !== 'open'"
-                data-testid="bots-claude"
-                @click="table.setBots('claude')"
-              >
-                Claude
-              </button>
-            </span>
-            <p v-if="state.bots === 'claude'" class="hint">
-              Claude plans each bot's turn; moves stay instant. Uses the server's AI key.
-            </p>
-          </div>
           <ul
             v-if="!state.canStart && state.startBlockers.length > 0"
             class="blockers dt-note warn"
@@ -669,19 +634,6 @@ const phaseLabel = computed(() => PHASE_LABELS[state.value?.phase ?? 'open'] ?? 
   font-family: var(--font-body);
   font-size: 0.8rem;
   text-overflow: ellipsis;
-}
-.bots {
-  display: grid;
-  gap: 0.4rem;
-}
-.seg {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.seg button[aria-pressed='true'] {
-  background: var(--ink);
-  color: var(--paper);
 }
 .row {
   display: flex;

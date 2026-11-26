@@ -57,7 +57,6 @@ const CONFIG = {
   seed: 'label',
   rngKey: 'ab'.repeat(32),
   seats: [],
-  bots: 'builtin',
   maxStepWork: 10,
   maxObjects: 10,
   clock: 'off',

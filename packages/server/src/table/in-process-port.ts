@@ -25,8 +25,7 @@ import type { BannedList } from '../decks/banned';
 import { scaledSettings } from '../match/decision-clock';
 import { disclosedSeatSummaries, seedLabel, tablePolicy } from '../match/disclosure';
 import type { ReplayIdentity } from '../match/replay-config';
-import { MatchSession, type TableModelBots } from '../match/session';
-import type { SessionAi } from '../match/session-ai';
+import { MatchSession } from '../match/session';
 import { setupSeats, type SeatProblem } from '../match/setup';
 import type {
   TableSessionConfig,
@@ -43,24 +42,7 @@ export interface InProcessSessionDeps {
   store: GameStore;
   /** What the `games` row records for replay (ADR 0031 decision 8). Omit to record none. */
   replay?: ReplayIdentity;
-  /**
-   * Loads the model services, for a table whose bots are Claude; without it such a start fails.
-   * A loader, not the services: they cost a worker about 60 MB, so only a Claude table loads them.
-   */
-  loadAi?: () => Promise<SessionAi>;
 }
-
-/**
- * How Claude plays a table's bot seats. The strategist plans each turn ahead and the card-aware
- * bot makes every move from that plan, so nobody at the table waits on a model call. A tactical
- * call (none in this mode) would get 8 seconds and no retry. 300 network attempts cover a long
- * game several times over; past them the bots finish the game as the built-in bot.
- */
-export const TABLE_MODEL_BOTS: Readonly<TableModelBots> = Object.freeze({
-  tacticalMode: 'bot',
-  tacticianTimeoutMs: 8_000,
-  maxModelCalls: 300,
-});
 
 export interface InProcessSessionPortOptions {
   generation: number;
@@ -222,23 +204,16 @@ export class InProcessSessionPort implements TableSessionPort {
       return;
     }
 
-    const claude = config.bots === 'claude';
-    const ai = claude ? await this.deps.loadAi?.() : undefined;
-    if (this.stopped || this.terminal) return;
-    if (claude && ai === undefined) {
-      this.fail('setupFailed', 'This server cannot run Claude bots.');
-      return;
-    }
-    const botKind = claude ? 'ai' : 'random';
     const seatControllers: SeatControllers = Object.fromEntries(
-      seats.map((entry) => [entry.seat, entry.controller === 'human' ? 'human' : botKind] as const),
+      seats.map(
+        (entry) => [entry.seat, entry.controller === 'human' ? 'human' : 'random'] as const,
+      ),
     );
     const session = new MatchSession({
       gameId: config.gameId,
       seed: config.seed,
       seats: setup.seats,
-      providerKind: botKind,
-      ...(ai !== undefined && { ai, modelBots: TABLE_MODEL_BOTS }),
+      providerKind: 'random',
       gameMode: 'table',
       seatControllers,
       disclosure: tablePolicy(),
@@ -278,11 +253,11 @@ export class InProcessSessionPort implements TableSessionPort {
           setup.seats.map((seat) => seat.summary),
           entry.seat,
         ),
-        providerKind: botKind,
+        providerKind: 'random',
         gameMode: 'table',
         controllers: seats.map((seat) => ({
           seat: seat.seat,
-          kind: seat.controller === 'human' ? 'human' : botKind,
+          kind: seat.controller === 'human' ? 'human' : 'random',
         })),
         humanSeat: entry.seat,
         paceMs: session.getLivePaceMs(),
