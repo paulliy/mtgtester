@@ -15,7 +15,6 @@ import { buildOracleIndexFromCards } from '../cards/oracle-index';
 import type { SupportedPool } from '../cards/pool';
 import { GameStore } from '../db';
 import { bannedListFromNames } from '../decks/banned';
-import { sessionAi } from '../match/session-ai';
 import { InProcessSessionPort } from './in-process-port';
 import type { MainToWorker, TableWorkerBoot, WorkerToMain } from './worker-protocol';
 
@@ -23,14 +22,23 @@ declare const self: Worker;
 
 let port: InProcessSessionPort | null = null;
 let store: GameStore | null = null;
+/** Set by the first boot message, so a second one is ignored while the first awaits. */
+let booting = false;
+/** Set by `terminate`, so a boot still loading the model services starts no game. */
+let stopping = false;
 
 function post(message: WorkerToMain): void {
   self.postMessage(message);
 }
 
-function boot(input: TableWorkerBoot): void {
-  if (port !== null) return;
+async function boot(input: TableWorkerBoot): Promise<void> {
+  if (port !== null || booting) return;
+  booting = true;
   const { config, cards } = input;
+  // The model services cost a worker about 60 MB, so only a game with model seats loads them.
+  const sessionAi =
+    config.ai === undefined ? undefined : (await import('../match/session-ai')).sessionAi;
+  if (stopping) return;
   store = new GameStore(config.dbPath, { busyTimeoutMs: input.busyTimeoutMs });
   const index = buildOracleIndexFromCards([
     ...cards.pool.map((entry) => entry.card),
@@ -53,7 +61,7 @@ function boot(input: TableWorkerBoot): void {
       replay: input.replay,
       // Model seats (ADR 0055): the key comes from this worker's own environment, which it
       // inherits from the server process, and never crosses `postMessage`.
-      ...(config.ai !== undefined && {
+      ...(sessionAi !== undefined && {
         ai: { services: sessionAi, apiKey: process.env['ANTHROPIC_API_KEY'] ?? '' },
       }),
     },
@@ -66,6 +74,7 @@ function boot(input: TableWorkerBoot): void {
 }
 
 async function stop(reason: 'workerFailure' | 'hostAbandoned'): Promise<void> {
+  stopping = true;
   const running = port;
   if (running !== null) await running.terminate(reason);
   try {
@@ -81,7 +90,7 @@ self.onmessage = (event: MessageEvent<MainToWorker>) => {
   const message = event.data;
   switch (message.type) {
     case 'boot':
-      boot(message.boot);
+      void boot(message.boot);
       return;
     case 'input':
       void port?.send(message.input).catch(() => undefined);
