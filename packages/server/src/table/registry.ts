@@ -28,6 +28,8 @@ export interface TableRegistryOptions {
   insecureLan?: boolean;
   clock?: TableClockMode | null;
   limits?: Partial<TableLimits>;
+  /** Whether hosts may give seats to model-driven bots (ADR 0055). */
+  modelSeats?: boolean;
 }
 
 export type HostSecretCheck =
@@ -89,6 +91,7 @@ export class TableRegistry {
       ...(this.options.insecureLan === undefined ? {} : { insecureLan: this.options.insecureLan }),
       ...(this.options.clock === undefined ? {} : { clock: this.options.clock }),
       ...(this.options.limits === undefined ? {} : { limits: this.options.limits }),
+      ...(this.options.modelSeats === true && { modelSeats: true }),
     });
     this.tables.set(table.id, table);
     return {

@@ -6,7 +6,7 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import type { OracleCard, PlayerId, ServerToClientMessage } from '@mtg/shared';
 import { buildOracleIndexFromCards } from '../cards/oracle-index';
 import { buildSupportedPool, type SupportedPool } from '../cards/pool';
@@ -17,7 +17,8 @@ import { generateCommanderDeck } from '../decks/generate';
 import { TABLE_ENGINE_LIMITS } from '../match/engine-limits';
 import { makeResolvedDeck } from '../test-factory';
 import { createDeckChecker } from './deck-check';
-import { InProcessSessionPort, toDeckProblems } from './in-process-port';
+import { sessionAi } from '../match/session-ai';
+import { InProcessSessionPort, toDeckProblems, type InProcessSessionDeps } from './in-process-port';
 import type { TableSessionConfig, TableSessionOutput, TableSessionSeat } from './session-port';
 import { buildSessionConfig } from './start-config';
 import type { StartAttempt } from './table';
@@ -77,6 +78,7 @@ function fakeStore(): { store: GameStore; calls: string[] } {
       return { ...snapshot, id, importedAt: new Date().toISOString() };
     },
     insertStrategyProfile: () => undefined,
+    strategyProfile: () => null,
     snapshotCards: (id: string) => snapshots.get(id) ?? null,
     recorderFor: (gameId: string) => new GameRecorder(db, gameId),
   } as unknown as GameStore;
@@ -123,12 +125,23 @@ const TERMINAL = new Set(['gameOver', 'setupProblems', 'failed']);
  * action, which is how the agent client's `first-legal` policy plays.
  */
 function harness(
-  options: { pool?: SupportedPool; answer?: boolean; humans?: readonly PlayerId[] } = {},
+  options: {
+    pool?: SupportedPool;
+    answer?: boolean;
+    humans?: readonly PlayerId[];
+    ai?: InProcessSessionDeps['ai'];
+  } = {},
 ): Harness {
   const { store, calls } = fakeStore();
   const port = new InProcessSessionPort({
     generation: GENERATION,
-    deps: { pool: options.pool ?? pool, index, banned, store },
+    deps: {
+      pool: options.pool ?? pool,
+      index,
+      banned,
+      store,
+      ...(options.ai !== undefined && { ai: options.ai }),
+    },
   });
   const outputs: TableSessionOutput[] = [];
   let finish!: () => void;
@@ -285,6 +298,94 @@ describe('InProcessSessionPort - setup', () => {
         detail: expect.stringContaining('P1') as string,
       },
     ]);
+  });
+
+  it('fails a model seat at start when the port has no AI services (ADR 0055)', async () => {
+    const h = harness();
+    await h.port.start(
+      configOf({
+        seats: seatsOf().map((s) => (s.seat === 'P2' ? { seat: 'P2', controller: 'model' } : s)),
+        ai: { maxUsdPerGame: 1 },
+      }),
+    );
+    await h.done;
+    expect(terminals(h.outputs)).toEqual([
+      {
+        type: 'failed',
+        generation: GENERATION,
+        reason: 'setupFailed',
+        detail: 'This server cannot run AI bots right now.',
+      },
+    ]);
+  });
+
+  it('plays a model seat on the Anthropic API and tells every seat when the cap stops it', async () => {
+    // Each Messages call bills 100,000 input and 2,000 output tokens (about $0.011 on Haiku) and
+    // answers nothing usable, so the model seat falls back to the bot after paying, until the
+    // $0.03 cap stops it.
+    let calls = 0;
+    vi.stubGlobal('fetch', async () => {
+      calls++;
+      return new Response(
+        JSON.stringify({
+          id: `msg_${calls}`,
+          type: 'message',
+          role: 'assistant',
+          model: 'claude-haiku-5-5',
+          content: [{ type: 'text', text: 'not a decision' }],
+          stop_reason: 'end_turn',
+          stop_sequence: null,
+          usage: { input_tokens: 100_000, output_tokens: 2_000 },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      const h = harness({ ai: { services: sessionAi, apiKey: 'sk-ant-test' } });
+      await h.port.start(
+        configOf({
+          seats: seatsOf().map((s) => (s.seat === 'P2' ? { seat: 'P2', controller: 'model' } : s)),
+          ai: { maxUsdPerGame: 0.03 },
+        }),
+      );
+      await h.done;
+      expect(calls).toBeGreaterThan(0);
+      const budget = h.outputs.filter(
+        (o) => o.type === 'tableFrame' && o.message.type === 'aiBudget',
+      );
+      expect(budget).toEqual([
+        {
+          type: 'tableFrame',
+          generation: GENERATION,
+          message: { type: 'aiBudget', payload: { reason: 'cap' } },
+        },
+      ]);
+      expect(terminals(h.outputs).map((o) => o.type)).toEqual(['gameOver']);
+
+      // Nothing the port emits carries the key.
+      expect(JSON.stringify(h.outputs)).not.toContain('sk-ant-test');
+    } finally {
+      warn.mockRestore();
+      vi.unstubAllGlobals();
+    }
+  }, 60_000);
+
+  it('tells a reconnecting seat that the AI bots switched, after the one-time notice (PR review, #164)', async () => {
+    const h = harness({ answer: false });
+    await h.port.start(configOf());
+    const deadline = Date.now() + 10_000;
+    while (!h.outputs.some((o) => o.type === 'started') && Date.now() < deadline) await settle(10);
+    // As if the game's budget had stopped earlier, while this player was away.
+    (h.port as unknown as { aiBudgetReason: 'cap' | 'key' | null }).aiBudgetReason = 'key';
+    const before = h.outputs.length;
+    await h.port.send({ type: 'resyncPlayer', seat: 'P1' });
+    expect(h.outputs.slice(before)).toContainEqual({
+      type: 'tableFrame',
+      generation: GENERATION,
+      message: { type: 'aiBudget', payload: { reason: 'key' } },
+    });
+    await h.port.terminate('hostAbandoned');
   });
 
   it('starts once', async () => {
@@ -486,6 +587,20 @@ describe('buildSessionConfig', () => {
     });
     expect(a.seed).not.toContain(a.rngKey);
     expect(b).not.toHaveProperty('turnCap');
+  });
+
+  it('carries the cap only for a game with a model seat, and refuses one the server cannot run', () => {
+    const withModel: StartAttempt = {
+      ...attempt,
+      seats: [...attempt.seats, { seat: 'P3', controller: 'model' }],
+    };
+    const config = buildSessionConfig(withModel, { dbPath: 'x.db', ai: { maxUsdPerGame: 0.5 } });
+    expect(config.ai).toEqual({ maxUsdPerGame: 0.5 });
+    expect(config.seats.at(-1)).toEqual({ seat: 'P3', controller: 'model' });
+    expect(
+      buildSessionConfig(attempt, { dbPath: 'x.db', ai: { maxUsdPerGame: 0.5 } }),
+    ).not.toHaveProperty('ai');
+    expect(() => buildSessionConfig(withModel, { dbPath: 'x.db' })).toThrow(/model seat/);
   });
 
   it('gives a human seat its name and plaintext and a bot only its controller', () => {

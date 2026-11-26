@@ -37,6 +37,8 @@ const ALWAYS = [
   // A table seat's clock and connection: the visible wait ADR 0031 decision 10 accepts.
   'clockState',
   'seatStatus',
+  // Model seats switched to the built-in bot, and why; never an amount (ADR 0055).
+  'aiBudget',
 ];
 
 describe('DENY_ALL', () => {

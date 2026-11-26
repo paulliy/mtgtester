@@ -32,6 +32,8 @@ export interface DecisionTraceInput {
   steering?: BotSteering;
   /** Life of every seat when the decision was made. */
   life: Record<string, number>;
+  /** Wall-clock milliseconds from the request reaching the seat to its answer. */
+  elapsedMs?: number;
 }
 
 export interface DecisionTraceLine {
@@ -52,6 +54,7 @@ export interface DecisionTraceLine {
   escalatedBy?: string;
   steering?: BotSteering;
   life: Record<string, number>;
+  elapsedMs?: number;
 }
 
 /** A name for an object id as the seat sees it, or the id itself when the view has no name. */
@@ -94,6 +97,7 @@ export function decisionTraceLine(input: DecisionTraceInput): DecisionTraceLine 
     }),
     ...(input.steering !== undefined && { steering: input.steering }),
     life: input.life,
+    ...(input.elapsedMs !== undefined && { elapsedMs: Math.round(input.elapsedMs) }),
   };
 }
 

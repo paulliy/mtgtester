@@ -992,3 +992,51 @@ describe('secrets on the wire', () => {
     expect(JSON.stringify(aliceMessages)).not.toContain(h.table.currentInviteCode);
   });
 });
+
+// ── Model seats (ADR 0055) ──────────────────────────────────────────────────────────────────
+
+describe('model seats', () => {
+  it('refuses a model seat on a server that does not offer them, and says so in the state', () => {
+    const h = setup();
+    const host = hostConn(h);
+    expect(h.table.hostSetSeat(host, { seat: 'P3', controller: 'model' })).toMatchObject({
+      ok: false,
+      reason: 'modelSeatsOff',
+    });
+    expect(stateFor(h, host).modelSeats).toBe(false);
+  });
+
+  it('lets the host seat a model bot when the server offers them, and starts with it', () => {
+    const h = setup({ modelSeats: true });
+    const host = hostConn(h);
+    const alice = conn();
+    seatPlayer(h, host, alice, 'Alice', 'P1');
+    record(h, h.table.hostSetSeat(host, { seat: 'P2', controller: 'model' }));
+    record(h, h.table.hostSetSeat(host, { seat: 'P3', controller: 'bot' }));
+    record(h, h.table.hostSetSeat(host, { seat: 'P4', controller: 'model' }));
+    const state = stateFor(h, host);
+    expect(state.modelSeats).toBe(true);
+    expect(state.seats.map((s) => s.controller)).toEqual(['human', 'model', 'bot', 'model']);
+
+    const started = record(h, h.table.hostStart(host));
+    expect(started.ok).toBe(true);
+    const [attempt] = startEffects(started.effects);
+    expect(attempt?.seats.map((s) => [s.seat, s.controller])).toEqual([
+      ['P1', 'human'],
+      ['P2', 'model'],
+      ['P3', 'bot'],
+      ['P4', 'model'],
+    ]);
+  });
+
+  it('lets only the host add a model seat', () => {
+    const h = setup({ modelSeats: true });
+    hostConn(h);
+    const player = conn();
+    join(h, player, 'Mallory');
+    expect(h.table.hostSetSeat(player, { seat: 'P2', controller: 'model' })).toMatchObject({
+      ok: false,
+      reason: 'notHost',
+    });
+  });
+});

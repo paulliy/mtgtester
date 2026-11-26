@@ -339,6 +339,37 @@ describe('OpenAiDecisionProvider', () => {
     expect(calls).toBe(2);
   });
 
+  it('sends a routine decision type to the card-aware bot in model mode (ADR 0055)', async () => {
+    const requestDecision = vi.fn().mockResolvedValue({
+      response: { requestId: 'req-1', actionId: 0 },
+      meta: { rawResponse: '{"actionId":0}' },
+    });
+    const provider = new OpenAiDecisionProvider(
+      { activeModel: 'm1', requestDecision },
+      mockQueue,
+      mockEngine,
+      { ...DEFAULT_AI_CONFIG, botDecisionTypes: ['mulligan'] },
+    );
+    const mulligan: DecisionRequest = {
+      ...fixtureReq,
+      requestId: 'req-mull',
+      phase: 'beginning',
+      decisionType: 'mulligan',
+      prompt: 'Keep or mulligan?',
+      legalActions: [
+        { id: 0, type: 'keep', description: 'Keep this hand' },
+        { id: 1, type: 'mulligan', description: 'Mulligan' },
+      ],
+    };
+    const res = await provider.decide(mulligan);
+    expect([0, 1]).toContain(res.actionId);
+    expect(requestDecision).not.toHaveBeenCalled();
+
+    // A decision type off the list still goes to the tactician.
+    await provider.decide(fixtureReq);
+    expect(requestDecision).toHaveBeenCalledTimes(1);
+  });
+
   it('falls back to the heuristic bot when retries also fail', async () => {
     const mockClient: AiClient = {
       activeModel: 'm1',
@@ -383,6 +414,27 @@ describe('OpenAiDecisionProvider', () => {
 
       const res = await provider.decide(fixtureReq);
       expect(res.actionId).toBe(1); // "Cast Spell" — scores above `pass` (id 0)
+    });
+
+    it("breaks the fallback's ties on the seat's injected stream when it has one (ADR 0055)", async () => {
+      const nextInt = vi.fn(() => 0);
+      const provider = new OpenAiDecisionProvider(
+        throwingClient(new HttpError(500, 'upstream')),
+        mockQueue,
+        mockEngine,
+        DEFAULT_AI_CONFIG,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { fallbackRandom: { nextInt } },
+      );
+
+      const res = await provider.decide(fixtureReq);
+      expect(res.actionId).toBe(1);
+      expect(nextInt).toHaveBeenCalled();
     });
 
     it.each([

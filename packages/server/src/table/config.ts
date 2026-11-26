@@ -72,6 +72,12 @@ export interface TableConfig {
   hostSecret: string | null;
   /** Development mode only: the engine's events per step (`TABLE_MAX_STEP_WORK`), to force a halt. */
   maxStepWork: number | null;
+  /**
+   * Model-driven seats (ADR 0055), on with `TABLE_AI_SEATS=1`; null when off. The Anthropic key
+   * is read from the environment where it is used (each game worker inherits it), never stored
+   * here, so it cannot reach a log line or a frame with the rest of the settings.
+   */
+  aiSeats: { maxUsdPerGame: number } | null;
 }
 
 export type TableConfigErrorCode =
@@ -309,6 +315,37 @@ export function loadTableConfig(
     );
   }
 
+  const aiSetting = setting(env, 'TABLE_AI_SEATS') ?? '0';
+  if (aiSetting !== '0' && aiSetting !== '1') {
+    return fail('badValue', 'TABLE_AI_SEATS must be 0 or 1.', 'TABLE_AI_SEATS');
+  }
+  let aiSeats: TableConfig['aiSeats'] = null;
+  if (aiSetting === '1') {
+    if ((env['ANTHROPIC_API_KEY'] ?? '').trim() === '') {
+      return fail(
+        'badValue',
+        'TABLE_AI_SEATS=1 needs ANTHROPIC_API_KEY: model seats call the Anthropic API.',
+        'ANTHROPIC_API_KEY',
+      );
+    }
+    const capSetting = setting(env, 'TABLE_AI_MAX_USD_PER_GAME') ?? '1';
+    const maxUsdPerGame = Number(capSetting);
+    if (!/^\d+(\.\d+)?$/.test(capSetting) || !(maxUsdPerGame > 0) || maxUsdPerGame > 100) {
+      return fail(
+        'badValue',
+        'TABLE_AI_MAX_USD_PER_GAME must be a dollar amount above 0 and at most 100.',
+        'TABLE_AI_MAX_USD_PER_GAME',
+      );
+    }
+    aiSeats = { maxUsdPerGame };
+  } else if (setting(env, 'TABLE_AI_MAX_USD_PER_GAME') !== undefined) {
+    return fail(
+      'badValue',
+      'TABLE_AI_MAX_USD_PER_GAME applies only with TABLE_AI_SEATS=1.',
+      'TABLE_AI_MAX_USD_PER_GAME',
+    );
+  }
+
   const webDir = resolve(cwd, setting(env, 'TABLE_WEB_DIR') ?? DEFAULT_TABLE_WEB_DIR);
   const dbPath = resolve(cwd, setting(env, 'TABLE_DB_PATH') ?? DEFAULT_TABLE_DB_PATH);
   if (isInside(webDir, dbPath)) {
@@ -342,6 +379,7 @@ export function loadTableConfig(
       clockScale,
       hostSecret,
       maxStepWork,
+      aiSeats,
     },
   };
 }

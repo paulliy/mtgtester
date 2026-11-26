@@ -92,6 +92,8 @@ export interface TableOptions {
   insecureLan?: boolean;
   clock?: TableClockMode | null;
   limits?: Partial<TableLimits>;
+  /** Whether the host may give a seat to a model-driven bot (ADR 0055). Off by default. */
+  modelSeats?: boolean;
 }
 
 /** One seat of a start attempt. A human seat carries the approved, validated deck. */
@@ -103,7 +105,7 @@ export type StartAttemptSeat =
       decklist: string;
       deck: ResolvedDeck;
     }
-  | { seat: PlayerId; controller: 'bot' };
+  | { seat: PlayerId; controller: 'bot' | 'model' };
 
 /**
  * What part B needs to start one game: the table, a fresh attempt id, and every seat. The table
@@ -151,7 +153,9 @@ export type Refusal =
   | 'noPlayer'
   | 'cannotStart'
   | 'staleAttempt'
-  | 'alreadyAbandoning';
+  | 'alreadyAbandoning'
+  /** `hostSetSeat` asked for a model seat on a server that does not offer them. */
+  | 'modelSeatsOff';
 
 export type TableResult<Extra extends object = object> =
   | ({ ok: true; effects: TableEffect[] } & Extra)
@@ -223,6 +227,7 @@ export class Table {
   private readonly insecureLan: boolean;
   private readonly clock: TableClockMode | null;
   private readonly limits: TableLimits;
+  private readonly modelSeats: boolean;
 
   private phase: TablePhase = 'open';
   private finishedAt: number | null = null;
@@ -245,6 +250,7 @@ export class Table {
     this.insecureLan = options.insecureLan ?? false;
     this.clock = options.clock ?? null;
     this.limits = { ...DEFAULT_TABLE_LIMITS, ...options.limits };
+    this.modelSeats = options.modelSeats ?? false;
     this.emptySince = this.now();
     for (const seat of PLAYER_SEAT_IDS) {
       this.seats.set(seat, { seat, controller: 'open', player: null });
@@ -521,7 +527,10 @@ export class Table {
     return ok(this.broadcastState());
   }
 
-  /** `bot` or `open`. A human seat is vacated first, which revokes its token. */
+  /**
+   * `bot`, `model` or `open`. A human seat is vacated first, which revokes its token. `model` is
+   * refused unless this server offers model seats: only the host can add a paid seat (ADR 0055).
+   */
   hostSetSeat(
     conn: Connection,
     payload: { seat: PlayerId; controller: HostSeatController },
@@ -530,9 +539,10 @@ export class Table {
     if (gate !== null) return gate;
     const record = this.seats.get(payload.seat);
     if (record === undefined) return refuse('unknownSeat');
+    if (payload.controller === 'model' && !this.modelSeats) return refuse('modelSeatsOff');
     if (record.controller === 'human') this.vacate(payload.seat);
     record.controller = payload.controller;
-    if (payload.controller === 'bot') this.dropClaimsFor(payload.seat);
+    if (payload.controller !== 'open') this.dropClaimsFor(payload.seat);
     return ok(this.broadcastState());
   }
 
@@ -575,8 +585,8 @@ export class Table {
     if (blockers.length > 0) return refuse('cannotStart', { blockers });
     const seats: StartAttemptSeat[] = [];
     for (const record of this.seats.values()) {
-      if (record.controller === 'bot') {
-        seats.push({ seat: record.seat, controller: 'bot' });
+      if (record.controller === 'bot' || record.controller === 'model') {
+        seats.push({ seat: record.seat, controller: record.controller });
       } else if (record.controller === 'human' && record.player !== null) {
         seats.push({
           seat: record.seat,
@@ -897,6 +907,7 @@ export class Table {
       startBlockers: blockers,
       insecureLan: this.insecureLan,
       clock: this.clock,
+      modelSeats: this.modelSeats,
       you: {
         displayName: conn.displayName,
         seat: conn.seat,

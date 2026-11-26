@@ -8,6 +8,7 @@
  * confusing auth failure rather than a misconfiguration.
  */
 
+import { DECISION_TYPES, type DecisionType } from '@mtg/shared';
 import { WAKE_RULES, type WakeRule } from './steering';
 
 export interface AiModelProfile {
@@ -108,6 +109,13 @@ export interface AiConfig {
    * (ADR 0039).
    */
   tacticalMode: 'model' | 'bot';
+  /**
+   * In `model` mode, the decision types the card-aware bot answers instead of the tactician
+   * (ADR 0055 decision 3), after the turn plan, heuristics and cache. For routine choices that
+   * need no judgment: mulligans, ordering triggers, "may" triggers and the like.
+   * Env: `AI_BOT_DECISION_TYPES`, a comma-separated list of decision types. Default: none.
+   */
+  botDecisionTypes: readonly DecisionType[];
   /**
    * In `bot` mode, the named triggers that ask the tactician model (ADR 0044); empty is never.
    * `uncertain`: the bot's top two options score within `botEscalationMargin` LEP on a decision
@@ -396,6 +404,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   heuristicsEnabled: true,
   decisionCacheEnabled: true,
   tacticalMode: 'model',
+  botDecisionTypes: [],
   botEscalation: [],
   botEscalationShadow: [],
   botEscalationMargin: 1,
@@ -551,6 +560,20 @@ export function parseTriggerList(raw: string | undefined, name: string): Escalat
         `Unknown escalation trigger "${trigger}" in ${name}. Supported: ${ESCALATION_TRIGGERS.join(', ')} (or never).`,
       );
   return [...new Set(names)] as EscalationTrigger[];
+}
+
+/** `AI_BOT_DECISION_TYPES`: a comma-separated list of engine decision types, or empty. */
+export function parseDecisionTypes(raw: string | undefined): DecisionType[] {
+  const names = (raw ?? '')
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part !== '');
+  for (const name of names)
+    if (!(DECISION_TYPES as readonly string[]).includes(name))
+      throw new Error(
+        `Unknown decision type "${name}" in AI_BOT_DECISION_TYPES. Supported: ${DECISION_TYPES.join(', ')}.`,
+      );
+  return [...new Set(names)] as DecisionType[];
 }
 
 function parseLiveTriggers(raw: string | undefined): LiveEscalationTrigger[] {
@@ -855,6 +878,7 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       ['model', 'bot'] as const,
       DEFAULT_AI_CONFIG.tacticalMode,
     ),
+    botDecisionTypes: parseDecisionTypes(env['AI_BOT_DECISION_TYPES']),
     botEscalation: parseLiveTriggers(env['AI_BOT_ESCALATION']),
     botEscalationShadow: parseTriggerList(
       env['AI_BOT_ESCALATION_SHADOW'],

@@ -32,7 +32,7 @@ export interface TableAttemptManifest {
   rngKey: string;
   seats: Array<
     | { seat: PlayerId; controller: 'human'; displayName: string; decklist: string }
-    | { seat: PlayerId; controller: 'bot' }
+    | { seat: PlayerId; controller: 'bot' | 'model' }
   >;
   limits: { maxStepWork: number; maxObjects: number; turnCap: number | null };
   identity: {

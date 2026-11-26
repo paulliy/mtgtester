@@ -13,7 +13,12 @@
 
 import type { AsyncDecisionProvider, Engine } from '@mtg/engine';
 import type { DecisionRequest, DecisionResponse, PlayerId, PlayerView } from '@mtg/shared';
-import { decide as heuristicDecide, Rng as HeuristicRng, type DiplomacyPlay } from '@mtg/bot';
+import {
+  decide as heuristicDecide,
+  Rng as HeuristicRng,
+  type DiplomacyPlay,
+  type RandomSource,
+} from '@mtg/bot';
 import type { AiConfig } from './config';
 import type { AiClient, CallMeta } from './client';
 import { assemblePrompt, type AiPrompt, type OpenAiMessage } from './context';
@@ -77,8 +82,11 @@ export const JEV_CLOSE_CALL_INSTRUCTIONS =
 
 /** Optional seams for bot-led tactics, used by bot-bench's `bot-led` kind (ADR 0043). */
 export interface BotLedHooks {
-  /** Tie-break seed label for this seat's bot; defaults to `<gameId>-<seat>-bot`. */
-  botSeed?: string;
+  /**
+   * Tie-breaks for this seat's card-aware bot: a seed label (defaults to `<gameId>-<seat>-bot`), or
+   * a table seat's own keyed stream (ADR 0031 decision 4).
+   */
+  botSeed?: string | RandomSource;
   /**
    * Called once per decision the bot-led tactician was consulted on, with whether the model was
    * asked and the escalation reasons that fired.
@@ -87,6 +95,12 @@ export interface BotLedHooks {
     request: DecisionRequest,
     outcome: { escalated: boolean; reasons: readonly string[]; escalatedBy?: string },
   ) => void;
+  /**
+   * Tie-breaks for the heuristic fallback when a model call fails. A table seat passes its own
+   * keyed stream (ADR 0031 decision 4, ADR 0055 decision 7). Unset, each fallback seeds from the
+   * request id, as every tester game always has.
+   */
+  fallbackRandom?: RandomSource;
 }
 
 /**
@@ -192,6 +206,20 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
         bot.record(request, local);
       }
       return local;
+    }
+
+    // ADR 0055 decision 3: in model mode, routine decision types go to the card-aware bot rather
+    // than the tactician. The strategist still plans the turn; only these choices skip the model.
+    if (
+      this.config.tacticalMode === 'model' &&
+      this.config.botDecisionTypes.includes(request.decisionType)
+    ) {
+      const bot = this.botFor(request);
+      const answer = bot.decide(request);
+      bot.record(request, answer.response);
+      this.logLocal(request, answer.response, 'bot');
+      this.strategy.recordDecision(request, answer.response, 'bot');
+      return answer.response;
     }
 
     if (this.config.tacticalMode === 'bot') {
@@ -548,9 +576,11 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
       }
     }
 
-    // Seeded from the public request id, so it reveals nothing about a table game's keyed streams.
+    // The seat's own keyed stream when it has one (a table); otherwise seeded from the request id,
+    // which reveals nothing about a table game's keyed streams.
     // Card-aware, like bot-led mode and a table's bot seats: one bot wherever it plays (ADR 0043).
-    const fallback = heuristicDecide(request, view, new HeuristicRng(request.requestId), {
+    const random = this.botHooks.fallbackRandom ?? new HeuristicRng(request.requestId);
+    const fallback = heuristicDecide(request, view, random, {
       knowledge: knowledgeFor(this.engine),
     });
     console.warn(

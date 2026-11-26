@@ -54,6 +54,7 @@ describe('table protocol vocabulary', () => {
         'replayTurnState',
         'clockState',
         'seatStatus',
+        'aiBudget',
       ].sort(),
     );
   });
@@ -118,6 +119,15 @@ describe('parseTableClientMessage', () => {
   it('refuses a missing required field', () => {
     expect(parseTableClientMessage(frame('hostApprove', {})).ok).toBe(false);
     expect(parseTableClientMessage(frame('joinTable', { inviteCode: 'a' })).ok).toBe(false);
+  });
+
+  it('accepts a model seat from the host; the table decides whether the server offers it', () => {
+    expect(
+      parseTableClientMessage(frame('hostSetSeat', { seat: 'P2', controller: 'model' })),
+    ).toEqual({
+      ok: true,
+      message: { type: 'hostSetSeat', payload: { seat: 'P2', controller: 'model' } },
+    });
   });
 
   it('refuses wrongly typed fields', () => {

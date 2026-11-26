@@ -27,7 +27,14 @@ const seats = computed(() =>
     return {
       seat: entry.seat,
       name: entry.displayName ?? 'Bot',
-      kind: entry.controller === 'human' ? (fallback ? 'fallback' : 'human') : 'bot',
+      kind:
+        entry.controller === 'human'
+          ? fallback
+            ? 'fallback'
+            : 'human'
+          : entry.controller === 'model'
+            ? 'model'
+            : 'bot',
       connected: status?.connected ?? entry.connected,
     };
   }),
@@ -80,16 +87,34 @@ const myFallback = computed(() => {
         :data-testid="`bar-seat-${entry.seat}`"
       >
         <span class="seat-id" aria-hidden="true">{{ entry.seat }}</span>
-        <span :class="['dot', { on: entry.connected || entry.kind === 'bot' }]" />
+        <span
+          :class="[
+            'dot',
+            { on: entry.connected || entry.kind === 'bot' || entry.kind === 'model' },
+          ]"
+        />
         <strong>{{ entry.name }}</strong>
         <span class="badge">{{
-          entry.kind === 'human' ? 'player' : entry.kind === 'fallback' ? 'bot (away)' : 'bot'
+          entry.kind === 'human'
+            ? 'player'
+            : entry.kind === 'fallback'
+              ? 'bot (away)'
+              : entry.kind === 'model'
+                ? 'AI bot'
+                : 'bot'
         }}</span>
       </li>
     </ul>
     <span v-if="waitingOn" class="waiting" data-testid="waiting-on">
       <span class="pip" aria-hidden="true" />Waiting on {{ waitingOn.name }} —
       {{ formatClock(waitingOn.ms) }}
+    </span>
+    <span v-if="table.aiBudget" class="ai-budget" role="status" data-testid="ai-budget">
+      {{
+        table.aiBudget === 'cap'
+          ? 'AI budget reached: the AI bots play on as built-in bots.'
+          : 'The AI service refused this server: the AI bots play on as built-in bots.'
+      }}
     </span>
     <span v-if="mine" :class="['mine', { running: mine.running }]" data-testid="my-clock">
       Your time {{ formatClock(mine.remaining) }} · bank {{ formatClock(mine.bank) }}
@@ -195,6 +220,10 @@ const myFallback = computed(() => {
 .dot.on {
   background: var(--ok);
   border-color: var(--ok);
+}
+.ai-budget {
+  font-family: var(--font-body);
+  font-style: italic;
 }
 .waiting {
   display: inline-flex;
