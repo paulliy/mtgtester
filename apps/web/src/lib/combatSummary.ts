@@ -55,6 +55,8 @@ export interface CombatSummary {
    * is not one on its controller, so it adds nothing to the controller's chip.
    */
   attacked: Map<string, string>;
+  /** The same per seat without the "Under attack" lead, for the small tag beside a life total. */
+  chips: Map<string, string>;
   /**
    * Once blocks are declared, the same combat as sentences for the decision band ("Klauth is
    * blocked by Midnight Reaper. The Ur-Dragon is unblocked and deals 10 to Queen Marchesa.").
@@ -113,7 +115,7 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
         : [
             `${chosen.length} selected: ${countedNames(chosen.map((p) => p.name)).join(', ')}. Click a creature to add or remove it.`,
           ];
-    return { label: 'Combat · choose attackers', lines, attacked, prose: [] };
+    return { label: 'Combat · choose attackers', lines, attacked, chips: new Map(), prose: [] };
   }
 
   if (attackers.length === 0) return null;
@@ -188,17 +190,22 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
     lines.push(`${attacker.name}${pt(attacker)} → ${target} · ${state}`);
   }
 
+  const chips = new Map<string, string>();
+  const mark = (seat: string, lead: string, chip: string) => {
+    attacked.set(seat, `${lead} · ${chip}`);
+    chips.set(seat, chip);
+  };
   const attacksOnPlayer = (seat: string) =>
     attackers.filter((a) => a.attacking === seat && a.attackingPlaneswalker == null);
   for (const [seat, power] of incoming) {
     const onPlayer = attacksOnPlayer(seat);
     if (blocksPending || input.plan?.kind === 'blockers') {
-      attacked.set(seat, `Under attack · ${power} incoming`);
+      mark(seat, 'Under attack', `${power} incoming`);
       continue;
     }
     const pending = onPlayer.filter((a) => hitsLeft(a) > 0);
     if (pending.length === 0) {
-      attacked.set(seat, 'Attacked · damage dealt');
+      mark(seat, 'Attacked', 'damage dealt');
       continue;
     }
     // A blocked trampler can still push damage through; how much depends on how its controller
@@ -209,15 +216,12 @@ export function summarizeCombat(input: CombatSummaryInput): CombatSummary | null
     const unblocked = pending.filter((a) => a.blockedBy.length === 0);
     const through = unblocked.reduce((sum, a) => sum + damageOf(a), 0);
     if (trample) {
-      attacked.set(seat, `Under attack · ${through} incoming + trample`);
+      mark(seat, 'Under attack', `${through} incoming + trample`);
     } else if (unblocked.length === 0) {
-      attacked.set(
-        seat,
-        pending.length === 1 ? 'Under attack · blocked' : 'Under attack · all blocked',
-      );
+      mark(seat, 'Under attack', pending.length === 1 ? 'blocked' : 'all blocked');
     } else {
-      attacked.set(seat, `Under attack · ${through} incoming`);
+      mark(seat, 'Under attack', `${through} incoming`);
     }
   }
-  return { label, lines, attacked, prose };
+  return { label, lines, attacked, chips, prose };
 }

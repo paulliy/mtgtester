@@ -12,7 +12,8 @@ import ActionLog from '../components/ActionLog.vue';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { dealLinesFor } from '../lib/tableTalk';
 import { commanderObjectIds } from '../lib/commanderIds';
-import CombatOverlay from '../components/CombatOverlay.vue';
+import CombatLane from '../components/CombatLane.vue';
+import { buildCombatLane } from '../lib/combatLane';
 import CommanderDamageGrid from '../components/CommanderDamageGrid.vue';
 import CopyGameReportButton from '../components/CopyGameReportButton.vue';
 import { useBotsThinking } from '../composables/useBotsThinking';
@@ -65,6 +66,30 @@ onUnmounted(() => {
 });
 
 const state = computed(() => store.state);
+
+/** Combat as the lane draws it, read-only for watchers (`combatLane.ts`). */
+const laneHidden = ref(false);
+// Hiding the lane lasts for that turn's combat; the next turn shows it again.
+watch(
+  () => state.value?.turnNumber,
+  () => {
+    laneHidden.value = false;
+  },
+);
+const noTargets: ReadonlySet<string> = new Set();
+const combatLane = computed(() => {
+  const board = state.value;
+  if (board === null) return null;
+  return buildCombatLane({
+    phase: board.phase,
+    step: board.step,
+    priorityPlayer: board.priorityPlayer,
+    viewerSeat: null,
+    permanents: board.battlefield,
+    seats: board.seats.map((seat) => ({ seat: seat.seat, label: seat.label, life: seat.life })),
+    plan: null,
+  });
+});
 
 function permanentsFor(seat: string): SpectatorPermanent[] {
   return state.value?.battlefield.filter((p) => p.controller === seat) ?? [];
@@ -260,8 +285,21 @@ const roundLabel = computed(() => {
 
     <main v-if="state" class="layout" :class="{ 'info-open': infoOpen }">
       <StackPanel :state="state" class="stack-strip" />
+      <CombatLane
+        v-if="!laneHidden && combatLane !== null"
+        class="spectator-lane"
+        :model="combatLane"
+        :lines="[]"
+        :recap="null"
+        :composing="false"
+        :aim-targets="noTargets"
+        :rejection="null"
+        :can-attack-all="false"
+        :hint="null"
+        :waiting="null"
+        @hide="laneHidden = true"
+      />
       <div ref="seatsEl" class="seats">
-        <CombatOverlay :permanents="state.battlefield" />
         <SeatPanel
           v-for="seat in state.seats"
           :key="seat.seat"
@@ -457,7 +495,8 @@ const roundLabel = computed(() => {
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr);
+  /* The stack, the combat lane when there is combat, then the seats. */
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 0.6rem;
   flex: 1;
   min-height: 0;
@@ -466,6 +505,7 @@ const roundLabel = computed(() => {
   grid-template-columns: minmax(0, 1fr) 20rem;
 }
 .seats {
+  grid-row: 3;
   position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -476,11 +516,16 @@ const roundLabel = computed(() => {
 }
 /* The stack as one slim row above the seats: its heading, then the objects left to right. */
 .stack-strip {
+  grid-row: 1;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.6rem;
   padding: 0.25rem 0.6rem;
+}
+.spectator-lane {
+  grid-row: 2;
+  border-top: 1px solid var(--ink);
 }
 .stack-strip :deep(h3) {
   margin: 0;
@@ -492,7 +537,7 @@ const roundLabel = computed(() => {
 }
 .info-panel {
   grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-row: 1 / span 3;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
