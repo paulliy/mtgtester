@@ -54,8 +54,9 @@ export class AnthropicHttpFailure extends Error {
 type Effort = 'low' | 'medium' | 'high' | 'xhigh' | 'max';
 
 /**
- * Effort is the only depth control. Reasoning "off" (or effort `none`) maps to `low`, the
- * cheapest setting; this project's `max` is the API's `max`.
+ * Effort is the depth control. Reasoning "off" (or effort `none`) maps to `low`, the cheapest
+ * setting, and on a model that accepts it thinking is also disabled outright
+ * (`canDisableThinking`); this project's `max` is the API's `max`.
  */
 export function anthropicEffort(
   config: Pick<AiConfig, 'reasoningEnabled' | 'reasoningEffort'>,
@@ -71,6 +72,15 @@ export function anthropicEffort(
  * layout's prefix when it is on, otherwise the system primer), so the per-game constants are
  * read from cache on later calls. No `temperature`: current models reject sampling parameters.
  */
+/**
+ * Models that accept `thinking: {"type": "disabled"}`. Anthropic's effort page (read 2026-11-26)
+ * says Haiku 5.5 does, at effort `high` or below, and that Opus 5.5 rejects it with a 400 at every
+ * effort. A model is listed only once its documentation says so.
+ */
+export function canDisableThinking(model: string): boolean {
+  return /^claude-haiku-5-5(\b|$)/.test(model);
+}
+
 export function anthropicRequest(
   config: Pick<
     AiConfig,
@@ -81,10 +91,15 @@ export function anthropicRequest(
   answerTokens: number,
 ): Anthropic.Beta.Messages.MessageCreateParamsNonStreaming {
   const reasoningOn = config.reasoningEnabled === true && config.reasoningEffort !== 'none';
-  const thinkingRoom = Math.max(
-    ANTHROPIC_MIN_THINKING_TOKENS,
-    reasoningOn ? (config.reasoningTokenHeadroom ?? 0) : 0,
-  );
+  // ADR 0055 decision 2: "reasoning off" really is off where the model allows it, rather than
+  // effort `low` with thinking still on. Effort stays `low`, inside the `high`-or-below range.
+  const thinkingOff = !reasoningOn && canDisableThinking(model);
+  const thinkingRoom = thinkingOff
+    ? 0
+    : Math.max(
+        ANTHROPIC_MIN_THINKING_TOKENS,
+        reasoningOn ? (config.reasoningTokenHeadroom ?? 0) : 0,
+      );
 
   const leadingSystem = prompt.messages.findIndex((m) => m.role !== 'system');
   const systemCount = leadingSystem === -1 ? prompt.messages.length : leadingSystem;
@@ -116,6 +131,7 @@ export function anthropicRequest(
     ...(system.length > 0 ? { system } : {}),
     messages,
     output_config: { effort: anthropicEffort(config) },
+    ...(thinkingOff ? { thinking: { type: 'disabled' as const } } : {}),
     ...(supportsServerFallback(model)
       ? { betas: [ANTHROPIC_FALLBACK_BETA], fallbacks: 'default' as const }
       : {}),

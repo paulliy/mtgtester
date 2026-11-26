@@ -20,7 +20,7 @@ import { isPlayerSeatId } from './protocol';
  * Bump when a table message changes shape. A client that sends another version gets
  * `protocolMismatch` and nothing else.
  */
-export const PROTOCOL_VERSION = 1;
+export const PROTOCOL_VERSION = 2;
 
 /** Largest accepted plaintext decklist, in UTF-16 code units (64 KiB of ASCII). */
 export const TABLE_MAX_DECKLIST_CHARS = 65_536;
@@ -39,11 +39,15 @@ export interface TableCapabilities {
 
 export type TablePhase = 'open' | 'starting' | 'playing' | 'finished' | 'reaped';
 
-/** Who plays a seat. `open` is a seat nobody has taken and the host has not given to a bot. */
-export type TableSeatController = 'open' | 'bot' | 'human';
+/**
+ * Who plays a seat. `open` is a seat nobody has taken and the host has not given to a bot. `bot` is
+ * the built-in heuristic bot; `model` is a model-driven bot (ADR 0055), offered only when the
+ * server says so (`TableStatePayload.modelSeats`).
+ */
+export type TableSeatController = 'open' | 'bot' | 'model' | 'human';
 
 /** The controllers the host may set directly. A seat becomes `human` only by an approved claim. */
-export type HostSeatController = 'bot' | 'open';
+export type HostSeatController = 'bot' | 'model' | 'open';
 
 export type TableClockMode = 'off' | 'relaxed' | 'standard';
 
@@ -159,6 +163,7 @@ export const TABLE_SERVER_TO_CLIENT_TYPES = [
   'replayTurnState',
   'clockState',
   'seatStatus',
+  'aiBudget',
 ] as const;
 export type TableServerToClientType = (typeof TABLE_SERVER_TO_CLIENT_TYPES)[number];
 
@@ -205,6 +210,8 @@ export interface TableStatePayload {
   insecureLan: boolean;
   /** `null` until clocks exist (M4). */
   clock: TableClockMode | null;
+  /** Whether this server offers model-driven seats (ADR 0055); the host may set `model` only then. */
+  modelSeats: boolean;
   you: TableYouView;
 }
 
@@ -244,7 +251,7 @@ export type TableEnding = 'gameOver' | 'setupFailed' | 'workerFailure' | 'hostAb
 /** One seat's deck as the post-game view lists it. */
 export interface TableResultsDeck {
   seat: PlayerId;
-  controller: 'human' | 'bot';
+  controller: 'human' | 'bot' | 'model';
   displayName: string | null;
   commanderNames: string[];
   cards: Array<{ name: string; quantity: number }>;
@@ -292,6 +299,15 @@ export interface SeatStatusPayload {
   fallback: boolean;
 }
 
+/**
+ * The table's model seats stopped calling the model and play on as built-in bots (ADR 0055):
+ * the game reached its spending cap, or the provider refused the key. Sent once, to every seat.
+ * It carries no amount, since spending tracks what the bots hold.
+ */
+export interface AiBudgetPayload {
+  reason: 'cap' | 'key';
+}
+
 export type TableServerToClientMessage =
   | { type: 'tableState'; payload: TableStatePayload }
   | { type: 'claimPending'; payload: ClaimPendingPayload }
@@ -303,7 +319,8 @@ export type TableServerToClientMessage =
   | { type: 'tableResults'; payload: TableResultsPayload }
   | { type: 'replayTurnState'; payload: ReplayTurnStatePayload }
   | { type: 'clockState'; payload: ClockStatePayload }
-  | { type: 'seatStatus'; payload: SeatStatusPayload };
+  | { type: 'seatStatus'; payload: SeatStatusPayload }
+  | { type: 'aiBudget'; payload: AiBudgetPayload };
 
 export type TableServerMessageOf<T extends TableServerToClientType> = Extract<
   TableServerToClientMessage,
@@ -424,7 +441,10 @@ export function parseTableClientMessage(value: unknown): TableParseResult {
     case 'hostSetSeat': {
       if (unknownField(['seat', 'controller'])) return fail('unknownField');
       const controller = payload['controller'];
-      if (!isSeat(payload['seat']) || (controller !== 'bot' && controller !== 'open'))
+      if (
+        !isSeat(payload['seat']) ||
+        (controller !== 'bot' && controller !== 'model' && controller !== 'open')
+      )
         return fail('invalidPayload');
       return ok({ type: 'hostSetSeat', payload: { seat: payload['seat'], controller } });
     }

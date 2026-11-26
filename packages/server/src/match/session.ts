@@ -46,6 +46,7 @@ import type {
   PlayerId,
   PresentationCue,
   ProviderKind,
+  SeatControllerKind,
   SeatControllers,
   ServerToClientMessage,
   StartGameMode,
@@ -62,8 +63,9 @@ import type {
   AiCallLogger,
   AiClient,
   AiConfig,
+  BudgetStop,
+  GameAiBudget,
   JevPolicyBinding,
-  OpenAiCompatibleClient,
   ReflectionContext,
   RequestQueue,
   StrategyCoordinator,
@@ -155,6 +157,18 @@ export interface MatchSessionOptions {
    * `ai`. Without them reflections are off and a free-text deal draft gets the no-model answer.
    */
   ai?: SessionAi;
+  /**
+   * A table's model seats (ADR 0055): the AI configuration, built in code by `tableAiConfig`
+   * rather than read from the environment, and the per-game spending cap and call deadlines every
+   * model seat shares. Omitted, the configuration comes from the environment and nothing caps
+   * spending, as in the tester.
+   */
+  tableAi?: {
+    config: AiConfig;
+    limits: { maxUsdPerGame: number; tacticianDeadlineMs: number; strategistDeadlineMs: number };
+    /** Called once, when the game's budget stops: the cap was reached, or the key refused. */
+    onBudgetStop?: (reason: BudgetStop, spentUsd: number) => void;
+  };
   gameMode?: GameMode;
   /**
    * The game's random generator (ADR 0031 decision 4). Omitted is `'legacy'`, seeded from `seed`,
@@ -282,8 +296,10 @@ export class MatchSession {
   private running: Promise<void> | null = null;
   /** One client and one queue per session: the RPM ceiling is an account property, not a seat's. */
   private aiConfig: AiConfig | null = null;
-  private aiStrategistClient: OpenAiCompatibleClient | null = null;
-  private aiTacticianClient: OpenAiCompatibleClient | null = null;
+  private aiStrategistClient: AiClient | null = null;
+  private aiTacticianClient: AiClient | null = null;
+  /** A table game's shared spending cap (ADR 0055); null when nothing caps spending. */
+  private aiBudget: GameAiBudget | null = null;
   private aiQueue: RequestQueue | null = null;
   /** The strategist's own queue lane — see `AiConfig.strategistConcurrency`. */
   private aiStrategistQueue: RequestQueue | null = null;
@@ -310,6 +326,11 @@ export class MatchSession {
   /** Who answers each seat; a seat is `human` exactly when it is in `humanSeats`. */
   private readonly seatControllers: SeatControllers;
   private readonly humanSeats: ReadonlySet<PlayerId>;
+  /**
+   * The seats a model plays (controller `ai`). A tester game's bots share one kind, so this is
+   * every bot seat or none; a table may mix model seats with heuristic bots (ADR 0055).
+   */
+  private readonly modelSeats: ReadonlySet<PlayerId>;
   /** Per-human-seat state, keyed by the same seats as `humanSeats`. */
   private readonly humanStates = new Map<PlayerId, HumanSeatState>();
   /** A timed table's clocks and fallback bots; null for every untimed game. */
@@ -373,6 +394,9 @@ export class MatchSession {
     this.humanSeats = new Set(
       opts.seats.map((s) => s.seat).filter((seat) => this.seatControllers[seat] === 'human'),
     );
+    this.modelSeats = new Set(
+      opts.seats.map((s) => s.seat).filter((seat) => this.seatControllers[seat] === 'ai'),
+    );
     for (const seat of this.humanSeats) {
       this.humanStates.set(
         seat,
@@ -409,6 +433,7 @@ export class MatchSession {
     for (const seat of this.humanSeats) this.engine.enableManualMana(seat);
     this.recorder = opts.store?.recorderFor(opts.gameId) ?? null;
     const humanSeats = this.humanSeats;
+    const modelSeats = this.modelSeats;
     this.diplomacy =
       opts.diplomacy === true && opts.decisionProviderOverrides === undefined
         ? new DiplomacyTable({
@@ -420,15 +445,15 @@ export class MatchSession {
             answersLater: (seat) => humanSeats.has(seat),
             // A model seat proposes through its strategist (phase 4), not the heuristic proposer;
             // it still answers offers at once with the same evaluator, with no model call.
-            proposesOnItsOwn: (seat) => !humanSeats.has(seat) && opts.providerKind !== 'ai',
+            proposesOnItsOwn: (seat) => !humanSeats.has(seat) && !modelSeats.has(seat),
             repairedAttacks: () => this.countRepairedAttacks(),
           })
         : null;
-    if (opts.providerKind === 'ai' && opts.ai === undefined) {
+    if (this.modelSeats.size > 0 && opts.ai === undefined) {
       throw new Error('A session with model seats needs the AI services (`sessionAi`).');
     }
     this.logger =
-      opts.providerKind === 'ai'
+      this.modelSeats.size > 0
         ? new (this.requireAi().AiCallLogger)(opts.store?.raw ?? null, opts.gameId)
         : null;
 
@@ -583,7 +608,7 @@ export class MatchSession {
         }
         this.recordDecisionSource(request);
         this.aiCoordinator?.recordAcceptedDecision(request, response);
-        if (decidingHuman !== undefined && this.opts.providerKind === 'ai') {
+        if (decidingHuman !== undefined && this.modelSeats.size > 0) {
           this.ensureAiCoordinator().recordDecision(request, response, 'human');
         }
         this.logger?.recordAnchor(request.requestId, anchorSequence);
@@ -617,7 +642,7 @@ export class MatchSession {
         this.reportAiCost();
       },
       onTurnBoundary: (turn, activePlayer) => {
-        if (this.opts.providerKind === 'ai') {
+        if (this.modelSeats.size > 0) {
           this.ensureAiCoordinator().prefetch(this.opts.gameId, turn, activePlayer);
         }
       },
@@ -1613,7 +1638,7 @@ export class MatchSession {
       this.aiDraftClient = null;
       queue = { enqueue: (fn) => fn() };
     } else {
-      const config = (this.aiConfig ??= ai.loadAiConfig());
+      const config = this.loadedAiConfig();
       if (this.aiDraftClient === undefined) {
         this.aiDraftClient =
           config.apiKey === ''
@@ -2185,10 +2210,10 @@ export class MatchSession {
       default:
         return assertNever(this.gameMode, 'reflection seats');
     }
-    if (this.opts.providerKind !== 'ai') return [];
-    const config = (this.aiConfig ??= this.requireAi().loadAiConfig());
+    if (this.modelSeats.size === 0) return [];
+    const config = this.loadedAiConfig();
     if (!(this.opts.reflectionEnabled ?? config.reflectionEnabled)) return [];
-    return this.opts.seats.map((seat) => seat.seat).filter((seat) => !this.humanSeats.has(seat));
+    return this.opts.seats.map((seat) => seat.seat).filter((seat) => this.modelSeats.has(seat));
   }
 
   private sendReflections(
@@ -2394,15 +2419,14 @@ export class MatchSession {
       );
       return table === null ? bot : withDiplomacy(table, bot);
     };
-    const inner: AsyncDecisionProvider =
-      this.opts.providerKind !== 'ai'
-        ? new AsyncAdapter(heuristic())
-        : table === null
-          ? this.buildAiProvider()
-          : withDiplomacyAsync(
-              table,
-              this.buildAiProvider(() => table.playFor(playerId)),
-            );
+    const inner: AsyncDecisionProvider = !this.modelSeats.has(playerId)
+      ? new AsyncAdapter(heuristic())
+      : table === null
+        ? this.buildAiProvider(playerId)
+        : withDiplomacyAsync(
+            table,
+            this.buildAiProvider(playerId, () => table.playFor(playerId)),
+          );
     const pacedProvider = this.pacedBot(inner);
 
     // Bots retain an explicit decline of a sacrifice-style optional activation across turns in
@@ -2413,10 +2437,13 @@ export class MatchSession {
     return provider;
   }
 
-  private buildAiProvider(diplomacy?: () => DiplomacyPlay): AsyncDecisionProvider {
+  private buildAiProvider(
+    playerId: PlayerId,
+    diplomacy?: () => DiplomacyPlay,
+  ): AsyncDecisionProvider {
     const coordinator = this.ensureAiCoordinator();
     const config = this.aiConfig as AiConfig;
-    const tactician = this.aiTacticianClient as OpenAiCompatibleClient;
+    const tactician = this.aiTacticianClient as AiClient;
     const queue = this.aiQueue as RequestQueue;
     return new (this.requireAi().OpenAiDecisionProvider)(
       tactician,
@@ -2429,6 +2456,11 @@ export class MatchSession {
       this.aiJev ?? undefined,
       undefined,
       diplomacy,
+      // A keyed game's model seat breaks fallback ties on its own bot stream; no heuristic bot
+      // reads that stream, since the seat is the model's (ADR 0055 decision 7).
+      this.rngKey === null
+        ? {}
+        : { fallbackRandom: botRandomSource(this.rngKey, seatIndex(playerId)) },
     );
   }
 
@@ -2450,6 +2482,16 @@ export class MatchSession {
     }
   }
 
+  /** The AI configuration: a table's own, built in code, or else this process's environment. */
+  private loadedAiConfig(): AiConfig {
+    return (this.aiConfig ??= this.opts.tableAi?.config ?? this.requireAi().loadAiConfig());
+  }
+
+  /** What this game's model seats have spent, when a table budget tracks it; null otherwise. */
+  aiSpendUsd(): number | null {
+    return this.aiBudget?.spentUsd ?? null;
+  }
+
   /** The model-backed services; only reached on a path that needs a model. */
   private requireAi(): SessionAi {
     const ai = this.opts.ai;
@@ -2461,13 +2503,24 @@ export class MatchSession {
 
   private ensureAiCoordinator(): StrategyCoordinator {
     const ai = this.requireAi();
-    const config = (this.aiConfig ??= ai.loadAiConfig());
-    this.aiStrategistClient ??= new ai.OpenAiCompatibleClient(
-      ai.configForRole(config, 'strategist'),
+    const config = this.loadedAiConfig();
+    const tableAi = this.opts.tableAi;
+    if (tableAi !== undefined && this.aiBudget === null) {
+      this.aiBudget = new ai.GameAiBudget(tableAi.limits.maxUsdPerGame);
+      if (tableAi.onBudgetStop !== undefined) this.aiBudget.onStop = tableAi.onBudgetStop;
+    }
+    const limited = (client: AiClient, deadlineMs: number): AiClient =>
+      this.aiBudget === null ? client : ai.limitedClient(client, this.aiBudget, deadlineMs);
+    this.aiStrategistClient ??= limited(
+      new ai.OpenAiCompatibleClient(ai.configForRole(config, 'strategist')),
+      tableAi?.limits.strategistDeadlineMs ?? 0,
     );
-    this.aiTacticianClient ??= new ai.OpenAiCompatibleClient(ai.configForRole(config, 'tactician'));
-    this.aiStrategistClient.setAttemptObserver(this.logger?.attemptObserver());
-    this.aiTacticianClient.setAttemptObserver(this.logger?.attemptObserver());
+    this.aiTacticianClient ??= limited(
+      new ai.OpenAiCompatibleClient(ai.configForRole(config, 'tactician')),
+      tableAi?.limits.tacticianDeadlineMs ?? 0,
+    );
+    this.aiStrategistClient.setAttemptObserver?.(this.logger?.attemptObserver());
+    this.aiTacticianClient.setAttemptObserver?.(this.logger?.attemptObserver());
     if (this.aiJev === undefined) {
       this.aiJev =
         ai.createConfiguredJevPolicy(
@@ -2492,7 +2545,10 @@ export class MatchSession {
         this.engine,
         config,
         this.logger ?? undefined,
-        this.humanSeats,
+        // The coordinator plans only model seats' turns: people and heuristic bots are skipped.
+        new Set(
+          this.opts.seats.map((seat) => seat.seat).filter((seat) => !this.modelSeats.has(seat)),
+        ),
         // Each bot is told what its *own* deck is built to do (ADR 0022 §5). The map is keyed by
         // seat and read only for the seat being planned, so no seat ever sees another's.
         new Map(this.opts.seats.map((seat) => [seat.seat, seat.summary.archetypeTag])),
@@ -2586,13 +2642,17 @@ function resolveSeatControllers(
       if (given === undefined) throw new Error('a table session requires seatControllers');
       const human = new Set(seats.filter((seat) => given[seat] === 'human'));
       if (human.size === 0) throw new Error('a table session requires at least one human seat');
+      // Each bot seat names its own kind, so a table may mix model seats with heuristic bots
+      // (ADR 0055); the session-wide `providerKind` no longer decides any seat here.
+      const out: Record<PlayerId, SeatControllerKind> = {};
       for (const seat of seats) {
-        // Mixed bot kinds in one session are not supported yet: one provider kind drives every bot.
-        if (!human.has(seat) && given[seat] !== opts.providerKind) {
-          throw new Error(`table seat ${seat} must be human or ${opts.providerKind}`);
+        const kind = given[seat];
+        if (kind !== 'human' && kind !== 'random' && kind !== 'ai') {
+          throw new Error(`table seat ${seat} must be human, random or ai`);
         }
+        out[seat] = kind;
       }
-      return bots(human);
+      return out;
     }
     default:
       return assertNever(gameMode, 'session game mode');

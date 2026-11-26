@@ -51,6 +51,8 @@ export function wireTables(deps: TableWiringDeps): TableWiring {
     // Every player sees the no-TLS banner at an --insecure-lan table (plan M5 task 5).
     insecureLan: config.insecureLan,
     ...(config.hostSecret !== null && { hostSecret: config.hostSecret }),
+    // ADR 0055: hosts may seat model-driven bots only when the operator turned them on.
+    ...(config.aiSeats !== null && { modelSeats: true }),
   });
   const cardsFor = workerCardsFor({ index: deps.index, pool: deps.pool, banned: deps.banned });
 
@@ -64,6 +66,7 @@ export function wireTables(deps: TableWiringDeps): TableWiring {
       ...(config.oracleFixture !== null && { oracleFixture: true }),
       clock: config.clock,
       ...(config.clockScale !== null && { clockScale: config.clockScale }),
+      ...(config.aiSeats !== null && { ai: config.aiSeats }),
     });
     // Development mode can shrink the engine's budget to force a halt (end-to-end tests).
     const session =

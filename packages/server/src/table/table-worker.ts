@@ -15,6 +15,7 @@ import { buildOracleIndexFromCards } from '../cards/oracle-index';
 import type { SupportedPool } from '../cards/pool';
 import { GameStore } from '../db';
 import { bannedListFromNames } from '../decks/banned';
+import { sessionAi } from '../match/session-ai';
 import { InProcessSessionPort } from './in-process-port';
 import type { MainToWorker, TableWorkerBoot, WorkerToMain } from './worker-protocol';
 
@@ -50,6 +51,11 @@ function boot(input: TableWorkerBoot): void {
       banned: bannedListFromNames(cards.bannedNames),
       store,
       replay: input.replay,
+      // Model seats (ADR 0055): the key comes from this worker's own environment, which it
+      // inherits from the server process, and never crosses `postMessage`.
+      ...(config.ai !== undefined && {
+        ai: { services: sessionAi, apiKey: process.env['ANTHROPIC_API_KEY'] ?? '' },
+      }),
     },
   });
   port = session;

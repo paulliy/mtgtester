@@ -166,9 +166,40 @@ describe('loadTableConfig', () => {
       clockScale: null,
       hostSecret: null,
       maxStepWork: null,
+      aiSeats: null,
     });
     expect(config.dbPath).toBe('/work/repo/data/tables/tables.sqlite');
     expect(config.webDir).toBe('/work/repo/apps/web/dist-table');
+  });
+
+  it('turns model seats on only with an Anthropic key, and reads the per-game cap (ADR 0055)', () => {
+    expect(okConfig({ TABLE_AI_SEATS: '1', ANTHROPIC_API_KEY: 'sk-ant-x' }).aiSeats).toEqual({
+      maxUsdPerGame: 1,
+    });
+    expect(
+      okConfig({
+        TABLE_AI_SEATS: '1',
+        ANTHROPIC_API_KEY: 'sk-ant-x',
+        TABLE_AI_MAX_USD_PER_GAME: '0.5',
+      }).aiSeats,
+    ).toEqual({ maxUsdPerGame: 0.5 });
+    expect(okConfig({ TABLE_AI_SEATS: '0', ANTHROPIC_API_KEY: 'sk-ant-x' }).aiSeats).toBeNull();
+
+    expect(refusal({ TABLE_AI_SEATS: '1' }, ['--dev']).setting).toBe('ANTHROPIC_API_KEY');
+    expect(refusal({ TABLE_AI_SEATS: 'yes' }, ['--dev']).setting).toBe('TABLE_AI_SEATS');
+    for (const bad of ['0', '-1', 'abc', '1e3', '101']) {
+      expect(
+        refusal({ TABLE_AI_SEATS: '1', ANTHROPIC_API_KEY: 'k', TABLE_AI_MAX_USD_PER_GAME: bad }, [
+          '--dev',
+        ]).setting,
+      ).toBe('TABLE_AI_MAX_USD_PER_GAME');
+    }
+    expect(refusal({ TABLE_AI_MAX_USD_PER_GAME: '1' }, ['--dev']).setting).toBe(
+      'TABLE_AI_MAX_USD_PER_GAME',
+    );
+    // The key never lands in the parsed settings.
+    const config = okConfig({ TABLE_AI_SEATS: '1', ANTHROPIC_API_KEY: 'sk-ant-secret' });
+    expect(JSON.stringify(config)).not.toContain('sk-ant-secret');
   });
 
   it.each(PROXY_OR_ALLOWLIST_SETTINGS)('refuses --dev with %s set', (name) => {

@@ -13,7 +13,11 @@ import {
   condenseSeatLog,
   configForRole,
   createConfiguredJevPolicy,
+  DEFAULT_TABLE_AI_LIMITS,
+  GameAiBudget,
+  limitedClient,
   loadAiConfig,
+  tableAiConfig,
   OpenAiCompatibleClient,
   OpenAiDecisionProvider,
   publishReflections,
@@ -43,6 +47,12 @@ export const sessionAi = {
     createConfiguredJevPolicy(config, process.env, observer, traceObserver, comparisonObserver),
   /** The AI configuration from this process's environment. */
   loadAiConfig: () => loadAiConfig(process.env),
+  /** A table game's spending cap and the client wrapper that enforces it (ADR 0055). */
+  GameAiBudget,
+  limitedClient,
+  /** A table's code-built AI configuration and default call deadlines (ADR 0055). */
+  tableAiConfig,
+  DEFAULT_TABLE_AI_LIMITS,
   OpenAiCompatibleClient,
   OpenAiDecisionProvider,
   publishReflections,

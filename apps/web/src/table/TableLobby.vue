@@ -81,7 +81,13 @@ async function copyInvite(): Promise<void> {
 }
 
 const controllerLabel = (controller: string): string =>
-  controller === 'human' ? 'Player' : controller === 'bot' ? 'Bot' : 'Open';
+  controller === 'human'
+    ? 'Player'
+    : controller === 'bot'
+      ? 'Bot'
+      : controller === 'model'
+        ? 'AI bot'
+        : 'Open';
 
 /** Seats with someone or something in them, for the plate in the middle of the table. */
 const filled = computed(
@@ -137,7 +143,11 @@ const phaseLabel = computed(() => PHASE_LABELS[state.value?.phase ?? 'open'] ?? 
               />
               <strong>{{
                 entry.displayName ??
-                (entry.controller === 'bot' ? 'Built-in bot' : 'Waiting for a player')
+                (entry.controller === 'bot'
+                  ? 'Built-in bot'
+                  : entry.controller === 'model'
+                    ? 'AI bot'
+                    : 'Waiting for a player')
               }}</strong>
               <span v-if="entry.seat === table.mySeat" class="you-mark">You</span>
             </div>
@@ -154,17 +164,28 @@ const phaseLabel = computed(() => PHASE_LABELS[state.value?.phase ?? 'open'] ?? 
                 {{ entry.seat === seat ? 'Chosen' : 'Choose' }}
               </button>
               <template v-if="table.isHost && state.phase === 'open'">
+                <template v-if="entry.controller === 'open'">
+                  <button
+                    type="button"
+                    class="dt-btn small"
+                    :data-testid="`make-bot-${entry.seat}`"
+                    @click="table.setSeat(entry.seat, 'bot')"
+                  >
+                    Bot
+                  </button>
+                  <button
+                    v-if="state.modelSeats"
+                    type="button"
+                    class="dt-btn small"
+                    title="A Claude-driven bot. It uses this server's AI budget."
+                    :data-testid="`make-model-${entry.seat}`"
+                    @click="table.setSeat(entry.seat, 'model')"
+                  >
+                    AI bot
+                  </button>
+                </template>
                 <button
-                  v-if="entry.controller === 'open'"
-                  type="button"
-                  class="dt-btn small"
-                  :data-testid="`make-bot-${entry.seat}`"
-                  @click="table.setSeat(entry.seat, 'bot')"
-                >
-                  Bot
-                </button>
-                <button
-                  v-else-if="entry.controller === 'bot'"
+                  v-else-if="entry.controller === 'bot' || entry.controller === 'model'"
                   type="button"
                   class="dt-btn small"
                   @click="table.setSeat(entry.seat, 'open')"

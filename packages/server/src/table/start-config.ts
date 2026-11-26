@@ -31,6 +31,8 @@ export interface BuildSessionConfigOptions {
   clock?: TableClockMode;
   /** Dev mode only: every clock duration divided by this. */
   clockScale?: number;
+  /** The server's model-seat settings (ADR 0055), when it offers them. */
+  ai?: { maxUsdPerGame: number };
 }
 
 const KEY_PATTERN = /^[0-9a-f]{64}$/;
@@ -64,8 +66,12 @@ export function buildSessionConfig(
           displayName: seat.displayName,
           decklist: seat.decklist,
         }
-      : { seat: seat.seat, controller: 'bot' },
+      : { seat: seat.seat, controller: seat.controller },
   );
+  const hasModelSeat = seats.some((seat) => seat.controller === 'model');
+  if (hasModelSeat && opts.ai === undefined) {
+    throw new Error('a model seat needs a server that offers model seats');
+  }
 
   return {
     tableId: attempt.tableId,
@@ -83,5 +89,7 @@ export function buildSessionConfig(
     dbPath: opts.dbPath,
     ...(opts.oracleFixture !== undefined && { oracleFixture: opts.oracleFixture }),
     ...(opts.livePaceMs !== undefined && { livePaceMs: opts.livePaceMs }),
+    // Only a game with a model seat carries the cap, so every other game runs exactly as before.
+    ...(hasModelSeat && opts.ai !== undefined && { ai: { maxUsdPerGame: opts.ai.maxUsdPerGame } }),
   };
 }

@@ -25,7 +25,8 @@ import type { BannedList } from '../decks/banned';
 import { scaledSettings } from '../match/decision-clock';
 import { disclosedSeatSummaries, seedLabel, tablePolicy } from '../match/disclosure';
 import type { ReplayIdentity } from '../match/replay-config';
-import { MatchSession } from '../match/session';
+import { MatchSession, type MatchSessionOptions } from '../match/session';
+import type { SessionAi } from '../match/session-ai';
 import { setupSeats, type SeatProblem } from '../match/setup';
 import type {
   TableSessionConfig,
@@ -42,6 +43,12 @@ export interface InProcessSessionDeps {
   store: GameStore;
   /** What the `games` row records for replay (ADR 0031 decision 8). Omit to record none. */
   replay?: ReplayIdentity;
+  /**
+   * The model-backed services and the Anthropic key, for a game with model seats (ADR 0055).
+   * The worker passes `sessionAi` and its own environment's key; omitted, a model seat fails the
+   * start rather than playing without a cap.
+   */
+  ai?: { services: SessionAi; apiKey: string };
 }
 
 export interface InProcessSessionPortOptions {
@@ -67,6 +74,8 @@ export class InProcessSessionPort implements TableSessionPort {
   private rngKey = '';
   /** Each human seat's `gameStarted`, built once at start and re-sent on a resync. */
   private readonly startedFrames = new Map<PlayerId, ServerToClientMessage>();
+  /** Why the model seats switched to the built-in bot, once they have; re-sent on a resync. */
+  private aiBudgetReason: 'cap' | 'key' | null = null;
 
   constructor(options: InProcessSessionPortOptions) {
     this.generation = options.generation;
@@ -128,6 +137,9 @@ export class InProcessSessionPort implements TableSessionPort {
             });
           }
           session.resyncPlayer(input.seat);
+          // A player who reloads after the switch still learns of it. The table frame goes to
+          // every bound seat; setting the same reason again changes nothing for the others.
+          if (this.aiBudgetReason !== null) this.emitAiBudget(this.aiBudgetReason);
           break;
         }
         default: {
@@ -163,6 +175,53 @@ export class InProcessSessionPort implements TableSessionPort {
 
   // ── Start ──────────────────────────────────────────────────────────────────────────────────
 
+  /**
+   * The model-seat setup for `config` (ADR 0055): null for a game without model seats, or
+   * `unavailable` when one has them but this port has no AI services or key. When the game's
+   * budget stops, every seated player gets one `aiBudget` frame.
+   */
+  private tableAiFor(
+    config: TableSessionConfig,
+  ):
+    | { services: SessionAi; options: NonNullable<MatchSessionOptions['tableAi']> }
+    | null
+    | 'unavailable' {
+    if (config.ai === undefined) return null;
+    const ai = this.deps.ai;
+    if (ai === undefined || ai.apiKey.trim() === '') return 'unavailable';
+    const deadlines = ai.services.DEFAULT_TABLE_AI_LIMITS;
+    const limits = {
+      maxUsdPerGame: config.ai.maxUsdPerGame,
+      tacticianDeadlineMs: deadlines.tacticianDeadlineMs,
+      strategistDeadlineMs: deadlines.strategistDeadlineMs,
+    };
+    let aiConfig;
+    try {
+      aiConfig = ai.services.tableAiConfig(ai.apiKey, limits);
+    } catch {
+      return 'unavailable';
+    }
+    return {
+      services: ai.services,
+      options: {
+        config: aiConfig,
+        limits,
+        onBudgetStop: (reason) => {
+          this.aiBudgetReason = reason;
+          this.emitAiBudget(reason);
+        },
+      },
+    };
+  }
+
+  private emitAiBudget(reason: 'cap' | 'key'): void {
+    this.emit({
+      type: 'tableFrame',
+      generation: this.generation,
+      message: { type: 'aiBudget', payload: { reason } },
+    });
+  }
+
   private async prepareAndRun(config: TableSessionConfig): Promise<void> {
     const seats = [...config.seats].sort((a, b) => a.seat.localeCompare(b.seat));
     seats.forEach((entry, index) => {
@@ -190,7 +249,7 @@ export class InProcessSessionPort implements TableSessionPort {
     if (this.stopped || this.terminal) return;
 
     if (!setup.ok) {
-      const botSeats = new Set(seats.filter((s) => s.controller === 'bot').map((s) => s.seat));
+      const botSeats = new Set(seats.filter((s) => s.controller !== 'human').map((s) => s.seat));
       const botProblem = setup.problems.find((p) => botSeats.has(p.seat));
       if (botProblem !== undefined) {
         // A bot deck comes from the server's own pool: a failure there is the server's, not a
@@ -204,11 +263,16 @@ export class InProcessSessionPort implements TableSessionPort {
       return;
     }
 
+    const kindOf = (controller: 'human' | 'bot' | 'model'): 'human' | 'random' | 'ai' =>
+      controller === 'human' ? 'human' : controller === 'model' ? 'ai' : 'random';
     const seatControllers: SeatControllers = Object.fromEntries(
-      seats.map(
-        (entry) => [entry.seat, entry.controller === 'human' ? 'human' : 'random'] as const,
-      ),
+      seats.map((entry) => [entry.seat, kindOf(entry.controller)] as const),
     );
+    const tableAi = this.tableAiFor(config);
+    if (tableAi === 'unavailable') {
+      this.fail('setupFailed', 'This server cannot run AI bots right now.');
+      return;
+    }
     const session = new MatchSession({
       gameId: config.gameId,
       seed: config.seed,
@@ -217,6 +281,7 @@ export class InProcessSessionPort implements TableSessionPort {
       gameMode: 'table',
       seatControllers,
       disclosure: tablePolicy(),
+      ...(tableAi !== null && { ai: tableAi.services, tableAi: tableAi.options }),
       rng: 'chacha20',
       rngKey: config.rngKey,
       engineLimits: { maxStepWork: config.maxStepWork, maxObjects: config.maxObjects },
@@ -255,10 +320,7 @@ export class InProcessSessionPort implements TableSessionPort {
         ),
         providerKind: 'random',
         gameMode: 'table',
-        controllers: seats.map((seat) => ({
-          seat: seat.seat,
-          kind: seat.controller === 'human' ? 'human' : 'random',
-        })),
+        controllers: seats.map((seat) => ({ seat: seat.seat, kind: kindOf(seat.controller) })),
         humanSeat: entry.seat,
         paceMs: session.getLivePaceMs(),
         startedAt,

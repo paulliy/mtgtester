@@ -86,10 +86,10 @@ function decksOf(
   const bySeat = new Map<PlayerId, TableGameDeck>(stored.map((deck) => [deck.seat, deck]));
   return manifest.seats.map((seat) => {
     const deck = bySeat.get(seat.seat);
-    if (seat.controller === 'bot') {
+    if (seat.controller !== 'human') {
       return {
         seat: seat.seat,
-        controller: 'bot',
+        controller: seat.controller,
         displayName: null,
         commanderNames: deck?.commanderNames ?? [],
         cards: deck?.cards ?? [],
