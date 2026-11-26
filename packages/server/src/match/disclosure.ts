@@ -228,6 +228,8 @@ const PLANNED_OUTBOUND_GATES: Readonly<Record<string, OutboundGate>> = {
   // A seat's clock and connection are the visible wait the ADR accepts (decision 10).
   clockState: 'always',
   seatStatus: 'always',
+  // That model seats switched to the built-in bot, and why; no amount (ADR 0055 decision 8).
+  aiBudget: 'always',
 };
 
 /** The full-state types, for tests and for the table server's own checks. */

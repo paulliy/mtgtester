@@ -1,6 +1,6 @@
 # Plan: LLM seats at tables
 
-Status: Phase 2 in review (2026-11-26). Phases 0 and 1 done. Amends
+Status: Phases 3 and 4 in review (2026-11-26). Phases 0 to 2 done. Phase 5 left: real paid table game and deploy. Amends
 [ADR 0031](../decisions/0031-multiplayer-tables.md) decision 10 once accepted.
 
 ## Goal
@@ -179,6 +179,13 @@ Each phase is its own pull request. I stop after each one for your review.
    seats and record resident memory. That matters most if the VM is the 1 GB AMD micro rather
    than the Ampere shape.
 
+Built (2026-11-26): `TABLE_AI_SEATS`, `ANTHROPIC_API_KEY` and `TABLE_AI_MAX_USD_PER_GAME` in
+`table/config.ts` (the key is checked but never stored in the config); the start config and
+session port carry a `model` seat and the cap; the worker passes `sessionAi` and the key from its
+own environment (a Bun worker inherits the parent's, checked on Bun 1.4.4). The module-graph test
+passes with the worker reaching `ai/`. A model seat on a port without AI services fails the start
+with `setupFailed` rather than playing uncapped.
+
 ### Phase 4: protocol and lobby
 
 1. `TableSeatController` and `HostSeatController` gain `'model'`, with a `PROTOCOL_VERSION` bump.
@@ -191,6 +198,13 @@ Each phase is its own pull request. I stop after each one for your review.
    `game_decision_sources` label model seats distinctly from built-in bots.
 4. Tests: the protocol parser accepts `'model'` only when enabled, a non-host socket cannot set it,
    and the lobby shows the option only when the server offers it.
+
+Built (2026-11-26): `model` in `TableSeatController` and `HostSeatController`,
+`PROTOCOL_VERSION` 2, `TableStatePayload.modelSeats`, and the `modelSeatsOff` refusal. The budget
+notice is a new table frame, `aiBudget` (`{ reason: 'cap' | 'key' }`, gated `always`, no
+amount), which the status bar shows as one line. Checked in Chromium against `serve:table --dev`
+with a dummy key: the lobby offers "AI bot" on open seats, and in play Anthropic's 401 on the
+first model call stopped the budget and showed "The AI service refused this server".
 
 ### Phase 5: disclosure check, end-to-end and deploy
 

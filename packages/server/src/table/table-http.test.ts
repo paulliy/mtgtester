@@ -80,6 +80,7 @@ function config(overrides: Partial<TableConfig> = {}): TableConfig {
     clockScale: null,
     hostSecret: null,
     maxStepWork: null,
+    aiSeats: null,
     ...overrides,
   };
 }

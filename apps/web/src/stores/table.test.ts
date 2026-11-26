@@ -362,6 +362,22 @@ describe('table store', () => {
     expect(sockets[0]!.sent.at(-1)).toEqual({ type: 'resumeControl', payload: {} });
   });
 
+  it('keeps the AI budget notice, asks for a model seat, and clears both on a new table (ADR 0055)', () => {
+    const { table } = setup();
+    table.open('t1');
+    sockets[0]!.open();
+    expect(table.aiBudget).toBeNull();
+    sockets[0]!.deliver({ type: 'aiBudget', payload: { reason: 'cap' } });
+    expect(table.aiBudget).toBe('cap');
+    table.setSeat('P2', 'model');
+    expect(sockets[0]!.sent.at(-1)).toEqual({
+      type: 'hostSetSeat',
+      payload: { seat: 'P2', controller: 'model' },
+    });
+    table.open('t2');
+    expect(table.aiBudget).toBeNull();
+  });
+
   it('keeps the post-game record and asks for replay turns', () => {
     const { table } = setup();
     table.open('t1');

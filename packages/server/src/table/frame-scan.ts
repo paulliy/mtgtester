@@ -84,6 +84,8 @@ const LIVE_TYPES = new Set([
   // The visible wait ADR 0031 decision 10 accepts: a seat's clock and connection.
   'clockState',
   'seatStatus',
+  // Model seats switched to the built-in bot (ADR 0055); a reason, never an amount.
+  'aiBudget',
 ]);
 
 /** Full-state frames: allowed only after the seat's own `gameOver`. */

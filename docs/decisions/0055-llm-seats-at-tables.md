@@ -119,7 +119,8 @@ turn 15 when the models changed) had Haiku tactician decisions at 1.1 s p50 and 
 8. **Disclosure.** ADR 0031 decision 3 stands: no `apiWaiting`, AI note, strategist plan or cost
    figure reaches any player during play, and AI reasoning is not shown after the game either. The
    host's post-game view gets the table's total model spend and whether the cap was reached. Post-game
-   reflection stays off at tables.
+   reflection stays off at tables. When the budget stops, every seat gets one `aiBudget` table
+   frame naming only the reason (the cap, or the key refused), never an amount.
 
 ## Consequences
 

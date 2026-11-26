@@ -214,6 +214,9 @@ export class TableAgentSession {
       case 'clockState':
         // The clocks are for people; an agent answers as soon as it can.
         return;
+      case 'aiBudget':
+        // Another seat's AI switched to the built-in bot; nothing for this agent to do.
+        return;
       case 'tableResults':
       case 'replayTurnState':
         // Post-game data, after this client's run has ended on `gameOver`.

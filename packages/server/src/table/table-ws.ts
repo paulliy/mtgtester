@@ -203,6 +203,7 @@ const REFUSAL_TEXT: Record<Refusal, string> = {
   nameTaken: 'That name is taken. Choose another.',
   tableFull: 'This table is full.',
   unknownSeat: 'There is no such seat.',
+  modelSeatsOff: 'This server does not offer AI bots.',
   seatUnavailable: 'That seat is not open.',
   alreadySeated: 'You already hold a seat.',
   claimLimitTable: 'Too many seat requests are waiting on the host.',

@@ -30,7 +30,8 @@ import type {
 /** One seat of a game as the worker receives it. Human decks are the approved plaintext. */
 export type TableSessionSeat =
   | { seat: PlayerId; controller: 'human'; displayName: string; decklist: string }
-  | { seat: PlayerId; controller: 'bot' };
+  /** `bot` is the heuristic bot; `model` a model-driven seat (ADR 0055). */
+  | { seat: PlayerId; controller: 'bot' | 'model' };
 
 /**
  * Everything one start attempt needs. The table server persists this as the private start-attempt
@@ -60,6 +61,11 @@ export interface TableSessionConfig {
   oracleFixture?: boolean;
   /** Tests only: 0 presents as fast as the engine computes. */
   livePaceMs?: number;
+  /**
+   * Present exactly when a seat is `model` (ADR 0055): the per-game cap every model seat shares.
+   * The Anthropic key is not here; the worker reads it from its own environment.
+   */
+  ai?: { maxUsdPerGame: number };
 }
 
 /** A player's input, already authorized by the table server for `seat`. */
