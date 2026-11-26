@@ -21,6 +21,7 @@ import {
   type ClientToServerMessage,
   type ClockStatePayload,
   type HostSeatController,
+  type TableBotPlay,
   type PlayerId,
   type ReplayTurnStatePayload,
   type ReplayUnlockedPayload,
@@ -414,6 +415,9 @@ export const useTableStore = defineStore('table', () => {
   function setSeat(seat: PlayerId, controller: HostSeatController): void {
     sendFrame({ type: 'hostSetSeat', payload: { seat, controller } });
   }
+  function setBots(bots: TableBotPlay): void {
+    sendFrame({ type: 'hostSetBots', payload: { bots } });
+  }
   function kick(seat: PlayerId): void {
     sendFrame({ type: 'hostKick', payload: { seat } });
   }
@@ -466,6 +470,7 @@ export const useTableStore = defineStore('table', () => {
     approve,
     deny,
     setSeat,
+    setBots,
     kick,
     rotateInvite,
     start,

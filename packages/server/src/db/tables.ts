@@ -35,6 +35,8 @@ export interface TableAttemptManifest {
     | { seat: PlayerId; controller: 'bot' }
   >;
   limits: { maxStepWork: number; maxObjects: number; turnCap: number | null };
+  /** Who played the bot seats. Absent on attempts recorded before Claude bots existed. */
+  bots?: 'builtin' | 'claude';
   identity: {
     cardDataSha256: string | null;
     buildCommit: string | null;

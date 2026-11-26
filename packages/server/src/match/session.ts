@@ -59,6 +59,7 @@ import type {
 // Types only: the model-backed services arrive as `opts.ai` (`session-ai.ts`), so a session with
 // no model seat loads none of `ai/`.
 import type {
+  AiAttemptObserver,
   AiCallLogger,
   AiClient,
   AiConfig,
@@ -230,8 +231,27 @@ export interface MatchSessionOptions {
    * a table with the clock off. Not accepted for other modes.
    */
   clock?: { settings: ClockSettings; timers?: ClockTimers };
+  /**
+   * How a `'table'` game's model seats play (table mode with `providerKind: 'ai'` only). People
+   * at a table wait on every bot move and no clock times a bot, so the table bounds each tactical
+   * call and the game's paid calls here instead of in the environment. Omitted elsewhere.
+   */
+  modelBots?: TableModelBots;
   /** Table frames for every seated player (`clockState`, `seatStatus`). Table mode only. */
   sendTable?(message: TableServerToClientMessage): void;
+}
+
+/**
+ * The limits a table puts on its model seats. `tacticalMode` is who picks each move (`bot`: the
+ * card-aware bot steered by the strategist's plan; `model`: the tactician). A tactical call gets
+ * `tacticianTimeoutMs` and no retry before the heuristic bot answers it, and once the game has
+ * made `maxModelCalls` network attempts every bot seat plays as the heuristic bot for the rest of
+ * the game.
+ */
+export interface TableModelBots {
+  tacticalMode: 'bot' | 'model';
+  tacticianTimeoutMs: number;
+  maxModelCalls: number;
 }
 
 /** Free-text deal readings (ADR 0035 phase 4) one game may ask for: each is a paid call. */
@@ -297,6 +317,8 @@ export class MatchSession {
   private draftLogger: AiCallLogger | null = null;
   /** Free-text readings asked for this game, and whether one is running: each is a paid call. */
   private draftsUsed = 0;
+  /** Network attempts the model seats have made this game (counted for `modelBots` only). */
+  private modelCalls = 0;
   private draftInFlight = false;
   private debugFlags: DebugFlags = { ...DEFAULT_DEBUG_FLAGS };
   private readonly gameMode: GameMode;
@@ -426,6 +448,9 @@ export class MatchSession {
         : null;
     if (opts.providerKind === 'ai' && opts.ai === undefined) {
       throw new Error('A session with model seats needs the AI services (`sessionAi`).');
+    }
+    if (opts.modelBots !== undefined && (this.gameMode !== 'table' || opts.providerKind !== 'ai')) {
+      throw new Error('modelBots apply to a table game whose bots are model seats');
     }
     this.logger =
       opts.providerKind === 'ai'
@@ -617,7 +642,7 @@ export class MatchSession {
         this.reportAiCost();
       },
       onTurnBoundary: (turn, activePlayer) => {
-        if (this.opts.providerKind === 'ai') {
+        if (this.opts.providerKind === 'ai' && !this.modelCallsSpent()) {
           this.ensureAiCoordinator().prefetch(this.opts.gameId, turn, activePlayer);
         }
       },
@@ -1613,7 +1638,7 @@ export class MatchSession {
       this.aiDraftClient = null;
       queue = { enqueue: (fn) => fn() };
     } else {
-      const config = (this.aiConfig ??= ai.loadAiConfig());
+      const config = (this.aiConfig ??= this.loadAiConfig());
       if (this.aiDraftClient === undefined) {
         this.aiDraftClient =
           config.apiKey === ''
@@ -2186,7 +2211,7 @@ export class MatchSession {
         return assertNever(this.gameMode, 'reflection seats');
     }
     if (this.opts.providerKind !== 'ai') return [];
-    const config = (this.aiConfig ??= this.requireAi().loadAiConfig());
+    const config = (this.aiConfig ??= this.loadAiConfig());
     if (!(this.opts.reflectionEnabled ?? config.reflectionEnabled)) return [];
     return this.opts.seats.map((seat) => seat.seat).filter((seat) => !this.humanSeats.has(seat));
   }
@@ -2397,12 +2422,15 @@ export class MatchSession {
     const inner: AsyncDecisionProvider =
       this.opts.providerKind !== 'ai'
         ? new AsyncAdapter(heuristic())
-        : table === null
-          ? this.buildAiProvider()
-          : withDiplomacyAsync(
-              table,
-              this.buildAiProvider(() => table.playFor(playerId)),
-            );
+        : this.cappedModelSeat(
+            table === null
+              ? this.buildAiProvider()
+              : withDiplomacyAsync(
+                  table,
+                  this.buildAiProvider(() => table.playFor(playerId)),
+                ),
+            heuristic,
+          );
     const pacedProvider = this.pacedBot(inner);
 
     // Bots retain an explicit decline of a sacrifice-style optional activation across turns in
@@ -2411,6 +2439,64 @@ export class MatchSession {
 
     this.providers.set(playerId, provider);
     return provider;
+  }
+
+  /**
+   * A model seat under the table's call cap: once the game's model calls are spent, the seat is
+   * the heuristic bot (built on first use) for the rest of the game. Without `modelBots`, the
+   * model seat unchanged.
+   */
+  private cappedModelSeat(
+    model: AsyncDecisionProvider,
+    heuristic: () => DecisionProvider,
+  ): AsyncDecisionProvider {
+    if (this.opts.modelBots === undefined) return model;
+    let bot: AsyncDecisionProvider | null = null;
+    return {
+      decide: (request) => {
+        if (!this.modelCallsSpent()) return model.decide(request);
+        bot ??= new AsyncAdapter(heuristic());
+        return bot.decide(request);
+      },
+    };
+  }
+
+  /** Whether a table's model seats have used up the game's calls. Never true without a cap. */
+  private modelCallsSpent(): boolean {
+    const limits = this.opts.modelBots;
+    return limits !== undefined && this.modelCalls >= limits.maxModelCalls;
+  }
+
+  /** `observer`, counting each attempt toward the table's call cap first. */
+  private countedObserver(observer: AiAttemptObserver | undefined): AiAttemptObserver | undefined {
+    if (this.opts.modelBots === undefined) return observer;
+    return (attempt) => {
+      this.modelCalls += 1;
+      return observer?.(attempt);
+    };
+  }
+
+  /**
+   * This process's AI configuration, with a table's limits on top: the tactical mode, and a
+   * tactician that gets one bounded attempt before the heuristic bot answers.
+   */
+  private loadAiConfig(): AiConfig {
+    const config = this.requireAi().loadAiConfig();
+    const limits = this.opts.modelBots;
+    if (limits === undefined) return config;
+    return {
+      ...config,
+      tacticalMode: limits.tacticalMode,
+      // A table never asks the model from bot mode: every escalation would be a wait at the table.
+      ...(limits.tacticalMode === 'bot' && { botEscalation: [] }),
+      // Reflections are a tester feature; a table has nowhere to show them.
+      reflectionEnabled: false,
+      tactician: {
+        ...config.tactician,
+        requestTimeoutMs: Math.min(config.tactician.requestTimeoutMs, limits.tacticianTimeoutMs),
+        maxRetries: 0,
+      },
+    };
   }
 
   private buildAiProvider(diplomacy?: () => DiplomacyPlay): AsyncDecisionProvider {
@@ -2461,13 +2547,15 @@ export class MatchSession {
 
   private ensureAiCoordinator(): StrategyCoordinator {
     const ai = this.requireAi();
-    const config = (this.aiConfig ??= ai.loadAiConfig());
+    const config = (this.aiConfig ??= this.loadAiConfig());
     this.aiStrategistClient ??= new ai.OpenAiCompatibleClient(
       ai.configForRole(config, 'strategist'),
     );
     this.aiTacticianClient ??= new ai.OpenAiCompatibleClient(ai.configForRole(config, 'tactician'));
-    this.aiStrategistClient.setAttemptObserver(this.logger?.attemptObserver());
-    this.aiTacticianClient.setAttemptObserver(this.logger?.attemptObserver());
+    this.aiStrategistClient.setAttemptObserver(
+      this.countedObserver(this.logger?.attemptObserver()),
+    );
+    this.aiTacticianClient.setAttemptObserver(this.countedObserver(this.logger?.attemptObserver()));
     if (this.aiJev === undefined) {
       this.aiJev =
         ai.createConfiguredJevPolicy(

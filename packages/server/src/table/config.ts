@@ -18,6 +18,7 @@
 
 import { isAbsolute, relative, resolve } from 'node:path';
 import type { TableClockMode } from '@mtg/shared';
+import { loadAiConfig } from '../ai/config';
 
 export const DEFAULT_TABLE_PORT = 3002;
 export const DEFAULT_TABLE_HOST = '127.0.0.1';
@@ -72,6 +73,11 @@ export interface TableConfig {
   hostSecret: string | null;
   /** Development mode only: the engine's events per step (`TABLE_MAX_STEP_WORK`), to force a halt. */
   maxStepWork: number | null;
+  /**
+   * Whether hosts may give bot seats to Claude: on when the AI configuration finds a key, unless
+   * `TABLE_CLAUDE_BOTS=off`.
+   */
+  claudeBots: boolean;
 }
 
 export type TableConfigErrorCode =
@@ -257,6 +263,12 @@ export function loadTableConfig(
     }
   }
 
+  const claudeSetting = setting(env, 'TABLE_CLAUDE_BOTS') ?? 'auto';
+  if (claudeSetting !== 'auto' && claudeSetting !== 'off') {
+    return fail('badValue', 'TABLE_CLAUDE_BOTS must be auto or off.', 'TABLE_CLAUDE_BOTS');
+  }
+  const claudeBots = claudeSetting === 'auto' && hasAiKey(env);
+
   const maxSetting = setting(env, 'TABLE_MAX_TABLES');
   let maxTables = DEFAULT_MAX_TABLES;
   if (maxSetting !== undefined) {
@@ -342,8 +354,18 @@ export function loadTableConfig(
       clockScale,
       hostSecret,
       maxStepWork,
+      claudeBots,
     },
   };
+}
+
+/** Whether this environment's AI configuration has a key. A bad AI setting counts as none. */
+function hasAiKey(env: Readonly<Record<string, string | undefined>>): boolean {
+  try {
+    return loadAiConfig({ ...env }).apiKey !== '';
+  } catch {
+    return false;
+  }
 }
 
 /** Settings only development mode accepts. */

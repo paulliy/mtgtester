@@ -27,6 +27,8 @@ export interface TableRegistryOptions {
   throttle?: AttemptThrottle;
   insecureLan?: boolean;
   clock?: TableClockMode | null;
+  /** Whether hosts may give bot seats to Claude. */
+  claudeBots?: boolean;
   limits?: Partial<TableLimits>;
 }
 
@@ -89,6 +91,7 @@ export class TableRegistry {
       ...(this.options.insecureLan === undefined ? {} : { insecureLan: this.options.insecureLan }),
       ...(this.options.clock === undefined ? {} : { clock: this.options.clock }),
       ...(this.options.limits === undefined ? {} : { limits: this.options.limits }),
+      ...(this.options.claudeBots === true && { claudeBots: true }),
     });
     this.tables.set(table.id, table);
     return {

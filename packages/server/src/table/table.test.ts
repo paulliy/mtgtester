@@ -775,6 +775,42 @@ describe('hostStart', () => {
   });
 });
 
+describe('who plays the bots', () => {
+  it('starts with the built-in bot and refuses Claude where the server offers none', () => {
+    const { h, host, alice } = readyTable();
+    expect(stateFor(h, host)).toMatchObject({ bots: 'builtin', claudeBots: false });
+    expect(h.table.hostSetBots(host, { bots: 'claude' })).toMatchObject({
+      ok: false,
+      reason: 'claudeUnavailable',
+    });
+    expect(h.table.hostSetBots(alice, { bots: 'builtin' })).toMatchObject({
+      ok: false,
+      reason: 'notHost',
+    });
+    const started = startEffects(record(h, h.table.hostStart(host)).effects);
+    expect(started.map((attempt) => attempt.bots)).toEqual(['builtin']);
+  });
+
+  it('lets the host give the bots to Claude, shows every seat, and starts with it', () => {
+    const h = setup({ claudeBots: true });
+    const host = hostConn(h);
+    const alice = conn();
+    seatPlayer(h, host, alice, 'Alice', 'P1');
+    for (const seat of ['P2', 'P3', 'P4'] as const) {
+      record(h, h.table.hostSetSeat(host, { seat, controller: 'bot' }));
+    }
+    record(h, h.table.hostSetBots(host, { bots: 'claude' }));
+    expect(stateFor(h, alice)).toMatchObject({ bots: 'claude', claudeBots: true });
+    const started = startEffects(record(h, h.table.hostStart(host)).effects);
+    expect(started.map((attempt) => attempt.bots)).toEqual(['claude']);
+    // The choice is fixed once the game starts.
+    expect(h.table.hostSetBots(host, { bots: 'builtin' })).toMatchObject({
+      ok: false,
+      reason: 'wrongPhase',
+    });
+  });
+});
+
 describe('refusals outside open', () => {
   it.each(['starting', 'playing', 'finished'] as const)(
     'refuses lobby actions while %s',

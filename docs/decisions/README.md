@@ -58,7 +58,7 @@ To add an ADR, take the next unused number, put a `Status:` line in the form abo
 | [0028](0028-ai-counterfactual-routing-cache-and-promotion.md)  | Counterfactuals, routing, cache evidence, and promotion                                           | Accepted (2026-09-21)  | 2026-09-21 | —                            |
 | [0029](0029-player-smart-yield.md)                             | Player smart yield                                                                                | Accepted (2026-10-06)  | 2026-10-06 | —                            |
 | [0030](0030-manual-mana-activation.md)                         | Manual mana activation                                                                            | Accepted (2026-10-23)  | 2026-10-23 | 0031 (amends)                |
-| [0031](0031-multiplayer-tables.md)                             | Multiplayer tables                                                                                | Accepted (2026-10-29)  | 2026-10-27 | 0053 (amends)                |
+| [0031](0031-multiplayer-tables.md)                             | Multiplayer tables                                                                                | Accepted (2026-10-29)  | 2026-10-27 | 0053 (amends), 0055 (amends) |
 | [0032](0032-server-computed-presentation.md)                   | Server-computed presentation                                                                      | Accepted (2026-10-29)  | 2026-10-27 | —                            |
 | [0033](0033-forge-informed-card-authoring.md)                  | Faster card authoring, informed by Forge                                                          | Accepted (2026-10-29)  | 2026-10-27 | —                            |
 | [0034](0034-fail-loud-execution-and-strict-tests.md)           | Fail loud in card execution and in the tests that prove it                                        | Accepted (2026-10-29)  | 2026-10-27 | 0036 (amends)                |
@@ -82,5 +82,6 @@ To add an ADR, take the next unused number, put a `Status:` line in the form abo
 | [0052](0052-decktank-visual-identity.md)                       | Decktank visual identity                                                                          | Accepted (2026-11-22)  | 2026-11-22 | 0053 (amends), 0054 (amends) |
 | [0053](0053-single-player-in-the-browser.md)                   | Single player runs in the browser                                                                 | Accepted (2026-11-23)  | 2026-11-23 | —                            |
 | [0054](0054-import-report-and-unmodeled-card-names.md)         | Import report and the unmodeled card names a preview sends                                        | Accepted (2026-11-23)  | 2026-11-23 | —                            |
+| [0055](0055-claude-bots-at-tables.md)                          | Claude bots at multiplayer tables                                                                 | Proposed (2026-11-26)  | 2026-11-26 | —                            |
 
 <!-- adr-index:end -->

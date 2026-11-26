@@ -15,12 +15,19 @@ import type {
   ServerToClientMessage,
 } from '@mtg/shared';
 import { RandomDecisionProvider } from '@mtg/engine';
-import { DEFAULT_AI_CONFIG, StrategyCoordinator, type AiClient, type AiConfig } from '../ai';
+import {
+  DEFAULT_AI_CONFIG,
+  StrategyCoordinator,
+  type AiAttemptObserver,
+  type AiClient,
+  type AiConfig,
+  type AiNetworkAttempt,
+} from '../ai';
 import type { GameStore } from '../db';
 import { GameRecorder, type SqliteLike } from '../db/games';
 import type { ReplayIdentity } from './replay-config';
-import { sessionAi } from './session-ai';
-import { MatchSession } from './session';
+import { sessionAi, type SessionAi } from './session-ai';
+import { MatchSession, type TableModelBots } from './session';
 import type { SeatSetup } from './setup';
 import { tablePolicy, testerPolicy } from './disclosure';
 
@@ -109,6 +116,8 @@ function table(
     rng?: 'legacy' | 'chacha20';
     rngKey?: string;
     engineLimits?: { maxStepWork: number; maxObjects: number };
+    ai?: SessionAi;
+    modelBots?: TableModelBots;
   } = {},
 ): Table {
   const pub: ServerToClientMessage[] = [];
@@ -122,7 +131,8 @@ function table(
     ...(options.engineLimits !== undefined ? { engineLimits: options.engineLimits } : {}),
     seats: seats(),
     providerKind: options.providerKind ?? 'random',
-    ...(options.providerKind === 'ai' && { ai: sessionAi }),
+    ...(options.providerKind === 'ai' && { ai: options.ai ?? sessionAi }),
+    ...(options.modelBots !== undefined && { modelBots: options.modelBots }),
     gameMode: 'table',
     seatControllers: {
       P1: 'human',
@@ -396,6 +406,97 @@ describe('MatchSession - a table with two human seats', () => {
     expect(requestDecision).toHaveBeenCalledTimes(1);
     coordinator.cancel();
     t.session.abandon();
+  });
+});
+
+/**
+ * Model services whose every client is offline: each call is reported to its attempt observer,
+ * as the real client does, and then fails, so each decision falls back to the heuristic bot.
+ */
+function offlineAi(base: Partial<AiConfig> = {}) {
+  const clients: Array<{ config: AiConfig; calls: number }> = [];
+  class OfflineClient {
+    readonly activeModel = 'offline';
+    private observer: AiAttemptObserver | undefined;
+    private readonly record: { config: AiConfig; calls: number };
+    constructor(config: AiConfig) {
+      this.record = { config, calls: 0 };
+      clients.push(this.record);
+    }
+    setAttemptObserver(observer: AiAttemptObserver | undefined): void {
+      this.observer = observer;
+    }
+    async requestDecision(): Promise<never> {
+      this.record.calls += 1;
+      const now = new Date().toISOString();
+      await this.observer?.({
+        schemaVersion: 1,
+        logicalRequestId: 'offline',
+        attemptIndex: 0,
+        requestedModel: 'offline',
+        status: 'transport_error',
+        startedAt: now,
+        endedAt: now,
+        durationMs: 0,
+        messages: [],
+        effectiveConfig: {},
+        usage: { promptTokenSource: 'unknown', responseTokenSource: 'unknown' },
+      } as unknown as AiNetworkAttempt);
+      throw new Error('offline');
+    }
+  }
+  const ai: SessionAi = {
+    ...sessionAi,
+    loadAiConfig: () => ({ ...DEFAULT_AI_CONFIG, apiKey: 'test-key', ...base }),
+    createConfiguredJevPolicy: () => null,
+    OpenAiCompatibleClient: OfflineClient as unknown as SessionAi['OpenAiCompatibleClient'],
+  };
+  const calls = (): number => clients.reduce((sum, client) => sum + client.calls, 0);
+  return { ai, clients, calls };
+}
+
+describe('MatchSession - Claude bots at a table', () => {
+  it('bounds the tactician and asks it nothing when the bot makes the moves', async () => {
+    const offline = offlineAi({ tacticalMode: 'model' });
+    const t = table({
+      providerKind: 'ai',
+      ai: offline.ai,
+      modelBots: { tacticalMode: 'bot', tacticianTimeoutMs: 8_000, maxModelCalls: 1_000 },
+    });
+    await playScripted(t);
+
+    expect(t.pub.some((m) => m.type === 'computeHalted' || m.type === 'gameOver')).toBe(true);
+    const tactician = offline.clients.find(
+      (client) => client.config.models.join() === DEFAULT_AI_CONFIG.tactician.models.join(),
+    );
+    expect(tactician?.config.requestTimeoutMs).toBe(8_000);
+    expect(tactician?.config.maxRetries).toBe(0);
+    expect(tactician?.calls).toBe(0);
+    // The strategist still plans: the calls left are its own.
+    expect(offline.calls()).toBeGreaterThan(0);
+  }, 30_000);
+
+  it('plays the rest of the game as the built-in bot once the call cap is spent', async () => {
+    const offline = offlineAi();
+    const t = table({
+      providerKind: 'ai',
+      ai: offline.ai,
+      modelBots: { tacticalMode: 'model', tacticianTimeoutMs: 8_000, maxModelCalls: 3 },
+    });
+    await playScripted(t);
+
+    expect(t.pub.some((m) => m.type === 'computeHalted' || m.type === 'gameOver')).toBe(true);
+    // A call already in flight when the cap is reached may still finish; nothing starts after.
+    expect(offline.calls()).toBeGreaterThanOrEqual(3);
+    expect(offline.calls()).toBeLessThanOrEqual(3 + DEFAULT_AI_CONFIG.strategistConcurrency + 1);
+  }, 30_000);
+
+  it('refuses model-seat limits outside a table of model seats', () => {
+    expect(() =>
+      table({
+        modelBots: { tacticalMode: 'bot', tacticianTimeoutMs: 8_000, maxModelCalls: 10 },
+      }),
+    ).toThrow(/modelBots/);
   });
 });
 

@@ -153,6 +153,7 @@ function makeRig(options: RigOptions = {}) {
       options.buildConfig ??
       ((attempt) => ({
         tableId: attempt.tableId,
+        bots: attempt.bots,
         attemptId: attempt.attemptId,
         gameId: 'game-1',
         seed: 'label',

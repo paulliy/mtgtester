@@ -398,7 +398,7 @@ benchmarks and debug views show every hand by design and must never be reachable
    - **Until M5 lands, `serve:table` refuses to start without `--dev`.** Production mode and its
      gates ship together, so no earlier build can be exposed.
 
-10. **LLM seats are not offered at tables yet.** Their cost reports leak, as decision 3 notes. No
+10. **LLM seats are not offered at tables yet.** _(Amended by [ADR 0055](0055-claude-bots-at-tables.md): a host may give a table's bots to Claude, with a per-game call cap.)_ Their cost reports leak, as decision 3 notes. No
     per-game call cap exists to bound a host's spending. And a table must answer within its clock.
     Table bot seats are heuristic or random. LLM seats at tables need their own design, with a
     per-table call cap. Post-game reflection (ADR 0022) is off for tables.

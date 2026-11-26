@@ -26,6 +26,7 @@ import type {
   PlayerId,
   ResolvedDeck,
   TableCapabilities,
+  TableBotPlay,
   TableClockMode,
   TableDeckProblem,
   TablePhase,
@@ -91,6 +92,8 @@ export interface TableOptions {
   throttle?: AttemptThrottle;
   insecureLan?: boolean;
   clock?: TableClockMode | null;
+  /** Whether the host may give the bot seats to Claude (the server has an AI key). */
+  claudeBots?: boolean;
   limits?: Partial<TableLimits>;
 }
 
@@ -113,6 +116,8 @@ export interface StartAttempt {
   attemptId: string;
   tableId: string;
   seats: StartAttemptSeat[];
+  /** Who plays the bot seats. */
+  bots: TableBotPlay;
 }
 
 export type TableEffect =
@@ -151,7 +156,8 @@ export type Refusal =
   | 'noPlayer'
   | 'cannotStart'
   | 'staleAttempt'
-  | 'alreadyAbandoning';
+  | 'alreadyAbandoning'
+  | 'claudeUnavailable';
 
 export type TableResult<Extra extends object = object> =
   | ({ ok: true; effects: TableEffect[] } & Extra)
@@ -222,6 +228,8 @@ export class Table {
   private readonly throttle: AttemptThrottle;
   private readonly insecureLan: boolean;
   private readonly clock: TableClockMode | null;
+  private readonly claudeBots: boolean;
+  private bots: TableBotPlay = 'builtin';
   private readonly limits: TableLimits;
 
   private phase: TablePhase = 'open';
@@ -244,6 +252,7 @@ export class Table {
     this.throttle = options.throttle ?? new AttemptThrottle({ now: this.now });
     this.insecureLan = options.insecureLan ?? false;
     this.clock = options.clock ?? null;
+    this.claudeBots = options.claudeBots ?? false;
     this.limits = { ...DEFAULT_TABLE_LIMITS, ...options.limits };
     this.emptySince = this.now();
     for (const seat of PLAYER_SEAT_IDS) {
@@ -536,6 +545,15 @@ export class Table {
     return ok(this.broadcastState());
   }
 
+  /** Who plays every bot seat. `claude` only when this server offers it. */
+  hostSetBots(conn: Connection, payload: { bots: TableBotPlay }): TableResult {
+    const gate = this.hostGate(conn);
+    if (gate !== null) return gate;
+    if (payload.bots === 'claude' && !this.claudeBots) return refuse('claudeUnavailable');
+    this.bots = payload.bots;
+    return ok(this.broadcastState());
+  }
+
   /** Removes the seat's player: token revoked, claims dropped, socket told and closed. */
   hostKick(conn: Connection, payload: { seat: PlayerId }): TableResult {
     const gate = this.hostGate(conn);
@@ -595,7 +613,7 @@ export class Table {
     this.phase = 'starting';
     return ok(
       [
-        { type: 'startGame', attempt: { attemptId, tableId: this.id, seats } },
+        { type: 'startGame', attempt: { attemptId, tableId: this.id, seats, bots: this.bots } },
         ...this.broadcastState(),
       ],
       { attemptId },
@@ -897,6 +915,8 @@ export class Table {
       startBlockers: blockers,
       insecureLan: this.insecureLan,
       clock: this.clock,
+      bots: this.bots,
+      claudeBots: this.claudeBots,
       you: {
         displayName: conn.displayName,
         seat: conn.seat,

@@ -20,7 +20,7 @@ import { isPlayerSeatId } from './protocol';
  * Bump when a table message changes shape. A client that sends another version gets
  * `protocolMismatch` and nothing else.
  */
-export const PROTOCOL_VERSION = 1;
+export const PROTOCOL_VERSION = 2;
 
 /** Largest accepted plaintext decklist, in UTF-16 code units (64 KiB of ASCII). */
 export const TABLE_MAX_DECKLIST_CHARS = 65_536;
@@ -46,6 +46,12 @@ export type TableSeatController = 'open' | 'bot' | 'human';
 export type HostSeatController = 'bot' | 'open';
 
 export type TableClockMode = 'off' | 'relaxed' | 'standard';
+
+/**
+ * Who plays a table's bot seats: the built-in bot, or Claude (the server's model seats, offered
+ * only when the server has an AI key). One choice for every bot seat at the table.
+ */
+export type TableBotPlay = 'builtin' | 'claude';
 
 export type TableDeckProblemCode = ValidationCode | 'parse' | 'unresolved' | 'tooLarge';
 
@@ -80,6 +86,7 @@ export const TABLE_CLIENT_TO_SERVER_TYPES = [
   'hostApprove',
   'hostDeny',
   'hostSetSeat',
+  'hostSetBots',
   'hostKick',
   'hostRotateInvite',
   'hostStart',
@@ -111,6 +118,9 @@ export interface HostSetSeatPayload {
   seat: PlayerId;
   controller: HostSeatController;
 }
+export interface HostSetBotsPayload {
+  bots: TableBotPlay;
+}
 export interface HostKickPayload {
   seat: PlayerId;
 }
@@ -132,6 +142,7 @@ export type TableClientToServerMessage =
   | { type: 'hostApprove'; payload: ClaimIdPayload }
   | { type: 'hostDeny'; payload: ClaimIdPayload }
   | { type: 'hostSetSeat'; payload: HostSetSeatPayload }
+  | { type: 'hostSetBots'; payload: HostSetBotsPayload }
   | { type: 'hostKick'; payload: HostKickPayload }
   | { type: 'hostRotateInvite'; payload: EmptyPayload }
   | { type: 'hostStart'; payload: EmptyPayload }
@@ -205,6 +216,10 @@ export interface TableStatePayload {
   insecureLan: boolean;
   /** `null` until clocks exist (M4). */
   clock: TableClockMode | null;
+  /** Who plays the bot seats. */
+  bots: TableBotPlay;
+  /** Whether this server can offer `claude` (it has an AI key). */
+  claudeBots: boolean;
   you: TableYouView;
 }
 
@@ -427,6 +442,12 @@ export function parseTableClientMessage(value: unknown): TableParseResult {
       if (!isSeat(payload['seat']) || (controller !== 'bot' && controller !== 'open'))
         return fail('invalidPayload');
       return ok({ type: 'hostSetSeat', payload: { seat: payload['seat'], controller } });
+    }
+    case 'hostSetBots': {
+      if (unknownField(['bots'])) return fail('unknownField');
+      const bots = payload['bots'];
+      if (bots !== 'builtin' && bots !== 'claude') return fail('invalidPayload');
+      return ok({ type: 'hostSetBots', payload: { bots } });
     }
     case 'hostKick': {
       if (unknownField(['seat'])) return fail('unknownField');

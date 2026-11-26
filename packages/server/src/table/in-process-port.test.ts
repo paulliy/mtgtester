@@ -98,6 +98,7 @@ function configOf(over: Partial<TableSessionConfig> = {}): TableSessionConfig {
     attemptId: 'attempt-1',
     gameId: 'game-1',
     seed: 'public-label',
+    bots: 'builtin',
     rngKey: KNOWN_KEY,
     seats: seatsOf(),
     ...TABLE_ENGINE_LIMITS,
@@ -287,6 +288,20 @@ describe('InProcessSessionPort - setup', () => {
     ]);
   });
 
+  it('fails a Claude-bot start on a worker without the model services', async () => {
+    const h = harness();
+    await h.port.start(configOf({ bots: 'claude' }));
+    await h.done;
+    expect(h.outputs).toEqual([
+      {
+        type: 'failed',
+        generation: GENERATION,
+        reason: 'setupFailed',
+        detail: 'This server cannot run Claude bots.',
+      },
+    ]);
+  });
+
   it('starts once', async () => {
     const h = harness({ answer: false });
     await h.port.start(configOf({ turnCap: 2 }));
@@ -441,6 +456,7 @@ describe('buildSessionConfig', () => {
   const attempt: StartAttempt = {
     attemptId: 'attempt-9',
     tableId: 'table-9',
+    bots: 'builtin',
     seats: [
       {
         seat: 'P1',

@@ -21,6 +21,7 @@ import type {
   PlayerId,
   ServerToClientMessage,
   SubmitPlayerActionPayload,
+  TableBotPlay,
   TableClockMode,
   TableDeckProblem,
   TableServerToClientMessage,
@@ -46,6 +47,8 @@ export interface TableSessionConfig {
   /** 32 bytes as 64 hex digits, for the `chacha20` generator. */
   rngKey: string;
   seats: TableSessionSeat[];
+  /** Who plays the bot seats: the heuristic bot, or the server's model seats. */
+  bots: TableBotPlay;
   /** The engine work budget (`match/engine-limits.ts`), stored with the game. */
   maxStepWork: number;
   maxObjects: number;
