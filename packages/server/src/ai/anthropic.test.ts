@@ -70,8 +70,25 @@ describe('Anthropic provider config', () => {
     expect(config.apiFormat).toBe('anthropic');
     expect(config.baseUrl).toBe('https://api.anthropic.com');
     expect(config.apiKey).toBe('sk-ant-x');
-    expect(config.strategist.models).toEqual(['claude-opus-5-5', 'claude-sonnet-5-5']);
-    expect(config.tactician.models).toEqual(['claude-sonnet-5-5']);
+    expect(config.strategist.models).toEqual(['claude-sonnet-5-5']);
+    expect(config.tactician.models).toEqual(['claude-haiku-5-5', 'claude-sonnet-5-5']);
+  });
+
+  it('turns the stable-prefix cache layout on for Claude only, and lets the env turn it off', () => {
+    expect(
+      loadAiConfig({ AI_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: 'k' })
+        .providerPromptCacheLayoutEnabled,
+    ).toBe(true);
+    expect(
+      loadAiConfig({
+        AI_PROVIDER: 'anthropic',
+        ANTHROPIC_API_KEY: 'k',
+        AI_PROVIDER_PROMPT_CACHE_LAYOUT_ENABLED: 'false',
+      }).providerPromptCacheLayoutEnabled,
+    ).toBe(false);
+    expect(loadAiConfig({ AI_PROVIDER: 'openrouter' }).providerPromptCacheLayoutEnabled).toBe(
+      false,
+    );
   });
 
   it('is auto-detected from ANTHROPIC_API_KEY alone, but never ahead of another key', () => {
@@ -122,6 +139,12 @@ describe('anthropicRequest', () => {
     expect(body.messages).toEqual([{ role: 'user', content: [{ type: 'text', text: 'state' }] }]);
     expect(body).not.toHaveProperty('temperature');
     expect(body.fallbacks).toBe('default');
+  });
+
+  it('sends no server-side fallback to Haiku, which has none', () => {
+    const body = anthropicRequest(anthropicConfig, 'claude-haiku-5-5', prompt, 256);
+    expect(body).not.toHaveProperty('fallbacks');
+    expect(body).not.toHaveProperty('betas');
   });
 
   it('maps reasoning off to low effort and still leaves room to think', () => {
@@ -180,7 +203,13 @@ describe('OpenAiCompatibleClient over the Messages API', () => {
     const fetchImpl = vi.fn().mockResolvedValue(message('{"actionId":0,"note":"pass"}'));
     const attempts: AiNetworkAttempt[] = [];
     const client = new OpenAiCompatibleClient(
-      configForRole(anthropicConfig, 'tactician'),
+      configForRole(
+        {
+          ...anthropicConfig,
+          tactician: { ...DEFAULT_AI_CONFIG.tactician, models: ['claude-sonnet-5-5'] },
+        },
+        'tactician',
+      ),
       fetchImpl as unknown as typeof fetch,
       async () => {},
       (attempt) => {
@@ -203,7 +232,7 @@ describe('OpenAiCompatibleClient over the Messages API', () => {
     expect(headers.get('anthropic-version')).not.toBeNull();
     expect(headers.get('anthropic-beta')).toContain('server-side-fallback-2026-07-01');
     const sent = JSON.parse(String(init.body)) as Record<string, unknown>;
-    expect(sent['model']).toBe(DEFAULT_AI_CONFIG.tactician.models[0] ?? '');
+    expect(sent['model']).toBe('claude-sonnet-5-5');
     expect(sent).not.toHaveProperty('response_format');
     expect(attempts[0]?.status).toBe('accepted');
     expect(attempts[0]?.effectiveConfig['apiFormat']).toBe('anthropic');
