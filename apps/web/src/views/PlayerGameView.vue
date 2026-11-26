@@ -889,6 +889,24 @@ watch(combatLane, (model) => {
   }
   if (model.kind !== 'attackers') lastCombat.value = { turn: board.turnNumber, model };
 });
+/** Life totals as combat left them, so later life changes this turn aren't put down to combat. */
+const combatEndLife = ref<{ turn: number; life: Map<string, number> } | null>(null);
+watch(
+  () => {
+    const board = state.value;
+    if (board === null || board.phase !== 'combat') return null;
+    return `${board.turnNumber}|${board.seats.map((seat) => `${seat.seat}:${seat.life}`).join(',')}`;
+  },
+  (key) => {
+    const board = state.value;
+    if (key === null || board === null) return;
+    combatEndLife.value = {
+      turn: board.turnNumber,
+      life: new Map(board.seats.map((seat) => [seat.seat, seat.life])),
+    };
+  },
+  { immediate: true },
+);
 /** The line the lane folds into for the rest of the turn once combat is over. */
 const combatRecapLine = computed(() => {
   const board = state.value;
@@ -897,11 +915,16 @@ const combatRecapLine = computed(() => {
   if (board === null || last === null || start === null) return null;
   if (board.phase === 'combat' || last.turn !== board.turnNumber) return null;
   if (board.phase !== 'postcombatMain' && board.phase !== 'ending') return null;
+  const end = combatEndLife.value?.turn === board.turnNumber ? combatEndLife.value.life : null;
   return combatRecap(
     last.model,
     start.attacker,
     start.life,
-    board.seats.map((seat) => ({ seat: seat.seat, label: seat.label, life: seat.life })),
+    board.seats.map((seat) => ({
+      seat: seat.seat,
+      label: seat.label,
+      life: end?.get(seat.seat) ?? seat.life,
+    })),
     board.viewerSeat,
   );
 });

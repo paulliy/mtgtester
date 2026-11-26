@@ -404,6 +404,14 @@ export function buildCombatLane(input: LaneInput): LaneModel | null {
           .filter((p): p is LanePermanent => p !== undefined)
       : [];
 
+  /**
+   * The creatures still blocking an attacker. `blockedBy` keeps the history; one that left
+   * combat (regenerated, say) is still on the battlefield but no longer blocking it.
+   */
+  const liveBlockersOf = (attacker: LanePermanent): LanePermanent[] =>
+    attacker.blockedBy
+      .map((id) => byId.get(id))
+      .filter((p): p is LanePermanent => p !== undefined && p.blocking === attacker.id);
   const declaredBlockedOf = (p: LanePermanent) => p.blockedBy.length > 0;
   const waitingOnOthers = (p: LanePermanent) =>
     plan?.kind === 'blockers' && !blockable.has(p.id) && !declaredBlockedOf(p);
@@ -431,12 +439,7 @@ export function buildCombatLane(input: LaneInput): LaneModel | null {
       groups.set(targetId, group);
     }
     const planned = plannedOn(attacker.id);
-    const blockers =
-      planned.length > 0
-        ? planned
-        : attacker.blockedBy
-            .map((id) => byId.get(id))
-            .filter((p): p is LanePermanent => p !== undefined);
+    const blockers = planned.length > 0 ? planned : liveBlockersOf(attacker);
     fighters.push(attacker, ...blockers);
     // While you block, another defender's attackers are still waiting on their own blocks.
     const othersBlocking = waitingOnOthers(attacker);
@@ -472,12 +475,7 @@ export function buildCombatLane(input: LaneInput): LaneModel | null {
       const blocked = blocksPending ? false : planned.length > 0 || attacker.blockedBy.length > 0;
       if (!blocked) damage += strikes(attacker, steps);
       else {
-        const blockers =
-          planned.length > 0
-            ? planned
-            : attacker.blockedBy
-                .map((id) => byId.get(id))
-                .filter((p): p is LanePermanent => p !== undefined);
+        const blockers = planned.length > 0 ? planned : liveBlockersOf(attacker);
         // The defender gains life from its lifelink blockers' damage, which isn't modelled here.
         if (blockers.some((b) => b.controller === group.seat && has(b, 'lifelink'))) unknown = true;
         const outcome = predictOutcome(attacker, blockers, '', steps, true, true);

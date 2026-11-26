@@ -306,6 +306,20 @@ describe('buildCombatLane', () => {
     ).toBe(38);
   });
 
+  it('stops counting a blocker that left combat but stayed on the battlefield', () => {
+    const wurm = creature('wurm', 'Lab Wurm', 'P2', 6, 6, {
+      keywords: ['trample'],
+      attacking: 'P1',
+      blockedBy: ['bear'],
+    });
+    const regenerated = creature('bear', 'Lab Bear', 'P1', 2, 2, { blocking: null });
+    const group = buildCombatLane(input({ priorityPlayer: 'P2', permanents: [wurm, regenerated] }))!
+      .groups[0]!;
+    expect(group.pairs[0]!.blockers).toEqual([]);
+    expect(group.pairs[0]!.outcome?.text).toBe('blocker gone, 6 tramples over');
+    expect(group.lifeAfter).toBe(34);
+  });
+
   it('reads declared blocks and puts an attacker on a planeswalker under the walker', () => {
     const jace = creature(
       'jace',
