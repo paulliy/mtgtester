@@ -172,6 +172,20 @@ describe('anthropicRequest', () => {
     expect(high.max_tokens).toBe(5000);
   });
 
+  it('turns thinking off on Haiku 5.5 when reasoning is off, and only there (ADR 0055)', () => {
+    const off = { ...anthropicConfig, reasoningEnabled: false, reasoningTokenHeadroom: 0 };
+    const haiku = anthropicRequest(off, 'claude-haiku-5-5', prompt, 256);
+    expect(haiku.thinking).toEqual({ type: 'disabled' });
+    expect(haiku.output_config).toEqual({ effort: 'low' });
+    expect(haiku.max_tokens).toBe(256);
+
+    // Opus 5.5 rejects a disabled `thinking` with a 400, so it never gets one.
+    expect(anthropicRequest(off, 'claude-opus-5-5', prompt, 256)).not.toHaveProperty('thinking');
+    // Reasoning on leaves thinking to the effort level on every model.
+    const on = { ...anthropicConfig, reasoningEnabled: true, reasoningEffort: 'medium' as const };
+    expect(anthropicRequest(on, 'claude-haiku-5-5', prompt, 256)).not.toHaveProperty('thinking');
+  });
+
   it('puts the breakpoint on the last stable-prefix message when the cache layout is on', () => {
     const layered: AiPrompt = {
       messages: [

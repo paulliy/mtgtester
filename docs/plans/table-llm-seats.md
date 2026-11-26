@@ -1,6 +1,6 @@
 # Plan: LLM seats at tables
 
-Status: Phase 1 in review (2026-11-26). Phase 0 done: ADR 0055 proposed with census and paid-game figures. Amends
+Status: Phase 2 in review (2026-11-26). Phases 0 and 1 done. Amends
 [ADR 0031](../decisions/0031-multiplayer-tables.md) decision 10 once accepted.
 
 ## Goal
@@ -133,29 +133,33 @@ Each phase is its own pull request. I stop after each one for your review.
    server refuses to enable model seats for a model with no price entry (ADR 0055 decision 5). The
    cap counts across all model seats at the table. A call is sent only
    if the running total is under the cap. Once the cap is reached, every model seat switches to
-   the heuristic bot for the rest of the game, with one public log line ("AI budget reached; bots
-   continue on built-in play"). No exception and no halt. The strategist is checked first, because
-   strategist calls are the large ones.
+   the heuristic bot for the rest of the game. No exception and no halt. The session reports the
+   stop through `tableAi.onBudgetStop`; the public log line ("AI budget reached; bots continue on
+   built-in play") and the host's message are wired in Phase 4 with the rest of the table UI.
+
+   Built: `ai/pricing.ts` (Haiku 5.5 only, from Anthropic's pricing page) and `ai/game-budget.ts`
+   (`GameAiBudget`, `limitedClient`). The wrapper refuses a call once the budget stops and charges
+   every physical attempt the client reports, including failed ones.
 
 4. **The key's own limit.** When the provider says the key is out of credit or over its limit
    (a billing or quota error, not an ordinary 429 rate limit), the table treats it the same as
    reaching the cap: the seats switch to the bot at once, rather than paying the deadline on every
    decision. One host-only message says so.
 
-5. **Thinking off and the early strategist.** For models that accept it (Haiku 5.5),
+5. **Thinking off, and the strategist wait.** For models that accept it (Haiku 5.5),
    `anthropicRequest` sends `thinking: {"type": "disabled"}` when a role's reasoning is off,
-   instead of effort `low` with thinking on (ADR 0055 decision 2). The table's model seats ask for
-   their turn plan when the seat before them starts its turn (or at its end step, whichever the
-   coordinator's prefetch can anchor), so the plan is usually ready when their turn begins. Check
-   with a stubbed slow strategist that a model seat's first decision does not wait the full call.
+   instead of effort `low` with thinking on (ADR 0055 decision 2). Starting the strategist earlier
+   turned out to be unnecessary for waiting: the paid games' turn-start pauses came from the duel
+   harness's shared queue. A session test with a strategist that never answers shows a model
+   seat's decisions go ahead without it (ADR 0055 decision 6).
 
 6. **No JEV, no reflection and no post-game call** at tables. The table's `AiConfig` is built in
    code from the Anthropic preset plus the table overrides, so a stray `AI_*` variable on the VM
    cannot turn these on.
 
 7. Tests with a stubbed client cover each case: a routine decision never reaches the client, a
-   slow client hits the deadline, a costly client hits the cap mid-game, and an out-of-credit error
-   switches every seat at once.
+   slow client hits the deadline, a costly client hits the cap mid-game (end to end, priced from
+   the tokens a stubbed Messages API reports), and an out-of-credit error stops the budget.
 
 ### Phase 3: wiring the table worker
 

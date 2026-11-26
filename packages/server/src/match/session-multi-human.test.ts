@@ -15,12 +15,18 @@ import type {
   ServerToClientMessage,
 } from '@mtg/shared';
 import { RandomDecisionProvider } from '@mtg/engine';
-import { DEFAULT_AI_CONFIG, StrategyCoordinator, type AiClient, type AiConfig } from '../ai';
+import {
+  DEFAULT_AI_CONFIG,
+  StrategyCoordinator,
+  tableAiConfig,
+  type AiClient,
+  type AiConfig,
+} from '../ai';
 import type { GameStore } from '../db';
 import { GameRecorder, type SqliteLike } from '../db/games';
 import type { ReplayIdentity } from './replay-config';
 import { sessionAi } from './session-ai';
-import { MatchSession } from './session';
+import { MatchSession, type MatchSessionOptions } from './session';
 import type { SeatSetup } from './setup';
 import { tablePolicy, testerPolicy } from './disclosure';
 
@@ -111,6 +117,7 @@ function table(
     engineLimits?: { maxStepWork: number; maxObjects: number };
     /** The two bot seats' controllers, when they differ (ADR 0055). */
     bots?: { P2: 'random' | 'ai'; P4: 'random' | 'ai' };
+    tableAi?: MatchSessionOptions['tableAi'];
   } = {},
 ): Table {
   const bots = options.bots ?? {
@@ -130,6 +137,7 @@ function table(
     seats: seats(),
     providerKind: options.providerKind ?? 'random',
     ...(anyModel && { ai: sessionAi }),
+    ...(options.tableAi !== undefined && { tableAi: options.tableAi }),
     gameMode: 'table',
     seatControllers: { P1: 'human', P2: bots.P2, P3: 'human', P4: bots.P4 },
     turnCap: options.turnCap ?? 6,
@@ -477,6 +485,103 @@ describe('MatchSession - a table that mixes a model seat with a heuristic bot (A
     coordinator.cancel();
     t.session.abandon();
   });
+
+  it('stops calling the model once the game reaches its spending cap, priced from tokens', async () => {
+    // Every Messages call is billed 100,000 input and 2,000 output tokens (about $0.011 on Haiku)
+    // and answers nothing usable, so each decision falls back to the bot after paying.
+    let calls = 0;
+    let callsAtStop: number | null = null;
+    vi.stubGlobal('fetch', async () => {
+      calls++;
+      return new Response(
+        JSON.stringify({
+          id: `msg_${calls}`,
+          type: 'message',
+          role: 'assistant',
+          model: 'claude-haiku-5-5',
+          content: [{ type: 'text', text: 'not a decision' }],
+          stop_reason: 'end_turn',
+          stop_sequence: null,
+          usage: { input_tokens: 100_000, output_tokens: 2_000 },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    });
+    const stops: Array<{ reason: string; spent: number }> = [];
+    const t = table({
+      bots: { P2: 'ai', P4: 'random' },
+      tableAi: {
+        config: { ...tableAiConfig('test-key'), maxRetries: 0 },
+        limits: { maxUsdPerGame: 0.03, tacticianDeadlineMs: 5_000, strategistDeadlineMs: 5_000 },
+        onBudgetStop: (reason, spent) => {
+          stops.push({ reason, spent });
+          callsAtStop = calls;
+        },
+      },
+    });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      await playScripted(t);
+    } finally {
+      warn.mockRestore();
+      vi.unstubAllGlobals();
+    }
+
+    expect(stops).toHaveLength(1);
+    expect(stops[0]?.reason).toBe('cap');
+    expect(stops[0]?.spent).toBeGreaterThanOrEqual(0.03);
+    // A call already in flight when the cap is crossed may land, but no new one starts after it.
+    expect(calls - (callsAtStop ?? 0)).toBeLessThanOrEqual(1);
+    expect(t.session.aiSpendUsd()).toBeGreaterThanOrEqual(0.03);
+    // The cap is about three calls' worth, so the game kept going on the bot well past it.
+    expect(t.pub.some((m) => m.type === 'gameOver' || m.type === 'computeHalted')).toBe(true);
+  }, 30_000);
+
+  it("answers a model seat's first decision without waiting for a slow strategist", async () => {
+    // The real session gives the strategist its own queue (unlike the paid-duel harness), so a
+    // turn plan still being written never holds up the tactician.
+    const t = table({ bots: { P2: 'ai', P4: 'random' } });
+    const tacticianAsked: number[] = [];
+    const started = Date.now();
+    const strategist = {
+      activeModel: 'slow-strategist',
+      requestDecision: (_p: unknown, _r: DecisionRequest, signal?: AbortSignal) =>
+        new Promise<never>((_resolve, reject) => {
+          signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        }),
+      setAttemptObserver: () => undefined,
+    } as unknown as AiClient;
+    const tactician = {
+      activeModel: 'fast-tactician',
+      requestDecision: () => {
+        tacticianAsked.push(Date.now() - started);
+        return Promise.reject(new Error('mock tactician unavailable'));
+      },
+      setAttemptObserver: () => undefined,
+    } as unknown as AiClient;
+    const internals = t.session as unknown as {
+      aiConfig: AiConfig;
+      aiStrategistClient: AiClient;
+      aiTacticianClient: AiClient;
+    };
+    internals.aiConfig = {
+      ...DEFAULT_AI_CONFIG,
+      apiKey: 'test-key',
+      tacticalMode: 'model',
+      strategistEnabled: true,
+    };
+    internals.aiStrategistClient = strategist;
+    internals.aiTacticianClient = tactician;
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      await playScripted(t);
+    } finally {
+      warn.mockRestore();
+    }
+    // The strategist never answers, yet the tactician was asked, and the game ran to its end.
+    expect(tacticianAsked.length).toBeGreaterThan(0);
+    expect(t.pub.some((m) => m.type === 'gameOver' || m.type === 'computeHalted')).toBe(true);
+  }, 30_000);
 
   it('refuses a table seat whose controller is not human, random or ai', () => {
     expect(

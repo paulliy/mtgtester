@@ -52,13 +52,17 @@ figures OpenRouter reported.
 | Cost, both model seats                         | $0.14                      | $0.55                      |
 | Tactician calls (per own turn)                 | 176 (12.6)                 | 623 (32.8)                 |
 | Decisions other than turn start: p50, p95, max | 0.9 s, 7.5 s, 14.3 s       | 1.9 s, 5.4 s, 18.5 s       |
-| Turn-start wait for the strategist (median)    | 16.2 s (14 waits)          | 14.6 s (31 waits)          |
+| Turn-start wait, duel harness only (median)    | 16.2 s (14 waits)          | 14.6 s (31 waits)          |
 | Winner                                         | P1 (bot-led)               | P4 (model-led)             |
 
 Three things follow. A seat costs roughly $0.07 to $0.28 a game on Haiku, so three model seats fit
-under $1 in both games, though B's rate is close to it on a longer game. The time a person waits is
-dominated by one strategist call at the start of each model seat's turn, not by the tactician. One
-game per setting says nothing about strength. A partial game with a Sonnet strategist (stopped at
+under $1 in both games, though B's rate is close to it on a longer game. The turn-start waits are an
+artifact of the duel harness, which puts the strategist and every tactician call on one queue that
+runs one request at a time (`cli/ai-mode-duel.ts:490-534`). A real session gives the strategist its
+own queue (`match/session.ts`, `aiStrategistQueue`), and a decision never waits for a turn plan
+(`guidanceFor` reads whatever has landed); a session test with a strategist that never answers
+confirms it. At a table, a person waits only for the tactician (0.9 s p50, 7.5 s p95 in game A).
+One game per setting says nothing about strength. A partial game with a Sonnet strategist (stopped at
 turn 15 when the models changed) had Haiku tactician decisions at 1.1 s p50 and 6.2 s p90.
 
 ## Decision
@@ -101,9 +105,13 @@ turn 15 when the models changed) had Haiku tactician decisions at 1.1 s p50 and 
 6. **Clock.** A tactician call gets a hard wall-clock deadline (15 s to start with, about twice the
    measured p95). Retries happen only inside it. When it passes, the heuristic fallback answers,
    recorded as `fallback`. The strategist call at turn start has its own deadline (30 s to start
-   with); when it passes, the seat plays that turn with its previous knobs or none. The
-   strategist call for a model seat starts before its turn begins (Paul, 2026-11-26), so people
-   do not sit through it: the turn-start wait was the longest pause in both paid games.
+   with); when it passes, the seat plays on without a plan for that turn. Paul asked for the
+   strategist to start earlier so people would not wait for it, but the wait was the duel
+   harness's shared queue, not the session (see the paid-games notes): at a table nobody waits for
+   the strategist. It already starts at the previous turn's last decision. Starting it a full turn
+   earlier would make the plan ready sooner, at the cost of planning from an older board and of a
+   per-seat plan slot in the coordinator; that is left out until play shows early decisions
+   suffer from the missing plan.
 7. **Randomness.** At a keyed table, the heuristic fallback inside a model seat's AI provider
    breaks ties on that seat's own bot stream (stream 1 + seat, ADR 0031 decision 4), not on
    `HeuristicRng(requestId)`. No heuristic bot reads that stream, because the seat is the model's,

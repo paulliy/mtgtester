@@ -82,8 +82,11 @@ export const JEV_CLOSE_CALL_INSTRUCTIONS =
 
 /** Optional seams for bot-led tactics, used by bot-bench's `bot-led` kind (ADR 0043). */
 export interface BotLedHooks {
-  /** Tie-break seed label for this seat's bot; defaults to `<gameId>-<seat>-bot`. */
-  botSeed?: string;
+  /**
+   * Tie-breaks for this seat's card-aware bot: a seed label (defaults to `<gameId>-<seat>-bot`), or
+   * a table seat's own keyed stream (ADR 0031 decision 4).
+   */
+  botSeed?: string | RandomSource;
   /**
    * Called once per decision the bot-led tactician was consulted on, with whether the model was
    * asked and the escalation reasons that fired.
@@ -203,6 +206,20 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
         bot.record(request, local);
       }
       return local;
+    }
+
+    // ADR 0055 decision 3: in model mode, routine decision types go to the card-aware bot rather
+    // than the tactician. The strategist still plans the turn; only these choices skip the model.
+    if (
+      this.config.tacticalMode === 'model' &&
+      this.config.botDecisionTypes.includes(request.decisionType)
+    ) {
+      const bot = this.botFor(request);
+      const answer = bot.decide(request);
+      bot.record(request, answer.response);
+      this.logLocal(request, answer.response, 'bot');
+      this.strategy.recordDecision(request, answer.response, 'bot');
+      return answer.response;
     }
 
     if (this.config.tacticalMode === 'bot') {

@@ -63,8 +63,9 @@ import type {
   AiCallLogger,
   AiClient,
   AiConfig,
+  BudgetStop,
+  GameAiBudget,
   JevPolicyBinding,
-  OpenAiCompatibleClient,
   ReflectionContext,
   RequestQueue,
   StrategyCoordinator,
@@ -156,6 +157,18 @@ export interface MatchSessionOptions {
    * `ai`. Without them reflections are off and a free-text deal draft gets the no-model answer.
    */
   ai?: SessionAi;
+  /**
+   * A table's model seats (ADR 0055): the AI configuration, built in code by `tableAiConfig`
+   * rather than read from the environment, and the per-game spending cap and call deadlines every
+   * model seat shares. Omitted, the configuration comes from the environment and nothing caps
+   * spending, as in the tester.
+   */
+  tableAi?: {
+    config: AiConfig;
+    limits: { maxUsdPerGame: number; tacticianDeadlineMs: number; strategistDeadlineMs: number };
+    /** Called once, when the game's budget stops: the cap was reached, or the key refused. */
+    onBudgetStop?: (reason: BudgetStop, spentUsd: number) => void;
+  };
   gameMode?: GameMode;
   /**
    * The game's random generator (ADR 0031 decision 4). Omitted is `'legacy'`, seeded from `seed`,
@@ -283,8 +296,10 @@ export class MatchSession {
   private running: Promise<void> | null = null;
   /** One client and one queue per session: the RPM ceiling is an account property, not a seat's. */
   private aiConfig: AiConfig | null = null;
-  private aiStrategistClient: OpenAiCompatibleClient | null = null;
-  private aiTacticianClient: OpenAiCompatibleClient | null = null;
+  private aiStrategistClient: AiClient | null = null;
+  private aiTacticianClient: AiClient | null = null;
+  /** A table game's shared spending cap (ADR 0055); null when nothing caps spending. */
+  private aiBudget: GameAiBudget | null = null;
   private aiQueue: RequestQueue | null = null;
   /** The strategist's own queue lane — see `AiConfig.strategistConcurrency`. */
   private aiStrategistQueue: RequestQueue | null = null;
@@ -1623,7 +1638,7 @@ export class MatchSession {
       this.aiDraftClient = null;
       queue = { enqueue: (fn) => fn() };
     } else {
-      const config = (this.aiConfig ??= ai.loadAiConfig());
+      const config = this.loadedAiConfig();
       if (this.aiDraftClient === undefined) {
         this.aiDraftClient =
           config.apiKey === ''
@@ -2196,7 +2211,7 @@ export class MatchSession {
         return assertNever(this.gameMode, 'reflection seats');
     }
     if (this.modelSeats.size === 0) return [];
-    const config = (this.aiConfig ??= this.requireAi().loadAiConfig());
+    const config = this.loadedAiConfig();
     if (!(this.opts.reflectionEnabled ?? config.reflectionEnabled)) return [];
     return this.opts.seats.map((seat) => seat.seat).filter((seat) => this.modelSeats.has(seat));
   }
@@ -2428,7 +2443,7 @@ export class MatchSession {
   ): AsyncDecisionProvider {
     const coordinator = this.ensureAiCoordinator();
     const config = this.aiConfig as AiConfig;
-    const tactician = this.aiTacticianClient as OpenAiCompatibleClient;
+    const tactician = this.aiTacticianClient as AiClient;
     const queue = this.aiQueue as RequestQueue;
     return new (this.requireAi().OpenAiDecisionProvider)(
       tactician,
@@ -2467,6 +2482,16 @@ export class MatchSession {
     }
   }
 
+  /** The AI configuration: a table's own, built in code, or else this process's environment. */
+  private loadedAiConfig(): AiConfig {
+    return (this.aiConfig ??= this.opts.tableAi?.config ?? this.requireAi().loadAiConfig());
+  }
+
+  /** What this game's model seats have spent, when a table budget tracks it; null otherwise. */
+  aiSpendUsd(): number | null {
+    return this.aiBudget?.spentUsd ?? null;
+  }
+
   /** The model-backed services; only reached on a path that needs a model. */
   private requireAi(): SessionAi {
     const ai = this.opts.ai;
@@ -2478,13 +2503,24 @@ export class MatchSession {
 
   private ensureAiCoordinator(): StrategyCoordinator {
     const ai = this.requireAi();
-    const config = (this.aiConfig ??= ai.loadAiConfig());
-    this.aiStrategistClient ??= new ai.OpenAiCompatibleClient(
-      ai.configForRole(config, 'strategist'),
+    const config = this.loadedAiConfig();
+    const tableAi = this.opts.tableAi;
+    if (tableAi !== undefined && this.aiBudget === null) {
+      this.aiBudget = new ai.GameAiBudget(tableAi.limits.maxUsdPerGame);
+      if (tableAi.onBudgetStop !== undefined) this.aiBudget.onStop = tableAi.onBudgetStop;
+    }
+    const limited = (client: AiClient, deadlineMs: number): AiClient =>
+      this.aiBudget === null ? client : ai.limitedClient(client, this.aiBudget, deadlineMs);
+    this.aiStrategistClient ??= limited(
+      new ai.OpenAiCompatibleClient(ai.configForRole(config, 'strategist')),
+      tableAi?.limits.strategistDeadlineMs ?? 0,
     );
-    this.aiTacticianClient ??= new ai.OpenAiCompatibleClient(ai.configForRole(config, 'tactician'));
-    this.aiStrategistClient.setAttemptObserver(this.logger?.attemptObserver());
-    this.aiTacticianClient.setAttemptObserver(this.logger?.attemptObserver());
+    this.aiTacticianClient ??= limited(
+      new ai.OpenAiCompatibleClient(ai.configForRole(config, 'tactician')),
+      tableAi?.limits.tacticianDeadlineMs ?? 0,
+    );
+    this.aiStrategistClient.setAttemptObserver?.(this.logger?.attemptObserver());
+    this.aiTacticianClient.setAttemptObserver?.(this.logger?.attemptObserver());
     if (this.aiJev === undefined) {
       this.aiJev =
         ai.createConfiguredJevPolicy(
