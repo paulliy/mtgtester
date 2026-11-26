@@ -1,6 +1,6 @@
 # Plan: LLM seats at tables
 
-Status: draft, awaiting answers to the open questions at the end. Amends
+Status: scoped (2026-11-26), ready for Phase 0. Amends
 [ADR 0031](../decisions/0031-multiplayer-tables.md) decision 10 once accepted.
 
 ## Goal
@@ -9,18 +9,28 @@ A table host can give an empty seat to a **model-driven bot** (the same `OpenAiD
 `StrategyCoordinator` stack the tester uses for "AI bots"), next to the existing built-in bot. Off
 unless the server operator turns it on and supplies a key.
 
-## Why ADR 0031 said no, and what the host secret does and does not fix
+## Decisions (Paul, 2026-11-26)
+
+- **Provider:** the Anthropic preset. Haiku 5.5 is the tactician (Sonnet as its backup) and
+  Sonnet 5.5 is the strategist (`PROVIDERS.anthropic.roleModels` in `ai/config.ts`), through the
+  Messages API with the stable-prefix cache layout.
+- **Server:** the existing Oracle Cloud VM (`docs/guides/deploy-oracle-cloud.md`).
+- **Account-wide spending** is bounded by the limit set on the API key itself, outside this code.
+  The server does not keep its own daily cap.
+- **Per-game cap: about $1** for all model seats at one table together.
+- **Model-led play** (`tacticalMode: 'model'`), but routine decisions that do not need judgment
+  go to the card-aware heuristic bot instead of the model (Phase 2).
+- **AI reasoning after the game:** out of scope. Notes and reflection stay off at tables.
+
+## Why ADR 0031 said no, and what changes
 
 ADR 0031 decision 10 gives three reasons LLM seats are not offered at tables:
 
-| Reason                                               | Does the host secret solve it?                                                                                                                                                                                                                                                                                                                                                                          | What this plan does                                                                                                                                           |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| No per-game call cap bounds the host's spending.     | **Partly.** Only the host secret creates a table, and only the host token can call `hostSetSeat` (`table/table.ts:525`), so an invited player can never add a paid seat. But one game still has no ceiling: a 4-hour, 3-model-seat game, or a retry storm, has no bound. Anyone holding the secret (it is printed in the journal at every start) can also open up to `TABLE_MAX_TABLES` tables at once. | A per-table spend cap and a server-wide daily cap, both enforced on the server. A seat that hits a cap finishes the game on the heuristic bot.                |
-| Cost reports leak (token counts track a bot's hand). | **No.** The secret controls who creates tables, not what players at the table see.                                                                                                                                                                                                                                                                                                                      | The table policy already denies `apiWaiting` and AI notes (decision 3). Keep both denied during play; add tests. Document the remaining latency side channel. |
-| A table must answer within its clock.                | **No.**                                                                                                                                                                                                                                                                                                                                                                                                 | A hard per-decision deadline for model seats, after which the heuristic bot answers.                                                                          |
-
-So the host secret is a good reason to allow LLM seats as a host-only choice. It is not enough by
-itself; the caps and the deadline are still required.
+| Reason                                               | Answer in this plan                                                                                                                                                                                                                                                                                                     |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No per-game call cap bounds the host's spending.     | Only the host secret creates a table, and only the host token can call `hostSetSeat` (`table/table.ts:525`), so an invited player can never add a paid seat. The key's own limit bounds the account. A $1 per-game cap, enforced by the server, bounds each game; a seat that reaches it finishes on the heuristic bot. |
+| Cost reports leak (token counts track a bot's hand). | The table policy already denies `apiWaiting` and AI notes (decision 3). Both stay denied, now with tests on a table that has a model seat. The remaining latency side channel is accepted and documented.                                                                                                               |
+| A table must answer within its clock.                | A hard per-decision deadline for model seats, after which the heuristic bot answers.                                                                                                                                                                                                                                    |
 
 ## What already exists
 
@@ -30,8 +40,9 @@ itself; the caps and the deadline are still required.
   which the module-graph test allows (`table/module-graph.test.ts`). This still needs proving by
   running the test with `sessionAi` wired into the worker.
 - The AI provider already falls back to the heuristic bot when a call fails
-  (`ai/provider.ts:531-567`), and answers dominated decisions locally (`heuristics.ts`, decision
-  cache) without a call.
+  (`ai/provider.ts:531-567`).
+- In model mode, `heuristics.ts` already answers _dominated_ decisions (one sensible option)
+  without a call, and the decision cache reuses identical answers.
 - The table disclosure policy (`tablePolicy()`) already withholds AI cost reports and other seats'
   AI notes.
 
@@ -47,7 +58,10 @@ itself; the caps and the deadline are still required.
   `'open' | 'bot' | 'human'`, `HostSeatController` is `'bot' | 'open'`
   (`shared/src/table-protocol.ts:43-46`), and the parser rejects anything else (`:427`).
 - **No spend cap exists anywhere in `ai/`.** There are rate limits and retries, but nothing limits
-  money spent per game or per day.
+  money spent per game.
+- **Model mode has no "routine decisions to the bot" route.** The bot answers only dominated
+  decisions, failures and (in `bot` mode) everything. Nothing sends a whole decision _type_ to the
+  card-aware bot while the model keeps the rest.
 - **The fallback uses a request-id RNG.** The heuristic fallback inside the AI provider seeds from
   `new HeuristicRng(request.requestId)` (`ai/provider.ts:553`), not from the seat's ChaCha20
   stream (ADR 0031 decision 4).
@@ -58,15 +72,19 @@ Each phase is its own pull request. I stop after each one for your review.
 
 ### Phase 0: decision and measurement (no product code)
 
-1. Write ADR 00NN, "LLM seats at tables", amending 0031 decision 10. It records the host-only rule,
-   the caps, the deadline, the accepted latency side channel, and the provider/mode choice from
-   the open questions. Run `bun run adr:index`.
-2. Measure a 4-seat game with three model seats on the chosen provider and model, offline with
-   `bun run ai-call-census` and then one paid game through the tester. Record calls per turn,
-   dollars per game, and p50/p95/max seconds per model decision. The only paid figures today are
-   from OpenRouter models: about $0.13 billed for one model seat over a 98-minute duel
-   (ADR 0039, ADR 0040). The new Claude preset (Haiku tactician, Sonnet strategist, commit
-   `02f99fbd`) has not been measured. These numbers set the cap defaults and the deadline.
+1. Write ADR 00NN, "LLM seats at tables", amending 0031 decision 10. It records the decisions
+   above, the host-only rule, the per-game cap, the deadline, the routine-decision route, and the
+   accepted latency side channel. Run `bun run adr:index`.
+2. Measure a 4-seat game with three model seats on the Anthropic preset: offline with
+   `bun run ai-call-census` first, then one paid game through the tester. Record:
+   - calls per turn by role and by `decisionType`;
+   - dollars per game, to check that **$1 covers a full game**. Haiku and Sonnet at tables have
+     never been measured. The only paid figure is from cheaper OpenRouter models: about $0.13
+     billed for one model seat over a 98-minute duel (ADR 0039, ADR 0040). If a typical game
+     costs more than $1, the cap would hand most games to the bot partway through, and we should
+     talk before Phase 2;
+   - p50, p95 and maximum seconds per Haiku decision and per Sonnet strategist call. These set the
+     deadline.
 
 ### Phase 1: per-seat provider kind in the session (tester behavior unchanged)
 
@@ -83,48 +101,70 @@ Each phase is its own pull request. I stop after each one for your review.
    only for the model seat. Existing session tests pass unchanged. `bun run hill-climb` shows
    identical fingerprints, because no benchmark game has mixed seats.
 
-### Phase 2: table-side AI limits
+### Phase 2: routine decisions to the bot, the deadline and the cap
 
-New module `table/ai-limits.ts`, used only when the table enables model seats.
+1. **Routine decisions go to the card-aware bot.** A new config field, `botDecisionTypes`, lists
+   the `DecisionType`s the card-aware bot (`bot/src/policy.ts`, ADR 0039) answers in model mode.
+   That happens after the plan, heuristics and cache, and before any tactician call. The default
+   is empty, so the tester is unchanged; table model seats get the table set. The starting set,
+   to be confirmed by Phase 0's census:
+   - **bot:** `mulligan`, `bottomCards`, `orderTriggers`, `optionalTrigger`,
+     `commanderReplacement`, `legendRule`, `assignCombatDamage`;
+   - **model:** `priority`, `declareAttackers`, `declareBlockers`, `chooseTargets`,
+     `chooseModes`, `chooseX`, `general`.
 
-1. **Per-decision deadline.** A table model seat gets its own `AiConfig` override with a hard
+   The strategist still plans every turn, so its knobs (aggression, cards to hold, targets) steer
+   the bot's routine picks the same way they do in bot mode. Evidence before the set is accepted:
+   `bun run bot-league` or a mode duel with the route on and off, with no drop in model-seat win
+   rate and fewer tactician calls per turn. Recorded as `bot` in `game_decision_sources`.
+
+2. **Per-decision deadline.** A table model seat gets its own `AiConfig` override with a hard
    wall-clock deadline per decision (default from Phase 0's p95). Retries happen only within that
    deadline, with `retryOnTimeout: false`. When the deadline passes, the existing heuristic
-   fallback answers and the decision is recorded as `fallback`.
-2. **Per-table spend cap** (`TABLE_AI_MAX_USD_PER_GAME`). It uses the billed cost each call
-   already reports (ADR 0040) and counts across all model seats at the table. Once the cap is
-   reached, every model seat switches to the heuristic bot for the rest of the game, with one
-   public log line ("AI budget reached; bots continue on built-in play"). No exception and no halt.
-3. **Server-wide daily cap** (`TABLE_AI_MAX_USD_PER_DAY`), stored in the table database so a
-   restart does not reset it. The main thread checks it before starting a game with model seats.
-   If the cap is already reached, the start is refused with a host-only message.
-4. **No JEV, no reflection, no post-game call** at tables in v1. The config is built in code, not
-   from whatever is in the environment.
-5. Tests with a stubbed client cover each case: a slow client hits the deadline, a costly client
-   hits the per-game cap mid-game, and a start is refused at the daily cap.
+   fallback answers, and the decision is recorded as `fallback`.
+
+3. **Per-game cap**, `TABLE_AI_MAX_USD_PER_GAME`, default `1.00`. It uses the billed cost each call
+   already reports (ADR 0040) and counts across all model seats at the table. A call is sent only
+   if the running total is under the cap. Once the cap is reached, every model seat switches to
+   the heuristic bot for the rest of the game, with one public log line ("AI budget reached; bots
+   continue on built-in play"). No exception and no halt. The strategist is checked first, because
+   Sonnet calls are the large ones.
+
+4. **The key's own limit.** When the provider says the key is out of credit or over its limit
+   (a billing or quota error, not an ordinary 429 rate limit), the table treats it the same as
+   reaching the cap: the seats switch to the bot at once, rather than paying the deadline on every
+   decision. One host-only message says so.
+
+5. **No JEV, no reflection and no post-game call** at tables. The table's `AiConfig` is built in
+   code from the Anthropic preset plus the table overrides, so a stray `AI_*` variable on the VM
+   cannot turn these on.
+
+6. Tests with a stubbed client cover each case: a routine decision never reaches the client, a
+   slow client hits the deadline, a costly client hits the cap mid-game, and an out-of-credit error
+   switches every seat at once.
 
 ### Phase 3: wiring the table worker
 
 1. Add `TABLE_AI_SEATS=1` to the table server's settings. The server reads it at startup and
-   refuses to start if it is set without a usable provider key (`loadAiConfig` resolving a
-   provider). Without it, everything works as today.
+   refuses to start if it is set without `ANTHROPIC_API_KEY`. Without it, everything works as
+   today.
 2. The worker boot message carries `aiSeats: boolean`. When it is on, the worker passes
-   `ai: sessionAi` to the session. Before relying on this, check that a Bun `Worker` sees the
-   parent's `process.env` (the provider key). If it does not, pass the provider settings in the
-   boot message rather than re-reading the environment.
+   `ai: sessionAi` (or the table-only equivalent from step 4) to the session. Before relying on
+   this, check that a Bun `Worker` sees the parent's `process.env`. If it does not, pass the
+   provider settings in the boot message rather than re-reading the environment.
 3. `in-process-port.ts` maps the new controller to `'ai'` in `seatControllers` and in the
    `gameStarted` payload's `controllers`.
 4. Run `table/module-graph.test.ts` with the worker now reaching `ai/`. If it pulls in any
-   runtime `benchmark/` or `batch/` module, add a thin table-only entry instead of `sessionAi`
-   (for example `table/table-ai.ts` exporting the same object) rather than widening the
-   allowlist.
-5. Memory check on a 1 GB-style limit (`MemoryHigh=700M` in `mtg-table.service`): start a table
-   with three model seats and record resident memory.
+   runtime `benchmark/` or `batch/` module, add a thin table-only entry (for example
+   `table/table-ai.ts` exporting the same object) rather than widening the allowlist.
+5. Memory check against `mtg-table.service`'s `MemoryHigh=700M`: start a table with three model
+   seats and record resident memory. That matters most if the VM is the 1 GB AMD micro rather
+   than the Ampere shape.
 
 ### Phase 4: protocol and lobby
 
-1. `TableSeatController` gains `'model'` and `HostSeatController` gains `'model'`, with a
-   `PROTOCOL_VERSION` bump. The parser accepts `'model'` only when the server advertises it.
+1. `TableSeatController` and `HostSeatController` gain `'model'`, with a `PROTOCOL_VERSION` bump.
+   The parser accepts `'model'` only when the server advertises it.
 2. The lobby payload advertises `modelSeats: boolean` (true only with `TABLE_AI_SEATS=1`). The
    host's seat control in `apps/web/src/table/TableLobby.vue` adds "AI bot (uses API budget)"
    next to "Built-in bot" only when the server advertises it. Other players see "AI bot" on the
@@ -137,33 +177,24 @@ New module `table/ai-limits.ts`, used only when the table enables model seats.
 ### Phase 5: disclosure check, end-to-end and deploy
 
 1. Disclosure tests on a table with a model seat. No `apiWaiting`, AI note, strategist plan or
-   cost figure reaches any socket during play. `table/frame-scan.ts` and `exposure.ts` cover the
-   new frames.
-2. Post-game: the host's post-game view shows the table's total model spend. Showing each AI seat's
-   reasoning after the game is a separate, optional change (open question 4).
+   cost figure reaches any socket during play or after it. `table/frame-scan.ts` and
+   `exposure.ts` cover the new frames.
+2. The host's post-game view shows the table's total model spend, and whether the cap was reached.
+   That is a number, not reasoning.
 3. `scripted-run.ts` plays a table with a model seat against a stubbed client. Then one real
-   table game on `bun run dev --table` with the real provider.
+   table game on `bun run dev --table` with the Anthropic key.
 4. Deploy notes: update `deploy/oracle-cloud/mtg-table.env.example`, replacing the current
-   misleading "model-driven opponents" comment with `TABLE_AI_SEATS`, the key, and the two caps.
-   Add a section to `docs/guides/deploy-oracle-cloud.md`. Turning it on, on the VPS, is your
+   misleading "model-driven opponents" comment with `TABLE_AI_SEATS`, `AI_PROVIDER=anthropic`,
+   `ANTHROPIC_API_KEY` and `TABLE_AI_MAX_USD_PER_GAME`. Add a section to
+   `docs/guides/deploy-oracle-cloud.md`. Setting the key and turning it on, on the VM, is Paul's
    step.
 
 ## Accepted risks (stated in the ADR)
 
 - **Latency side channel.** A model seat visibly thinks longer on some decisions than others, and
   that can hint at its hand. The deadline bounds this but does not remove it. Padding every model
-  answer to a fixed time would remove it at the cost of slower games, so it is not done in v1.
+  answer to a fixed time would remove it at the cost of slower games, so it is not done here.
 - **The provider sees the bot's own view.** The model receives only that seat's redacted view,
   as in the tester. It never sees other hands or the RNG key.
-
-## Open questions for you
-
-1. **Provider and model on the VPS.** Anthropic preset (Haiku tactician, Sonnet strategist, the new
-   default) or an OpenRouter chain?
-2. **Cap values.** Dollars per table game and per day. Phase 0 gives real numbers, but a starting
-   guess helps.
-3. **Tactical mode.** `model` (the default; won the 2026-11-19 duel, more calls, slower) or `bot`
-   (strategist steers the heuristic bot; far fewer calls and much less waiting for humans, but it
-   missed the win bar)? For a table where people are waiting, I lean `bot` with escalation on.
-4. **Post-game AI reasoning and reflection.** Leave off for v1, or show the AI seats' notes to
-   everyone once the game ends?
+- **The cap can end model play partway through a game.** Phase 0 shows how often that would
+  happen at $1.
