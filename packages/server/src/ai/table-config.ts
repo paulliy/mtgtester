@@ -50,9 +50,15 @@ export const DEFAULT_TABLE_AI_LIMITS: TableAiLimits = {
 export function tableAiConfig(
   apiKey: string,
   limits: TableAiLimits = DEFAULT_TABLE_AI_LIMITS,
+  /** A stand-in for the Anthropic API (development mode's scripted run); omit for the real one. */
+  baseUrl?: string,
 ): AiConfig {
   if (apiKey.trim() === '') throw new Error('model seats at a table need ANTHROPIC_API_KEY');
-  const base = loadAiConfig({ AI_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: apiKey });
+  const base = loadAiConfig({
+    AI_PROVIDER: 'anthropic',
+    ANTHROPIC_API_KEY: apiKey,
+    ...(baseUrl !== undefined && { ANTHROPIC_BASE_URL: baseUrl }),
+  });
   const config: AiConfig = {
     ...base,
     models: [TABLE_MODEL],

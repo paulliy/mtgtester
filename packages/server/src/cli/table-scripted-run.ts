@@ -8,7 +8,12 @@
  * The default is two scripted seats and two bots, untimed. `disconnect` seats four scripted
  * players at a relaxed clock scaled 60 times faster; P2 drops its socket after two decisions,
  * stays away past its grace, then resumes on a new socket and takes control back. `tls` runs the
- * server in production mode behind a TLS proxy with a certificate made at run time.
+ * server in production mode behind a TLS proxy with a certificate made at run time. `model`
+ * makes P4 an AI bot whose calls go to a loopback stand-in for the Anthropic API (ADR 0055); it
+ * needs the placeholder key in the environment the process starts with:
+ *
+ *   ANTHROPIC_API_KEY=sk-ant-scripted-run-stub \
+ *     bun run packages/server/src/cli/table-scripted-run.ts --scenario model
  */
 
 import { runScriptedTable, type ScriptedRunOptions } from '../table/scripted-run';
@@ -33,7 +38,8 @@ const options: ScriptedRunOptions = {
   ...(turnCap !== undefined && { turnCap: Number(turnCap) }),
 };
 if (scenario === 'tls') options.tls = true;
-if (scenario !== 'default' && scenario !== 'disconnect' && scenario !== 'tls') {
+if (scenario === 'model') options.modelSeat = true;
+if (!['default', 'disconnect', 'tls', 'model'].includes(scenario)) {
   process.stderr.write(`unknown scenario ${scenario}\n`);
   process.exit(2);
 }

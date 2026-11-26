@@ -197,6 +197,16 @@ describe('loadTableConfig', () => {
     expect(refusal({ TABLE_AI_MAX_USD_PER_GAME: '1' }, ['--dev']).setting).toBe(
       'TABLE_AI_MAX_USD_PER_GAME',
     );
+    // Development mode can point model seats at a stand-in API (the scripted run); production
+    // refuses the setting with the other development-only ones.
+    const ai = { TABLE_AI_SEATS: '1', ANTHROPIC_API_KEY: 'k' };
+    expect(okConfig({ ...ai, TABLE_AI_BASE_URL: 'http://127.0.0.1:4100' }).aiSeats).toEqual({
+      maxUsdPerGame: 1,
+      baseUrl: 'http://127.0.0.1:4100',
+    });
+    expect(refusal({ ...ai, TABLE_AI_BASE_URL: 'ftp://x' }, ['--dev']).setting).toBe(
+      'TABLE_AI_BASE_URL',
+    );
     // The key never lands in the parsed settings.
     const config = okConfig({ TABLE_AI_SEATS: '1', ANTHROPIC_API_KEY: 'sk-ant-secret' });
     expect(JSON.stringify(config)).not.toContain('sk-ant-secret');

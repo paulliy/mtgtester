@@ -157,6 +157,49 @@ Player addresses: Cloudflare puts the visitor's address last in `X-Forwarded-For
 entry the server's throttles and per-address caps use. Players behind one shared address (one
 household) share those caps: 8 sockets and 30 socket opens a minute.
 
+## AI bots (optional, you)
+
+With AI bots on, the host can give an empty seat to a Claude Haiku bot through the Anthropic API
+([ADR 0055](../decisions/0055-llm-seats-at-tables.md)). Built-in bots need none of this. Only the
+host can add one, so an invited player never spends your key.
+
+1. In the Anthropic Console, make an API key for the server and set a monthly spend limit on it.
+   That limit is the account-wide backstop; the server does not keep its own.
+2. Add three lines to `/etc/mtg-table.env` without an editor. `read -s` keeps the key out of the
+   terminal and the shell history:
+
+   ```bash
+   read -rsp 'Anthropic API key: ' KEY; echo
+   ```
+
+   ```bash
+   printf 'TABLE_AI_SEATS=1\nANTHROPIC_API_KEY=%s\nTABLE_AI_MAX_USD_PER_GAME=1\n' "$KEY" | sudo tee -a /etc/mtg-table.env >/dev/null; unset KEY
+   ```
+
+   To change a value later, for example the cap:
+
+   ```bash
+   sudo sed -i 's/^TABLE_AI_MAX_USD_PER_GAME=.*/TABLE_AI_MAX_USD_PER_GAME=0.5/' /etc/mtg-table.env
+   ```
+
+3. Restart and check the log:
+
+   ```bash
+   sudo systemctl restart mtg-table
+   sudo journalctl -u mtg-table -n 40 --no-pager
+   ```
+
+   The start-up block says `AI bots: on, cap $1 per game`. A server with `TABLE_AI_SEATS=1` and
+   no key refuses to start and says why.
+
+At a table, the lobby then shows an **AI bot** button beside **Bot** on each open seat. Every AI
+bot in one game shares the per-game cap. When the game reaches it, or Anthropic refuses the key,
+every player sees one line, and the AI bots finish the game as built-in bots. After the game, the
+host's results page shows what the AI bots spent; no player sees an amount, and no one sees the
+bots' reasoning. In the paid test games, one AI seat cost about $0.07 to $0.28 a game.
+
+To turn AI bots off, set `TABLE_AI_SEATS=0` (or delete the three lines) and restart.
+
 ## Releases and updates
 
 Merging to main updates the server on its own:

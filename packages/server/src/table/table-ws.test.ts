@@ -1119,6 +1119,37 @@ describe('the post-game view', () => {
     expect(game.carol.of('tableResults')).toEqual([]);
   });
 
+  it("sends the AI bots' spend after the game to the host only (ADR 0055)", async () => {
+    const { postGame } = reader();
+    const game = await startedGame(makeRig({ postGame }));
+    // Alice is also the host on her game socket; the table's own host socket is not seated.
+    game.rig.send(game.aliceGame, 'hostAuth', { hostToken: game.t.hostToken });
+    game.port.emit({
+      type: 'gameOver',
+      generation: game.port.generation,
+      result: RESULT,
+      aiSpend: { spentUsd: 0.42, stopped: 'cap' },
+    });
+    await flush();
+    await flush();
+    for (const host of [game.t.host, game.aliceGame]) {
+      expect(host.of('tableAiSpend').map((frame) => frame.payload)).toEqual([
+        { spentUsd: 0.42, stopped: 'cap' },
+      ]);
+    }
+    expect(game.bobGame.of('tableAiSpend')).toEqual([]);
+    expect(game.carol.of('tableAiSpend')).toEqual([]);
+    // It follows the results, never precedes them.
+    const types = game.aliceGame.frames.map((frame) => frame.type);
+    expect(types.indexOf('tableAiSpend')).toBeGreaterThan(types.indexOf('tableResults'));
+  });
+
+  it('sends no spend line for a game without AI bots', async () => {
+    const { postGame } = reader();
+    const game = await finishedGame(postGame);
+    expect(game.t.host.of('tableAiSpend')).toEqual([]);
+  });
+
   it('sends the post-game record to a seat that resumes after the game', async () => {
     const { postGame } = reader();
     const game = await finishedGame(postGame);

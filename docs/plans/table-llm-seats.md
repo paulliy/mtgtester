@@ -1,6 +1,6 @@
 # Plan: LLM seats at tables
 
-Status: Phases 3 and 4 in review (2026-11-26). Phases 0 to 2 done. Phase 5 left: real paid table game and deploy. Amends
+Status: Phases 0 to 4 done; Phase 5 in review (2026-11-26). Left: one real paid table game on the VM, then the ADR's acceptance. Amends
 [ADR 0031](../decisions/0031-multiplayer-tables.md) decision 10 once accepted.
 
 ## Goal
@@ -220,6 +220,22 @@ first model call stopped the budget and showed "The AI service refused this serv
    `ANTHROPIC_API_KEY` and `TABLE_AI_MAX_USD_PER_GAME`. Add a section to
    `docs/guides/deploy-oracle-cloud.md`. Setting the key and turning it on, on the VM, is Paul's
    step.
+
+**Built (Phase 5):**
+
+- The session port reports the game's model spend with its terminal output (`aiSpend` on
+  `gameOver` and `failed`). After the game the hub sends a `tableAiSpend` frame, the amount and
+  whether the budget stopped, to host sockets only. It is gated `fullState`, so it cannot leave
+  during play, and the post-game page shows it as section IV, "AI spend".
+- Disclosure: the port's stubbed-API game asserts no frame carries an AI wait, a note, a debug
+  event, a reflection or a cost figure. The frame scan treats `tableAiSpend` as post-game only.
+- `TABLE_AI_BASE_URL` (development mode only; production refuses it) points model seats at a
+  stand-in API. `table-scripted-run.ts --scenario model` plays a table in real workers with P4 as
+  an AI bot against a loopback stand-in for the Messages API, and checks the model was called,
+  only the host got the spend line, and the frame scan is clean.
+- `serve:table` prints `AI bots: on, cap $N per game` (or `off`) at start.
+- The deploy guide has an "AI bots" section with commands that need no editor.
+- The real game is Paul's, on the VM: this repository's sessions hold no Anthropic key.
 
 ## Accepted risks (stated in the ADR)
 

@@ -32,7 +32,7 @@ export interface BuildSessionConfigOptions {
   /** Dev mode only: every clock duration divided by this. */
   clockScale?: number;
   /** The server's model-seat settings (ADR 0055), when it offers them. */
-  ai?: { maxUsdPerGame: number };
+  ai?: { maxUsdPerGame: number; baseUrl?: string };
 }
 
 const KEY_PATTERN = /^[0-9a-f]{64}$/;
@@ -90,6 +90,6 @@ export function buildSessionConfig(
     ...(opts.oracleFixture !== undefined && { oracleFixture: opts.oracleFixture }),
     ...(opts.livePaceMs !== undefined && { livePaceMs: opts.livePaceMs }),
     // Only a game with a model seat carries the cap, so every other game runs exactly as before.
-    ...(hasModelSeat && opts.ai !== undefined && { ai: { maxUsdPerGame: opts.ai.maxUsdPerGame } }),
+    ...(hasModelSeat && opts.ai !== undefined && { ai: { ...opts.ai } }),
   };
 }

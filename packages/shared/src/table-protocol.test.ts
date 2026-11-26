@@ -55,6 +55,7 @@ describe('table protocol vocabulary', () => {
         'clockState',
         'seatStatus',
         'aiBudget',
+        'tableAiSpend',
       ].sort(),
     );
   });

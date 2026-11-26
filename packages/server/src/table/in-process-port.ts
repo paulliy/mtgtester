@@ -29,6 +29,7 @@ import { MatchSession, type MatchSessionOptions } from '../match/session';
 import type { SessionAi } from '../match/session-ai';
 import { setupSeats, type SeatProblem } from '../match/setup';
 import type {
+  TableAiSpend,
   TableSessionConfig,
   TableSessionInput,
   TableSessionOutput,
@@ -76,6 +77,8 @@ export class InProcessSessionPort implements TableSessionPort {
   private readonly startedFrames = new Map<PlayerId, ServerToClientMessage>();
   /** Why the model seats switched to the built-in bot, once they have; re-sent on a resync. */
   private aiBudgetReason: 'cap' | 'key' | null = null;
+  /** Whether this game runs model seats, so its terminal output reports their spend. */
+  private aiActive = false;
 
   constructor(options: InProcessSessionPortOptions) {
     this.generation = options.generation;
@@ -197,10 +200,11 @@ export class InProcessSessionPort implements TableSessionPort {
     };
     let aiConfig;
     try {
-      aiConfig = ai.services.tableAiConfig(ai.apiKey, limits);
+      aiConfig = ai.services.tableAiConfig(ai.apiKey, limits, config.ai.baseUrl);
     } catch {
       return 'unavailable';
     }
+    this.aiActive = true;
     return {
       services: ai.services,
       options: {
@@ -355,7 +359,7 @@ export class InProcessSessionPort implements TableSessionPort {
   }
 
   private finish(result: GameResult): void {
-    this.emit({ type: 'gameOver', generation: this.generation, result });
+    this.emit({ type: 'gameOver', generation: this.generation, result, ...this.aiSpendField() });
   }
 
   private fail(reason: FailedOutput['reason'], detail?: string): void {
@@ -364,7 +368,16 @@ export class InProcessSessionPort implements TableSessionPort {
       generation: this.generation,
       reason,
       ...(detail !== undefined && { detail }),
+      ...this.aiSpendField(),
     });
+  }
+
+  /** The model seats' spend for a terminal output, when the game has model seats. */
+  private aiSpendField(): { aiSpend?: TableAiSpend } {
+    if (!this.aiActive) return {};
+    return {
+      aiSpend: { spentUsd: this.session?.aiSpendUsd() ?? 0, stopped: this.aiBudgetReason },
+    };
   }
 
   // ── Output ─────────────────────────────────────────────────────────────────────────────────

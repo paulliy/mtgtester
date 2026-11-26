@@ -292,6 +292,7 @@ export type {
   TableClientToServerMessage,
   TableClientToServerType,
   TableClockMode,
+  TableAiSpendPayload,
   TableClosedPayload,
   TableClosedReason,
   TableDeckProblem,

@@ -168,6 +168,11 @@ async function main(): Promise<void> {
     `  Web build:      ${config.webDir}${site ? ' (the whole site, cards from ' + SITE_CARDS_DIR + ')' : ''}`,
   );
   console.log(`  Clock:          ${config.clock}`);
+  const ai = config.aiSeats;
+  const aiVia = ai?.baseUrl === undefined ? '' : ` via ${ai.baseUrl}`;
+  console.log(
+    `  AI bots:        ${ai === null ? 'off (TABLE_AI_SEATS)' : `on, cap $${ai.maxUsdPerGame} per game${aiVia}`}`,
+  );
   console.log(`  Max tables:     ${config.maxTables}`);
   console.log(`  Oracle index:   ${index.size.toLocaleString()} cards`);
   console.log(`  Supported pool: ${pool.cards.length.toLocaleString()} cards`);

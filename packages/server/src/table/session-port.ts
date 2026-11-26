@@ -65,7 +65,7 @@ export interface TableSessionConfig {
    * Present exactly when a seat is `model` (ADR 0055): the per-game cap every model seat shares.
    * The Anthropic key is not here; the worker reads it from its own environment.
    */
-  ai?: { maxUsdPerGame: number };
+  ai?: { maxUsdPerGame: number; baseUrl?: string };
 }
 
 /** A player's input, already authorized by the table server for `seat`. */
@@ -84,6 +84,12 @@ export type TableSessionInput =
 /** Typed per-seat deck problems from worker preparation; each goes to its own seat only. */
 export type TableSetupProblems = Partial<Record<PlayerId, TableDeckProblem[]>>;
 
+/** What a game's model seats spent, reported with its terminal output (ADR 0055 decision 8). */
+export interface TableAiSpend {
+  spentUsd: number;
+  stopped: 'cap' | 'key' | null;
+}
+
 export type TableSessionOutput =
   /** A frame for one seat. Never routed to another seat or to a lobby-only socket. */
   | { type: 'seatFrame'; generation: number; seat: PlayerId; message: ServerToClientMessage }
@@ -96,7 +102,7 @@ export type TableSessionOutput =
   /** Terminal: deck problems found during preparation. No game row or result was created. */
   | { type: 'setupProblems'; generation: number; problems: TableSetupProblems }
   /** Terminal: the game ended (win, draw, halt, turn cap) and its result is committed. */
-  | { type: 'gameOver'; generation: number; result: GameResult }
+  | { type: 'gameOver'; generation: number; result: GameResult; aiSpend?: TableAiSpend }
   /**
    * Terminal: the run stopped without a committed result. `setupFailed` means setup never reached
    * game start; the others interrupt a running game (stored as a halt with this reason).
@@ -106,6 +112,7 @@ export type TableSessionOutput =
       generation: number;
       reason: 'setupFailed' | 'workerFailure' | 'hostAbandoned';
       detail?: string;
+      aiSpend?: TableAiSpend;
     };
 
 export interface TableSessionPort {

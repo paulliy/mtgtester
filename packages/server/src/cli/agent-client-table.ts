@@ -217,6 +217,9 @@ export class TableAgentSession {
       case 'aiBudget':
         // Another seat's AI switched to the built-in bot; nothing for this agent to do.
         return;
+      case 'tableAiSpend':
+        // The host's spend line after the game; nothing for this agent to do.
+        return;
       case 'tableResults':
       case 'replayTurnState':
         // Post-game data, after this client's run has ended on `gameOver`.

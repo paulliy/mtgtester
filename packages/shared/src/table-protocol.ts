@@ -164,6 +164,7 @@ export const TABLE_SERVER_TO_CLIENT_TYPES = [
   'clockState',
   'seatStatus',
   'aiBudget',
+  'tableAiSpend',
 ] as const;
 export type TableServerToClientType = (typeof TABLE_SERVER_TO_CLIENT_TYPES)[number];
 
@@ -308,6 +309,16 @@ export interface AiBudgetPayload {
   reason: 'cap' | 'key';
 }
 
+/**
+ * What the table's model seats spent in the game just ended (ADR 0055 decision 8). Sent after the
+ * game, to the host only: a number, never reasoning. `stopped` says whether the model seats
+ * finished on the built-in bot, and why.
+ */
+export interface TableAiSpendPayload {
+  spentUsd: number;
+  stopped: 'cap' | 'key' | null;
+}
+
 export type TableServerToClientMessage =
   | { type: 'tableState'; payload: TableStatePayload }
   | { type: 'claimPending'; payload: ClaimPendingPayload }
@@ -320,7 +331,8 @@ export type TableServerToClientMessage =
   | { type: 'replayTurnState'; payload: ReplayTurnStatePayload }
   | { type: 'clockState'; payload: ClockStatePayload }
   | { type: 'seatStatus'; payload: SeatStatusPayload }
-  | { type: 'aiBudget'; payload: AiBudgetPayload };
+  | { type: 'aiBudget'; payload: AiBudgetPayload }
+  | { type: 'tableAiSpend'; payload: TableAiSpendPayload };
 
 export type TableServerMessageOf<T extends TableServerToClientType> = Extract<
   TableServerToClientMessage,

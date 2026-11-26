@@ -7,6 +7,12 @@
  * Every frame each player receives is recorded and scanned (`scanTableFrames`). After the game
  * each player asks for a replay turn and reads the post-game record.
  *
+ * With `modelSeat`, P4 is an AI bot (ADR 0055) instead of a built-in bot, and its calls go to a
+ * stand-in for the Anthropic Messages API on loopback (`TABLE_AI_BASE_URL`), which answers each
+ * decision with the first legal action and bills a fixed number of tokens. The run then checks
+ * that the model was called, that only the host got the spend line after the game, and that no
+ * live frame carried a cost.
+ *
  * `table-scripted-run.ts` in `cli/` runs this and prints the report; `scripted-run.test.ts`
  * spawns that and checks it, since Vitest cannot load `bun:sqlite` or start a Bun server.
  */
@@ -57,6 +63,17 @@ export interface ScriptedRunOptions {
   rngKey?: string;
   /** Give up after this long. */
   timeoutMs?: number;
+  /** P4 is an AI bot whose calls go to a loopback stand-in for the Anthropic API. */
+  modelSeat?: boolean;
+}
+
+export interface ScriptedAiReport {
+  /** Messages API calls the stand-in answered. */
+  calls: number;
+  /** The `tableAiSpend` payloads the host socket received. */
+  hostSpend: unknown[];
+  /** `tableAiSpend` frames any seat socket received; must be none (the host is not seated). */
+  seatSpendFrames: number;
 }
 
 export interface ScriptedSeatReport {
@@ -84,6 +101,7 @@ export interface ScriptedRunReport {
   problems: string[];
   seats: ScriptedSeatReport[];
   disconnect: ScriptedDisconnectReport | null;
+  ai: ScriptedAiReport | null;
   scan: FrameScanReport;
   attemptStatus: string | null;
   gameStatus: string | null;
@@ -92,6 +110,49 @@ export interface ScriptedRunReport {
 
 const DEFAULT_FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
 const DEFAULT_KEY = '5c'.repeat(32);
+/**
+ * The placeholder key a run with an AI seat must be started with. A game worker reads the key
+ * from the environment the process started with (a later `process.env` write does not reach it),
+ * so the caller sets it, and the run refuses any other key so a real one never reaches the
+ * stand-in.
+ */
+export const STUB_API_KEY = 'sk-ant-scripted-run-stub';
+
+/**
+ * A loopback stand-in for the Anthropic Messages API. Each call is answered with the first legal
+ * action in its prompt (a strategist call gets the same text, which is not a plan, so the seat
+ * plays on without one) and bills 1,000 input and 20 output tokens.
+ */
+function startStubAnthropic(): { origin: string; calls: () => number; stop: () => void } {
+  let calls = 0;
+  const server = Bun.serve({
+    port: 0,
+    hostname: '127.0.0.1',
+    async fetch(request) {
+      calls += 1;
+      const body = await request.text();
+      const first = /\\?"legalActions\\?":\s*\[\s*\{\s*\\?"id\\?":\s*(\d+)/.exec(body);
+      const text = JSON.stringify({ actionId: Number(first?.[1] ?? 0) });
+      return Response.json({
+        id: `msg_stub_${calls}`,
+        type: 'message',
+        role: 'assistant',
+        model: 'claude-haiku-5-5',
+        content: [{ type: 'text', text }],
+        stop_reason: 'end_turn',
+        stop_sequence: null,
+        usage: { input_tokens: 1_000, output_tokens: 20 },
+      });
+    },
+  });
+  return {
+    origin: `http://127.0.0.1:${server.port}`,
+    calls: () => calls,
+    stop: () => {
+      void server.stop(true);
+    },
+  };
+}
 
 function decklistFor(cards: OracleCard[], label: string): string {
   const deck = generateCommanderDeck(buildSupportedPool(cards), { seed: `scripted-${label}` });
@@ -144,10 +205,22 @@ export async function runScriptedTable(
   const certificate = options.tls === true ? makeTestCertificate(dir) : null;
   const proxy = certificate === null ? null : startTlsProxy(certificate);
   const ca = certificate?.ca ?? null;
+  if (options.modelSeat === true && proxy !== null) {
+    throw new Error('a scripted run with an AI seat runs in development mode only');
+  }
+  if (options.modelSeat === true && process.env['ANTHROPIC_API_KEY'] !== STUB_API_KEY) {
+    throw new Error(`a scripted run with an AI seat needs ANTHROPIC_API_KEY=${STUB_API_KEY}`);
+  }
+  const stub = options.modelSeat === true ? startStubAnthropic() : null;
   const common = {
     TABLE_DB_PATH: join(dir, 'tables.sqlite'),
     TABLE_WEB_DIR: join(dir, 'web'),
     TABLE_PORT: '0',
+    ...(stub !== null && {
+      TABLE_AI_SEATS: '1',
+      ANTHROPIC_API_KEY: STUB_API_KEY,
+      TABLE_AI_BASE_URL: stub.origin,
+    }),
   };
   const loaded =
     proxy === null
@@ -247,7 +320,8 @@ export async function runScriptedTable(
     host.send(JSON.stringify({ type: 'hostAuth', payload: { hostToken: table.hostToken } }));
     if (humanCount === 2) {
       for (const seat of ['P3', 'P4'] as const) {
-        host.send(JSON.stringify({ type: 'hostSetSeat', payload: { seat, controller: 'bot' } }));
+        const controller = seat === 'P4' && stub !== null ? 'model' : 'bot';
+        host.send(JSON.stringify({ type: 'hostSetSeat', payload: { seat, controller } }));
       }
     }
 
@@ -409,6 +483,7 @@ export async function runScriptedTable(
     for (const socket of sockets) socket.close();
     await server.stop();
     proxy?.stop();
+    stub?.stop();
   }
 
   const attempts = store.raw
@@ -446,6 +521,33 @@ export async function runScriptedTable(
   }
   if (attempt?.status !== 'finished') problems.push(`attempt status ${String(attempt?.status)}`);
 
+  let ai: ScriptedAiReport | null = null;
+  if (stub !== null) {
+    const spendFrames = frames.flatMap((frame) => {
+      const parsed = JSON.parse(frame.text) as { type?: string; payload?: unknown };
+      return parsed.type === 'tableAiSpend' ? [{ to: frame.to, payload: parsed.payload }] : [];
+    });
+    ai = {
+      calls: stub.calls(),
+      hostSpend: spendFrames.filter((f) => f.to === 'host').map((f) => f.payload),
+      seatSpendFrames: spendFrames.filter((f) => f.to !== 'host').length,
+    };
+    if (ai.calls === 0) problems.push('the AI seat never called the model');
+    if (ai.seatSpendFrames > 0) problems.push('a seat that is not the host got the spend line');
+    const [spend] = ai.hostSpend as Array<{ spentUsd?: unknown; stopped?: unknown }>;
+    if (ai.hostSpend.length !== 1 || spend === undefined) {
+      problems.push(`the host got ${ai.hostSpend.length} spend lines, not 1`);
+    } else if (typeof spend.spentUsd !== 'number' || !(spend.spentUsd > 0)) {
+      problems.push(`the host's spend line has no amount: ${JSON.stringify(spend)}`);
+    } else if (spend.stopped !== null) {
+      problems.push(`the budget stopped (${String(spend.stopped)}) under a $1 cap`);
+    }
+    const seatTexts = frames.filter((frame) => frame.to !== 'host').map((frame) => frame.text);
+    if (seatTexts.some((text) => text.includes('spentUsd') || text.includes('costUsd'))) {
+      problems.push('a seat frame carried a cost figure');
+    }
+  }
+
   if (disconnect !== null) {
     if (!disconnect.reconnected) problems.push('the dropped seat never reconnected');
     if (!disconnect.fallbackSeen) problems.push('the dropped seat was never handed to its bot');
@@ -458,6 +560,7 @@ export async function runScriptedTable(
     problems,
     seats,
     disconnect,
+    ai,
     scan,
     attemptStatus: attempt?.status ?? null,
     gameStatus: game?.status ?? null,

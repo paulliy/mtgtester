@@ -25,6 +25,7 @@ import {
   type ReplayTurnStatePayload,
   type ReplayUnlockedPayload,
   type SeatStatusPayload,
+  type TableAiSpendPayload,
   type TableClientToServerMessage,
   type TableClosedReason,
   type TableDeckProblem,
@@ -138,6 +139,8 @@ export const useTableStore = defineStore('table', () => {
   const seatStatus = ref<Record<string, SeatStatusPayload>>({});
   /** Set once the table's AI bots stopped calling the model (ADR 0055): the cap, or the key. */
   const aiBudget = ref<'cap' | 'key' | null>(null);
+  /** The host's post-game line: what the AI bots spent (ADR 0055 decision 8). */
+  const aiSpend = ref<TableAiSpendPayload | null>(null);
   const results = ref<TableResultsPayload | null>(null);
   const replayUnlock = ref<ReplayUnlockedPayload | null>(null);
   const replayTurn = ref<ReplayTurnStatePayload | null>(null);
@@ -195,6 +198,7 @@ export const useTableStore = defineStore('table', () => {
       clocks.value = {};
       seatStatus.value = {};
       aiBudget.value = null;
+      aiSpend.value = null;
       deckProblems.value = [];
       errors.value = [];
       lobbyJoin = null;
@@ -370,6 +374,9 @@ export const useTableStore = defineStore('table', () => {
       case 'aiBudget':
         aiBudget.value = message.payload.reason;
         return;
+      case 'tableAiSpend':
+        aiSpend.value = message.payload;
+        return;
       default: {
         const unknown: never = message;
         void unknown;
@@ -450,6 +457,7 @@ export const useTableStore = defineStore('table', () => {
     clocks,
     seatStatus,
     aiBudget,
+    aiSpend,
     results,
     replayUnlock,
     replayTurn,

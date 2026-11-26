@@ -363,8 +363,36 @@ describe('InProcessSessionPort - setup', () => {
       ]);
       expect(terminals(h.outputs).map((o) => o.type)).toEqual(['gameOver']);
 
+      // The terminal output reports what the game spent, for the host's post-game line: at least
+      // the cap, and no more than the one call in flight past it.
+      const [over] = terminals(h.outputs);
+      if (over?.type !== 'gameOver') throw new Error('expected gameOver');
+      expect(over.aiSpend?.stopped).toBe('cap');
+      expect(over.aiSpend?.spentUsd).toBeGreaterThanOrEqual(0.03);
+      expect(over.aiSpend?.spentUsd).toBeLessThan(0.03 + 2 * 0.0111);
+
       // Nothing the port emits carries the key.
       expect(JSON.stringify(h.outputs)).not.toContain('sk-ant-test');
+
+      // Disclosure (ADR 0055 decision 8): no frame a player can receive during the game carries
+      // an AI wait, a note, a debug event, a reflection or a cost figure.
+      const live = JSON.stringify(
+        h.outputs.flatMap((o) =>
+          o.type === 'seatFrame' || o.type === 'publicFrame' || o.type === 'tableFrame'
+            ? [o.message]
+            : [],
+        ),
+      );
+      for (const leak of [
+        '"apiWaiting"',
+        '"debugEvents"',
+        '"gameReflections"',
+        '"note"',
+        'costUsd',
+        'spentUsd',
+      ]) {
+        expect(live).not.toContain(leak);
+      }
     } finally {
       warn.mockRestore();
       vi.unstubAllGlobals();

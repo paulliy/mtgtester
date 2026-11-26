@@ -75,9 +75,10 @@ export interface TableConfig {
   /**
    * Model-driven seats (ADR 0055), on with `TABLE_AI_SEATS=1`; null when off. The Anthropic key
    * is read from the environment where it is used (each game worker inherits it), never stored
-   * here, so it cannot reach a log line or a frame with the rest of the settings.
+   * here, so it cannot reach a log line or a frame with the rest of the settings. `baseUrl` is
+   * development mode's `TABLE_AI_BASE_URL`: a stand-in for the Anthropic API in a scripted run.
    */
-  aiSeats: { maxUsdPerGame: number } | null;
+  aiSeats: { maxUsdPerGame: number; baseUrl?: string } | null;
 }
 
 export type TableConfigErrorCode =
@@ -337,7 +338,11 @@ export function loadTableConfig(
         'TABLE_AI_MAX_USD_PER_GAME',
       );
     }
-    aiSeats = { maxUsdPerGame };
+    const baseUrl = setting(env, 'TABLE_AI_BASE_URL');
+    if (baseUrl !== undefined && !/^https?:\/\/[^\s]+$/.test(baseUrl)) {
+      return fail('badValue', 'TABLE_AI_BASE_URL must be an http(s) URL.', 'TABLE_AI_BASE_URL');
+    }
+    aiSeats = { maxUsdPerGame, ...(baseUrl !== undefined && { baseUrl }) };
   } else if (setting(env, 'TABLE_AI_MAX_USD_PER_GAME') !== undefined) {
     return fail(
       'badValue',
@@ -391,6 +396,7 @@ export const DEV_ONLY_SETTINGS = [
   'TABLE_PACE_MS',
   'TABLE_CLOCK_SCALE',
   'TABLE_MAX_STEP_WORK',
+  'TABLE_AI_BASE_URL',
 ] as const;
 
 /** Who may reach the server, and how. */

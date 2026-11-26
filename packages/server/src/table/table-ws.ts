@@ -46,6 +46,7 @@ import type {
 import { isOutboundAllowed, tablePolicy, type DisclosurePolicy } from '../match/disclosure';
 import { withoutActionData } from '../match/presentation';
 import type {
+  TableAiSpend,
   TableSessionConfig,
   TableSessionInput,
   TableSessionOutput,
@@ -291,6 +292,8 @@ interface AttemptRun {
 /** The finished attempt the post-game view describes. */
 interface Ended {
   attemptId: string;
+  /** What the game's model seats spent; sent after the game to the host only. */
+  aiSpend: TableAiSpend | null;
   /** Null until the reader answered; then what every seat socket is sent. */
   view: { results: TableResultsPayload; unlock: ReplayUnlockedPayload | null } | null;
 }
@@ -308,9 +311,13 @@ interface TableRuntime {
 }
 
 type Outcome =
-  | { kind: 'gameOver'; result: GameResult }
+  | { kind: 'gameOver'; result: GameResult; aiSpend?: TableAiSpend }
   | { kind: 'rejected'; problems: TableSetupProblems }
-  | { kind: 'failed'; reason: 'setupFailed' | 'workerFailure' | 'hostAbandoned' };
+  | {
+      kind: 'failed';
+      reason: 'setupFailed' | 'workerFailure' | 'hostAbandoned';
+      aiSpend?: TableAiSpend;
+    };
 
 const errorFrame = (
   message: string,
@@ -925,6 +932,7 @@ export class TableSocketHub {
       this.sendGated(runtime, socketId, { type: 'replayUnlocked', payload: view.unlock });
     }
     this.sendGated(runtime, socketId, { type: 'tableResults', payload: view.results });
+    this.sendAiSpend(runtime, socketId);
   }
 
   /** Send a full-state frame only if the policy allows it now. */
@@ -946,8 +954,9 @@ export class TableSocketHub {
     attemptId: string,
     ending: TableEnding,
     result: GameResult | null,
+    aiSpend: TableAiSpend | null,
   ): Promise<void> {
-    const ended: Ended = { attemptId, view: null };
+    const ended: Ended = { attemptId, aiSpend, view: null };
     runtime.ended = ended;
     const reader = this.deps.postGame;
     if (reader === undefined) return;
@@ -957,9 +966,24 @@ export class TableSocketHub {
       return;
     }
     if (runtime.ended !== ended || !this.isTerminal(runtime)) return;
+    const seated = new Set<string>();
     for (const [seat, socketId] of runtime.seatSockets) {
-      if (this.boundSeat(runtime, socketId) === seat) this.sendPostGame(runtime, socketId);
+      if (this.boundSeat(runtime, socketId) !== seat) continue;
+      seated.add(socketId);
+      this.sendPostGame(runtime, socketId);
     }
+    // A host who is not seated gets only the spend line.
+    for (const socketId of runtime.sockets.keys()) {
+      if (!seated.has(socketId)) this.sendAiSpend(runtime, socketId);
+    }
+  }
+
+  /** The model seats' spend, after the game, to a host socket only (ADR 0055 decision 8). */
+  private sendAiSpend(runtime: TableRuntime, socketId: string): void {
+    const aiSpend = runtime.ended?.aiSpend;
+    if (aiSpend === undefined || aiSpend === null) return;
+    if (!runtime.table.isHost(socketId)) return;
+    this.sendGated(runtime, socketId, { type: 'tableAiSpend', payload: aiSpend });
   }
 
   // ── Start, outputs and the end of an attempt ──────────────────────────────────────────────
@@ -1080,10 +1104,18 @@ export class TableSocketHub {
         void this.settle(runtime, run, { kind: 'rejected', problems: output.problems });
         return;
       case 'gameOver':
-        void this.settle(runtime, run, { kind: 'gameOver', result: output.result });
+        void this.settle(runtime, run, {
+          kind: 'gameOver',
+          result: output.result,
+          ...(output.aiSpend !== undefined && { aiSpend: output.aiSpend }),
+        });
         return;
       case 'failed':
-        void this.settle(runtime, run, { kind: 'failed', reason: output.reason });
+        void this.settle(runtime, run, {
+          kind: 'failed',
+          reason: output.reason,
+          ...(output.aiSpend !== undefined && { aiSpend: output.aiSpend }),
+        });
         return;
       default:
         assertNever(output, 'session output');
@@ -1125,7 +1157,13 @@ export class TableSocketHub {
       }
       case 'gameOver': {
         this.apply(runtime, table.gameFinished(run.attemptId).effects);
-        await this.unlockPostGame(runtime, run.attemptId, 'gameOver', outcome.result);
+        await this.unlockPostGame(
+          runtime,
+          run.attemptId,
+          'gameOver',
+          outcome.result,
+          outcome.aiSpend ?? null,
+        );
         return;
       }
       case 'failed': {
@@ -1135,7 +1173,13 @@ export class TableSocketHub {
           this.sendTo(runtime, socketId, errorFrame(text));
         }
         this.apply(runtime, table.gameFinished(run.attemptId).effects);
-        await this.unlockPostGame(runtime, run.attemptId, outcome.reason, null);
+        await this.unlockPostGame(
+          runtime,
+          run.attemptId,
+          outcome.reason,
+          null,
+          outcome.aiSpend ?? null,
+        );
         return;
       }
       default:

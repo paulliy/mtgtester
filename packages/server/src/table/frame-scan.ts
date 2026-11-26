@@ -89,7 +89,12 @@ const LIVE_TYPES = new Set([
 ]);
 
 /** Full-state frames: allowed only after the seat's own `gameOver`. */
-const POST_GAME_TYPES = new Set(['replayUnlocked', 'replayTurnState', 'tableResults']);
+const POST_GAME_TYPES = new Set([
+  'replayUnlocked',
+  'replayTurnState',
+  'tableResults',
+  'tableAiSpend',
+]);
 
 const ENGINE_REQUEST_ID = /"[^"]*-t\d+-d\d+"/;
 const CARD_ID = /^c-\d+$/;

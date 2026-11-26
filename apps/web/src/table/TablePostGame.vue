@@ -54,6 +54,21 @@ const endingText = computed(() => {
 
 const board = computed(() => table.replayTurn?.state ?? null);
 
+/** The host's AI spend line, in dollars to the cent. */
+const aiSpendText = computed(() => {
+  const spend = table.aiSpend;
+  if (spend === null) return null;
+  const usd = spend.spentUsd;
+  const amount = usd > 0 && usd < 0.005 ? 'under $0.01' : `$${usd.toFixed(2)}`;
+  const tail =
+    spend.stopped === 'cap'
+      ? ' The game reached its spending cap, and the AI bots finished it as built-in bots.'
+      : spend.stopped === 'key'
+        ? ' The AI service refused the key, and the AI bots finished the game as built-in bots.'
+        : '';
+  return `The AI bots spent ${amount} on this game.${tail}`;
+});
+
 /** The display title over the ending sentence. */
 const headline = computed(() => {
   const r = results.value;
@@ -227,6 +242,12 @@ const deckSize = (deck: { cards: Array<{ quantity: number }> }): number =>
       <h2 id="key-title" class="dt-head"><span class="num">III.</span> Random key</h2>
       <p>Every shuffle and random choice in this game came from this key:</p>
       <code class="dt-plate" data-testid="rng-key">{{ results.rngKey }}</code>
+    </section>
+
+    <section v-if="aiSpendText" class="ai-spend" aria-labelledby="ai-spend-title">
+      <h2 id="ai-spend-title" class="dt-head"><span class="num">IV.</span> AI spend</h2>
+      <p data-testid="ai-spend">{{ aiSpendText }}</p>
+      <p>Only you, the host, see this.</p>
     </section>
   </section>
 </template>

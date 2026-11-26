@@ -10,6 +10,9 @@ import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import type { ScriptedRunReport } from './scripted-run';
 
+// `STUB_API_KEY` in `scripted-run.ts`; importing it would load `bun:sqlite` into Vitest.
+const STUB_API_KEY = 'sk-ant-scripted-run-stub';
+
 describe('a scripted table game in workers', () => {
   it('finishes with two scripted clients and two bots, and the frame scan is clean', () => {
     const run = spawnSync('bun', ['run', 'packages/server/src/cli/table-scripted-run.ts'], {
@@ -46,6 +49,30 @@ describe('a scripted table game in workers', () => {
     expect(report.disconnect).toMatchObject({ fallbackSeen: true, reconnected: true });
     expect(report.disconnect?.decisionsAfterResume).toBeGreaterThan(0);
     expect(report.scan.violations).toEqual([]);
+  }, 300_000);
+
+  it('finishes with an AI seat on a stand-in API; only the host gets the spend line (ADR 0055)', () => {
+    const run = spawnSync(
+      'bun',
+      ['run', 'packages/server/src/cli/table-scripted-run.ts', '--scenario', 'model'],
+      {
+        encoding: 'utf8',
+        timeout: 280_000,
+        env: { ...process.env, ANTHROPIC_API_KEY: STUB_API_KEY },
+      },
+    );
+    expect(run.error).toBeUndefined();
+    const last = run.stdout.trim().split('\n').at(-1) ?? '{}';
+    const report = JSON.parse(last) as ScriptedRunReport;
+    expect(report.problems).toEqual([]);
+    expect(run.status).toBe(0);
+    expect(report.attemptStatus).toBe('finished');
+    expect(report.scan.violations).toEqual([]);
+    expect(report.ai?.calls).toBeGreaterThan(0);
+    expect(report.ai?.seatSpendFrames).toBe(0);
+    expect(report.ai?.hostSpend).toEqual([
+      { spentUsd: expect.any(Number) as number, stopped: null },
+    ]);
   }, 300_000);
 
   it('finishes in production mode behind a TLS proxy, every client over https and wss', () => {

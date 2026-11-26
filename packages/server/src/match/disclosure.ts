@@ -230,6 +230,8 @@ const PLANNED_OUTBOUND_GATES: Readonly<Record<string, OutboundGate>> = {
   seatStatus: 'always',
   // That model seats switched to the built-in bot, and why; no amount (ADR 0055 decision 8).
   aiBudget: 'always',
+  // The model seats' spend, after the game and to the host only (ADR 0055 decision 8).
+  tableAiSpend: 'fullState',
 };
 
 /** The full-state types, for tests and for the table server's own checks. */

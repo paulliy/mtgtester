@@ -378,6 +378,17 @@ describe('table store', () => {
     expect(table.aiBudget).toBeNull();
   });
 
+  it("keeps the host's post-game AI spend line, and forgets it on another table", () => {
+    const { table } = setup();
+    table.open('t1');
+    sockets[0]!.open();
+    expect(table.aiSpend).toBeNull();
+    sockets[0]!.deliver({ type: 'tableAiSpend', payload: { spentUsd: 0.31, stopped: null } });
+    expect(table.aiSpend).toEqual({ spentUsd: 0.31, stopped: null });
+    table.open('t2');
+    expect(table.aiSpend).toBeNull();
+  });
+
   it('keeps the post-game record and asks for replay turns', () => {
     const { table } = setup();
     table.open('t1');
