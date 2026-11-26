@@ -385,6 +385,27 @@ describe('OpenAiDecisionProvider', () => {
       expect(res.actionId).toBe(1); // "Cast Spell" — scores above `pass` (id 0)
     });
 
+    it("breaks the fallback's ties on the seat's injected stream when it has one (ADR 0055)", async () => {
+      const nextInt = vi.fn(() => 0);
+      const provider = new OpenAiDecisionProvider(
+        throwingClient(new HttpError(500, 'upstream')),
+        mockQueue,
+        mockEngine,
+        DEFAULT_AI_CONFIG,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { fallbackRandom: { nextInt } },
+      );
+
+      const res = await provider.decide(fixtureReq);
+      expect(res.actionId).toBe(1);
+      expect(nextInt).toHaveBeenCalled();
+    });
+
     it.each([
       ['daily quota', new DailyQuotaExhaustedError()],
       ['no available model', new NoAvailableModelError(['m1'])],

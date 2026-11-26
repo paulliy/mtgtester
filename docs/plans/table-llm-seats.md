@@ -1,6 +1,6 @@
 # Plan: LLM seats at tables
 
-Status: Phase 0 done (2026-11-26): ADR 0055 proposed with census and paid-game figures. Next: Phase 1. Amends
+Status: Phase 1 in review (2026-11-26). Phase 0 done: ADR 0055 proposed with census and paid-game figures. Amends
 [ADR 0031](../decisions/0031-multiplayer-tables.md) decision 10 once accepted.
 
 ## Goal
@@ -12,8 +12,10 @@ unless the server operator turns it on and supplies a key.
 ## Decisions (Paul, 2026-11-26)
 
 - **Models (revised 2026-11-26):** Claude Haiku 5.5 for both roles. Strategist reasoning at
-  medium effort; tactician reasoning off, with low effort as the alternative (ADR 0055 decision 2
-  and its paid-game table). Anthropic API directly or through OpenRouter is a deployment choice.
+  medium effort; tactician thinking off (ADR 0055 decision 2 and its paid-game table).
+- **Provider:** the Anthropic Messages API directly, with the key Paul holds (not OpenRouter).
+- **Strategist starts early:** a model seat's turn plan is requested before its turn begins, so
+  people do not wait at the start of its turn.
 - **Server:** the existing Oracle Cloud VM (`docs/guides/deploy-oracle-cloud.md`).
 - **Account-wide spending** is bounded by the limit set on the API key itself, outside this code.
   The server does not keep its own daily cap.
@@ -95,8 +97,8 @@ Each phase is its own pull request. I stop after each one for your review.
    the same.
 2. Require `opts.ai` when any seat is a model seat, not only when `providerKind === 'ai'`.
 3. The heuristic fallback inside the AI provider takes an injected `{ nextInt }` source. In table
-   games that is the seat's own fallback stream. Other games keep the current seeding, so their
-   decisions stay the same.
+   games that is the seat's own bot stream, which no heuristic bot reads at a model seat. Other
+   games keep the current seeding, so their decisions stay the same.
 4. Tests: a mixed game (one model seat with a stubbed client, one heuristic seat) asks the model
    only for the model seat. Existing session tests pass unchanged. `bun run hill-climb` shows
    identical fingerprints, because no benchmark game has mixed seats.
@@ -140,11 +142,18 @@ Each phase is its own pull request. I stop after each one for your review.
    reaching the cap: the seats switch to the bot at once, rather than paying the deadline on every
    decision. One host-only message says so.
 
-5. **No JEV, no reflection and no post-game call** at tables. The table's `AiConfig` is built in
+5. **Thinking off and the early strategist.** For models that accept it (Haiku 5.5),
+   `anthropicRequest` sends `thinking: {"type": "disabled"}` when a role's reasoning is off,
+   instead of effort `low` with thinking on (ADR 0055 decision 2). The table's model seats ask for
+   their turn plan when the seat before them starts its turn (or at its end step, whichever the
+   coordinator's prefetch can anchor), so the plan is usually ready when their turn begins. Check
+   with a stubbed slow strategist that a model seat's first decision does not wait the full call.
+
+6. **No JEV, no reflection and no post-game call** at tables. The table's `AiConfig` is built in
    code from the Anthropic preset plus the table overrides, so a stray `AI_*` variable on the VM
    cannot turn these on.
 
-6. Tests with a stubbed client cover each case: a routine decision never reaches the client, a
+7. Tests with a stubbed client cover each case: a routine decision never reaches the client, a
    slow client hits the deadline, a costly client hits the cap mid-game, and an out-of-credit error
    switches every seat at once.
 

@@ -109,8 +109,15 @@ function table(
     rng?: 'legacy' | 'chacha20';
     rngKey?: string;
     engineLimits?: { maxStepWork: number; maxObjects: number };
+    /** The two bot seats' controllers, when they differ (ADR 0055). */
+    bots?: { P2: 'random' | 'ai'; P4: 'random' | 'ai' };
   } = {},
 ): Table {
+  const bots = options.bots ?? {
+    P2: options.providerKind ?? 'random',
+    P4: options.providerKind ?? 'random',
+  };
+  const anyModel = bots.P2 === 'ai' || bots.P4 === 'ai';
   const pub: ServerToClientMessage[] = [];
   const bySeat: Record<PlayerId, ServerToClientMessage[]> = { P1: [], P3: [] };
   const session = new MatchSession({
@@ -122,14 +129,9 @@ function table(
     ...(options.engineLimits !== undefined ? { engineLimits: options.engineLimits } : {}),
     seats: seats(),
     providerKind: options.providerKind ?? 'random',
-    ...(options.providerKind === 'ai' && { ai: sessionAi }),
+    ...(anyModel && { ai: sessionAi }),
     gameMode: 'table',
-    seatControllers: {
-      P1: 'human',
-      P2: options.providerKind ?? 'random',
-      P3: 'human',
-      P4: options.providerKind ?? 'random',
-    },
+    seatControllers: { P1: 'human', P2: bots.P2, P3: 'human', P4: bots.P4 },
     turnCap: options.turnCap ?? 6,
     ...(options.store !== undefined ? { store: options.store } : {}),
     ...(options.replay !== undefined ? { replay: options.replay } : {}),
@@ -396,6 +398,123 @@ describe('MatchSession - a table with two human seats', () => {
     expect(requestDecision).toHaveBeenCalledTimes(1);
     coordinator.cancel();
     t.session.abandon();
+  });
+});
+
+describe('MatchSession - a table that mixes a model seat with a heuristic bot (ADR 0055)', () => {
+  /** Put a mocked client and config into the session before it starts, as the test above does. */
+  function withMockedAi(t: Table, client: AiClient): void {
+    const internals = t.session as unknown as {
+      aiConfig: AiConfig;
+      aiStrategistClient: AiClient;
+      aiTacticianClient: AiClient;
+    };
+    internals.aiConfig = {
+      ...DEFAULT_AI_CONFIG,
+      apiKey: 'test-key',
+      tacticalMode: 'model',
+      strategistEnabled: true,
+      reflectionEnabled: false,
+      jevEnabled: false,
+      jevShadowEnabled: false,
+    };
+    internals.aiStrategistClient = client;
+    internals.aiTacticianClient = client;
+  }
+
+  it('asks the model only about the model seat, and the heuristic seat still plays', async () => {
+    const t = table({ bots: { P2: 'ai', P4: 'random' } });
+    const asked: PlayerId[] = [];
+    // Every call fails, so each model-seat decision ends on the heuristic fallback and the game
+    // still runs to its cap without a network.
+    const client = {
+      activeModel: 'mock',
+      requestDecision: vi.fn((_prompt: unknown, request: DecisionRequest) => {
+        asked.push(request.decidingPlayer);
+        return Promise.reject(new Error('mock model unavailable'));
+      }),
+      setAttemptObserver: () => undefined,
+    } as unknown as AiClient;
+    withMockedAi(t, client);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      await playScripted(t);
+    } finally {
+      warn.mockRestore();
+    }
+
+    expect(asked.length).toBeGreaterThan(0);
+    expect(new Set(asked)).toEqual(new Set(['P2']));
+  }, 30_000);
+
+  it('plans strategist turns for the model seat only, not the heuristic bot or the people', () => {
+    const t = table({ bots: { P2: 'ai', P4: 'random' } });
+    const requestDecision = vi.fn(() => new Promise<never>(() => undefined));
+    withMockedAi(t, {
+      activeModel: 'mock-strategist',
+      requestDecision,
+      setAttemptObserver: () => undefined,
+    } as unknown as AiClient);
+    const coordinator = (
+      t.session as unknown as { ensureAiCoordinator(): StrategyCoordinator }
+    ).ensureAiCoordinator();
+    const request = (seat: PlayerId): DecisionRequest => ({
+      requestId: `r-${seat}`,
+      gameId: 'g-multi-human',
+      turn: 1,
+      activePlayer: seat,
+      decidingPlayer: seat,
+      phase: 'precombatMain',
+      step: null,
+      decisionType: 'priority',
+      prompt: 'Choose.',
+      legalActions: [{ id: 0, type: 'pass', description: 'Pass priority' }],
+    });
+    for (const seat of ['P1', 'P3', 'P4'] as const) coordinator.prepare(request(seat));
+    expect(requestDecision).not.toHaveBeenCalled();
+    coordinator.prepare(request('P2'));
+    expect(requestDecision).toHaveBeenCalledTimes(1);
+    coordinator.cancel();
+    t.session.abandon();
+  });
+
+  it('refuses a table seat whose controller is not human, random or ai', () => {
+    expect(
+      () =>
+        new MatchSession({
+          disclosure: tablePolicy(),
+          gameId: 'g-bad',
+          seed: SEED,
+          seats: seats(),
+          providerKind: 'random',
+          gameMode: 'table',
+          seatControllers: {
+            P1: 'human',
+            P2: 'random',
+            P3: 'human',
+            P4: 'model' as unknown as 'ai',
+          },
+          send: () => undefined,
+          sendToSeat: () => undefined,
+        }),
+    ).toThrow('table seat P4 must be human, random or ai');
+  });
+
+  it('needs the AI services when any seat is a model seat', () => {
+    expect(
+      () =>
+        new MatchSession({
+          disclosure: tablePolicy(),
+          gameId: 'g-no-ai',
+          seed: SEED,
+          seats: seats(),
+          providerKind: 'random',
+          gameMode: 'table',
+          seatControllers: { P1: 'human', P2: 'ai', P3: 'human', P4: 'random' },
+          send: () => undefined,
+          sendToSeat: () => undefined,
+        }),
+    ).toThrow('A session with model seats needs the AI services');
   });
 });
 

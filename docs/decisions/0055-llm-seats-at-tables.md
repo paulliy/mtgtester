@@ -67,12 +67,17 @@ turn 15 when the models changed) had Haiku tactician decisions at 1.1 s p50 and 
    when the server runs with `TABLE_AI_SEATS=1` and a usable provider key. Without the setting, the
    lobby does not offer it and the protocol parser refuses it.
 2. **Models.** Claude Haiku 5.5 for every role (Paul, 2026-11-26): the strategist with reasoning at
-   medium effort, the tactician with reasoning off (setting A above, cheaper and faster per
-   decision), with low effort kept as the alternative until a multi-game strength check picks
-   between them. The table's `AiConfig` is built in code from these settings, so stray `AI_*`
-   variables on the host cannot turn on JEV, reflection or other experiments. Whether the server
-   calls the Anthropic API directly or through OpenRouter is a deployment choice; decision 5 is what
-   makes the direct API usable.
+   medium effort, the tactician with thinking off (setting A above, cheaper and faster per
+   decision). The table's `AiConfig` is built in code from these settings, so stray `AI_*`
+   variables on the host cannot turn on JEV, reflection or other experiments. The server calls the
+   Anthropic Messages API directly (Paul, 2026-11-26), so decision 5's price table is required.
+
+   "Thinking off" must be sent as `thinking: {"type": "disabled"}`. Anthropic's effort page says
+   Haiku 5.5 accepts it at effort `high` or below, and that Opus 5.5 rejects it with a 400 at every
+   effort. Today `anthropicEffort` maps reasoning off to effort `low` with thinking left on
+   (`ai/anthropic.ts:58-65`), which matches setting B more than A. The table phase sends the
+   disabled form for models that accept it.
+
 3. **Model-led play, with routine decision types on the card-aware bot.** `tacticalMode: 'model'`.
    A new `botDecisionTypes` list sends whole decision types to the card-aware bot
    ([ADR 0039](0039-bot-led-tactics.md)) after the plan, heuristics and cache, and before the
@@ -96,11 +101,13 @@ turn 15 when the models changed) had Haiku tactician decisions at 1.1 s p50 and 
 6. **Clock.** A tactician call gets a hard wall-clock deadline (15 s to start with, about twice the
    measured p95). Retries happen only inside it. When it passes, the heuristic fallback answers,
    recorded as `fallback`. The strategist call at turn start has its own deadline (30 s to start
-   with); when it passes, the seat plays that turn with its previous knobs or none. Starting the
-   strategist call before the seat's turn begins, so people do not wait for it, is a later
-   improvement.
-7. **Randomness.** The heuristic fallback inside the AI provider draws from the seat's own ChaCha20
-   fallback stream at tables (ADR 0031 decision 4), not from `HeuristicRng(requestId)`.
+   with); when it passes, the seat plays that turn with its previous knobs or none. The
+   strategist call for a model seat starts before its turn begins (Paul, 2026-11-26), so people
+   do not sit through it: the turn-start wait was the longest pause in both paid games.
+7. **Randomness.** At a keyed table, the heuristic fallback inside a model seat's AI provider
+   breaks ties on that seat's own bot stream (stream 1 + seat, ADR 0031 decision 4), not on
+   `HeuristicRng(requestId)`. No heuristic bot reads that stream, because the seat is the model's,
+   and a model seat never has a clock fallback bot.
 8. **Disclosure.** ADR 0031 decision 3 stands: no `apiWaiting`, AI note, strategist plan or cost
    figure reaches any player during play, and AI reasoning is not shown after the game either. The
    host's post-game view gets the table's total model spend and whether the cap was reached. Post-game
