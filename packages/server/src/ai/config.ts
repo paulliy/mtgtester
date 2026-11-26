@@ -346,7 +346,8 @@ const OPENAI: ProviderPreset = {
 /**
  * Claude, through the Messages API (not an OpenAI shim). Thinking cannot be switched off on the
  * current models, so effort is the cost control: see `anthropicRequest` in `anthropic.ts`.
- * The strategist gets Opus for the once-per-turn plan; every other role gets Sonnet.
+ * Paul's pick (2026-11-26): Haiku is the tactician (many small calls a turn, Sonnet as its
+ * capacity backup) and Sonnet is the strategist; the other roles get Sonnet.
  */
 const ANTHROPIC: ProviderPreset = {
   baseUrl: 'https://api.anthropic.com',
@@ -355,8 +356,8 @@ const ANTHROPIC: ProviderPreset = {
   envPrefix: 'ANTHROPIC',
   apiFormat: 'anthropic',
   roleModels: {
-    strategist: ['claude-opus-5-5', 'claude-sonnet-5-5'],
-    tactician: ['claude-sonnet-5-5'],
+    strategist: ['claude-sonnet-5-5'],
+    tactician: ['claude-haiku-5-5', 'claude-sonnet-5-5'],
     archetype: ['claude-sonnet-5-5'],
     reflection: ['claude-sonnet-5-5'],
   },
@@ -965,9 +966,11 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
       env['AI_STRATEGY_ROUTER_SHADOW_ENABLED'],
       DEFAULT_AI_CONFIG.strategyRouterShadowEnabled,
     ),
+    // On by default for the Messages API: without it the only cache breakpoint sits on the
+    // system primer, which is usually under Claude's 512-token minimum, so nothing caches.
     providerPromptCacheLayoutEnabled: parseBoolean(
       env['AI_PROVIDER_PROMPT_CACHE_LAYOUT_ENABLED'],
-      DEFAULT_AI_CONFIG.providerPromptCacheLayoutEnabled,
+      apiFormat === 'anthropic' ? true : DEFAULT_AI_CONFIG.providerPromptCacheLayoutEnabled,
     ),
     combatRolloutsEnabled: parseBoolean(
       env['AI_COMBAT_ROLLOUTS_ENABLED'],

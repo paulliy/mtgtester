@@ -24,6 +24,22 @@ export const ANTHROPIC_MIN_THINKING_TOKENS = 2048;
 /** Server-side refusal fallback (beta): a declined request is re-run on a fallback model. */
 export const ANTHROPIC_FALLBACK_BETA = 'server-side-fallback-2026-07-01';
 
+/**
+ * The models that offer the server-side fallback. Haiku 5.5 has none (a declined request stays
+ * declined), so it, and any model not listed, is sent without the parameter.
+ */
+const SERVER_FALLBACK_MODELS = new Set([
+  'claude-fable-5-2',
+  'claude-fable-5-1',
+  'claude-opus-5-5',
+  'claude-opus-5',
+  'claude-sonnet-5-5',
+]);
+
+export function supportsServerFallback(model: string): boolean {
+  return SERVER_FALLBACK_MODELS.has(model);
+}
+
 /** An HTTP failure from the Messages API, flattened so the client classifies it like any other. */
 export class AnthropicHttpFailure extends Error {
   constructor(
@@ -100,8 +116,9 @@ export function anthropicRequest(
     ...(system.length > 0 ? { system } : {}),
     messages,
     output_config: { effort: anthropicEffort(config) },
-    betas: [ANTHROPIC_FALLBACK_BETA],
-    fallbacks: 'default',
+    ...(supportsServerFallback(model)
+      ? { betas: [ANTHROPIC_FALLBACK_BETA], fallbacks: 'default' as const }
+      : {}),
   };
 }
 
