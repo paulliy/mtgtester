@@ -58,6 +58,8 @@ export class GameAiBudget {
   unpricedAttempts = 0;
   /** Called once, when the budget stops. */
   onStop?: (reason: BudgetStop, spentUsd: number) => void;
+  /** Calls in flight, which a stop aborts so no retry inside them spends past the cap. */
+  private readonly stopListeners = new Set<() => void>();
 
   constructor(readonly maxUsd: number) {
     if (!(maxUsd > 0)) throw new RangeError(`a game AI budget must be positive, got ${maxUsd}`);
@@ -88,7 +90,16 @@ export class GameAiBudget {
   stop(reason: BudgetStop): void {
     if (this.stoppedFor !== null) return;
     this.stoppedFor = reason;
+    for (const listener of [...this.stopListeners]) listener();
     this.onStop?.(reason, this.spent);
+  }
+
+  /** Run `listener` when the budget stops; returns the unsubscribe. */
+  whenStopped(listener: () => void): () => void {
+    this.stopListeners.add(listener);
+    return () => {
+      this.stopListeners.delete(listener);
+    };
   }
 }
 
@@ -96,6 +107,13 @@ export class GameAiBudget {
  * A client that answers to `budget` and gives up after `deadlineMs` (retries and model fallback
  * included). The deadline aborts the call; the AI provider treats that like any failed call and
  * answers with its heuristic fallback.
+ *
+ * Two things hold even when the inner client is slow to notice its signal:
+ *
+ * - The call settles when the deadline passes, not when the inner client next checks the signal.
+ *   (Its rate-limit wait sleeps 60 s without watching it.)
+ * - When the game's budget stops, from this seat or any other, every call in flight is aborted, so
+ *   the inner client's own retries send nothing more: it checks the signal before each attempt.
  */
 export function limitedClient(inner: AiClient, budget: GameAiBudget, deadlineMs: number): AiClient {
   let outer: AiAttemptObserver | undefined;
@@ -117,12 +135,33 @@ export function limitedClient(inner: AiClient, budget: GameAiBudget, deadlineMs:
       signal?: AbortSignal,
     ): Promise<{ response: DecisionResponseOf; meta: CallMeta }> {
       budget.check();
-      const deadline = AbortSignal.timeout(deadlineMs);
-      return await inner.requestDecision(
-        prompt,
-        request,
-        signal === undefined ? deadline : AbortSignal.any([signal, deadline]),
-      );
+      const stopped = new AbortController();
+      const unsubscribe = budget.whenStopped(() => {
+        stopped.abort(new BudgetExhaustedError(budget.stopped ?? 'cap'));
+      });
+      const combined = AbortSignal.any([
+        stopped.signal,
+        AbortSignal.timeout(deadlineMs),
+        ...(signal === undefined ? [] : [signal]),
+      ]);
+      try {
+        return await new Promise((resolve, reject) => {
+          const onAbort = (): void => {
+            reject(
+              combined.reason instanceof Error ? combined.reason : new Error('AI call aborted'),
+            );
+          };
+          if (combined.aborted) {
+            onAbort();
+            return;
+          }
+          combined.addEventListener('abort', onAbort, { once: true });
+          // A late settle after the abort is ignored: the promise has already rejected.
+          inner.requestDecision(prompt, request, combined).then(resolve, reject);
+        });
+      } finally {
+        unsubscribe();
+      }
     },
   };
 }

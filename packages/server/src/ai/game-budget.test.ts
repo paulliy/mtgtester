@@ -146,6 +146,62 @@ describe('limitedClient', () => {
     await expect(client.requestDecision(prompt, request)).rejects.toThrow();
   });
 
+  it('settles at its deadline even when the inner client ignores the signal', async () => {
+    // The client's rate-limit wait sleeps 60 s without watching its signal (PR review, #164).
+    const inner: AiClient = {
+      activeModel: 'claude-haiku-5-5',
+      requestDecision: () => new Promise(() => undefined),
+    };
+    const started = Date.now();
+    const client = limitedClient(inner, new GameAiBudget(1), 30);
+    await expect(client.requestDecision(prompt, request)).rejects.toThrow();
+    expect(Date.now() - started).toBeLessThan(1_000);
+  });
+
+  it('sends no retry once an attempt inside the same call crosses the cap', async () => {
+    // A retry loop like `withRetry`: it checks the signal before each billed attempt.
+    let observe: ((a: AiNetworkAttempt) => void | Promise<void>) | undefined;
+    let attempts = 0;
+    const inner: AiClient = {
+      activeModel: 'claude-haiku-5-5',
+      setAttemptObserver: (observer) => {
+        observe = observer;
+      },
+      requestDecision: async (_prompt, _request, signal) => {
+        for (let i = 0; i < 3; i++) {
+          if (signal?.aborted === true) throw new Error('cancelled');
+          attempts++;
+          await observe?.(
+            attempt({ status: 'rejected', usage: { ...attempt().usage, costUsd: 0.6 } }),
+          );
+        }
+        throw new Error('every attempt was rejected');
+      },
+    };
+    const budget = new GameAiBudget(0.5);
+    const client = limitedClient(inner, budget, 15_000);
+    await expect(client.requestDecision(prompt, request)).rejects.toBeInstanceOf(
+      BudgetExhaustedError,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(attempts).toBe(1);
+    expect(budget.stopped).toBe('cap');
+  });
+
+  it("aborts another seat's call in flight when the budget stops", async () => {
+    const budget = new GameAiBudget(1);
+    const waiting: AiClient = {
+      activeModel: 'claude-haiku-5-5',
+      requestDecision: (_prompt, _request, signal) =>
+        new Promise((_resolve, reject) => {
+          signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        }),
+    };
+    const call = limitedClient(waiting, budget, 15_000).requestDecision(prompt, request);
+    budget.stop('cap');
+    await expect(call).rejects.toBeInstanceOf(BudgetExhaustedError);
+  });
+
   it("charges every attempt the inner client reports and passes it to the caller's observer", async () => {
     let observe: ((a: AiNetworkAttempt) => void | Promise<void>) | undefined;
     const inner: AiClient = {
