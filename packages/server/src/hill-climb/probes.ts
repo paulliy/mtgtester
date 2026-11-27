@@ -22,6 +22,7 @@ import { playGame, sumWork } from '../cli/engine-bench-game';
 import type { FuzzDeck } from '../cli/fuzz-game';
 import { loadDecks, pod } from '../cli/fuzz-plan';
 import { TABLE_ENGINE_LIMITS } from '../match/engine-limits';
+import { tableAiConfig } from '../ai/table-config';
 import { authoringProbe } from './authoring';
 import type { Metric, Report } from './report';
 import { measureSettle, poolTextMatches } from '../../../../scripts/card-compiler/settle';
@@ -261,6 +262,9 @@ const CENSUS_MODES: Array<{ key: string; config: Partial<AiConfig> }> = [
       strategistDeltaEnabled: false,
     },
   },
+  // What model seats at a table run (ADR 0055): the table's own configuration, Haiku on the
+  // Messages API with the stable-prefix layout. The key is a placeholder; the census never calls out.
+  { key: 'table', config: tableAiConfig('census-placeholder-key') },
 ];
 
 /**
