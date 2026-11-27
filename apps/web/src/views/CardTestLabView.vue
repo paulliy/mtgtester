@@ -202,11 +202,11 @@ onMounted(async () => {
   }
 });
 
+// A started scenario, not a resumed player game: that resume's answer arrives first and would
+// show the previous board before the scenario's.
 watch(
-  () => store.gameId,
-  (gameId) => {
-    if (gameId !== null) void router.push('/game');
-  },
+  () => store.startsConfirmed,
+  () => void router.push('/game'),
 );
 
 function pickCard(target: LabCard): void {
