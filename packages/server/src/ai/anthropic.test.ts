@@ -210,6 +210,73 @@ describe('anthropicRequest', () => {
     ]);
     expect(body.messages[1]?.content).toEqual([{ type: 'text', text: 'observation' }]);
   });
+
+  it('adds a second breakpoint on the last card glossary message', () => {
+    const layered: AiPrompt = {
+      messages: [
+        { role: 'system', content: 'primer' },
+        { role: 'user', content: 'game constants' },
+        { role: 'user', content: 'glossary 1' },
+        { role: 'user', content: 'glossary 2' },
+        { role: 'user', content: 'observation' },
+      ],
+      estimatedTokens: 10,
+      glossaryMessageCount: 2,
+      promptCache: {
+        version: 'stable-prefix-v2',
+        role: 'tactician',
+        prefixHash: 'h',
+        prefixMessageCount: 2,
+        coldStatus: 'unverified',
+        completeResponseCacheAllowed: false,
+      },
+    };
+    const body = anthropicRequest(anthropicConfig, 'claude-haiku-5-5', layered, 100);
+    const marked = body.messages.map((m) =>
+      (m.content as Array<{ cache_control?: unknown }>).some((b) => b.cache_control !== undefined),
+    );
+    expect(marked).toEqual([true, false, true, false]);
+  });
+
+  it('keeps a later system message in place on a model that allows it', () => {
+    const split: AiPrompt = {
+      messages: [
+        { role: 'system', content: 'common' },
+        { role: 'user', content: 'observation' },
+        { role: 'system', content: 'attack section' },
+      ],
+      estimatedTokens: 10,
+    };
+    const haiku = anthropicRequest(anthropicConfig, 'claude-haiku-5-5', split, 100);
+    expect(haiku.system).toEqual([
+      { type: 'text', text: 'common', cache_control: { type: 'ephemeral' } },
+    ]);
+    expect(haiku.messages.map((m) => m.role)).toEqual(['user', 'system']);
+    // Claude Sonnet 5 rejects system messages in `messages`: there it joins the system prompt.
+    const sonnet5 = anthropicRequest(anthropicConfig, 'claude-sonnet-5', split, 100);
+    expect(sonnet5.system).toHaveLength(2);
+    expect(sonnet5.messages.map((m) => m.role)).toEqual(['user']);
+  });
+
+  it('puts the glossary breakpoint after the system primer without the cache layout', () => {
+    const plain: AiPrompt = {
+      messages: [
+        { role: 'system', content: 'primer' },
+        { role: 'user', content: 'glossary' },
+        { role: 'user', content: 'observation' },
+      ],
+      estimatedTokens: 10,
+      glossaryMessageCount: 1,
+    };
+    const body = anthropicRequest(anthropicConfig, 'claude-haiku-5-5', plain, 100);
+    expect(body.system).toEqual([
+      { type: 'text', text: 'primer', cache_control: { type: 'ephemeral' } },
+    ]);
+    expect(body.messages[0]?.content).toEqual([
+      { type: 'text', text: 'glossary', cache_control: { type: 'ephemeral' } },
+    ]);
+    expect(body.messages[1]?.content).toEqual([{ type: 'text', text: 'observation' }]);
+  });
 });
 
 describe('OpenAiCompatibleClient over the Messages API', () => {

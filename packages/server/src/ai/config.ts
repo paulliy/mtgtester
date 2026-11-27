@@ -234,6 +234,19 @@ export interface AiConfig {
    * hill-climb `botCached` census mode measures it offline.
    */
   providerPromptCacheLayoutEnabled: boolean;
+  /**
+   * Move the tactician's hand and battlefield rules text into a per-seat card glossary that only
+   * grows, ahead of the observation (`CardGlossary`), so a prefix cache serves it. On by default
+   * for the Messages API, like the stable-prefix layout; the hill-climb `table` census mode
+   * measures it.
+   */
+  tacticianCardGlossaryEnabled: boolean;
+  /**
+   * Send the tactician the same system prompt for every decision, with the primer sections a
+   * decision adds after the game state as a system message (`stableSystemPrimer` in context.ts),
+   * so a change of decision type keeps the cached prefix. On by default for the Messages API.
+   */
+  tacticianStableSystemPrimerEnabled: boolean;
   /** Reserved feature flag for exact engine-derived combat previews. */
   combatRolloutsEnabled: boolean;
   /** Allow Jev to answer supported tactical choices. Off until benchmark promotion. */
@@ -508,6 +521,8 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   planLifecycleScopedInvalidationEnabled: false,
   strategyRouterShadowEnabled: false,
   providerPromptCacheLayoutEnabled: false,
+  tacticianCardGlossaryEnabled: false,
+  tacticianStableSystemPrimerEnabled: false,
   combatRolloutsEnabled: false,
   jevEnabled: false,
   jevShadowEnabled: false,
@@ -995,6 +1010,14 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     providerPromptCacheLayoutEnabled: parseBoolean(
       env['AI_PROVIDER_PROMPT_CACHE_LAYOUT_ENABLED'],
       apiFormat === 'anthropic' ? true : DEFAULT_AI_CONFIG.providerPromptCacheLayoutEnabled,
+    ),
+    tacticianCardGlossaryEnabled: parseBoolean(
+      env['AI_TACTICIAN_CARD_GLOSSARY_ENABLED'],
+      apiFormat === 'anthropic' ? true : DEFAULT_AI_CONFIG.tacticianCardGlossaryEnabled,
+    ),
+    tacticianStableSystemPrimerEnabled: parseBoolean(
+      env['AI_TACTICIAN_STABLE_SYSTEM_PRIMER_ENABLED'],
+      apiFormat === 'anthropic' ? true : DEFAULT_AI_CONFIG.tacticianStableSystemPrimerEnabled,
     ),
     combatRolloutsEnabled: parseBoolean(
       env['AI_COMBAT_ROLLOUTS_ENABLED'],

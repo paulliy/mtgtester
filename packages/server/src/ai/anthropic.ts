@@ -40,6 +40,25 @@ export function supportsServerFallback(model: string): boolean {
   return SERVER_FALLBACK_MODELS.has(model);
 }
 
+/**
+ * Models that accept `role: "system"` messages inside `messages` (no beta header). Claude Sonnet 5
+ * and older models do not; there a later system message joins the top-level system prompt.
+ */
+const MID_CONVERSATION_SYSTEM_MODELS = new Set([
+  'claude-fable-5-2',
+  'claude-fable-5-1',
+  'claude-fable-5',
+  'claude-opus-5-5',
+  'claude-opus-5',
+  'claude-opus-4-8',
+  'claude-sonnet-5-5',
+  'claude-haiku-5-5',
+]);
+
+export function supportsMidConversationSystem(model: string): boolean {
+  return MID_CONVERSATION_SYSTEM_MODELS.has(model);
+}
+
 /** An HTTP failure from the Messages API, flattened so the client classifies it like any other. */
 export class AnthropicHttpFailure extends Error {
   constructor(
@@ -70,7 +89,8 @@ export function anthropicEffort(
  * One Messages request. System messages become the top-level `system`; the rest keep their
  * order. A cache breakpoint goes on the last message of the stable prefix (the prompt-cache
  * layout's prefix when it is on, otherwise the system primer), so the per-game constants are
- * read from cache on later calls. No `temperature`: current models reject sampling parameters.
+ * read from cache on later calls, and a second one on the last card glossary message, if any.
+ * No `temperature`: current models reject sampling parameters.
  */
 /**
  * Models that accept `thinking: {"type": "disabled"}`. Anthropic's effort page (read 2026-11-26)
@@ -105,6 +125,12 @@ export function anthropicRequest(
   const systemCount = leadingSystem === -1 ? prompt.messages.length : leadingSystem;
   const prefixCount = prompt.promptCache?.prefixMessageCount ?? systemCount;
   const breakpoint = Math.min(Math.max(prefixCount, 1), prompt.messages.length) - 1;
+  // The card glossary follows the stable prefix and only ever grows, so a second breakpoint on its
+  // last message lets the next call read all of it but the one message that call adds.
+  const glossaryEnd = Math.max(prefixCount, 1) + (prompt.glossaryMessageCount ?? 0) - 1;
+  const breakpoints = new Set([breakpoint]);
+  if (glossaryEnd > breakpoint && glossaryEnd < prompt.messages.length - 1)
+    breakpoints.add(glossaryEnd);
   const cache = { type: 'ephemeral' as const };
 
   const system: Anthropic.Beta.Messages.BetaTextBlockParam[] = [];
@@ -113,12 +139,16 @@ export function anthropicRequest(
     const block: Anthropic.Beta.Messages.BetaTextBlockParam = {
       type: 'text',
       text: message.content,
-      ...(index === breakpoint ? { cache_control: cache } : {}),
+      ...(breakpoints.has(index) ? { cache_control: cache } : {}),
     };
     if (message.role === 'system') {
-      // A system message after the conversation has started is still an operator instruction;
-      // keep it in the system prompt rather than demoting it to a user turn.
-      system.push(block);
+      // A system message after the conversation has started is still an operator instruction.
+      // Where the model allows it, it stays where it is, so it does not change the cached prefix
+      // ahead of the conversation; otherwise it joins the system prompt rather than being
+      // demoted to a user turn.
+      if (index >= systemCount && supportsMidConversationSystem(model))
+        messages.push({ role: 'system', content: [block] });
+      else system.push(block);
       return;
     }
     messages.push({ role: message.role, content: [block] });
