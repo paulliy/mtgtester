@@ -4648,9 +4648,6 @@ button.primary {
   grid-template-columns: minmax(0, 1fr) minmax(24rem, 48%);
   border-top: 1px solid var(--ink);
 }
-.human-zone.no-hand .hand-band {
-  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
-}
 .hand-wrap {
   min-width: 0;
   min-height: 0;
