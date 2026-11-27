@@ -101,6 +101,31 @@ export function canDisableThinking(model: string): boolean {
   return /^claude-haiku-5-5(\b|$)/.test(model);
 }
 
+function leadingSystemCount(prompt: Pick<AiPrompt, 'messages'>): number {
+  const leadingSystem = prompt.messages.findIndex((m) => m.role !== 'system');
+  return leadingSystem === -1 ? prompt.messages.length : leadingSystem;
+}
+
+/**
+ * The indexes of the messages `anthropicRequest` puts a cache breakpoint on: the last message of
+ * the stable prefix (the prompt-cache layout's prefix when it is on, otherwise the system primer),
+ * and the last card glossary message, if any. Exported so the hill-climb census bills a prompt
+ * with exactly the breakpoints a real request carries (`AnthropicCacheModel`).
+ */
+export function anthropicCacheBreakpoints(
+  prompt: Pick<AiPrompt, 'messages' | 'promptCache' | 'glossaryMessageCount'>,
+): Set<number> {
+  const prefixCount = prompt.promptCache?.prefixMessageCount ?? leadingSystemCount(prompt);
+  const breakpoint = Math.min(Math.max(prefixCount, 1), prompt.messages.length) - 1;
+  // The card glossary follows the stable prefix and only ever grows, so a second breakpoint on its
+  // last message lets the next call read all of it but the one message that call adds.
+  const glossaryEnd = Math.max(prefixCount, 1) + (prompt.glossaryMessageCount ?? 0) - 1;
+  const breakpoints = new Set([breakpoint]);
+  if (glossaryEnd > breakpoint && glossaryEnd < prompt.messages.length - 1)
+    breakpoints.add(glossaryEnd);
+  return breakpoints;
+}
+
 export function anthropicRequest(
   config: Pick<
     AiConfig,
@@ -121,16 +146,8 @@ export function anthropicRequest(
         reasoningOn ? (config.reasoningTokenHeadroom ?? 0) : 0,
       );
 
-  const leadingSystem = prompt.messages.findIndex((m) => m.role !== 'system');
-  const systemCount = leadingSystem === -1 ? prompt.messages.length : leadingSystem;
-  const prefixCount = prompt.promptCache?.prefixMessageCount ?? systemCount;
-  const breakpoint = Math.min(Math.max(prefixCount, 1), prompt.messages.length) - 1;
-  // The card glossary follows the stable prefix and only ever grows, so a second breakpoint on its
-  // last message lets the next call read all of it but the one message that call adds.
-  const glossaryEnd = Math.max(prefixCount, 1) + (prompt.glossaryMessageCount ?? 0) - 1;
-  const breakpoints = new Set([breakpoint]);
-  if (glossaryEnd > breakpoint && glossaryEnd < prompt.messages.length - 1)
-    breakpoints.add(glossaryEnd);
+  const systemCount = leadingSystemCount(prompt);
+  const breakpoints = anthropicCacheBreakpoints(prompt);
   const cache = { type: 'ephemeral' as const };
 
   const system: Anthropic.Beta.Messages.BetaTextBlockParam[] = [];

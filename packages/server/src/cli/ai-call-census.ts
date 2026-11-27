@@ -28,7 +28,8 @@ import {
 } from '../ai/config';
 import { OpenAiDecisionProvider } from '../ai/provider';
 import { StrategyCoordinator } from '../ai/strategy-coordinator';
-import { PrefixCacheModel } from '../ai/prompt-cache';
+import { AnthropicCacheModel, PrefixCacheModel } from '../ai/prompt-cache';
+import { priceOf } from '../ai/pricing';
 import type { AiClient } from '../ai/client';
 import { localCallMeta } from '../ai/logger';
 import { knowledgeFor } from '../ai/bot-tactician';
@@ -89,6 +90,15 @@ export interface CensusCounts {
   /** The cacheable characters of prompts whose cached prefix is at least 1,024 tokens. */
   tacticianLongPrefixChars: number;
   strategistLongPrefixChars: number;
+  /**
+   * Only for a mode on the Messages API with a priced model: prompt characters billed the way
+   * Anthropic's cache bills them (`AnthropicCacheModel`), at the input price, and the characters
+   * read from cache. Zero otherwise.
+   */
+  tacticianAnthropicBilledChars: number;
+  strategistAnthropicBilledChars: number;
+  tacticianAnthropicReadChars: number;
+  strategistAnthropicReadChars: number;
   byDecisionType: Record<string, number>;
   /** Times each trigger fired (live or shadow), summed over seats. */
   triggerFired: Record<string, number>;
@@ -117,6 +127,10 @@ function emptyCounts(): CensusCounts {
     strategistCacheableChars: 0,
     tacticianLongPrefixChars: 0,
     strategistLongPrefixChars: 0,
+    tacticianAnthropicBilledChars: 0,
+    strategistAnthropicBilledChars: 0,
+    tacticianAnthropicReadChars: 0,
+    strategistAnthropicReadChars: 0,
     byDecisionType: {},
     triggerFired: {},
     triggerEscalated: {},
@@ -175,6 +189,16 @@ export async function censusPod(
   // One cache per role: the two roles may run on different models, and a pod is one session.
   const tacticianCache = new PrefixCacheModel();
   const strategistCache = new PrefixCacheModel();
+  const config: AiConfig = { ...DEFAULT_AI_CONFIG, ...mode.config };
+  // Anthropic's cache is shared by every request from one account, so one model per role and pod.
+  const anthropicModel = (models: readonly string[]): AnthropicCacheModel | undefined => {
+    const price = models[0] === undefined ? undefined : priceOf(models[0]);
+    return config.apiFormat === 'anthropic' && price !== undefined
+      ? new AnthropicCacheModel(price.standard)
+      : undefined;
+  };
+  const tacticianBilling = anthropicModel(config.tactician.models);
+  const strategistBilling = anthropicModel(config.strategist.models);
   const tactician: AiClient = {
     activeModel: 'census-stub',
     requestDecision(prompt, request: DecisionRequest) {
@@ -184,6 +208,9 @@ export async function censusPod(
       counts.tacticianPromptChars += seen.chars;
       counts.tacticianCacheableChars += seen.cacheableChars;
       counts.tacticianLongPrefixChars += seen.longPrefixChars;
+      const billed = tacticianBilling?.observe(prompt);
+      counts.tacticianAnthropicBilledChars += billed?.billedChars ?? 0;
+      counts.tacticianAnthropicReadChars += billed?.readChars ?? 0;
       counts.byDecisionType[request.decisionType] =
         (counts.byDecisionType[request.decisionType] ?? 0) + 1;
       const view = engine.view(request.decidingPlayer);
@@ -199,6 +226,9 @@ export async function censusPod(
       counts.strategistPromptChars += seen.chars;
       counts.strategistCacheableChars += seen.cacheableChars;
       counts.strategistLongPrefixChars += seen.longPrefixChars;
+      const billed = strategistBilling?.observe(prompt);
+      counts.strategistAnthropicBilledChars += billed?.billedChars ?? 0;
+      counts.strategistAnthropicReadChars += billed?.readChars ?? 0;
       return Promise.resolve({
         response: {
           requestId: request.requestId,
@@ -209,7 +239,6 @@ export async function censusPod(
       });
     },
   };
-  const config: AiConfig = { ...DEFAULT_AI_CONFIG, ...mode.config };
   const queue = { enqueue: <T>(fn: () => Promise<T>): Promise<T> => fn() };
   const archetypes =
     options.archetypes === true

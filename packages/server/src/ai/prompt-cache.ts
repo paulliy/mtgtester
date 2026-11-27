@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { anthropicCacheBreakpoints } from './anthropic';
 import type { AiPrompt, OpenAiMessage } from './context';
 
 export interface PromptCacheMetadata {
@@ -205,6 +206,91 @@ export class PrefixCacheModel {
       chars: text.length,
       cacheableChars,
       longPrefixChars: cacheableChars >= MIN_CACHED_PREFIX_CHARS ? cacheableChars : 0,
+    };
+  }
+}
+
+/** What `AnthropicCacheModel` bills one prompt as, in characters of message content. */
+export interface AnthropicBilledPrompt {
+  chars: number;
+  /** Read from a cache entry an earlier prompt wrote. */
+  readChars: number;
+  /** Written to the cache by this prompt. */
+  writeChars: number;
+  /** Characters at the input price, weighting reads and writes by their price against input. */
+  billedChars: number;
+}
+
+/** Claude Haiku 5.5's shortest cacheable prefix (Anthropic's prompt caching page, 2026-11). */
+export const ANTHROPIC_MIN_CACHED_PREFIX_TOKENS = 512;
+
+/** Blocks before a breakpoint the API searches for an earlier entry (its 20-block lookback). */
+const ANTHROPIC_LOOKBACK_BLOCKS = 20;
+
+/**
+ * An offline model of Anthropic's explicit prompt cache, for the hill-climb census. Unlike
+ * `PrefixCacheModel`, which scores how much of a prompt repeats, this bills a prompt the way the
+ * Messages API does: a prompt reads the longest prefix an earlier prompt wrote that ends on a
+ * message at or within 20 messages before one of its breakpoints, writes everything from there to
+ * its last breakpoint, and pays the input price for the rest. Breakpoints are the ones
+ * `anthropicRequest` sets (`anthropicCacheBreakpoints`), and a prefix shorter than the model's
+ * minimum is never stored. Each message is one content block, as `anthropicRequest` sends it.
+ *
+ * Reads and writes are weighted by the Haiku 5.5 row in `pricing.ts` (read 0.1x, five-minute write
+ * 1.25x). Entries never expire here, so a game where a seat waits more than five minutes between
+ * calls bills more than this says; the model scores the layout, not the table's pace.
+ */
+export class AnthropicCacheModel {
+  private readonly written = new Set<string>();
+  private readonly readRatio: number;
+  private readonly writeRatio: number;
+  private readonly minChars: number;
+
+  constructor(
+    price: { input: number; cacheRead: number; cacheWrite: number },
+    minTokens = ANTHROPIC_MIN_CACHED_PREFIX_TOKENS,
+  ) {
+    this.readRatio = price.cacheRead / price.input;
+    this.writeRatio = price.cacheWrite / price.input;
+    this.minChars = minTokens * 4;
+  }
+
+  observe(
+    prompt: Pick<AiPrompt, 'messages' | 'promptCache' | 'glossaryMessageCount'>,
+  ): AnthropicBilledPrompt {
+    const ends: number[] = [];
+    const hashes: string[] = [];
+    let chars = 0;
+    let chain = '';
+    for (const message of prompt.messages) {
+      chars += message.content.length;
+      chain = createHash('sha256')
+        .update(chain)
+        .update(`\u0000${message.role}\u0000${message.content}`)
+        .digest('base64');
+      ends.push(chars);
+      hashes.push(chain);
+    }
+    const breakpoints = [...anthropicCacheBreakpoints(prompt)].sort((a, b) => a - b);
+    let readChars = 0;
+    for (const breakpoint of breakpoints) {
+      const from = Math.max(0, breakpoint - ANTHROPIC_LOOKBACK_BLOCKS + 1);
+      for (let index = breakpoint; index >= from; index--) {
+        if (!this.written.has(hashes[index]!)) continue;
+        readChars = Math.max(readChars, ends[index]!);
+        break;
+      }
+    }
+    const stored = breakpoints.filter((index) => ends[index]! >= this.minChars);
+    for (const index of stored) this.written.add(hashes[index]!);
+    const lastStored = stored.length === 0 ? 0 : ends[stored.at(-1)!]!;
+    const writeChars = Math.max(0, lastStored - readChars);
+    const uncached = chars - readChars - writeChars;
+    return {
+      chars,
+      readChars,
+      writeChars,
+      billedChars: uncached + readChars * this.readRatio + writeChars * this.writeRatio,
     };
   }
 }

@@ -288,6 +288,8 @@ export async function modelProbe(decks: FuzzDeck[], profile: Profile): Promise<M
       tactician: { tokens: 0, chars: 0, cacheable: 0, long: 0 },
       strategist: { tokens: 0, chars: 0, cacheable: 0, long: 0 },
     };
+    let anthropicBilled = 0;
+    let anthropicRead = 0;
     for (let game = 0; game < profile.censusGames; game++) {
       const counts = await censusPod(
         pod(decks, game).decks,
@@ -307,6 +309,9 @@ export async function modelProbe(decks: FuzzDeck[], profile: Profile): Promise<M
       roles.strategist.chars += counts.strategistPromptChars;
       roles.strategist.cacheable += counts.strategistCacheableChars;
       roles.strategist.long += counts.strategistLongPrefixChars;
+      anthropicBilled +=
+        counts.tacticianAnthropicBilledChars + counts.strategistAnthropicBilledChars;
+      anthropicRead += counts.tacticianAnthropicReadChars + counts.strategistAnthropicReadChars;
     }
     const all = Object.values(roles);
     const tokens = all.reduce((sum, role) => sum + role.tokens, 0);
@@ -338,6 +343,21 @@ export async function modelProbe(decks: FuzzDeck[], profile: Profile): Promise<M
       'tokens',
       'lower',
     );
+    // Modes on the Messages API only: prompts billed by Anthropic's explicit cache, at the
+    // breakpoints real requests carry (`AnthropicCacheModel`). The prefix-share metrics above
+    // score an automatic cache, which this path does not have.
+    if (anthropicBilled > 0) {
+      metrics[`model.${mode.key}.anthropicBilledInputTokensPerTurn`] = exact(
+        Math.round(anthropicBilled / 4 / turns),
+        'tokens',
+        'lower',
+      );
+      metrics[`model.${mode.key}.anthropicCacheReadSharePct`] = exact(
+        chars === 0 ? 0 : round((anthropicRead / chars) * 100, 2),
+        '%',
+        'higher',
+      );
+    }
   }
   return metrics;
 }

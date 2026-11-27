@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { AiPrompt } from './context';
 import {
+  ANTHROPIC_MIN_CACHED_PREFIX_TOKENS,
+  AnthropicCacheModel,
   MIN_CACHED_PREFIX_CHARS,
   PREFIX_CACHE_BLOCK_CHARS,
   preparePromptForCaching,
@@ -124,5 +126,57 @@ describe('preparePromptForCaching staticKeys', () => {
     );
     expect(prompt.messages).toHaveLength(2);
     expect(JSON.parse(prompt.messages[1]!.content)).toEqual({ ctx: { turn: 1 } });
+  });
+});
+
+describe('AnthropicCacheModel', () => {
+  // The Haiku 5.5 row: read 0.1x and five-minute write 1.25x the input price.
+  const price = { input: 0.1, cacheRead: 0.01, cacheWrite: 0.125 };
+  const MIN = ANTHROPIC_MIN_CACHED_PREFIX_TOKENS * 4;
+  const system = { role: 'system' as const, content: 's'.repeat(MIN) };
+  const glossary = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ role: 'user' as const, content: `g${i}`.repeat(50) }));
+  const prompt = (glossaryCount: number, observation: string) => ({
+    messages: [system, ...glossary(glossaryCount), { role: 'user' as const, content: observation }],
+    glossaryMessageCount: glossaryCount,
+  });
+
+  it('writes up to its last breakpoint on the first call and reads nothing', () => {
+    const cache = new AnthropicCacheModel(price);
+    const billed = cache.observe(prompt(2, 'o'.repeat(400)));
+    const glossaryChars = glossary(2).reduce((sum, m) => sum + m.content.length, 0);
+    expect(billed.readChars).toBe(0);
+    expect(billed.writeChars).toBe(MIN + glossaryChars);
+    expect(billed.billedChars).toBeCloseTo((MIN + glossaryChars) * 1.25 + 400);
+  });
+
+  it('reads the earlier glossary and writes only the message a call adds', () => {
+    const cache = new AnthropicCacheModel(price);
+    cache.observe(prompt(2, 'o'.repeat(400)));
+    const billed = cache.observe(prompt(3, 'p'.repeat(400)));
+    const [g0, g1, g2] = glossary(3);
+    expect(billed.readChars).toBe(MIN + g0!.content.length + g1!.content.length);
+    expect(billed.writeChars).toBe(g2!.content.length);
+    expect(billed.billedChars).toBeCloseTo(billed.readChars * 0.1 + billed.writeChars * 1.25 + 400);
+  });
+
+  it('never caches the observation after the last breakpoint, however often it repeats', () => {
+    const cache = new AnthropicCacheModel(price);
+    cache.observe(prompt(1, 'same'.repeat(100)));
+    const billed = cache.observe(prompt(1, 'same'.repeat(100)));
+    expect(billed.chars - billed.readChars - billed.writeChars).toBe(400);
+  });
+
+  it('stores no prefix shorter than the minimum, so it bills that prefix at the input price', () => {
+    const cache = new AnthropicCacheModel(price);
+    const short = {
+      messages: [
+        { role: 'system' as const, content: 'x'.repeat(100) },
+        { role: 'user' as const, content: 'y' },
+      ],
+    };
+    cache.observe(short);
+    const billed = cache.observe(short);
+    expect(billed).toMatchObject({ readChars: 0, writeChars: 0, billedChars: 101 });
   });
 });
