@@ -360,6 +360,8 @@ describe('table store', () => {
     expect(table.seatStatus['P1']?.fallback).toBe(true);
     table.resumeControl();
     expect(sockets[0]!.sent.at(-1)).toEqual({ type: 'resumeControl', payload: {} });
+    table.resolveSeat('P2');
+    expect(sockets[0]!.sent.at(-1)).toEqual({ type: 'hostResolveSeat', payload: { seat: 'P2' } });
   });
 
   it('keeps the AI budget notice, asks for a model seat, and clears both on a new table (ADR 0055)', () => {

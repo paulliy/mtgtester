@@ -566,6 +566,21 @@ export class Table {
     return ok([...effects, ...this.broadcastState()]);
   }
 
+  /**
+   * The host asks the fallback bot to answer a human seat's pending decision once, for a game
+   * stuck on a choice its player cannot make. Allowed only while the game runs, and only for a
+   * seat a person holds: bot seats never wait. The table only gates; the game does the answering
+   * (and does nothing if the seat has no decision pending).
+   */
+  hostResolveSeat(conn: Connection, payload: { seat: PlayerId }): TableResult {
+    if (this.conns.get(conn.socketId)?.isHost !== true) return refuse('notHost');
+    if (this.phase !== 'playing') return refuse('wrongPhase');
+    const record = this.seats.get(payload.seat);
+    if (record === undefined) return refuse('unknownSeat');
+    if (record.controller !== 'human') return refuse('noPlayer');
+    return ok([]);
+  }
+
   /** Replaces the invite code. The old one stops working at once. */
   hostRotateInvite(conn: Connection): TableResult<{ inviteCode: string }> {
     const gate = this.hostGate(conn);

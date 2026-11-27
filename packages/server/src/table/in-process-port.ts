@@ -126,6 +126,9 @@ export class InProcessSessionPort implements TableSessionPort {
         case 'resumeControl':
           session.resumeControl(input.seat);
           break;
+        case 'hostResolve':
+          session.hostResolve(input.seat);
+          break;
         case 'resyncPlayer': {
           const started = this.startedFrames.get(input.seat);
           if (started !== undefined) {

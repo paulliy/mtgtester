@@ -262,6 +262,11 @@ interface PendingDecision {
   engineRevision: number;
   /** The revision sent with the decision frame; the answer is checked against it. */
   wireRevision: number;
+  /**
+   * The client still shows this decision: no later board has gone out to clear it. A board past
+   * the decision is always sent while this holds, even when it looks unchanged (see `rewrite`).
+   */
+  shown: boolean;
 }
 
 interface LastSubmit {
@@ -591,6 +596,18 @@ export class TableSocketHub {
         return;
       case 'hostKick': {
         const result = table.hostKick(conn, message.payload);
+        this.finish(runtime, socket, result);
+        return;
+      }
+      case 'hostResolveSeat': {
+        const result = table.hostResolveSeat(conn, message.payload);
+        const run = runtime.run;
+        if (result.ok && (run === null || run.terminal || !run.started)) {
+          this.sendTo(runtime, socket.id, errorFrame(REFUSAL_TEXT.wrongPhase));
+          return;
+        }
+        if (result.ok && run !== null)
+          this.toPort(run, { type: 'hostResolve', seat: message.payload.seat });
         this.finish(runtime, socket, result);
         return;
       }
@@ -1217,7 +1234,17 @@ export class TableSocketHub {
   ): ServerToClientMessage | null {
     switch (message.type) {
       case 'playerStateSnapshot': {
-        const { revision: _engineRevision, ...projection } = message.payload;
+        const { revision: engineRevision, ...projection } = message.payload;
+        // A board past the decision the client still shows must reach it, unchanged or not: the
+        // higher revision is how the client learns that decision is over. An answer that moves
+        // nothing on its own board (declaring a mulligan before the new hands are dealt) used to
+        // leave the old buttons up, so a second click met "stale" and the screen only moved
+        // when some later change happened to come along.
+        const pending = run.pending.get(seat);
+        if (pending?.shown === true && engineRevision > pending.engineRevision) {
+          pending.shown = false;
+          run.wire.invalidateBoard(seat);
+        }
         const board = run.wire.recordBoard(seat, projection);
         if (!board.send) return null;
         return {
@@ -1240,6 +1267,7 @@ export class TableSocketHub {
           wireRequestId: surfaced.requestId,
           engineRevision: message.payload.revision,
           wireRevision,
+          shown: true,
         });
         const wired = { ...request, requestId: surfaced.requestId };
         return {

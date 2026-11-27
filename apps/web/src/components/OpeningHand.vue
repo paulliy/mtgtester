@@ -5,6 +5,11 @@
  * Covers both decisions of the London mulligan — keep or mulligan, then (after a second
  * mulligan or later) which cards to put on the bottom, one click per card. The engine decides
  * every count; this only reads them from the request and the seat.
+ *
+ * With no request (`request` null) it is the wait after you chose Mulligan: in multiplayer each
+ * player answers keep-or-mulligan in turn order and the new hands are dealt only once everyone
+ * has (CR 103.5), so the screen stays up, buttonless, saying so, instead of dropping you on the
+ * board with your old hand until the next question.
  */
 import { computed } from 'vue';
 import type { SpectatorCard } from '@mtg/shared';
@@ -12,16 +17,17 @@ import type { DecisionRequest } from '../lib/protocol';
 import CardImage from './CardImage.vue';
 
 const props = defineProps<{
-  request: DecisionRequest;
+  request: DecisionRequest | null;
   cards: SpectatorCard[];
   mulligansTaken: number;
 }>();
 const emit = defineEmits<{ choose: [actionId: number] }>();
 
-const bottoming = computed(() => props.request.decisionType === 'bottomCards');
-const keepAction = computed(() => props.request.legalActions.find((a) => a.type === 'keep'));
+const waiting = computed(() => props.request === null);
+const bottoming = computed(() => props.request?.decisionType === 'bottomCards');
+const keepAction = computed(() => props.request?.legalActions.find((a) => a.type === 'keep'));
 const mulliganAction = computed(() =>
-  props.request.legalActions.find((a) => a.type === 'mulligan'),
+  props.request?.legalActions.find((a) => a.type === 'mulligan'),
 );
 
 /** Keeping now puts this many on the bottom: every mulligan after the free first one (103.4c). */
@@ -39,8 +45,10 @@ const keepCount = computed(() => props.cards.length - bottomIfKept.value);
  * the engine saying the count (`turn/mulligan.ts` knows it) in a `DecisionPresentation` field.
  */
 const bottomRemaining = computed(() => {
+  const request = props.request;
+  if (request === null) return null;
   // eslint-disable-next-line no-restricted-syntax -- no typed field carries the remaining count; see above
-  const match = /put (\d+) more/.exec(props.request.prompt);
+  const match = /put (\d+) more/.exec(request.prompt);
   return match === null ? null : Number(match[1]);
 });
 
@@ -49,6 +57,7 @@ function plural(n: number, word: string): string {
 }
 
 const heading = computed(() => {
+  if (waiting.value) return 'Mulligan chosen';
   if (bottoming.value) {
     return bottomRemaining.value === null
       ? 'Choose a card to put on the bottom'
@@ -66,7 +75,7 @@ const mulliganNote = computed(() =>
 );
 
 function bottomActionFor(card: SpectatorCard): number | null {
-  const action = props.request.legalActions.find(
+  const action = props.request?.legalActions.find(
     (a) =>
       a.type === 'bottomCard' &&
       a.interaction?.kind === 'choice' &&
@@ -126,7 +135,11 @@ function fanStyle(index: number): Record<string, string> {
           </div>
         </template>
       </div>
-      <div v-if="!bottoming" class="choices">
+      <p v-if="waiting" class="note waiting-note" role="status" data-testid="mulligan-waiting">
+        Waiting for the other players to keep or mulligan. Your new hand is dealt once everyone has
+        decided.
+      </p>
+      <div v-else-if="!bottoming" class="choices">
         <div class="choice">
           <button
             v-if="mulliganAction"
@@ -309,5 +322,8 @@ function fanStyle(index: number): Record<string, string> {
   font-size: 0.9rem;
   line-height: 1.4;
   color: var(--muted);
+}
+.waiting-note {
+  max-width: 24rem;
 }
 </style>
