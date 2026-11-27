@@ -532,6 +532,42 @@ describe('spectator store — server-confirmed position', () => {
     }
   });
 
+  it("does not mistake a live session's resumed game for the start queued behind it", () => {
+    const values = new Map<string, string>([['mtg-player-session', 'old-token']]);
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    });
+    try {
+      // A fresh page whose previous player game is still running on the server.
+      store.sessionToken = 'old-token';
+      store.gameMode = 'singlePlayer';
+      startWithPod(store, 'orbit');
+      connectionChanged?.('open');
+      expect(sent.map((m) => m.type)).toContain('resumeGame');
+
+      // The resume is answered first, with the old game.
+      const resumed = podGameStarted('old-game');
+      resumed.payload.sessionToken = 'old-token';
+      inbound?.(resumed);
+      // Not the start's answer: nothing waiting on the start moves, and nothing is remembered.
+      expect(store.startsConfirmed).toBe(0);
+      expect(values.has('mtg-recent-pod-ids')).toBe(false);
+
+      // Then the start's own answer replaces it, and is the one that confirms.
+      const started = podGameStarted('fresh-game');
+      started.payload.sessionToken = 'fresh-token';
+      inbound?.(started);
+      expect(store.startsConfirmed).toBe(1);
+      expect(store.gameId).toBe('fresh-game');
+      expect(store.state).toBeNull();
+      expect(JSON.parse(values.get('mtg-recent-pod-ids') ?? '[]')).toEqual(['orbit']);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it.each(['deck', 'pod'] as const)(
     'starts a confirmed game when recent %s storage rejects a write',
     (recent) => {

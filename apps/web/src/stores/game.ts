@@ -365,6 +365,13 @@ export const useGameStore = defineStore('game', () => {
     saveRecentIds(key, pushRecentId(readRecentIds(key), id));
   }
 
+  /**
+   * How many `gameStarted` frames have answered a start, as opposed to a resume. A view waiting on
+   * its start watches this rather than `gameId`: a resume answered ahead of the start changes
+   * `gameId` to the previous game, and following that showed the old board before the new one.
+   */
+  const startsConfirmed = ref(0);
+
   /** When the last frame arrived (`Date.now()`), so a long quiet spell can read as bots thinking. */
   const lastFrameAt = ref(0);
 
@@ -403,17 +410,25 @@ export const useGameStore = defineStore('game', () => {
           default:
             assertNever(startedMode, 'gameStarted gameMode');
         }
+        // The server answers in the order it was asked, and the resume always goes out ahead of a
+        // queued start. So while a resume is pending, this frame is that resume's answer: the
+        // previous game, reclaimed so a start behind it may replace it. It is not the start's
+        // answer, so it neither confirms the start nor records what the start asked to remember.
+        const answersResume = resumePending;
         resumePending = false;
-        if (pendingRecentDeckSeat !== null) {
-          const selected = message.payload.seats.find(
-            (seat) => seat.seat === pendingRecentDeckSeat,
-          );
-          if (selected) rememberRecentId('mtg-recent-deck-ids', selected.deckId);
+        if (!answersResume) {
+          if (pendingRecentDeckSeat !== null) {
+            const selected = message.payload.seats.find(
+              (seat) => seat.seat === pendingRecentDeckSeat,
+            );
+            if (selected) rememberRecentId('mtg-recent-deck-ids', selected.deckId);
+          }
+          if (pendingRecentPodId !== null) {
+            rememberRecentId('mtg-recent-pod-ids', pendingRecentPodId);
+          }
+          clearPendingRecents();
+          startsConfirmed.value += 1;
         }
-        if (pendingRecentPodId !== null) {
-          rememberRecentId('mtg-recent-pod-ids', pendingRecentPodId);
-        }
-        clearPendingRecents();
         const resuming = gameId.value === message.payload.gameId;
         gameId.value = message.payload.gameId;
         seed.value = message.payload.seed;
@@ -984,6 +999,7 @@ export const useGameStore = defineStore('game', () => {
   return {
     connection,
     lastFrameAt,
+    startsConfirmed,
     gameId,
     seed,
     seats,

@@ -41,10 +41,12 @@ export function useConfirmedStart(): {
     startErrors.value = errors.map(describeStartError);
   }
 
+  // Not `gameId`: on a fresh page the stored session is resumed ahead of the start, and that
+  // resume's answer sets `gameId` to the previous game first.
   watch(
-    () => store.gameId,
-    (id, previous) => {
-      if (!starting.value || id === null || id === previous) return;
+    () => store.startsConfirmed,
+    () => {
+      if (!starting.value) return;
       starting.value = false;
       void router.push('/game');
     },
