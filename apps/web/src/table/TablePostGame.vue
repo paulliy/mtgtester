@@ -12,14 +12,6 @@ const results = computed(() => table.results);
 const turnIndex = ref(-1);
 
 const turns = computed(() => results.value?.replayTurns ?? []);
-watch(
-  turns,
-  (next) => {
-    if (next.length > 0 && turnIndex.value < 0) show(next.length - 1);
-  },
-  { immediate: true },
-);
-
 /**
  * Asking for another turn needs the table's socket. Fifteen minutes after the game ends the server
  * closes the table and the page stops reconnecting, so the replay keeps the turn it last loaded and
@@ -38,6 +30,16 @@ function show(index: number): void {
   turnIndex.value = index;
   table.requestReplayTurn(turn);
 }
+
+// Declared after `canLoad` and `show`: the immediate run calls them. It also waits for the socket,
+// so a page that opens while reconnecting still asks for the last turn once it is back.
+watch(
+  [turns, canLoad],
+  ([next, ready]) => {
+    if (ready && next.length > 0 && turnIndex.value < 0) show(next.length - 1);
+  },
+  { immediate: true },
+);
 
 /** The ruler and the stepper follow the turn on screen; the asked-for one shows as loading. */
 const shownIndex = computed(() => {

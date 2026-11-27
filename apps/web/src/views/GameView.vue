@@ -289,6 +289,7 @@ const roundLabel = computed(() => {
         v-if="!laneHidden && combatLane !== null"
         class="spectator-lane"
         :model="combatLane"
+        cards
         :lines="[]"
         :recap="null"
         :composing="false"
