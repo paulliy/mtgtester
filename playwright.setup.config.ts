@@ -61,6 +61,7 @@ export default defineConfig({
             { name: 'decktank.opened', value: 'true' },
             { name: 'mtg.playerGameInfoOpen', value: 'true' },
             { name: 'mtg.playerOpponentZonesOpen', value: 'true' },
+            { name: 'mtg.playerOpponentLandsOpen', value: 'true' },
             { name: 'mtg.playerPile.lands', value: 'true' },
             { name: 'mtg.playerPile.graveyard', value: 'true' },
             { name: 'mtg.playerPile.exile', value: 'true' },
