@@ -5,7 +5,8 @@
  * (`.env` is read by Bun), so the endpoint, models and key are the same ones the app uses.
  *
  *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]
- *                        [--escalation T1,T2] [--shadow T1,T2] [--opponents model|bot-never|bot-v1]
+ *                        [--escalation T1,T2] [--shadow T1,T2] [--table]
+ *                        [--opponents model|bot-never|bot-v1|compact-off]
  *                        [--delta] [--await-strategist]
  *                        [--offline] [--trace out.jsonl]
  *
@@ -38,6 +39,12 @@
  * counts real model calls, prompt and response tokens and reported cost per mode, and who won.
  * Nothing here prints or stores the API key.
  *
+ * `--table` builds every seat from the table configuration (ADR 0055): Claude Haiku 5.5 on the
+ * Messages API, with only `ANTHROPIC_API_KEY` read from the environment. Its attempts are priced
+ * from `pricing.ts`, since that API reports no cost. `--opponents compact-off` seats model-led
+ * tacticians on both sides, P1 and P3 with the compact observation (hill-climb token idea 4) and
+ * P2 and P4 without it.
+ *
  * `--trace` writes one JSON line per decision (`decision-trace.ts`): the seat, its menu, the answer,
  * who answered it, the triggers that fired and the knobs in force, so a lost game can be reviewed.
  */
@@ -67,6 +74,8 @@ import type { AiAttemptObserver, AiClient, CostSettlement } from '../ai/client';
 import type { AiPrompt } from '../ai/context';
 import type { AsyncDecisionProvider } from '@mtg/engine';
 import { knowledgeFor } from '../ai/bot-tactician';
+import { estimateCostUsd } from '../ai/pricing';
+import { tableAiConfig } from '../ai/table-config';
 import { localCallMeta } from '../ai/logger';
 
 const FIXTURE = 'packages/server/fixtures/coverage-oracle.json';
@@ -97,6 +106,8 @@ export interface Tally {
   responseTokens: number;
   /** Prompt tokens the provider reported serving from its prompt cache, over every attempt. */
   cacheReadTokens: number;
+  /** Prompt tokens the provider reported writing to its prompt cache (Messages API only). */
+  cacheWriteTokens: number;
   costUsd: number;
   costKnown: boolean;
   /** Calls that failed after the client's own retries; the seat fell back to the bot. */
@@ -122,6 +133,7 @@ export function emptyTally(): Tally {
     promptTokens: 0,
     responseTokens: 0,
     cacheReadTokens: 0,
+    cacheWriteTokens: 0,
     costUsd: 0,
     costKnown: true,
     failedCalls: 0,
@@ -173,8 +185,15 @@ export function counting<M extends string = ModeName>(
   modeOf: (seat: PlayerId) => M,
   tallies: Record<M, Tally>,
   budget: Budget,
+  /**
+   * The price of an attempt the API reported no cost for. The Messages API reports tokens only,
+   * so without this an Anthropic duel's cost stays unknown and `--max-usd` never stops it.
+   */
+  priceAttempt?: (attempt: Parameters<AiAttemptObserver>[0]) => number | undefined,
 ): CountingClient {
   const modeByRequest = new Map<string, M>();
+  // Priced accepted attempts, per request, for a result that carries no cost of its own.
+  const pricedByRequest = new Map<string, number>();
   // Kept after a call ends, so a cost settled after the game still finds its seat's mode.
   const settledModeByRequest = new Map<string, M>();
   let outer: AiAttemptObserver | undefined;
@@ -191,13 +210,25 @@ export function counting<M extends string = ModeName>(
   };
   inner.setAttemptObserver(async (attempt) => {
     const mode = modeByRequest.get(attempt.logicalRequestId);
-    if (mode !== undefined) tallies[mode].cacheReadTokens += attempt.usage.cacheReadTokens ?? 0;
+    if (mode !== undefined) {
+      tallies[mode].cacheReadTokens += attempt.usage.cacheReadTokens ?? 0;
+      tallies[mode].cacheWriteTokens += attempt.usage.cacheWriteTokens ?? 0;
+    }
+    const priced = attempt.usage.costUsd ?? priceAttempt?.(attempt);
+    if (
+      mode !== undefined &&
+      attempt.status === 'accepted' &&
+      attempt.usage.costUsd === undefined
+    ) {
+      if (priced !== undefined) pricedByRequest.set(attempt.logicalRequestId, priced);
+    }
     if (mode !== undefined && attempt.backend !== undefined) {
       const providers = tallies[mode].providers;
       providers[attempt.backend] = (providers[attempt.backend] ?? 0) + 1;
     }
     if (mode !== undefined && attempt.status !== 'accepted') {
-      const { promptTokens, responseTokens, costUsd } = attempt.usage;
+      const { promptTokens, responseTokens } = attempt.usage;
+      const costUsd = priced;
       const tally = tallies[mode];
       if (costUsd === undefined) {
         // A timed-out or failed attempt may carry token estimates but no price. Count it apart
@@ -246,7 +277,9 @@ export function counting<M extends string = ModeName>(
       }
       if (role === 'tactician') tally.tacticianCalls++;
       else tally.strategistCalls++;
-      charge(tally, result.meta.promptTokens, result.meta.responseTokens, result.meta.costUsd);
+      const costUsd = result.meta.costUsd ?? pricedByRequest.get(request.requestId);
+      pricedByRequest.delete(request.requestId);
+      charge(tally, result.meta.promptTokens, result.meta.responseTokens, costUsd);
       return result;
     },
     async settle(options) {
@@ -381,7 +414,14 @@ async function main(): Promise<void> {
     capped: false,
   };
 
-  const base = loadAiConfig(process.env);
+  // `--table`: every seat runs the table's own configuration (ADR 0055): Claude Haiku 5.5 on the
+  // Messages API, built in code, with only the Anthropic key read from the environment.
+  const table = argv.includes('--table');
+  const tableKey = process.env['ANTHROPIC_API_KEY'] ?? '';
+  const base =
+    table && (offline || tableKey !== '')
+      ? tableAiConfig(offline ? 'offline' : tableKey)
+      : loadAiConfig(process.env);
   if (!offline && !base.apiKey) {
     console.error('No AI API key found in the environment or .env; nothing was played.');
     process.exitCode = 1;
@@ -394,42 +434,60 @@ async function main(): Promise<void> {
     throw new Error('--escalation: lethal is shadow-only (ADR 0044)');
   const shadow = parseTriggerList(arg(argv, '--shadow'), '--shadow');
   const opponents = arg(argv, '--opponents') ?? 'model';
-  if (opponents !== 'model' && opponents !== 'bot-never' && opponents !== 'bot-v1')
-    throw new Error('--opponents must be model, bot-never or bot-v1');
+  if (
+    opponents !== 'model' &&
+    opponents !== 'bot-never' &&
+    opponents !== 'bot-v1' &&
+    opponents !== 'compact-off'
+  )
+    throw new Error('--opponents must be model, bot-never, bot-v1 or compact-off');
+  // Hill-climb token idea 4: both sides model-led, P1 and P3 with the compact tactician
+  // observation and P2 and P4 without it, so the observation is the only difference.
+  const compactDuel = opponents === 'compact-off';
   const delta = argv.includes('--delta');
-  const awaitStrategist = argv.includes('--await-strategist') || opponents !== 'model';
-  const configs: Record<ModeName, AiConfig> = {
-    bot: {
-      ...base,
-      ...(delta ? { strategistDeltaEnabled: true } : {}),
-      tacticalMode: 'bot',
-      botEscalation: escalation as LiveEscalationTrigger[],
-      botEscalationShadow: shadow,
-      strategistReplan: 'onChange',
-      ...(opponents === 'bot-v1' ? { strategistWakeRule: 'table-v2' as const } : {}),
-    },
-    model:
-      opponents === 'model'
-        ? { ...base, tacticalMode: 'model', ...(delta ? { strategistDeltaEnabled: false } : {}) }
-        : opponents === 'bot-v1'
-          ? {
-              ...base,
-              ...(delta ? { strategistDeltaEnabled: false } : {}),
-              tacticalMode: 'bot',
-              botEscalation: escalation as LiveEscalationTrigger[],
-              botEscalationShadow: shadow,
-              strategistReplan: 'onChange',
-              strategistWakeRule: 'table-v1',
-            }
-          : {
-              ...base,
-              ...(delta ? { strategistDeltaEnabled: false } : {}),
-              tacticalMode: 'bot',
-              botEscalation: [],
-              botEscalationShadow: shadow,
-              strategistReplan: 'onChange',
-            },
-  };
+  const awaitStrategist =
+    argv.includes('--await-strategist') || (opponents !== 'model' && !compactDuel);
+  const configs: Record<ModeName, AiConfig> = compactDuel
+    ? {
+        bot: { ...base, tacticalMode: 'model', tacticianCompactObservationEnabled: true },
+        model: { ...base, tacticalMode: 'model', tacticianCompactObservationEnabled: false },
+      }
+    : {
+        bot: {
+          ...base,
+          ...(delta ? { strategistDeltaEnabled: true } : {}),
+          tacticalMode: 'bot',
+          botEscalation: escalation as LiveEscalationTrigger[],
+          botEscalationShadow: shadow,
+          strategistReplan: 'onChange',
+          ...(opponents === 'bot-v1' ? { strategistWakeRule: 'table-v2' as const } : {}),
+        },
+        model:
+          opponents === 'model'
+            ? {
+                ...base,
+                tacticalMode: 'model',
+                ...(delta ? { strategistDeltaEnabled: false } : {}),
+              }
+            : opponents === 'bot-v1'
+              ? {
+                  ...base,
+                  ...(delta ? { strategistDeltaEnabled: false } : {}),
+                  tacticalMode: 'bot',
+                  botEscalation: escalation as LiveEscalationTrigger[],
+                  botEscalationShadow: shadow,
+                  strategistReplan: 'onChange',
+                  strategistWakeRule: 'table-v1',
+                }
+              : {
+                  ...base,
+                  ...(delta ? { strategistDeltaEnabled: false } : {}),
+                  tacticalMode: 'bot',
+                  botEscalation: [],
+                  botEscalationShadow: shadow,
+                  strategistReplan: 'onChange',
+                },
+      };
 
   const pool = buildSupportedPool(
     JSON.parse(readFileSync(resolve(FIXTURE), 'utf8')) as OracleCard[],
@@ -456,11 +514,15 @@ async function main(): Promise<void> {
   );
   // With `--opponents bot-never` the "model" seats play the bot-led bot that never escalates.
   const label = (mode: ModeName): string =>
-    mode === 'model' && opponents !== 'model'
-      ? opponents
-      : mode === 'bot' && delta
-        ? 'bot+delta'
-        : mode;
+    compactDuel
+      ? mode === 'bot'
+        ? 'compact'
+        : 'full'
+      : mode === 'model' && opponents !== 'model'
+        ? opponents
+        : mode === 'bot' && delta
+          ? 'bot+delta'
+          : mode;
   decks.forEach((d, i) =>
     console.log(`  ${SEATS[i]} [${label(modeOf(SEATS[i]!))}]  ${d.commander.name}`),
   );
@@ -469,6 +531,13 @@ async function main(): Promise<void> {
   console.log(`  Tactician: ${base.tactician.models.join(' → ')}`);
 
   const tallies: Record<ModeName, Tally> = { bot: emptyTally(), model: emptyTally() };
+  // The Messages API reports tokens but no price: price each attempt from `pricing.ts`, as the
+  // table's own per-game cap does, so `--max-usd` holds on that path too.
+  const priceAttempt =
+    base.apiFormat === 'anthropic'
+      ? (attempt: Parameters<AiAttemptObserver>[0]) =>
+          estimateCostUsd(attempt.requestedModel, attempt.usage)
+      : undefined;
   const strategistClient = counting(
     offline
       ? offlineChatClient(engine, 'strategist')
@@ -477,6 +546,7 @@ async function main(): Promise<void> {
     modeOf,
     tallies,
     budget,
+    priceAttempt,
   );
   const tacticianClient = counting(
     offline
@@ -486,6 +556,7 @@ async function main(): Promise<void> {
     modeOf,
     tallies,
     budget,
+    priceAttempt,
   );
   const queue = new RequestQueue(base);
   const logger = new AiCallLogger(null, `mode-duel-${seed}`);
@@ -676,6 +747,10 @@ async function main(): Promise<void> {
               t.promptTokens === 0
                 ? 0
                 : Number(((t.cacheReadTokens / t.promptTokens) * 100).toFixed(1)),
+            cacheWriteSharePct:
+              t.promptTokens === 0
+                ? 0
+                : Number(((t.cacheWriteTokens / t.promptTokens) * 100).toFixed(1)),
           },
         ];
       }),

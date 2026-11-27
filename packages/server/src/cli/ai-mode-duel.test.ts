@@ -1,3 +1,4 @@
+import { estimateCostUsd } from '../ai/pricing';
 import { describe, expect, it } from 'vitest';
 import type { DecisionRequest } from '@mtg/shared';
 import type { AiAttemptObserver, AiNetworkAttempt, OpenAiCompatibleClient } from '../ai/client';
@@ -102,6 +103,48 @@ describe('ai-mode-duel spend accounting', () => {
     await client.requestDecision(prompt, request);
     expect(tallies.bot).toMatchObject({ promptTokens: 100, cacheReadTokens: 60 });
     expect(tallies.model.cacheReadTokens).toBe(0);
+  });
+
+  it('prices Messages API attempts, which report no cost, so the spend cap holds', async () => {
+    let observer: AiAttemptObserver | undefined;
+    const inner = {
+      activeModel: 'claude-haiku-5-5',
+      setAttemptObserver(o: AiAttemptObserver | undefined) {
+        observer = o;
+      },
+      async requestDecision() {
+        await observer?.({
+          logicalRequestId: 'r1',
+          requestedModel: 'claude-haiku-5-5',
+          status: 'accepted',
+          usage: {
+            promptTokens: 10_000,
+            responseTokens: 100,
+            cacheReadTokens: 6_000,
+            cacheWriteTokens: 1_000,
+          },
+        } as AiNetworkAttempt);
+        return { meta: { promptTokens: 10_000, responseTokens: 100 } };
+      },
+    } as unknown as OpenAiCompatibleClient;
+    const tallies = { bot: emptyTally(), model: emptyTally() };
+    const budget: Budget = { maxUsd: 1, maxCalls: 10, spentUsd: 0, calls: 0, capped: false };
+    const client = counting(
+      inner,
+      'tactician',
+      () => 'bot',
+      tallies,
+      budget,
+      (attempt) => estimateCostUsd(attempt.requestedModel, attempt.usage),
+    );
+    await client.requestDecision(prompt, request);
+    // Haiku 5.5: 3,000 fresh at $0.10/M, 6,000 read at $0.01/M, 1,000 written at $0.125/M and
+    // 100 out at $0.50/M.
+    const expected = (3_000 * 0.1 + 6_000 * 0.01 + 1_000 * 0.125 + 100 * 0.5) / 1_000_000;
+    expect(tallies.bot.costUsd).toBeCloseTo(expected, 9);
+    expect(tallies.bot.costKnown).toBe(true);
+    expect(tallies.bot).toMatchObject({ cacheReadTokens: 6_000, cacheWriteTokens: 1_000 });
+    expect(budget.spentUsd).toBeCloseTo(expected, 9);
   });
 
   it('counts an unpriced failed attempt apart instead of making the cost unknown', async () => {
