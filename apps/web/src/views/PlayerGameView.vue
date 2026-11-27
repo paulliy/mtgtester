@@ -235,6 +235,38 @@ function togglePile(pile: Pile): void {
 }
 
 /**
+ * Opponents' lands show as a count ("Lands 5 · 2 open") with the names behind one toggle,
+ * remembered across games. A seat's names open on their own while one of its lands can be
+ * targeted, is chosen, or can be activated, so a land a decision needs is always in reach.
+ */
+const OPPONENT_LANDS_KEY = 'mtg.playerOpponentLandsOpen';
+function readOpponentLands(): boolean {
+  try {
+    return localStorage.getItem(OPPONENT_LANDS_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+const opponentLandsOpen = ref(readOpponentLands());
+function toggleOpponentLands(): void {
+  opponentLandsOpen.value = !opponentLandsOpen.value;
+  try {
+    localStorage.setItem(OPPONENT_LANDS_KEY, String(opponentLandsOpen.value));
+  } catch {
+    // Storage blocked: the toggle still works for this visit.
+  }
+}
+function opponentLandsShown(seat: string): boolean {
+  if (opponentLandsOpen.value) return true;
+  return opponentLandGroups(seat).some(
+    (group) =>
+      isLegalTarget(group.permanent.id) ||
+      isChosenTarget(group.permanent.id) ||
+      actionableSourceIds.value.has(group.permanent.id),
+  );
+}
+
+/**
  * As on the spectator board, the settings (bot pace, confirmations, motion, Abandon) and the
  * game info drawer (commander damage, the log) sit behind top-bar buttons so the table gets the
  * window. The drawer remembers whether it was open; the settings menu always starts closed.
@@ -1827,11 +1859,13 @@ function abandon(): void {
           :counters="human.counters"
           compact
         />
-        <span class="resource" :class="{ ready: human.landsPlayedThisTurn === 0 }">{{
+        <!-- The land drop and spendable mana stay in the bar's text for screen readers (and the
+             tests that read them), but are not drawn: the board already shows lands and mana. -->
+        <span class="resource dt-sr" :class="{ ready: human.landsPlayedThisTurn === 0 }">{{
           human.landsPlayedThisTurn === 0 ? 'Land drop available' : 'Land played'
         }}</span>
         <span
-          class="resource"
+          class="resource dt-sr"
           title="Mana you can spend on anything right now: floating mana plus sources that need no mana to activate and whose mana has no spending restriction."
           >Mana ready <strong>{{ state!.viewerMana.units }}</strong
           ><span
@@ -2128,13 +2162,27 @@ function abandon(): void {
                 />
               </div>
             </TransitionGroup>
-            <!-- Lands as a line of names, then the zones that are only counts. -->
+            <!-- The land count opens the names; then the zones that are only counts. -->
             <div v-if="!opponent.hasLost" class="opp-foot">
-              <span class="foot-label"
-                >Lands {{ landCount(opponent.seat) }} ·
-                {{ openLandCount(opponent.seat) }} open</span
+              <button
+                type="button"
+                class="foot-label"
+                :aria-expanded="opponentLandsShown(opponent.seat)"
+                :title="opponentLandsOpen ? 'Hide land names' : 'Show land names'"
+                @click.stop="toggleOpponentLands"
               >
-              <TransitionGroup tag="span" name="land-line" class="land-line">
+                Lands {{ landCount(opponent.seat) }} · {{ openLandCount(opponent.seat) }} open<span
+                  class="caret"
+                  aria-hidden="true"
+                  >{{ opponentLandsShown(opponent.seat) ? ' ▴' : ' ▾' }}</span
+                >
+              </button>
+              <TransitionGroup
+                v-show="opponentLandsShown(opponent.seat)"
+                tag="span"
+                name="land-line"
+                class="land-line"
+              >
                 <span
                   v-for="(group, i) in opponentLandGroups(opponent.seat)"
                   :key="group.permanent.id"
@@ -2653,7 +2701,8 @@ function abandon(): void {
                   <svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true">
                     <path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" />
                   </svg>
-                  {{ decisionKicker }}
+                  <!-- The title already says what is asked; the kicker word is for screen readers. -->
+                  <span class="dt-sr">{{ decisionKicker }}</span>
                 </span>
                 <span class="decide-title">{{ decisionTitle }}</span>
                 <span
@@ -4411,6 +4460,10 @@ button.primary {
 }
 .foot-label {
   flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
   font-family: var(--font-ui);
   font-size: 0.7rem;
   letter-spacing: 0.08em;
@@ -4466,7 +4519,7 @@ button.primary {
 .human-zone {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(8.5rem, 11vw, 11rem);
+  grid-template-columns: minmax(0, 1fr) clamp(7.5rem, 8.5vw, 9rem);
   /* Your board keeps room for a row of tiles; the decision scrolls inside its share instead of
      growing over the board on a short screen. */
   grid-template-rows: auto minmax(7.5rem, 27fr) minmax(5.5rem, 14fr) auto minmax(10rem, 13fr);
@@ -4592,26 +4645,28 @@ button.primary {
   position: relative;
 }
 
-/* The rail: life first, then the zones that are only counts, on paper-2 behind an ink rule. */
+/* The rail, kept compact: life on one line, then the zones that are only counts, on paper-2
+   behind an ink rule. */
 .me-rail {
   grid-area: rail;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
   border-left: 1px solid var(--ink);
   background: var(--paper-2);
   overflow-y: auto;
 }
 .rail-life {
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
 }
 .rail-kicker {
   font-family: var(--font-ui);
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -4622,7 +4677,7 @@ button.primary {
   gap: 0 0.5rem;
 }
 .me-rail .life-badge {
-  font-size: 2.65rem;
+  font-size: 2rem;
 }
 .life-delta {
   font-size: 0.725rem;
@@ -4634,16 +4689,24 @@ button.primary {
   list-style: none;
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--ink);
-  font-size: 0.9rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.78rem;
 }
 .rail-piles > li {
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid var(--rule);
 }
 .rail-piles :deep(.zone-pile.row) {
   width: 100%;
+  min-height: 30px;
   border: 0;
   background: transparent;
+}
+.me-rail .meta-item,
+.me-rail .rail-row {
+  font-size: 0.78rem;
+}
+.me-rail .rail-row {
+  min-height: 30px;
 }
 .meta-item {
   font-family: var(--font-body);
@@ -4859,7 +4922,7 @@ button.primary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem 1.5rem;
+  gap: 0.4rem 0.6rem;
 }
 .decide-kicker {
   display: flex;
