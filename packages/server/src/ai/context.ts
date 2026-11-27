@@ -6,6 +6,7 @@
 import type { DecisionRequest, PlayerId, PlayerView, TurnStrategy } from '@mtg/shared';
 import type { SeatDiplomacyContext } from './diplomacy-context';
 import { summarizeHandCard, summarizePermanent } from './card-summary';
+import { COMPACT_OBSERVATION_PRIMER_TEXT, compactTacticianPayload } from './observation-compact';
 import { budgetContext, type ContextBudgetReport } from './context-budget';
 import { RULES_PRIMER, tacticianPrimerParts } from './primer';
 import type { PublicMemorySnapshot } from './public-memory';
@@ -72,6 +73,12 @@ export interface ContextOptions {
    * bytes of the prompt and so every cached prefix behind them.
    */
   stableSystemPrimer?: boolean;
+  /**
+   * Write the observation compactly (`compactTacticianPayload`): battlefield rows by controller
+   * with identical permanents merged, no bookkeeping log lines, no UI-only action fields. Not
+   * used with card summaries or the budgeter.
+   */
+  compactObservation?: boolean;
 }
 
 /**
@@ -223,6 +230,10 @@ export function assemblePrompt(
     legalActions: request.legalActions,
   };
 
+  const compact =
+    options.compactObservation === true && !useCardSummaries && options.useBudgeter !== true;
+  if (compact) compactTacticianPayload(rawPayload);
+
   const budgeted =
     options.useBudgeter === true
       ? budgetContext(rawPayload, options.inputTokenBudget ?? 6_000)
@@ -272,7 +283,14 @@ export function assemblePrompt(
       : `${parts.common}\n\n${parts.situational}`;
   const glossaryMessages = glossary?.flush() ?? [];
   const messages: OpenAiMessage[] = [
-    { role: 'system', content: systemPrimer + tacticalInstruction + glossaryInstruction },
+    {
+      role: 'system',
+      content:
+        systemPrimer +
+        tacticalInstruction +
+        glossaryInstruction +
+        (compact ? COMPACT_OBSERVATION_PRIMER_TEXT : ''),
+    },
     ...glossaryMessages,
     { role: 'user', content: userJson },
     ...(splitPrimer ? [{ role: 'system' as const, content: parts.situational }] : []),

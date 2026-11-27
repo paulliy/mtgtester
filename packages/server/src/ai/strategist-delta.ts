@@ -35,7 +35,7 @@ export interface StrategistDeltaInput {
  * Log kinds that carry no strategic information: turn structure and mana bookkeeping. The engine
  * keeps the last 15 visible events, and about two thirds of them are these.
  */
-const LOG_NOISE: ReadonlySet<string> = new Set([
+export const LOG_NOISE: ReadonlySet<string> = new Set([
   'phaseBegin',
   'stepBegin',
   'untap',

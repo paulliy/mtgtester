@@ -247,6 +247,13 @@ export interface AiConfig {
    * so a change of decision type keeps the cached prefix. On by default for the Messages API.
    */
   tacticianStableSystemPrimerEnabled: boolean;
+  /**
+   * Write the tactician's observation compactly (`compactTacticianPayload` in
+   * observation-compact.ts): the same state in fewer tokens. On by default for the Messages API,
+   * where the observation is the part no cache breakpoint covers; the hill-climb `table` census
+   * mode measures it with `anthropicBilledInputTokensPerTurn`.
+   */
+  tacticianCompactObservationEnabled: boolean;
   /** Reserved feature flag for exact engine-derived combat previews. */
   combatRolloutsEnabled: boolean;
   /** Allow Jev to answer supported tactical choices. Off until benchmark promotion. */
@@ -523,6 +530,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   providerPromptCacheLayoutEnabled: false,
   tacticianCardGlossaryEnabled: false,
   tacticianStableSystemPrimerEnabled: false,
+  tacticianCompactObservationEnabled: false,
   combatRolloutsEnabled: false,
   jevEnabled: false,
   jevShadowEnabled: false,
@@ -1018,6 +1026,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     tacticianStableSystemPrimerEnabled: parseBoolean(
       env['AI_TACTICIAN_STABLE_SYSTEM_PRIMER_ENABLED'],
       apiFormat === 'anthropic' ? true : DEFAULT_AI_CONFIG.tacticianStableSystemPrimerEnabled,
+    ),
+    tacticianCompactObservationEnabled: parseBoolean(
+      env['AI_TACTICIAN_COMPACT_OBSERVATION_ENABLED'],
+      apiFormat === 'anthropic' ? true : DEFAULT_AI_CONFIG.tacticianCompactObservationEnabled,
     ),
     combatRolloutsEnabled: parseBoolean(
       env['AI_COMBAT_ROLLOUTS_ENABLED'],

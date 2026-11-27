@@ -617,6 +617,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
         inputTokenBudget: this.config.contextInputTokenBudget,
         ...(this.config.tacticianCardGlossaryEnabled ? { cardGlossary: this.cardGlossary } : {}),
         stableSystemPrimer: this.config.tacticianStableSystemPrimerEnabled,
+        compactObservation: this.config.tacticianCompactObservationEnabled,
       },
     );
     const prompt = this.config.providerPromptCacheLayoutEnabled
