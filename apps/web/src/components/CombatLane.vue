@@ -19,9 +19,9 @@ import { scryfallImageUrl } from '../lib/card';
 const props = defineProps<{
   model: LaneModel | null;
   /**
-   * Draw the small cards and the drop boxes under each group. Off for now: the lane shows the
-   * hint, each group's life and what it would take, and the confirm. Placing still works by
-   * clicking a creature on the board and then the player (or the group's life here).
+   * Draw the small cards and the drop boxes under each group. The board turns it on for defense;
+   * without it the lane shows the hint, each group's life and what it would take, and the confirm,
+   * and placing works by clicking a creature on the board and then the player (or a group's life).
    */
   cards?: boolean;
   /** The combat in sentences, for screen readers (`combatSummary.lines`). */

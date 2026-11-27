@@ -968,6 +968,21 @@ function laneTarget(targetId: string): void {
   }
   tryPlanAssign(targetId);
 }
+/**
+ * The lane draws its cards and slots only on defense: while blocks are declared, or while attacks
+ * come at you on someone else's turn. When you attack it keeps to the hint, the life numbers and
+ * the confirm.
+ */
+const laneCards = computed(() => {
+  const lane = combatLane.value;
+  if (lane === null) return false;
+  if (lane.kind === 'blockers') return true;
+  const viewer = state.value?.viewerSeat;
+  return (
+    !isYourTurn.value && viewer != null && lane.groups.some((group) => group.targetId === viewer)
+  );
+});
+
 /** Who the lane says the game is waiting on, when it isn't you. */
 const laneWaiting = computed(() => {
   if (request.value !== null) return null;
@@ -2192,6 +2207,7 @@ function abandon(): void {
           v-if="laneShowing"
           class="combat-strip"
           :model="combatLane"
+          :cards="laneCards"
           :lines="combatSummary?.lines ?? []"
           :recap="combatRecapLine"
           :composing="combatPlan.mode === 'composing'"
