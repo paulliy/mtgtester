@@ -12,25 +12,25 @@
         "authoring",
         "compiler"
       ],
-      "commit": "0279c931",
+      "commit": "199ffbaa",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 58.21,
+      "calibrationMs": 64.38,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 3.58,
+          "value": 3.54,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.672
+          "spread": 0.601
         },
         "engine.medianGameMsPerDecision": {
-          "value": 3.71,
+          "value": 3.88,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.63
+          "spread": 0.479
         },
         "engine.work.layerPasses": {
           "value": 354,
@@ -139,11 +139,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 1.29,
+          "value": 0.86,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.576
+          "spread": 0.048
         },
         "model.default.callsPerTurn": {
           "value": 3.75,
@@ -295,6 +295,36 @@
           "better": "lower",
           "kind": "exact"
         },
+        "model.table.callsPerTurn": {
+          "value": 3.475,
+          "unit": "calls",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.table.promptTokensPerTurn": {
+          "value": 9114,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.table.cacheablePromptSharePct": {
+          "value": 40.04,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.table.longPrefixCacheableSharePct": {
+          "value": 24.11,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.table.uncachedPromptTokensPerTurn": {
+          "value": 5465,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
         "coverage.edhrecModeledCards": {
           "value": 5012,
           "unit": "cards",
@@ -403,25 +433,25 @@
         "authoring",
         "compiler"
       ],
-      "commit": "0279c931",
+      "commit": "199ffbaa",
       "dirty": false,
       "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz x4, linux-x64, bun 1.4.4",
-      "calibrationMs": 63.81,
+      "calibrationMs": 58.3,
       "repeats": 3,
       "metrics": {
         "engine.msPerDecision": {
-          "value": 6.31,
+          "value": 5.22,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.071
+          "spread": 0.174
         },
         "engine.medianGameMsPerDecision": {
-          "value": 5.76,
+          "value": 4.79,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.111
+          "spread": 0.177
         },
         "engine.work.layerPasses": {
           "value": 3030,
@@ -530,11 +560,11 @@
           "sameGames": true
         },
         "setup.msPerGame": {
-          "value": 0.85,
+          "value": 0.76,
           "unit": "ms",
           "better": "lower",
           "kind": "timed",
-          "spread": 0.109
+          "spread": 0.12
         },
         "model.default.callsPerTurn": {
           "value": 6.735,
@@ -682,6 +712,36 @@
         },
         "model.botNoDelta.uncachedPromptTokensPerTurn": {
           "value": 1692,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.table.callsPerTurn": {
+          "value": 6.209,
+          "unit": "calls",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.table.promptTokensPerTurn": {
+          "value": 23882,
+          "unit": "tokens",
+          "better": "lower",
+          "kind": "exact"
+        },
+        "model.table.cacheablePromptSharePct": {
+          "value": 39.76,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.table.longPrefixCacheableSharePct": {
+          "value": 34.07,
+          "unit": "%",
+          "better": "higher",
+          "kind": "exact"
+        },
+        "model.table.uncachedPromptTokensPerTurn": {
+          "value": 14387,
           "unit": "tokens",
           "better": "lower",
           "kind": "exact"
