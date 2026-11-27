@@ -20,12 +20,33 @@ watch(
   { immediate: true },
 );
 
+/**
+ * Asking for another turn needs the table's socket. Fifteen minutes after the game ends the server
+ * closes the table and the page stops reconnecting, so the replay keeps the turn it last loaded and
+ * says why the others cannot load, instead of moving the ruler to a turn that never arrives.
+ */
+const canLoad = computed(() => table.connection === 'open' && table.stopped === null);
+const loadNote = computed(() => {
+  if (turns.value.length === 0 || canLoad.value) return null;
+  if (table.stopped !== null) return 'This table has closed, so other turns can no longer load.';
+  return 'Reconnecting to the table…';
+});
+
 function show(index: number): void {
   const turn = turns.value[index];
-  if (turn === undefined) return;
+  if (turn === undefined || !canLoad.value) return;
   turnIndex.value = index;
   table.requestReplayTurn(turn);
 }
+
+/** The ruler and the stepper follow the turn on screen; the asked-for one shows as loading. */
+const shownIndex = computed(() => {
+  const turn = table.replayTurn?.turn;
+  return turn === undefined ? -1 : turns.value.indexOf(turn);
+});
+const loading = computed(
+  () => turnIndex.value >= 0 && turnIndex.value !== shownIndex.value && canLoad.value,
+);
 
 const endingText = computed(() => {
   const r = results.value;
@@ -103,7 +124,6 @@ const deckSize = (deck: { cards: Array<{ quantity: number }> }): number =>
 <template>
   <section v-if="results" class="post-game" data-testid="post-game">
     <header class="head dt-rise">
-      <p class="dt-kicker">The table has closed its game</p>
       <h1 class="dt-title">{{ headline }}</h1>
       <div class="dt-ornament" aria-hidden="true"><span class="star" /></div>
       <p class="ending" data-testid="ending">{{ endingText }}</p>
@@ -126,21 +146,24 @@ const deckSize = (deck: { cards: Array<{ quantity: number }> }): number =>
         <button
           type="button"
           class="dt-btn small"
-          :disabled="turnIndex <= 0"
+          :disabled="!canLoad || shownIndex <= 0"
           data-testid="replay-back"
-          @click="show(turnIndex - 1)"
+          @click="show(shownIndex - 1)"
         >
           ◀ Turn
         </button>
         <span class="turn-now" data-testid="replay-turn"
           >Turn {{ table.replayTurn?.turn ?? '…' }}</span
         >
+        <span v-if="loading" class="turn-loading" role="status"
+          >Loading turn {{ turns[turnIndex] }}…</span
+        >
         <button
           type="button"
           class="dt-btn small"
-          :disabled="turnIndex >= turns.length - 1"
+          :disabled="!canLoad || shownIndex < 0 || shownIndex >= turns.length - 1"
           data-testid="replay-forward"
-          @click="show(turnIndex + 1)"
+          @click="show(shownIndex + 1)"
         >
           Turn ▶
         </button>
@@ -150,9 +173,10 @@ const deckSize = (deck: { cards: Array<{ quantity: number }> }): number =>
           v-for="(turn, i) in turns"
           :key="turn"
           type="button"
-          :class="['tick', { here: i === turnIndex, major: turn % 5 === 0 || i === 0 }]"
+          :class="['tick', { here: i === shownIndex, major: turn % 5 === 0 || i === 0 }]"
           :aria-label="`Show turn ${turn}`"
-          :aria-pressed="i === turnIndex"
+          :aria-pressed="i === shownIndex"
+          :disabled="!canLoad"
           @click="show(i)"
         >
           <span v-if="turn % 5 === 0 || i === 0 || i === turns.length - 1" class="tick-num">{{
@@ -160,6 +184,9 @@ const deckSize = (deck: { cards: Array<{ quantity: number }> }): number =>
           }}</span>
         </button>
       </div>
+      <p v-if="loadNote" class="replay-note dt-note" role="status" data-testid="replay-note">
+        {{ loadNote }}
+      </p>
       <div v-if="board" class="board">
         <article
           v-for="entry in replaySeats"
@@ -305,6 +332,23 @@ const deckSize = (deck: { cards: Array<{ quantity: number }> }): number =>
     height 0.3s var(--ease),
     background-color 0.3s var(--ease),
     width 0.3s var(--ease);
+}
+.turn-loading {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.tick:disabled {
+  cursor: default;
+}
+.tick:disabled:not(.here):hover::after {
+  height: 0.45rem;
+}
+.tick.major:disabled:not(.here):hover::after {
+  height: 0.8rem;
+}
+.replay-note {
+  margin: 0.75rem 0 0;
 }
 .tick.major::after {
   height: 0.8rem;

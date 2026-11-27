@@ -18,6 +18,12 @@ import { scryfallImageUrl } from '../lib/card';
 
 const props = defineProps<{
   model: LaneModel | null;
+  /**
+   * Draw the small cards and the drop boxes under each group. Off for now: the lane shows the
+   * hint, each group's life and what it would take, and the confirm. Placing still works by
+   * clicking a creature on the board and then the player (or the group's life here).
+   */
+  cards?: boolean;
   /** The combat in sentences, for screen readers (`combatSummary.lines`). */
   lines: readonly string[];
   /** The one-line recap once combat is over, or null. */
@@ -153,7 +159,7 @@ const confirmWord = computed(() => (props.model?.kind === 'attackers' ? 'attacks
           <span v-if="group.life !== null" class="group-life">{{ group.life }}</span>
           <span v-if="lifeLine(group)" class="group-after">{{ lifeLine(group) }}</span>
         </div>
-        <div class="group-pairs">
+        <div v-if="cards" class="group-pairs">
           <div v-for="pair in group.pairs" :key="pair.attacker.id" class="lane-pair">
             <div class="pair-cards">
               <div

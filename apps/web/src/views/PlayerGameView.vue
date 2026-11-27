@@ -21,6 +21,7 @@ import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
 import ProvisionalBadge from '../components/ProvisionalBadge.vue';
 import StackPanel from '../components/StackPanel.vue';
+import YourTurnFlash from '../components/YourTurnFlash.vue';
 import ZonePile from '../components/ZonePile.vue';
 import ZoneStrip from '../components/ZoneStrip.vue';
 import ThemeControl from '../components/shell/ThemeControl.vue';
@@ -58,7 +59,7 @@ const chosenTargets = ref<Record<number, ObjectId>>({});
 const draggedId = ref<ObjectId | null>(null);
 
 /** Board anchor root + drag pointer tracking for the combat overlay and drag-cursor line (§9.8). */
-const { registerAnchor, setRoot, disposeRoot } = useBoardAnchors();
+const { registerAnchor, anchorFor, setRoot, disposeRoot } = useBoardAnchors();
 const tableRef = ref<HTMLElement | null>(null);
 const dragPointer = ref<{ x: number; y: number } | null>(null);
 // The table only renders once the first board state arrives, which can be after mount.
@@ -76,18 +77,33 @@ onUnmounted(() => {
   cardPreview.hide();
 });
 
+/**
+ * While you aim at a player you can target, the line ends at that player's seat letter, beside their name, rather
+ * than at the pointer, so the arrow names who is threatened. Over a card tile inside the seat
+ * (a planeswalker, say) the line keeps following the pointer.
+ */
+function aimEnd(target: EventTarget | null, x: number, y: number): { x: number; y: number } {
+  if (!(target instanceof Element) || target.closest('.tile') !== null) return { x, y };
+  const seat = target.closest('[data-seat]')?.getAttribute('data-seat');
+  if (seat == null || !isLegalTarget(seat)) return { x, y };
+  const name = anchorFor(`name:${seat}`);
+  if (name === undefined) return { x, y };
+  const below = y > name.y + name.height / 2;
+  return { x: name.x + name.width / 2, y: below ? name.y + name.height + 2 : name.y - 2 };
+}
+
 /** While you hold a creature during a declaration, a line follows the pointer from it. */
 const aimPointer = ref<{ x: number; y: number } | null>(null);
 function onBoardPointerMove(event: PointerEvent): void {
   if (tableRef.value === null || combatAimSourceId.value === null) return;
   const rect = tableRef.value.getBoundingClientRect();
-  aimPointer.value = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  aimPointer.value = aimEnd(event.target, event.clientX - rect.left, event.clientY - rect.top);
 }
 
 function onBoardDragOver(event: DragEvent): void {
   if (tableRef.value === null || draggedId.value === null) return;
   const rect = tableRef.value.getBoundingClientRect();
-  dragPointer.value = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  dragPointer.value = aimEnd(event.target, event.clientX - rect.left, event.clientY - rect.top);
 }
 
 /**
@@ -959,13 +975,13 @@ const laneWaiting = computed(() => {
   return seat === null ? null : `Waiting on ${seatLabel(seat)}: ${seat} ${waitingActivity.value}.`;
 });
 
-/** Each life total registers as an anchor, so an attack's arrow ends at the number it threatens. */
-const lifeAnchorRefs = new Map<string, (el: Element | ComponentPublicInstance | null) => void>();
-function lifeAnchorRef(seatId: string): (el: Element | ComponentPublicInstance | null) => void {
-  let fn = lifeAnchorRefs.get(seatId);
+/** Each opponent's seat letter registers as an anchor, so an aimed attack's arrow ends at the player. */
+const nameAnchorRefs = new Map<string, (el: Element | ComponentPublicInstance | null) => void>();
+function nameAnchorRef(seatId: string): (el: Element | ComponentPublicInstance | null) => void {
+  let fn = nameAnchorRefs.get(seatId);
   if (fn === undefined) {
-    fn = (el) => registerAnchor(`life:${seatId}`, el instanceof Element ? el : null);
-    lifeAnchorRefs.set(seatId, fn);
+    fn = (el) => registerAnchor(`name:${seatId}`, el instanceof Element ? el : null);
+    nameAnchorRefs.set(seatId, fn);
   }
   return fn;
 }
@@ -1731,6 +1747,12 @@ function abandon(): void {
 
 <template>
   <div class="player-game">
+    <YourTurnFlash
+      :active="isYourTurn"
+      :turn="state?.turnNumber ?? null"
+      :reduced-motion="store.reducedMotion"
+      :suppressed="openingHand !== null"
+    />
     <OpeningHand
       v-if="openingHand"
       :request="openingHand.request"
@@ -1965,7 +1987,7 @@ function abandon(): void {
           >
             <!-- Who: seat, commander and a line of counts; then any combat chip and the life. -->
             <header>
-              <span class="id-badge">{{ opponent.seat }}</span>
+              <span :ref="nameAnchorRef(opponent.seat)" class="id-badge">{{ opponent.seat }}</span>
               <span class="seat-who">
                 <strong
                   class="seat-name"
@@ -2027,7 +2049,6 @@ function abandon(): void {
                 >MONARCH</span
               >
               <span
-                :ref="lifeAnchorRef(opponent.seat)"
                 class="life-badge"
                 :aria-label="`${opponent.life} life`"
                 :class="{
@@ -2397,7 +2418,6 @@ function abandon(): void {
               <span class="rail-kicker">Life</span>
               <span class="rail-life-row">
                 <span
-                  :ref="lifeAnchorRef(human.seat)"
                   class="life-badge"
                   :aria-label="`${human.life} life`"
                   :class="{
