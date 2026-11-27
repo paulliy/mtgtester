@@ -715,7 +715,7 @@ export function formatSpectatorLine(event: GameEvent): SpectatorLogLine | null {
     case 'revealHandNoEligible':
       return {
         ...base,
-        text: `finds no eligible card in ${str(p, 'target') ?? 'the'} revealed hand to discard`,
+        text: `finds no eligible card in ${str(p, 'target') ?? 'the'}${str(p, 'target') === undefined ? '' : "'s"} revealed hand to discard`,
       };
     case 'returnSpell':
       return { ...base, text: `${str(p, 'name') ?? 'a spell'} returns to its owner's hand` };
