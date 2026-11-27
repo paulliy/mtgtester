@@ -238,6 +238,26 @@ describe('anthropicRequest', () => {
     expect(marked).toEqual([true, false, true, false]);
   });
 
+  it('keeps a later system message in place on a model that allows it', () => {
+    const split: AiPrompt = {
+      messages: [
+        { role: 'system', content: 'common' },
+        { role: 'user', content: 'observation' },
+        { role: 'system', content: 'attack section' },
+      ],
+      estimatedTokens: 10,
+    };
+    const haiku = anthropicRequest(anthropicConfig, 'claude-haiku-5-5', split, 100);
+    expect(haiku.system).toEqual([
+      { type: 'text', text: 'common', cache_control: { type: 'ephemeral' } },
+    ]);
+    expect(haiku.messages.map((m) => m.role)).toEqual(['user', 'system']);
+    // Claude Sonnet 5 rejects system messages in `messages`: there it joins the system prompt.
+    const sonnet5 = anthropicRequest(anthropicConfig, 'claude-sonnet-5', split, 100);
+    expect(sonnet5.system).toHaveLength(2);
+    expect(sonnet5.messages.map((m) => m.role)).toEqual(['user']);
+  });
+
   it('puts the glossary breakpoint after the system primer without the cache layout', () => {
     const plain: AiPrompt = {
       messages: [

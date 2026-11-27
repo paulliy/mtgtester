@@ -40,6 +40,25 @@ export function supportsServerFallback(model: string): boolean {
   return SERVER_FALLBACK_MODELS.has(model);
 }
 
+/**
+ * Models that accept `role: "system"` messages inside `messages` (no beta header). Claude Sonnet 5
+ * and older models do not; there a later system message joins the top-level system prompt.
+ */
+const MID_CONVERSATION_SYSTEM_MODELS = new Set([
+  'claude-fable-5-2',
+  'claude-fable-5-1',
+  'claude-fable-5',
+  'claude-opus-5-5',
+  'claude-opus-5',
+  'claude-opus-4-8',
+  'claude-sonnet-5-5',
+  'claude-haiku-5-5',
+]);
+
+export function supportsMidConversationSystem(model: string): boolean {
+  return MID_CONVERSATION_SYSTEM_MODELS.has(model);
+}
+
 /** An HTTP failure from the Messages API, flattened so the client classifies it like any other. */
 export class AnthropicHttpFailure extends Error {
   constructor(
@@ -123,9 +142,13 @@ export function anthropicRequest(
       ...(breakpoints.has(index) ? { cache_control: cache } : {}),
     };
     if (message.role === 'system') {
-      // A system message after the conversation has started is still an operator instruction;
-      // keep it in the system prompt rather than demoting it to a user turn.
-      system.push(block);
+      // A system message after the conversation has started is still an operator instruction.
+      // Where the model allows it, it stays where it is, so it does not change the cached prefix
+      // ahead of the conversation; otherwise it joins the system prompt rather than being
+      // demoted to a user turn.
+      if (index >= systemCount && supportsMidConversationSystem(model))
+        messages.push({ role: 'system', content: [block] });
+      else system.push(block);
       return;
     }
     messages.push({ role: message.role, content: [block] });

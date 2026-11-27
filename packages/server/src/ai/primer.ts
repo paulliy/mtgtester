@@ -218,8 +218,23 @@ export function tacticianPrimerSectionIds(request: DecisionRequest): string[] {
 
 /** Build only the tactical instructions this decision can consume. */
 export function tacticianPrimerFor(request: DecisionRequest): string {
+  const { common, situational } = tacticianPrimerParts(request);
+  return situational === '' ? common : `${common}\n\n${situational}`;
+}
+
+/**
+ * `tacticianPrimerFor` split in two: the common section every decision gets, and the sections
+ * this decision adds (empty when none). The same text, so a prompt can keep the common part in a
+ * cacheable system prompt and send the rest after the game state.
+ */
+export function tacticianPrimerParts(request: DecisionRequest): {
+  common: string;
+  situational: string;
+} {
   const byId = new Map(CATALOG.map((section) => [section.id, section.text]));
-  return tacticianPrimerSectionIds(request)
-    .map((id) => byId.get(id) ?? '')
-    .join('\n\n');
+  const [first, ...rest] = tacticianPrimerSectionIds(request);
+  return {
+    common: byId.get(first!) ?? '',
+    situational: rest.map((id) => byId.get(id) ?? '').join('\n\n'),
+  };
 }

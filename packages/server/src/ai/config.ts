@@ -241,6 +241,12 @@ export interface AiConfig {
    * measures it.
    */
   tacticianCardGlossaryEnabled: boolean;
+  /**
+   * Send the tactician the same system prompt for every decision, with the primer sections a
+   * decision adds after the game state as a system message (`stableSystemPrimer` in context.ts),
+   * so a change of decision type keeps the cached prefix. On by default for the Messages API.
+   */
+  tacticianStableSystemPrimerEnabled: boolean;
   /** Reserved feature flag for exact engine-derived combat previews. */
   combatRolloutsEnabled: boolean;
   /** Allow Jev to answer supported tactical choices. Off until benchmark promotion. */
@@ -516,6 +522,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   strategyRouterShadowEnabled: false,
   providerPromptCacheLayoutEnabled: false,
   tacticianCardGlossaryEnabled: false,
+  tacticianStableSystemPrimerEnabled: false,
   combatRolloutsEnabled: false,
   jevEnabled: false,
   jevShadowEnabled: false,
@@ -1007,6 +1014,10 @@ export function loadAiConfig(env: Record<string, string | undefined> = process.e
     tacticianCardGlossaryEnabled: parseBoolean(
       env['AI_TACTICIAN_CARD_GLOSSARY_ENABLED'],
       apiFormat === 'anthropic' ? true : DEFAULT_AI_CONFIG.tacticianCardGlossaryEnabled,
+    ),
+    tacticianStableSystemPrimerEnabled: parseBoolean(
+      env['AI_TACTICIAN_STABLE_SYSTEM_PRIMER_ENABLED'],
+      apiFormat === 'anthropic' ? true : DEFAULT_AI_CONFIG.tacticianStableSystemPrimerEnabled,
     ),
     combatRolloutsEnabled: parseBoolean(
       env['AI_COMBAT_ROLLOUTS_ENABLED'],

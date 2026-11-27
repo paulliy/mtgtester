@@ -95,7 +95,11 @@ function hashMessages(messages: readonly OpenAiMessage[]): string {
 export function preparePromptForCaching(prompt: AiPrompt, options: PromptCacheOptions): AiPrompt {
   if (prompt.messages.length < 2) return prompt;
   const system = prompt.messages[0]!;
-  const dynamicMessage = prompt.messages.at(-1)!;
+  // The observation is the last user message; system messages after it (a decision's own primer
+  // sections) stay after it.
+  const dynamicIndex = prompt.messages.findLastIndex((message) => message.role === 'user');
+  if (dynamicIndex < 1) return prompt;
+  const dynamicMessage = prompt.messages[dynamicIndex]!;
   let dynamicContent = dynamicMessage.content;
   let extractedCommanders: Record<string, unknown> | null = null;
   const movedContext: Record<string, unknown> = {};
@@ -125,8 +129,9 @@ export function preparePromptForCaching(prompt: AiPrompt, options: PromptCacheOp
   }
   const messages = [
     ...staticMessages,
-    ...prompt.messages.slice(1, -1),
+    ...prompt.messages.slice(1, dynamicIndex),
     { ...dynamicMessage, content: dynamicContent },
+    ...prompt.messages.slice(dynamicIndex + 1),
   ];
   const prefixHash = hashMessages(staticMessages);
   const estimatedTokens = Math.ceil(

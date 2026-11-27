@@ -7,7 +7,7 @@ import type { DecisionRequest, PlayerId, PlayerView, TurnStrategy } from '@mtg/s
 import type { SeatDiplomacyContext } from './diplomacy-context';
 import { summarizeHandCard, summarizePermanent } from './card-summary';
 import { budgetContext, type ContextBudgetReport } from './context-budget';
-import { RULES_PRIMER, tacticianPrimerFor } from './primer';
+import { RULES_PRIMER, tacticianPrimerParts } from './primer';
 import type { PublicMemorySnapshot } from './public-memory';
 import type { StateFeatures } from './state-features';
 import type { PromptCacheMetadata } from './prompt-cache';
@@ -65,6 +65,13 @@ export interface ContextOptions {
    * the budgeter.
    */
   cardGlossary?: CardGlossary;
+  /**
+   * Keep the system prompt the same for every decision: only the common tactician section goes
+   * there, and the sections a decision adds follow the game state as a system message. The
+   * model is told the same things, but a change of decision type no longer rewrites the first
+   * bytes of the prompt and so every cached prefix behind them.
+   */
+  stableSystemPrimer?: boolean;
 }
 
 /**
@@ -255,14 +262,20 @@ export function assemblePrompt(
     glossary === undefined
       ? ''
       : `\n\nCARD TEXT: a hand or battlefield card without text has the rules text listed under its name in cardText.`;
-  const systemPrimer = options.useLegacyTacticianPrimer
-    ? RULES_PRIMER
-    : tacticianPrimerFor(request);
+  const parts = options.useLegacyTacticianPrimer
+    ? { common: RULES_PRIMER, situational: '' }
+    : tacticianPrimerParts(request);
+  const splitPrimer = options.stableSystemPrimer === true && parts.situational !== '';
+  const systemPrimer =
+    parts.situational === '' || splitPrimer
+      ? parts.common
+      : `${parts.common}\n\n${parts.situational}`;
   const glossaryMessages = glossary?.flush() ?? [];
   const messages: OpenAiMessage[] = [
     { role: 'system', content: systemPrimer + tacticalInstruction + glossaryInstruction },
     ...glossaryMessages,
     { role: 'user', content: userJson },
+    ...(splitPrimer ? [{ role: 'system' as const, content: parts.situational }] : []),
   ];
 
   const totalChars = messages.reduce((sum, message) => sum + message.content.length, 0);

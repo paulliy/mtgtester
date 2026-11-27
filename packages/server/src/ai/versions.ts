@@ -14,6 +14,8 @@ export const AI_VERSIONS = Object.freeze({
   promptCache: 'stable-prefix-v2',
   /** Tactician card glossary, used only when `tacticianCardGlossaryEnabled`. */
   cardGlossary: 'tactician-card-glossary-v1',
+  /** Common tactician primer only in the system prompt, when `tacticianStableSystemPrimerEnabled`. */
+  stableSystemPrimer: 'tactician-stable-system-v1',
   /** Bot-led strategist delta prompts (hill-climb S6), used only when `strategistDeltaEnabled`. */
   strategistDelta: 'strategist-delta-v1',
   parser: 'decision-parser-v1',

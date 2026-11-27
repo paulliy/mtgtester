@@ -162,3 +162,45 @@ describe('assemblePrompt with a card glossary', () => {
     expect(prompt.messages.at(-1)!.content).toContain('battlefield');
   });
 });
+
+describe('assemblePrompt with a stable system primer', () => {
+  const attack: DecisionRequest = {
+    ...request,
+    decisionType: 'declareAttackers',
+    legalActions: [{ id: 0, type: 'pass', description: 'No attack' }],
+  };
+
+  it('keeps the system prompt the same across decision types and sends the rest after the state', () => {
+    const priority = assemblePrompt(request, view(), undefined, { stableSystemPrimer: true });
+    const attacking = assemblePrompt(attack, view(), undefined, { stableSystemPrimer: true });
+    expect(attacking.messages[0]).toEqual(priority.messages[0]);
+    expect(attacking.messages.map((m) => m.role)).toEqual(['system', 'user', 'system']);
+    // The same instructions as the one-piece primer, split in two.
+    const whole = assemblePrompt(attack, view()).messages[0]!.content;
+    expect(`${attacking.messages[0]!.content}\n\n${attacking.messages[2]!.content}`).toBe(whole);
+  });
+
+  it('adds no trailing message when the decision needs only the common section', () => {
+    const priority = assemblePrompt(request, view(), undefined, { stableSystemPrimer: true });
+    expect(priority.messages).toEqual(assemblePrompt(request, view()).messages);
+  });
+
+  it('leaves the observation as the dynamic message in the cache layout', () => {
+    const prompt = preparePromptForCaching(
+      assemblePrompt(attack, view(), undefined, {
+        stableSystemPrimer: true,
+        cardGlossary: new CardGlossary(),
+      }),
+      { role: 'tactician', staticContext: { deck: 'constants' } },
+    );
+    expect(prompt.messages.map((m) => m.role)).toEqual([
+      'system',
+      'user',
+      'user',
+      'user',
+      'system',
+    ]);
+    expect(prompt.messages[3]!.content).toContain('battlefield');
+    expect(prompt.messages[4]!.content).not.toContain('battlefield');
+  });
+});
