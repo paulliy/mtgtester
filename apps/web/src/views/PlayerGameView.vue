@@ -42,6 +42,7 @@ import { summarizeCombat } from '../lib/combatSummary';
 import { buildCombatLane, combatRecap, withDeparted, type LaneModel } from '../lib/combatLane';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { groupByXFamily, type XActionGroup } from '../lib/xFamilies';
+import { rowYieldIsUnambiguous, yieldedAbilityCount } from '../lib/sourceYields';
 import { commanderObjectIds } from '../lib/commanderIds';
 import { groupPermanents, stackKey, type GroupedPermanent } from '../lib/stackPermanents';
 import { useCardPreviewStore } from '../stores/cardPreview';
@@ -658,20 +659,37 @@ const playableSources = computed(() => {
     if (current === undefined || rank < current.rank) best.set(id, { rank, action });
   }
   // The verb ("Play", "Cast", "Activate") is the server's, from the action's type.
-  return [...best].map(([id, { action }]) => ({
-    id,
-    verb: entryOf(action)?.verb ?? '',
-    name: sourceNameOf(action) ?? id,
-  }));
+  return [...best].map(([id, { action }]) => {
+    const own = sourceActions.value.filter((candidate) => sourceId(candidate) === id);
+    return {
+      id,
+      verb: entryOf(action)?.verb ?? '',
+      name: sourceNameOf(action) ?? id,
+      // The row's one-click yield takes a single ability, so it is only offered when the source
+      // has one; the source's own tray yields each ability by name.
+      rowYield: rowYieldIsUnambiguous(own),
+      yielded: yieldedAbilityCount(own, store.ignoredAbilities),
+    };
+  });
 });
 /** The "Playable now" list: identical entries (three Swamps) collapse to one with a count. */
 const playableList = computed(() => {
-  const groups = new Map<string, { key: string; ids: string[]; verb: string; name: string }>();
+  const groups = new Map<
+    string,
+    { key: string; ids: string[]; verb: string; name: string; rowYield: boolean; yielded: number }
+  >();
   for (const source of playableSources.value) {
     const key = `${source.verb}|${source.name}`;
     const group = groups.get(key);
     if (group === undefined)
-      groups.set(key, { key, ids: [source.id], verb: source.verb, name: source.name });
+      groups.set(key, {
+        key,
+        ids: [source.id],
+        verb: source.verb,
+        name: source.name,
+        rowYield: source.rowYield,
+        yielded: source.yielded,
+      });
     else group.ids.push(source.id);
   }
   return [...groups.values()];
@@ -2877,12 +2895,19 @@ function abandon(): void {
                           <span class="verb">{{ entry.verb }}</span> {{ entry.name
                           }}<span v-if="entry.ids.length > 1" class="count">
                             ×{{ entry.ids.length }}</span
+                          ><span
+                            v-if="entry.yielded > 0"
+                            class="count"
+                            title="Some of this card's abilities are yielded. Resume them from the game log."
+                          >
+                            · {{ entry.yielded }} yielded</span
                           >
                         </button>
                         <button
                           v-if="
                             request.decisionType === 'priority' &&
                             entry.verb !== 'Play' &&
+                            entry.rowYield &&
                             yieldableSourceAction(entry.ids[0] ?? '') !== undefined
                           "
                           type="button"

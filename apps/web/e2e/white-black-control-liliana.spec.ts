@@ -288,3 +288,40 @@ test('Liliana, Waker of the Dead creates its −7 emblem and reanimates at comba
   await expect(targetImage).toHaveCount(0);
   await expect(page.getByText(/Liliana.*emblem/i).first()).toBeVisible();
 });
+
+test("Liliana, Waker of the Dead's Playable now row never yields one of her two abilities blind", async ({
+  page,
+}) => {
+  await runScenario(
+    page,
+    'Liliana, Waker of the Dead: −3 gives a creature −X/−X for your graveyard size',
+  );
+  await castWalker(page, 'Liliana, Waker of the Dead');
+
+  // The +1 and the −3 are both legal, so a one-click row yield would hide only the +1.
+  const source = playableSource(page, 'Liliana, Waker of the Dead');
+  await expect(source).toBeVisible({ timeout: 15_000 });
+  const rowYield = page.getByRole('button', {
+    name: 'Smart yield Liliana, Waker of the Dead',
+    exact: true,
+  });
+  await expect(rowYield).toHaveCount(0);
+
+  // Her own tray names each ability and yields it by name.
+  await source.click();
+  const plusOne = page
+    .locator('.source-action-row')
+    .filter({ hasText: /Each player discards; opponents unable/ });
+  await expect(plusOne).toBeVisible();
+  await expect(
+    page.locator('.source-action-row').filter({ hasText: /Target creature gets -X\/-X/ }),
+  ).toBeVisible();
+  await plusOne.getByRole('button', { name: 'Yield always' }).click();
+
+  // The −3 is still offered, and the row says the +1 is held back rather than dropping it.
+  await expect(source).toContainText('1 yielded');
+  await expect(rowYield).toBeVisible();
+  await page
+    .locator('.playable-now')
+    .screenshot({ path: process.env['LILIANA_SHOT'] ?? 'test-results/liliana-row.png' });
+});
