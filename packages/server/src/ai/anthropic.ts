@@ -70,7 +70,8 @@ export function anthropicEffort(
  * One Messages request. System messages become the top-level `system`; the rest keep their
  * order. A cache breakpoint goes on the last message of the stable prefix (the prompt-cache
  * layout's prefix when it is on, otherwise the system primer), so the per-game constants are
- * read from cache on later calls. No `temperature`: current models reject sampling parameters.
+ * read from cache on later calls, and a second one on the last card glossary message, if any.
+ * No `temperature`: current models reject sampling parameters.
  */
 /**
  * Models that accept `thinking: {"type": "disabled"}`. Anthropic's effort page (read 2026-11-26)
@@ -105,6 +106,12 @@ export function anthropicRequest(
   const systemCount = leadingSystem === -1 ? prompt.messages.length : leadingSystem;
   const prefixCount = prompt.promptCache?.prefixMessageCount ?? systemCount;
   const breakpoint = Math.min(Math.max(prefixCount, 1), prompt.messages.length) - 1;
+  // The card glossary follows the stable prefix and only ever grows, so a second breakpoint on its
+  // last message lets the next call read all of it but the one message that call adds.
+  const glossaryEnd = Math.max(prefixCount, 1) + (prompt.glossaryMessageCount ?? 0) - 1;
+  const breakpoints = new Set([breakpoint]);
+  if (glossaryEnd > breakpoint && glossaryEnd < prompt.messages.length - 1)
+    breakpoints.add(glossaryEnd);
   const cache = { type: 'ephemeral' as const };
 
   const system: Anthropic.Beta.Messages.BetaTextBlockParam[] = [];
@@ -113,7 +120,7 @@ export function anthropicRequest(
     const block: Anthropic.Beta.Messages.BetaTextBlockParam = {
       type: 'text',
       text: message.content,
-      ...(index === breakpoint ? { cache_control: cache } : {}),
+      ...(breakpoints.has(index) ? { cache_control: cache } : {}),
     };
     if (message.role === 'system') {
       // A system message after the conversation has started is still an operator instruction;

@@ -29,6 +29,7 @@ import { localCallMeta, type AiCallLogger, type DecisionSource } from './logger'
 import { validateResponse } from './validate';
 import { StrategyCoordinator } from './strategy-coordinator';
 import { preparePromptForCaching } from './prompt-cache';
+import { CardGlossary } from './card-glossary';
 import { routeStrategy } from './strategy-router';
 import { DEFAULT_POLICY_REGISTRY, type PolicyRegistry } from './policy-registry';
 import {
@@ -129,6 +130,8 @@ function emptyStats(): EscalationStats {
 export class OpenAiDecisionProvider implements AsyncDecisionProvider {
   /** Per-provider (therefore per-seat, per-game) — never shared between games. */
   private readonly cache = new DecisionCache();
+  /** The seat's card glossary, when `tacticianCardGlossaryEnabled`; per seat, per game. */
+  private readonly cardGlossary = new CardGlossary();
   private readonly strategy: StrategyCoordinator;
   /** The deal context the current request's prompt was built from (ADR 0035). */
   private decisionContext: { requestId: string; context: string | undefined } | null = null;
@@ -612,6 +615,7 @@ export class OpenAiDecisionProvider implements AsyncDecisionProvider {
         useBudgeter: this.config.contextBudgeterEnabled,
         useCardSummaries: this.config.contextCardSummariesEnabled,
         inputTokenBudget: this.config.contextInputTokenBudget,
+        ...(this.config.tacticianCardGlossaryEnabled ? { cardGlossary: this.cardGlossary } : {}),
       },
     );
     const prompt = this.config.providerPromptCacheLayoutEnabled

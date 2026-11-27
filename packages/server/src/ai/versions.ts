@@ -12,6 +12,8 @@ export const AI_VERSIONS = Object.freeze({
   replay: 'fresh-engine-replay-v1',
   counterfactual: 'bounded-counterfactual-v1',
   promptCache: 'stable-prefix-v2',
+  /** Tactician card glossary, used only when `tacticianCardGlossaryEnabled`. */
+  cardGlossary: 'tactician-card-glossary-v1',
   /** Bot-led strategist delta prompts (hill-climb S6), used only when `strategistDeltaEnabled`. */
   strategistDelta: 'strategist-delta-v1',
   parser: 'decision-parser-v1',

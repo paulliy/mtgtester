@@ -11,6 +11,7 @@ import { RULES_PRIMER, tacticianPrimerFor } from './primer';
 import type { PublicMemorySnapshot } from './public-memory';
 import type { StateFeatures } from './state-features';
 import type { PromptCacheMetadata } from './prompt-cache';
+import type { CardGlossary } from './card-glossary';
 
 export interface OpenAiMessage {
   role: 'system' | 'user' | 'assistant';
@@ -22,6 +23,11 @@ export interface AiPrompt {
   estimatedTokens: number;
   contextReport?: ContextBudgetReport;
   promptCache?: PromptCacheMetadata;
+  /**
+   * Card glossary messages (`CardGlossary`) placed right before the observation. A provider with
+   * explicit cache breakpoints puts one after the last of them.
+   */
+  glossaryMessageCount?: number;
 }
 
 const BASIC_LAND_NAMES = new Set(['Forest', 'Plains', 'Island', 'Swamp', 'Mountain']);
@@ -53,6 +59,12 @@ export interface ContextOptions {
   stateFeatures?: StateFeatures;
   /** Frozen pre-split prompt used only for historical benchmark comparability. */
   useLegacyTacticianPrimer?: boolean;
+  /**
+   * The seat's card glossary: hand and battlefield rules text moves out of the observation into
+   * glossary messages ahead of it, so a prefix cache can serve it. Not used with card summaries or
+   * the budgeter.
+   */
+  cardGlossary?: CardGlossary;
 }
 
 /**
@@ -66,6 +78,12 @@ export function assemblePrompt(
 ): AiPrompt {
   const includePublicZones = options.includePublicZones ?? true;
   const useCardSummaries = options.useCardSummaries ?? false;
+  // The budgeter trims the observation to a token limit; text moved to the glossary would escape it.
+  const glossary =
+    useCardSummaries || options.useBudgeter === true ? undefined : options.cardGlossary;
+  /** The card's text for the observation: nothing when the glossary lists exactly this text. */
+  const inlineText = (name: string, text: string): { text?: string } =>
+    glossary?.cover(name, text) === true ? {} : { text };
   /**
    * Rules text for a battlefield permanent, sent at most ONCE per distinct card name.
    * A Commander board repeats heavily — eight Thopter tokens, forty basics — and the text
@@ -78,7 +96,7 @@ export function assemblePrompt(
     if (BASIC_LAND_NAMES.has(name)) return {};
     if (textSent.has(name)) return {};
     textSent.add(name);
-    return { text: oracleText };
+    return inlineText(name, oracleText);
   };
 
   const rawPayload = {
@@ -128,7 +146,7 @@ export function assemblePrompt(
           ...(card.name.includes(' // ')
             ? { layoutNote: 'Dual-face Adventure/Omen card (castable as spell or permanent)' }
             : {}),
-          ...(isBasic || !card.oracleText ? {} : { text: card.oracleText }),
+          ...(isBasic || !card.oracleText ? {} : inlineText(card.name, card.oracleText)),
         };
       }),
     },
@@ -233,21 +251,28 @@ export function assemblePrompt(
     guidance === undefined
       ? ''
       : `\n\nTACTICIAN ROLE: The strategist's turnStrategy is advice, never authority. Apply it to the current legalActions and choose only the best next actionId. If the board changed, adapt. Do not create a new plan and do not return plannedActions or turnStrategy. Reasoning is disabled, so answer with compact JSON immediately.`;
+  const glossaryInstruction =
+    glossary === undefined
+      ? ''
+      : `\n\nCARD TEXT: a hand or battlefield card without text has the rules text listed under its name in cardText.`;
   const systemPrimer = options.useLegacyTacticianPrimer
     ? RULES_PRIMER
     : tacticianPrimerFor(request);
+  const glossaryMessages = glossary?.flush() ?? [];
   const messages: OpenAiMessage[] = [
-    { role: 'system', content: systemPrimer + tacticalInstruction },
+    { role: 'system', content: systemPrimer + tacticalInstruction + glossaryInstruction },
+    ...glossaryMessages,
     { role: 'user', content: userJson },
   ];
 
-  const totalChars = systemPrimer.length + tacticalInstruction.length + userJson.length;
+  const totalChars = messages.reduce((sum, message) => sum + message.content.length, 0);
   const estimatedTokens = Math.ceil(totalChars / 4);
 
   return {
     messages,
     estimatedTokens,
     ...(budgeted === null ? {} : { contextReport: budgeted.report }),
+    ...(glossary === undefined ? {} : { glossaryMessageCount: glossaryMessages.length }),
   };
 }
 
