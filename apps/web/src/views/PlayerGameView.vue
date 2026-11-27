@@ -1192,6 +1192,13 @@ const decisionBody = computed(() => {
   if (title === 'Blocks are in') return combatSummary.value?.prose.join(' ') ?? '';
   return '';
 });
+/** A priority stop whose prompt only restates the title ("You have priority (…). Choose…"). */
+function isPlainPriority(req: DecisionRequest): boolean {
+  return (
+    req.decisionType === 'priority' &&
+    /^You have priority \([^)]*\)\. Choose an action\.$/.test(promptOf(req).trim())
+  );
+}
 /** The band's body while you wait: the design says plainly that nothing is asked of you yet. */
 const waitingBody = computed(() => {
   const board = state.value;
@@ -2874,7 +2881,14 @@ function abandon(): void {
                     </div>
                   </div>
                 </template>
-                <p v-else-if="!openingHand" class="tray-hint">
+                <p
+                  v-else-if="
+                    !openingHand &&
+                    request?.decisionType === 'priority' &&
+                    playableSources.length > 0
+                  "
+                  class="tray-hint"
+                >
                   Click a highlighted card or permanent to play, cast, or activate it.
                 </p>
               </section>
@@ -2889,6 +2903,11 @@ function abandon(): void {
                   @choose="chooseFallbackAction"
                 />
                 <template v-else>
+                  <!-- The question comes first, then its answers. A plain priority stop says no
+                       more than the title, so its line is kept for screen readers only. -->
+                  <p class="prompt" :class="{ 'dt-sr': isPlainPriority(request) }">
+                    {{ promptOf(request) }}
+                  </p>
                   <div v-if="immediateActions.length > 0" class="quick-actions">
                     <button
                       v-for="(action, i) in immediateActions"
@@ -2900,7 +2919,6 @@ function abandon(): void {
                       {{ action.description }}
                     </button>
                   </div>
-                  <p class="prompt">{{ promptOf(request) }}</p>
                   <div v-if="playableSources.length > 0" class="playable-now">
                     <strong>Playable now</strong>
                     <div class="playable-list">
@@ -4661,7 +4679,8 @@ button.primary {
   grid-area: hand;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(24rem, 48%);
+  /* The decision is where the game asks you things, so it gets the larger share. */
+  grid-template-columns: minmax(0, 42fr) minmax(26rem, 58fr);
   border-top: 1px solid var(--ink);
 }
 .hand-wrap {
