@@ -42,6 +42,7 @@ import { summarizeCombat } from '../lib/combatSummary';
 import { buildCombatLane, combatRecap, withDeparted, type LaneModel } from '../lib/combatLane';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { groupByXFamily, type XActionGroup } from '../lib/xFamilies';
+import { clickableObjectIds } from '../lib/clickableObjects';
 import { commanderObjectIds } from '../lib/commanderIds';
 import { groupPermanents, stackKey, type GroupedPermanent } from '../lib/stackPermanents';
 import { useCardPreviewStore } from '../stores/cardPreview';
@@ -126,13 +127,38 @@ const request = computed(() => pending.value?.request ?? null);
 const human = computed(
   () => state.value?.seats.find((seat) => seat.seat === state.value?.viewerSeat) ?? null,
 );
+/**
+ * The request you chose Mulligan on, until the next question for you arrives. The engine asks
+ * everyone keep-or-mulligan in turn order and deals new hands only after the last answer, so
+ * between your click and your new hand the server has nothing to ask you; without this the
+ * opening-hand screen closed onto the board (old hand still showing) and reopened later.
+ */
+const mulliganedOn = ref<string | null>(null);
+watch(request, (req) => {
+  if (req !== null && req.requestId !== mulliganedOn.value) mulliganedOn.value = null;
+});
+watch(
+  () => [store.gameId, store.gameOver] as const,
+  () => (mulliganedOn.value = null),
+);
+function chooseOpeningHand(actionId: number): void {
+  const req = request.value;
+  const action = req?.legalActions.find((candidate) => candidate.id === actionId);
+  if (store.submitPlayerAction(actionId) && req !== null && action?.type === 'mulligan')
+    mulliganedOn.value = req.requestId;
+}
+
 /** Keep-or-mulligan and London bottoming take over the screen, Arena-style, until decided. */
 const openingHand = computed(() => {
   const req = request.value;
   const hand = human.value?.hand;
-  if (req === null || hand === null || hand === undefined) return null;
+  if (hand === null || hand === undefined) return null;
+  const mulligansTaken = human.value?.mulligansTaken ?? 0;
+  // Waiting on the other players after your mulligan: the screen stays up with no choices.
+  if (req === null)
+    return mulliganedOn.value === null ? null : { request: null, hand, mulligansTaken };
   if (req.decisionType !== 'mulligan' && req.decisionType !== 'bottomCards') return null;
-  return { request: req, hand, mulligansTaken: human.value?.mulligansTaken ?? 0 };
+  return { request: req, hand, mulligansTaken };
 });
 const opponents = computed(
   () => state.value?.seats.filter((seat) => seat.seat !== state.value?.viewerSeat) ?? [],
@@ -563,14 +589,16 @@ function sourceId(action: LegalAction): string | null {
   if (interaction.kind === 'attack') return interaction.attackerId;
   if (interaction.kind === 'block') return interaction.blockerId;
   // A choice about a player (who a token attacks, which opponent to pick) has no card to click:
-  // it goes to the decision panel, which shows each player's buttons.
+  // it goes to the decision panel, which shows each player's buttons. So does a choice about a
+  // card the board does not draw as clickable (a hidden zone): waiting for a click on it would
+  // leave the player with nothing to press and the game stuck.
   if (interaction.kind === 'choice')
-    return interaction.subjectId === undefined || seatIds.value.has(interaction.subjectId)
+    return interaction.subjectId === undefined || !clickableIds.value.has(interaction.subjectId)
       ? null
       : interaction.subjectId;
   return null;
 }
-const seatIds = computed(() => new Set((state.value?.seats ?? []).map((seat) => seat.seat)));
+const clickableIds = computed(() => clickableObjectIds(state.value));
 
 /**
  * Every source action but making mana by hand (ADR 0030): that lives on the land itself, in the
@@ -1736,7 +1764,7 @@ function abandon(): void {
       :request="openingHand.request"
       :cards="openingHand.hand"
       :mulligans-taken="openingHand.mulligansTaken"
-      @choose="store.submitPlayerAction"
+      @choose="chooseOpeningHand"
     />
     <!-- The board's header, in the app's top bar (which folds the site's ruler away while you play):
          the turn and where in it on the left, your resources and the ways out on the right. -->

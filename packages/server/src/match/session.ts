@@ -720,6 +720,21 @@ export class MatchSession {
     return withoutNote(bot.decide(fallbackMenu(request)));
   }
 
+  /**
+   * The host had the fallback bot answer this seat's pending decision once (table mode): the way
+   * out of a game stuck on a choice the player cannot make. The same path a clock timeout takes,
+   * so a late answer from the player is stale, and it works on untimed tables too. Does nothing
+   * when the seat has no decision pending (the game is waiting on something else).
+   */
+  hostResolve(seat: PlayerId): void {
+    const taken = this.humanStates.get(seat)?.provider.takeOver() ?? null;
+    if (taken === null) return;
+    this.clocks?.closeDecision(seat);
+    const response = this.fallbackDecide(seat, taken.request);
+    this.tagDecisionSource(taken.request.requestId, 'fallback');
+    taken.resolve(response);
+  }
+
   /** The player takes their seat back from its fallback bot (table mode, M4). */
   resumeControl(seat: PlayerId): void {
     if (this.clocks?.resumeControl(seat) === true) {

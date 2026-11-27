@@ -438,3 +438,81 @@ test('a guest takes a seat with a premade deck instead of pasting one', async ({
   await host.getByTestId('approve-P2').click();
   await expect(guest.getByTestId('seat-P2')).toContainText('Grace');
 });
+
+test('after a mulligan the hand screen waits for the others, and the host can unstick a seat', async ({
+  browser,
+}) => {
+  test.setTimeout(180_000);
+  const origin = `http://127.0.0.1:${TABLE_PORTS.main}`;
+  const host = await openPage(browser, origin);
+  const guest = await openPage(browser, origin);
+  const invite = await hostTable(host, 'Ann');
+  await joinAsGuest(guest, host, invite, 'Bob');
+  await fillWithBotsAndStart(host, ['P3', 'P4']);
+
+  // Players answer keep-or-mulligan in turn order. Whoever is asked first goes first; the other
+  // has not been asked yet, and answers nothing in this test.
+  const keepOf = (page: Page) => page.getByRole('button', { name: /^Keep \d+$/ });
+  await expect
+    .poll(async () => (await keepOf(host).isVisible()) || (await keepOf(guest).isVisible()), {
+      timeout: 60_000,
+    })
+    .toBe(true);
+  const hostFirst = await keepOf(host).isVisible();
+  const first = hostFirst ? host : guest;
+  const second = hostFirst ? guest : host;
+  const secondSeat = hostFirst ? 'P2' : 'P1';
+  const secondName = hostFirst ? 'Bob' : 'Ann';
+
+  // The mulligan keeps the hand screen up, with no choices, while the others decide.
+  await first.getByRole('button', { name: 'Mulligan', exact: true }).click();
+  await expect(first.getByTestId('mulligan-waiting')).toBeVisible();
+  await expect(keepOf(first)).toBeHidden();
+  await expect(first.locator('.opening-hand')).toBeVisible();
+  await expect(keepOf(second)).toBeVisible({ timeout: 30_000 });
+  // Still waiting while the other player thinks: the screen did not close onto the board.
+  await expect(first.getByTestId('mulligan-waiting')).toBeVisible();
+
+  // The host has the bot answer the stuck player's decision, once.
+  await host.getByTestId('stuck-menu').click();
+  await host.getByTestId(`resolve-seat-${secondSeat}`).click();
+  await host.getByRole('button', { name: 'Let the bot decide' }).click();
+  await expect(host.getByText(`Asked the bot to decide for ${secondName}.`)).toBeVisible();
+
+  // With everyone answered, the first player is dealt a new hand and asked again.
+  await expect(first.getByText('Opening hand · after 1 mulligan')).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(keepOf(first)).toBeVisible();
+  await expect(first.getByTestId('mulligan-waiting')).toBeHidden();
+});
+
+test('a host running the table without a seat can still unstick a player', async ({ browser }) => {
+  const origin = `http://127.0.0.1:${TABLE_PORTS.main}`;
+  const host = await openPage(browser, origin);
+  const guest = await openPage(browser, origin);
+  // The host creates the table and never joins by name or takes a seat.
+  await host.goto('/');
+  await host.getByTestId('host-secret').fill(TABLE_HOST_SECRET);
+  await host.getByTestId('create-table').click();
+  await expect(host).toHaveURL(/\/multiplayer\/[\w-]+#/);
+  const invite = await host.getByTestId('invite-link').inputValue();
+  await joinAsGuest(guest, host, invite, 'Bob');
+  await fillWithBotsAndStart(host, ['P1', 'P3', 'P4']);
+
+  // Bob is asked to keep or mulligan and answers nothing; the host has the bot answer for him.
+  await expect(guest.getByRole('button', { name: /^Keep \d+$/ })).toBeVisible({ timeout: 60_000 });
+  await expect(host.getByTestId('table-bar')).toBeVisible();
+  await host.getByTestId('stuck-menu').click();
+  await host.getByTestId('resolve-seat-P2').click();
+  await host.getByRole('button', { name: 'Let the bot decide' }).click();
+  await expect(host.getByText('Asked the bot to decide for Bob.')).toBeVisible();
+  // Bob's first decision is answered either way: a keep closes his hand screen, a mulligan
+  // retitles it ("Mulligan chosen", then "after 1 mulligan").
+  await expect(guest.getByRole('heading', { name: 'Opening hand', exact: true })).toBeHidden({
+    timeout: 30_000,
+  });
+  // Without a seat, ending the game stays in the lobby's host panel, not repeated in the bar.
+  await expect(host.getByTestId('host-panel').getByTestId('abandon')).toBeVisible();
+  await expect(host.getByTestId('table-bar').getByTestId('abandon')).toHaveCount(0);
+});
