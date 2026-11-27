@@ -508,6 +508,10 @@ export function findObjectByCardId(ctx: GameContext, cardId: string): EngineObje
     const found = zone.find((o) => o.cardId === cardId);
     if (found !== undefined) return found;
   }
+  // A spell being cast (CR 601.2a moves it to the stack before costs are paid) is still this
+  // card: a commander mid-cast must still be found, or Command Tower reads an empty identity and
+  // the commander can never be paid for.
+  for (const entry of s.stack) if (entry.card?.cardId === cardId) return entry.card;
   return undefined;
 }
 
