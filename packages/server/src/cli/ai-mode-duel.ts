@@ -5,7 +5,7 @@
  * (`.env` is read by Bun), so the endpoint, models and key are the same ones the app uses.
  *
  *   bun run ai-mode-duel [--seed S] [--turn-cap N] [--max-usd N] [--max-calls N] [--swap] [--json out.json]
- *                        [--escalation T1,T2] [--shadow T1,T2] [--table]
+ *                        [--escalation T1,T2] [--shadow T1,T2] [--table [--via openrouter]]
  *                        [--opponents model|bot-never|bot-v1|compact-off]
  *                        [--delta] [--await-strategist]
  *                        [--offline] [--trace out.jsonl]
@@ -41,7 +41,8 @@
  *
  * `--table` builds every seat from the table configuration (ADR 0055): Claude Haiku 5.5 on the
  * Messages API, with only `ANTHROPIC_API_KEY` read from the environment. Its attempts are priced
- * from `pricing.ts`, since that API reports no cost. `--opponents compact-off` seats model-led
+ * from `pricing.ts`, since that API reports no cost; `--via openrouter` reaches the same model
+ * through OpenRouter instead. `--opponents compact-off` seats model-led
  * tacticians on both sides, P1 and P3 with the compact observation (hill-climb token idea 4) and
  * P2 and P4 without it.
  *
@@ -398,6 +399,28 @@ export class SeatTracker {
   }
 }
 
+/** OpenRouter's id for the model table seats play (`TABLE_MODEL`). */
+export const TABLE_MODEL_ON_OPENROUTER = 'anthropic/claude-haiku-5.5';
+
+/**
+ * The table's seat configuration (`tableAiConfig`) with its endpoint, key and model ids taken
+ * from an OpenRouter configuration: same roles, reasoning, deadlines, bot decision types and
+ * prompt layout, a different road to the same model.
+ */
+export function tableSeatsOnOpenRouter(router: AiConfig): AiConfig {
+  const seats = tableAiConfig('via-openrouter');
+  const models = [TABLE_MODEL_ON_OPENROUTER];
+  return {
+    ...seats,
+    apiFormat: router.apiFormat,
+    baseUrl: router.baseUrl,
+    apiKey: router.apiKey,
+    models,
+    strategist: { ...seats.strategist, models },
+    tactician: { ...seats.tactician, models },
+  };
+}
+
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const seed = arg(argv, '--seed') ?? 'mode-duel';
@@ -417,11 +440,19 @@ async function main(): Promise<void> {
   // `--table`: every seat runs the table's own configuration (ADR 0055): Claude Haiku 5.5 on the
   // Messages API, built in code, with only the Anthropic key read from the environment.
   const table = argv.includes('--table');
+  // `--via openrouter`: the same table seats, with Haiku 5.5 reached through OpenRouter instead
+  // (no Anthropic key needed). Play and prompt tokens compare; cache billing does not, since that
+  // path sends no cache breakpoints.
+  const via = arg(argv, '--via') ?? 'anthropic';
+  if (via !== 'anthropic' && via !== 'openrouter')
+    throw new Error('--via must be anthropic or openrouter');
   const tableKey = process.env['ANTHROPIC_API_KEY'] ?? '';
-  const base =
-    table && (offline || tableKey !== '')
-      ? tableAiConfig(offline ? 'offline' : tableKey)
-      : loadAiConfig(process.env);
+  const base: AiConfig =
+    table && via === 'openrouter'
+      ? tableSeatsOnOpenRouter(loadAiConfig(process.env))
+      : table && (offline || tableKey !== '')
+        ? tableAiConfig(offline ? 'offline' : tableKey)
+        : loadAiConfig(process.env);
   if (!offline && !base.apiKey) {
     console.error('No AI API key found in the environment or .env; nothing was played.');
     process.exitCode = 1;
