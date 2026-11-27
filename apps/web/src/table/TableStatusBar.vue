@@ -189,7 +189,11 @@ const myFallback = computed(() => {
       @cancel="confirmingResolve = null"
     />
     <button
-      v-if="table.isHost && (table.phase === 'playing' || table.phase === 'starting')"
+      v-if="
+        table.isHost &&
+        table.mySeat !== null &&
+        (table.phase === 'playing' || table.phase === 'starting')
+      "
       type="button"
       class="dt-btn small danger"
       data-testid="abandon"
