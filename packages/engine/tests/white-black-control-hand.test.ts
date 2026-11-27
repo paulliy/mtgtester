@@ -10,6 +10,8 @@ import { interpretCard } from '../src/cards/interpret';
 import { registerWhiteBlackControlHandOverrides } from '../src/cards/overrides/white-black-control-hand';
 import { constant } from '../src/cards/value';
 import { createGame } from '../src/state/game';
+import { formatPlayerLog } from '../src/view/spectator';
+import { buildPlayerView } from '../src/view/view';
 import type { EnginePlayerState, GameContext } from '../src/state/types';
 import { queueStepTriggers } from '../src/turn/turn';
 import { runPrioritySequence } from '../src/turn/priority';
@@ -200,6 +202,24 @@ describe('white-black-control hand spells', () => {
     ).toEqual(['Only Creature', 'Only Land']);
     expect(player(ctx, 'P2').hand.map((card) => card.name)).toEqual(['Only Creature', 'Only Land']);
     expect(player(ctx, 'P2').graveyard).toHaveLength(0);
+
+    // The caster is told nothing was eligible and still gets to see the revealed hand.
+    const none = ctx.state.eventLog.filter((event) => event.type === 'revealHandNoEligible');
+    expect(none).toHaveLength(1);
+    expect(none[0]?.payload).toMatchObject({ player: 'P1', target: 'P2', count: 2 });
+    expect(
+      (player(ctx, 'P1').knownHandCards ?? []).map((entry) => [entry.owner, entry.objectId]),
+    ).toEqual(player(ctx, 'P2').hand.map((card) => ['P2', card.id]));
+    expect(
+      buildPlayerView(ctx, 'P1')
+        .opponents.find((o) => o.seat === 'P2')
+        ?.knownHand?.map((card) => card.name),
+    ).toEqual(['Only Creature', 'Only Land']);
+    expect(
+      formatPlayerLog(ctx.state.eventLog, 'P1').some((line) =>
+        line.text.includes('no eligible card'),
+      ),
+    ).toBe(true);
   });
 
   it('casts Thoughtseize and loses two life even when the target has no nonland card', () => {
