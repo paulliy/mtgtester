@@ -93,22 +93,12 @@ const controllerLabel = (controller: string): string =>
 const filled = computed(
   () => (state.value?.seats ?? []).filter((entry) => entry.controller !== 'open').length,
 );
-const PHASE_LABELS: Record<string, string> = {
-  open: 'Seating',
-  starting: 'Starting',
-  playing: 'In play',
-  finished: 'Finished',
-};
-const phaseLabel = computed(() => PHASE_LABELS[state.value?.phase ?? 'open'] ?? '');
 </script>
 
 <template>
   <section v-if="state" class="lobby" :class="{ hosting: table.isHost }" data-testid="lobby">
     <div class="main">
       <header class="head dt-rise">
-        <p class="dt-kicker">
-          {{ phaseLabel }}<template v-if="state.clock"> · {{ state.clock }} clock</template>
-        </p>
         <h1 class="dt-title">Table lobby</h1>
         <div class="dt-ornament" aria-hidden="true"><span class="star" /></div>
         <SinglePlayerLink />
@@ -288,7 +278,6 @@ const phaseLabel = computed(() => PHASE_LABELS[state.value?.phase ?? 'open'] ?? 
 
     <aside v-if="table.isHost" class="host" data-testid="host-panel" aria-labelledby="host-title">
       <div class="host-head">
-        <p class="dt-kicker">You are the host</p>
         <h2 id="host-title" class="host-title">Host</h2>
       </div>
       <div class="host-body">
@@ -397,9 +386,6 @@ const phaseLabel = computed(() => PHASE_LABELS[state.value?.phase ?? 'open'] ?? 
 .head {
   display: grid;
   gap: 0.8rem;
-}
-.head .dt-kicker {
-  margin: 0;
 }
 
 /* The four seats around a round table. */
@@ -620,9 +606,6 @@ const phaseLabel = computed(() => PHASE_LABELS[state.value?.phase ?? 'open'] ?? 
 .host-head {
   padding: 1.25rem 1.5rem 1rem;
   border-bottom: 1px solid var(--ink);
-}
-.host-head .dt-kicker {
-  margin: 0 0 0.3rem;
 }
 .host-title {
   margin: 0;

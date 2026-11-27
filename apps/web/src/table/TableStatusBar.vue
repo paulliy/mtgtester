@@ -5,8 +5,12 @@
  * waiting on and for how long, your own clock and bank, and the button that takes your seat back
  * from the fallback bot. Clocks count down here from the server's last report; the server's own
  * deadline is the one that counts.
+ *
+ * The host also gets "Stuck?": the fallback bot answers one human seat's pending decision once,
+ * for a game frozen on a choice its player cannot make (untimed tables have no clock to do it).
  */
 import { computed, onMounted, onUnmounted, ref } from 'vue';
+import ConfirmDialog from '../components/ConfirmDialog.vue';
 import { useTableStore } from '../stores/table';
 import { formatClock } from './clockFormat';
 
@@ -62,6 +66,29 @@ const mine = computed(() => {
     running: clock.running,
   };
 });
+
+/** The seats the host may unstick: people playing their own seat (bots never wait). */
+const resolvableSeats = computed(() =>
+  table.isHost && table.phase === 'playing'
+    ? seats.value.filter((entry) => entry.kind === 'human')
+    : [],
+);
+const stuckMenuOpen = ref(false);
+const confirmingResolve = ref<{ seat: string; name: string } | null>(null);
+const resolvedNote = ref<string | null>(null);
+
+function askResolve(entry: { seat: string; name: string }): void {
+  stuckMenuOpen.value = false;
+  confirmingResolve.value = { seat: entry.seat, name: entry.name };
+}
+function confirmResolve(): void {
+  const target = confirmingResolve.value;
+  confirmingResolve.value = null;
+  if (target === null) return;
+  table.resolveSeat(target.seat);
+  resolvedNote.value = `Asked the bot to decide for ${target.name}.`;
+  setTimeout(() => (resolvedNote.value = null), 6_000);
+}
 
 const myFallback = computed(() => {
   const seat = table.mySeat;
@@ -128,8 +155,45 @@ const myFallback = computed(() => {
     >
       Take back control
     </button>
+    <div v-if="resolvableSeats.length > 0" class="stuck">
+      <button
+        type="button"
+        class="dt-btn small"
+        data-testid="stuck-menu"
+        :aria-expanded="stuckMenuOpen"
+        @click="stuckMenuOpen = !stuckMenuOpen"
+      >
+        Stuck?
+      </button>
+      <ul v-if="stuckMenuOpen" class="stuck-menu" aria-label="Let the bot decide for a player">
+        <li v-for="entry in resolvableSeats" :key="entry.seat">
+          <button
+            type="button"
+            class="link"
+            :data-testid="`resolve-seat-${entry.seat}`"
+            @click="askResolve(entry)"
+          >
+            Let the bot decide for {{ entry.name }}
+          </button>
+        </li>
+      </ul>
+    </div>
+    <span v-if="resolvedNote" class="resolved" role="status">{{ resolvedNote }}</span>
+    <ConfirmDialog
+      v-if="confirmingResolve"
+      :title="`Let the bot decide for ${confirmingResolve.name}?`"
+      :message="`The built-in bot makes ${confirmingResolve.name}'s current choice for them, once. Use this when the game is stuck on a choice they cannot make. If they are not being asked anything, nothing happens.`"
+      confirm-label="Let the bot decide"
+      tone="primary"
+      @confirm="confirmResolve"
+      @cancel="confirmingResolve = null"
+    />
     <button
-      v-if="table.isHost && (table.phase === 'playing' || table.phase === 'starting')"
+      v-if="
+        table.isHost &&
+        table.mySeat !== null &&
+        (table.phase === 'playing' || table.phase === 'starting')
+      "
       type="button"
       class="dt-btn small danger"
       data-testid="abandon"
@@ -142,6 +206,10 @@ const myFallback = computed(() => {
 
 <style scoped>
 .table-bar {
+  /* Above the opening-hand screen (z-index 900): while you wait after a mulligan you can still
+     see who the table waits on, and the host can still reach "Stuck?". */
+  position: relative;
+  z-index: 950;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
@@ -254,6 +322,31 @@ const myFallback = computed(() => {
 .mine.running {
   background: var(--ink);
   color: var(--paper);
+}
+.stuck {
+  position: relative;
+}
+.stuck-menu {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 14rem;
+  margin: 0;
+  padding: 0.35rem 0;
+  list-style: none;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+}
+.stuck-menu button {
+  display: block;
+  width: 100%;
+  padding: 0.4rem 0.75rem;
+  text-align: left;
+}
+.resolved {
+  font-family: var(--font-body);
+  font-style: italic;
 }
 .take-back {
   background: var(--ink);

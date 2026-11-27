@@ -21,6 +21,7 @@ import GlobalCounters from '../components/GlobalCounters.vue';
 import PermanentChip from '../components/PermanentChip.vue';
 import ProvisionalBadge from '../components/ProvisionalBadge.vue';
 import StackPanel from '../components/StackPanel.vue';
+import YourTurnFlash from '../components/YourTurnFlash.vue';
 import ZonePile from '../components/ZonePile.vue';
 import ZoneStrip from '../components/ZoneStrip.vue';
 import ThemeControl from '../components/shell/ThemeControl.vue';
@@ -42,6 +43,7 @@ import { summarizeCombat } from '../lib/combatSummary';
 import { buildCombatLane, combatRecap, withDeparted, type LaneModel } from '../lib/combatLane';
 import { CONNECTION_LABELS } from '../lib/socket';
 import { groupByXFamily, type XActionGroup } from '../lib/xFamilies';
+import { clickableObjectIds } from '../lib/clickableObjects';
 import { rowYieldIsUnambiguous, yieldedAbilityCount } from '../lib/sourceYields';
 import { commanderObjectIds } from '../lib/commanderIds';
 import { groupPermanents, stackKey, type GroupedPermanent } from '../lib/stackPermanents';
@@ -59,7 +61,7 @@ const chosenTargets = ref<Record<number, ObjectId>>({});
 const draggedId = ref<ObjectId | null>(null);
 
 /** Board anchor root + drag pointer tracking for the combat overlay and drag-cursor line (§9.8). */
-const { registerAnchor, setRoot, disposeRoot } = useBoardAnchors();
+const { registerAnchor, anchorFor, setRoot, disposeRoot } = useBoardAnchors();
 const tableRef = ref<HTMLElement | null>(null);
 const dragPointer = ref<{ x: number; y: number } | null>(null);
 // The table only renders once the first board state arrives, which can be after mount.
@@ -77,18 +79,33 @@ onUnmounted(() => {
   cardPreview.hide();
 });
 
+/**
+ * While you aim at a player you can target, the line ends at that player's seat letter, beside their name, rather
+ * than at the pointer, so the arrow names who is threatened. Over a card tile inside the seat
+ * (a planeswalker, say) the line keeps following the pointer.
+ */
+function aimEnd(target: EventTarget | null, x: number, y: number): { x: number; y: number } {
+  if (!(target instanceof Element) || target.closest('.tile') !== null) return { x, y };
+  const seat = target.closest('[data-seat]')?.getAttribute('data-seat');
+  if (seat == null || !isLegalTarget(seat)) return { x, y };
+  const name = anchorFor(`name:${seat}`);
+  if (name === undefined) return { x, y };
+  const below = y > name.y + name.height / 2;
+  return { x: name.x + name.width / 2, y: below ? name.y + name.height + 2 : name.y - 2 };
+}
+
 /** While you hold a creature during a declaration, a line follows the pointer from it. */
 const aimPointer = ref<{ x: number; y: number } | null>(null);
 function onBoardPointerMove(event: PointerEvent): void {
   if (tableRef.value === null || combatAimSourceId.value === null) return;
   const rect = tableRef.value.getBoundingClientRect();
-  aimPointer.value = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  aimPointer.value = aimEnd(event.target, event.clientX - rect.left, event.clientY - rect.top);
 }
 
 function onBoardDragOver(event: DragEvent): void {
   if (tableRef.value === null || draggedId.value === null) return;
   const rect = tableRef.value.getBoundingClientRect();
-  dragPointer.value = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  dragPointer.value = aimEnd(event.target, event.clientX - rect.left, event.clientY - rect.top);
 }
 
 /**
@@ -127,13 +144,38 @@ const request = computed(() => pending.value?.request ?? null);
 const human = computed(
   () => state.value?.seats.find((seat) => seat.seat === state.value?.viewerSeat) ?? null,
 );
+/**
+ * The request you chose Mulligan on, until the next question for you arrives. The engine asks
+ * everyone keep-or-mulligan in turn order and deals new hands only after the last answer, so
+ * between your click and your new hand the server has nothing to ask you; without this the
+ * opening-hand screen closed onto the board (old hand still showing) and reopened later.
+ */
+const mulliganedOn = ref<string | null>(null);
+watch(request, (req) => {
+  if (req !== null && req.requestId !== mulliganedOn.value) mulliganedOn.value = null;
+});
+watch(
+  () => [store.gameId, store.gameOver] as const,
+  () => (mulliganedOn.value = null),
+);
+function chooseOpeningHand(actionId: number): void {
+  const req = request.value;
+  const action = req?.legalActions.find((candidate) => candidate.id === actionId);
+  if (store.submitPlayerAction(actionId) && req !== null && action?.type === 'mulligan')
+    mulliganedOn.value = req.requestId;
+}
+
 /** Keep-or-mulligan and London bottoming take over the screen, Arena-style, until decided. */
 const openingHand = computed(() => {
   const req = request.value;
   const hand = human.value?.hand;
-  if (req === null || hand === null || hand === undefined) return null;
+  if (hand === null || hand === undefined) return null;
+  const mulligansTaken = human.value?.mulligansTaken ?? 0;
+  // Waiting on the other players after your mulligan: the screen stays up with no choices.
+  if (req === null)
+    return mulliganedOn.value === null ? null : { request: null, hand, mulligansTaken };
   if (req.decisionType !== 'mulligan' && req.decisionType !== 'bottomCards') return null;
-  return { request: req, hand, mulligansTaken: human.value?.mulligansTaken ?? 0 };
+  return { request: req, hand, mulligansTaken };
 });
 const opponents = computed(
   () => state.value?.seats.filter((seat) => seat.seat !== state.value?.viewerSeat) ?? [],
@@ -217,6 +259,38 @@ function togglePile(pile: Pile): void {
   } catch {
     // Storage blocked: the toggle still works for this visit.
   }
+}
+
+/**
+ * Opponents' lands show as a count ("Lands 5 · 2 open") with the names behind one toggle,
+ * remembered across games. A seat's names open on their own while one of its lands can be
+ * targeted, is chosen, or can be activated, so a land a decision needs is always in reach.
+ */
+const OPPONENT_LANDS_KEY = 'mtg.playerOpponentLandsOpen';
+function readOpponentLands(): boolean {
+  try {
+    return localStorage.getItem(OPPONENT_LANDS_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+const opponentLandsOpen = ref(readOpponentLands());
+function toggleOpponentLands(): void {
+  opponentLandsOpen.value = !opponentLandsOpen.value;
+  try {
+    localStorage.setItem(OPPONENT_LANDS_KEY, String(opponentLandsOpen.value));
+  } catch {
+    // Storage blocked: the toggle still works for this visit.
+  }
+}
+function opponentLandsShown(seat: string): boolean {
+  if (opponentLandsOpen.value) return true;
+  return opponentLandGroups(seat).some(
+    (group) =>
+      isLegalTarget(group.permanent.id) ||
+      isChosenTarget(group.permanent.id) ||
+      actionableSourceIds.value.has(group.permanent.id),
+  );
 }
 
 /**
@@ -564,14 +638,16 @@ function sourceId(action: LegalAction): string | null {
   if (interaction.kind === 'attack') return interaction.attackerId;
   if (interaction.kind === 'block') return interaction.blockerId;
   // A choice about a player (who a token attacks, which opponent to pick) has no card to click:
-  // it goes to the decision panel, which shows each player's buttons.
+  // it goes to the decision panel, which shows each player's buttons. So does a choice about a
+  // card the board does not draw as clickable (a hidden zone): waiting for a click on it would
+  // leave the player with nothing to press and the game stuck.
   if (interaction.kind === 'choice')
-    return interaction.subjectId === undefined || seatIds.value.has(interaction.subjectId)
+    return interaction.subjectId === undefined || !clickableIds.value.has(interaction.subjectId)
       ? null
       : interaction.subjectId;
   return null;
 }
-const seatIds = computed(() => new Set((state.value?.seats ?? []).map((seat) => seat.seat)));
+const clickableIds = computed(() => clickableObjectIds(state.value));
 
 /**
  * Every source action but making mana by hand (ADR 0030): that lives on the land itself, in the
@@ -970,6 +1046,21 @@ function laneTarget(targetId: string): void {
   }
   tryPlanAssign(targetId);
 }
+/**
+ * The lane draws its cards and slots only on defense: while blocks are declared, or while attacks
+ * come at you on someone else's turn. When you attack it keeps to the hint, the life numbers and
+ * the confirm.
+ */
+const laneCards = computed(() => {
+  const lane = combatLane.value;
+  if (lane === null) return false;
+  if (lane.kind === 'blockers') return true;
+  const viewer = state.value?.viewerSeat;
+  return (
+    !isYourTurn.value && viewer != null && lane.groups.some((group) => group.targetId === viewer)
+  );
+});
+
 /** Who the lane says the game is waiting on, when it isn't you. */
 const laneWaiting = computed(() => {
   if (request.value !== null) return null;
@@ -977,13 +1068,13 @@ const laneWaiting = computed(() => {
   return seat === null ? null : `Waiting on ${seatLabel(seat)}: ${seat} ${waitingActivity.value}.`;
 });
 
-/** Each life total registers as an anchor, so an attack's arrow ends at the number it threatens. */
-const lifeAnchorRefs = new Map<string, (el: Element | ComponentPublicInstance | null) => void>();
-function lifeAnchorRef(seatId: string): (el: Element | ComponentPublicInstance | null) => void {
-  let fn = lifeAnchorRefs.get(seatId);
+/** Each opponent's seat letter registers as an anchor, so an aimed attack's arrow ends at the player. */
+const nameAnchorRefs = new Map<string, (el: Element | ComponentPublicInstance | null) => void>();
+function nameAnchorRef(seatId: string): (el: Element | ComponentPublicInstance | null) => void {
+  let fn = nameAnchorRefs.get(seatId);
   if (fn === undefined) {
-    fn = (el) => registerAnchor(`life:${seatId}`, el instanceof Element ? el : null);
-    lifeAnchorRefs.set(seatId, fn);
+    fn = (el) => registerAnchor(`name:${seatId}`, el instanceof Element ? el : null);
+    nameAnchorRefs.set(seatId, fn);
   }
   return fn;
 }
@@ -1179,6 +1270,13 @@ const decisionBody = computed(() => {
   if (title === 'Blocks are in') return combatSummary.value?.prose.join(' ') ?? '';
   return '';
 });
+/** A priority stop whose prompt only restates the title ("You have priority (…). Choose…"). */
+function isPlainPriority(req: DecisionRequest): boolean {
+  return (
+    req.decisionType === 'priority' &&
+    /^You have priority \([^)]*\)\. Choose an action\.$/.test(promptOf(req).trim())
+  );
+}
 /** The band's body while you wait: the design says plainly that nothing is asked of you yet. */
 const waitingBody = computed(() => {
   const board = state.value;
@@ -1749,12 +1847,18 @@ function abandon(): void {
 
 <template>
   <div class="player-game">
+    <YourTurnFlash
+      :active="isYourTurn"
+      :turn="state?.turnNumber ?? null"
+      :reduced-motion="store.reducedMotion"
+      :suppressed="openingHand !== null"
+    />
     <OpeningHand
       v-if="openingHand"
       :request="openingHand.request"
       :cards="openingHand.hand"
       :mulligans-taken="openingHand.mulligansTaken"
-      @choose="store.submitPlayerAction"
+      @choose="chooseOpeningHand"
     />
     <!-- The board's header, in the app's top bar (which folds the site's ruler away while you play):
          the turn and where in it on the left, your resources and the ways out on the right. -->
@@ -1801,11 +1905,13 @@ function abandon(): void {
           :counters="human.counters"
           compact
         />
-        <span class="resource" :class="{ ready: human.landsPlayedThisTurn === 0 }">{{
+        <!-- The land drop and spendable mana stay in the bar's text for screen readers (and the
+             tests that read them), but are not drawn: the board already shows lands and mana. -->
+        <span class="resource dt-sr" :class="{ ready: human.landsPlayedThisTurn === 0 }">{{
           human.landsPlayedThisTurn === 0 ? 'Land drop available' : 'Land played'
         }}</span>
         <span
-          class="resource"
+          class="resource dt-sr"
           title="Mana you can spend on anything right now: floating mana plus sources that need no mana to activate and whose mana has no spending restriction."
           >Mana ready <strong>{{ state!.viewerMana.units }}</strong
           ><span
@@ -1983,7 +2089,7 @@ function abandon(): void {
           >
             <!-- Who: seat, commander and a line of counts; then any combat chip and the life. -->
             <header>
-              <span class="id-badge">{{ opponent.seat }}</span>
+              <span :ref="nameAnchorRef(opponent.seat)" class="id-badge">{{ opponent.seat }}</span>
               <span class="seat-who">
                 <strong
                   class="seat-name"
@@ -2045,7 +2151,6 @@ function abandon(): void {
                 >MONARCH</span
               >
               <span
-                :ref="lifeAnchorRef(opponent.seat)"
                 class="life-badge"
                 :aria-label="`${opponent.life} life`"
                 :class="{
@@ -2103,13 +2208,27 @@ function abandon(): void {
                 />
               </div>
             </TransitionGroup>
-            <!-- Lands as a line of names, then the zones that are only counts. -->
+            <!-- The land count opens the names; then the zones that are only counts. -->
             <div v-if="!opponent.hasLost" class="opp-foot">
-              <span class="foot-label"
-                >Lands {{ landCount(opponent.seat) }} ·
-                {{ openLandCount(opponent.seat) }} open</span
+              <button
+                type="button"
+                class="foot-label"
+                :aria-expanded="opponentLandsShown(opponent.seat)"
+                :title="opponentLandsOpen ? 'Hide land names' : 'Show land names'"
+                @click.stop="toggleOpponentLands"
               >
-              <TransitionGroup tag="span" name="land-line" class="land-line">
+                Lands {{ landCount(opponent.seat) }} · {{ openLandCount(opponent.seat) }} open<span
+                  class="caret"
+                  aria-hidden="true"
+                  >{{ opponentLandsShown(opponent.seat) ? ' ▴' : ' ▾' }}</span
+                >
+              </button>
+              <TransitionGroup
+                v-show="opponentLandsShown(opponent.seat)"
+                tag="span"
+                name="land-line"
+                class="land-line"
+              >
                 <span
                   v-for="(group, i) in opponentLandGroups(opponent.seat)"
                   :key="group.permanent.id"
@@ -2189,6 +2308,7 @@ function abandon(): void {
           v-if="laneShowing"
           class="combat-strip"
           :model="combatLane"
+          :cards="laneCards"
           :lines="combatSummary?.lines ?? []"
           :recap="combatRecapLine"
           :composing="combatPlan.mode === 'composing'"
@@ -2415,7 +2535,6 @@ function abandon(): void {
               <span class="rail-kicker">Life</span>
               <span class="rail-life-row">
                 <span
-                  :ref="lifeAnchorRef(human.seat)"
                   class="life-badge"
                   :aria-label="`${human.life} life`"
                   :class="{
@@ -2628,7 +2747,8 @@ function abandon(): void {
                   <svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true">
                     <path d="M7 0 L8 6 L14 7 L8 8 L7 14 L6 8 L0 7 L6 6 Z" />
                   </svg>
-                  {{ decisionKicker }}
+                  <!-- The title already says what is asked; the kicker word is for screen readers. -->
+                  <span class="dt-sr">{{ decisionKicker }}</span>
                 </span>
                 <span class="decide-title">{{ decisionTitle }}</span>
                 <span
@@ -2856,7 +2976,14 @@ function abandon(): void {
                     </div>
                   </div>
                 </template>
-                <p v-else-if="!openingHand" class="tray-hint">
+                <p
+                  v-else-if="
+                    !openingHand &&
+                    request?.decisionType === 'priority' &&
+                    playableSources.length > 0
+                  "
+                  class="tray-hint"
+                >
                   Click a highlighted card or permanent to play, cast, or activate it.
                 </p>
               </section>
@@ -2871,6 +2998,11 @@ function abandon(): void {
                   @choose="chooseFallbackAction"
                 />
                 <template v-else>
+                  <!-- The question comes first, then its answers. A plain priority stop says no
+                       more than the title, so its line is kept for screen readers only. -->
+                  <p class="prompt" :class="{ 'dt-sr': isPlainPriority(request) }">
+                    {{ promptOf(request) }}
+                  </p>
                   <div v-if="immediateActions.length > 0" class="quick-actions">
                     <button
                       v-for="(action, i) in immediateActions"
@@ -2882,7 +3014,6 @@ function abandon(): void {
                       {{ action.description }}
                     </button>
                   </div>
-                  <p class="prompt">{{ promptOf(request) }}</p>
                   <div v-if="playableSources.length > 0" class="playable-now">
                     <strong>Playable now</strong>
                     <div class="playable-list">
@@ -4382,6 +4513,10 @@ button.primary {
 }
 .foot-label {
   flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
   font-family: var(--font-ui);
   font-size: 0.7rem;
   letter-spacing: 0.08em;
@@ -4437,7 +4572,7 @@ button.primary {
 .human-zone {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(8.5rem, 11vw, 11rem);
+  grid-template-columns: minmax(0, 1fr) clamp(7.5rem, 8.5vw, 9rem);
   /* Your board keeps room for a row of tiles; the decision scrolls inside its share instead of
      growing over the board on a short screen. */
   grid-template-rows: auto minmax(7.5rem, 27fr) minmax(5.5rem, 14fr) auto minmax(10rem, 13fr);
@@ -4563,26 +4698,28 @@ button.primary {
   position: relative;
 }
 
-/* The rail: life first, then the zones that are only counts, on paper-2 behind an ink rule. */
+/* The rail, kept compact: life on one line, then the zones that are only counts, on paper-2
+   behind an ink rule. */
 .me-rail {
   grid-area: rail;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
   border-left: 1px solid var(--ink);
   background: var(--paper-2);
   overflow-y: auto;
 }
 .rail-life {
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
 }
 .rail-kicker {
   font-family: var(--font-ui);
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -4593,7 +4730,7 @@ button.primary {
   gap: 0 0.5rem;
 }
 .me-rail .life-badge {
-  font-size: 2.65rem;
+  font-size: 2rem;
 }
 .life-delta {
   font-size: 0.725rem;
@@ -4605,16 +4742,24 @@ button.primary {
   list-style: none;
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--ink);
-  font-size: 0.9rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.78rem;
 }
 .rail-piles > li {
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid var(--rule);
 }
 .rail-piles :deep(.zone-pile.row) {
   width: 100%;
+  min-height: 30px;
   border: 0;
   background: transparent;
+}
+.me-rail .meta-item,
+.me-rail .rail-row {
+  font-size: 0.78rem;
+}
+.me-rail .rail-row {
+  min-height: 30px;
 }
 .meta-item {
   font-family: var(--font-body);
@@ -4650,11 +4795,9 @@ button.primary {
   grid-area: hand;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(24rem, 48%);
+  /* The decision is where the game asks you things, so it gets the larger share. */
+  grid-template-columns: minmax(0, 42fr) minmax(26rem, 58fr);
   border-top: 1px solid var(--ink);
-}
-.human-zone.no-hand .hand-band {
-  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
 }
 .hand-wrap {
   min-width: 0;
@@ -4832,7 +4975,7 @@ button.primary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem 1.5rem;
+  gap: 0.4rem 0.6rem;
 }
 .decide-kicker {
   display: flex;

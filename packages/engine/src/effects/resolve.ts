@@ -4555,7 +4555,24 @@ function* executeAbilityEffects(
             controllerId: controller.id,
           }),
         );
-        if (eligible.length === 0) break;
+        // The hand is revealed (CR 701.20a), so the caster keeps seeing it in the viewer even
+        // when nothing in it can be chosen.
+        if (player.id !== controller.id) {
+          const known = (controller.knownHandCards ?? []).filter(
+            (entry) => entry.owner !== player.id && liveKnownHandCard(ctx, entry) !== undefined,
+          );
+          for (const card of player.hand) known.push({ owner: player.id, objectId: card.id });
+          controller.knownHandCards = known;
+        }
+        if (eligible.length === 0) {
+          emit(
+            ctx,
+            'revealHandNoEligible',
+            { player: controller.id, target: player.id, count: player.hand.length },
+            controller.id,
+          );
+          break;
+        }
         const selected = yield* chooseCard(ctx, {
           player: controller.id,
           prompt: `Choose a card from ${player.id}'s revealed hand to discard.`,

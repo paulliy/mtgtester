@@ -65,13 +65,8 @@ async function create(): Promise<void> {
 <template>
   <section class="table-home">
     <div class="lead dt-rise">
-      <p class="dt-kicker">Commander, four seats, one table</p>
       <h1 class="dt-title">Host a table</h1>
       <div class="dt-ornament" aria-hidden="true"><span class="star" /></div>
-      <p class="intro">
-        Paste the host secret that <code>serve:table</code> printed when it started, or the one set
-        in <code>TABLE_HOST_SECRET</code>. Friends join with the invite link you get next.
-      </p>
 
       <form class="create dt-plate" @submit.prevent="create">
         <label class="dt-field">
@@ -128,16 +123,6 @@ async function create(): Promise<void> {
 .lead {
   display: grid;
   gap: 1.1rem;
-}
-.lead .dt-kicker {
-  margin: 0;
-}
-.intro {
-  margin: 0;
-  max-width: 34rem;
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  line-height: 1.55;
 }
 .create {
   display: flex;

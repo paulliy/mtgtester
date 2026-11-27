@@ -38,6 +38,7 @@ const inTable = computed(() => joined.value || table.isHost);
 const playing = computed(
   () => (table.phase === 'playing' || table.phase === 'starting') && table.mySeat !== null,
 );
+const gameRunning = computed(() => table.phase === 'playing' || table.phase === 'starting');
 const stoppedText = computed(() => {
   switch (table.stopped) {
     case 'takenOver':
@@ -82,7 +83,9 @@ function join(): void {
     </template>
 
     <template v-else-if="table.state !== null && inTable">
-      <TableStatusBar v-if="table.insecureLan" />
+      <!-- A host running the table without a seat still needs the bar while a game runs: it holds
+           "Stuck?" and "End the game". -->
+      <TableStatusBar v-if="table.insecureLan || (table.isHost && gameRunning)" />
       <TableLobby />
     </template>
 

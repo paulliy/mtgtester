@@ -479,6 +479,16 @@ describe('the table message set', () => {
     expect(game.aliceGame.errors()).toEqual(['Replay unlocks when the game is over.']);
   });
 
+  it('forwards hostResolveSeat from the host for a human seat only', async () => {
+    const game = await startedGame();
+    game.rig.send(game.t.host, 'hostResolveSeat', { seat: 'P2' });
+    game.rig.send(game.aliceGame, 'hostResolveSeat', { seat: 'P2' });
+    game.rig.send(game.t.host, 'hostResolveSeat', { seat: 'P3' });
+    expect(game.port.inputs('hostResolve')).toEqual([{ type: 'hostResolve', seat: 'P2' }]);
+    expect(game.aliceGame.errors()).toEqual(['Only the host can do that.']);
+    expect(game.t.host.errors()).toEqual(['Nobody holds that seat.']);
+  });
+
   it('sends clock and seat status frames to every bound seat, never to a lobby-only socket', async () => {
     const game = await startedGame();
     game.port.emit({
@@ -806,6 +816,28 @@ describe('outbound frames', () => {
     game.port.seat('P2', stateSnapshot(20, 1));
     expect(game.aliceGame.of('playerStateSnapshot')).toHaveLength(2);
     expect(game.bobGame.of('playerStateSnapshot').map((f) => f.payload['revision'])).toEqual([1]);
+  });
+
+  it('sends an unchanged board once when it moves past the decision the seat still shows', async () => {
+    const game = await startedGame();
+    game.port.seat('P1', stateSnapshot(10, 1));
+    game.port.seat('P1', actionRequired('req-1', 11));
+    const asked = Number(game.aliceGame.last('playerActionRequired')['revision']);
+    // The answer moved nothing on this board (a mulligan before the new hands are dealt), but the
+    // client must still learn the decision is over: the board goes out, past the decision.
+    game.port.seat('P1', stateSnapshot(12, 1));
+    const after = game.aliceGame
+      .of('playerStateSnapshot')
+      .map((f) => Number(f.payload['revision']));
+    expect(after).toHaveLength(2);
+    expect(after.at(-1)!).toBeGreaterThan(asked);
+    // Once cleared, unchanged boards are deduplicated again.
+    game.port.seat('P1', stateSnapshot(13, 1));
+    expect(game.aliceGame.of('playerStateSnapshot')).toHaveLength(2);
+    // A board at the decision's own revision does not clear it.
+    game.port.seat('P1', actionRequired('req-2', 14));
+    game.port.seat('P1', stateSnapshot(14, 1));
+    expect(game.aliceGame.of('playerStateSnapshot')).toHaveLength(2);
   });
 
   it('pins the answer to the revision sent with the decision', async () => {

@@ -13,6 +13,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { computePriorityOptions } from '../src/actions/legal';
 import { interpretCard } from '../src/cards/interpret';
 import { createGame } from '../src/state/game';
 import { manaSourcesFor, resolveDynamicUnits } from '../src/state/queries';
@@ -152,6 +153,18 @@ describe('state-derived mana production', () => {
 
     // Sorted for a stable assertion — the ability offers one mana, chosen among the identity.
     expect(symbolsFor(ctx, 'Test Tower')[0]?.sort()).toEqual(['B', 'G', 'R']);
+  });
+
+  it('lets Command Tower help pay for the commander being cast from the command zone', () => {
+    // The commander is on the stack while its cost is paid; Command Tower must still read its
+    // identity, or {1}{G} with a Forest and a Tower is wrongly unaffordable.
+    const ctx = ctxWithCommander(['G']);
+    spawn(ctx, 'P1', forest());
+    spawn(ctx, 'P1', commandTower());
+
+    const player = ctx.state.players.find((p) => p.id === 'P1')!;
+    const options = computePriorityOptions(ctx, player).map((option) => option.description);
+    expect(options.some((text) => text.includes('Test Identity Commander'))).toBe(true);
   });
 
   it('narrows with a narrower commander', () => {

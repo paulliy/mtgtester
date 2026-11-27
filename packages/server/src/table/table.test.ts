@@ -549,6 +549,15 @@ describe('token revocation', () => {
     expect(join(h, conn(), 'Alice').ok).toBe(true);
   });
 
+  it('refuses hostResolveSeat before the game runs, and from anyone but the host', () => {
+    const h = setup();
+    const host = hostConn(h);
+    const player = conn();
+    seatPlayer(h, host, player, 'Alice', 'P1');
+    expect(h.table.hostResolveSeat(host, { seat: 'P1' })).toMatchObject({ reason: 'wrongPhase' });
+    expect(h.table.hostResolveSeat(player, { seat: 'P1' })).toMatchObject({ reason: 'notHost' });
+  });
+
   it('refuses to kick an empty or bot seat', () => {
     const h = setup();
     const host = hostConn(h);

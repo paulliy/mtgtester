@@ -423,6 +423,10 @@ export const useTableStore = defineStore('table', () => {
   function kick(seat: PlayerId): void {
     sendFrame({ type: 'hostKick', payload: { seat } });
   }
+  /** Host only: the fallback bot answers this seat's pending decision once (a stuck game). */
+  function resolveSeat(seat: PlayerId): void {
+    sendFrame({ type: 'hostResolveSeat', payload: { seat } });
+  }
   function rotateInvite(): void {
     sendFrame({ type: 'hostRotateInvite', payload: {} });
   }
@@ -474,6 +478,7 @@ export const useTableStore = defineStore('table', () => {
     deny,
     setSeat,
     kick,
+    resolveSeat,
     rotateInvite,
     start,
     abandon,

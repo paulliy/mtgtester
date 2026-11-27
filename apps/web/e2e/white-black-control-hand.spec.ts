@@ -64,8 +64,18 @@ test('Duress: reveal P2’s hand and choose a noncreature, nonland card', async 
 
   await expect(opponent(page, 'P2')).toContainText('hand 3');
   await expect(opponent(page, 'P2').getByRole('heading', { name: /^Graveyard \(/ })).toBeVisible();
-  await expect(opponent(page, 'P2').getByRole('img', { name: 'Lab P2 Artifact' })).toBeVisible();
+  // The discarded card also leaves the "Seen in hand" strip with a short animation; count only
+  // the cards that are staying.
+  const settled = opponent(page, 'P2').locator('.zone-card-thumb:not(.zone-card-leave-active)');
+  await expect(settled.getByRole('img', { name: 'Lab P2 Artifact' })).toBeVisible();
   await expect(page.getByText('Lab Private Library Card')).toHaveCount(0);
+
+  // Duress revealed the hand to its caster, who keeps seeing what is left in it.
+  const seen = opponent(page, 'P2').locator('.zone').filter({ hasText: 'Seen in hand (3)' });
+  await expect(seen).toBeVisible();
+  for (const name of ['Lab P2 Creature', 'Lab P2 Land', 'Lab P2 Enchantment'])
+    await expect(seen.getByRole('img', { name })).toBeVisible();
+  await expect(seen.getByRole('img', { name: 'Lab P2 Artifact' })).toHaveCount(0);
 });
 
 test('Thoughtseize: discard a nonland card and lose 2 life', async ({ page }) => {

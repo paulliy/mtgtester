@@ -55,6 +55,7 @@ export default defineConfig({
             { name: 'mtg.playerPile.graveyard', value: 'true' },
             { name: 'mtg.playerPile.exile', value: 'true' },
             { name: 'mtg.playerOpponentZonesOpen', value: 'true' },
+            { name: 'mtg.playerOpponentLandsOpen', value: 'true' },
           ],
         },
       ],

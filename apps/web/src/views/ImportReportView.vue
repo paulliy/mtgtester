@@ -10,7 +10,6 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
 import type { CardReport, CardReportEntry } from '@mtg/shared';
-import PageFoot from '../components/shell/PageFoot.vue';
 import PageTitle from '../components/shell/PageTitle.vue';
 import {
   GROUP_LABELS,
@@ -337,7 +336,6 @@ function ledgerSilent(row: ReportRow): boolean {
       <RouterLink to="/" class="dt-btn"
         >Back to New game<span class="dt-arr" aria-hidden="true"
       /></RouterLink>
-      <PageFoot place="III. Workshop · a. Card lab" />
     </div>
 
     <template v-else>
@@ -578,7 +576,6 @@ function ledgerSilent(row: ReportRow): boolean {
           <p v-else class="state">Nothing selected.</p>
         </aside>
       </div>
-      <PageFoot place="III. Workshop · a. Card lab" />
     </template>
   </section>
 </template>

@@ -85,6 +85,7 @@ export const TABLE_CLIENT_TO_SERVER_TYPES = [
   'hostDeny',
   'hostSetSeat',
   'hostKick',
+  'hostResolveSeat',
   'hostRotateInvite',
   'hostStart',
   'hostAbandon',
@@ -118,6 +119,10 @@ export interface HostSetSeatPayload {
 export interface HostKickPayload {
   seat: PlayerId;
 }
+/** The host has the fallback bot answer this seat's pending decision once. */
+export interface HostResolveSeatPayload {
+  seat: PlayerId;
+}
 export interface ResumeSeatPayload {
   seatToken: string;
   protocolVersion: number;
@@ -137,6 +142,7 @@ export type TableClientToServerMessage =
   | { type: 'hostDeny'; payload: ClaimIdPayload }
   | { type: 'hostSetSeat'; payload: HostSetSeatPayload }
   | { type: 'hostKick'; payload: HostKickPayload }
+  | { type: 'hostResolveSeat'; payload: HostResolveSeatPayload }
   | { type: 'hostRotateInvite'; payload: EmptyPayload }
   | { type: 'hostStart'; payload: EmptyPayload }
   | { type: 'hostAbandon'; payload: EmptyPayload }
@@ -448,10 +454,11 @@ export function parseTableClientMessage(value: unknown): TableParseResult {
         return fail('invalidPayload');
       return ok({ type: 'hostSetSeat', payload: { seat: payload['seat'], controller } });
     }
-    case 'hostKick': {
+    case 'hostKick':
+    case 'hostResolveSeat': {
       if (unknownField(['seat'])) return fail('unknownField');
       if (!isSeat(payload['seat'])) return fail('invalidPayload');
-      return ok({ type: 'hostKick', payload: { seat: payload['seat'] } });
+      return ok({ type: kind, payload: { seat: payload['seat'] } });
     }
     case 'resumeSeat': {
       if (unknownField(['seatToken', 'protocolVersion', 'capabilities']))

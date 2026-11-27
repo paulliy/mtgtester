@@ -78,6 +78,8 @@ export type TableSessionInput =
   | { type: 'setRawActionData'; seat: PlayerId; enabled: boolean }
   /** The seat's player takes it back from the fallback bot (M4). */
   | { type: 'resumeControl'; seat: PlayerId }
+  /** The host has the seat's fallback bot answer its pending decision once (a stuck game). */
+  | { type: 'hostResolve'; seat: PlayerId }
   /** Re-send the seat's board and pending request to a socket that just bound to it. */
   | { type: 'resyncPlayer'; seat: PlayerId };
 

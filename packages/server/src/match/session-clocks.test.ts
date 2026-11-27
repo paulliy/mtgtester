@@ -254,7 +254,7 @@ async function until(done: () => boolean, label: string): Promise<void> {
 }
 
 /** Answer every P3 request with its first legal action, as a player who is always there. */
-function keepAnswering(t: Timed, seat: PlayerId): () => void {
+function keepAnswering(t: Pick<Timed, 'required' | 'session'>, seat: PlayerId): () => void {
   let consumed = 0;
   let stop = false;
   const loop = async (): Promise<void> => {
@@ -501,4 +501,87 @@ describe('a timed table', () => {
     expect(frames).toEqual([]);
     untimed.abandon();
   });
+});
+
+describe('the host resolving a stuck seat', () => {
+  /** An untimed table: nothing but the host can answer for a player who cannot. */
+  function untimedTable() {
+    const { store, sources } = fakeStore();
+    const pub: ServerToClientMessage[] = [];
+    const bySeat: Record<string, ServerToClientMessage[]> = { P1: [], P3: [] };
+    const session = new MatchSession({
+      disclosure: tablePolicy(),
+      gameId: 'g-host-resolve',
+      seed: 'host-resolve-seed',
+      rng: 'chacha20',
+      rngKey: '5a'.repeat(32),
+      seats: seats(),
+      providerKind: 'random',
+      gameMode: 'table',
+      seatControllers: { P1: 'human', P2: 'random', P3: 'human', P4: 'random' },
+      turnCap: 40,
+      livePaceMs: 0,
+      store,
+      send: (message) => pub.push(message),
+      sendToSeat: (seat, message) => bySeat[seat]!.push(message),
+      sendTable: () => undefined,
+    });
+    const required = (seat: PlayerId): Required[] =>
+      (bySeat[seat] ?? []).filter((m): m is Required => m.type === 'playerActionRequired');
+    return { session, sources, bySeat, required };
+  }
+
+  it('answers the pending decision with the fallback bot once, and a late answer is stale', async () => {
+    const t = untimedTable();
+    const stopP3 = keepAnswering(t, 'P3');
+    t.session.start();
+    await until(() => t.required('P1').length > 0, 'a P1 decision');
+    const stuck = t.required('P1')[0]!;
+    const stuckId = stuck.payload.request.requestId;
+
+    t.session.hostResolve('P1');
+    await until(() => t.sources.has(stuckId), 'the fallback answer');
+    expect(t.sources.get(stuckId)).toBe('fallback');
+
+    // The player's own answer to the decision the bot took is refused, not applied twice.
+    const before = t.bySeat['P1']!.length;
+    t.session.submitPlayerAction('P1', {
+      requestId: stuckId,
+      revision: stuck.payload.revision,
+      actionId: 0,
+    });
+    const errors = t.bySeat['P1']!.slice(before).filter((frame) => frame.type === 'error');
+    expect(errors).toHaveLength(1);
+
+    // Only that one decision: the seat is not handed to the bot, so P1's next one waits for them.
+    await until(
+      () => t.required('P1').some((m) => m.payload.request.requestId !== stuckId),
+      'the next P1 decision',
+    );
+    const next = t.required('P1').find((m) => m.payload.request.requestId !== stuckId)!;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(t.sources.has(next.payload.request.requestId)).toBe(false);
+    stopP3();
+    t.session.abandon();
+  }, 30_000);
+
+  it('does nothing for a seat with no decision pending', async () => {
+    const t = untimedTable();
+    t.session.start();
+    await until(
+      () => t.required('P1').length > 0 || t.required('P3').length > 0,
+      'a human decision',
+    );
+    const waiting: PlayerId = t.required('P1').length > 0 ? 'P3' : 'P1';
+    const pendingSeat: PlayerId = waiting === 'P1' ? 'P3' : 'P1';
+    const asked = t.required(pendingSeat)[0]!.payload.request.requestId;
+    if (t.required(waiting).length === 0) {
+      t.session.hostResolve(waiting);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect([...t.sources.values()]).not.toContain('fallback');
+    }
+    // The seat that is being asked is still waiting on its player.
+    expect(t.sources.has(asked)).toBe(false);
+    t.session.abandon();
+  }, 30_000);
 });
